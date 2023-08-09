@@ -5,6 +5,7 @@ import (
 	"time"
 
 	atranscribe "github.com/bcc-code/bccm-flows/activities/transcribe"
+	"github.com/bcc-code/bccm-flows/activities/vidispine"
 	wtranscribe "github.com/bcc-code/bccm-flows/workflows/transcribe"
 
 	"go.temporal.io/sdk/client"
@@ -34,7 +35,10 @@ func main() {
 	w := worker.New(c, "transcribe", workerOptions)
 
 	w.RegisterWorkflow(wtranscribe.TranscribeWorkflow)
+	w.RegisterWorkflow(wtranscribe.TranscribeVXWorkflow)
 	w.RegisterActivity(atranscribe.TranscribeActivity)
+	w.RegisterActivity(vidispine.GetFileFromVXActivity)
+	w.RegisterActivity(vidispine.ImportFileAsShapeActivity)
 
 	err = w.Run(worker.InterruptCh())
 	log.Printf("Worker finished: %v", err)

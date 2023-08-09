@@ -2,8 +2,10 @@ package transcribe
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
+	"github.com/bcc-code/bccm-flows/services/transcribe"
 	"go.temporal.io/sdk/activity"
 )
 
@@ -26,7 +28,19 @@ func TranscribeActivity(
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscribeActivity")
 	log.Info("Starting TranscribeActivity")
+
 	time.Sleep(time.Second * 10)
+
+	jobData, err := transcribe.DoTranscribe(ctx, input.File, input.DestinationPath, input.Language)
+
+	if err != nil {
+		return nil, err
+	}
 	log.Info("Finished TranscribeActivity")
-	return &TranscribeActivityResponse{}, nil
+
+	fileName := filepath.Base(input.File)
+	return &TranscribeActivityResponse{
+		JSONPath: filepath.Join(jobData.OutputPath, fileName+".json"),
+		SRTPath:  filepath.Join(jobData.OutputPath, fileName+".srt"),
+	}, nil
 }

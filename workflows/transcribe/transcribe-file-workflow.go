@@ -9,7 +9,7 @@ import (
 )
 
 // TranscribeWorkflowInput is the input to the TranscribeWorkflow
-type TranscribeWorkflowInput struct {
+type TranscribeFileWorkflowInput struct {
 	Language        string
 	File            string
 	DestinationPath string
@@ -18,17 +18,19 @@ type TranscribeWorkflowInput struct {
 // TranscribeWorkflow is the workflow that transcribes a video
 func TranscribeWorkflow(
 	ctx workflow.Context,
-	TranscribeWorkflowInput TranscribeWorkflowInput,
+	params TranscribeFileWorkflowInput,
 ) error {
 
 	logger := workflow.GetLogger(ctx)
 	options := workflow.ActivityOptions{
 		RetryPolicy: &temporal.RetryPolicy{
 			InitialInterval: time.Minute * 1,
-			MaximumAttempts: 5,
-			MaximumInterval: time.Minute * 5,
+			MaximumAttempts: 10,
+			MaximumInterval: time.Hour * 1,
 		},
-		StartToCloseTimeout: time.Minute * 10,
+		StartToCloseTimeout:    time.Hour * 4,
+		ScheduleToCloseTimeout: time.Hour * 48,
+		HeartbeatTimeout:       time.Minute * 1,
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
@@ -36,9 +38,9 @@ func TranscribeWorkflow(
 	logger.Info("Starting TranscribeWorkflow")
 
 	x := workflow.ExecuteActivity(ctx, transcribe.TranscribeActivity, transcribe.TranscribeActivityParams{
-		Language:        TranscribeWorkflowInput.Language,
-		File:            TranscribeWorkflowInput.File,
-		DestinationPath: TranscribeWorkflowInput.DestinationPath,
+		Language:        params.Language,
+		File:            params.File,
+		DestinationPath: params.DestinationPath,
 	}).Get(ctx, nil)
 
 	return x

@@ -14,6 +14,7 @@ func transcribeHandler(c *gin.Context) {
 	language := c.DefaultPostForm("language", c.DefaultQuery("language", ""))
 	file := c.DefaultPostForm("file", c.DefaultQuery("file", ""))
 	destinationPath := c.DefaultPostForm("destinationPath", c.DefaultQuery("destinationPath", ""))
+	vxID := c.DefaultPostForm("vxID", c.DefaultQuery("vxID", ""))
 
 	wfClient, err := client.Dial(client.Options{
 		HostPort: client.DefaultHostPort,
@@ -32,7 +33,28 @@ func transcribeHandler(c *gin.Context) {
 		TaskQueue: "transcribe",
 	}
 
-	transcribeInput := transcribe.TranscribeWorkflowInput{
+	// TODO: Ugly code, just a test
+	if vxID != "" {
+
+		transcribeInput := transcribe.TranscribeVXWorkflowInput{
+			Language:        language,
+			DestinationPath: destinationPath,
+			VXID:            vxID,
+		}
+
+		res, err := wfClient.ExecuteWorkflow(c, workflowOptions, transcribe.TranscribeVXWorkflow, transcribeInput)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	transcribeInput := transcribe.TranscribeFileWorkflowInput{
 		Language:        language,
 		File:            file,
 		DestinationPath: destinationPath,
@@ -46,7 +68,6 @@ func transcribeHandler(c *gin.Context) {
 		})
 		return
 	}
-
 	c.JSON(http.StatusOK, res)
 }
 
