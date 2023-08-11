@@ -17,7 +17,8 @@ func transcribeHandler(c *gin.Context) {
 	vxID := c.DefaultPostForm("vxID", c.DefaultQuery("vxID", ""))
 
 	wfClient, err := client.Dial(client.Options{
-		HostPort: client.DefaultHostPort,
+		HostPort:  os.Getenv("TEMPORAL_HOST_PORT"),
+		Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{

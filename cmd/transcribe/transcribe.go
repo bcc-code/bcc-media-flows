@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"time"
 
 	atranscribe "github.com/bcc-code/bccm-flows/activities/transcribe"
@@ -14,7 +15,8 @@ import (
 
 func main() {
 	c, err := client.Dial(client.Options{
-		HostPort: client.DefaultHostPort,
+		HostPort:  os.Getenv("TEMPORAL_HOST_PORT"),
+		Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
 	})
 
 	if err != nil {
