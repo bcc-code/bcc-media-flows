@@ -1,0 +1,22 @@
+name: Deploy Images
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "master" ]
+  
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build and push generic Worker Docker image
+      run: | 
+        export DATE=$(date@%s)
+        docker build . --file generic-worker.Dockerfile --tag ghcr.io/bcc-code/bcc-media/temporal-worker:$DATE
+        docker push ghcr.io/bcc-code/bcc-media/temporal-worker:$DATE
+
+    
