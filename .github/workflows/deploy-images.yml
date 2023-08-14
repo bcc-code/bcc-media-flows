@@ -18,6 +18,13 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Build and push generic Worker Docker image
       run: | 
         docker build . --file generic-worker.Dockerfile --tag $IMAGE_NAME
