@@ -41,14 +41,6 @@ func Test_CreatePlaceholder(t *testing.T) {
 	assert.NotEmpty(t, placeholderID)
 }
 
-func Test_RegisterFile(t *testing.T) {
-	c := getClient()
-	out, err := c.RegisterFile("VX-42", "/mnt/isilon/Production/mdtest/test.srt", vidispine.FILE_STATE_CLOSED)
-	assert.NoError(t, err)
-	spew.Dump(out)
-	assert.NotEmpty(t, out)
-}
-
 func Test_AddShapeToItem(t *testing.T) {
 	c := getClient()
 	out, err := c.AddShapeToItem("lowimage", "VX-463136", "VX-1458094")

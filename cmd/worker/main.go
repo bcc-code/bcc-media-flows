@@ -29,12 +29,12 @@ func main() {
 		DeadlockDetectionTimeout:           time.Hour * 3,
 		DisableRegistrationAliasing:        true, // Recommended according to readme, default false for backwards compatibility
 		EnableSessionWorker:                true,
-		Identity:                           "generic-worker",
+		Identity:                           "worker",
 		LocalActivityWorkerOnly:            false,
 		MaxConcurrentActivityExecutionSize: 100, // Doesn't make sense to have more than one activity running at a time
 	}
 
-	w := worker.New(c, "generic-worker", workerOptions)
+	w := worker.New(c, "worker", workerOptions)
 
 	w.RegisterWorkflow(wtranscribe.TranscribeWorkflow)
 	w.RegisterWorkflow(wtranscribe.TranscribeVXWorkflow)

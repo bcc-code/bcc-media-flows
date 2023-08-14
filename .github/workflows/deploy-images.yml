@@ -12,9 +12,6 @@ jobs:
     permissions:
       packages: write
       contents: read
-    env:
-      IMAGE_NAME_LATEST: ghcr.io/bcc-code/bcc-media/temporal-worker:latest
-      IMAGE_NAME: ghcr.io/bcc-code/bcc-media/temporal-worker:${{ github.sha }}
     steps:
     - uses: actions/checkout@v3
 
@@ -26,8 +23,21 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build and push generic Worker Docker image
+      env:
+        IMAGE_NAME_LATEST: ghcr.io/bcc-code/bcc-media/temporal-worker:latest
+        IMAGE_NAME: ghcr.io/bcc-code/bcc-media/temporal-worker:${{ github.sha }}
       run: | 
-        docker build . --file generic-worker.Dockerfile --tag $IMAGE_NAME
+        docker build . --file worker.Dockerfile --tag $IMAGE_NAME
+        docker tag $IMAGE_NAME $IMAGE_NAME_LATEST
+        docker push $IMAGE_NAME
+        docker push $IMAGE_NAME_LATEST
+
+    - name: Build and push generic Worker Docker image
+      env:
+        IMAGE_NAME_LATEST: ghcr.io/bcc-code/bcc-media/temporal-httpin:latest
+        IMAGE_NAME: ghcr.io/bcc-code/bcc-media/temporal-httpin:${{ github.sha }}
+      run: |
+        docker build . --file httpin.Dockerfile --tag $IMAGE_NAME
         docker tag $IMAGE_NAME $IMAGE_NAME_LATEST
         docker push $IMAGE_NAME
         docker push $IMAGE_NAME_LATEST
