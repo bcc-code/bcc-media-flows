@@ -15,7 +15,7 @@ func (sr ShapeResult) GetShape(tag string) *Shape {
 
 func (s Shape) GetPath() string {
 	for _, fc := range s.ContainerComponent.File {
-		return fc.Path
+		return fc.URI[0][7:]
 	}
 
 	return ""

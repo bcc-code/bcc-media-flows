@@ -1,3 +1,5 @@
+//go:build testLive
+
 package vidispine_test
 
 import (
