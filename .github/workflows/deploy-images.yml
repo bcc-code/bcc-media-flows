@@ -17,7 +17,7 @@ jobs:
 
     - name: Build and push generic Worker Docker image
       run: | 
-        export DATE=$(date@%s)
+        export DATE=$(date %s)
         docker build . --file generic-worker.Dockerfile --tag ghcr.io/bcc-code/bcc-media/temporal-worker:$DATE
         docker push ghcr.io/bcc-code/bcc-media/temporal-worker:$DATE
 
