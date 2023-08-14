@@ -30,8 +30,8 @@ func transcribeHandler(c *gin.Context) {
 	defer wfClient.Close()
 
 	workflowOptions := client.StartWorkflowOptions{
-		ID:        "generic-worker-" + uuid.NewString(),
-		TaskQueue: "generic-worker",
+		ID:        "worker-" + uuid.NewString(),
+		TaskQueue: "worker",
 	}
 
 	// TODO: Ugly code, just a test
