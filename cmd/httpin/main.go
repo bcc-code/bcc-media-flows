@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/bcc-code/bccm-flows/workflows"
 	"net/http"
 	"os"
 
-	"github.com/bcc-code/bccm-flows/workflows/transcribe"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"
@@ -37,13 +37,13 @@ func transcribeHandler(c *gin.Context) {
 	// TODO: Ugly code, just a test
 	if vxID != "" {
 
-		transcribeInput := transcribe.TranscribeVXWorkflowInput{
+		transcribeInput := workflows.TranscribeVXInput{
 			Language:        language,
 			DestinationPath: destinationPath,
 			VXID:            vxID,
 		}
 
-		res, err := wfClient.ExecuteWorkflow(c, workflowOptions, transcribe.TranscribeVXWorkflow, transcribeInput)
+		res, err := wfClient.ExecuteWorkflow(c, workflowOptions, workflows.TranscribeVX, transcribeInput)
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -55,13 +55,13 @@ func transcribeHandler(c *gin.Context) {
 		return
 	}
 
-	transcribeInput := transcribe.TranscribeFileWorkflowInput{
+	transcribeInput := workflows.TranscribeFileInput{
 		Language:        language,
 		File:            file,
 		DestinationPath: destinationPath,
 	}
 
-	res, err := wfClient.ExecuteWorkflow(c, workflowOptions, transcribe.TranscribeWorkflow, transcribeInput)
+	res, err := wfClient.ExecuteWorkflow(c, workflowOptions, workflows.TranscribeFile, transcribeInput)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{

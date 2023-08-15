@@ -1,4 +1,4 @@
-package transcribe
+package workflows
 
 import (
 	"fmt"
@@ -12,17 +12,17 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-// TranscribeWorkflowInput is the input to the TranscribeWorkflow
-type TranscribeVXWorkflowInput struct {
+// TranscribeVXInput is the input to the TranscribeFile
+type TranscribeVXInput struct {
 	Language        string
 	DestinationPath string
 	VXID            string
 }
 
-// TranscribeWorkflow is the workflow that transcribes a video
-func TranscribeVXWorkflow(
+// TranscribeVX is the workflow that transcribes a video
+func TranscribeVX(
 	ctx workflow.Context,
-	params TranscribeVXWorkflowInput,
+	params TranscribeVXInput,
 ) error {
 
 	logger := workflow.GetLogger(ctx)
@@ -40,7 +40,7 @@ func TranscribeVXWorkflow(
 
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	logger.Info("Starting TranscribeWorkflow")
+	logger.Info("Starting TranscribeFile")
 
 	shapes := &vidispine.GetFileFromVXResult{}
 	err := workflow.ExecuteActivity(ctx, vidispine.GetFileFromVXActivity, vidispine.GetFileFromVXParams{

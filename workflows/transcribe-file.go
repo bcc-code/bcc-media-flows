@@ -1,4 +1,4 @@
-package transcribe
+package workflows
 
 import (
 	"time"
@@ -8,17 +8,17 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-// TranscribeWorkflowInput is the input to the TranscribeWorkflow
-type TranscribeFileWorkflowInput struct {
+// TranscribeFileInput is the input to the TranscribeFile
+type TranscribeFileInput struct {
 	Language        string
 	File            string
 	DestinationPath string
 }
 
-// TranscribeWorkflow is the workflow that transcribes a video
-func TranscribeWorkflow(
+// TranscribeFile is the workflow that transcribes a video
+func TranscribeFile(
 	ctx workflow.Context,
-	params TranscribeFileWorkflowInput,
+	params TranscribeFileInput,
 ) error {
 
 	logger := workflow.GetLogger(ctx)
@@ -35,7 +35,7 @@ func TranscribeWorkflow(
 
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	logger.Info("Starting TranscribeWorkflow")
+	logger.Info("Starting TranscribeFile")
 
 	x := workflow.ExecuteActivity(ctx, transcribe.TranscribeActivity, transcribe.TranscribeActivityParams{
 		Language:        params.Language,
