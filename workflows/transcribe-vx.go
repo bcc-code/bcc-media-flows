@@ -104,7 +104,7 @@ func TranscribeVX(
 		return err != nil
 	})
 
-	if errs != nil {
+	if len(errs) > 0 {
 		spew.Dump(errs)
 		return fmt.Errorf("failed to import transcription files: %v", errs)
 	}

@@ -224,6 +224,7 @@ func (c *Client) AddShapeToItem(tag, itemID, fileID string) (string, error) {
 	result, err := c.restyClient.R().
 		Post(requestURL.String())
 
+	//TODO: make sure to not return until the shape is actually imported
 	if err != nil {
 		return "", err
 	}

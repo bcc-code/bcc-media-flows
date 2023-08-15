@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/go-resty/resty/v2"
 	"go.temporal.io/sdk/activity"
 )
@@ -108,8 +107,6 @@ func DoTranscribe(
 	}
 
 	job := resp.Result().(*TranscribeJob)
-	activity.RecordHeartbeat(ctx)
-	spew.Dump(job)
 
 	// Periodically check the status of the job
 	for {
@@ -123,7 +120,6 @@ func DoTranscribe(
 		}
 
 		job := resp.Result().(*TranscribeJob)
-		spew.Dump(job)
 		switch job.Status {
 		case "COMPLETED":
 			return job, nil
