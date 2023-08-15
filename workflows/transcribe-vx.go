@@ -3,7 +3,7 @@ package workflows
 import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/activities"
-	"github.com/google/uuid"
+	"os"
 	"time"
 
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
@@ -21,14 +21,14 @@ type TranscribeVXInput struct {
 	VXID     string
 }
 
-func createUniquePath(base string) string {
+func createUniquePath(base, key string) (string, error) {
 	date := time.Now()
 
-	destinationPath := fmt.Sprintf("%s/%04d/%02d/%02d", base, date.Year(), date.Month(), date.Day())
-	key, _ := uuid.NewUUID()
-	destinationPath = fmt.Sprintf("%s/%s", destinationPath, key)
+	destinationPath := fmt.Sprintf("%s/%04d/%02d/%02d/%s", base, date.Year(), date.Month(), date.Day(), key)
 
-	return destinationPath
+	err := os.MkdirAll(destinationPath, os.ModePerm)
+
+	return destinationPath, err
 }
 
 // TranscribeVX is the workflow that transcribes a video
@@ -38,6 +38,8 @@ func TranscribeVX(
 ) error {
 
 	logger := workflow.GetLogger(ctx)
+
+	info := workflow.GetInfo(ctx)
 
 	options := workflow.ActivityOptions{
 		RetryPolicy: &temporal.RetryPolicy{
@@ -64,7 +66,10 @@ func TranscribeVX(
 		return err
 	}
 
-	destinationPath := createUniquePath(BaseDestinationPath)
+	destinationPath, err := createUniquePath(BaseDestinationPath, info.OriginalRunID)
+	if err != nil {
+		return err
+	}
 
 	transcriptionJob := &activities.TranscribeResponse{}
 	err = workflow.ExecuteActivity(ctx, activities.Transcribe, activities.TranscribeParams{
