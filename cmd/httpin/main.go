@@ -38,9 +38,8 @@ func transcribeHandler(c *gin.Context) {
 	if vxID != "" {
 
 		transcribeInput := workflows.TranscribeVXInput{
-			Language:        language,
-			DestinationPath: destinationPath,
-			VXID:            vxID,
+			Language: language,
+			VXID:     vxID,
 		}
 
 		res, err := wfClient.ExecuteWorkflow(c, workflowOptions, workflows.TranscribeVX, transcribeInput)
