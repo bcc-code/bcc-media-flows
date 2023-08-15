@@ -3,6 +3,7 @@ package workflows
 import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/activities"
+	"github.com/google/uuid"
 	"time"
 
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
@@ -12,11 +13,22 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
+const BaseDestinationPath = "/mnt/isilon/Production/aux"
+
 // TranscribeVXInput is the input to the TranscribeFile
 type TranscribeVXInput struct {
-	Language        string
-	DestinationPath string
-	VXID            string
+	Language string
+	VXID     string
+}
+
+func createUniquePath(base string) string {
+	date := time.Now()
+
+	destinationPath := fmt.Sprintf("%s/%04d/%02d/%02d", base, date.Year(), date.Month(), date.Day())
+	key, _ := uuid.NewUUID()
+	destinationPath = fmt.Sprintf("%s/%s", destinationPath, key)
+
+	return destinationPath
 }
 
 // TranscribeVX is the workflow that transcribes a video
@@ -52,11 +64,13 @@ func TranscribeVX(
 		return err
 	}
 
+	destinationPath := createUniquePath(BaseDestinationPath)
+
 	transcriptionJob := &activities.TranscribeResponse{}
 	err = workflow.ExecuteActivity(ctx, activities.Transcribe, activities.TranscribeParams{
 		Language:        params.Language,
 		File:            shapes.FilePath,
-		DestinationPath: params.DestinationPath,
+		DestinationPath: destinationPath,
 	}).Get(ctx, transcriptionJob)
 
 	if err != nil {
