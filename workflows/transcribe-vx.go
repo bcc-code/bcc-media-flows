@@ -8,7 +8,6 @@ import (
 
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/samber/lo"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -97,13 +96,14 @@ func TranscribeVX(
 		})
 
 	var errs []error
-	errs = append(errs, importJson.Get(ctx, nil))
-	errs = append(errs, importSRT.Get(ctx, nil))
-
-	errs = lo.Filter(errs, func(err error, _ int) bool {
-		return err != nil
-	})
-
+	err = importJson.Get(ctx, nil)
+	if err != nil {
+		errs = append(errs, err)
+	}
+	err = importSRT.Get(ctx, nil)
+	if err != nil {
+		errs = append(errs, err)
+	}
 	if len(errs) > 0 {
 		spew.Dump(errs)
 		return fmt.Errorf("failed to import transcription files: %v", errs)
