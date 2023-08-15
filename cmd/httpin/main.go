@@ -29,18 +29,21 @@ func transcribeHandler(c *gin.Context) {
 
 	defer wfClient.Close()
 
+	queue := os.Getenv("QUEUE")
+	if queue == "" {
+		queue = "worker"
+	}
 	workflowOptions := client.StartWorkflowOptions{
 		ID:        "worker-" + uuid.NewString(),
-		TaskQueue: "worker",
+		TaskQueue: queue,
 	}
 
 	// TODO: Ugly code, just a test
 	if vxID != "" {
 
 		transcribeInput := workflows.TranscribeVXInput{
-			Language:        language,
-			DestinationPath: destinationPath,
-			VXID:            vxID,
+			Language: language,
+			VXID:     vxID,
 		}
 
 		res, err := wfClient.ExecuteWorkflow(c, workflowOptions, workflows.TranscribeVX, transcribeInput)

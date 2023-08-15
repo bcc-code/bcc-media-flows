@@ -24,16 +24,25 @@ func main() {
 
 	defer c.Close()
 
+	identity := os.Getenv("IDENTITY")
+	if identity == "" {
+		identity = "worker"
+	}
+
 	workerOptions := worker.Options{
 		DeadlockDetectionTimeout:           time.Hour * 3,
 		DisableRegistrationAliasing:        true, // Recommended according to readme, default false for backwards compatibility
 		EnableSessionWorker:                true,
-		Identity:                           "worker",
+		Identity:                           identity,
 		LocalActivityWorkerOnly:            false,
 		MaxConcurrentActivityExecutionSize: 100, // Doesn't make sense to have more than one activity running at a time
 	}
 
-	w := worker.New(c, "worker", workerOptions)
+	queue := os.Getenv("QUEUE")
+	if queue == "" {
+		queue = "worker"
+	}
+	w := worker.New(c, queue, workerOptions)
 
 	w.RegisterWorkflow(workflows.TranscribeFile)
 	w.RegisterWorkflow(workflows.TranscribeVX)
