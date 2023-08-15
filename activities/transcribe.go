@@ -1,4 +1,4 @@
-package transcribe
+package activities
 
 import (
 	"context"
@@ -9,25 +9,25 @@ import (
 	"go.temporal.io/sdk/activity"
 )
 
-type TranscribeActivityParams struct {
+type TranscribeParams struct {
 	File            string
 	DestinationPath string
 	Language        string
 }
 
-type TranscribeActivityResponse struct {
+type TranscribeResponse struct {
 	JSONPath string
 	SRTPath  string
 }
 
-// TranscribeActivity is the activity that transcribes a video
-func TranscribeActivity(
+// Transcribe is the activity that transcribes a video
+func Transcribe(
 	ctx context.Context,
-	input TranscribeActivityParams,
-) (*TranscribeActivityResponse, error) {
+	input TranscribeParams,
+) (*TranscribeResponse, error) {
 	log := activity.GetLogger(ctx)
-	activity.RecordHeartbeat(ctx, "TranscribeActivity")
-	log.Info("Starting TranscribeActivity")
+	activity.RecordHeartbeat(ctx, "Transcribe")
+	log.Info("Starting Transcribe")
 
 	time.Sleep(time.Second * 10)
 
@@ -36,10 +36,10 @@ func TranscribeActivity(
 	if err != nil {
 		return nil, err
 	}
-	log.Info("Finished TranscribeActivity")
+	log.Info("Finished Transcribe")
 
 	fileName := filepath.Base(input.File)
-	return &TranscribeActivityResponse{
+	return &TranscribeResponse{
 		JSONPath: filepath.Join(jobData.OutputPath, fileName+".json"),
 		SRTPath:  filepath.Join(jobData.OutputPath, fileName+".srt"),
 	}, nil

@@ -1,12 +1,12 @@
 package main
 
 import (
+	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/workflows"
 	"log"
 	"os"
 	"time"
 
-	atranscribe "github.com/bcc-code/bccm-flows/activities/transcribe"
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
@@ -37,7 +37,7 @@ func main() {
 
 	w.RegisterWorkflow(workflows.TranscribeFile)
 	w.RegisterWorkflow(workflows.TranscribeVX)
-	w.RegisterActivity(atranscribe.TranscribeActivity)
+	w.RegisterActivity(activities.Transcribe)
 	w.RegisterActivity(vidispine.GetFileFromVXActivity)
 	w.RegisterActivity(vidispine.ImportFileAsShapeActivity)
 

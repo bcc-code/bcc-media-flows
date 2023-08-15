@@ -2,9 +2,9 @@ package workflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bccm-flows/activities"
 	"time"
 
-	"github.com/bcc-code/bccm-flows/activities/transcribe"
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/samber/lo"
@@ -52,8 +52,8 @@ func TranscribeVX(
 		return err
 	}
 
-	transcriptionJob := &transcribe.TranscribeActivityResponse{}
-	err = workflow.ExecuteActivity(ctx, transcribe.TranscribeActivity, transcribe.TranscribeActivityParams{
+	transcriptionJob := &activities.TranscribeResponse{}
+	err = workflow.ExecuteActivity(ctx, activities.Transcribe, activities.TranscribeParams{
 		Language:        params.Language,
 		File:            shapes.FilePath,
 		DestinationPath: params.DestinationPath,
@@ -77,7 +77,7 @@ func TranscribeVX(
 			ShapeTag: "Transcribed_Subtitle_SRT",
 		})
 
-	errs := []error{}
+	var errs []error
 	errs = append(errs, importJson.Get(ctx, nil))
 	errs = append(errs, importSRT.Get(ctx, nil))
 

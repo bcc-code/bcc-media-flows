@@ -1,9 +1,9 @@
 package workflows
 
 import (
+	"github.com/bcc-code/bccm-flows/activities"
 	"time"
 
-	"github.com/bcc-code/bccm-flows/activities/transcribe"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -37,7 +37,7 @@ func TranscribeFile(
 
 	logger.Info("Starting TranscribeFile")
 
-	x := workflow.ExecuteActivity(ctx, transcribe.TranscribeActivity, transcribe.TranscribeActivityParams{
+	x := workflow.ExecuteActivity(ctx, activities.Transcribe, activities.TranscribeParams{
 		Language:        params.Language,
 		File:            params.File,
 		DestinationPath: params.DestinationPath,
