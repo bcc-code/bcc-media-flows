@@ -5,6 +5,7 @@ import (
 	"github.com/bcc-code/bccm-flows/workflows"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
@@ -44,11 +45,24 @@ func main() {
 	}
 	w := worker.New(c, queue, workerOptions)
 
-	w.RegisterWorkflow(workflows.TranscribeFile)
-	w.RegisterWorkflow(workflows.TranscribeVX)
-	w.RegisterActivity(activities.Transcribe)
-	w.RegisterActivity(vidispine.GetFileFromVXActivity)
-	w.RegisterActivity(vidispine.ImportFileAsShapeActivity)
+	roles := os.Getenv("ROLES")
+	if roles == "" {
+		roles = "generic"
+	}
+
+	for _, role := range strings.Split(roles, ",") {
+		switch role {
+		case "generic":
+			w.RegisterWorkflow(workflows.TranscribeFile)
+			w.RegisterWorkflow(workflows.TranscribeVX)
+			w.RegisterActivity(activities.Transcribe)
+			w.RegisterActivity(vidispine.GetFileFromVXActivity)
+			w.RegisterActivity(vidispine.ImportFileAsShapeActivity)
+			w.RegisterWorkflow(workflows.TranscodePreview)
+		case "transcoder":
+			w.RegisterActivity(activities.TranscodePreview)
+		}
+	}
 
 	err = w.Run(worker.InterruptCh())
 	log.Printf("Worker finished: %v", err)

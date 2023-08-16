@@ -3,7 +3,7 @@ package workflows
 import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/activities"
-	"os"
+	"github.com/bcc-code/bccm-flows/utils"
 	"time"
 
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
@@ -20,16 +20,6 @@ type TranscribeVXInput struct {
 	VXID     string
 }
 
-func createUniquePath(base, key string) (string, error) {
-	date := time.Now()
-
-	destinationPath := fmt.Sprintf("%s/%04d/%02d/%02d/%s", base, date.Year(), date.Month(), date.Day(), key)
-
-	err := os.MkdirAll(destinationPath, os.ModePerm)
-
-	return destinationPath, err
-}
-
 // TranscribeVX is the workflow that transcribes a video
 func TranscribeVX(
 	ctx workflow.Context,
@@ -37,8 +27,6 @@ func TranscribeVX(
 ) error {
 
 	logger := workflow.GetLogger(ctx)
-
-	info := workflow.GetInfo(ctx)
 
 	options := workflow.ActivityOptions{
 		RetryPolicy: &temporal.RetryPolicy{
@@ -65,7 +53,7 @@ func TranscribeVX(
 		return err
 	}
 
-	destinationPath, err := createUniquePath(BaseDestinationPath, info.OriginalRunID)
+	destinationPath, err := utils.GetWorkflowOutputFolder(ctx)
 	if err != nil {
 		return err
 	}
