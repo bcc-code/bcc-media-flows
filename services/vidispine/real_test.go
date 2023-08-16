@@ -2,6 +2,12 @@
 
 package vidispine_test
 
+// This test will only run if the build tag testLive is set.
+// To run this test, run:
+// go test -tags testLive
+
+// Be careful, this will manipulate data in Vidispine.
+
 import (
 	"os"
 	"testing"
@@ -49,4 +55,34 @@ func Test_AddShapeToItem(t *testing.T) {
 	assert.NoError(t, err)
 	spew.Dump(out)
 	assert.NotEmpty(t, out)
+}
+
+func Test_AddFileToPlaceholder(t *testing.T) {
+	c := getClient()
+
+	url := c.AddFileToPlaceholder("VX-ITEM", "VX-FILE", "tag", vidispine.FILE_STATE_CLOSED)
+	assert.Equal(t, "http://10.12.128.15:8080/import/placeholder/VX-ITEM/container?fileId=VX-FILE&growing=false&tag=tag", url)
+
+	url = c.AddFileToPlaceholder("VX-ITEM", "VX-FILE", "", vidispine.FILE_STATE_CLOSED)
+	assert.Equal(t, "http://10.12.128.15:8080/import/placeholder/VX-ITEM/container?fileId=VX-FILE&growing=false", url)
+
+	url = c.AddFileToPlaceholder("VX-ITEM", "VX-FILE", "tag", vidispine.FILE_STATE_OPEN)
+	assert.Equal(t, "http://10.12.128.15:8080/import/placeholder/VX-ITEM/container?fastStartLength=7200&fileId=VX-FILE&growing=true&jobmetadata=portal_groups%3AStringArray%253dAdmin&overrideFastStart=true&requireFastStart=true&settings=VX-76&tag=tag", url)
+
+}
+
+func Test_GetDataForExport(t *testing.T) {
+	c := getClient()
+
+	// SEQ - Embedded audio
+	c.GetDataForExport("VX-464406")
+
+	// SEQ - Related Audio
+	c.GetDataForExport("VX-464480")
+
+	// Asset
+	c.GetDataForExport("VX-464458")
+
+	// Subclip
+	c.GetDataForExport("VX-460824")
 }

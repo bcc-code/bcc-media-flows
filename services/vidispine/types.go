@@ -12,8 +12,19 @@ type MetadataResult struct {
 	ID    string                        `json:"id"`
 }
 
-/// Shape Result
+// Get returns the first value of the given key, or the fallback if the key is not present
+// It does not check what clip the metadata belongs to!
+func (m *MetadataResult) Get(key string, fallback string) string {
+	if val, ok := m.Terse[key]; !ok {
+		return fallback
+	} else if len(val) == 0 {
+		return fallback
+	} else {
+		return val[0].Value
+	}
+}
 
+// Shape Result
 type ShapeResult struct {
 	Shape []Shape `json:"shape"`
 	ID    string  `json:"id"`

@@ -1,0 +1,419 @@
+{
+	"terse": {
+		"__placeholder_shape_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__collection_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"portal_mf326592": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "1fd52bd9-2364-4b97-9e5b-826b2a94913a",
+				"value": "eng"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "418240a8-3e76-4d1b-8f2f-0807ae86e8ea",
+				"value": "por"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "2dff5b2e-0826-4137-a152-0168c6848792",
+				"value": "ron"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "be162383-c055-4c9b-8be7-05cfd32ce170",
+				"value": "tur"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "a33b1fb3-a02f-4615-8cd7-e79d3722cf45",
+				"value": "nor"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "f345824d-7fa4-4228-b4e5-c33171ea08a8",
+				"value": "deu"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "0d49d8e6-bb83-44e0-81da-516073590d02",
+				"value": "nld"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "7fcdff1b-ba73-4ef7-a21c-5f0f263bff9d",
+				"value": "rus"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "1b9fa002-cae7-4a13-b9dc-59c611e7670f",
+				"value": "cmn"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d8cff054-601b-4d97-89c9-c62f1250ab70",
+				"value": "hrv"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "b34d7a8d-03b6-4ae8-9832-ff8880ebaa4c",
+				"value": "bul"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "66412f76-a48d-410c-bf05-b2ed855de45f",
+				"value": "pol"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "12956c78-74b0-42d7-a03f-ea3d1ca33a39",
+				"value": "fra"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d728a531-cbd5-4a88-a7cc-2cc95eceaadf",
+				"value": "spa"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "048057d7-d02a-4369-9a67-93841a995902",
+				"value": "fin"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "49e158d6-1c11-48a4-b0c0-299b8396eb96",
+				"value": "tam"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "02fc01e9-4348-455e-a5d4-a6b6bd8a16ba",
+				"value": "yue"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "21f09811-2ba4-432c-800d-6217a6f53480",
+				"value": "hun"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "9ffe4379-2e66-406c-acf7-9f9156ae3536",
+				"value": "ita"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d1f0f2c4-ef82-4d9a-b249-5dcb98cdd3a2",
+				"value": "slv"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "fcf72ee7-0b03-4647-9821-9479e8ee1951",
+				"value": "kha"
+			}
+		],
+		"portal_mf47652": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "fc9b0b1b-a698-43ff-a900-26149e41389f",
+				"value": ""
+			}
+		],
+		"title": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "90ee3e10-b269-493f-b203-3da63200f5a8",
+				"value": "TITLE"
+			}
+		],
+		"portal_re3_seen_by_rule": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "a860f221-0ce0-43e9-b0b5-254ea0fc1aa3",
+				"value": "4089a315-fe5b-4de0-a3d2-1a31a733d46b"
+			}
+		],
+		"__storage_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"__shape": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-929903"
+			}
+		],
+		"__version": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"__shape_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__sequence_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__ancestor_collection_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"portal_mf259": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "34107ed8-4729-4ee6-97c0-30133c51652d",
+				"value": "user"
+			}
+		],
+		"portal_mf868653": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "37e262e5-c9e0-48b5-b214-3633b861bf02",
+				"value": "original"
+			}
+		],
+		"portal_mf50574": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "f2e5c8e2-ceaf-4104-b3e4-a0de05131097",
+				"value": ""
+			}
+		],
+		"portal_mf472706": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "cd35f4e3-7731-4ba2-89a8-a42563c52103",
+				"value": ""
+			}
+		],
+		"__user": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "user"
+			}
+		],
+		"created": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "188c8464-eb1c-43cb-bc00-8ac7fbf3c67b",
+				"value": "2023-08-10T14:54:13.723Z"
+			}
+		],
+		"portal_mf882282": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "e9b04b30-0ef4-4ad1-8bd5-548af39eab5c",
+				"value": ""
+			}
+		],
+		"portal_mf957223": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "8e8969fe-a704-4674-8b19-b4dcf83dc536",
+				"value": ""
+			}
+		],
+		"portal_mf806195": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "1ddbbab2-955e-4bff-9a04-50df07591f1f",
+				"value": ""
+			}
+		],
+		"__storagegroup_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"mediaType": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "a9f19ab9-9c93-41bc-9aff-45bfe11f07cd",
+				"value": "none"
+			}
+		],
+		"portal_mf573509": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d76a4ce9-fdf7-4d9f-83cc-4fa742af2c6b",
+				"value": "John Doe"
+			}
+		],
+		"itemId": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ce92b097-69cf-4a1a-8021-5107738e6cb8",
+				"value": "VX-464480"
+			}
+		],
+		"portal_mf431847": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c32ddd82-f39d-4eba-a2cd-d778808d64e6",
+				"value": ""
+			}
+		],
+		"portal_mf371915": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c726fece-421a-4cf2-b8e6-15b668339b8e",
+				"value": "VOD/Some/Offline"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ed221f1d-71b6-4a6e-9093-f08d6da08963",
+				"value": "vod"
+			}
+		],
+		"shapeTag": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "79ea7475-90bc-427b-a9d0-544e8bf79ba8",
+				"value": "original"
+			}
+		],
+		"portal_mf452504": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ae1c32c9-962a-4039-a7d1-460a7b0222ba",
+				"value": "related"
+			}
+		],
+		"__sequence": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "vidispine"
+			}
+		],
+		"__version_count": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__shape_last_added": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "2023-08-10T14:54:14.123Z"
+			}
+		],
+		"__metadata_last_modified": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "2023-08-11T16:54:34.152+02:00"
+			}
+		],
+		"portal_mf529506": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "a2e97f6a-07dd-4622-a04d-845b595d557b",
+				"value": ""
+			}
+		],
+		"portal_mf16851": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "74e45a1a-d1ce-42bf-82aa-264aab994ac3",
+				"value": ""
+			}
+		],
+		"user": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "user"
+			}
+		]
+	},
+	"id": "VX-464480"
+}

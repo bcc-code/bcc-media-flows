@@ -1,0 +1,1083 @@
+{
+	"terse": {
+		"portal_mf225957": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "a20fd1bc-d31d-4ef8-b4ea-b2fab748967a",
+				"value": ""
+			}
+		],
+		"portal_mf164510": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "139c103f-a069-42db-b51e-2615758c292d",
+				"value": ""
+			},
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "2cbc94ab-ebe1-4d10-ba59-56789be97179",
+				"value": ""
+			}
+		],
+		"portal_mf903178": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "46c3a1f0-87fe-4824-8974-157c24f18235",
+				"value": "VX-460822"
+			}
+		],
+		"portal_mf381829": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "1531a47f-7f3c-420b-b6b7-163d47141870",
+				"value": ""
+			}
+		],
+		"portal_mf961978": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "bf4be808-e0d6-4318-b114-579f2b55ab98",
+				"value": "VX-460838"
+			}
+		],
+		"originalFormat": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "6627ad78-5f40-4249-88c4-d4e03eb406b5",
+				"value": "mxf"
+			}
+		],
+		"__storage_lowres_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"portal_mf442906": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "78393073-6d35-44ab-a5d0-14d3b0335bd1",
+				"value": "VX-460821"
+			}
+		],
+		"__version": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"portal_mf616220": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "696bfe48-014d-4eb4-a8b8-345ad4d58b1b",
+				"value": "mpeg2video"
+			}
+		],
+		"original_mimetype": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "12f9fb40-d00c-4ddc-8585-2fa8d19c23f7",
+				"value": "video/x-mxf-mpeg2video-pcm_s24le"
+			}
+		],
+		"__sequence_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"portal_mf868653": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "b47be9a1-e703-44a8-8eaf-e16b34bed9a0",
+				"value": "original"
+			}
+		],
+		"portal_mf624761": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "5558479d-4318-4d9f-85eb-ca4628a1d741",
+				"value": "Transcription"
+			}
+		],
+		"portal_mf472706": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "86bef8c5-0c30-473d-8457-5da75829f544",
+				"value": ""
+			},
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "3e72fbe7-af17-43a4-b6e6-84c9994e820c",
+				"value": ""
+			}
+		],
+		"portal_mf355364": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "e4c83bd3-3a13-4ddd-9197-f6a28bf4adb3",
+				"value": "VX-460842"
+			}
+		],
+		"__user": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "vsapiuser"
+			}
+		],
+		"portal_mf103906": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d9f33159-3fd2-4cbf-8996-9b3e0bd96dc8",
+				"value": ""
+			}
+		],
+		"portal_mf957223": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d6ae64f0-ac8a-4b1f-9126-94640b546839",
+				"value": ""
+			}
+		],
+		"portal_mf139381": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c1b9dcee-486e-4f7b-8f4c-887987cd97ec",
+				"value": ""
+			}
+		],
+		"itemId": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "03d3d9fd-7c03-4f68-b2ec-c7cd70ced030",
+				"value": "VX-460824"
+			}
+		],
+		"portal_mf769691": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "4390ffaa-d5cc-4eea-8963-4b2ba17b9fe9",
+				"value": ""
+			}
+		],
+		"portal_mf351607": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "2eb4f3a5-a99e-4821-a1c8-c05815c017a7",
+				"value": "VX-460829"
+			}
+		],
+		"portal_mf176737": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "0d986a83-c9fa-49c1-9b22-0a6bf9d84284",
+				"value": "VX-460831"
+			}
+		],
+		"portal_mf371915": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "8f6b7656-5f62-4e62-9cd6-acd62ab844d6",
+				"value": "vod"
+			}
+		],
+		"durationTimeCode": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "8d257e86-387a-491e-aa7f-a7bd9ed15189",
+				"value": "5964120000@1000000"
+			}
+		],
+		"originalAudioCodec": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "710ad380-17f4-49a4-93a8-e15c598c6c10",
+				"value": "pcm_s24le"
+			}
+		],
+		"__storage": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-42"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-47"
+			}
+		],
+		"portal_mf93393": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c1343050-c70d-4377-8f98-18e217deac32",
+				"value": "VX-460820"
+			}
+		],
+		"__collection_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"portal_mf736581": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "769d6a52-011b-4289-91dc-bb30ea0aa0fb",
+				"value": "VX-460827"
+			}
+		],
+		"portal_mf417206": [
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "5003a138-610e-4ff1-aa92-4579271530d4",
+				"value": "newsubclip"
+			}
+		],
+		"portal_mf561452": [
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "e73538c7-0691-4b22-a2f6-ce557c6bec56",
+				"value": ""
+			}
+		],
+		"portal_mf954584": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "57e365e7-b040-47c3-b8b9-5299e7801a14",
+				"value": "VX-460840"
+			}
+		],
+		"__shapetag_original_hash": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "88b8d0237ba77c0d428e5d70464fab2549a9a6d6"
+			}
+		],
+		"portal_mf848898": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "5ce092eb-7b49-4628-af20-160510044f5a",
+				"value": "VX-460836"
+			}
+		],
+		"portal_mf625008": [
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "69d2a3c3-5b8e-4c4a-9f9c-947740fc3cb4",
+				"value": ""
+			}
+		],
+		"__storage_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "2"
+			}
+		],
+		"portal_mf532126": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "a18f2788-2bb4-4635-92d5-99fbdd8f4a52",
+				"value": "video"
+			}
+		],
+		"portal_mf447219": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ef5280b5-c025-4f45-8928-9cfb176ed3ab",
+				"value": "VX-460844"
+			}
+		],
+		"portal_mf426791": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "b4522492-9477-466d-bc76-49a1c9166359",
+				"value": ""
+			}
+		],
+		"portal_mf406543": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "722cd921-ebba-474f-b836-1927ec96b737",
+				"value": ""
+			},
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "b28535af-8cb5-4dcf-8d5c-1b92627d38fc",
+				"value": ""
+			}
+		],
+		"__storage_lowres": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-47"
+			}
+		],
+		"portal_mf307547": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c5b135f1-d5f0-4a70-8098-435efae07cde",
+				"value": "VX-460826"
+			}
+		],
+		"portal_mf75574": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "333b1932-ef3d-4cd4-a551-5288344d256a",
+				"value": ""
+			}
+		],
+		"startTimeCode": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "6233c2c8-1000-4c6c-8dc9-397f3ede09bb",
+				"value": "1699048@PAL"
+			}
+		],
+		"portal_mf50574": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "1d300f5e-61ce-4e6d-b2ad-3e70a5011d94",
+				"value": ""
+			},
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "d9d835ab-60b5-40d7-b05a-2f00a8c50101",
+				"value": "John Doe The Talkative"
+			}
+		],
+		"portal_mf436337": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ab95df3b-2ebd-4a93-8c45-e21997d7058d",
+				"value": "VX-460839"
+			}
+		],
+		"portal_mf230973": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "0653acb4-1ccf-4a41-bfdf-30e98d555411",
+				"value": "John Doe - Speech"
+			}
+		],
+		"portal_mf103965": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "4cb3a39f-18e7-4316-9fd4-386625933161",
+				"value": ""
+			},
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "ee591705-0609-4ba1-9ab8-270f8e62ab81",
+				"value": ""
+			}
+		],
+		"__storage_original": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-42"
+			}
+		],
+		"portal_mf431847": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d558e6eb-03ea-44b2-b8d5-d817eda83ab1",
+				"value": ""
+			}
+		],
+		"portal_mf122460": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "7cf1d75a-ad9b-4950-abc4-36bd2fd9b015",
+				"value": "VX-460832"
+			}
+		],
+		"__version_count": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__shape_last_added": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "2023-08-01T16:55:10.875Z"
+			}
+		],
+		"__metadata_last_modified": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "2023-08-02T19:33:23.468+02:00"
+			}
+		],
+		"portal_mf529506": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "74b680d4-6352-4de8-b9f4-3241f359c5e9",
+				"value": ""
+			},
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "ae70c628-6df8-4374-bbf5-9053a4f9b99a",
+				"value": ""
+			}
+		],
+		"portal_mf16851": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "6e492042-1be5-42ab-ac16-43b02cc97f05",
+				"value": ""
+			},
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "3734a4b8-9421-4e40-88fe-2cbf43380247",
+				"value": ""
+			}
+		],
+		"portal_mf747349": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "b22451ef-9f9f-48f4-a0fb-6e03293d7511",
+				"value": "raw"
+			}
+		],
+		"originalFilename": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "b3e87bae-7ce9-4157-b412-c4b09c1dbff7",
+				"value": "FILE_NAME.mxf"
+			}
+		],
+		"portal_mf31408": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "225d677d-8af2-46ed-bd71-57fd18b6a140",
+				"value": "VX-460819"
+			}
+		],
+		"__placeholder_shape_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"portal_mf194005": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "dc13ca11-0e7c-4d03-a902-64f8e87804b7",
+				"value": "pcm_s24le"
+			}
+		],
+		"mimeType": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "fb022f3e-1940-49cf-ad31-e60958b730af",
+				"value": "video/x-mxf-mpeg2video-pcm_s24le"
+			}
+		],
+		"portal_mf99398": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "577cf8db-ffb2-43c4-bd30-b01484807a68",
+				"value": "SS23_20230801_1900_PGM_MU1.mxf"
+			}
+		],
+		"portal_mf399151": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "9d53b386-05ef-421e-a0ce-7cececc4bbb6",
+				"value": ""
+			}
+		],
+		"portal_re3_seen_by_rule": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "fa08b42b-bd18-4230-8239-d935da393495",
+				"value": "0be60879-dbb9-4fcd-8b49-1e2ba275ff38"
+			}
+		],
+		"portal_mf903539": [
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "1a5c212b-cc52-418b-8e17-5542140e82de",
+				"value": "test111"
+			}
+		],
+		"portal_mf416770": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "1abafeb4-e40a-4422-9007-5a63803e56dc",
+				"value": "file:///file/path/that/could/exist/FILE_NAME.mxf"
+			}
+		],
+		"portal_mf831437": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "2df29921-45de-42e9-aec4-7258eca8af63",
+				"value": "VX-460823"
+			}
+		],
+		"portal_mf460370": [
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "d09c99c6-c101-416a-80bf-4df7e4439310",
+				"value": ""
+			}
+		],
+		"portal_mf189850": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "4c6ecc54-3a55-4f31-8419-3fb9535bd7d8",
+				"value": ""
+			}
+		],
+		"portal_mf890483": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "05d046ee-91f1-4e56-9c6f-d0a40a317cbb",
+				"value": "VX-460835"
+			}
+		],
+		"portal_mf189205": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "964df250-fea9-4d18-8c2d-35afe8c57427",
+				"value": "no"
+			}
+		],
+		"originalHeight": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c002e75c-588f-4996-b62c-8b9255aa96ce",
+				"value": "1080"
+			}
+		],
+		"portal_mf489927": [
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "b6d7d817-b906-46ae-aa16-76b900319c53",
+				"value": ""
+			}
+		],
+		"portal_mf223187": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ca4be83c-f021-40db-9516-9d65dcfe1201",
+				"value": "VX-460834"
+			}
+		],
+		"created": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c6ef4d0d-447e-436c-b54e-c3d451754d1a",
+				"value": "2023-08-01T16:53:52.728Z"
+			}
+		],
+		"portal_mf706061": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "a3c74c06-ccb5-4955-ac7f-24d909c8cf7d",
+				"value": "mxf"
+			}
+		],
+		"representativeThumbnailNoAuth": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "90590c92-187d-4265-a12e-05ee14433eae",
+				"value": "/APInoauth/thumbnail/VX-6/VX-460824;version=0/73500@PAL?hash=JUNK"
+			}
+		],
+		"portal_mf806195": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "0ca718f0-9ca1-4644-99ea-1afde3ec3361",
+				"value": ""
+			},
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "ca62e93b-b6c3-4c3c-aa6e-590740327fea",
+				"value": ""
+			}
+		],
+		"mediaType": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c833200d-d0f3-4fa0-8ff0-c6e084e60598",
+				"value": "video"
+			}
+		],
+		"portal_ingested": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "3b82ffd7-351d-4581-a3b8-79817dc964a5",
+				"value": "2023-08-01T16:54:19.396Z"
+			}
+		],
+		"portal_mf830874": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ea082fe3-33cd-47b1-9d33-d0c7f2ecae03",
+				"value": "VX-460824"
+			}
+		],
+		"shapeTag": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "05ea8c44-2ee4-47f6-830f-a675bf9d9e4b",
+				"value": "lowres"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "75336344-42d6-4505-ad6f-f87b582ed9d3",
+				"value": "original"
+			}
+		],
+		"portal_mf452504": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "7a1fbbdc-8ee5-41cc-bb15-d3a83320ff27",
+				"value": "embedded"
+			}
+		],
+		"portal_mf683496": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ba0f7fff-5f72-4102-bad4-ab955f5cf615",
+				"value": "VX-460825"
+			}
+		],
+		"portal_mf184670": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "b1abb105-1973-4de5-ba28-f23ebff415dd",
+				"value": "VX-460818"
+			}
+		],
+		"portal_mf319181": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ca85ff0c-ac5d-46c8-be2b-304a0492e3fe",
+				"value": "VX-460828"
+			}
+		],
+		"portal_mf326592": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "87f753ec-6ee7-4828-9762-ee6870a394eb",
+				"value": "nor"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ed582fac-ac10-4b44-8a5a-a6e5161c76ea",
+				"value": "nld"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "b7ba104c-2af5-45f9-883a-12501efba017",
+				"value": "deu"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "b4cf8765-ca26-4eeb-a07e-70eca3cb8671",
+				"value": "fra"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "6ade7c3f-af60-42eb-9f5f-6a7ae2e88ec2",
+				"value": "eng"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "646a91fc-78cd-46fe-9572-1ce35f59940c",
+				"value": "fin"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "54be05c6-a48d-4468-95d5-fead17b5eb12",
+				"value": "spa"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "6e215f52-edde-430a-8c41-4f64cefa1738",
+				"value": "por"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "bf516e31-4523-432e-8225-adf9e3d1f384",
+				"value": "rus"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "b5ff9050-9102-4023-8713-387e0c936bcd",
+				"value": "tur"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "4d6db94e-2b56-41fe-9817-43a5d4d6b6dc",
+				"value": "ron"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "b66d788e-a804-4dff-8983-2ee38a4e00da",
+				"value": "pol"
+			}
+		],
+		"durationSeconds": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "730ba18b-7202-476a-b309-9f160c244ff3",
+				"value": "5964.12"
+			}
+		],
+		"portal_mf47652": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "15d2d286-70aa-4188-9d94-32a43d1d82ab",
+				"value": ""
+			},
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "9df7f418-7c1c-4ba5-a42d-baafee5f8f90",
+				"value": ""
+			}
+		],
+		"portal_mf99053": [
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "a527b59f-315f-40b4-8c7f-0b92a9ada37f",
+				"value": ""
+			}
+		],
+		"title": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "3048d18f-94ae-4565-acd7-fa0e7545b9e4",
+				"value": "FULL TITLE"
+			},
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "12b5cde1-e006-411b-a1c4-ddea600484e5",
+				"value": "John Doe - Speech"
+			}
+		],
+		"portal_mf621489": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "22854a54-7d1a-4624-adc8-31094b5f5b82",
+				"value": "VX-460843"
+			}
+		],
+		"__shape": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-924167"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-924146"
+			}
+		],
+		"representativeThumbnail": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d5d31c26-d490-4c8c-8693-3cc6bacda90d",
+				"value": "/API/thumbnail/VX-6/VX-460824;version=0/73500@PAL"
+			}
+		],
+		"startSeconds": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "988381c2-6ce1-4bac-b077-ba3bc80fc3b5",
+				"value": "67961.92"
+			}
+		],
+		"portal_mf855789": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d6868508-dafd-4e97-84a2-f00c4f5ad4d2",
+				"value": "VX-460841"
+			}
+		],
+		"__shape_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "2"
+			}
+		],
+		"portal_mf982016": [
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "fa7d30be-fce8-4641-b28b-1a4416b1ef73",
+				"value": ""
+			}
+		],
+		"portal_mf594493": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "1295af98-7fd0-4d16-b7e4-a45995768d0d",
+				"value": ""
+			},
+			{
+				"end": "1782435@PAL",
+				"start": "1728368@PAL",
+				"uuid": "b31e32ff-81d8-410b-8620-215bc2a04ad7",
+				"value": "tale"
+			}
+		],
+		"__ancestor_collection_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"__shapetag_lowres_hash": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "47797ee226d6988c6f4596b920164e5082b04ece"
+			}
+		],
+		"__storagegroup_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"portal_mf384324": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "8a52f96e-bf99-4321-9a25-335a56076353",
+				"value": "VX-460833"
+			}
+		],
+		"originalVideoCodec": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "652fdad0-c62f-4408-a85e-226d92d8ac83",
+				"value": "mpeg2video"
+			}
+		],
+		"portal_mf554728": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "42f9e22f-8b48-476d-abe4-d9e2bd05f217",
+				"value": ""
+			}
+		],
+		"portal_mf162929": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "61934c7c-145b-4e30-b640-869a74d23df1",
+				"value": "VX-460837"
+			}
+		],
+		"__storage_original_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"portal_mf499625": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c196c69e-8a1f-43fe-a931-5f7cc015f9ff",
+				"value": "FILE_NAME"
+			}
+		],
+		"originalWidth": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "58152d62-9fec-40d2-92aa-017fb610c7e8",
+				"value": "1920"
+			}
+		],
+		"originalUri": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "7dd0efaf-d1e6-482d-93c0-b6f5b7234cad",
+				"value": "file:///file/path/that/could/exist/FILE_NAME.mxf"
+			}
+		],
+		"portal_mf929480": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "9da7251b-99f8-496f-9dae-272f23960fd4",
+				"value": "Finished"
+			}
+		],
+		"user": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "vsapiuser"
+			}
+		],
+		"portal_mf299396": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "e60d04f8-7d08-457c-950e-8d27b17eb06a",
+				"value": "VX-460830"
+			}
+		]
+	},
+	"id": "VX-460824"
+}
