@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/bcc-code/bccm-flows/workflows"
 	"net/http"
 	"os"
@@ -76,6 +77,7 @@ func triggerHandler(ctx *gin.Context) {
 	}
 
 	if err != nil {
+		fmt.Print(err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
