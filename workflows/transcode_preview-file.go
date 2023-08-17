@@ -9,15 +9,15 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-// TranscodeFileInput is the input to the TranscribeFile
-type TranscodeFileInput struct {
+// TranscodePreviewFileInput is the input to the TranscribeFile
+type TranscodePreviewFileInput struct {
 	FilePath string
 }
 
-// TranscodeFile is the workflow that transcribes a video
-func TranscodeFile(
+// TranscodePreviewFile is a workflow definition for transcoding a video to a preview
+func TranscodePreviewFile(
 	ctx workflow.Context,
-	params TranscodeFileInput,
+	params TranscodePreviewFileInput,
 ) error {
 
 	logger := workflow.GetLogger(ctx)
@@ -34,7 +34,7 @@ func TranscodeFile(
 
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	logger.Info("Starting TranscodeFile")
+	logger.Info("Starting TranscodePreviewFile")
 
 	previewResponse := &activities.TranscodePreviewResponse{}
 	err := workflow.ExecuteActivity(ctx, activities.TranscodePreview, activities.TranscodePreviewParams{

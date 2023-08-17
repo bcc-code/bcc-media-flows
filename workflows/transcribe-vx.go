@@ -41,7 +41,7 @@ func TranscribeVX(
 
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	logger.Info("Starting TranscribeFile")
+	logger.Info("Starting TranscribeVX")
 
 	shapes := &vidispine.GetFileFromVXResult{}
 	err := workflow.ExecuteActivity(ctx, vidispine.GetFileFromVXActivity, vidispine.GetFileFromVXParams{

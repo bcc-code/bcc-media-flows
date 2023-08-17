@@ -58,8 +58,8 @@ func main() {
 			w.RegisterActivity(activities.Transcribe)
 			w.RegisterActivity(vidispine.GetFileFromVXActivity)
 			w.RegisterActivity(vidispine.ImportFileAsShapeActivity)
-			w.RegisterWorkflow(workflows.TranscodePreview)
-			w.RegisterWorkflow(workflows.TranscodeFile)
+			w.RegisterWorkflow(workflows.TranscodePreviewVX)
+			w.RegisterWorkflow(workflows.TranscodePreviewFile)
 		case "transcoder":
 			w.RegisterActivity(activities.TranscodePreview)
 		}

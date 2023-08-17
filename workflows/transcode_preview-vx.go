@@ -10,15 +10,15 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-// TranscodePreviewInput is the input to the TranscribeFile
-type TranscodePreviewInput struct {
+// TranscodePreviewVXInput is the input to the TranscribeFile
+type TranscodePreviewVXInput struct {
 	VXID string
 }
 
-// TranscodePreview is the workflow that transcribes a video
-func TranscodePreview(
+// TranscodePreviewVX is the workflow definition of transcoding a video to preview
+func TranscodePreviewVX(
 	ctx workflow.Context,
-	params TranscodePreviewInput,
+	params TranscodePreviewVXInput,
 ) error {
 
 	logger := workflow.GetLogger(ctx)
@@ -35,7 +35,7 @@ func TranscodePreview(
 
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	logger.Info("Starting TranscodePreview")
+	logger.Info("Starting TranscodePreviewVX")
 
 	shapes := &vidispine.GetFileFromVXResult{}
 	err := workflow.ExecuteActivity(ctx, vidispine.GetFileFromVXActivity, vidispine.GetFileFromVXParams{

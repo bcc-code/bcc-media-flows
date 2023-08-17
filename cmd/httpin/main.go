@@ -123,7 +123,7 @@ func triggerHandler(ctx *gin.Context) {
 			ctx.Status(http.StatusBadRequest)
 			return
 		}
-		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.TranscodePreview, workflows.TranscodePreviewInput{
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
 			VXID: vxID,
 		})
 	}
