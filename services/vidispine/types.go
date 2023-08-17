@@ -24,6 +24,18 @@ func (m *MetadataResult) Get(key string, fallback string) string {
 	}
 }
 
+func (m *MetadataResult) GetArray(key string) []string {
+	if val, ok := m.Terse[key]; !ok {
+		return []string{}
+	} else {
+		out := []string{}
+		for _, v := range val {
+			out = append(out, v.Value)
+		}
+		return out
+	}
+}
+
 // Shape Result
 type ShapeResult struct {
 	Shape []Shape `json:"shape"`

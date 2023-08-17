@@ -231,3 +231,14 @@ func (c *Client) AddShapeToItem(tag, itemID, fileID string) (string, error) {
 
 	return result.String(), nil
 }
+
+func (c *Client) GetSequence(sequenceID string) (*SequenceDocument, error) {
+	result, err := c.restyClient.R().
+		SetResult(&SequenceDocument{}).
+		Get("/item/" + sequenceID + "/sequence/vidispine")
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Result().(*SequenceDocument), nil
+}

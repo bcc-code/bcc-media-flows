@@ -2,31 +2,41 @@ package vidispine
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
+	bccmflows "github.com/bcc-code/bccm-flows"
 	"github.com/davecgh/go-spew/spew"
 )
 
 type ExportAudioSource string
 
-type FileWithTS struct {
-	FilePath string  `json:"filePath"` // absolute unix path
-	StartTS  float64 `json:"startTS"`  // in seconds, usable for ffmpeg
-	EndTS    float64 `json:"endTS"`    // in seconds, usable for ffmpeg
+type Clip struct {
+	VideoFile  string
+	InSeconds  float64
+	OutSeconds float64
+	AudioFile  map[string]*AudioFile
+	SubFile    map[string]string
+	VXID       string
+}
+
+type AudioFile struct {
+	VXID     string
+	Channels []int
+	File     string
 }
 
 type ExportData struct {
-	Title  string
-	Videos []FileWithTS              `json:"videos"`
-	Audios map[string]([]FileWithTS) `json:"audios"`
-	Subs   map[string]([]FileWithTS) `json:"subs"`
+	Clips []*Clip
+	Title string
 }
 
 const (
 	FIELD_EXPORT_AUDIO_SOURCE = "portal_mf452504"
 	FIELD_TITLE               = "title"
 	FIELD_SUBCLIP_TO_EXPORT   = "portal_mf230973"
+	FIELD_LANGS_TO_EXPORT     = "portal_mf326592"
 	FIELD_START_TC            = "startTimeCode"
 
 	EXPORT_AUDIO_SOURCE_EMBEDDED ExportAudioSource = "embedded"
@@ -123,55 +133,149 @@ func (c *Client) GetDataForExport(itemVXID string) error {
 	exportFormat := meta.Get("portal_mf868653", "NOTHING") // TODO: What is this?
 
 	out := ExportData{
-		Title:  title,
-		Videos: []FileWithTS{},
-		Audios: map[string]([]FileWithTS){},
-		Subs:   map[string]([]FileWithTS){},
+		Title: title,
+		Clips: []*Clip{},
 	}
 
 	if isSequence {
-		// TODO: Implement
-		return errors.New("Sequences are not supported yet")
-	}
-
-	videoOut := FileWithTS{
-		StartTS: 0,
-		EndTS:   0,
-	}
-
-	if isSubclip {
-		var subclipMeta *MetadataResult
-
-		subclipName := meta.Get(FIELD_SUBCLIP_TO_EXPORT, "")
-		if scMeta, ok := metaClips[subclipName]; ok {
-			subclipMeta = scMeta
-		} else {
-			return errors.New("Subclip " + subclipName + " does not exist")
-		}
-
-		in, out, err := subclipMeta.GetInOut(meta.Get(FIELD_START_TC, "0@PAL"))
+		seq, err := c.GetSequence(itemVXID)
 		if err != nil {
 			return err
 		}
-
-		videoOut.StartTS = in
-		videoOut.EndTS = out
+		out.Clips, err = seq.ToClips(c, audioSource)
+		if err != nil {
+			return err
+		}
 	} else {
-		in, out, err := meta.GetInOut("")
+
+		shapes, err := c.GetShapes(itemVXID)
 		if err != nil {
 			return err
 		}
 
-		videoOut.StartTS = in
-		videoOut.EndTS = out
+		shape := shapes.GetShape("original")
+		if shape == nil {
+			return fmt.Errorf("no original shape found for item %s", itemVXID)
+		}
+
+		clip := Clip{
+			VXID:      itemVXID,
+			VideoFile: shape.GetPath(),
+		}
+
+		if isSubclip {
+			var subclipMeta *MetadataResult
+
+			subclipName := meta.Get(FIELD_SUBCLIP_TO_EXPORT, "")
+			if scMeta, ok := metaClips[subclipName]; ok {
+				subclipMeta = scMeta
+			} else {
+				return errors.New("Subclip " + subclipName + " does not exist")
+			}
+
+			in, out, err := subclipMeta.GetInOut(meta.Get(FIELD_START_TC, "0@PAL"))
+			if err != nil {
+				return err
+			}
+
+			clip.InSeconds = in
+			clip.OutSeconds = out
+		} else {
+			in, out, err := meta.GetInOut("")
+			if err != nil {
+				return err
+			}
+			clip.InSeconds = in
+			clip.OutSeconds = out
+		}
+
+		out.Clips = append(out.Clips, &clip)
+	}
+
+	for _, clip := range out.Clips {
+		if clip.AudioFile != nil {
+			continue
+		}
+
+		clip.AudioFile = map[string]*AudioFile{}
+		languagesToExport := meta.GetArray(FIELD_LANGS_TO_EXPORT)
+
+		if audioSource == EXPORT_AUDIO_SOURCE_RELATED {
+			for _, lang := range languagesToExport {
+
+				// Figure out which field holds the related id
+				relatedField := bccmflows.LanguagesByISO[lang].RelatedMBFieldID
+				if relatedField == "" {
+					return errors.New("No related field for language " + lang + ". This indicates missing support in Vidispine")
+				}
+
+				// Get metadata for the video clip
+				clipMeta, err := c.GetMetadata(clip.VXID)
+				if err != nil {
+					return err
+				}
+
+				// Now we know what audio to export
+				relatedAudioVXID := clipMeta.Get(relatedField, "")
+				if relatedAudioVXID == "" {
+					// TODO: This should fall back to "nor" audio and issue a warning *somewhere*
+					// This is mostly used for example for copyright with music
+					return errors.New("No related audio VXID for language " + lang)
+				}
+
+				relatedAudioShapes, err := c.GetShapes(relatedAudioVXID)
+				if err != nil {
+					return err
+				}
+
+				// Ok now we can finally get the path to the audio file
+				relatedAudioShape := relatedAudioShapes.GetShape("original")
+				if relatedAudioShape == nil {
+					// TODO: This should fall back to "nor" audio and issue a warning *somewhere*
+					return fmt.Errorf("no original shape found for item %s", relatedAudioVXID)
+				}
+
+				clip.AudioFile[lang] = &AudioFile{
+					VXID:     relatedAudioVXID,
+					File:     relatedAudioShape.GetPath(),
+					Channels: []int{1, 2}, // TODO: Always stereo? How does ffmpeg number channels/streams?
+				}
+
+			}
+		} else if audioSource == EXPORT_AUDIO_SOURCE_EMBEDDED {
+			// The most common use of this is for exporting a subclip, or a seuence where all clips are from the same source
+			// In this case we *assume* that all clips have an embedded audio tracks.
+
+			// TODO: Verify this assumption using ffprobe?
+
+			spew.Dump(clip.VideoFile)
+			if !strings.Contains(clip.VideoFile, "MU1") {
+				return errors.New("Currently only MU1 is supported with embedded audio. " + clip.VideoFile + " does not contain MU1. Contact support if you need this")
+			}
+
+			for _, lang := range languagesToExport {
+				if l, ok := bccmflows.LanguagesByISO[lang]; ok {
+					channels := []int{}
+					for i := 0; i < l.MU1ChannelCount; i++ {
+						channels = append(channels, l.MU1ChannelStart+i)
+					}
+
+					clip.AudioFile[lang] = &AudioFile{
+						VXID:     clip.VXID,
+						File:     clip.VideoFile,
+						Channels: channels,
+					}
+				} else {
+					// TODO: Warning and fallback to "nor" audio
+					return errors.New("No language " + lang + " found in bccmflows.LanguagesByISO")
+				}
+			}
+
+		}
 	}
 
 	/// TODO: Audio files.
-	// How do we indicate that the tracks should be taken from the video file?
-	// TODO: File path
 	// TODO: Subs
-
-	out.Videos = append(out.Videos, videoOut)
 
 	println("Exporting item " + itemVXID)
 	spew.Dump(exportFormat)

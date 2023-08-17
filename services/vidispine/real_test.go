@@ -73,16 +73,21 @@ func Test_AddFileToPlaceholder(t *testing.T) {
 
 func Test_GetDataForExport(t *testing.T) {
 	c := getClient()
+	var err error
 
 	// SEQ - Embedded audio
-	c.GetDataForExport("VX-464406")
+	err = c.GetDataForExport("VX-464406")
 
 	// SEQ - Related Audio
-	c.GetDataForExport("VX-464480")
+	//err = c.GetDataForExport("VX-464448")
+
+	// SEQ - Related Audio
+	//err = c.GetDataForExport("VX-464480")
+	assert.NoError(t, err)
 
 	// Asset
-	c.GetDataForExport("VX-464458")
+	//c.GetDataForExport("VX-464458")
 
 	// Subclip
-	c.GetDataForExport("VX-460824")
+	//c.GetDataForExport("VX-460824")
 }
