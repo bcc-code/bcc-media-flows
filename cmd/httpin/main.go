@@ -74,16 +74,19 @@ func transcribeHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func transcodeHandler(c *gin.Context) {
-	file := c.DefaultPostForm("file", c.DefaultQuery("file", ""))
-	vxID := c.DefaultPostForm("vxID", c.DefaultQuery("vxID", ""))
+func getParamFromCtx(ctx *gin.Context, key string) string {
+	return ctx.DefaultPostForm(key, ctx.DefaultQuery(key, ""))
+}
+
+func triggerHandler(ctx *gin.Context) {
+	job := ctx.Param("job")
 
 	wfClient, err := client.Dial(client.Options{
 		HostPort:  os.Getenv("TEMPORAL_HOST_PORT"),
 		Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -100,36 +103,38 @@ func transcodeHandler(c *gin.Context) {
 		TaskQueue: queue,
 	}
 
-	if vxID != "" {
-		transcodeInput := workflows.TranscodePreviewInput{
-			VXID: vxID,
-		}
+	var res client.WorkflowRun
 
-		res, err := wfClient.ExecuteWorkflow(c, workflowOptions, workflows.TranscodePreview, transcodeInput)
-
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": err.Error(),
-			})
+	switch job {
+	case "transcribeVX":
+		vxID := getParamFromCtx(ctx, "vxID")
+		language := getParamFromCtx(ctx, "language")
+		if vxID == "" || language == "" {
+			ctx.Status(http.StatusBadRequest)
 			return
 		}
-		c.JSON(http.StatusOK, res)
-		return
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.TranscribeVX, workflows.TranscribeVXInput{
+			Language: language,
+			VXID:     vxID,
+		})
+	case "transcodePreview":
+		vxID := getParamFromCtx(ctx, "vxID")
+		if vxID == "" {
+			ctx.Status(http.StatusBadRequest)
+			return
+		}
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.TranscodePreview, workflows.TranscodePreviewInput{
+			VXID: vxID,
+		})
 	}
-
-	transcodeInput := workflows.TranscodeFileInput{
-		FilePath: file,
-	}
-
-	res, err := wfClient.ExecuteWorkflow(c, workflowOptions, workflows.TranscodeFile, transcodeInput)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
-	c.JSON(http.StatusOK, res)
+	ctx.JSON(http.StatusOK, res)
 }
 
 func main() {
@@ -138,12 +143,13 @@ func main() {
 	r.GET("/transcribe", transcribeHandler)
 	r.POST("/transcribe", transcribeHandler)
 
-	r.GET("/transcode", transcodeHandler)
+	r.POST("/trigger/:job", triggerHandler)
+	r.GET("/trigger/:job", triggerHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080" // Default port if not specified
 	}
 
-	r.Run(":" + port)
+	_ = r.Run(":" + port)
 }
