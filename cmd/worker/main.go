@@ -37,6 +37,7 @@ func main() {
 		Identity:                           identity,
 		LocalActivityWorkerOnly:            false,
 		MaxConcurrentActivityExecutionSize: 100, // Doesn't make sense to have more than one activity running at a time
+
 	}
 
 	queue := os.Getenv("QUEUE")
@@ -49,17 +50,17 @@ func main() {
 	if roles == "" {
 		roles = "generic"
 	}
+	w.RegisterWorkflow(workflows.TranscodePreviewVX)
+	w.RegisterWorkflow(workflows.TranscodePreviewFile)
+	w.RegisterWorkflow(workflows.TranscribeFile)
+	w.RegisterWorkflow(workflows.TranscribeVX)
 
 	for _, role := range strings.Split(roles, ",") {
 		switch role {
 		case "generic":
-			w.RegisterWorkflow(workflows.TranscribeFile)
-			w.RegisterWorkflow(workflows.TranscribeVX)
 			w.RegisterActivity(activities.Transcribe)
 			w.RegisterActivity(vidispine.GetFileFromVXActivity)
 			w.RegisterActivity(vidispine.ImportFileAsShapeActivity)
-			w.RegisterWorkflow(workflows.TranscodePreviewVX)
-			w.RegisterWorkflow(workflows.TranscodePreviewFile)
 		case "transcoder":
 			w.RegisterActivity(activities.TranscodePreview)
 		}
