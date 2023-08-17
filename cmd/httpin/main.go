@@ -40,7 +40,6 @@ func transcribeHandler(c *gin.Context) {
 
 	// TODO: Ugly code, just a test
 	if vxID != "" {
-
 		transcribeInput := workflows.TranscribeVXInput{
 			Language: language,
 			VXID:     vxID,
@@ -77,6 +76,7 @@ func transcribeHandler(c *gin.Context) {
 
 func transcodeHandler(c *gin.Context) {
 	file := c.DefaultPostForm("file", c.DefaultQuery("file", ""))
+	vxID := c.DefaultPostForm("vxID", c.DefaultQuery("vxID", ""))
 
 	wfClient, err := client.Dial(client.Options{
 		HostPort:  os.Getenv("TEMPORAL_HOST_PORT"),
@@ -98,6 +98,23 @@ func transcodeHandler(c *gin.Context) {
 	workflowOptions := client.StartWorkflowOptions{
 		ID:        "worker-" + uuid.NewString(),
 		TaskQueue: queue,
+	}
+
+	if vxID != "" {
+		transcodeInput := workflows.TranscodePreviewInput{
+			VXID: vxID,
+		}
+
+		res, err := wfClient.ExecuteWorkflow(c, workflowOptions, workflows.TranscodePreview, transcodeInput)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, res)
+		return
 	}
 
 	transcodeInput := workflows.TranscodeFileInput{
