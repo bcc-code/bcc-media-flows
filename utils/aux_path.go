@@ -9,6 +9,7 @@ import (
 
 const BaseDestinationPath = "/mnt/isilon/Production/aux"
 
+// GetWorkflowOutputFolder retrieves the path and creates necessary folders for the workflow to use as an output.
 func GetWorkflowOutputFolder(ctx workflow.Context) (string, error) {
 	info := workflow.GetInfo(ctx)
 

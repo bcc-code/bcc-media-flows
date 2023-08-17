@@ -17,6 +17,8 @@ type TranscodePreviewResponse struct {
 	PreviewFilePath string
 }
 
+// TranscodePreview is the activity definition for transcoding a video to preview. It only uses the specified filepath
+// and output dir to create the necessary files. Requires ffmpeg and ffprobe to be installed on the worker running this.
 func TranscodePreview(ctx context.Context, input TranscodePreviewParams) (*TranscodePreviewResponse, error) {
 	activity.RecordHeartbeat(ctx, "Transcode Preview")
 

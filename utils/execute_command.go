@@ -5,6 +5,7 @@ import (
 	"os/exec"
 )
 
+// ExecuteCmd executes the cmd and returns through outputCallback line-by-line before returning the whole stdout at the end.
 func ExecuteCmd(cmd *exec.Cmd, outputCallback func(string)) (string, error) {
 	stdout, _ := cmd.StdoutPipe()
 

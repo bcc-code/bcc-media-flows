@@ -9,12 +9,13 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-// TranscodePreviewFileInput is the input to the TranscribeFile
+// TranscodePreviewFileInput is the input to the TranscodePreviewFile workflow
 type TranscodePreviewFileInput struct {
 	FilePath string
 }
 
-// TranscodePreviewFile is a workflow definition for transcoding a video to a preview
+// TranscodePreviewFile can be used to test the transcode activity locally where you have no access to vidispine
+// or would like to avoid writing to vidispine. Output folder will be set to the same as where the file is originated.
 func TranscodePreviewFile(
 	ctx workflow.Context,
 	params TranscodePreviewFileInput,

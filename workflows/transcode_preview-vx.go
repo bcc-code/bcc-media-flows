@@ -10,12 +10,15 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-// TranscodePreviewVXInput is the input to the TranscribeFile
+// TranscodePreviewVXInput is the input to the TranscodePreviewVX workflow
 type TranscodePreviewVXInput struct {
 	VXID string
 }
 
-// TranscodePreviewVX is the workflow definition of transcoding a video to preview
+// TranscodePreviewVX is the workflow definition of transcoding a video to preview.
+// The workflow should first retrieve the filepath to transcribe from the vx-item,
+// then it will generate or use the output folder determined from the workflow run ID
+// to output transcoded files, before attaching them to the vx-item as a shape
 func TranscodePreviewVX(
 	ctx workflow.Context,
 	params TranscodePreviewVXInput,
