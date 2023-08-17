@@ -2,10 +2,10 @@ package main
 
 import (
 	"github.com/bcc-code/bccm-flows/activities"
+	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/workflows"
 	"log"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
@@ -42,28 +42,21 @@ func main() {
 
 	queue := os.Getenv("QUEUE")
 	if queue == "" {
-		queue = "worker"
+		queue = common.QueueWorker
 	}
 	w := worker.New(c, queue, workerOptions)
 
-	roles := os.Getenv("ROLES")
-	if roles == "" {
-		roles = "generic"
-	}
-	w.RegisterWorkflow(workflows.TranscodePreviewVX)
-	w.RegisterWorkflow(workflows.TranscodePreviewFile)
-	w.RegisterWorkflow(workflows.TranscribeFile)
-	w.RegisterWorkflow(workflows.TranscribeVX)
-
-	for _, role := range strings.Split(roles, ",") {
-		switch role {
-		case "generic":
-			w.RegisterActivity(activities.Transcribe)
-			w.RegisterActivity(vidispine.GetFileFromVXActivity)
-			w.RegisterActivity(vidispine.ImportFileAsShapeActivity)
-		case "transcoder":
-			w.RegisterActivity(activities.TranscodePreview)
-		}
+	switch queue {
+	case common.QueueWorker:
+		w.RegisterActivity(activities.Transcribe)
+		w.RegisterActivity(vidispine.GetFileFromVXActivity)
+		w.RegisterActivity(vidispine.ImportFileAsShapeActivity)
+		w.RegisterWorkflow(workflows.TranscodePreviewVX)
+		w.RegisterWorkflow(workflows.TranscodePreviewFile)
+		w.RegisterWorkflow(workflows.TranscribeFile)
+		w.RegisterWorkflow(workflows.TranscribeVX)
+	case common.QueueTranscode:
+		w.RegisterActivity(activities.TranscodePreview)
 	}
 
 	err = w.Run(worker.InterruptCh())
