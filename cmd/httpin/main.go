@@ -106,7 +106,7 @@ func triggerHandler(ctx *gin.Context) {
 	var res client.WorkflowRun
 
 	switch job {
-	case "transcribeVX":
+	case "TranscribeVX":
 		vxID := getParamFromCtx(ctx, "vxID")
 		language := getParamFromCtx(ctx, "language")
 		if vxID == "" || language == "" {
@@ -117,7 +117,7 @@ func triggerHandler(ctx *gin.Context) {
 			Language: language,
 			VXID:     vxID,
 		})
-	case "transcodePreview":
+	case "TranscodePreviewVX":
 		vxID := getParamFromCtx(ctx, "vxID")
 		if vxID == "" {
 			ctx.Status(http.StatusBadRequest)
