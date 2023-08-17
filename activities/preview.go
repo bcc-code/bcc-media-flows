@@ -2,6 +2,7 @@ package activities
 
 import (
 	"context"
+	"fmt"
 	"github.com/bcc-code/bccm-flows/services/transcode"
 	"go.temporal.io/sdk/activity"
 	"time"
@@ -26,6 +27,7 @@ func TranscodePreview(ctx context.Context, input TranscodePreviewParams) (*Trans
 	}
 
 	stopChan := make(chan struct{})
+	defer close(stopChan)
 
 	go func() {
 		timer := time.NewTicker(time.Second * 5)
@@ -46,10 +48,9 @@ func TranscodePreview(ctx context.Context, input TranscodePreviewParams) (*Trans
 		FilePath:  input.FilePath,
 	}, progressCallback)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
-
-	close(stopChan)
 
 	return &TranscodePreviewResponse{
 		PreviewFilePath: result.LowResolutionPath,

@@ -59,6 +59,8 @@ func Preview(input PreviewInput, progressCallback func(float64)) (*PreviewResult
 
 	command := strings.Join(commandParts, " ")
 
+	fmt.Println(command)
+
 	cmd := exec.Command("ffmpeg", strings.Split(command, " ")...)
 
 	totalFrames, _ := strconv.ParseFloat(info.Streams[0].NbFrames, 64)

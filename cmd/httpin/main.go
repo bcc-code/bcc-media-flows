@@ -75,11 +75,53 @@ func transcribeHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func transcodeHandler(c *gin.Context) {
+	file := c.DefaultPostForm("file", c.DefaultQuery("file", ""))
+
+	wfClient, err := client.Dial(client.Options{
+		HostPort:  os.Getenv("TEMPORAL_HOST_PORT"),
+		Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	defer wfClient.Close()
+
+	queue := os.Getenv("QUEUE")
+	if queue == "" {
+		queue = "worker"
+	}
+	workflowOptions := client.StartWorkflowOptions{
+		ID:        "worker-" + uuid.NewString(),
+		TaskQueue: queue,
+	}
+
+	transcodeInput := workflows.TranscodeFileInput{
+		FilePath: file,
+	}
+
+	res, err := wfClient.ExecuteWorkflow(c, workflowOptions, workflows.TranscodeFile, transcodeInput)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+
 func main() {
 	r := gin.Default()
 
 	r.GET("/transcribe", transcribeHandler)
 	r.POST("/transcribe", transcribeHandler)
+
+	r.GET("/transcode", transcodeHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
