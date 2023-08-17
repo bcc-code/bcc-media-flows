@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/bcc-code/bccm-flows/activities"
+	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/workflows"
 	"log"
 	"os"
@@ -36,19 +37,27 @@ func main() {
 		Identity:                           identity,
 		LocalActivityWorkerOnly:            false,
 		MaxConcurrentActivityExecutionSize: 100, // Doesn't make sense to have more than one activity running at a time
+
 	}
 
 	queue := os.Getenv("QUEUE")
 	if queue == "" {
-		queue = "worker"
+		queue = common.QueueWorker
 	}
 	w := worker.New(c, queue, workerOptions)
 
-	w.RegisterWorkflow(workflows.TranscribeFile)
-	w.RegisterWorkflow(workflows.TranscribeVX)
-	w.RegisterActivity(activities.Transcribe)
-	w.RegisterActivity(vidispine.GetFileFromVXActivity)
-	w.RegisterActivity(vidispine.ImportFileAsShapeActivity)
+	switch queue {
+	case common.QueueWorker:
+		w.RegisterActivity(activities.Transcribe)
+		w.RegisterActivity(vidispine.GetFileFromVXActivity)
+		w.RegisterActivity(vidispine.ImportFileAsShapeActivity)
+		w.RegisterWorkflow(workflows.TranscodePreviewVX)
+		w.RegisterWorkflow(workflows.TranscodePreviewFile)
+		w.RegisterWorkflow(workflows.TranscribeFile)
+		w.RegisterWorkflow(workflows.TranscribeVX)
+	case common.QueueTranscode:
+		w.RegisterActivity(activities.TranscodePreview)
+	}
 
 	err = w.Run(worker.InterruptCh())
 	log.Printf("Worker finished: %v", err)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/bcc-code/bccm-flows/workflows"
 	"net/http"
 	"os"
@@ -10,18 +11,19 @@ import (
 	"go.temporal.io/sdk/client"
 )
 
-func transcribeHandler(c *gin.Context) {
-	language := c.DefaultPostForm("language", c.DefaultQuery("language", ""))
-	file := c.DefaultPostForm("file", c.DefaultQuery("file", ""))
-	destinationPath := c.DefaultPostForm("destinationPath", c.DefaultQuery("destinationPath", ""))
-	vxID := c.DefaultPostForm("vxID", c.DefaultQuery("vxID", ""))
+func getParamFromCtx(ctx *gin.Context, key string) string {
+	return ctx.DefaultPostForm(key, ctx.DefaultQuery(key, ""))
+}
+
+func triggerHandler(ctx *gin.Context) {
+	job := ctx.Param("job")
 
 	wfClient, err := client.Dial(client.Options{
 		HostPort:  os.Getenv("TEMPORAL_HOST_PORT"),
 		Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -33,58 +35,67 @@ func transcribeHandler(c *gin.Context) {
 	if queue == "" {
 		queue = "worker"
 	}
+	vxID := getParamFromCtx(ctx, "vxID")
 	workflowOptions := client.StartWorkflowOptions{
-		ID:        "worker-" + uuid.NewString(),
+		ID:        uuid.NewString(),
 		TaskQueue: queue,
+		SearchAttributes: map[string]any{
+			"CustomStringField": vxID,
+		},
 	}
 
-	// TODO: Ugly code, just a test
-	if vxID != "" {
+	var res client.WorkflowRun
 
-		transcribeInput := workflows.TranscribeVXInput{
-			Language: language,
-			VXID:     vxID,
-		}
-
-		res, err := wfClient.ExecuteWorkflow(c, workflowOptions, workflows.TranscribeVX, transcribeInput)
-
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": err.Error(),
-			})
+	switch job {
+	case "TranscribeVX":
+		language := getParamFromCtx(ctx, "language")
+		if vxID == "" || language == "" {
+			ctx.Status(http.StatusBadRequest)
 			return
 		}
-		c.JSON(http.StatusOK, res)
-		return
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.TranscribeVX, workflows.TranscribeVXInput{
+			Language: language,
+			VXID:     vxID,
+		})
+	case "TranscodePreviewVX":
+		if vxID == "" {
+			ctx.Status(http.StatusBadRequest)
+			return
+		}
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
+			VXID: vxID,
+		})
+	case "TranscodePreviewFile":
+		file := getParamFromCtx(ctx, "file")
+		if file == "" {
+			ctx.Status(http.StatusBadRequest)
+			return
+		}
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.TranscodePreviewFile, workflows.TranscodePreviewFileInput{
+			FilePath: file,
+		})
 	}
-
-	transcribeInput := workflows.TranscribeFileInput{
-		Language:        language,
-		File:            file,
-		DestinationPath: destinationPath,
-	}
-
-	res, err := wfClient.ExecuteWorkflow(c, workflowOptions, workflows.TranscribeFile, transcribeInput)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		fmt.Print(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
-	c.JSON(http.StatusOK, res)
+	ctx.JSON(http.StatusOK, res)
 }
 
 func main() {
 	r := gin.Default()
 
-	r.GET("/transcribe", transcribeHandler)
-	r.POST("/transcribe", transcribeHandler)
+	r.POST("/trigger/:job", triggerHandler)
+	r.GET("/trigger/:job", triggerHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080" // Default port if not specified
 	}
 
-	r.Run(":" + port)
+	_ = r.Run(":" + port)
 }
