@@ -126,6 +126,15 @@ func triggerHandler(ctx *gin.Context) {
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
 			VXID: vxID,
 		})
+	case "TranscodePreviewFile":
+		file := getParamFromCtx(ctx, "file")
+		if file == "" {
+			ctx.Status(http.StatusBadRequest)
+			return
+		}
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.TranscodePreviewFile, workflows.TranscodePreviewFileInput{
+			FilePath: file,
+		})
 	}
 
 	if err != nil {

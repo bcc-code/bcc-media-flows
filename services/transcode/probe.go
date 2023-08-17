@@ -94,7 +94,7 @@ type FFProbeResult struct {
 
 // ProbeFile returns information about the specified video file. Requires ffprobe present.
 func ProbeFile(filePath string) (*FFProbeResult, error) {
-	options := strings.Split("-v quiet -print_format json -select_streams v:0 -show_format -show_streams", " ")
+	options := strings.Split("-v quiet -print_format json -show_format -show_streams", " ")
 	options = append(options, filePath)
 
 	cmd := exec.Command(

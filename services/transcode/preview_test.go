@@ -1,6 +1,7 @@
 package transcode
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -11,6 +12,7 @@ func Test_Preview(t *testing.T) {
 
 	progressCallback := func(percent float64) {
 		currentPercent = percent
+		fmt.Println(percent)
 	}
 
 	_, err := Preview(PreviewInput{
