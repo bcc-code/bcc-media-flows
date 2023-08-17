@@ -34,16 +34,19 @@ func triggerHandler(ctx *gin.Context) {
 	if queue == "" {
 		queue = "worker"
 	}
+	vxID := getParamFromCtx(ctx, "vxID")
 	workflowOptions := client.StartWorkflowOptions{
-		ID:        "worker-" + uuid.NewString(),
+		ID:        uuid.NewString(),
 		TaskQueue: queue,
+		SearchAttributes: map[string]any{
+			"VXID": vxID,
+		},
 	}
 
 	var res client.WorkflowRun
 
 	switch job {
 	case "TranscribeVX":
-		vxID := getParamFromCtx(ctx, "vxID")
 		language := getParamFromCtx(ctx, "language")
 		if vxID == "" || language == "" {
 			ctx.Status(http.StatusBadRequest)
@@ -54,7 +57,6 @@ func triggerHandler(ctx *gin.Context) {
 			VXID:     vxID,
 		})
 	case "TranscodePreviewVX":
-		vxID := getParamFromCtx(ctx, "vxID")
 		if vxID == "" {
 			ctx.Status(http.StatusBadRequest)
 			return
