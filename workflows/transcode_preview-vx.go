@@ -62,11 +62,18 @@ func TranscodePreviewVX(
 		return err
 	}
 
+	var shapeTag string
+	if previewResponse.AudioOnly {
+		shapeTag = "lowaudio"
+	} else {
+		shapeTag = "lowres_watermarked"
+	}
+
 	err = workflow.ExecuteActivity(ctx, vidispine.ImportFileAsShapeActivity,
 		vidispine.ImportFileAsShapeParams{
 			AssetID:  params.VXID,
 			FilePath: previewResponse.PreviewFilePath,
-			ShapeTag: "lowres_watermarked",
+			ShapeTag: shapeTag,
 		}).Get(ctx, nil)
 
 	return err

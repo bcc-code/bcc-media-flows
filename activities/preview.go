@@ -15,6 +15,7 @@ type TranscodePreviewParams struct {
 
 type TranscodePreviewResponse struct {
 	PreviewFilePath string
+	AudioOnly       bool
 }
 
 // TranscodePreview is the activity definition for transcoding a video to preview. It only uses the specified filepath
@@ -56,5 +57,6 @@ func TranscodePreview(ctx context.Context, input TranscodePreviewParams) (*Trans
 
 	return &TranscodePreviewResponse{
 		PreviewFilePath: result.LowResolutionPath,
+		AudioOnly:       result.AudioOnly,
 	}, nil
 }

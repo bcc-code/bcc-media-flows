@@ -18,6 +18,7 @@ type PreviewInput struct {
 
 type PreviewResult struct {
 	LowResolutionPath string
+	AudioOnly         bool
 }
 
 var previewWatermarkPath = os.Getenv("PREVIEW_WATERMARK_PATH")
@@ -136,5 +137,6 @@ func Preview(input PreviewInput, progressCallback func(float64)) (*PreviewResult
 
 	return &PreviewResult{
 		LowResolutionPath: outputPath,
+		AudioOnly:         !hasVideo && hasAudio,
 	}, nil
 }
