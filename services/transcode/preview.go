@@ -1,11 +1,12 @@
 package transcode
 
 import (
-	"bufio"
 	"fmt"
+	"github.com/bcc-code/bccm-flows/utils"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -18,10 +19,17 @@ type PreviewResult struct {
 	LowResolutionPath string
 }
 
-func Preview(input PreviewInput) (*PreviewResult, error) {
+var previewWatermarkPath = os.Getenv("PREVIEW_WATERMARK_PATH")
+
+func Preview(input PreviewInput, progressCallback func(float64)) (*PreviewResult, error) {
 	encoder := os.Getenv("ENCODER")
 	if encoder == "" {
 		encoder = "hevc"
+	}
+
+	info, err := ProbeFile(input.FilePath)
+	if err != nil {
+		return nil, err
 	}
 
 	filename := filepath.Base(input.FilePath)
@@ -32,12 +40,13 @@ func Preview(input PreviewInput) (*PreviewResult, error) {
 		"-hide_banner",
 		"-loglevel",
 		"+level",
+		"-progress pipe:1",
 		"-y",
 		"-ac 2",
 		"-ss 0.0",
 		fmt.Sprintf("-i %s", input.FilePath),
 		"-ss 0.0",
-		fmt.Sprintf("-i %s", os.Getenv("PREVIEW_WATERMARK_PATH")),
+		fmt.Sprintf("-i %s", previewWatermarkPath),
 		"-filter_complex sws_flags=bicubic;[0:v]split=1[VIDEO-main-.mp4];[VIDEO-main-.mp4]scale=-2:540,null[temp];[temp][1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4];[0:a:0]asplit=1[AUDIO-main-.mp4-0];[AUDIO-main-.mp4-0]aformat=channel_layouts=stereo[AUDIO-.mp4-0]",
 		"-map [VIDEO-.mp4]",
 		"-map [AUDIO-.mp4-0]",
@@ -52,27 +61,26 @@ func Preview(input PreviewInput) (*PreviewResult, error) {
 
 	cmd := exec.Command("ffmpeg", strings.Split(command, " ")...)
 
-	stderr, _ := cmd.StderrPipe()
-	stdout, _ := cmd.StdoutPipe()
+	totalFrames, _ := strconv.ParseFloat(info.Streams[0].NbFrames, 64)
 
-	_ = cmd.Start()
+	callback := func(line string) {
+		parts := strings.Split(line, "=")
 
-	go func() {
-		scanner := bufio.NewScanner(stderr)
-		scanner.Split(bufio.ScanLines)
-		for scanner.Scan() {
-			fmt.Print(scanner.Text())
+		if len(parts) != 2 {
+			return
 		}
-	}()
 
-	scanner := bufio.NewScanner(stdout)
-	scanner.Split(bufio.ScanLines)
-	for scanner.Scan() {
-		line := scanner.Text()
-		fmt.Println(line)
+		if parts[0] == "frame" {
+			frame, _ := strconv.ParseFloat(parts[1], 64)
+			if frame == 0 {
+				progressCallback(0)
+			} else {
+				progressCallback(frame / totalFrames)
+			}
+		}
 	}
 
-	err := cmd.Wait()
+	_, err = utils.ExecuteCmd(cmd, callback)
 	if err != nil {
 		return nil, err
 	}

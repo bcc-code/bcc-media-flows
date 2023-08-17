@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/bcc-code/bccm-flows/services/transcode"
 	"go.temporal.io/sdk/activity"
+	"time"
 )
 
 type TranscodePreviewParams struct {
@@ -18,13 +19,37 @@ type TranscodePreviewResponse struct {
 func TranscodePreview(ctx context.Context, input TranscodePreviewParams) (*TranscodePreviewResponse, error) {
 	activity.RecordHeartbeat(ctx, "Transcode Preview")
 
+	currentPercent := 0.0
+
+	progressCallback := func(percent float64) {
+		currentPercent = percent
+	}
+
+	stopChan := make(chan struct{})
+
+	go func() {
+		timer := time.NewTicker(time.Second * 5)
+		defer timer.Stop()
+
+		for {
+			select {
+			case <-timer.C:
+				activity.RecordHeartbeat(ctx, currentPercent)
+			case <-stopChan:
+				return
+			}
+		}
+	}()
+
 	result, err := transcode.Preview(transcode.PreviewInput{
 		OutputDir: input.DestinationDirPath,
 		FilePath:  input.FilePath,
-	})
+	}, progressCallback)
 	if err != nil {
 		return nil, err
 	}
+
+	close(stopChan)
 
 	return &TranscodePreviewResponse{
 		PreviewFilePath: result.LowResolutionPath,
