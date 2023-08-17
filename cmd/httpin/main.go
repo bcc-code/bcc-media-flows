@@ -37,8 +37,11 @@ func triggerHandler(ctx *gin.Context) {
 	}
 	vxID := getParamFromCtx(ctx, "vxID")
 	workflowOptions := client.StartWorkflowOptions{
-		ID:        uuid.NewString() + "_" + vxID,
+		ID:        uuid.NewString(),
 		TaskQueue: queue,
+		SearchAttributes: map[string]any{
+			"CustomStringField": vxID,
+		},
 	}
 
 	var res client.WorkflowRun
