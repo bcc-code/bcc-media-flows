@@ -28,3 +28,19 @@ func ImportFileAsShapeActivity(ctx context.Context, params *ImportFileAsShapePar
 	_, err = vsClient.AddShapeToItem(params.ShapeTag, params.AssetID, fileID)
 	return err
 }
+
+type ImportSubtitleAsSidecarParams struct {
+	AssetID  string
+	FilePath string
+	Language string
+}
+
+func ImportFileAsSidecarActivity(ctx context.Context, params *ImportSubtitleAsSidecarParams) error {
+	log := activity.GetLogger(ctx)
+	log.Info("Starting ImportSubtitleAsSidecarParams")
+
+	vsClient := vidispine.NewClient(os.Getenv("VIDISPINE_BASE_URL"), os.Getenv("VIDISPINE_USERNAME"), os.Getenv("VIDISPINE_PASSWORD"))
+
+	_, err := vsClient.AddSidecarToItem(params.AssetID, params.FilePath, params.Language)
+	return err
+}

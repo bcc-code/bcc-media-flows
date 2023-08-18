@@ -231,3 +231,21 @@ func (c *Client) AddShapeToItem(tag, itemID, fileID string) (string, error) {
 
 	return result.String(), nil
 }
+
+func (c *Client) AddSidecarToItem(itemID, filePath, language string) (string, error) {
+	requestURL, _ := url.Parse(c.baseURL)
+	requestURL.Path += "/import/sidecar/" + url.PathEscape(itemID)
+	q := requestURL.Query()
+	q.Set("sidecar", "file://"+filePath)
+	q.Set("jobmetadata", "subtitleLanguage="+language)
+	requestURL.RawQuery = q.Encode()
+
+	result, err := c.restyClient.R().
+		Post(requestURL.String())
+
+	if err != nil {
+		return "", err
+	}
+
+	return result.String(), nil
+}

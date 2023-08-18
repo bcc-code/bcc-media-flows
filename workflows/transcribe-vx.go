@@ -97,5 +97,11 @@ func TranscribeVX(
 		return fmt.Errorf("failed to import transcription files: %v", errs)
 	}
 
-	return nil
+	err = workflow.ExecuteActivity(ctx, vidispine.ImportFileAsSidecarActivity, vidispine.ImportSubtitleAsSidecarParams{
+		FilePath: transcriptionJob.SRTPath,
+		Language: "no",
+		AssetID:  params.VXID,
+	}).Get(ctx, nil)
+
+	return err
 }
