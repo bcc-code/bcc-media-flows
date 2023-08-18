@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/utils"
+	"os"
 	"time"
 
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
@@ -12,7 +13,7 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-const BaseDestinationPath = "/mnt/isilon/Production/aux"
+const transcriptionMetadataFieldName = "portal_mf624761"
 
 // TranscribeVXInput is the input to the TranscribeFile
 type TranscribeVXInput struct {
@@ -102,6 +103,23 @@ func TranscribeVX(
 		Language: "no",
 		AssetID:  params.VXID,
 	}).Get(ctx, nil)
+	if err != nil {
+		return err
+	}
 
-	return err
+	txtValue, err := os.ReadFile(transcriptionJob.TXTPath)
+	if err != nil {
+		return err
+	}
+
+	err = workflow.ExecuteActivity(ctx, vidispine.SetVXMetadataFieldActivity, vidispine.SetVXMetadataFieldParams{
+		VXID:  params.VXID,
+		Key:   transcriptionMetadataFieldName,
+		Value: string(txtValue),
+	}).Get(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -5,6 +5,7 @@ import "text/template"
 var (
 	xmlMasterPlaceholderTmpl      = template.Must(template.New("master").Parse(xmlMasterPlaceholder))
 	xmlRawMaterialPlaceholderTmpl = template.Must(template.New("raw").Parse(xmlRawMaterialPlaceholder))
+	xmlSetMetadataPlaceholderTmpl = template.Must(template.New("metadata").Parse(xmlSetMetadataPlaceholder))
 )
 
 const (
@@ -57,6 +58,16 @@ const (
 		<field>
 			<name>title</name>
 			<value>{{ .Title }}</value>
+		</field>
+	</timespan>
+</MetadataDocument>`
+
+	xmlSetMetadataPlaceholder = `<?xml version="1.0"?>
+<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine">
+	<timespan start="-INF" end="+INF">
+		<field>
+			<name>{{.Key}}</name>
+			<value>{{.Value}}</value>
 		</field>
 	</timespan>
 </MetadataDocument>`

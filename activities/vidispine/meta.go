@@ -3,9 +3,6 @@ package vidispine
 import (
 	"context"
 	"fmt"
-	"os"
-
-	"github.com/bcc-code/bccm-flows/services/vidispine"
 	"go.temporal.io/sdk/activity"
 )
 
@@ -23,7 +20,7 @@ func GetFileFromVXActivity(ctx context.Context, params GetFileFromVXParams) (*Ge
 	log := activity.GetLogger(ctx)
 	log.Info("Starting GetFileFromVXActivity")
 
-	vsClient := vidispine.NewClient(os.Getenv("VIDISPINE_BASE_URL"), os.Getenv("VIDISPINE_USERNAME"), os.Getenv("VIDISPINE_PASSWORD"))
+	vsClient := getClient()
 
 	shapes, err := vsClient.GetShapes(params.VXID)
 	if err != nil {
@@ -44,4 +41,23 @@ func GetFileFromVXActivity(ctx context.Context, params GetFileFromVXParams) (*Ge
 	}
 
 	return nil, fmt.Errorf("no shape found for tags: %v", params.Tags)
+}
+
+type SetVXMetadataFieldParams struct {
+	VXID  string
+	Key   string
+	Value string
+}
+
+type SetVXMetadataFieldResult struct {
+}
+
+func SetVXMetadataFieldActivity(ctx context.Context, params SetVXMetadataFieldParams) (*SetVXMetadataFieldResult, error) {
+	log := activity.GetLogger(ctx)
+	log.Info("Starting SetVXMetadataFieldActivity")
+
+	vsClient := getClient()
+
+	_, err := vsClient.SetItemMetadataField(params.VXID, params.Key, params.Value)
+	return nil, err
 }
