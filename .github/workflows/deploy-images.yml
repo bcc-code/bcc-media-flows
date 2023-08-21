@@ -7,37 +7,6 @@ on:
 
 
 jobs:
-  publish:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    strategy:
-      matrix:
-        goosarch: [ linux/amd64 ]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
-        with:
-          go-version: 1.21
-      - name: Get OS and arch info
-        run: |
-          GOOSARCH=${{matrix.goosarch}}
-          GOOS=${GOOSARCH%/*}
-          GOARCH=${GOOSARCH#*/}
-          BINARY_NAME=${{github.repository}}-worker-$GOOS-$GOARCH
-          echo "BINARY_NAME=$BINARY_NAME" >> $GITHUB_ENV
-          echo "GOOS=$GOOS" >> $GITHUB_ENV
-          echo "GOARCH=$GOARCH" >> $GITHUB_ENV
-      - name: Build
-        run: |
-          go build -o "$BINARY_NAME" -v ./cmd/worker
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        with:
-          draft: true
-          files: ${{env.BINARY_NAME}}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   deploy:
     runs-on: ubuntu-latest
     permissions:
