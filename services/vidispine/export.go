@@ -8,6 +8,7 @@ import (
 
 	bccmflows "github.com/bcc-code/bccm-flows"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/samber/lo"
 )
 
 type ExportAudioSource string
@@ -112,6 +113,7 @@ func (c *Client) GetDataForExport(itemVXID string) error {
 		return err
 	}
 
+	fullOriginalMeta := meta
 	metaClips := meta.SplitByClips()
 
 	// Get the metadata for the original clip
@@ -127,7 +129,7 @@ func (c *Client) GetDataForExport(itemVXID string) error {
 	isSequence := meta.Get("__sequence_size", "0") != "0"
 
 	// Check for subclip
-	isSubclip := len(metaClips) > 1
+	isSubclip := len(fullOriginalMeta.GetArray("title")) > 1
 
 	title := meta.Get("title", "")
 	exportFormat := meta.Get("portal_mf868653", "NOTHING") // TODO: What is this?
@@ -199,6 +201,12 @@ func (c *Client) GetDataForExport(itemVXID string) error {
 
 		clip.AudioFile = map[string]*AudioFile{}
 		languagesToExport := meta.GetArray(FIELD_LANGS_TO_EXPORT)
+		if _, i, ok := lo.FindIndexOf(languagesToExport, func(l string) bool { return l == "nor" }); ok {
+			// Move "nor" to the front if available, so we can use it as fallback
+			languagesToExport = append(languagesToExport[:i], languagesToExport[i+1:]...)
+			languagesToExport = append([]string{"nor"}, languagesToExport...)
+		}
+		spew.Dump(languagesToExport)
 
 		if audioSource == EXPORT_AUDIO_SOURCE_RELATED {
 			for _, lang := range languagesToExport {
@@ -218,9 +226,12 @@ func (c *Client) GetDataForExport(itemVXID string) error {
 				// Now we know what audio to export
 				relatedAudioVXID := clipMeta.Get(relatedField, "")
 				if relatedAudioVXID == "" {
-					// TODO: This should fall back to "nor" audio and issue a warning *somewhere*
-					// This is mostly used for example for copyright with music
-					return errors.New("No related audio VXID for language " + lang)
+					// Fall back to "nor" audio and issue a warning *somewhere*
+					if languagesToExport[0] == "nor" {
+						clip.AudioFile[lang] = clip.AudioFile["nor"]
+					}
+					spew.Dump(errors.New("No related audio VXID for language " + lang))
+					continue
 				}
 
 				relatedAudioShapes, err := c.GetShapes(relatedAudioVXID)
@@ -274,8 +285,24 @@ func (c *Client) GetDataForExport(itemVXID string) error {
 		}
 	}
 
-	/// TODO: Audio files.
-	// TODO: Subs
+	// Fetch subs
+	for _, clip := range out.Clips {
+		// This is independent of audio language export config, we include all subs available
+		clipShapes, err := c.GetShapes(clip.VXID)
+		if err != nil {
+			return err
+		}
+
+		for langCode := range bccmflows.LanguagesByISO {
+			// There are also videos with .txt subs... we should support those at some point
+			shape := clipShapes.GetShape(fmt.Sprintf("sub_%s_srt", langCode))
+			if shape == nil {
+				continue
+			}
+
+			clip.SubFile[langCode] = shape.GetPath()
+		}
+	}
 
 	println("Exporting item " + itemVXID)
 	spew.Dump(exportFormat)

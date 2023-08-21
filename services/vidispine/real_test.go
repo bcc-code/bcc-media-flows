@@ -76,7 +76,13 @@ func Test_GetDataForExport(t *testing.T) {
 	var err error
 
 	// SEQ - Embedded audio
-	err = c.GetDataForExport("VX-464406")
+	//err = c.GetDataForExport("VX-464406")
+
+	// Asset - Master, Embedded Audio, Subtitles - Should error
+	// err = c.GetDataForExport("VX-447219")
+
+	// SEQ - Master, Embedded Audio, Subtitles
+	err = c.GetDataForExport("VX-447459")
 
 	// SEQ - Related Audio
 	//err = c.GetDataForExport("VX-464448")
