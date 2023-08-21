@@ -34,26 +34,31 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	logger.Info("Starting WatchFolderTranscode")
 
 	path := params.Path
-	path = utils.MoveToSiblingFolder(path, "processing")
-
-	var err error
+	path, err := utils.MoveToSiblingFolder(path, "processing")
+	if err != nil {
+		return err
+	}
+	outFolder, err := utils.GetSiblingFolder(path, "out")
+	if err != nil {
+		return err
+	}
 
 	switch params.ToCodec {
 	case common.CodecProRes422HQ_HD:
 		ctx = workflow.WithTaskQueue(ctx, common.QueueTranscode)
 		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.TranscodeToProResParams{
 			FilePath:  path,
-			OutputDir: utils.GetSiblingFolder(path, "out"),
+			OutputDir: outFolder,
 		}).Get(ctx, nil)
 	default:
 		err = fmt.Errorf("codec not supported: %s", params.ToCodec)
 	}
 
 	if err != nil {
-		path = utils.MoveToSiblingFolder(path, "error")
+		path, _ = utils.MoveToSiblingFolder(path, "error")
 		return err
 	} else {
-		path = utils.MoveToSiblingFolder(path, "processed")
+		path, _ = utils.MoveToSiblingFolder(path, "processed")
 	}
 
 	return nil

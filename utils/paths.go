@@ -1,32 +1,30 @@
 package utils
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 )
 
-func GetSiblingFolder(path, folder string) string {
+func GetSiblingFolder(path, folder string) (string, error) {
 	newFolder := filepath.Clean(filepath.Join(filepath.Dir(path), "..", folder))
 	err := os.MkdirAll(newFolder, os.ModePerm)
 	if err != nil {
-		fmt.Println(err)
+		return "", err
 	}
 	newFolder, err = filepath.Abs(newFolder)
 	if err != nil {
-		fmt.Println(err)
+		return "", err
 	}
-	return newFolder
+	return newFolder, nil
 }
 
-func MoveToSiblingFolder(path, folder string) string {
+func MoveToSiblingFolder(path, folder string) (string, error) {
 	filename := filepath.Base(path)
-	newFolder := GetSiblingFolder(path, folder)
+	newFolder, err := GetSiblingFolder(path, folder)
 	newPath := filepath.Join(newFolder, filename)
-	err := os.Rename(path, newPath)
+	err = os.Rename(path, newPath)
 	if err != nil {
-		fmt.Println(err)
-		return ""
+		return "", err
 	}
-	return newPath
+	return newPath, nil
 }
