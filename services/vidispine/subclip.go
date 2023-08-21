@@ -11,9 +11,9 @@ import (
 
 const (
 	// This is an arbitrary value, but it should be unique to prvent collisions with real titles
-	ORIGINAL_CLIP = "311a21f7-c07d-4fb6-b34b-fe4125869402"
-	MINUS_INF     = "-INF"
-	PLUS_INF      = "+INF"
+	OriginalClip = "311a21f7-c07d-4fb6-b34b-fe4125869402"
+	MinusInf     = "-INF"
+	PlusInf      = "+INF"
 )
 
 func (meta *MetadataResult) SplitByClips() map[string]*MetadataResult {
@@ -64,7 +64,7 @@ func (meta *MetadataResult) SplitByClips() map[string]*MetadataResult {
 	out := map[string]*MetadataResult{}
 	for key, val := range temp {
 		if key == "-INF-+INF" {
-			key = ORIGINAL_CLIP
+			key = OriginalClip
 		} else {
 			key = val.Get("title", key)
 		}

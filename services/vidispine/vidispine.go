@@ -11,11 +11,11 @@ import (
 
 type itemContentParam string
 
-const DEFAULT_STORAGE_ID = "VX-42"
+const DefaultStorageID = "VX-42"
 
 const (
-	ITEM_CONTENT_PARAM_METADATA itemContentParam = "metadata"
-	ITEM_CONTENT_PARAM_SHAPE    itemContentParam = "shape"
+	ItemContentParamMetadata itemContentParam = "metadata"
+	ItemContentParamShape    itemContentParam = "shape"
 )
 
 type Client struct {
@@ -158,7 +158,7 @@ func (c *Client) RegisterFile(filePath string, fileState fileState) (string, err
 
 	// We need the absolute path to the storage in order to remove it from the file path
 	// Yeah, briliant design. I know.
-	storagePath, err := c.GetAbsoluteStoragePath(DEFAULT_STORAGE_ID)
+	storagePath, err := c.GetAbsoluteStoragePath(DefaultStorageID)
 	if err != nil {
 		return "", err
 	}
@@ -168,7 +168,7 @@ func (c *Client) RegisterFile(filePath string, fileState fileState) (string, err
 
 	// Do it in a slightly more complicated way, but make sure everything is encoded properly.
 	requestURL, _ := url.Parse(c.baseURL)
-	requestURL.Path += "/storage/" + url.PathEscape(DEFAULT_STORAGE_ID) + "/file"
+	requestURL.Path += "/storage/" + url.PathEscape(DefaultStorageID) + "/file"
 	q := requestURL.Query()
 	q.Set("path", filePath)
 	q.Set("createOnly", "false")
@@ -216,7 +216,7 @@ func (c *Client) AddShapeToItem(tag, itemID, fileID string) (string, error) {
 	requestURL, _ := url.Parse(c.baseURL)
 	requestURL.Path += "/item/" + url.PathEscape(itemID) + "/shape"
 	q := requestURL.Query()
-	q.Set("storageId", DEFAULT_STORAGE_ID)
+	q.Set("storageId", DefaultStorageID)
 	q.Set("fileId", fileID)
 	q.Set("tag", tag)
 	requestURL.RawQuery = q.Encode()

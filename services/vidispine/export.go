@@ -34,14 +34,17 @@ type ExportData struct {
 }
 
 const (
-	FIELD_EXPORT_AUDIO_SOURCE = "portal_mf452504"
-	FIELD_TITLE               = "title"
-	FIELD_SUBCLIP_TO_EXPORT   = "portal_mf230973"
-	FIELD_LANGS_TO_EXPORT     = "portal_mf326592"
-	FIELD_START_TC            = "startTimeCode"
+	FieldExportAudioSource = "portal_mf452504"
+	FieldTitle             = "title"
+	FieldSubclipToExport   = "portal_mf230973"
+	FieldLangsToExport     = "portal_mf326592"
+	FieldStartTC           = "startTimeCode"
 
-	EXPORT_AUDIO_SOURCE_EMBEDDED ExportAudioSource = "embedded"
-	EXPORT_AUDIO_SOURCE_RELATED  ExportAudioSource = "related"
+	ExportAudioSourceEmbedded ExportAudioSource = "embedded"
+	ExportAudioSourceRelated  ExportAudioSource = "related"
+
+	EmptyWAVFile = "empty.wav"
+	EmtpySRTFile = "/mnt/isilon/assets/empty.srt"
 )
 
 func TCToSeconds(tc string) (float64, error) {
@@ -133,14 +136,14 @@ func getClipForAssetOrSubclip(c *Client, itemVXID string, isSubclip bool, meta *
 
 	var subclipMeta *MetadataResult
 
-	subclipName := meta.Get(FIELD_SUBCLIP_TO_EXPORT, "")
+	subclipName := meta.Get(FieldSubclipToExport, "")
 	if scMeta, ok := clipsMeta[subclipName]; ok {
 		subclipMeta = scMeta
 	} else {
 		return nil, errors.New("Subclip " + subclipName + " does not exist")
 	}
 
-	in, out, err := subclipMeta.GetInOut(meta.Get(FIELD_START_TC, "0@PAL"))
+	in, out, err := subclipMeta.GetInOut(meta.Get(FieldStartTC, "0@PAL"))
 	clip.InSeconds = in
 	clip.OutSeconds = out
 	return &clip, err
@@ -302,12 +305,12 @@ func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
 	metaClips := meta.SplitByClips()
 
 	// Get the metadata for the original clip
-	meta = metaClips[ORIGINAL_CLIP]
+	meta = metaClips[OriginalClip]
 
 	// Determine where to take the audio from
-	audioSource := EXPORT_AUDIO_SOURCE_EMBEDDED
-	if ExportAudioSource(meta.Get(FIELD_EXPORT_AUDIO_SOURCE, "")) == EXPORT_AUDIO_SOURCE_RELATED {
-		audioSource = EXPORT_AUDIO_SOURCE_RELATED
+	audioSource := ExportAudioSourceEmbedded
+	if ExportAudioSource(meta.Get(FieldExportAudioSource, "")) == ExportAudioSourceRelated {
+		audioSource = ExportAudioSourceRelated
 	}
 
 	// Check for sequence
@@ -345,11 +348,11 @@ func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
 	for _, clip := range out.Clips {
 		clip.AudioFile = map[string]*AudioFile{}
 
-		languagesToExport := meta.GetArray(FIELD_LANGS_TO_EXPORT)
+		languagesToExport := meta.GetArray(FieldLangsToExport)
 
-		if audioSource == EXPORT_AUDIO_SOURCE_RELATED {
+		if audioSource == ExportAudioSourceRelated {
 			clip, err = getRelatedAudios(c, clip, languagesToExport)
-		} else if audioSource == EXPORT_AUDIO_SOURCE_EMBEDDED {
+		} else if audioSource == ExportAudioSourceEmbedded {
 			clip, err = getEmbeddedAudio(c, clip, languagesToExport)
 		}
 
@@ -389,7 +392,7 @@ func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
 		// This is so it is easier to handle down the line if we always have a sub file for all languages
 		for langCode := range allSubLanguages.Iter() {
 			if _, ok := clip.SubFile[langCode]; !ok {
-				clip.SubFile[langCode] = "/mnt/isilon/assets/empty.srt"
+				clip.SubFile[langCode] = EmtpySRTFile
 			}
 		}
 	}

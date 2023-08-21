@@ -38,7 +38,7 @@ func Test_GetInOut_Asset(t *testing.T) {
 
 	meta := m.SplitByClips()
 
-	in, out, err := meta[vidispine.ORIGINAL_CLIP].GetInOut("")
+	in, out, err := meta[vidispine.OriginalClip].GetInOut("")
 	assert.NoError(t, err)
 	assert.Equal(t, 0.0, in)
 	assert.Equal(t, 7012.0, out)
@@ -54,7 +54,7 @@ func Test_GetInOut_Subclip(t *testing.T) {
 
 	meta := m.SplitByClips()
 
-	tcStart := meta[vidispine.ORIGINAL_CLIP].Get("startTimeCode", "0@PAL")
+	tcStart := meta[vidispine.OriginalClip].Get("startTimeCode", "0@PAL")
 
 	in, out, err := meta["John Doe - Speech"].GetInOut(tcStart)
 	assert.NoError(t, err)
