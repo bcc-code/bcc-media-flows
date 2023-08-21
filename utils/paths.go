@@ -18,7 +18,7 @@ func GetSiblingFolder(path, folder string) (string, error) {
 	return newFolder, nil
 }
 
-func MoveToSiblingFolder(path, folder string) (string, error) {
+func MoveToParentFolder(path, folder string) (string, error) {
 	filename := filepath.Base(path)
 	newFolder, err := GetSiblingFolder(path, folder)
 	newPath := filepath.Join(newFolder, filename)

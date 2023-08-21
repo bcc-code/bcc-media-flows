@@ -34,7 +34,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	logger.Info("Starting WatchFolderTranscode")
 
 	path := params.Path
-	path, err := utils.MoveToSiblingFolder(path, "processing")
+	path, err := utils.MoveToParentFolder(path, "processing")
 	if err != nil {
 		return err
 	}
@@ -76,12 +76,12 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	}
 
 	if err != nil {
-		path, _ = utils.MoveToSiblingFolder(path, "error")
+		path, _ = utils.MoveToParentFolder(path, "error")
 		return err
 	} else {
-		path, _ = utils.MoveToSiblingFolder(path, "processed")
+		path, _ = utils.MoveToParentFolder(path, "processed")
 
-		_, _ = utils.MoveToSiblingFolder(output.OutputPath, "out")
+		_, _ = utils.MoveToParentFolder(output.OutputPath, "out")
 	}
 
 	return nil
