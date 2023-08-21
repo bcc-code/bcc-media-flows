@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	bccmflows "github.com/bcc-code/bccm-flows"
-	"github.com/davecgh/go-spew/spew"
+	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/samber/lo"
 )
 
@@ -79,7 +79,7 @@ func (m *MetadataResult) GetInOut(beginTC string) (float64, float64, error) {
 	if v.Start == "-INF" && v.End == "+INF" {
 		// This is a full asset so we return 0.0 start and the lenght of the asset as end
 		endString := m.Get("durationSeconds", "0")
-		end, err := strconv.ParseFloat(endString, 64) // TODO: Error?
+		end, err := strconv.ParseFloat(endString, 64)
 		return start, end, err
 	}
 
@@ -105,15 +105,200 @@ func (m *MetadataResult) GetInOut(beginTC string) (float64, float64, error) {
 	return inTCseconds - beginTCseconds, outTCseconds - beginTCseconds, nil
 }
 
-// GetDataForExport returns the data needed to export the item with the given VXID
-// If exportSubclip is true, the subclip will be exported, otherwise the whole clip
-func (c *Client) GetDataForExport(itemVXID string) error {
-	meta, err := c.GetMetadata(itemVXID)
+func getClipForAssetOrSubclip(c *Client, itemVXID string, isSubclip bool, meta *MetadataResult, clipsMeta map[string]*MetadataResult) (*Clip, error) {
+	shapes, err := c.GetShapes(itemVXID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	fullOriginalMeta := meta
+	shape := shapes.GetShape("original")
+	if shape == nil {
+		return nil, fmt.Errorf("no original shape found for item %s", itemVXID)
+	}
+
+	clip := Clip{
+		VXID:      itemVXID,
+		VideoFile: shape.GetPath(),
+	}
+
+	if !isSubclip {
+		in, out, err := meta.GetInOut("")
+		if err != nil {
+			return nil, err
+		}
+		clip.InSeconds = in
+		clip.OutSeconds = out
+		return &clip, nil
+	}
+
+	var subclipMeta *MetadataResult
+
+	subclipName := meta.Get(FIELD_SUBCLIP_TO_EXPORT, "")
+	if scMeta, ok := clipsMeta[subclipName]; ok {
+		subclipMeta = scMeta
+	} else {
+		return nil, errors.New("Subclip " + subclipName + " does not exist")
+	}
+
+	in, out, err := subclipMeta.GetInOut(meta.Get(FIELD_START_TC, "0@PAL"))
+	clip.InSeconds = in
+	clip.OutSeconds = out
+	return &clip, err
+}
+
+func getRelatedAudios(c *Client, clip *Clip, languagesToExport []string) (*Clip, error) {
+
+	if _, i, ok := lo.FindIndexOf(languagesToExport, func(l string) bool { return l == "nor" }); ok {
+		// Move "nor" to the front if available, so we can use it as fallback
+		languagesToExport = append(languagesToExport[:i], languagesToExport[i+1:]...)
+		languagesToExport = append([]string{"nor"}, languagesToExport...)
+	}
+
+	for _, lang := range languagesToExport {
+
+		// Figure out which field holds the related id
+		relatedField := bccmflows.LanguagesByISO[lang].RelatedMBFieldID
+		if relatedField == "" {
+			return clip, errors.New("No related field for language " + lang + ". This indicates missing support in Vidispine")
+		}
+
+		// Get metadata for the video clip
+		clipMeta, err := c.GetMetadata(clip.VXID)
+		if err != nil {
+			return clip, err
+		}
+
+		// Now we know what audio to export
+		relatedAudioVXID := clipMeta.Get(relatedField, "")
+		if relatedAudioVXID == "" {
+			// If nor (floor language) is missing we fall back to silece
+			if lang == "nor" {
+				clip.AudioFile[lang] = &AudioFile{
+					Channels: []int{1, 2},
+					File:     "/mnt/isilon/assets/BlankAudio10h.wav",
+				}
+			} else if languagesToExport[0] == "nor" {
+				// Fall back to "nor" audio and issue a warning *somewhere*
+				clip.AudioFile[lang] = clip.AudioFile["nor"]
+			}
+
+			continue
+		}
+
+		relatedAudioShapes, err := c.GetShapes(relatedAudioVXID)
+		if err != nil {
+			return clip, err
+		}
+
+		// Ok now we can finally get the path to the audio file
+		relatedAudioShape := relatedAudioShapes.GetShape("original")
+		if relatedAudioShape == nil {
+			if languagesToExport[0] == "nor" {
+				// Fall back to "nor" audio and issue a warning *somewhere*
+				clip.AudioFile[lang] = clip.AudioFile["nor"]
+			} else {
+				return clip, fmt.Errorf("no original or fallback shape found for item %s", relatedAudioVXID)
+			}
+		}
+
+		channels := []int{}
+
+		if len(relatedAudioShape.AudioComponent) > 0 {
+			for i := 0; i < relatedAudioShape.AudioComponent[0].ChannelCount; i++ {
+				channels = append(channels, i+1)
+			}
+		} else {
+			return clip, fmt.Errorf("no audio components found for item %s", relatedAudioVXID)
+		}
+
+		clip.AudioFile[lang] = &AudioFile{
+			VXID:     relatedAudioVXID,
+			File:     relatedAudioShape.GetPath(),
+			Channels: channels,
+		}
+
+	}
+
+	return clip, nil
+}
+
+func getEmbeddedAudio(c *Client, clip *Clip, languagesToExport []string) (*Clip, error) {
+	shapes, err := c.GetShapes(clip.VXID)
+	if err != nil {
+		return clip, err
+	}
+
+	shape := shapes.GetShape("original")
+	if len(shape.AudioComponent) != 16 && len(shape.AudioComponent) > 2 {
+		return clip, fmt.Errorf("Found %d audio components, expected 2 or 16", len(shape.AudioComponent))
+	}
+
+	if len(shape.AudioComponent) == 0 {
+		// We have no audio, so we fall back to silence
+		channels := []int{1, 2}
+		for _, lang := range languagesToExport {
+			clip.AudioFile[lang] = &AudioFile{
+				File:     "/mnt/isilon/assets/BlankAudio10h.wav",
+				Channels: channels,
+			}
+		}
+
+		return clip, nil
+	}
+
+	if shape.AudioComponent[0].ChannelCount <= 2 {
+		// We have stereo or mono audio, so we copy it to all languages
+
+		channels := []int{}
+		for i := 1; i <= shape.AudioComponent[0].ChannelCount; i++ {
+			channels = append(channels, i)
+		}
+
+		for _, lang := range languagesToExport {
+			clip.AudioFile[lang] = &AudioFile{
+				VXID:     clip.VXID,
+				File:     shape.GetPath(),
+				Channels: channels,
+			}
+		}
+
+	}
+
+	for _, lang := range languagesToExport {
+		// We have an actual 16 channel audio file, so we need to figure out which channels to use
+		// and assign them to the correct language
+
+		if l, ok := bccmflows.LanguagesByISO[lang]; ok {
+			channels := []int{}
+			for i := 0; i < l.MU1ChannelCount; i++ {
+				channels = append(channels, l.MU1ChannelStart+i)
+			}
+
+			clip.AudioFile[lang] = &AudioFile{
+				VXID:     clip.VXID,
+				File:     clip.VideoFile,
+				Channels: channels,
+			}
+		} else {
+			return clip, errors.New("No language " + lang + " found in bccmflows.LanguagesByISO")
+		}
+	}
+
+	return clip, nil
+}
+
+// GetDataForExport returns the data needed to export the item with the given VXID
+// If exportSubclip is true, the subclip will be exported, otherwise the whole clip
+func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
+	meta, err := c.GetMetadata(itemVXID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check for subclip
+	// This check needs to happen on the original metadata, not the split one
+	isSubclip := len(meta.GetArray("title")) > 1
+
 	metaClips := meta.SplitByClips()
 
 	// Get the metadata for the original clip
@@ -128,188 +313,86 @@ func (c *Client) GetDataForExport(itemVXID string) error {
 	// Check for sequence
 	isSequence := meta.Get("__sequence_size", "0") != "0"
 
-	// Check for subclip
-	isSubclip := len(fullOriginalMeta.GetArray("title")) > 1
-
 	title := meta.Get("title", "")
-	exportFormat := meta.Get("portal_mf868653", "NOTHING") // TODO: What is this?
+
+	// TODO: This appears to define the shape used for export. Validate how and where this is used
+	// exportFormat := meta.Get("portal_mf868653", "original")
 
 	out := ExportData{
 		Title: title,
 		Clips: []*Clip{},
 	}
 
+	// Get the video clips as a base
 	if isSequence {
 		seq, err := c.GetSequence(itemVXID)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		out.Clips, err = seq.ToClips(c, audioSource)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	} else {
-
-		shapes, err := c.GetShapes(itemVXID)
+		clip, err := getClipForAssetOrSubclip(c, itemVXID, isSubclip, meta, metaClips)
 		if err != nil {
-			return err
+			return nil, err
 		}
-
-		shape := shapes.GetShape("original")
-		if shape == nil {
-			return fmt.Errorf("no original shape found for item %s", itemVXID)
-		}
-
-		clip := Clip{
-			VXID:      itemVXID,
-			VideoFile: shape.GetPath(),
-		}
-
-		if isSubclip {
-			var subclipMeta *MetadataResult
-
-			subclipName := meta.Get(FIELD_SUBCLIP_TO_EXPORT, "")
-			if scMeta, ok := metaClips[subclipName]; ok {
-				subclipMeta = scMeta
-			} else {
-				return errors.New("Subclip " + subclipName + " does not exist")
-			}
-
-			in, out, err := subclipMeta.GetInOut(meta.Get(FIELD_START_TC, "0@PAL"))
-			if err != nil {
-				return err
-			}
-
-			clip.InSeconds = in
-			clip.OutSeconds = out
-		} else {
-			in, out, err := meta.GetInOut("")
-			if err != nil {
-				return err
-			}
-			clip.InSeconds = in
-			clip.OutSeconds = out
-		}
-
-		out.Clips = append(out.Clips, &clip)
+		out.Clips = append(out.Clips, clip)
 	}
 
+	// Process the video clips and get the audio parts
 	for _, clip := range out.Clips {
-		if clip.AudioFile != nil {
-			continue
-		}
-
 		clip.AudioFile = map[string]*AudioFile{}
+
 		languagesToExport := meta.GetArray(FIELD_LANGS_TO_EXPORT)
-		if _, i, ok := lo.FindIndexOf(languagesToExport, func(l string) bool { return l == "nor" }); ok {
-			// Move "nor" to the front if available, so we can use it as fallback
-			languagesToExport = append(languagesToExport[:i], languagesToExport[i+1:]...)
-			languagesToExport = append([]string{"nor"}, languagesToExport...)
-		}
-		spew.Dump(languagesToExport)
 
 		if audioSource == EXPORT_AUDIO_SOURCE_RELATED {
-			for _, lang := range languagesToExport {
-
-				// Figure out which field holds the related id
-				relatedField := bccmflows.LanguagesByISO[lang].RelatedMBFieldID
-				if relatedField == "" {
-					return errors.New("No related field for language " + lang + ". This indicates missing support in Vidispine")
-				}
-
-				// Get metadata for the video clip
-				clipMeta, err := c.GetMetadata(clip.VXID)
-				if err != nil {
-					return err
-				}
-
-				// Now we know what audio to export
-				relatedAudioVXID := clipMeta.Get(relatedField, "")
-				if relatedAudioVXID == "" {
-					// Fall back to "nor" audio and issue a warning *somewhere*
-					if languagesToExport[0] == "nor" {
-						clip.AudioFile[lang] = clip.AudioFile["nor"]
-					}
-					spew.Dump(errors.New("No related audio VXID for language " + lang))
-					continue
-				}
-
-				relatedAudioShapes, err := c.GetShapes(relatedAudioVXID)
-				if err != nil {
-					return err
-				}
-
-				// Ok now we can finally get the path to the audio file
-				relatedAudioShape := relatedAudioShapes.GetShape("original")
-				if relatedAudioShape == nil {
-					// TODO: This should fall back to "nor" audio and issue a warning *somewhere*
-					return fmt.Errorf("no original shape found for item %s", relatedAudioVXID)
-				}
-
-				clip.AudioFile[lang] = &AudioFile{
-					VXID:     relatedAudioVXID,
-					File:     relatedAudioShape.GetPath(),
-					Channels: []int{1, 2}, // TODO: Always stereo? How does ffmpeg number channels/streams?
-				}
-
-			}
+			clip, err = getRelatedAudios(c, clip, languagesToExport)
 		} else if audioSource == EXPORT_AUDIO_SOURCE_EMBEDDED {
-			// The most common use of this is for exporting a subclip, or a seuence where all clips are from the same source
-			// In this case we *assume* that all clips have an embedded audio tracks.
+			clip, err = getEmbeddedAudio(c, clip, languagesToExport)
+		}
 
-			// TODO: Verify this assumption using ffprobe?
-
-			spew.Dump(clip.VideoFile)
-			if !strings.Contains(clip.VideoFile, "MU1") {
-				return errors.New("Currently only MU1 is supported with embedded audio. " + clip.VideoFile + " does not contain MU1. Contact support if you need this")
-			}
-
-			for _, lang := range languagesToExport {
-				if l, ok := bccmflows.LanguagesByISO[lang]; ok {
-					channels := []int{}
-					for i := 0; i < l.MU1ChannelCount; i++ {
-						channels = append(channels, l.MU1ChannelStart+i)
-					}
-
-					clip.AudioFile[lang] = &AudioFile{
-						VXID:     clip.VXID,
-						File:     clip.VideoFile,
-						Channels: channels,
-					}
-				} else {
-					// TODO: Warning and fallback to "nor" audio
-					return errors.New("No language " + lang + " found in bccmflows.LanguagesByISO")
-				}
-			}
-
+		if err != nil {
+			return nil, err
 		}
 	}
+
+	allSubLanguages := mapset.NewSet[string]()
 
 	// Fetch subs
 	for _, clip := range out.Clips {
+		clip.SubFile = map[string]string{}
+
 		// This is independent of audio language export config, we include all subs available
 		clipShapes, err := c.GetShapes(clip.VXID)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		for langCode := range bccmflows.LanguagesByISO {
 			// There are also videos with .txt subs... we should support those at some point
 			shape := clipShapes.GetShape(fmt.Sprintf("sub_%s_srt", langCode))
-			if shape == nil {
+			if shape == nil || shape.GetPath() == "" {
 				continue
 			}
 
 			clip.SubFile[langCode] = shape.GetPath()
+
+			// Collect all languages that any of the clips have subs for
+			allSubLanguages.Add(langCode)
 		}
 	}
 
-	println("Exporting item " + itemVXID)
-	spew.Dump(exportFormat)
-	spew.Dump(out)
-	spew.Dump(audioSource)
-	println("---------------" + itemVXID)
-	println()
+	for _, clip := range out.Clips {
+		// Add empty subs for all languages that any of the clips have subs for if they are missing
+		// This is so it is easier to handle down the line if we always have a sub file for all languages
+		for langCode := range allSubLanguages.Iter() {
+			if _, ok := clip.SubFile[langCode]; !ok {
+				clip.SubFile[langCode] = "/mnt/isilon/assets/empty.srt"
+			}
+		}
+	}
 
-	return nil
+	return &out, nil
 }

@@ -239,7 +239,7 @@ func (c *Client) GetSequence(sequenceID string) (*SequenceDocument, error) {
 	if err != nil {
 		return nil, err
 	}
-		return result.Result().(*SequenceDocument), nil
+	return result.Result().(*SequenceDocument), nil
 }
 
 func (c *Client) AddSidecarToItem(itemID, filePath, language string) (string, error) {

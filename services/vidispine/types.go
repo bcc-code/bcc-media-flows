@@ -159,6 +159,13 @@ type VideoComponent struct {
 	StartTimestamp       Timestamp    `json:"startTimestamp"`
 }
 
+type BinaryComponent struct {
+	Length   int    `json:"length"`
+	File     []File `json:"file"`
+	ID       string `json:"id"`
+	Metadata []KV   `json:"metadata"`
+}
+
 type Shape struct {
 	ID                 string             `json:"id"`
 	Created            string             `json:"created"`
@@ -168,5 +175,6 @@ type Shape struct {
 	ContainerComponent ContainerComponent `json:"containerComponent"`
 	AudioComponent     []AudioComponent   `json:"audioComponent"`
 	VideoComponent     []VideoComponent   `json:"videoComponent"`
+	BinaryComponent    []BinaryComponent  `json:"binaryComponent"`
 	Metadata           KV                 `json:"metadata"`
 }
