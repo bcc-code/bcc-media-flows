@@ -15,8 +15,6 @@ import (
 
 var TranscodeRootPath = os.Getenv("TRANSCODE_ROOT_PATH")
 
-const TranscodeH264 = "h264"
-
 type watcherResult struct {
 	Name      string    `json:"name"`
 	Path      string    `json:"path"`
@@ -41,7 +39,7 @@ func watchersHandler(ctx *gin.Context) {
 	ctx.Status(200)
 }
 
-var exp = regexp.MustCompile(fmt.Sprintf("(?:%s/)(?P<encoding>\\w*)(?:/in/)", TranscodeRootPath))
+var exp = regexp.MustCompile(fmt.Sprintf("(?:%s/)(?P<encoding>[\\w-]*)(?:/in/)", TranscodeRootPath))
 
 func doTranscode(ctx context.Context, path string) error {
 	match := exp.MatchString(path)
