@@ -51,6 +51,8 @@ func main() {
 		w.RegisterActivity(activities.Transcribe)
 		w.RegisterActivity(vidispine.GetFileFromVXActivity)
 		w.RegisterActivity(vidispine.ImportFileAsShapeActivity)
+		w.RegisterActivity(vidispine.ImportFileAsSidecarActivity)
+		w.RegisterActivity(vidispine.SetVXMetadataFieldActivity)
 		w.RegisterWorkflow(workflows.TranscodePreviewVX)
 		w.RegisterWorkflow(workflows.TranscodePreviewFile)
 		w.RegisterWorkflow(workflows.TranscribeFile)

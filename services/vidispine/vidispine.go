@@ -239,6 +239,53 @@ func (c *Client) GetSequence(sequenceID string) (*SequenceDocument, error) {
 	if err != nil {
 		return nil, err
 	}
+		return result.Result().(*SequenceDocument), nil
+}
 
-	return result.Result().(*SequenceDocument), nil
+func (c *Client) AddSidecarToItem(itemID, filePath, language string) (string, error) {
+	requestURL, _ := url.Parse(c.baseURL)
+	requestURL.Path += "/import/sidecar/" + url.PathEscape(itemID)
+	q := requestURL.Query()
+	q.Set("sidecar", "file://"+filePath)
+	q.Set("jobmetadata", "subtitleLanguage="+language)
+	requestURL.RawQuery = q.Encode()
+
+	result, err := c.restyClient.R().
+		Post(requestURL.String())
+
+	if err != nil {
+		return "", err
+	}
+
+	return result.String(), nil
+}
+
+func (c *Client) SetItemMetadataField(itemID, key, value string) (string, error) {
+	requestURL, _ := url.Parse(c.baseURL)
+	requestURL.Path += fmt.Sprintf("/item/%s/metadata", url.PathEscape(itemID))
+	q := requestURL.Query()
+	requestURL.RawQuery = q.Encode()
+
+	var body bytes.Buffer
+	err := xmlSetMetadataPlaceholderTmpl.Execute(&body, struct {
+		Key   string
+		Value string
+	}{
+		key,
+		value,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	result, err := c.restyClient.R().
+		SetHeader("content-type", "application/xml").
+		SetBody(body.String()).
+		Put(requestURL.String())
+
+	if err != nil {
+		return "", err
+	}
+
+	return result.String(), nil
 }

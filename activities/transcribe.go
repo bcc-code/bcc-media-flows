@@ -18,6 +18,7 @@ type TranscribeParams struct {
 type TranscribeResponse struct {
 	JSONPath string
 	SRTPath  string
+	TXTPath  string
 }
 
 // Transcribe is the activity that transcribes a video
@@ -42,5 +43,6 @@ func Transcribe(
 	return &TranscribeResponse{
 		JSONPath: filepath.Join(jobData.OutputPath, fileName+".json"),
 		SRTPath:  filepath.Join(jobData.OutputPath, fileName+".srt"),
+		TXTPath:  filepath.Join(jobData.OutputPath, fileName+".txt"),
 	}, nil
 }
