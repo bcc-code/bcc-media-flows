@@ -18,6 +18,32 @@ type ProResResult struct {
 	OutputPath string
 }
 
+func parseProgressCallback(totalFrames float64, cb func(float64)) func(string) {
+	return func(line string) {
+
+		parts := strings.Split(line, "=")
+
+		if len(parts) != 2 {
+			return
+		}
+
+		if parts[0] == "frame" {
+			frame, _ := strconv.ParseFloat(parts[1], 64)
+			if frame == 0 {
+				cb(0)
+			} else {
+				cb(frame / totalFrames)
+			}
+		}
+		if parts[0] == "progress" {
+			// Audio doesn't report progress in a conceivable way, so just return 1 on complete
+			if parts[1] == "end" {
+				cb(1)
+			}
+		}
+	}
+}
+
 func ProRes(input ProResInput, progressCallback func(float64)) (*ProResResult, error) {
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mov"
 	outputPath := filepath.Join(input.OutputDir, filename)
@@ -54,28 +80,7 @@ func ProRes(input ProResInput, progressCallback func(float64)) (*ProResResult, e
 		return nil, err
 	}
 
-	_, err = utils.ExecuteCmd(cmd, func(line string) {
-		parts := strings.Split(line, "=")
-
-		if len(parts) != 2 {
-			return
-		}
-
-		if parts[0] == "frame" {
-			frame, _ := strconv.ParseFloat(parts[1], 64)
-			if frame == 0 {
-				progressCallback(0)
-			} else {
-				progressCallback(frame / totalFrames)
-			}
-		}
-		if parts[0] == "progress" {
-			// Audio doesn't report progress in a conceivable way, so just return 1 on complete
-			if parts[1] == "end" {
-				progressCallback(1)
-			}
-		}
-	})
+	_, err = utils.ExecuteCmd(cmd, parseProgressCallback(totalFrames, progressCallback))
 	if err != nil {
 		return nil, err
 	}

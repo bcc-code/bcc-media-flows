@@ -101,36 +101,14 @@ func Preview(input PreviewInput, progressCallback func(float64)) (*PreviewResult
 
 	command := strings.Join(commandParts, " ")
 
-	fmt.Println(command)
-
 	cmd := exec.Command("ffmpeg", strings.Split(command, " ")...)
 
-	totalFrames, _ := strconv.ParseFloat(info.Streams[0].NbFrames, 64)
-
-	callback := func(line string) {
-		parts := strings.Split(line, "=")
-
-		if len(parts) != 2 {
-			return
-		}
-
-		if parts[0] == "frame" {
-			frame, _ := strconv.ParseFloat(parts[1], 64)
-			if frame == 0 {
-				progressCallback(0)
-			} else {
-				progressCallback(frame / totalFrames)
-			}
-		}
-		if parts[0] == "progress" {
-			// Audio doesn't report progress in a conceivable way, so just return 1 on complete
-			if parts[1] == "end" {
-				progressCallback(1)
-			}
-		}
+	totalFrames, err := strconv.ParseFloat(info.Streams[0].NbFrames, 64)
+	if err != nil {
+		return nil, err
 	}
 
-	_, err = utils.ExecuteCmd(cmd, callback)
+	_, err = utils.ExecuteCmd(cmd, parseProgressCallback(totalFrames, progressCallback))
 	if err != nil {
 		return nil, err
 	}
