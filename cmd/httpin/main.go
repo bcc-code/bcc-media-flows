@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/workflows"
 	"net/http"
 	"os"
@@ -15,13 +16,25 @@ func getParamFromCtx(ctx *gin.Context, key string) string {
 	return ctx.DefaultPostForm(key, ctx.DefaultQuery(key, ""))
 }
 
-func triggerHandler(ctx *gin.Context) {
-	job := ctx.Param("job")
-
-	wfClient, err := client.Dial(client.Options{
+func getClient() (client.Client, error) {
+	return client.Dial(client.Options{
 		HostPort:  os.Getenv("TEMPORAL_HOST_PORT"),
 		Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
 	})
+}
+
+func getQueue() string {
+	queue := os.Getenv("QUEUE")
+	if queue == "" {
+		queue = common.QueueWorker
+	}
+	return queue
+}
+
+func triggerHandler(ctx *gin.Context) {
+	job := ctx.Param("job")
+
+	wfClient, err := getClient()
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -31,10 +44,7 @@ func triggerHandler(ctx *gin.Context) {
 
 	defer wfClient.Close()
 
-	queue := os.Getenv("QUEUE")
-	if queue == "" {
-		queue = "worker"
-	}
+	queue := getQueue()
 	vxID := getParamFromCtx(ctx, "vxID")
 	workflowOptions := client.StartWorkflowOptions{
 		ID:        uuid.NewString(),
@@ -91,6 +101,8 @@ func main() {
 
 	r.POST("/trigger/:job", triggerHandler)
 	r.GET("/trigger/:job", triggerHandler)
+
+	r.POST("/watchers", watchersHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
