@@ -18,11 +18,7 @@ type TranscodePreviewResponse struct {
 	AudioOnly       bool
 }
 
-// TranscodePreview is the activity definition for transcoding a video to preview. It only uses the specified filepath
-// and output dir to create the necessary files. Requires ffmpeg and ffprobe to be installed on the worker running this.
-func TranscodePreview(ctx context.Context, input TranscodePreviewParams) (*TranscodePreviewResponse, error) {
-	activity.RecordHeartbeat(ctx, "Transcode Preview")
-
+func registerProgressCallback(ctx context.Context) (chan struct{}, func(float64)) {
 	currentPercent := 0.0
 
 	progressCallback := func(percent float64) {
@@ -30,7 +26,6 @@ func TranscodePreview(ctx context.Context, input TranscodePreviewParams) (*Trans
 	}
 
 	stopChan := make(chan struct{})
-	defer close(stopChan)
 
 	go func() {
 		timer := time.NewTicker(time.Second * 5)
@@ -45,6 +40,17 @@ func TranscodePreview(ctx context.Context, input TranscodePreviewParams) (*Trans
 			}
 		}
 	}()
+
+	return stopChan, progressCallback
+}
+
+// TranscodePreview is the activity definition for transcoding a video to preview. It only uses the specified filepath
+// and output dir to create the necessary files. Requires ffmpeg and ffprobe to be installed on the worker running this.
+func TranscodePreview(ctx context.Context, input TranscodePreviewParams) (*TranscodePreviewResponse, error) {
+	activity.RecordHeartbeat(ctx, "Transcode Preview")
+
+	stop, progressCallback := registerProgressCallback(ctx)
+	defer close(stop)
 
 	result, err := transcode.Preview(transcode.PreviewInput{
 		OutputDir: input.DestinationDirPath,

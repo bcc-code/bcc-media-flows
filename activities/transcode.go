@@ -20,10 +20,13 @@ func TranscodeToProResActivity(ctx context.Context, input TranscodeToProResParam
 	activity.RecordHeartbeat(ctx, "TranscodeToProRes")
 	log.Info("Starting TranscodeToProResActivity")
 
+	stop, progressCallback := registerProgressCallback(ctx)
+	defer close(stop)
+
 	transcodeResult, err := transcode.ProRes(transcode.ProResInput{
 		FilePath:  input.FilePath,
 		OutputDir: input.OutputDir,
-	})
+	}, progressCallback)
 	if err != nil {
 		return nil, err
 	}
