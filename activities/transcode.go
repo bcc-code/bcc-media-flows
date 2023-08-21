@@ -7,8 +7,10 @@ import (
 )
 
 type TranscodeToProResParams struct {
-	FilePath  string
-	OutputDir string
+	FilePath   string
+	OutputDir  string
+	Resolution string
+	FrameRate  int
 }
 
 type TranscodeToProResResponse struct {
@@ -24,8 +26,10 @@ func TranscodeToProResActivity(ctx context.Context, input TranscodeToProResParam
 	defer close(stop)
 
 	transcodeResult, err := transcode.ProRes(transcode.ProResInput{
-		FilePath:  input.FilePath,
-		OutputDir: input.OutputDir,
+		FilePath:   input.FilePath,
+		OutputDir:  input.OutputDir,
+		FrameRate:  input.FrameRate,
+		Resolution: input.Resolution,
 	}, progressCallback)
 	if err != nil {
 		return nil, err

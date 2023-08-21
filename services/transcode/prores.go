@@ -10,8 +10,10 @@ import (
 )
 
 type ProResInput struct {
-	FilePath  string
-	OutputDir string
+	FilePath   string
+	OutputDir  string
+	Resolution string
+	FrameRate  int
 }
 
 type ProResResult struct {
@@ -60,11 +62,27 @@ func ProRes(input ProResInput, progressCallback func(float64)) (*ProResResult, e
 		"-profile:v 3",
 		"-vendor ap10",
 		"-y",
-		"-s 1920x1080",
-		"-r 50",
+	}
+
+	if input.Resolution != "" {
+		commandParts = append(
+			commandParts,
+			fmt.Sprintf("-s %s", input.Resolution),
+		)
+	}
+
+	if input.FrameRate != 0 {
+		commandParts = append(
+			commandParts,
+			fmt.Sprintf("-r %d", input.FrameRate),
+		)
+	}
+
+	commandParts = append(
+		commandParts,
 		"-bits_per_mb 8000",
 		outputPath,
-	}
+	)
 
 	commandString := strings.Join(commandParts, " ")
 

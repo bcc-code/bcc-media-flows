@@ -43,12 +43,32 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 		return err
 	}
 
+	ctx = workflow.WithTaskQueue(ctx, common.QueueTranscode)
 	switch params.ToCodec {
-	case common.CodecProRes422HQ_HD:
-		ctx = workflow.WithTaskQueue(ctx, common.QueueTranscode)
+	case common.CodecProRes422HQHD:
+		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.TranscodeToProResParams{
+			FilePath:   path,
+			OutputDir:  outFolder,
+			Resolution: "1920x1080",
+			FrameRate:  25,
+		}).Get(ctx, nil)
+	case common.CodecProRes422HQNative:
 		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.TranscodeToProResParams{
 			FilePath:  path,
 			OutputDir: outFolder,
+		}).Get(ctx, nil)
+	case common.CodecProRes422HQNative25FPS:
+		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.TranscodeToProResParams{
+			FilePath:  path,
+			OutputDir: outFolder,
+			FrameRate: 25,
+		}).Get(ctx, nil)
+	case common.CodecProRes4444K25FPS:
+		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.TranscodeToProResParams{
+			FilePath:   path,
+			OutputDir:  outFolder,
+			Resolution: "3840x2160",
+			FrameRate:  25,
 		}).Get(ctx, nil)
 	default:
 		err = fmt.Errorf("codec not supported: %s", params.ToCodec)
