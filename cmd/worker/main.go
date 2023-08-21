@@ -47,6 +47,19 @@ func main() {
 	w := worker.New(c, queue, workerOptions)
 
 	switch queue {
+	case common.QueueDebug:
+		w.RegisterActivity(activities.Transcribe)
+		w.RegisterActivity(vidispine.GetFileFromVXActivity)
+		w.RegisterActivity(vidispine.ImportFileAsShapeActivity)
+		w.RegisterActivity(vidispine.ImportFileAsSidecarActivity)
+		w.RegisterActivity(vidispine.SetVXMetadataFieldActivity)
+		w.RegisterWorkflow(workflows.TranscodePreviewVX)
+		w.RegisterWorkflow(workflows.TranscodePreviewFile)
+		w.RegisterWorkflow(workflows.TranscribeFile)
+		w.RegisterWorkflow(workflows.TranscribeVX)
+		w.RegisterWorkflow(workflows.WatchFolderTranscode)
+		w.RegisterActivity(activities.TranscodePreview)
+		w.RegisterActivity(activities.TranscodeToProResActivity)
 	case common.QueueWorker:
 		w.RegisterActivity(activities.Transcribe)
 		w.RegisterActivity(vidispine.GetFileFromVXActivity)
@@ -57,8 +70,10 @@ func main() {
 		w.RegisterWorkflow(workflows.TranscodePreviewFile)
 		w.RegisterWorkflow(workflows.TranscribeFile)
 		w.RegisterWorkflow(workflows.TranscribeVX)
+		w.RegisterWorkflow(workflows.WatchFolderTranscode)
 	case common.QueueTranscode:
 		w.RegisterActivity(activities.TranscodePreview)
+		w.RegisterActivity(activities.TranscodeToProResActivity)
 	}
 
 	err = w.Run(worker.InterruptCh())
