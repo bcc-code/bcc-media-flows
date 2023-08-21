@@ -12,6 +12,10 @@ func GetSiblingFolder(path, folder string) string {
 	if err != nil {
 		fmt.Println(err)
 	}
+	newFolder, err = filepath.Abs(newFolder)
+	if err != nil {
+		fmt.Println(err)
+	}
 	return newFolder
 }
 
