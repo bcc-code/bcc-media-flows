@@ -4,40 +4,76 @@ on:
   workflow_dispatch:
   push:
     branches: [ "master" ]
-  
+
 
 jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    strategy:
+      matrix:
+        goosarch: [ linux/amd64, linux/arm64, darwin/amd64, darwin/arm64 ]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: 1.21
+      - name: Get OS and arch info
+        run: |
+          GOOSARCH=${{matrix.goosarch}}
+          GOOS=${GOOSARCH%/*}
+          GOARCH=${GOOSARCH#*/}
+          BINARY_NAME=${{github.repository}}-$GOOS-$GOARCH
+          echo "BINARY_NAME=$BINARY_NAME" >> $GITHUB_ENV
+          echo "GOOS=$GOOS" >> $GITHUB_ENV
+          echo "GOARCH=$GOARCH" >> $GITHUB_ENV
+      - name: Build
+        run: |
+          go build -o "$BINARY_NAME" -v ./cmd/worker
+      - name: Release Notes
+        run:
+          git log $(git describe HEAD~ --tags --abbrev=0)..HEAD --pretty='format:* %h %s%n  * %an <%ae>' --no-merges >> ".github/RELEASE-TEMPLATE.md"
+      - name: Release with Notes
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: ".github/RELEASE-TEMPLATE.md"
+          draft: true
+          files: ${{env.BINARY_NAME}}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   deploy:
     runs-on: ubuntu-latest
     permissions:
       packages: write
       contents: read
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v2
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build and push worker image
-      env:
-        IMAGE_NAME_LATEST: ghcr.io/bcc-code/bcc-media/temporal-worker:latest
-        IMAGE_NAME: ghcr.io/bcc-code/bcc-media/temporal-worker:${{ github.sha }}
-      run: | 
-        docker build . --file worker.Dockerfile --tag $IMAGE_NAME
-        docker tag $IMAGE_NAME $IMAGE_NAME_LATEST
-        docker push $IMAGE_NAME
-        docker push $IMAGE_NAME_LATEST
+      - name: Build and push worker image
+        env:
+          IMAGE_NAME_LATEST: ghcr.io/bcc-code/bcc-media/temporal-worker:latest
+          IMAGE_NAME: ghcr.io/bcc-code/bcc-media/temporal-worker:${{ github.sha }}
+        run: |
+          docker build . --file worker.Dockerfile --tag $IMAGE_NAME
+          docker tag $IMAGE_NAME $IMAGE_NAME_LATEST
+          docker push $IMAGE_NAME
+          docker push $IMAGE_NAME_LATEST
 
-    - name: Build and push http trigger image
-      env:
-        IMAGE_NAME_LATEST: ghcr.io/bcc-code/bcc-media/temporal-httpin:latest
-        IMAGE_NAME: ghcr.io/bcc-code/bcc-media/temporal-httpin:${{ github.sha }}
-      run: |
-        docker build . --file httpin.Dockerfile --tag $IMAGE_NAME
-        docker tag $IMAGE_NAME $IMAGE_NAME_LATEST
-        docker push $IMAGE_NAME
-        docker push $IMAGE_NAME_LATEST
+      - name: Build and push http trigger image
+        env:
+          IMAGE_NAME_LATEST: ghcr.io/bcc-code/bcc-media/temporal-httpin:latest
+          IMAGE_NAME: ghcr.io/bcc-code/bcc-media/temporal-httpin:${{ github.sha }}
+        run: |
+          docker build . --file httpin.Dockerfile --tag $IMAGE_NAME
+          docker tag $IMAGE_NAME $IMAGE_NAME_LATEST
+          docker push $IMAGE_NAME
+          docker push $IMAGE_NAME_LATEST
