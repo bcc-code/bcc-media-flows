@@ -61,6 +61,10 @@ func ProRes(input ProResInput, progressCallback func(float64)) (*ProResResult, e
 		"-progress pipe:1",
 		"-profile:v 3",
 		"-vendor ap10",
+		"-vf \"setfield=tff\"",
+		"-color_primaries bt709",
+		"-color_trc bt709",
+		"-colorspace bt709",
 		"-y",
 	}
 
@@ -81,6 +85,7 @@ func ProRes(input ProResInput, progressCallback func(float64)) (*ProResResult, e
 	commandParts = append(
 		commandParts,
 		"-bits_per_mb 8000",
+		"-c:a pcm_s16le",
 		outputPath,
 	)
 
