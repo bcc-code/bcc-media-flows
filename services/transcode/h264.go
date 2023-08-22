@@ -9,44 +9,19 @@ import (
 	"strings"
 )
 
-type ProResInput struct {
+type EncodeInput struct {
 	FilePath   string
 	OutputDir  string
 	Resolution string
 	FrameRate  int
+	Bitrate    string
 }
 
-type ProResResult struct {
-	OutputPath string
+type EncodeResult struct {
+	Path string
 }
 
-func parseProgressCallback(totalFrames float64, cb func(float64)) func(string) {
-	return func(line string) {
-
-		parts := strings.Split(line, "=")
-
-		if len(parts) != 2 {
-			return
-		}
-
-		if parts[0] == "frame" {
-			frame, _ := strconv.ParseFloat(parts[1], 64)
-			if frame == 0 {
-				cb(0)
-			} else {
-				cb(frame / totalFrames)
-			}
-		}
-		if parts[0] == "progress" {
-			// Audio doesn't report progress in a conceivable way, so just return 1 on complete
-			if parts[1] == "end" {
-				cb(1)
-			}
-		}
-	}
-}
-
-func ProRes(input ProResInput, progressCallback func(float64)) (*ProResResult, error) {
+func H264(input EncodeInput, progressCallback func(float64)) (*EncodeResult, error) {
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mov"
 	outputPath := filepath.Join(input.OutputDir, filename)
 
@@ -57,15 +32,21 @@ func ProRes(input ProResInput, progressCallback func(float64)) (*ProResResult, e
 
 	commandParts := []string{
 		fmt.Sprintf("-i %s", input.FilePath),
-		"-c:v prores_ks",
+		"-c:v libx264",
 		"-progress pipe:1",
-		"-profile:v 3",
-		"-vendor ap10",
-		"-vf \"setfield=tff\"",
+		"-profile:v high422",
+		"-pix_fmt yuv422p10le",
 		"-color_primaries bt709",
 		"-color_trc bt709",
 		"-colorspace bt709",
 		"-y",
+	}
+
+	if input.Bitrate != "" {
+		commandParts = append(
+			commandParts,
+			fmt.Sprintf("-b:v %s", input.Bitrate),
+		)
 	}
 
 	if input.Resolution != "" {
@@ -107,7 +88,7 @@ func ProRes(input ProResInput, progressCallback func(float64)) (*ProResResult, e
 		return nil, err
 	}
 
-	return &ProResResult{
-		OutputPath: outputPath,
+	return &EncodeResult{
+		Path: outputPath,
 	}, nil
 }

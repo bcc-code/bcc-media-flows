@@ -43,33 +43,41 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 		return err
 	}
 
-	var output activities.TranscodeToProResResponse
+	var output activities.EncodeResult
 	ctx = workflow.WithTaskQueue(ctx, common.QueueTranscode)
 	switch params.ToCodec {
 	case common.CodecProRes422HQHD:
-		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.TranscodeToProResParams{
+		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:   path,
 			OutputDir:  outFolder,
 			Resolution: "1920x1080",
 			FrameRate:  25,
 		}).Get(ctx, &output)
 	case common.CodecProRes422HQNative:
-		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.TranscodeToProResParams{
+		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:  path,
 			OutputDir: outFolder,
 		}).Get(ctx, &output)
 	case common.CodecProRes422HQNative25FPS:
-		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.TranscodeToProResParams{
+		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:  path,
 			OutputDir: outFolder,
 			FrameRate: 25,
 		}).Get(ctx, &output)
 	case common.CodecProRes4444K25FPS:
-		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.TranscodeToProResParams{
+		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:   path,
 			OutputDir:  outFolder,
 			Resolution: "3840x2160",
 			FrameRate:  25,
+		}).Get(ctx, &output)
+	case common.CodecAVCIntra100HD:
+		err = workflow.ExecuteActivity(ctx, activities.TranscodeToH264Activity, activities.EncodeParams{
+			FilePath:   path,
+			OutputDir:  outFolder,
+			Resolution: "1920x1080",
+			FrameRate:  25,
+			Bitrate:    "100M",
 		}).Get(ctx, &output)
 	default:
 		err = fmt.Errorf("codec not supported: %s", params.ToCodec)
