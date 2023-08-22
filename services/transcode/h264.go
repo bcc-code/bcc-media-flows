@@ -22,7 +22,7 @@ type EncodeResult struct {
 }
 
 func H264(input EncodeInput, progressCallback func(float64)) (*EncodeResult, error) {
-	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mov"
+	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mxf"
 	outputPath := filepath.Join(input.OutputDir, filename)
 
 	info, err := ProbeFile(input.FilePath)
