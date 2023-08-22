@@ -101,7 +101,7 @@ func ProRes(input ProResInput, progressCallback func(float64)) (*ProResResult, e
 
 	totalFrames, err := strconv.ParseFloat(info.Streams[0].NbFrames, 64)
 	if err != nil {
-		return nil, err
+		totalFrames = 1000000
 	}
 
 	_, err = utils.ExecuteCmd(cmd, parseProgressCallback(totalFrames, progressCallback))
