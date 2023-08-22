@@ -36,7 +36,7 @@ func H264(input EncodeInput, progressCallback func(float64)) (*EncodeResult, err
 		"-progress pipe:1",
 		"-profile:v high422",
 		"-pix_fmt yuv422p10le",
-		"-vf \"setfield=tff,format=yuv422p10le\"",
+		"-vf setfield=tff,format=yuv422p10le",
 		"-color_primaries bt709",
 		"-color_trc bt709",
 		"-colorspace bt709",
