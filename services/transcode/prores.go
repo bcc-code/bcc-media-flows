@@ -90,6 +90,8 @@ func ProRes(input ProResInput, progressCallback func(float64)) (*ProResResult, e
 
 	commandString := strings.Join(commandParts, " ")
 
+	fmt.Println(commandString)
+
 	cmd := exec.Command("ffmpeg",
 		strings.Split(
 			commandString,
