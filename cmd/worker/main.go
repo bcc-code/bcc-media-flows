@@ -74,6 +74,7 @@ func main() {
 	case common.QueueTranscode:
 		w.RegisterActivity(activities.TranscodePreview)
 		w.RegisterActivity(activities.TranscodeToProResActivity)
+		w.RegisterActivity(activities.TranscodeToH264Activity)
 	}
 
 	err = w.Run(worker.InterruptCh())
