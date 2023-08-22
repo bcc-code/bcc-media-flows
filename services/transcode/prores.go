@@ -61,7 +61,7 @@ func ProRes(input ProResInput, progressCallback func(float64)) (*ProResResult, e
 		"-progress pipe:1",
 		"-profile:v 3",
 		"-vendor ap10",
-		"-vf \"setfield=tff\"",
+		"-vf setfield=tff",
 		"-color_primaries bt709",
 		"-color_trc bt709",
 		"-colorspace bt709",
@@ -106,7 +106,7 @@ func ProRes(input ProResInput, progressCallback func(float64)) (*ProResResult, e
 
 	_, err = utils.ExecuteCmd(cmd, parseProgressCallback(totalFrames, progressCallback))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("couldn't execute ffmpeg %s", err.Error())
 	}
 
 	return &ProResResult{

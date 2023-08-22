@@ -2,6 +2,7 @@ package transcode
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/bcc-code/bccm-flows/utils"
 	"os/exec"
 	"strings"
@@ -104,7 +105,7 @@ func ProbeFile(filePath string) (*FFProbeResult, error) {
 
 	result, err := utils.ExecuteCmd(cmd, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("couldn't execute ffprobe %s", err.Error())
 	}
 
 	var info FFProbeResult

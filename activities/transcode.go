@@ -2,6 +2,7 @@ package activities
 
 import (
 	"context"
+	"fmt"
 	"github.com/bcc-code/bccm-flows/services/transcode"
 	"go.temporal.io/sdk/activity"
 )
@@ -33,6 +34,7 @@ func TranscodeToProResActivity(ctx context.Context, input EncodeParams) (*Encode
 		Resolution: input.Resolution,
 	}, progressCallback)
 	if err != nil {
+		fmt.Println(err.Error())
 		return nil, err
 	}
 
