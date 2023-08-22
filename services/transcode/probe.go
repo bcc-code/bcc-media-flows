@@ -71,6 +71,7 @@ type FFProbeResult struct {
 			VendorId     string    `json:"vendor_id"`
 			Encoder      string    `json:"encoder"`
 			Timecode     string    `json:"timecode"`
+			Duration     string    `json:"DURATION"`
 		} `json:"tags"`
 	} `json:"streams"`
 	Format struct {

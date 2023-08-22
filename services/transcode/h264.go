@@ -5,7 +5,6 @@ import (
 	"github.com/bcc-code/bccm-flows/utils"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
@@ -79,12 +78,7 @@ func H264(input EncodeInput, progressCallback func(float64)) (*EncodeResult, err
 		)...,
 	)
 
-	totalFrames, err := strconv.ParseFloat(info.Streams[0].NbFrames, 64)
-	if err != nil {
-		totalFrames = 1000000
-	}
-
-	_, err = utils.ExecuteCmd(cmd, parseProgressCallback(totalFrames, progressCallback))
+	_, err = utils.ExecuteCmd(cmd, parseProgressCallback(info, progressCallback))
 	if err != nil {
 		return nil, err
 	}
