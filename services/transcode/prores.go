@@ -23,17 +23,13 @@ type ProResResult struct {
 
 func parseProgressCallback(info *FFProbeResult, cb func(float64)) func(string) {
 	return func(line string) {
-		totalFrames, err := strconv.ParseFloat(info.Streams[0].NbFrames, 64)
+		totalFrames, _ := strconv.ParseFloat(info.Streams[0].NbFrames, 64)
+		duration := info.Streams[0].Tags.Duration
+		layout := "15:04:05.999999999"
+		t, err := time.Parse(layout, duration)
 		var totalSeconds int
-		if err != nil {
-			duration := info.Streams[0].Tags.Duration
-			if duration != "" {
-				layout := "15:04:05.999999999"
-				t, err := time.Parse(layout, duration)
-				if err == nil {
-					totalSeconds = t.Hour()*3600 + t.Minute()*60 + t.Second()
-				}
-			}
+		if err == nil {
+			totalSeconds = t.Hour()*3600 + t.Minute()*60 + t.Second()
 		}
 
 		parts := strings.Split(line, "=")
@@ -49,20 +45,18 @@ func parseProgressCallback(info *FFProbeResult, cb func(float64)) func(string) {
 			} else {
 				cb(frame / totalFrames)
 			}
-		} else if totalSeconds != 0 && parts[0] == "out_time_ms" {
+		} else if totalSeconds != 0 && parts[0] == "out_time_us" {
 			ms, _ := strconv.ParseFloat(parts[1], 64)
 			if ms == 0 {
 				cb(0)
 			} else {
-				cb(ms / float64(totalSeconds*1000))
+				cb(ms / float64(totalSeconds*1000*1000))
 			}
 		} else if parts[0] == "progress" {
 			// Audio doesn't report progress in a conceivable way, so just return 1 on complete
 			if parts[1] == "end" {
 				cb(1)
 			}
-		} else {
-			cb(0)
 		}
 	}
 }

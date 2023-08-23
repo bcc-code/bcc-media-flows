@@ -18,6 +18,10 @@ type TranscodePreviewResponse struct {
 	AudioOnly       bool
 }
 
+type heartbeat struct {
+	Percent float64 `json:"percent"`
+}
+
 func registerProgressCallback(ctx context.Context) (chan struct{}, func(float64)) {
 	currentPercent := 0.0
 
@@ -34,7 +38,9 @@ func registerProgressCallback(ctx context.Context) (chan struct{}, func(float64)
 		for {
 			select {
 			case <-timer.C:
-				activity.RecordHeartbeat(ctx, currentPercent)
+				activity.RecordHeartbeat(ctx, heartbeat{
+					Percent: currentPercent,
+				})
 			case <-stopChan:
 				return
 			}
