@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
@@ -103,12 +102,7 @@ func Preview(input PreviewInput, progressCallback func(float64)) (*PreviewResult
 
 	cmd := exec.Command("ffmpeg", strings.Split(command, " ")...)
 
-	totalFrames, err := strconv.ParseFloat(info.Streams[0].NbFrames, 64)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = utils.ExecuteCmd(cmd, parseProgressCallback(totalFrames, progressCallback))
+	_, err = utils.ExecuteCmd(cmd, parseProgressCallback(info, progressCallback))
 	if err != nil {
 		return nil, err
 	}
