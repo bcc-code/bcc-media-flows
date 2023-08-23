@@ -12,8 +12,31 @@ type MetadataResult struct {
 	ID    string                        `json:"id"`
 }
 
-/// Shape Result
+// Get returns the first value of the given key, or the fallback if the key is not present
+// It does not check what clip the metadata belongs to!
+func (m *MetadataResult) Get(key string, fallback string) string {
+	if val, ok := m.Terse[key]; !ok {
+		return fallback
+	} else if len(val) == 0 {
+		return fallback
+	} else {
+		return val[0].Value
+	}
+}
 
+func (m *MetadataResult) GetArray(key string) []string {
+	if val, ok := m.Terse[key]; !ok {
+		return []string{}
+	} else {
+		out := []string{}
+		for _, v := range val {
+			out = append(out, v.Value)
+		}
+		return out
+	}
+}
+
+// Shape Result
 type ShapeResult struct {
 	Shape []Shape `json:"shape"`
 	ID    string  `json:"id"`
@@ -136,6 +159,13 @@ type VideoComponent struct {
 	StartTimestamp       Timestamp    `json:"startTimestamp"`
 }
 
+type BinaryComponent struct {
+	Length   int    `json:"length"`
+	File     []File `json:"file"`
+	ID       string `json:"id"`
+	Metadata []KV   `json:"metadata"`
+}
+
 type Shape struct {
 	ID                 string             `json:"id"`
 	Created            string             `json:"created"`
@@ -145,5 +175,6 @@ type Shape struct {
 	ContainerComponent ContainerComponent `json:"containerComponent"`
 	AudioComponent     []AudioComponent   `json:"audioComponent"`
 	VideoComponent     []VideoComponent   `json:"videoComponent"`
+	BinaryComponent    []BinaryComponent  `json:"binaryComponent"`
 	Metadata           KV                 `json:"metadata"`
 }
