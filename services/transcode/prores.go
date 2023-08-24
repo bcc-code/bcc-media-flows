@@ -1,8 +1,8 @@
 package transcode
 
 import (
+	"bufio"
 	"fmt"
-	"github.com/bcc-code/bccm-flows/utils"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -105,18 +105,32 @@ func ProRes(input ProResInput, progressCallback func(float64)) (*ProResResult, e
 
 	commandString := strings.Join(commandParts, " ")
 
-	fmt.Println(commandString)
-
 	cmd := exec.Command("ffmpeg",
 		strings.Split(
 			commandString,
 			" ",
 		)...,
 	)
+	stdout, _ := cmd.StdoutPipe()
 
-	_, err = utils.ExecuteCmd(cmd, parseProgressCallback(info, progressCallback))
+	err = cmd.Start()
 	if err != nil {
-		return nil, fmt.Errorf("couldn't execute ffmpeg %s", err.Error())
+		return nil, err
+	}
+
+	cb := parseProgressCallback(info, progressCallback)
+
+	scanner := bufio.NewScanner(stdout)
+	scanner.Split(bufio.ScanLines)
+	for scanner.Scan() {
+		line := scanner.Text()
+		fmt.Println(line)
+		cb(line)
+	}
+
+	err = cmd.Wait()
+	if err != nil {
+		return nil, err
 	}
 
 	return &ProResResult{

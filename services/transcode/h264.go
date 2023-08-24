@@ -1,8 +1,8 @@
 package transcode
 
 import (
+	"bufio"
 	"fmt"
-	"github.com/bcc-code/bccm-flows/utils"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -35,7 +35,7 @@ func H264(input EncodeInput, progressCallback func(float64)) (*EncodeResult, err
 		"-progress pipe:1",
 		"-profile:v high422",
 		"-pix_fmt yuv422p10le",
-		"-vf setfield=tff,format=yuv422p10le",
+		//"-vf setfield=tff,format=yuv422p10le",
 		"-color_primaries bt709",
 		"-color_trc bt709",
 		"-colorspace bt709",
@@ -65,7 +65,6 @@ func H264(input EncodeInput, progressCallback func(float64)) (*EncodeResult, err
 
 	commandParts = append(
 		commandParts,
-		"-bits_per_mb 8000",
 		outputPath,
 	)
 
@@ -77,8 +76,24 @@ func H264(input EncodeInput, progressCallback func(float64)) (*EncodeResult, err
 			" ",
 		)...,
 	)
+	stdout, _ := cmd.StdoutPipe()
 
-	_, err = utils.ExecuteCmd(cmd, parseProgressCallback(info, progressCallback))
+	err = cmd.Start()
+	if err != nil {
+		return nil, err
+	}
+
+	cb := parseProgressCallback(info, progressCallback)
+
+	scanner := bufio.NewScanner(stdout)
+	scanner.Split(bufio.ScanLines)
+	for scanner.Scan() {
+		line := scanner.Text()
+		fmt.Println(line)
+		cb(line)
+	}
+
+	err = cmd.Wait()
 	if err != nil {
 		return nil, err
 	}

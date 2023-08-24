@@ -20,7 +20,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	options := workflow.ActivityOptions{
 		RetryPolicy: &temporal.RetryPolicy{
 			InitialInterval: time.Minute * 1,
-			MaximumAttempts: 10,
+			MaximumAttempts: 1,
 			MaximumInterval: time.Hour * 1,
 		},
 		StartToCloseTimeout:    time.Hour * 4,
