@@ -32,7 +32,7 @@ func registerProgressCallback(ctx context.Context) (chan struct{}, func(float64)
 	stopChan := make(chan struct{})
 
 	go func() {
-		timer := time.NewTicker(time.Second * 5)
+		timer := time.NewTicker(time.Second * 15)
 		defer timer.Stop()
 
 		for {
