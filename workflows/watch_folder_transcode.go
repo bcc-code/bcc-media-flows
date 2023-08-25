@@ -89,6 +89,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 			OutputDir:  outFolder,
 			Resolution: "1920x1080",
 			FrameRate:  25,
+			Bitrate:    "60M",
 		}).Get(ctx, &output)
 	default:
 		err = fmt.Errorf("codec not supported: %s", params.ToCodec)
