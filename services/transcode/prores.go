@@ -22,9 +22,11 @@ type ProResResult struct {
 }
 
 type Progress struct {
-	Percent      float64
-	TotalSeconds int
-	TotalFrames  int
+	Percent        float64 `json:"percent"`
+	CurrentSeconds int     `json:"currentSeconds"`
+	TotalSeconds   int     `json:"totalSeconds"`
+	CurrentFrame   int     `json:"currentFrame"`
+	TotalFrames    int     `json:"totalFrames"`
 }
 
 func parseProgressCallback(info *FFProbeResult, cb func(Progress)) func(string) {
@@ -57,6 +59,7 @@ func parseProgressCallback(info *FFProbeResult, cb func(Progress)) func(string) 
 		if totalFrames != 0 && parts[0] == "frame" {
 			frame, _ := strconv.ParseFloat(parts[1], 64)
 			progress.TotalFrames = int(totalFrames)
+			progress.CurrentFrame = int(frame)
 			if frame == 0 {
 				cb(progress)
 			} else {
@@ -66,6 +69,7 @@ func parseProgressCallback(info *FFProbeResult, cb func(Progress)) func(string) 
 		} else if totalSeconds != 0 && parts[0] == "out_time_us" {
 			ms, _ := strconv.ParseFloat(parts[1], 64)
 			progress.TotalSeconds = totalSeconds
+			progress.CurrentSeconds = int(ms / 1000 / 1000)
 			if ms == 0 {
 				cb(progress)
 			} else {
