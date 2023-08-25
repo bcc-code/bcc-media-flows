@@ -3,6 +3,7 @@ package transcode
 import (
 	"bufio"
 	"fmt"
+	"github.com/pkg/errors"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -22,7 +23,6 @@ func XDCAM(input EncodeInput, progressCallback func(float64)) (*EncodeResult, er
 		"-c:v mpeg2video",
 		"-progress pipe:1",
 		"-pix_fmt yuv422p",
-		"-vf setfield=tt,format=yuv422p",
 		"-color_primaries bt709",
 		"-color_trc bt709",
 		"-colorspace bt709",
@@ -67,7 +67,7 @@ func XDCAM(input EncodeInput, progressCallback func(float64)) (*EncodeResult, er
 
 	err = cmd.Start()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "couldn't start ffmpeg")
 	}
 
 	cb := parseProgressCallback(info, progressCallback)
