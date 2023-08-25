@@ -66,3 +66,27 @@ func TranscodeToH264Activity(ctx context.Context, input EncodeParams) (*EncodeRe
 		OutputPath: transcodeResult.Path,
 	}, nil
 }
+
+func TranscodeToXDCAMActivity(ctx context.Context, input EncodeParams) (*EncodeResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeToXDCAM")
+	log.Info("Starting TranscodeToXDCAMActivity")
+
+	stop, progressCallback := registerProgressCallback(ctx)
+	defer close(stop)
+
+	transcodeResult, err := transcode.XDCAM(transcode.EncodeInput{
+		FilePath:   input.FilePath,
+		OutputDir:  input.OutputDir,
+		FrameRate:  input.FrameRate,
+		Resolution: input.Resolution,
+		Bitrate:    input.Bitrate,
+	}, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+
+	return &EncodeResult{
+		OutputPath: transcodeResult.Path,
+	}, nil
+}

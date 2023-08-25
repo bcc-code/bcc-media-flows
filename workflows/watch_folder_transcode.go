@@ -79,6 +79,13 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 			FrameRate:  25,
 			Bitrate:    "100M",
 		}).Get(ctx, &output)
+	case common.CodecXDCAMHD422:
+		err = workflow.ExecuteActivity(ctx, activities.TranscodeToXDCAMActivity, activities.EncodeParams{
+			FilePath:   path,
+			OutputDir:  outFolder,
+			Resolution: "1920x1080",
+			FrameRate:  25,
+		}).Get(ctx, &output)
 	default:
 		err = fmt.Errorf("codec not supported: %s", params.ToCodec)
 	}

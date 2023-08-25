@@ -75,6 +75,7 @@ func main() {
 		w.RegisterActivity(activities.TranscodePreview)
 		w.RegisterActivity(activities.TranscodeToProResActivity)
 		w.RegisterActivity(activities.TranscodeToH264Activity)
+		w.RegisterActivity(activities.TranscodeToXDCAMActivity)
 	}
 
 	err = w.Run(worker.InterruptCh())

@@ -6,4 +6,5 @@ const (
 	CodecProRes422HQNative25FPS = "ProRes422HQ_Native_25FPS"
 	CodecProRes4444K25FPS       = "ProRes444_4K-25FPS"
 	CodecAVCIntra100HD          = "AVCintra100_HD"
+	CodecXDCAMHD422             = "XDCAMHD422"
 )

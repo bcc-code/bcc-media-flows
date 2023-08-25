@@ -31,6 +31,12 @@ func parseProgressCallback(info *FFProbeResult, cb func(float64)) func(string) {
 		if err == nil {
 			totalSeconds = t.Hour()*3600 + t.Minute()*60 + t.Second()
 		}
+		if totalSeconds == 0 {
+			floatSeconds, _ := strconv.ParseFloat(info.Streams[0].Duration, 64)
+			if floatSeconds != 0 {
+				totalSeconds = int(floatSeconds)
+			}
+		}
 
 		parts := strings.Split(line, "=")
 
