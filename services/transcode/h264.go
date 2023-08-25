@@ -20,7 +20,7 @@ type EncodeResult struct {
 	Path string
 }
 
-func H264(input EncodeInput, progressCallback func(float64)) (*EncodeResult, error) {
+func H264(input EncodeInput, progressCallback func(Progress)) (*EncodeResult, error) {
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mxf"
 	outputPath := filepath.Join(input.OutputDir, filename)
 

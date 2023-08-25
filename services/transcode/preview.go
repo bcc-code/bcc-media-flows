@@ -22,7 +22,7 @@ type PreviewResult struct {
 
 var previewWatermarkPath = os.Getenv("PREVIEW_WATERMARK_PATH")
 
-func Preview(input PreviewInput, progressCallback func(float64)) (*PreviewResult, error) {
+func Preview(input PreviewInput, progressCallback func(Progress)) (*PreviewResult, error) {
 	encoder := os.Getenv("ENCODER")
 	if encoder == "" {
 		encoder = "hevc"

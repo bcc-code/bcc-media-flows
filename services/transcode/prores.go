@@ -21,15 +21,23 @@ type ProResResult struct {
 	OutputPath string
 }
 
-func parseProgressCallback(info *FFProbeResult, cb func(float64)) func(string) {
+type Progress struct {
+	Percent      float64
+	TotalSeconds int
+	TotalFrames  int
+}
+
+func parseProgressCallback(info *FFProbeResult, cb func(Progress)) func(string) {
 	return func(line string) {
 		totalFrames, _ := strconv.ParseFloat(info.Streams[0].NbFrames, 64)
-		duration := info.Streams[0].Tags.Duration
-		layout := "15:04:05.999999999"
-		t, err := time.Parse(layout, duration)
 		var totalSeconds int
-		if err == nil {
-			totalSeconds = t.Hour()*3600 + t.Minute()*60 + t.Second()
+		duration := info.Streams[0].Tags.Duration
+		if duration != "" {
+			layout := "15:04:05.999999999"
+			t, err := time.Parse(layout, duration)
+			if err == nil {
+				totalSeconds = t.Hour()*3600 + t.Minute()*60 + t.Second()
+			}
 		}
 		if totalSeconds == 0 {
 			floatSeconds, _ := strconv.ParseFloat(info.Streams[0].Duration, 64)
@@ -44,30 +52,37 @@ func parseProgressCallback(info *FFProbeResult, cb func(float64)) func(string) {
 			return
 		}
 
+		var progress Progress
+
 		if totalFrames != 0 && parts[0] == "frame" {
 			frame, _ := strconv.ParseFloat(parts[1], 64)
+			progress.TotalFrames = int(totalFrames)
 			if frame == 0 {
-				cb(0)
+				cb(progress)
 			} else {
-				cb(frame / totalFrames)
+				progress.Percent = frame / totalFrames * 100
+				cb(progress)
 			}
 		} else if totalSeconds != 0 && parts[0] == "out_time_us" {
 			ms, _ := strconv.ParseFloat(parts[1], 64)
+			progress.TotalSeconds = totalSeconds
 			if ms == 0 {
-				cb(0)
+				cb(progress)
 			} else {
-				cb(ms / float64(totalSeconds*1000*1000))
+				progress.Percent = ms / float64(totalSeconds*1000*1000) * 100
+				cb(progress)
 			}
 		} else if parts[0] == "progress" {
 			// Audio doesn't report progress in a conceivable way, so just return 1 on complete
+			progress.Percent = 100
 			if parts[1] == "end" {
-				cb(1)
+				cb(progress)
 			}
 		}
 	}
 }
 
-func ProRes(input ProResInput, progressCallback func(float64)) (*ProResResult, error) {
+func ProRes(input ProResInput, progressCallback func(Progress)) (*ProResResult, error) {
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mov"
 	outputPath := filepath.Join(input.OutputDir, filename)
 
