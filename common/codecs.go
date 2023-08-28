@@ -1,10 +1,11 @@
 package common
 
 const (
-	CodecProRes422HQHD          = "ProRes422HQ_HD"
-	CodecProRes422HQNative      = "ProRes422HQ_Native"
-	CodecProRes422HQNative25FPS = "ProRes422HQ_Native_25FPS"
-	CodecProRes4444K25FPS       = "ProRes444_4K-25FPS"
-	CodecAVCIntra100HD          = "AVCintra100_HD"
-	CodecXDCAMHD422             = "XDCAMHD422"
+	FolderProRes422HQHD          = "ProRes422HQ_HD"
+	FolderProRes422HQNative      = "ProRes422HQ_Native"
+	FolderProRes422HQNative25FPS = "ProRes422HQ_Native_25FPS"
+	FolderProRes4444K25FPS       = "ProRes444_4K-25FPS"
+	FolderAVCIntra100HD          = "AVCintra100_HD"
+	FolderXDCAMHD422             = "XDCAMHD422"
+	FolderTranscribe             = "Transcribe"
 )

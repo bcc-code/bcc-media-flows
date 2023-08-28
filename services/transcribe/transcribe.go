@@ -9,7 +9,7 @@ import (
 	"go.temporal.io/sdk/activity"
 )
 
-const BASE_URL = "http://10.12.128.44:8888"
+const BaseUrl = "http://10.12.128.44:8888"
 
 var (
 	errNoInputFile = fmt.Errorf("no input file")
@@ -100,7 +100,7 @@ func DoTranscribe(
 			OutputPath: outputFolder,
 		}).
 		SetResult(&TranscribeJob{}).
-		Post(fmt.Sprintf("%s/transcription/job", BASE_URL))
+		Post(fmt.Sprintf("%s/transcription/job", BaseUrl))
 
 	if err != nil {
 		return nil, err
@@ -113,7 +113,7 @@ func DoTranscribe(
 		activity.RecordHeartbeat(ctx)
 		resp, err := restyClient.R().EnableTrace().
 			SetResult(&TranscribeJob{}).
-			Get(fmt.Sprintf("%s/transcription/job/%s", BASE_URL, job.ID))
+			Get(fmt.Sprintf("%s/transcription/job/%s", BaseUrl, job.ID))
 
 		if err != nil {
 			return nil, err
