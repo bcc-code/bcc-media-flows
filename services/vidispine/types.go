@@ -36,7 +36,6 @@ func (m *MetadataResult) GetArray(key string) []string {
 	}
 }
 
-// Shape Result
 type ShapeResult struct {
 	Shape []Shape `json:"shape"`
 	ID    string  `json:"id"`

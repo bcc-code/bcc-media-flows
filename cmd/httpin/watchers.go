@@ -61,8 +61,8 @@ func doTranscode(ctx context.Context, path string) error {
 	}
 
 	_, err = c.ExecuteWorkflow(ctx, workflowOptions, workflows.WatchFolderTranscode, workflows.WatchFolderTranscodeInput{
-		Path:    path,
-		ToCodec: t,
+		Path:       path,
+		FolderName: t,
 	})
 	return err
 }
