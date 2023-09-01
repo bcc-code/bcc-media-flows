@@ -1,12 +1,15 @@
 package transcode
 
-import "testing"
+import (
+	"github.com/bcc-code/bccm-flows/common"
+	"testing"
+)
 
 func Test_Merge(t *testing.T) {
-	_, _ = MergeVideo(MergeInput{
+	_, _ = MergeVideo(common.MergeInput{
 		Title:     "Test",
 		OutputDir: "/Users/*/Desktop/Transcoding/test/",
-		Items: []MergeInputItem{
+		Items: []common.MergeInputItem{
 			{
 				Start: 8,
 				End:   12,
@@ -22,10 +25,10 @@ func Test_Merge(t *testing.T) {
 }
 
 func Test_MergeAudio(t *testing.T) {
-	_, _ = MergeAudio(MergeInput{
+	_, _ = MergeAudio(common.MergeInput{
 		Title:     "Test",
 		OutputDir: "/Users/*/Desktop/Transcoding/test/",
-		Items: []MergeInputItem{
+		Items: []common.MergeInputItem{
 			{
 				Start: 0,
 				End:   2,
