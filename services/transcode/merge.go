@@ -2,6 +2,7 @@ package transcode
 
 import (
 	"fmt"
+	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/samber/lo"
 	"os/exec"
@@ -9,20 +10,7 @@ import (
 	"strings"
 )
 
-type MergeInputItem struct {
-	Path    string
-	Start   float64
-	End     float64
-	Streams []int
-}
-
-type MergeInput struct {
-	Title     string
-	Items     []MergeInputItem
-	OutputDir string
-}
-
-func MergeVideo(input MergeInput) (*EncodeResult, error) {
+func MergeVideo(input common.MergeInput) (*common.MergeResult, error) {
 	var params []string
 
 	for _, i := range input.Items {
@@ -51,10 +39,12 @@ func MergeVideo(input MergeInput) (*EncodeResult, error) {
 
 	_, err := utils.ExecuteCmd(cmd, nil)
 
-	return nil, err
+	return &common.MergeResult{
+		Path: outputPath,
+	}, err
 }
 
-func mergeItemToStereoStream(index int, tag string, item MergeInputItem) (string, error) {
+func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) (string, error) {
 	info, err := ProbeFile(item.Path)
 	if err != nil {
 		return "", err
@@ -83,7 +73,7 @@ func mergeItemToStereoStream(index int, tag string, item MergeInputItem) (string
 }
 
 // MergeAudio merges MXF audio files into one stereo file.
-func MergeAudio(input MergeInput) (*EncodeResult, error) {
+func MergeAudio(input common.MergeInput) (*common.MergeResult, error) {
 	var params []string
 
 	for _, i := range input.Items {
@@ -121,7 +111,7 @@ func MergeAudio(input MergeInput) (*EncodeResult, error) {
 
 	_, err := utils.ExecuteCmd(cmd, nil)
 
-	return &EncodeResult{
+	return &common.MergeResult{
 		Path: outputPath,
 	}, err
 }

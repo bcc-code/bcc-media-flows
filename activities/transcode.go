@@ -3,6 +3,7 @@ package activities
 import (
 	"context"
 	"fmt"
+	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/services/transcode"
 	"go.temporal.io/sdk/activity"
 )
@@ -89,4 +90,28 @@ func TranscodeToXDCAMActivity(ctx context.Context, input EncodeParams) (*EncodeR
 	return &EncodeResult{
 		OutputPath: transcodeResult.Path,
 	}, nil
+}
+
+func TranscodeMergeVideo(ctx context.Context, params common.MergeInput) (*common.MergeResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeMergeVideo")
+	log.Info("Starting TranscodeMergeVideoActivity")
+
+	result, err := transcode.MergeVideo(params)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func TranscodeMergeAudio(ctx context.Context, params common.MergeInput) (*common.MergeResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeMergeAudio")
+	log.Info("Starting TranscodeMergeAudioActivity")
+
+	result, err := transcode.MergeAudio(params)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }

@@ -26,6 +26,17 @@ var transcodeActivities = []any{
 	activities.TranscodeToProResActivity,
 	activities.TranscodeToH264Activity,
 	activities.TranscodeToXDCAMActivity,
+	activities.TranscodeMergeAudio,
+	activities.TranscodeMergeVideo,
+}
+
+var workerWorkflows = []any{
+	workflows.TranscodePreviewVX,
+	workflows.TranscodePreviewFile,
+	workflows.TranscribeFile,
+	workflows.TranscribeVX,
+	workflows.WatchFolderTranscode,
+	workflows.AssetExportVX,
 }
 
 func main() {
@@ -73,11 +84,9 @@ func main() {
 			w.RegisterActivity(a)
 		}
 
-		w.RegisterWorkflow(workflows.TranscodePreviewVX)
-		w.RegisterWorkflow(workflows.TranscodePreviewFile)
-		w.RegisterWorkflow(workflows.TranscribeFile)
-		w.RegisterWorkflow(workflows.TranscribeVX)
-		w.RegisterWorkflow(workflows.WatchFolderTranscode)
+		for _, wf := range workerWorkflows {
+			w.RegisterWorkflow(wf)
+		}
 	case common.QueueWorker:
 		w.RegisterActivity(activities.Transcribe)
 
@@ -85,11 +94,9 @@ func main() {
 			w.RegisterActivity(activity)
 		}
 
-		w.RegisterWorkflow(workflows.TranscodePreviewVX)
-		w.RegisterWorkflow(workflows.TranscodePreviewFile)
-		w.RegisterWorkflow(workflows.TranscribeFile)
-		w.RegisterWorkflow(workflows.TranscribeVX)
-		w.RegisterWorkflow(workflows.WatchFolderTranscode)
+		for _, wf := range workerWorkflows {
+			w.RegisterWorkflow(wf)
+		}
 	case common.QueueTranscode:
 		for _, a := range transcodeActivities {
 			w.RegisterActivity(a)
