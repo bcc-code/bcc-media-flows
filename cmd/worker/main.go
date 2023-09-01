@@ -13,6 +13,21 @@ import (
 	"go.temporal.io/sdk/worker"
 )
 
+var vidispineActivities = []any{
+	vidispine.GetFileFromVXActivity,
+	vidispine.ImportFileAsShapeActivity,
+	vidispine.ImportFileAsSidecarActivity,
+	vidispine.SetVXMetadataFieldActivity,
+	vidispine.GetExportDataActivity,
+}
+
+var transcodeActivities = []any{
+	activities.TranscodePreview,
+	activities.TranscodeToProResActivity,
+	activities.TranscodeToH264Activity,
+	activities.TranscodeToXDCAMActivity,
+}
+
 func main() {
 	c, err := client.Dial(client.Options{
 		HostPort:  os.Getenv("TEMPORAL_HOST_PORT"),
@@ -49,33 +64,36 @@ func main() {
 	switch queue {
 	case common.QueueDebug:
 		w.RegisterActivity(activities.Transcribe)
-		w.RegisterActivity(vidispine.GetFileFromVXActivity)
-		w.RegisterActivity(vidispine.ImportFileAsShapeActivity)
-		w.RegisterActivity(vidispine.ImportFileAsSidecarActivity)
-		w.RegisterActivity(vidispine.SetVXMetadataFieldActivity)
+
+		for _, a := range vidispineActivities {
+			w.RegisterActivity(a)
+		}
+
+		for _, a := range transcodeActivities {
+			w.RegisterActivity(a)
+		}
+
 		w.RegisterWorkflow(workflows.TranscodePreviewVX)
 		w.RegisterWorkflow(workflows.TranscodePreviewFile)
 		w.RegisterWorkflow(workflows.TranscribeFile)
 		w.RegisterWorkflow(workflows.TranscribeVX)
 		w.RegisterWorkflow(workflows.WatchFolderTranscode)
-		w.RegisterActivity(activities.TranscodePreview)
-		w.RegisterActivity(activities.TranscodeToProResActivity)
 	case common.QueueWorker:
 		w.RegisterActivity(activities.Transcribe)
-		w.RegisterActivity(vidispine.GetFileFromVXActivity)
-		w.RegisterActivity(vidispine.ImportFileAsShapeActivity)
-		w.RegisterActivity(vidispine.ImportFileAsSidecarActivity)
-		w.RegisterActivity(vidispine.SetVXMetadataFieldActivity)
+
+		for _, activity := range vidispineActivities {
+			w.RegisterActivity(activity)
+		}
+
 		w.RegisterWorkflow(workflows.TranscodePreviewVX)
 		w.RegisterWorkflow(workflows.TranscodePreviewFile)
 		w.RegisterWorkflow(workflows.TranscribeFile)
 		w.RegisterWorkflow(workflows.TranscribeVX)
 		w.RegisterWorkflow(workflows.WatchFolderTranscode)
 	case common.QueueTranscode:
-		w.RegisterActivity(activities.TranscodePreview)
-		w.RegisterActivity(activities.TranscodeToProResActivity)
-		w.RegisterActivity(activities.TranscodeToH264Activity)
-		w.RegisterActivity(activities.TranscodeToXDCAMActivity)
+		for _, a := range transcodeActivities {
+			w.RegisterActivity(a)
+		}
 	}
 
 	err = w.Run(worker.InterruptCh())
