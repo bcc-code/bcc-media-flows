@@ -20,7 +20,7 @@ type PreviewResult struct {
 	AudioOnly         bool
 }
 
-var previewWatermarkPath = os.Getenv("PREVIEW_WATERMARK_PATH")
+const previewWatermarkPath = "/mnt/isilon/system/graphics/LOGO_BTV_Preview_960-540.mov"
 
 func Preview(input PreviewInput, progressCallback func(Progress)) (*PreviewResult, error) {
 	encoder := os.Getenv("ENCODER")

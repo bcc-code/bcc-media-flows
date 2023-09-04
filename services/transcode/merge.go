@@ -69,7 +69,11 @@ func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) 
 			channels++
 		}
 	}
-	streamString += fmt.Sprintf("amerge=inputs=%d[%s]", channels, tag)
+	if channels == 0 {
+		streamString += fmt.Sprintf("anullsrc=channel_layout=stereo[%s]", tag)
+	} else {
+		streamString += fmt.Sprintf("amerge=inputs=%d[%s]", channels, tag)
+	}
 
 	return streamString, nil
 }
