@@ -20,7 +20,8 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting AssetExport")
 
-	ctx = workflow.WithActivityOptions(ctx, DefaultActivityOptions)
+	options := GetDefaultActivityOptions()
+	ctx = workflow.WithActivityOptions(ctx, options)
 
 	var data *vidispine.ExportData
 
@@ -69,6 +70,8 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 		}
 	}
 
+	options.TaskQueue = utils.GetTranscodeQueue()
+	ctx = workflow.WithActivityOptions(ctx, options)
 	err = workflow.ExecuteActivity(ctx, activities.TranscodeMergeVideo, mergeInput).Get(ctx, nil)
 
 	if err != nil {

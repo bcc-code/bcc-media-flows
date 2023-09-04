@@ -11,6 +11,7 @@ type MergeInput struct {
 	Title     string
 	Items     []MergeInputItem
 	OutputDir string
+	WorkDir   string
 }
 
 type MergeResult struct {

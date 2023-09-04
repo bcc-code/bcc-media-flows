@@ -5,6 +5,7 @@ import (
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/samber/lo"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -115,4 +116,40 @@ func MergeAudio(input common.MergeInput, progressCallback func(Progress)) (*comm
 	return &common.MergeResult{
 		Path: outputPath,
 	}, err
+}
+
+func MergeSubtitles(input common.MergeInput) (*common.MergeResult, error) {
+	var files []string
+	for index, item := range input.Items {
+		file := filepath.Join(input.WorkDir, fmt.Sprintf("%d.srt", index))
+		cmd := exec.Command("ffmpeg", "-i", item.Path, "-ss", fmt.Sprintf("%f", item.Start), "-to", fmt.Sprintf("%f", item.End), "-y", file)
+
+		_, err := utils.ExecuteCmd(cmd, nil)
+		if err != nil {
+			return nil, err
+		}
+		files = append(files, file)
+	}
+	var content string
+	for _, f := range files {
+		content += fmt.Sprintf("file '%s'\n", f)
+	}
+
+	subtitlesFile := filepath.Join(input.WorkDir, "subtitles.txt")
+
+	err := os.WriteFile(subtitlesFile, []byte(content), os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+
+	outputPath := filepath.Join(input.OutputDir, filepath.Clean(input.Title)+".srt")
+	cmd := exec.Command("ffmpeg", "-f", "concat", "-safe", "0", "-i", subtitlesFile, "-y", outputPath)
+	_, err = utils.ExecuteCmd(cmd, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &common.MergeResult{
+		Path: outputPath,
+	}, nil
 }

@@ -7,14 +7,16 @@ import (
 	"time"
 )
 
-var DefaultActivityOptions = workflow.ActivityOptions{
-	RetryPolicy: &temporal.RetryPolicy{
-		InitialInterval: time.Minute * 1,
-		MaximumAttempts: 10,
-		MaximumInterval: time.Hour * 1,
-	},
-	StartToCloseTimeout:    time.Hour * 4,
-	ScheduleToCloseTimeout: time.Hour * 48,
-	HeartbeatTimeout:       time.Minute * 1,
-	TaskQueue:              utils.GetWorkerQueue(),
+func GetDefaultActivityOptions() workflow.ActivityOptions {
+	return workflow.ActivityOptions{
+		RetryPolicy: &temporal.RetryPolicy{
+			InitialInterval: time.Minute * 1,
+			MaximumAttempts: 10,
+			MaximumInterval: time.Hour * 1,
+		},
+		StartToCloseTimeout:    time.Hour * 4,
+		ScheduleToCloseTimeout: time.Hour * 48,
+		HeartbeatTimeout:       time.Minute * 1,
+		TaskQueue:              utils.GetWorkerQueue(),
+	}
 }
