@@ -7,6 +7,8 @@ import (
 	"github.com/bcc-code/bccm-flows/services/vidispine"
 	"github.com/bcc-code/bccm-flows/utils"
 	"go.temporal.io/sdk/workflow"
+	"os"
+	"path/filepath"
 )
 
 type AssetExportParams struct {
@@ -39,12 +41,22 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 		return nil, err
 	}
 
+	tempFolder := filepath.Join(workflowFolder, "temp")
+
+	err = os.MkdirAll(tempFolder, os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+
 	mergeInput := common.MergeInput{
 		Title:     data.Title,
 		OutputDir: workflowFolder,
+		WorkDir:   tempFolder,
 	}
 
 	var audioMergeInputs = map[string]*common.MergeInput{}
+
+	var subtitleMergeInputs = map[string]*common.MergeInput{}
 
 	for _, clip := range data.Clips {
 		mergeInput.Items = append(mergeInput.Items, common.MergeInputItem{
@@ -58,6 +70,7 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 				audioMergeInputs[lan] = &common.MergeInput{
 					Title:     data.Title + "-" + lan,
 					OutputDir: workflowFolder,
+					WorkDir:   tempFolder,
 				}
 			}
 
@@ -66,6 +79,22 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 				Start:   clip.InSeconds,
 				End:     clip.OutSeconds,
 				Streams: af.Channels,
+			})
+		}
+
+		for lan, sf := range clip.SubtitleFiles {
+			if _, ok := subtitleMergeInputs[lan]; !ok {
+				subtitleMergeInputs[lan] = &common.MergeInput{
+					Title:     data.Title + "-" + lan,
+					OutputDir: workflowFolder,
+					WorkDir:   tempFolder,
+				}
+			}
+
+			subtitleMergeInputs[lan].Items = append(subtitleMergeInputs[lan].Items, common.MergeInputItem{
+				Path:  sf,
+				Start: clip.InSeconds,
+				End:   clip.OutSeconds,
 			})
 		}
 	}
@@ -80,6 +109,13 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 
 	for _, mi := range audioMergeInputs {
 		err = workflow.ExecuteActivity(ctx, activities.TranscodeMergeAudio, *mi).Get(ctx, nil)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	for _, mi := range subtitleMergeInputs {
+		err = workflow.ExecuteActivity(ctx, activities.TranscodeMergeSubtitles, *mi).Get(ctx, nil)
 		if err != nil {
 			return nil, err
 		}

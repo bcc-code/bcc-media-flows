@@ -29,6 +29,7 @@ var transcodeActivities = []any{
 	activities.TranscodeToXDCAMActivity,
 	activities.TranscodeMergeAudio,
 	activities.TranscodeMergeVideo,
+	activities.TranscodeMergeSubtitles,
 }
 
 var workerWorkflows = []any{

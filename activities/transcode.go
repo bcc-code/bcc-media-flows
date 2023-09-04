@@ -121,3 +121,19 @@ func TranscodeMergeAudio(ctx context.Context, params common.MergeInput) (*common
 	}
 	return result, nil
 }
+
+func TranscodeMergeSubtitles(ctx context.Context, params common.MergeInput) (*common.MergeResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeMergeSubtitles")
+	log.Info("Starting TranscodeMergeSubtitlesActivity")
+
+	// No easy way of reporting progress, so this just triggers heartbeats
+	stopChan, _ := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	result, err := transcode.MergeSubtitles(params)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
