@@ -36,18 +36,18 @@ func parseProgressCallback(info *FFProbeResult, cb func(Progress)) func(string) 
 			return
 		}
 
-		if totalFrames != 0 && parts[0] == "frame" {
+		if parts[0] == "frame" {
 			frame, _ := strconv.ParseFloat(parts[1], 64)
 			progress.TotalFrames = int(totalFrames)
 			progress.CurrentFrame = int(frame)
-			if frame != 0 {
+			if totalFrames != 0 && frame != 0 {
 				progress.Percent = frame / totalFrames * 100
 			}
-		} else if totalSeconds != 0 && parts[0] == "out_time_us" {
+		} else if parts[0] == "out_time_us" {
 			ms, _ := strconv.ParseFloat(parts[1], 64)
 			progress.TotalSeconds = totalSeconds
 			progress.CurrentSeconds = int(ms / 1000 / 1000)
-			if ms != 0 {
+			if totalSeconds != 0 && ms != 0 {
 				progress.Percent = ms / float64(totalSeconds*1000*1000) * 100
 			}
 		} else if parts[0] == "progress" {
