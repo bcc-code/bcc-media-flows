@@ -47,6 +47,9 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		_ = os.RemoveAll(tempFolder)
+	}()
 
 	mergeInput := common.MergeInput{
 		Title:     data.Title,
