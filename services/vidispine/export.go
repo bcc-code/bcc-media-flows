@@ -43,8 +43,8 @@ const (
 	ExportAudioSourceEmbedded ExportAudioSource = "embedded"
 	ExportAudioSourceRelated  ExportAudioSource = "related"
 
-	EmptyWAVFile = "empty.wav"
-	EmtpySRTFile = "/mnt/isilon/assets/empty.srt"
+	EmptyWAVFile = "/mnt/isilon/system/assets/BlankAudio10h.wav"
+	EmtpySRTFile = "/mnt/isilon/system/assets/empty.srt"
 )
 
 func TCToSeconds(tc string) (float64, error) {
@@ -178,7 +178,7 @@ func getRelatedAudios(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 			if lang == "nor" {
 				clip.AudioFiles[lang] = &AudioFile{
 					Channels: []int{1, 2},
-					File:     "/mnt/isilon/assets/BlankAudio10h.wav",
+					File:     EmptyWAVFile,
 				}
 			} else if languagesToExport[0] == "nor" {
 				// Fall back to "nor" audio and issue a warning *somewhere*
@@ -241,7 +241,7 @@ func getEmbeddedAudio(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 		channels := []int{1, 2}
 		for _, lang := range languagesToExport {
 			clip.AudioFiles[lang] = &AudioFile{
-				File:     "/mnt/isilon/assets/BlankAudio10h.wav",
+				File:     EmptyWAVFile,
 				Channels: channels,
 			}
 		}

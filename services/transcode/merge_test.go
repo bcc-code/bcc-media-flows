@@ -21,7 +21,7 @@ func Test_Merge(t *testing.T) {
 				Path:  "/Users/*/Desktop/Transcoding/test/*.mp4",
 			},
 		},
-	})
+	}, nil)
 }
 
 func Test_MergeAudio(t *testing.T) {
@@ -56,5 +56,5 @@ func Test_MergeAudio(t *testing.T) {
 				Path: "/Users/*/Desktop/Transcoding/test/2.mp4",
 			},
 		},
-	})
+	}, nil)
 }

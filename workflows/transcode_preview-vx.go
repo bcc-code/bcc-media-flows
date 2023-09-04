@@ -3,7 +3,6 @@ package workflows
 import (
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
-	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/utils"
 	"time"
 
@@ -35,7 +34,7 @@ func TranscodePreviewVX(
 		StartToCloseTimeout:    time.Hour * 4,
 		ScheduleToCloseTimeout: time.Hour * 48,
 		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              common.QueueWorker,
+		TaskQueue:              utils.GetWorkerQueue(),
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
@@ -55,7 +54,7 @@ func TranscodePreviewVX(
 	destinationPath, err := utils.GetWorkflowOutputFolder(ctx)
 
 	previewResponse := &activities.TranscodePreviewResponse{}
-	ctx = workflow.WithTaskQueue(ctx, common.QueueTranscode)
+	ctx = workflow.WithTaskQueue(ctx, utils.GetTranscodeQueue())
 	err = workflow.ExecuteActivity(ctx, activities.TranscodePreview, activities.TranscodePreviewParams{
 		FilePath:           shapes.FilePath,
 		DestinationDirPath: destinationPath,
@@ -72,7 +71,7 @@ func TranscodePreviewVX(
 		shapeTag = "lowres_watermarked"
 	}
 
-	ctx = workflow.WithTaskQueue(ctx, common.QueueWorker)
+	ctx = workflow.WithTaskQueue(ctx, utils.GetWorkerQueue())
 	err = workflow.ExecuteActivity(ctx, vidispine.ImportFileAsShapeActivity,
 		vidispine.ImportFileAsShapeParams{
 			AssetID:  params.VXID,

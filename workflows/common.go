@@ -1,7 +1,7 @@
 package workflows
 
 import (
-	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/utils"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 	"time"
@@ -16,5 +16,5 @@ var DefaultActivityOptions = workflow.ActivityOptions{
 	StartToCloseTimeout:    time.Hour * 4,
 	ScheduleToCloseTimeout: time.Hour * 48,
 	HeartbeatTimeout:       time.Minute * 1,
-	TaskQueue:              common.QueueWorker,
+	TaskQueue:              utils.GetWorkerQueue(),
 }

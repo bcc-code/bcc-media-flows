@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func MergeVideo(input common.MergeInput) (*common.MergeResult, error) {
+func MergeVideo(input common.MergeInput, progressCallback func(Progress)) (*common.MergeResult, error) {
 	var params []string
 
 	for _, i := range input.Items {
@@ -33,11 +33,11 @@ func MergeVideo(input common.MergeInput) (*common.MergeResult, error) {
 
 	outputPath := filepath.Join(input.OutputDir, filepath.Clean(input.Title)+".mkv")
 
-	params = append(params, "-filter_complex", filterComplex, "-map", "[v]", "-y", outputPath)
+	params = append(params, "-progress", "pipe:1", "-filter_complex", filterComplex, "-map", "[v]", "-y", outputPath)
 
 	cmd := exec.Command("ffmpeg", params...)
 
-	_, err := utils.ExecuteCmd(cmd, nil)
+	_, err := utils.ExecuteCmd(cmd, parseProgressCallback(nil, progressCallback))
 
 	return &common.MergeResult{
 		Path: outputPath,
@@ -45,9 +45,10 @@ func MergeVideo(input common.MergeInput) (*common.MergeResult, error) {
 }
 
 func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) (string, error) {
-	info, err := ProbeFile(item.Path)
-	if err != nil {
-		return "", err
+	info, _ := ProbeFile(item.Path)
+
+	if info == nil || len(info.Streams) == 0 {
+		return fmt.Sprintf("anullsrc=channel_layout=stereo[%s]", tag), nil
 	}
 
 	streams := lo.Map(item.Streams, func(i, _ int) FFProbeStream {
@@ -73,7 +74,7 @@ func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) 
 }
 
 // MergeAudio merges MXF audio files into one stereo file.
-func MergeAudio(input common.MergeInput) (*common.MergeResult, error) {
+func MergeAudio(input common.MergeInput, progressCallback func(Progress)) (*common.MergeResult, error) {
 	var params []string
 
 	for _, i := range input.Items {
@@ -109,7 +110,7 @@ func MergeAudio(input common.MergeInput) (*common.MergeResult, error) {
 
 	cmd := exec.Command("ffmpeg", params...)
 
-	_, err := utils.ExecuteCmd(cmd, nil)
+	_, err := utils.ExecuteCmd(cmd, parseProgressCallback(nil, progressCallback))
 
 	return &common.MergeResult{
 		Path: outputPath,

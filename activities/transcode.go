@@ -97,7 +97,10 @@ func TranscodeMergeVideo(ctx context.Context, params common.MergeInput) (*common
 	activity.RecordHeartbeat(ctx, "TranscodeMergeVideo")
 	log.Info("Starting TranscodeMergeVideoActivity")
 
-	result, err := transcode.MergeVideo(params)
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	result, err := transcode.MergeVideo(params, progressCallback)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +112,10 @@ func TranscodeMergeAudio(ctx context.Context, params common.MergeInput) (*common
 	activity.RecordHeartbeat(ctx, "TranscodeMergeAudio")
 	log.Info("Starting TranscodeMergeAudioActivity")
 
-	result, err := transcode.MergeAudio(params)
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	result, err := transcode.MergeAudio(params, progressCallback)
 	if err != nil {
 		return nil, err
 	}

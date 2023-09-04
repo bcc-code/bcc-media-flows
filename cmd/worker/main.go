@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/workflows"
 	"log"
 	"os"
@@ -63,16 +64,11 @@ func main() {
 		Identity:                           identity,
 		LocalActivityWorkerOnly:            false,
 		MaxConcurrentActivityExecutionSize: 100, // Doesn't make sense to have more than one activity running at a time
-
 	}
 
-	queue := os.Getenv("QUEUE")
-	if queue == "" {
-		queue = common.QueueWorker
-	}
-	w := worker.New(c, queue, workerOptions)
+	w := worker.New(c, utils.GetQueue(), workerOptions)
 
-	switch queue {
+	switch utils.GetQueue() {
 	case common.QueueDebug:
 		w.RegisterActivity(activities.Transcribe)
 

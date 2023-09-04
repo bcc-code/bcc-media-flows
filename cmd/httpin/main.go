@@ -84,6 +84,14 @@ func triggerHandler(ctx *gin.Context) {
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.TranscodePreviewFile, workflows.TranscodePreviewFileInput{
 			FilePath: file,
 		})
+	case "ExportAssetVX":
+		if vxID == "" {
+			ctx.Status(http.StatusBadRequest)
+			return
+		}
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.AssetExportVX, workflows.AssetExportParams{
+			VXID: vxID,
+		})
 	}
 
 	if err != nil {

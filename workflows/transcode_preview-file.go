@@ -2,7 +2,7 @@ package workflows
 
 import (
 	"github.com/bcc-code/bccm-flows/activities"
-	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/utils"
 	"path/filepath"
 	"time"
 
@@ -32,7 +32,7 @@ func TranscodePreviewFile(
 		StartToCloseTimeout:    time.Hour * 4,
 		ScheduleToCloseTimeout: time.Hour * 48,
 		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              common.QueueTranscode,
+		TaskQueue:              utils.GetTranscodeQueue(),
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)

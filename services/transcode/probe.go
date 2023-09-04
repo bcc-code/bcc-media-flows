@@ -103,6 +103,8 @@ func ProbeFile(filePath string) (*FFProbeResult, error) {
 	options := strings.Split("-v quiet -print_format json -show_format -show_streams", " ")
 	options = append(options, filePath)
 
+	fmt.Println(strings.Join(options, " "))
+
 	cmd := exec.Command(
 		"ffprobe",
 		options...,

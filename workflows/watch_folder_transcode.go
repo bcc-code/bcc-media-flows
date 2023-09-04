@@ -26,7 +26,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 		StartToCloseTimeout:    time.Hour * 4,
 		ScheduleToCloseTimeout: time.Hour * 48,
 		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              common.QueueWorker,
+		TaskQueue:              utils.GetWorkerQueue(),
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
@@ -49,7 +49,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 
 	var transcodeOutput *activities.EncodeResult
 	var transcribeOutput *activities.TranscribeResponse
-	ctx = workflow.WithTaskQueue(ctx, common.QueueTranscode)
+	ctx = workflow.WithTaskQueue(ctx, utils.GetTranscodeQueue())
 	switch params.FolderName {
 	case common.FolderProRes422HQHD:
 		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
@@ -93,7 +93,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 			Bitrate:    "60M",
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderTranscribe:
-		ctx = workflow.WithTaskQueue(ctx, common.QueueWorker)
+		ctx = workflow.WithTaskQueue(ctx, utils.GetWorkerQueue())
 		err = workflow.ExecuteActivity(ctx, activities.Transcribe, activities.TranscribeParams{
 			Language:        "no",
 			File:            path,
