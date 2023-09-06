@@ -5,6 +5,7 @@ import (
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/samber/lo"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -32,9 +33,24 @@ func MergeVideo(input common.MergeInput, progressCallback func(Progress)) (*comm
 
 	filterComplex += fmt.Sprintf("concat=n=%d:v=1:a=0 [v]", len(input.Items))
 
-	outputPath := filepath.Join(input.OutputDir, filepath.Clean(input.Title)+".mkv")
+	outputPath := filepath.Join(input.OutputDir, filepath.Clean(input.Title)+".mxf")
 
-	params = append(params, "-progress", "pipe:1", "-filter_complex", filterComplex, "-map", "[v]", "-y", outputPath)
+	params = append(params,
+		"-progress", "pipe:1",
+		"-filter_complex", filterComplex,
+		"-map", "[v]",
+		"-c:v", "prores",
+		"-profile:v", "3",
+		"-vendor", "ap10",
+		"-pix_fmt", "yuv422p10le",
+		"-color_primaries", "bt709",
+		"-color_trc", "bt709",
+		"-colorspace", "bt709",
+		"-y",
+		outputPath,
+	)
+
+	log.Default().Println(strings.Join(params, " "))
 
 	cmd := exec.Command("ffmpeg", params...)
 
@@ -52,12 +68,25 @@ func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) 
 		return fmt.Sprintf("anullsrc=channel_layout=stereo[%s]", tag), nil
 	}
 
-	streams := lo.Map(item.Streams, func(i, _ int) FFProbeStream {
-		s, _ := lo.Find(info.Streams, func(s FFProbeStream) bool {
-			return s.Index == i
+	var streams []FFProbeStream
+
+	for _, stream := range item.Streams {
+		s, found := lo.Find(info.Streams, func(s FFProbeStream) bool {
+			return s.Index == stream
 		})
-		return s
-	})
+		if found {
+			streams = append(streams, s)
+		}
+	}
+
+	if len(streams) == 0 {
+		s, found := lo.Find(info.Streams, func(s FFProbeStream) bool {
+			return s.ChannelLayout == "stereo" && s.Channels == 2
+		})
+		if found {
+			streams = append(streams, s)
+		}
+	}
 
 	var streamString string
 	channels := 0
@@ -71,6 +100,8 @@ func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) 
 	}
 	if channels == 0 {
 		streamString += fmt.Sprintf("anullsrc=channel_layout=stereo[%s]", tag)
+	} else if channels == 2 {
+		streamString += fmt.Sprintf("amerge[%s]", tag)
 	} else {
 		streamString += fmt.Sprintf("amerge=inputs=%d[%s]", channels, tag)
 	}
@@ -107,7 +138,7 @@ func MergeAudio(input common.MergeInput, progressCallback func(Progress)) (*comm
 
 	filterComplex += fmt.Sprintf("concat=n=%d:v=0:a=1 [a]", len(input.Items))
 
-	outputPath := filepath.Join(input.OutputDir, filepath.Clean(input.Title)+".mka")
+	outputPath := filepath.Join(input.OutputDir, filepath.Clean(input.Title)+".wav")
 
 	params = append(params, "-filter_complex", filterComplex, "-map", "[a]", "-y", outputPath)
 

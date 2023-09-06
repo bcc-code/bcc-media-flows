@@ -19,15 +19,6 @@ type ProResResult struct {
 	OutputPath string
 }
 
-type Progress struct {
-	Percent        float64 `json:"percent"`
-	CurrentSeconds int     `json:"currentSeconds"`
-	TotalSeconds   int     `json:"totalSeconds"`
-	CurrentFrame   int     `json:"currentFrame"`
-	TotalFrames    int     `json:"totalFrames"`
-	Bitrate        string  `json:"bitrate"`
-}
-
 func ProRes(input ProResInput, progressCallback func(Progress)) (*ProResResult, error) {
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mov"
 	outputPath := filepath.Join(input.OutputDir, filename)
@@ -39,7 +30,7 @@ func ProRes(input ProResInput, progressCallback func(Progress)) (*ProResResult, 
 
 	commandParts := []string{
 		fmt.Sprintf("-i %s", input.FilePath),
-		"-c:v prores_ks",
+		"-c:v prores",
 		"-progress pipe:1",
 		"-profile:v 3",
 		"-vendor ap10",

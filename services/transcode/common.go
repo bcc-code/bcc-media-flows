@@ -6,6 +6,15 @@ import (
 	"time"
 )
 
+type Progress struct {
+	Percent        float64 `json:"percent"`
+	CurrentSeconds int     `json:"currentSeconds"`
+	TotalSeconds   int     `json:"totalSeconds"`
+	CurrentFrame   int     `json:"currentFrame"`
+	TotalFrames    int     `json:"totalFrames"`
+	Bitrate        string  `json:"bitrate"`
+}
+
 func parseProgressCallback(info *FFProbeResult, cb func(Progress)) func(string) {
 	var progress Progress
 
