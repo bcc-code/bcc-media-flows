@@ -58,7 +58,6 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 	}
 
 	var audioMergeInputs = map[string]*common.MergeInput{}
-
 	var subtitleMergeInputs = map[string]*common.MergeInput{}
 
 	for _, clip := range data.Clips {
