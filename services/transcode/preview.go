@@ -102,7 +102,7 @@ func Preview(input PreviewInput, progressCallback func(Progress)) (*PreviewResul
 
 	cmd := exec.Command("ffmpeg", strings.Split(command, " ")...)
 
-	_, err = utils.ExecuteCmd(cmd, parseProgressCallback(info, progressCallback))
+	_, err = utils.ExecuteCmd(cmd, parseProgressCallback(infoToBase(info), progressCallback))
 	if err != nil {
 		return nil, err
 	}

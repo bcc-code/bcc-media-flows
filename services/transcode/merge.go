@@ -54,7 +54,9 @@ func MergeVideo(input common.MergeInput, progressCallback func(Progress)) (*comm
 
 	cmd := exec.Command("ffmpeg", params...)
 
-	_, err := utils.ExecuteCmd(cmd, parseProgressCallback(nil, progressCallback))
+	_, err := utils.ExecuteCmd(cmd, parseProgressCallback(baseInfo{
+		TotalSeconds: input.Duration,
+	}, progressCallback))
 
 	return &common.MergeResult{
 		Path: outputPath,
@@ -146,7 +148,7 @@ func MergeAudio(input common.MergeInput, progressCallback func(Progress)) (*comm
 
 	cmd := exec.Command("ffmpeg", params...)
 
-	_, err := utils.ExecuteCmd(cmd, parseProgressCallback(nil, progressCallback))
+	_, err := utils.ExecuteCmd(cmd, parseProgressCallback(baseInfo{}, progressCallback))
 
 	return &common.MergeResult{
 		Path: outputPath,

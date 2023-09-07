@@ -76,7 +76,7 @@ func ProRes(input ProResInput, progressCallback func(Progress)) (*ProResResult, 
 		return nil, err
 	}
 
-	cb := parseProgressCallback(info, progressCallback)
+	cb := parseProgressCallback(infoToBase(info), progressCallback)
 
 	scanner := bufio.NewScanner(stdout)
 	scanner.Split(bufio.ScanLines)

@@ -36,7 +36,7 @@ func printProgress() (func(Progress), chan struct{}) {
 func Test_MuxVideo(t *testing.T) {
 	printer, stop := printProgress()
 	defer close(stop)
-	_, err := MuxVideo(MuxVideoInput{
+	_, err := Mux(MuxVideoInput{
 		DestinationPath: "/Users/fredrikvedvik/Desktop/Transcoding/test/",
 		Bitrate:         "5M",
 		FrameRate:       25,

@@ -12,6 +12,7 @@ type MergeInput struct {
 	Items     []MergeInputItem
 	OutputDir string
 	WorkDir   string
+	Duration  float64
 }
 
 type MergeResult struct {

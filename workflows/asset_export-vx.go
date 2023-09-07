@@ -1,11 +1,13 @@
 package workflows
 
 import (
+	"fmt"
 	"github.com/bcc-code/bccm-flows/activities"
 	avidispine "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/services/vidispine"
 	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 	"os"
 	"path/filepath"
@@ -47,13 +49,28 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		_ = os.RemoveAll(tempFolder)
-	}()
+
+	downloadablesFolder := filepath.Join(workflowFolder, "downloadables")
+
+	err = os.MkdirAll(downloadablesFolder, os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+
+	streamsFolder := filepath.Join(workflowFolder, "streams")
+
+	err = os.MkdirAll(streamsFolder, os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+
+	//defer func() {
+	//	_ = os.RemoveAll(tempFolder)
+	//}()
 
 	mergeInput := common.MergeInput{
 		Title:     data.Title,
-		OutputDir: workflowFolder,
+		OutputDir: tempFolder,
 		WorkDir:   tempFolder,
 	}
 
@@ -61,6 +78,7 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 	var subtitleMergeInputs = map[string]*common.MergeInput{}
 
 	for _, clip := range data.Clips {
+		mergeInput.Duration += clip.OutSeconds - clip.InSeconds
 		mergeInput.Items = append(mergeInput.Items, common.MergeInputItem{
 			Path:  clip.VideoFile,
 			Start: clip.InSeconds,
@@ -71,7 +89,7 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 			if _, ok := audioMergeInputs[lan]; !ok {
 				audioMergeInputs[lan] = &common.MergeInput{
 					Title:     data.Title + "-" + lan,
-					OutputDir: workflowFolder,
+					OutputDir: tempFolder,
 					WorkDir:   tempFolder,
 				}
 			}
@@ -103,23 +121,121 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 
 	options.TaskQueue = utils.GetTranscodeQueue()
 	ctx = workflow.WithActivityOptions(ctx, options)
-	err = workflow.ExecuteActivity(ctx, activities.TranscodeMergeVideo, mergeInput).Get(ctx, nil)
 
-	if err != nil {
-		return nil, err
-	}
-
-	for _, mi := range audioMergeInputs {
-		err = workflow.ExecuteActivity(ctx, activities.TranscodeMergeAudio, *mi).Get(ctx, nil)
+	var videoFile string
+	{
+		var result common.MergeResult
+		err = workflow.ExecuteActivity(ctx, activities.TranscodeMergeVideo, mergeInput).Get(ctx, &result)
 		if err != nil {
 			return nil, err
 		}
+		videoFile = result.Path
 	}
 
-	for _, mi := range subtitleMergeInputs {
-		err = workflow.ExecuteActivity(ctx, activities.TranscodeMergeSubtitles, *mi).Get(ctx, nil)
+	var audioFiles = map[string]string{}
+	for lang, mi := range audioMergeInputs {
+		var result common.MergeResult
+		err = workflow.ExecuteActivity(ctx, activities.TranscodeMergeAudio, *mi).Get(ctx, &result)
 		if err != nil {
 			return nil, err
+		}
+		audioFiles[lang] = result.Path
+	}
+
+	var subtitleFiles = map[string]string{}
+	for lang, mi := range subtitleMergeInputs {
+		var result common.MergeResult
+		err = workflow.ExecuteActivity(ctx, activities.TranscodeMergeSubtitles, *mi).Get(ctx, &result)
+		if err != nil {
+			return nil, err
+		}
+		subtitleFiles[lang] = result.Path
+	}
+
+	// ordered by quality
+	var videoFiles []string
+	{
+		inputs := []common.VideoInput{
+			{
+				Path:            videoFile,
+				FrameRate:       25,
+				Width:           1920,
+				Height:          1080,
+				Bitrate:         "5M",
+				DestinationPath: tempFolder,
+			},
+			{
+				Path:            videoFile,
+				FrameRate:       25,
+				Width:           1280,
+				Height:          720,
+				Bitrate:         "2M",
+				DestinationPath: tempFolder,
+			},
+		}
+
+		for _, input := range inputs {
+			var result common.VideoResult
+			err = workflow.ExecuteActivity(ctx, activities.TranscodeToVideoH264, input).Get(ctx, &result)
+			if err != nil {
+				return nil, err
+			}
+			videoFiles = append(videoFiles, result.OutputPath)
+		}
+	}
+
+	var compressedAudioFiles = map[string]string{}
+	for lang, path := range audioFiles {
+		var result common.AudioResult
+		err = workflow.ExecuteActivity(ctx, activities.TranscodeToAudioAac, common.AudioInput{
+			Path:            path,
+			Bitrate:         "128k",
+			DestinationPath: tempFolder,
+		}).Get(ctx, &result)
+		if err != nil {
+			return nil, err
+		}
+		compressedAudioFiles[lang] = result.OutputPath
+	}
+
+	for lang, path := range compressedAudioFiles {
+		for _, f := range videoFiles {
+			base := filepath.Base(f)
+			err = workflow.ExecuteActivity(ctx, activities.TranscodeMux, common.MuxInput{
+				FileName:        base[:len(base)-len(filepath.Ext(base))] + "-" + lang,
+				DestinationPath: downloadablesFolder,
+				VideoFilePath:   f,
+				AudioFilePaths:  map[string]string{lang: path},
+			}).Get(ctx, nil)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	var languageKeys []string
+
+	for l := range compressedAudioFiles {
+		languageKeys = append(languageKeys, l)
+	}
+
+	languages := utils.LanguageKeysToOrderedLanguages(languageKeys)
+
+	for index, chunk := range lo.Chunk(languages, 16) {
+		var audioFilePaths = map[string]string{}
+		for _, lang := range chunk {
+			audioFilePaths[lang.ISO6391] = compressedAudioFiles[lang.ISO6391]
+		}
+
+		for _, f := range videoFiles {
+			base := filepath.Base(f)
+
+			err = workflow.ExecuteActivity(ctx, activities.TranscodeMux, common.MuxInput{
+				FileName:        base[:len(base)-len(filepath.Ext(base))] + fmt.Sprintf("-%d", index),
+				DestinationPath: streamsFolder,
+				VideoFilePath:   f,
+				AudioFilePaths:  audioFilePaths,
+			}).Get(ctx, nil)
 		}
 	}
 

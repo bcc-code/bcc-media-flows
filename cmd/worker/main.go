@@ -30,6 +30,9 @@ var transcodeActivities = []any{
 	activities.TranscodeMergeAudio,
 	activities.TranscodeMergeVideo,
 	activities.TranscodeMergeSubtitles,
+	activities.TranscodeToVideoH264,
+	activities.TranscodeToAudioAac,
+	activities.TranscodeMux,
 }
 
 var workerWorkflows = []any{

@@ -70,7 +70,7 @@ func XDCAM(input EncodeInput, progressCallback func(Progress)) (*EncodeResult, e
 		return nil, errors.Wrap(err, "couldn't start ffmpeg")
 	}
 
-	cb := parseProgressCallback(info, progressCallback)
+	cb := parseProgressCallback(infoToBase(info), progressCallback)
 
 	scanner := bufio.NewScanner(stdout)
 	scanner.Split(bufio.ScanLines)

@@ -83,7 +83,7 @@ func H264(input EncodeInput, progressCallback func(Progress)) (*EncodeResult, er
 		return nil, err
 	}
 
-	cb := parseProgressCallback(info, progressCallback)
+	cb := parseProgressCallback(infoToBase(info), progressCallback)
 
 	scanner := bufio.NewScanner(stdout)
 	scanner.Split(bufio.ScanLines)

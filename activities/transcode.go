@@ -137,3 +137,48 @@ func TranscodeMergeSubtitles(ctx context.Context, params common.MergeInput) (*co
 	}
 	return result, nil
 }
+
+func TranscodeToVideoH264(ctx context.Context, input common.VideoInput) (*common.VideoResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeToVideoH264")
+	log.Info("Starting TranscodeToVideoH264Activity")
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	result, err := transcode.VideoH264(input, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func TranscodeToAudioAac(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeToAudioAac")
+	log.Info("Starting TranscodeToAudioAacActivity")
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	result, err := transcode.AudioAac(input, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func TranscodeMux(ctx context.Context, input common.MuxInput) (*common.MuxResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeMux")
+	log.Info("Starting TranscodeMuxActivity")
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	result, err := transcode.Mux(input, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}

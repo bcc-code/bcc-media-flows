@@ -2,6 +2,7 @@ package activities
 
 import (
 	"context"
+	"fmt"
 	"github.com/bcc-code/bccm-flows/services/transcode"
 	"go.temporal.io/sdk/activity"
 	"time"
@@ -24,6 +25,7 @@ func registerProgressCallback(ctx context.Context) (chan struct{}, func(transcod
 			select {
 			case <-timer.C:
 				activity.RecordHeartbeat(ctx, current)
+				fmt.Println(current)
 			case <-stopChan:
 				return
 			}
