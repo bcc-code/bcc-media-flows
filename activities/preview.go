@@ -30,7 +30,7 @@ func TranscodePreview(ctx context.Context, input TranscodePreviewParams) (*Trans
 		FilePath:  input.FilePath,
 	}, progressCallback)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(err.Error())
 		return nil, err
 	}
 

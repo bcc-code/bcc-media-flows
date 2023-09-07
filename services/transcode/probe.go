@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bcc-code/bccm-flows/utils"
+	"log"
 	"os/exec"
 	"strings"
 	"time"
@@ -103,7 +104,7 @@ func ProbeFile(filePath string) (*FFProbeResult, error) {
 	options := strings.Split("-v quiet -print_format json -show_format -show_streams", " ")
 	options = append(options, filePath)
 
-	fmt.Println(strings.Join(options, " "))
+	log.Default().Println(strings.Join(options, " "))
 
 	cmd := exec.Command(
 		"ffprobe",

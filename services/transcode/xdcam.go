@@ -76,7 +76,6 @@ func XDCAM(input EncodeInput, progressCallback func(Progress)) (*EncodeResult, e
 	scanner.Split(bufio.ScanLines)
 	for scanner.Scan() {
 		line := scanner.Text()
-		fmt.Println(line)
 		cb(line)
 	}
 

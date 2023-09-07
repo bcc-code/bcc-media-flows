@@ -2,6 +2,7 @@ package transcode
 
 import (
 	"fmt"
+	"github.com/bcc-code/bccm-flows/common"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -36,12 +37,8 @@ func printProgress() (func(Progress), chan struct{}) {
 func Test_MuxVideo(t *testing.T) {
 	printer, stop := printProgress()
 	defer close(stop)
-	_, err := Mux(MuxVideoInput{
+	_, err := Mux(common.MuxInput{
 		DestinationPath: "/Users/fredrikvedvik/Desktop/Transcoding/test/",
-		Bitrate:         "5M",
-		FrameRate:       25,
-		Width:           1280,
-		Height:          720,
 		VideoFilePath:   root + "SOTM_7v2123_SEQ.mxf",
 		AudioFilePaths: map[string]string{
 			"nor": root + "SOTM_7v2123_SEQ-nor.wav",

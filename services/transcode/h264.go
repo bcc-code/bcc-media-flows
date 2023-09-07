@@ -89,7 +89,6 @@ func H264(input EncodeInput, progressCallback func(Progress)) (*EncodeResult, er
 	scanner.Split(bufio.ScanLines)
 	for scanner.Scan() {
 		line := scanner.Text()
-		fmt.Println(line)
 		cb(line)
 	}
 

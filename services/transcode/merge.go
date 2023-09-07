@@ -12,6 +12,7 @@ import (
 	"strings"
 )
 
+// MergeVideo takes a list of video files and merges them into one file.
 func MergeVideo(input common.MergeInput, progressCallback func(Progress)) (*common.MergeResult, error) {
 	var params []string
 
@@ -22,6 +23,7 @@ func MergeVideo(input common.MergeInput, progressCallback func(Progress)) (*comm
 	var filterComplex string
 
 	for index, i := range input.Items {
+		// Add the video stream and timestamps to the filter, with setpts to let the transcoder know to continue the timestamp from the previous file.
 		filterComplex += fmt.Sprintf("[%d:v] trim=start=%f:end=%f,setpts=PTS-STARTPTS [v%d];", index, i.Start, i.End, index)
 	}
 
@@ -31,6 +33,7 @@ func MergeVideo(input common.MergeInput, progressCallback func(Progress)) (*comm
 		filterComplex += fmt.Sprintf("[v%d] ", index)
 	}
 
+	// Concatenate the video streams.
 	filterComplex += fmt.Sprintf("concat=n=%d:v=1:a=0 [v]", len(input.Items))
 
 	outputPath := filepath.Join(input.OutputDir, filepath.Clean(input.Title)+".mxf")
@@ -63,6 +66,7 @@ func MergeVideo(input common.MergeInput, progressCallback func(Progress)) (*comm
 	}, err
 }
 
+// mergeItemToStereoStream takes a merge input item and returns a string that can be used in a filter_complex to merge the audio streams.
 func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) (string, error) {
 	info, _ := ProbeFile(item.Path)
 
@@ -143,8 +147,6 @@ func MergeAudio(input common.MergeInput, progressCallback func(Progress)) (*comm
 	outputPath := filepath.Join(input.OutputDir, filepath.Clean(input.Title)+".wav")
 
 	params = append(params, "-filter_complex", filterComplex, "-map", "[a]", "-y", outputPath)
-
-	fmt.Println(strings.Join(params, " "))
 
 	cmd := exec.Command("ffmpeg", params...)
 

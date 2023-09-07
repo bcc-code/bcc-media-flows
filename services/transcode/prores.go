@@ -82,7 +82,6 @@ func ProRes(input ProResInput, progressCallback func(Progress)) (*ProResResult, 
 	scanner.Split(bufio.ScanLines)
 	for scanner.Scan() {
 		line := scanner.Text()
-		fmt.Println(line)
 		cb(line)
 	}
 
