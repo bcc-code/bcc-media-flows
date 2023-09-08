@@ -47,9 +47,8 @@ func formatSecondsToTimestamp(seconds float64) string {
 	seconds -= float64(minutes * 60)
 
 	secondsInt := int(seconds)
-	frames := int((seconds - float64(secondsInt)) * 100)
 
-	return fmt.Sprintf("%02d:%02d:%02d:%02d", hours, minutes, secondsInt, frames)
+	return fmt.Sprintf("%02d:%02d:%02d:00", hours, minutes, secondsInt)
 }
 
 func exportDataToMergeInputs(data *vidispine.ExportData, tempFolder, subtitlesFolder string) (
