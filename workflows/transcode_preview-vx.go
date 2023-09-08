@@ -51,7 +51,10 @@ func TranscodePreviewVX(
 		return err
 	}
 
-	destinationPath, err := utils.GetWorkflowOutputFolder(ctx)
+	destinationPath, err := getWorkflowOutputFolder(ctx)
+	if err != nil {
+		return err
+	}
 
 	previewResponse := &activities.TranscodePreviewResponse{}
 	ctx = workflow.WithTaskQueue(ctx, utils.GetTranscodeQueue())

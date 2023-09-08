@@ -24,10 +24,11 @@ type AudioResult struct {
 }
 
 type MuxInput struct {
-	FileName        string
-	VideoFilePath   string
-	AudioFilePaths  map[string]string
-	DestinationPath string
+	FileName          string
+	VideoFilePath     string
+	AudioFilePaths    map[string]string
+	SubtitleFilePaths map[string]string
+	DestinationPath   string
 }
 type MuxResult struct {
 	Path string

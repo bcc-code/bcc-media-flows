@@ -1,16 +1,21 @@
 package workflows
 
 import (
+	"encoding/json"
+	"encoding/xml"
 	"fmt"
+	bccmflows "github.com/bcc-code/bccm-flows"
 	"github.com/bcc-code/bccm-flows/activities"
 	avidispine "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/common/ingest"
+	"github.com/bcc-code/bccm-flows/common/smil"
 	"github.com/bcc-code/bccm-flows/services/vidispine"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
-	"os"
 	"path/filepath"
+	"strings"
 )
 
 type AssetExportParams struct {
@@ -18,64 +23,47 @@ type AssetExportParams struct {
 }
 
 type AssetExportResult struct {
+	Duration string `json:"duration"`
+	ID       string `json:"id"`
+	SmilFile string `json:"smil_file"`
+	Title    string `json:"title"`
 }
 
-func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExportResult, error) {
-	logger := workflow.GetLogger(ctx)
-	logger.Info("Starting AssetExport")
+const (
+	r1080p = "1920x1080"
+	r720p  = "1280x720"
+	r540p  = "960x540"
+	r360p  = "640x360"
+	r270p  = "480x270"
+	r180p  = "320x180"
+)
 
-	options := GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, options)
+func formatSecondsToTimestamp(seconds float64) string {
+	hours := int(seconds / 3600)
+	seconds -= float64(hours * 3600)
 
-	var data *vidispine.ExportData
+	minutes := int(seconds / 60)
+	seconds -= float64(minutes * 60)
 
-	err := workflow.ExecuteActivity(ctx, avidispine.GetExportDataActivity, avidispine.GetExportDataParams{
-		VXID: params.VXID,
-	}).Get(ctx, &data)
-	if err != nil {
-		return nil, err
-	}
+	secondsInt := int(seconds)
+	frames := int((seconds - float64(secondsInt)) * 100)
 
-	logger.Info("Retrieved data from vidispine")
+	return fmt.Sprintf("%02d:%02d:%02d:%02d", hours, minutes, secondsInt, frames)
+}
 
-	workflowFolder, err := utils.GetWorkflowOutputFolder(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	tempFolder := filepath.Join(workflowFolder, "temp")
-
-	err = os.MkdirAll(tempFolder, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-
-	downloadablesFolder := filepath.Join(workflowFolder, "downloadables")
-
-	err = os.MkdirAll(downloadablesFolder, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-
-	streamsFolder := filepath.Join(workflowFolder, "streams")
-
-	err = os.MkdirAll(streamsFolder, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-
-	//defer func() {
-	//	_ = os.RemoveAll(tempFolder)
-	//}()
-
-	mergeInput := common.MergeInput{
+func exportDataToMergeInputs(data *vidispine.ExportData, tempFolder, subtitlesFolder string) (
+	mergeInput common.MergeInput,
+	audioMergeInputs map[string]*common.MergeInput,
+	subtitleMergeInputs map[string]*common.MergeInput,
+) {
+	mergeInput = common.MergeInput{
 		Title:     data.Title,
 		OutputDir: tempFolder,
 		WorkDir:   tempFolder,
 	}
 
-	var audioMergeInputs = map[string]*common.MergeInput{}
-	var subtitleMergeInputs = map[string]*common.MergeInput{}
+	audioMergeInputs = map[string]*common.MergeInput{}
+	subtitleMergeInputs = map[string]*common.MergeInput{}
 
 	for _, clip := range data.Clips {
 		mergeInput.Duration += clip.OutSeconds - clip.InSeconds
@@ -106,7 +94,7 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 			if _, ok := subtitleMergeInputs[lan]; !ok {
 				subtitleMergeInputs[lan] = &common.MergeInput{
 					Title:     data.Title + "-" + lan,
-					OutputDir: workflowFolder,
+					OutputDir: subtitlesFolder,
 					WorkDir:   tempFolder,
 				}
 			}
@@ -117,6 +105,67 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 				End:   clip.OutSeconds,
 			})
 		}
+	}
+
+	return
+}
+
+func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExportResult, error) {
+	logger := workflow.GetLogger(ctx)
+	logger.Info("Starting AssetExport")
+
+	options := GetDefaultActivityOptions()
+	ctx = workflow.WithActivityOptions(ctx, options)
+
+	var data *vidispine.ExportData
+
+	err := workflow.ExecuteActivity(ctx, avidispine.GetExportDataActivity, avidispine.GetExportDataParams{
+		VXID: params.VXID,
+	}).Get(ctx, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Info("Retrieved data from vidispine")
+
+	outputFolder, err := getWorkflowOutputFolder(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	tempFolder, err := getWorkflowTempFolder(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	filesFolder := filepath.Join(outputFolder, "files")
+	err = createFolder(ctx, filesFolder)
+	if err != nil {
+		return nil, err
+	}
+
+	streamsFolder := filepath.Join(outputFolder, "streams")
+	err = createFolder(ctx, streamsFolder)
+	if err != nil {
+		return nil, err
+	}
+
+	subtitlesFolder := filepath.Join(outputFolder, "subtitles")
+	err = createFolder(ctx, subtitlesFolder)
+	if err != nil {
+		return nil, err
+	}
+
+	//defer func() {
+	//	_ = os.RemoveAll(tempFolder)
+	//}()
+
+	mergeInput, audioMergeInputs, subtitleMergeInputs := exportDataToMergeInputs(data, tempFolder, subtitlesFolder)
+
+	ingestData := ingest.Data{
+		Title:    data.Title,
+		Id:       params.VXID,
+		Duration: formatSecondsToTimestamp(mergeInput.Duration),
 	}
 
 	options.TaskQueue = utils.GetTranscodeQueue()
@@ -152,11 +201,10 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 		subtitleFiles[lang] = result.Path
 	}
 
-	// ordered by quality
-	var videoFiles []string
+	videoFiles := map[string]string{}
 	{
-		inputs := []common.VideoInput{
-			{
+		qualities := map[string]common.VideoInput{
+			r1080p: {
 				Path:            videoFile,
 				FrameRate:       25,
 				Width:           1920,
@@ -164,23 +212,54 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 				Bitrate:         "5M",
 				DestinationPath: tempFolder,
 			},
-			{
+			r720p: {
 				Path:            videoFile,
 				FrameRate:       25,
 				Width:           1280,
 				Height:          720,
-				Bitrate:         "2M",
+				Bitrate:         "3M",
+				DestinationPath: tempFolder,
+			},
+			r540p: {
+				Path:            videoFile,
+				FrameRate:       25,
+				Width:           960,
+				Height:          540,
+				Bitrate:         "1900k",
+				DestinationPath: tempFolder,
+			},
+			r360p: {
+				Path:            videoFile,
+				FrameRate:       25,
+				Width:           640,
+				Height:          360,
+				Bitrate:         "980k",
+				DestinationPath: tempFolder,
+			},
+			r270p: {
+				Path:            videoFile,
+				FrameRate:       25,
+				Width:           480,
+				Height:          270,
+				Bitrate:         "610k",
+				DestinationPath: tempFolder,
+			},
+			r180p: {
+				Path:            videoFile,
+				FrameRate:       25,
+				Width:           320,
+				Height:          180,
+				Bitrate:         "320k",
 				DestinationPath: tempFolder,
 			},
 		}
-
-		for _, input := range inputs {
+		for key, input := range qualities {
 			var result common.VideoResult
 			err = workflow.ExecuteActivity(ctx, activities.TranscodeToVideoH264, input).Get(ctx, &result)
 			if err != nil {
 				return nil, err
 			}
-			videoFiles = append(videoFiles, result.OutputPath)
+			videoFiles[key] = result.OutputPath
 		}
 	}
 
@@ -198,46 +277,104 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 		compressedAudioFiles[lang] = result.OutputPath
 	}
 
-	for lang, path := range compressedAudioFiles {
-		for _, f := range videoFiles {
-			base := filepath.Base(f)
+	languages := utils.LanguageKeysToOrderedLanguages(lo.Keys(compressedAudioFiles))
+
+	for _, lang := range languages {
+		for _, q := range []string{r1080p, r540p, r180p} {
+			base := filepath.Base(videoFiles[q])
+			key := lang.ISO6391
+			fileName := base[:len(base)-len(filepath.Ext(base))] + "-" + key
+			var result common.MuxResult
 			err = workflow.ExecuteActivity(ctx, activities.TranscodeMux, common.MuxInput{
-				FileName:        base[:len(base)-len(filepath.Ext(base))] + "-" + lang,
-				DestinationPath: downloadablesFolder,
-				VideoFilePath:   f,
-				AudioFilePaths:  map[string]string{lang: path},
-			}).Get(ctx, nil)
+				FileName:          fileName,
+				DestinationPath:   filesFolder,
+				VideoFilePath:     videoFiles[q],
+				AudioFilePaths:    map[string]string{key: compressedAudioFiles[key]},
+				SubtitleFilePaths: subtitleFiles,
+			}).Get(ctx, &result)
 			if err != nil {
 				return nil, err
 			}
+			ingestData.Files = append(ingestData.Files, ingest.File{
+				Resolution:    q,
+				AudioLanguage: lang.ISO6392TwoLetter,
+				Mime:          "video/mp4",
+				Path:          filepath.Join("files", filepath.Base(result.Path)),
+			})
 		}
 	}
 
-	var languageKeys []string
+	var smilData smil.Smil
+	smilData.XMLName.Local = "smil"
+	smilData.XMLName.Space = "http://www.w3.org/2001/SMIL20/Language"
+	smilData.Head.Meta.Name = "formats"
+	smilData.Head.Meta.Content = "mp4"
 
-	for l := range compressedAudioFiles {
-		languageKeys = append(languageKeys, l)
+	subtitleLanguages := utils.LanguageKeysToOrderedLanguages(lo.Keys(subtitleFiles))
+	for _, language := range subtitleLanguages {
+		path := subtitleFiles[language.ISO6391]
+		smilData.Body.Switch.TextStreams = append(smilData.Body.Switch.TextStreams, smil.TextStream{
+			Src:            filepath.Join("subtitles", filepath.Base(path)),
+			SystemLanguage: language.ISO6391,
+			SubtitleName:   language.LanguageNameSystem,
+		})
 	}
 
-	languages := utils.LanguageKeysToOrderedLanguages(languageKeys)
+	for _, q := range []string{r180p, r270p, r360p, r540p, r720p, r1080p} {
 
-	for index, chunk := range lo.Chunk(languages, 16) {
-		var audioFilePaths = map[string]string{}
-		for _, lang := range chunk {
-			audioFilePaths[lang.ISO6391] = compressedAudioFiles[lang.ISO6391]
+		path := videoFiles[q]
+
+		audioFilePaths := map[string]string{}
+		var fileLanguages []bccmflows.Language
+		// Add audio files to mux, but uniquely across qualities.
+		for len(languages) > 0 && len(audioFilePaths) < 16 {
+			key := languages[0].ISO6391
+			fileLanguages = append(fileLanguages, languages[0])
+			audioFilePaths[key] = compressedAudioFiles[key]
+			languages = languages[1:]
 		}
 
-		for _, f := range videoFiles {
-			base := filepath.Base(f)
-
-			err = workflow.ExecuteActivity(ctx, activities.TranscodeMux, common.MuxInput{
-				FileName:        base[:len(base)-len(filepath.Ext(base))] + fmt.Sprintf("-%d", index),
-				DestinationPath: streamsFolder,
-				VideoFilePath:   f,
-				AudioFilePaths:  audioFilePaths,
-			}).Get(ctx, nil)
+		var result common.MuxResult
+		err = workflow.ExecuteActivity(ctx, activities.TranscodeMux, common.MuxInput{
+			FileName:        filepath.Base(path),
+			DestinationPath: streamsFolder,
+			AudioFilePaths:  audioFilePaths,
+			VideoFilePath:   path,
+		}).Get(ctx, &result)
+		if err != nil {
+			return nil, err
 		}
+
+		smilData.Body.Switch.Videos = append(smilData.Body.Switch.Videos, smil.Video{
+			Src:          filepath.Join("streams", filepath.Base(result.Path)),
+			IncludeAudio: fmt.Sprintf("%t", len(fileLanguages) > 0),
+			SystemLanguage: strings.Join(lo.Map(fileLanguages, func(i bccmflows.Language, _ int) string {
+				return i.ISO6391
+			}), ","),
+			AudioName: strings.Join(lo.Map(fileLanguages, func(i bccmflows.Language, _ int) string {
+				return i.LanguageNameSystem
+			}), ","),
+		})
 	}
 
-	return nil, nil
+	xmlData, _ := xml.MarshalIndent(smilData, "", "\t")
+	err = writeFile(ctx, filepath.Join(outputFolder, "smil.xml"), xmlData)
+	if err != nil {
+
+		return nil, err
+	}
+
+	ingestData.SmilFile = "smil.xml"
+
+	marshalled, err := json.Marshal(ingestData)
+	if err != nil {
+		return nil, err
+	}
+
+	err = writeFile(ctx, filepath.Join(outputFolder, "ingest.json"), marshalled)
+	if err != nil {
+		return nil, err
+	}
+	err = deletePath(ctx, tempFolder)
+	return nil, err
 }

@@ -69,7 +69,6 @@ func MergeVideo(input common.MergeInput, progressCallback func(Progress)) (*comm
 // mergeItemToStereoStream takes a merge input item and returns a string that can be used in a filter_complex to merge the audio streams.
 func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) (string, error) {
 	info, _ := ProbeFile(item.Path)
-
 	if info == nil || len(info.Streams) == 0 {
 		return fmt.Sprintf("anullsrc=channel_layout=stereo[%s]", tag), nil
 	}

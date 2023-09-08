@@ -3,8 +3,8 @@ package transcode
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/bcc-code/bccm-flows/cache"
 	"github.com/bcc-code/bccm-flows/utils"
-	"log"
 	"os/exec"
 	"strings"
 	"time"
@@ -91,20 +91,17 @@ type FFProbeResult struct {
 		BitRate        string `json:"bit_rate"`
 		ProbeScore     int    `json:"probe_score"`
 		Tags           struct {
-			MajorBrand       string    `json:"major_brand"`
-			MinorVersion     string    `json:"minor_version"`
-			CompatibleBrands string    `json:"compatible_brands"`
-			CreationTime     time.Time `json:"creation_time"`
+			MajorBrand       string `json:"major_brand"`
+			MinorVersion     string `json:"minor_version"`
+			CompatibleBrands string `json:"compatible_brands"`
+			CreationTime     string `json:"creation_time"`
 		} `json:"tags"`
 	} `json:"format"`
 }
 
-// ProbeFile returns information about the specified video file. Requires ffprobe present.
-func ProbeFile(filePath string) (*FFProbeResult, error) {
+func doProbe(path string) (*FFProbeResult, error) {
 	options := strings.Split("-v quiet -print_format json -show_format -show_streams", " ")
-	options = append(options, filePath)
-
-	log.Default().Println(strings.Join(options, " "))
+	options = append(options, path)
 
 	cmd := exec.Command(
 		"ffprobe",
@@ -113,11 +110,18 @@ func ProbeFile(filePath string) (*FFProbeResult, error) {
 
 	result, err := utils.ExecuteCmd(cmd, nil)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't execute ffprobe %s", err.Error())
+		return nil, fmt.Errorf("couldn't execute ffprobe %s, %s", path, err.Error())
 	}
 
 	var info FFProbeResult
 	err = json.Unmarshal([]byte(result), &info)
 
 	return &info, err
+}
+
+// ProbeFile returns information about the specified video file. Requires ffprobe present.
+func ProbeFile(filePath string) (*FFProbeResult, error) {
+	return cache.GetOrSet("probe:"+filePath, func() (*FFProbeResult, error) {
+		return doProbe(filePath)
+	})
 }

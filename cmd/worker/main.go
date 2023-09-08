@@ -14,6 +14,14 @@ import (
 	"go.temporal.io/sdk/worker"
 )
 
+var utilActivities = []any{
+	activities.MoveFile,
+	activities.CreateFolder,
+	activities.WriteFile,
+	activities.DeletePath,
+	activities.StandardizeFileName,
+}
+
 var vidispineActivities = []any{
 	vidispine.GetFileFromVXActivity,
 	vidispine.ImportFileAsShapeActivity,
@@ -76,6 +84,10 @@ func main() {
 	case common.QueueDebug:
 		w.RegisterActivity(activities.Transcribe)
 
+		for _, a := range utilActivities {
+			w.RegisterActivity(a)
+		}
+
 		for _, a := range vidispineActivities {
 			w.RegisterActivity(a)
 		}
@@ -90,8 +102,12 @@ func main() {
 	case common.QueueWorker:
 		w.RegisterActivity(activities.Transcribe)
 
-		for _, activity := range vidispineActivities {
-			w.RegisterActivity(activity)
+		for _, a := range utilActivities {
+			w.RegisterActivity(a)
+		}
+
+		for _, a := range vidispineActivities {
+			w.RegisterActivity(a)
 		}
 
 		for _, wf := range workerWorkflows {

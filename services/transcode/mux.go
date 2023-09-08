@@ -12,23 +12,30 @@ import (
 	"strings"
 )
 
-type audioFile struct {
+type languageFile struct {
 	Path     string
 	Language string
 }
 
 // Order and respect the global language ordering.
-func getVideoAudioFiles(input common.MuxInput) []audioFile {
-	var languageKeys []string
-	for lang := range input.AudioFilePaths {
-		languageKeys = append(languageKeys, lang)
-	}
+func getMuxAudioFiles(input common.MuxInput) []languageFile {
+	languages := utils.LanguageKeysToOrderedLanguages(lo.Keys(input.AudioFilePaths))
 
-	languages := utils.LanguageKeysToOrderedLanguages(languageKeys)
-
-	return lo.Map(languages, func(lang bccmflows.Language, _ int) audioFile {
-		return audioFile{
+	return lo.Map(languages, func(lang bccmflows.Language, _ int) languageFile {
+		return languageFile{
 			Path:     input.AudioFilePaths[lang.ISO6391],
+			Language: lang.ISO6391,
+		}
+	})
+}
+
+// Order and respect the global language ordering.
+func getMuxSubtitleFiles(input common.MuxInput) []languageFile {
+	languages := utils.LanguageKeysToOrderedLanguages(lo.Keys(input.SubtitleFilePaths))
+
+	return lo.Map(languages, func(lang bccmflows.Language, _ int) languageFile {
+		return languageFile{
+			Path:     input.SubtitleFilePaths[lang.ISO6391],
 			Language: lang.ISO6391,
 		}
 	})
@@ -48,34 +55,57 @@ func Mux(input common.MuxInput, progressCallback func(Progress)) (*common.MuxRes
 		"-i", input.VideoFilePath,
 	}
 
-	audioFiles := getVideoAudioFiles(input)
+	audioFiles := getMuxAudioFiles(input)
+	subtitleFiles := getMuxSubtitleFiles(input)
 
-	for _, af := range audioFiles {
+	for _, f := range audioFiles {
 		params = append(params,
-			"-i", af.Path,
+			"-i", f.Path,
 		)
 	}
 
-	params = append(params, "-map", "0:v")
-
-	for index, af := range audioFiles {
+	for _, f := range subtitleFiles {
 		params = append(params,
-			"-map", fmt.Sprintf("%d:a", index+1),
-			fmt.Sprintf("-metadata:s:%d", index+1), fmt.Sprintf("language=%s", af.Language),
+			"-i", f.Path,
 		)
+	}
+
+	streams := 0
+	params = append(params, "-map", fmt.Sprintf("%d:v", streams))
+	streams++
+
+	for _, f := range audioFiles {
+		params = append(params,
+			"-map", fmt.Sprintf("%d:a", streams),
+			fmt.Sprintf("-metadata:s:%d", streams), fmt.Sprintf("language=%s", f.Language),
+		)
+		streams++
+	}
+
+	for _, f := range subtitleFiles {
+		params = append(params,
+			"-map", fmt.Sprintf("%d:s", streams),
+			fmt.Sprintf("-metadata:s:%d", streams), fmt.Sprintf("language=%s", f.Language),
+		)
+		streams++
 	}
 
 	params = append(params,
 		"-c:v", "copy",
 		"-c:a", "copy",
+		"-c:s", "mov_text",
 		"-y", outputPath,
 	)
-
-	log.Default().Println(strings.Join(params, " "))
 
 	cmd := exec.Command("ffmpeg", params...)
 
 	_, err = utils.ExecuteCmd(cmd, parseProgressCallback(infoToBase(info), progressCallback))
 
-	return nil, err
+	if err != nil {
+		log.Default().Println("mux failed", err)
+		return nil, fmt.Errorf("mux failed, %s", strings.Join(params, " "))
+	}
+	return &common.MuxResult{
+		Path: outputPath,
+	}, nil
 }
