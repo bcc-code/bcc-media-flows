@@ -23,6 +23,17 @@ func GetDefaultActivityOptions() workflow.ActivityOptions {
 	}
 }
 
+func GetDefaultWorkflowOptions() workflow.ChildWorkflowOptions {
+	return workflow.ChildWorkflowOptions{
+		RetryPolicy: &temporal.RetryPolicy{
+			InitialInterval: time.Minute * 1,
+			MaximumAttempts: 10,
+			MaximumInterval: time.Hour * 1,
+		},
+		TaskQueue: utils.GetWorkerQueue(),
+	}
+}
+
 func createFolder(ctx workflow.Context, destination string) error {
 	return workflow.ExecuteActivity(ctx, activities.CreateFolder, activities.CreateFolderInput{
 		Destination: destination,

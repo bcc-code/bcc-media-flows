@@ -50,6 +50,9 @@ var workerWorkflows = []any{
 	workflows.TranscribeVX,
 	workflows.WatchFolderTranscode,
 	workflows.AssetExportVX,
+	workflows.MergeExportData,
+	workflows.MuxFiles,
+	workflows.PrepareFiles,
 }
 
 func main() {

@@ -34,6 +34,7 @@ func MoveFile(ctx context.Context, input MoveFileInput) (*FileResult, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = os.Chmod(input.Destination, os.ModePerm)
 	return &FileResult{
 		Path: input.Destination,
 	}, nil
