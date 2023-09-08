@@ -89,8 +89,10 @@ func triggerHandler(ctx *gin.Context) {
 			ctx.Status(http.StatusBadRequest)
 			return
 		}
+
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.AssetExportVX, workflows.AssetExportParams{
-			VXID: vxID,
+			VXID:      vxID,
+			WithFiles: getParamFromCtx(ctx, "withFiles") == "true",
 		})
 	}
 

@@ -19,7 +19,8 @@ import (
 )
 
 type AssetExportParams struct {
-	VXID string
+	VXID      string
+	WithFiles bool
 }
 
 type AssetExportResult struct {
@@ -190,6 +191,7 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 			AudioFiles:    audioFiles,
 			SubtitleFiles: subtitleFiles,
 			OutputPath:    outputFolder,
+			WithFiles:     params.WithFiles,
 		}).Get(ctx, &result)
 		if err != nil {
 			return nil, err
@@ -399,6 +401,7 @@ type MuxFilesParams struct {
 	AudioFiles    map[string]string
 	SubtitleFiles map[string]string
 	OutputPath    string
+	WithFiles     bool
 }
 
 type MuxFilesResult struct {
@@ -421,28 +424,30 @@ func MuxFiles(ctx workflow.Context, params MuxFilesParams) (*MuxFilesResult, err
 		return nil, err
 	}
 	audioLanguages := utils.LanguageKeysToOrderedLanguages(lo.Keys(params.AudioFiles))
-	for _, lang := range audioLanguages {
-		for _, q := range []string{r1080p, r540p, r180p} {
-			base := filepath.Base(params.VideoFiles[q])
-			key := lang.ISO6391
-			fileName := base[:len(base)-len(filepath.Ext(base))] + "-" + key
-			var result common.MuxResult
-			err = workflow.ExecuteActivity(ctx, activities.TranscodeMux, common.MuxInput{
-				FileName:          fileName,
-				DestinationPath:   filesFolder,
-				VideoFilePath:     params.VideoFiles[q],
-				AudioFilePaths:    map[string]string{key: params.AudioFiles[key]},
-				SubtitleFilePaths: params.SubtitleFiles,
-			}).Get(ctx, &result)
-			if err != nil {
-				return nil, err
+	if params.WithFiles {
+		for _, lang := range audioLanguages {
+			for _, q := range []string{r1080p, r540p, r180p} {
+				base := filepath.Base(params.VideoFiles[q])
+				key := lang.ISO6391
+				fileName := base[:len(base)-len(filepath.Ext(base))] + "-" + key
+				var result common.MuxResult
+				err = workflow.ExecuteActivity(ctx, activities.TranscodeMux, common.MuxInput{
+					FileName:          fileName,
+					DestinationPath:   filesFolder,
+					VideoFilePath:     params.VideoFiles[q],
+					AudioFilePaths:    map[string]string{key: params.AudioFiles[key]},
+					SubtitleFilePaths: params.SubtitleFiles,
+				}).Get(ctx, &result)
+				if err != nil {
+					return nil, err
+				}
+				files = append(files, ingest.File{
+					Resolution:    q,
+					AudioLanguage: lang.ISO6392TwoLetter,
+					Mime:          "video/mp4",
+					Path:          filepath.Join("files", filepath.Base(result.Path)),
+				})
 			}
-			files = append(files, ingest.File{
-				Resolution:    q,
-				AudioLanguage: lang.ISO6392TwoLetter,
-				Mime:          "video/mp4",
-				Path:          filepath.Join("files", filepath.Base(result.Path)),
-			})
 		}
 	}
 
