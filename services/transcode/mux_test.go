@@ -3,6 +3,7 @@ package transcode
 import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -10,8 +11,8 @@ import (
 
 const root = "/Users/fredrikvedvik/Desktop/Transcoding/sotm7/"
 
-func printProgress() (func(Progress), chan struct{}) {
-	var progress Progress
+func printProgress() (ffmpeg.ProgressCallback, chan struct{}) {
+	var progress ffmpeg.Progress
 
 	stopChan := make(chan struct{})
 
@@ -29,7 +30,7 @@ func printProgress() (func(Progress), chan struct{}) {
 		}
 	}()
 
-	return func(p Progress) {
+	return func(p ffmpeg.Progress) {
 		progress = p
 	}, stopChan
 }

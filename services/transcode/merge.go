@@ -3,6 +3,7 @@ package transcode
 import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/samber/lo"
 	"log"
@@ -13,7 +14,7 @@ import (
 )
 
 // MergeVideo takes a list of video files and merges them into one file.
-func MergeVideo(input common.MergeInput, progressCallback func(Progress)) (*common.MergeResult, error) {
+func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallback) (*common.MergeResult, error) {
 	var params []string
 
 	for _, i := range input.Items {
@@ -55,11 +56,9 @@ func MergeVideo(input common.MergeInput, progressCallback func(Progress)) (*comm
 
 	log.Default().Println(strings.Join(params, " "))
 
-	cmd := exec.Command("ffmpeg", params...)
-
-	_, err := utils.ExecuteCmd(cmd, parseProgressCallback(baseInfo{
+	_, err := ffmpeg.Do(params, ffmpeg.StreamInfo{
 		TotalSeconds: input.Duration,
-	}, progressCallback))
+	}, progressCallback)
 
 	return &common.MergeResult{
 		Path: outputPath,
@@ -68,15 +67,15 @@ func MergeVideo(input common.MergeInput, progressCallback func(Progress)) (*comm
 
 // mergeItemToStereoStream takes a merge input item and returns a string that can be used in a filter_complex to merge the audio streams.
 func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) (string, error) {
-	info, _ := ProbeFile(item.Path)
+	info, _ := ffmpeg.ProbeFile(item.Path)
 	if info == nil || len(info.Streams) == 0 {
 		return fmt.Sprintf("anullsrc=channel_layout=stereo[%s]", tag), nil
 	}
 
-	var streams []FFProbeStream
+	var streams []ffmpeg.FFProbeStream
 
 	for _, stream := range item.Streams {
-		s, found := lo.Find(info.Streams, func(s FFProbeStream) bool {
+		s, found := lo.Find(info.Streams, func(s ffmpeg.FFProbeStream) bool {
 			return s.Index == stream
 		})
 		if found {
@@ -85,7 +84,7 @@ func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) 
 	}
 
 	if len(streams) == 0 {
-		s, found := lo.Find(info.Streams, func(s FFProbeStream) bool {
+		s, found := lo.Find(info.Streams, func(s ffmpeg.FFProbeStream) bool {
 			return s.ChannelLayout == "stereo" && s.Channels == 2
 		})
 		if found {
@@ -115,7 +114,7 @@ func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) 
 }
 
 // MergeAudio merges MXF audio files into one stereo file.
-func MergeAudio(input common.MergeInput, progressCallback func(Progress)) (*common.MergeResult, error) {
+func MergeAudio(input common.MergeInput, progressCallback ffmpeg.ProgressCallback) (*common.MergeResult, error) {
 	var params []string
 
 	for _, i := range input.Items {
@@ -147,9 +146,7 @@ func MergeAudio(input common.MergeInput, progressCallback func(Progress)) (*comm
 
 	params = append(params, "-filter_complex", filterComplex, "-map", "[a]", "-y", outputPath)
 
-	cmd := exec.Command("ffmpeg", params...)
-
-	_, err := utils.ExecuteCmd(cmd, parseProgressCallback(baseInfo{}, progressCallback))
+	_, err := ffmpeg.Do(params, ffmpeg.StreamInfo{}, progressCallback)
 
 	return &common.MergeResult{
 		Path: outputPath,

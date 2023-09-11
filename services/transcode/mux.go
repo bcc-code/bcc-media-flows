@@ -4,10 +4,10 @@ import (
 	"fmt"
 	bccmflows "github.com/bcc-code/bccm-flows"
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/samber/lo"
 	"log"
-	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -42,9 +42,9 @@ func getMuxSubtitleFiles(input common.MuxInput) []languageFile {
 }
 
 // Mux multiplexes specified video, audio and subtitle tracks.
-func Mux(input common.MuxInput, progressCallback func(Progress)) (*common.MuxResult, error) {
+func Mux(input common.MuxInput, progressCallback ffmpeg.ProgressCallback) (*common.MuxResult, error) {
 	//Use ffmpeg to mux the video
-	info, err := ProbeFile(input.VideoFilePath)
+	info, err := ffmpeg.GetStreamInfo(input.VideoFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -99,10 +99,7 @@ func Mux(input common.MuxInput, progressCallback func(Progress)) (*common.MuxRes
 		"-y", outputPath,
 	)
 
-	cmd := exec.Command("ffmpeg", params...)
-
-	_, err = utils.ExecuteCmd(cmd, parseProgressCallback(infoToBase(info), progressCallback))
-
+	_, err = ffmpeg.Do(params, info, progressCallback)
 	if err != nil {
 		log.Default().Println("mux failed", err)
 		return nil, fmt.Errorf("mux failed, %s", strings.Join(params, " "))

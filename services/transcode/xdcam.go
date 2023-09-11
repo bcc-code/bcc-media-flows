@@ -1,88 +1,59 @@
 package transcode
 
 import (
-	"bufio"
-	"fmt"
-	"github.com/pkg/errors"
-	"os/exec"
+	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
-func XDCAM(input EncodeInput, progressCallback func(Progress)) (*EncodeResult, error) {
+func XDCAM(input EncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeResult, error) {
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mxf"
 	outputPath := filepath.Join(input.OutputDir, filename)
 
-	info, err := ProbeFile(input.FilePath)
-	if err != nil {
-		return nil, err
-	}
-
-	commandParts := []string{
-		fmt.Sprintf("-i %s", input.FilePath),
-		"-c:v mpeg2video",
-		"-progress pipe:1",
-		"-pix_fmt yuv422p",
-		"-color_primaries bt709",
-		"-color_trc bt709",
-		"-colorspace bt709",
+	params := []string{
+		"-i", input.FilePath,
+		"-c:v", "mpeg2video",
+		"-progress", "pipe:1",
+		"-pix_fmt", "yuv422p",
+		"-color_primaries", "bt709",
+		"-color_trc", "bt709",
+		"-colorspace", "bt709",
 		"-y",
 	}
 
 	if input.Bitrate != "" {
-		commandParts = append(
-			commandParts,
-			fmt.Sprintf("-b:v %s", input.Bitrate),
+		params = append(
+			params,
+			"-b:v", input.Bitrate,
 		)
 	}
 
 	if input.Resolution != "" {
-		commandParts = append(
-			commandParts,
-			fmt.Sprintf("-s %s", input.Resolution),
+		params = append(
+			params,
+			"-s", input.Resolution,
 		)
 	}
 
 	if input.FrameRate != 0 {
-		commandParts = append(
-			commandParts,
-			fmt.Sprintf("-r %d", input.FrameRate),
+		params = append(
+			params,
+			"-r", strconv.Itoa(input.FrameRate),
 		)
 	}
 
-	commandParts = append(
-		commandParts,
+	params = append(
+		params,
 		outputPath,
 	)
 
-	commandString := strings.Join(commandParts, " ")
-
-	cmd := exec.Command("ffmpeg",
-		strings.Split(
-			commandString,
-			" ",
-		)...,
-	)
-	stdout, _ := cmd.StdoutPipe()
-
-	err = cmd.Start()
-	if err != nil {
-		return nil, errors.Wrap(err, "couldn't start ffmpeg")
-	}
-
-	cb := parseProgressCallback(infoToBase(info), progressCallback)
-
-	scanner := bufio.NewScanner(stdout)
-	scanner.Split(bufio.ScanLines)
-	for scanner.Scan() {
-		line := scanner.Text()
-		cb(line)
-	}
-
-	err = cmd.Wait()
+	info, err := ffmpeg.GetStreamInfo(input.FilePath)
 	if err != nil {
 		return nil, err
 	}
+
+	_, err = ffmpeg.Do(params, info, progressCallback)
 
 	return &EncodeResult{
 		Path: outputPath,

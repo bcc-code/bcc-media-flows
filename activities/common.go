@@ -2,15 +2,15 @@ package activities
 
 import (
 	"context"
-	"github.com/bcc-code/bccm-flows/services/transcode"
+	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"go.temporal.io/sdk/activity"
 	"time"
 )
 
-func registerProgressCallback(ctx context.Context) (chan struct{}, func(transcode.Progress)) {
-	var current transcode.Progress
+func registerProgressCallback(ctx context.Context) (chan struct{}, func(ffmpeg.Progress)) {
+	var current ffmpeg.Progress
 
-	progressCallback := func(percent transcode.Progress) {
+	progressCallback := func(percent ffmpeg.Progress) {
 		current = percent
 	}
 

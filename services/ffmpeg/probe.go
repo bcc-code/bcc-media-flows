@@ -1,4 +1,4 @@
-package transcode
+package ffmpeg
 
 import (
 	"encoding/json"
@@ -124,4 +124,12 @@ func ProbeFile(filePath string) (*FFProbeResult, error) {
 	return cache.GetOrSet("probe:"+filePath, func() (*FFProbeResult, error) {
 		return doProbe(filePath)
 	})
+}
+
+func GetStreamInfo(path string) (StreamInfo, error) {
+	info, err := ProbeFile(path)
+	if err != nil {
+		return StreamInfo{}, err
+	}
+	return ProbeResultToInfo(info), nil
 }

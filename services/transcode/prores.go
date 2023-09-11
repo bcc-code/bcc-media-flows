@@ -1,10 +1,9 @@
 package transcode
 
 import (
-	"bufio"
-	"fmt"
-	"os/exec"
+	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -19,73 +18,49 @@ type ProResResult struct {
 	OutputPath string
 }
 
-func ProRes(input ProResInput, progressCallback func(Progress)) (*ProResResult, error) {
+func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProResResult, error) {
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mov"
-	outputPath := filepath.Join(input.OutputDir, filename)
 
-	info, err := ProbeFile(input.FilePath)
-	if err != nil {
-		return nil, err
-	}
-
-	commandParts := []string{
-		fmt.Sprintf("-i %s", input.FilePath),
-		"-c:v prores",
-		"-progress pipe:1",
-		"-profile:v 3",
-		"-vendor ap10",
-		"-vf setfield=tff",
-		"-color_primaries bt709",
-		"-color_trc bt709",
-		"-colorspace bt709",
-		"-y",
+	params := []string{
+		"-i", input.FilePath,
+		"-c:v", "prores",
+		"-progress", "pipe:1",
+		"-profile:v", "3",
+		"-vendor", "ap10",
+		"-vf", "setfield=tff",
+		"-color_primaries", "bt709",
+		"-color_trc", "bt709",
+		"-colorspace", "bt709",
+		"-bits_per_mb", "8000",
 	}
 
 	if input.Resolution != "" {
-		commandParts = append(
-			commandParts,
-			fmt.Sprintf("-s %s", input.Resolution),
+		params = append(
+			params,
+			"-s", input.Resolution,
 		)
 	}
 
 	if input.FrameRate != 0 {
-		commandParts = append(
-			commandParts,
-			fmt.Sprintf("-r %d", input.FrameRate),
+		params = append(
+			params,
+			"-r", strconv.Itoa(input.FrameRate),
 		)
 	}
 
-	commandParts = append(
-		commandParts,
-		"-bits_per_mb 8000",
+	outputPath := filepath.Join(input.OutputDir, filename)
+	params = append(
+		params,
+		"-y",
 		outputPath,
 	)
 
-	commandString := strings.Join(commandParts, " ")
-
-	cmd := exec.Command("ffmpeg",
-		strings.Split(
-			commandString,
-			" ",
-		)...,
-	)
-	stdout, _ := cmd.StdoutPipe()
-
-	err = cmd.Start()
+	info, err := ffmpeg.GetStreamInfo(input.FilePath)
 	if err != nil {
 		return nil, err
 	}
 
-	cb := parseProgressCallback(infoToBase(info), progressCallback)
-
-	scanner := bufio.NewScanner(stdout)
-	scanner.Split(bufio.ScanLines)
-	for scanner.Scan() {
-		line := scanner.Text()
-		cb(line)
-	}
-
-	err = cmd.Wait()
+	_, err = ffmpeg.Do(params, info, progressCallback)
 	if err != nil {
 		return nil, err
 	}

@@ -1,4 +1,4 @@
-package transcode
+package ffmpeg
 
 import (
 	"strconv"
@@ -17,12 +17,12 @@ type Progress struct {
 	Bitrate        string  `json:"bitrate"`
 }
 
-type baseInfo struct {
+type StreamInfo struct {
 	TotalFrames  int
 	TotalSeconds float64
 }
 
-func infoToBase(info *FFProbeResult) baseInfo {
+func ProbeResultToInfo(info *FFProbeResult) StreamInfo {
 	var totalFrames int64
 	var totalSeconds float64
 	if info != nil {
@@ -42,13 +42,13 @@ func infoToBase(info *FFProbeResult) baseInfo {
 			}
 		}
 	}
-	return baseInfo{
+	return StreamInfo{
 		TotalFrames:  int(totalFrames),
 		TotalSeconds: totalSeconds,
 	}
 }
 
-func parseProgressCallback(info baseInfo, cb func(Progress)) func(string) {
+func parseProgressCallback(info StreamInfo, cb func(Progress)) func(string) {
 	var progress Progress
 
 	return func(line string) {

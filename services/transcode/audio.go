@@ -2,12 +2,11 @@ package transcode
 
 import (
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils"
-	"os/exec"
+	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"path/filepath"
 )
 
-func AudioAac(input common.AudioInput, cb ProgressCallback) (*common.AudioResult, error) {
+func AudioAac(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.AudioResult, error) {
 	params := []string{
 		"-progress", "pipe:1",
 		"-i", input.Path,
@@ -22,14 +21,12 @@ func AudioAac(input common.AudioInput, cb ProgressCallback) (*common.AudioResult
 
 	params = append(params, "-y", outputPath)
 
-	info, err := ProbeFile(input.Path)
+	info, err := ffmpeg.GetStreamInfo(input.Path)
 	if err != nil {
 		return nil, err
 	}
 
-	cmd := exec.Command("ffmpeg", params...)
-
-	_, err = utils.ExecuteCmd(cmd, parseProgressCallback(infoToBase(info), cb))
+	_, err = ffmpeg.Do(params, info, cb)
 	if err != nil {
 		return nil, err
 	}

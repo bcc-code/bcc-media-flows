@@ -3,12 +3,11 @@ package transcode
 import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils"
-	"os/exec"
+	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"path/filepath"
 )
 
-func VideoH264(input common.VideoInput, cb ProgressCallback) (*common.VideoResult, error) {
+func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.VideoResult, error) {
 	params := []string{
 		"-progress", "pipe:1",
 		"-i", input.Path,
@@ -29,14 +28,12 @@ func VideoH264(input common.VideoInput, cb ProgressCallback) (*common.VideoResul
 
 	params = append(params, "-y", outputPath)
 
-	info, err := ProbeFile(input.Path)
+	info, err := ffmpeg.GetStreamInfo(input.Path)
 	if err != nil {
 		return nil, err
 	}
 
-	cmd := exec.Command("ffmpeg", params...)
-
-	_, err = utils.ExecuteCmd(cmd, parseProgressCallback(infoToBase(info), cb))
+	_, err = ffmpeg.Do(params, info, cb)
 	if err != nil {
 		return nil, err
 	}
