@@ -94,6 +94,17 @@ func triggerHandler(ctx *gin.Context) {
 			VXID:      vxID,
 			WithFiles: getParamFromCtx(ctx, "withFiles") == "true",
 		})
+	case "ExecuteFFmpeg":
+		var input struct {
+			Arguments []string `json:"arguments"`
+		}
+		if err = ctx.BindJSON(&input); err != nil {
+			ctx.Status(http.StatusBadRequest)
+			return
+		}
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.ExecuteFFmpeg, workflows.ExecuteFFmpegInput{
+			Arguments: input.Arguments,
+		})
 	}
 
 	if err != nil {

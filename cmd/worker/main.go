@@ -41,6 +41,7 @@ var transcodeActivities = []any{
 	activities.TranscodeToVideoH264,
 	activities.TranscodeToAudioAac,
 	activities.TranscodeMux,
+	activities.ExecuteFFmpeg,
 }
 
 var workerWorkflows = []any{
@@ -53,6 +54,7 @@ var workerWorkflows = []any{
 	workflows.MergeExportData,
 	workflows.MuxFiles,
 	workflows.PrepareFiles,
+	workflows.ExecuteFFmpeg,
 }
 
 func main() {

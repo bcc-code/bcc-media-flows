@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"github.com/bcc-code/bccm-flows/services/transcode"
 	"go.temporal.io/sdk/activity"
 )
@@ -181,4 +182,23 @@ func TranscodeMux(ctx context.Context, input common.MuxInput) (*common.MuxResult
 		return nil, err
 	}
 	return result, nil
+}
+
+type ExecuteFFmpegInput struct {
+	Arguments []string
+}
+
+func ExecuteFFmpeg(ctx context.Context, input ExecuteFFmpegInput) error {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "ExecuteFFmpeg")
+	log.Info("Starting ExecuteFFmpeg")
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	_, err := ffmpeg.Do(input.Arguments, ffmpeg.StreamInfo{}, progressCallback)
+	if err != nil {
+		return err
+	}
+	return nil
 }
