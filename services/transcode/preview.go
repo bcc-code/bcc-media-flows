@@ -20,7 +20,7 @@ type PreviewResult struct {
 	AudioOnly         bool
 }
 
-var previewWatermarkPath = os.Getenv("PREVIEW_WATERMARK_PATH")
+const previewWatermarkPath = "/mnt/isilon/system/graphics/LOGO_BTV_Preview_960-540.mov"
 
 func Preview(input PreviewInput, progressCallback func(Progress)) (*PreviewResult, error) {
 	encoder := os.Getenv("ENCODER")
@@ -102,7 +102,7 @@ func Preview(input PreviewInput, progressCallback func(Progress)) (*PreviewResul
 
 	cmd := exec.Command("ffmpeg", strings.Split(command, " ")...)
 
-	_, err = utils.ExecuteCmd(cmd, parseProgressCallback(info, progressCallback))
+	_, err = utils.ExecuteCmd(cmd, parseProgressCallback(infoToBase(info), progressCallback))
 	if err != nil {
 		return nil, err
 	}

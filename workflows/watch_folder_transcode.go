@@ -26,7 +26,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 		StartToCloseTimeout:    time.Hour * 4,
 		ScheduleToCloseTimeout: time.Hour * 48,
 		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              common.QueueWorker,
+		TaskQueue:              utils.GetWorkerQueue(),
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
@@ -34,11 +34,15 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	logger.Info("Starting WatchFolderTranscode")
 
 	path := params.Path
-	path, err := utils.FixFilename(path)
+	path, err := standardizeFileName(ctx, path)
 	if err != nil {
 		return err
 	}
-	path, err = utils.MoveToParentFolder(path, "processing")
+	processingFolder, err := utils.GetSiblingFolder(path, "processing")
+	if err != nil {
+		return err
+	}
+	path, err = moveToFolder(ctx, path, processingFolder)
 	if err != nil {
 		return err
 	}
@@ -46,10 +50,18 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	if err != nil {
 		return err
 	}
+	errorFolder, err := utils.GetSiblingFolder(path, "error")
+	if err != nil {
+		return err
+	}
+	processedFolder, err := utils.GetSiblingFolder(path, "processed")
+	if err != nil {
+		return err
+	}
 
 	var transcodeOutput *activities.EncodeResult
 	var transcribeOutput *activities.TranscribeResponse
-	ctx = workflow.WithTaskQueue(ctx, common.QueueTranscode)
+	ctx = workflow.WithTaskQueue(ctx, utils.GetTranscodeQueue())
 	switch params.FolderName {
 	case common.FolderProRes422HQHD:
 		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
@@ -93,7 +105,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 			Bitrate:    "60M",
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderTranscribe:
-		ctx = workflow.WithTaskQueue(ctx, common.QueueWorker)
+		ctx = workflow.WithTaskQueue(ctx, utils.GetWorkerQueue())
 		err = workflow.ExecuteActivity(ctx, activities.Transcribe, activities.TranscribeParams{
 			Language:        "no",
 			File:            path,
@@ -104,18 +116,18 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	}
 
 	if err != nil {
-		path, _ = utils.MoveToParentFolder(path, "error")
+		path, _ = moveToFolder(ctx, path, errorFolder)
 		return err
 	} else {
-		path, _ = utils.MoveToParentFolder(path, "processed")
+		path, _ = moveToFolder(ctx, path, processedFolder)
 
 		if transcodeOutput != nil {
-			_, _ = utils.MoveToParentFolder(transcodeOutput.OutputPath, "out")
+			_, _ = moveToFolder(ctx, transcodeOutput.OutputPath, outFolder)
 		}
 		if transcribeOutput != nil {
-			_, _ = utils.MoveToParentFolder(transcribeOutput.JSONPath, "out")
-			_, _ = utils.MoveToParentFolder(transcribeOutput.SRTPath, "out")
-			_, _ = utils.MoveToParentFolder(transcribeOutput.TXTPath, "out")
+			_, _ = moveToFolder(ctx, transcribeOutput.JSONPath, outFolder)
+			_, _ = moveToFolder(ctx, transcribeOutput.SRTPath, outFolder)
+			_, _ = moveToFolder(ctx, transcribeOutput.TXTPath, outFolder)
 		}
 	}
 

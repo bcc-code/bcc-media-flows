@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/workflows"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -57,7 +57,7 @@ func doTranscode(ctx context.Context, path string) error {
 
 	workflowOptions := client.StartWorkflowOptions{
 		ID:        uuid.NewString(),
-		TaskQueue: common.QueueWorker,
+		TaskQueue: utils.GetWorkerQueue(),
 	}
 
 	_, err = c.ExecuteWorkflow(ctx, workflowOptions, workflows.WatchFolderTranscode, workflows.WatchFolderTranscodeInput{

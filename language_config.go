@@ -87,6 +87,18 @@ func (l LanguageList) ByReaperChan() map[int]Language {
 	return out
 }
 
+func (l LanguageList) Len() int {
+	return len(l)
+}
+
+func (l LanguageList) Swap(i, j int) {
+	l[i], l[j] = l[j], l[i]
+}
+
+func (l LanguageList) Less(i, j int) bool {
+	return l[i].LanguageNumber < l[j].LanguageNumber
+}
+
 // Master: https://www.notion.so/bccmedia/Language-codes-222bc3bd6240428a93d03a84761ab57b?pvs=4
 var languages = LanguageList{
 	{
