@@ -158,6 +158,7 @@ func MergeAudio(input common.MergeInput, progressCallback func(Progress)) (*comm
 
 func MergeSubtitles(input common.MergeInput) (*common.MergeResult, error) {
 	var files []string
+	// for each file, extract the specified range and save the result to a file.
 	for index, item := range input.Items {
 		file := filepath.Join(input.WorkDir, fmt.Sprintf("%d.srt", index))
 		cmd := exec.Command("ffmpeg", "-i", item.Path, "-ss", fmt.Sprintf("%f", item.Start), "-to", fmt.Sprintf("%f", item.End), "-y", file)
@@ -168,6 +169,11 @@ func MergeSubtitles(input common.MergeInput) (*common.MergeResult, error) {
 		}
 		files = append(files, file)
 	}
+
+	// the files have to be present in a text file for ffmpeg to concatenate them.
+	// #subtitles.txt
+	// file /path/to/file/0.srt
+	// file /path/to/file/1.srt
 	var content string
 	for _, f := range files {
 		content += fmt.Sprintf("file '%s'\n", f)
@@ -181,7 +187,12 @@ func MergeSubtitles(input common.MergeInput) (*common.MergeResult, error) {
 	}
 
 	outputPath := filepath.Join(input.OutputDir, filepath.Clean(input.Title)+".srt")
-	cmd := exec.Command("ffmpeg", "-f", "concat", "-safe", "0", "-i", subtitlesFile, "-y", outputPath)
+	cmd := exec.Command("ffmpeg",
+		"-f", "concat",
+		"-safe", "0",
+		"-i", subtitlesFile,
+		"-y", outputPath,
+	)
 	_, err = utils.ExecuteCmd(cmd, nil)
 	if err != nil {
 		return nil, err

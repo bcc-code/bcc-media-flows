@@ -41,6 +41,7 @@ func getMuxSubtitleFiles(input common.MuxInput) []languageFile {
 	})
 }
 
+// Mux multiplexes specified video, audio and subtitle tracks.
 func Mux(input common.MuxInput, progressCallback func(Progress)) (*common.MuxResult, error) {
 	//Use ffmpeg to mux the video
 	info, err := ProbeFile(input.VideoFilePath)
@@ -90,6 +91,7 @@ func Mux(input common.MuxInput, progressCallback func(Progress)) (*common.MuxRes
 		streams++
 	}
 
+	// using "copy" codec to avoid re-encoding, mov_text is the subtitle codec for mp4
 	params = append(params,
 		"-c:v", "copy",
 		"-c:a", "copy",
