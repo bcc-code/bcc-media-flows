@@ -64,7 +64,7 @@ func CreateFolder(ctx context.Context, input CreateFolderInput) error {
 	activity.RecordHeartbeat(ctx, "CreateFolder")
 	log.Info("Starting CreateFolderActivity")
 
-	err := os.MkdirAll(input.Destination, os.ModePerm)
+	err := os.MkdirAll(input.Destination, 0755)
 	if err != nil {
 		return err
 	}

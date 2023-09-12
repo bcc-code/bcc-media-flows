@@ -346,6 +346,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 	options := GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
+	ctx = workflow.WithTaskQueue(ctx, utils.GetTranscodeQueue())
 	tempFolder := params.OutputPath
 	videoFiles := map[string]string{}
 	{
@@ -449,6 +450,7 @@ func MuxFiles(ctx workflow.Context, params MuxFilesParams) (*MuxFilesResult, err
 
 	options := GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
+	ctx = workflow.WithTaskQueue(ctx, utils.GetTranscodeQueue())
 
 	var files []ingest.File
 	filesFolder := filepath.Join(params.OutputPath, "files")
