@@ -50,6 +50,10 @@ func StandardizeFileName(ctx context.Context, input FileInput) (*FileResult, err
 	if err != nil {
 		return nil, err
 	}
+	err = os.Chmod(path, os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
 	return &FileResult{
 		Path: path,
 	}, nil
@@ -82,6 +86,10 @@ func WriteFile(ctx context.Context, input WriteFileInput) error {
 	log.Info("Starting WriteFileActivity")
 
 	err := os.MkdirAll(filepath.Dir(input.Path), os.ModePerm)
+	if err != nil {
+		return err
+	}
+	err = os.Chmod(input.Path, os.ModePerm)
 	if err != nil {
 		return err
 	}
