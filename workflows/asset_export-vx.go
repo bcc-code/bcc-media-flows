@@ -450,14 +450,22 @@ func MuxFiles(ctx workflow.Context, params MuxFilesParams) (*MuxFilesResult, err
 
 	options := GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
-	ctx = workflow.WithTaskQueue(ctx, utils.GetTranscodeQueue())
 
-	var files []ingest.File
 	filesFolder := filepath.Join(params.OutputPath, "files")
 	err := createFolder(ctx, filesFolder)
 	if err != nil {
 		return nil, err
 	}
+
+	streamsFolder := filepath.Join(params.OutputPath, "streams")
+	err = createFolder(ctx, streamsFolder)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx = workflow.WithTaskQueue(ctx, utils.GetTranscodeQueue())
+
+	var files []ingest.File
 	audioLanguages := utils.LanguageKeysToOrderedLanguages(lo.Keys(params.AudioFiles))
 	if params.WithFiles {
 		for _, lang := range audioLanguages {
@@ -503,12 +511,6 @@ func MuxFiles(ctx workflow.Context, params MuxFilesParams) (*MuxFilesResult, err
 
 	var streams []smil.Video
 	languages := audioLanguages
-
-	streamsFolder := filepath.Join(params.OutputPath, "streams")
-	err = createFolder(ctx, streamsFolder)
-	if err != nil {
-		return nil, err
-	}
 
 	for _, q := range []string{r180p, r270p, r360p, r540p, r720p, r1080p} {
 		path := params.VideoFiles[q]
