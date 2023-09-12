@@ -398,7 +398,10 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 				DestinationPath: tempFolder,
 			},
 		}
-		for key, input := range qualities {
+
+		keys := lo.Keys(qualities)
+		for _, key := range keys {
+			input := qualities[key]
 			var result common.VideoResult
 			err := workflow.ExecuteActivity(ctx, activities.TranscodeToVideoH264, input).Get(ctx, &result)
 			if err != nil {
