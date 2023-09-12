@@ -276,17 +276,11 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 
 	data := params.ExportData
 
-	subtitlesFolder := filepath.Join(params.OutputPath, "subtitles")
-	err := createFolder(ctx, subtitlesFolder)
-	if err != nil {
-		return nil, err
-	}
-
-	mergeInput, audioMergeInputs, subtitleMergeInputs := exportDataToMergeInputs(data, params.TempPath, subtitlesFolder)
+	mergeInput, audioMergeInputs, subtitleMergeInputs := exportDataToMergeInputs(data, params.TempPath, params.OutputPath)
 
 	options.TaskQueue = utils.GetTranscodeQueue()
 	ctx = workflow.WithActivityOptions(ctx, options)
-
+	var err error
 	var videoFile string
 	{
 		var result common.MergeResult
@@ -399,8 +393,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 			},
 		}
 
-		keys := lo.Keys(qualities)
-		for _, key := range keys {
+		for key := range qualities {
 			input := qualities[key]
 			var result common.VideoResult
 			err := workflow.ExecuteActivity(ctx, activities.TranscodeToVideoH264, input).Get(ctx, &result)
@@ -451,18 +444,6 @@ func MuxFiles(ctx workflow.Context, params MuxFilesParams) (*MuxFilesResult, err
 	options := GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	filesFolder := filepath.Join(params.OutputPath, "files")
-	err := createFolder(ctx, filesFolder)
-	if err != nil {
-		return nil, err
-	}
-
-	streamsFolder := filepath.Join(params.OutputPath, "streams")
-	err = createFolder(ctx, streamsFolder)
-	if err != nil {
-		return nil, err
-	}
-
 	ctx = workflow.WithTaskQueue(ctx, utils.GetTranscodeQueue())
 
 	var files []ingest.File
@@ -474,9 +455,9 @@ func MuxFiles(ctx workflow.Context, params MuxFilesParams) (*MuxFilesResult, err
 				key := lang.ISO6391
 				fileName := base[:len(base)-len(filepath.Ext(base))] + "-" + key
 				var result common.MuxResult
-				err = workflow.ExecuteActivity(ctx, activities.TranscodeMux, common.MuxInput{
+				err := workflow.ExecuteActivity(ctx, activities.TranscodeMux, common.MuxInput{
 					FileName:          fileName,
-					DestinationPath:   filesFolder,
+					DestinationPath:   params.OutputPath,
 					VideoFilePath:     params.VideoFiles[q],
 					AudioFilePaths:    map[string]string{key: params.AudioFiles[key]},
 					SubtitleFilePaths: params.SubtitleFiles,
@@ -492,7 +473,7 @@ func MuxFiles(ctx workflow.Context, params MuxFilesParams) (*MuxFilesResult, err
 					Resolution:    q,
 					AudioLanguage: code,
 					Mime:          "video/mp4",
-					Path:          filepath.Join("files", filepath.Base(result.Path)),
+					Path:          filepath.Base(result.Path),
 				})
 			}
 		}
@@ -503,7 +484,7 @@ func MuxFiles(ctx workflow.Context, params MuxFilesParams) (*MuxFilesResult, err
 	for _, language := range subtitleLanguages {
 		path := params.SubtitleFiles[language.ISO6391]
 		subtitles = append(subtitles, smil.TextStream{
-			Src:            filepath.Join("subtitles", filepath.Base(path)),
+			Src:            filepath.Base(path),
 			SystemLanguage: language.ISO6391,
 			SubtitleName:   language.LanguageNameSystem,
 		})
@@ -529,9 +510,9 @@ func MuxFiles(ctx workflow.Context, params MuxFilesParams) (*MuxFilesResult, err
 		fileName := base[:len(base)-len(filepath.Ext(base))]
 
 		var result common.MuxResult
-		err = workflow.ExecuteActivity(ctx, activities.TranscodeMux, common.MuxInput{
+		err := workflow.ExecuteActivity(ctx, activities.TranscodeMux, common.MuxInput{
 			FileName:        fileName,
-			DestinationPath: streamsFolder,
+			DestinationPath: params.OutputPath,
 			AudioFilePaths:  audioFilePaths,
 			VideoFilePath:   path,
 		}).Get(ctx, &result)
@@ -540,7 +521,7 @@ func MuxFiles(ctx workflow.Context, params MuxFilesParams) (*MuxFilesResult, err
 		}
 
 		streams = append(streams, smil.Video{
-			Src:          filepath.Join("streams", filepath.Base(result.Path)),
+			Src:          filepath.Base(result.Path),
 			IncludeAudio: fmt.Sprintf("%t", len(fileLanguages) > 0),
 			SystemLanguage: strings.Join(lo.Map(fileLanguages, func(i bccmflows.Language, _ int) string {
 				return i.ISO6391
