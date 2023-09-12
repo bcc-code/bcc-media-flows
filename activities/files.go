@@ -89,12 +89,15 @@ func WriteFile(ctx context.Context, input WriteFileInput) error {
 	if err != nil {
 		return err
 	}
+	err = os.WriteFile(input.Path, input.Data, os.ModePerm)
+	if err != nil {
+		return err
+	}
 	err = os.Chmod(input.Path, os.ModePerm)
 	if err != nil {
 		return err
 	}
-
-	return os.WriteFile(input.Path, input.Data, os.ModePerm)
+	return nil
 }
 
 func DeletePath(ctx context.Context, input FileInput) error {
