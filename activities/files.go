@@ -68,7 +68,7 @@ func CreateFolder(ctx context.Context, input CreateFolderInput) error {
 	if err != nil {
 		return err
 	}
-	return nil
+	return os.Chmod(input.Destination, os.ModePerm)
 }
 
 type WriteFileInput struct {
