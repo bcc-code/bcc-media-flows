@@ -142,9 +142,6 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 
 	ctx = workflow.WithChildOptions(ctx, GetDefaultWorkflowOptions())
 
-	options.TaskQueue = utils.GetTranscodeQueue()
-	ctx = workflow.WithActivityOptions(ctx, options)
-
 	var mergeResult MergeExportDataResult
 	err = workflow.ExecuteChildWorkflow(ctx, MergeExportData, MergeExportDataParams{
 		ExportData: data,
