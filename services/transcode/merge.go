@@ -59,10 +59,18 @@ func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 	_, err := ffmpeg.Do(params, ffmpeg.StreamInfo{
 		TotalSeconds: input.Duration,
 	}, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+
+	err = os.Chmod(outputPath, os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
 
 	return &common.MergeResult{
 		Path: outputPath,
-	}, err
+	}, nil
 }
 
 // mergeItemToStereoStream takes a merge input item and returns a string that can be used in a filter_complex to merge the audio streams.

@@ -233,7 +233,7 @@ var languages = LanguageList{
 		LanguageNameNative: "Română",
 		LanguageNameSystem: "Romanian",
 		ISO6391:            "ron",
-		ISO6392TwoLetter:   "rn",
+		ISO6392TwoLetter:   "ro",
 		ReaperChannel:      10,
 		MU1ChannelStart:    14,
 		MU2ChannelStart:    -1,

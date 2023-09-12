@@ -2,6 +2,7 @@ package transcode
 
 import (
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -61,6 +62,11 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProRe
 	}
 
 	_, err = ffmpeg.Do(params, info, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+
+	err = os.Chmod(outputPath, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}

@@ -12,6 +12,8 @@ import (
 	"github.com/bcc-code/bccm-flows/common/smil"
 	"github.com/bcc-code/bccm-flows/services/vidispine"
 	"github.com/bcc-code/bccm-flows/utils"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/google/uuid"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 	"path/filepath"
@@ -163,6 +165,7 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 	var audioFiles map[string]string
 	{
 		var result PrepareFilesResult
+		ctx = workflow.WithChildOptions(ctx, GetDefaultWorkflowOptions())
 		err = workflow.ExecuteChildWorkflow(ctx, PrepareFiles, PrepareFilesParams{
 			OutputPath: tempFolder,
 			VideoFile:  mergeResult.VideoFile,
@@ -202,13 +205,13 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 
 	xmlData, _ := xml.MarshalIndent(smilData, "", "\t")
 	xmlData = append([]byte("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n"), xmlData...)
-	err = writeFile(ctx, filepath.Join(outputFolder, "smil.xml"), xmlData)
+	err = writeFile(ctx, filepath.Join(outputFolder, "aws.smil"), xmlData)
 	if err != nil {
 
 		return nil, err
 	}
 
-	ingestData.SmilFile = "smil.xml"
+	ingestData.SmilFile = "aws.smil"
 
 	marshalled, err := json.Marshal(ingestData)
 	if err != nil {
@@ -220,6 +223,37 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 		return nil, err
 	}
 	//err = deletePath(ctx, tempFolder)
+
+	ingestFolder := data.Title + "_" + workflow.GetInfo(ctx).OriginalRunID
+
+	err = workflow.ExecuteActivity(ctx, activities.RcloneUploadDir, activities.RcloneUploadDirInput{
+		Source:      strings.Replace(outputFolder, "/mnt/isilon/", "isilon:isilon/", 1),
+		Destination: fmt.Sprintf("s3prod:vod-asset-ingest-prod/" + ingestFolder),
+	}).Get(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	event := cloudevents.NewEvent()
+	event.SetID(uuid.NewString())
+	event.SetSpecVersion(cloudevents.VersionV1)
+	event.SetSource("bccm-flows")
+	event.SetType("asset.delivered")
+	type r struct {
+		JSONMetaPath string `json:"jsonMetaPath"`
+	}
+	err = event.SetData(
+		cloudevents.ApplicationJSON,
+		r{
+			JSONMetaPath: filepath.Join(ingestFolder, "ingest.json"),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = workflow.ExecuteActivity(ctx, activities.PubsubPublish, event).Get(ctx, nil)
+
 	return nil, err
 }
 
@@ -440,9 +474,13 @@ func MuxFiles(ctx workflow.Context, params MuxFilesParams) (*MuxFilesResult, err
 				if err != nil {
 					return nil, err
 				}
+				code := lang.ISO6392TwoLetter
+				if code == "" {
+					code = lang.ISO6391
+				}
 				files = append(files, ingest.File{
 					Resolution:    q,
-					AudioLanguage: lang.ISO6392TwoLetter,
+					AudioLanguage: code,
 					Mime:          "video/mp4",
 					Path:          filepath.Join("files", filepath.Base(result.Path)),
 				})

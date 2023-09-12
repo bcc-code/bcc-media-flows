@@ -8,10 +8,14 @@ import (
 )
 
 func registerProgressCallback(ctx context.Context) (chan struct{}, func(ffmpeg.Progress)) {
-	var current ffmpeg.Progress
+	return newHeartBeater[ffmpeg.Progress](ctx)
+}
 
-	progressCallback := func(percent ffmpeg.Progress) {
-		current = percent
+func newHeartBeater[T any](ctx context.Context) (chan struct{}, func(T)) {
+	var info T
+
+	cb := func(i T) {
+		info = i
 	}
 
 	stopChan := make(chan struct{})
@@ -23,12 +27,12 @@ func registerProgressCallback(ctx context.Context) (chan struct{}, func(ffmpeg.P
 		for {
 			select {
 			case <-timer.C:
-				activity.RecordHeartbeat(ctx, current)
+				activity.RecordHeartbeat(ctx, info)
 			case <-stopChan:
 				return
 			}
 		}
 	}()
 
-	return stopChan, progressCallback
+	return stopChan, cb
 }

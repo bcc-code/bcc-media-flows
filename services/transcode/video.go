@@ -4,14 +4,20 @@ import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
+	"os"
 	"path/filepath"
 )
 
 func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.VideoResult, error) {
+	h264encoder := os.Getenv("H264_ENCODER")
+	if h264encoder == "" {
+		h264encoder = "libx264"
+	}
+
 	params := []string{
 		"-progress", "pipe:1",
 		"-i", input.Path,
-		"-c:v", "libx264",
+		"-c:v", h264encoder,
 		"-b:v", input.Bitrate,
 		"-r", fmt.Sprintf("%d", input.FrameRate),
 		"-vf", fmt.Sprintf("scale=%[1]d:%[2]d:force_original_aspect_ratio=decrease,pad=%[1]d:%[2]d:(ow-iw)/2:(oh-ih)/2",
@@ -34,6 +40,11 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 	}
 
 	_, err = ffmpeg.Do(params, info, cb)
+	if err != nil {
+		return nil, err
+	}
+
+	err = os.Chmod(outputPath, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}

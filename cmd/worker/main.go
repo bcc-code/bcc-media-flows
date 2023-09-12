@@ -88,6 +88,8 @@ func main() {
 	switch utils.GetQueue() {
 	case common.QueueDebug:
 		w.RegisterActivity(activities.Transcribe)
+		w.RegisterActivity(activities.RcloneUploadDir)
+		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {
 			w.RegisterActivity(a)
@@ -106,6 +108,8 @@ func main() {
 		}
 	case common.QueueWorker:
 		w.RegisterActivity(activities.Transcribe)
+		w.RegisterActivity(activities.RcloneUploadDir)
+		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {
 			w.RegisterActivity(a)

@@ -8,6 +8,7 @@ import (
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/samber/lo"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -103,6 +104,11 @@ func Mux(input common.MuxInput, progressCallback ffmpeg.ProgressCallback) (*comm
 	if err != nil {
 		log.Default().Println("mux failed", err)
 		return nil, fmt.Errorf("mux failed, %s", strings.Join(params, " "))
+	}
+
+	err = os.Chmod(outputPath, os.ModePerm)
+	if err != nil {
+		return nil, err
 	}
 	return &common.MuxResult{
 		Path: outputPath,

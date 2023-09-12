@@ -2,6 +2,7 @@ package transcode
 
 import (
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -28,9 +29,14 @@ func H264(input EncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeR
 		return nil, err
 	}
 
+	h264encoder := os.Getenv("H264_ENCODER")
+	if h264encoder == "" {
+		h264encoder = "libx264"
+	}
+
 	params := []string{
 		"-i", input.FilePath,
-		"-c:v", "libx264",
+		"-c:v", h264encoder,
 		"-progress", "pipe:1",
 		"-profile:v", "high422",
 		"-pix_fmt", "yuv422p10le",
@@ -68,6 +74,14 @@ func H264(input EncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeR
 	)
 
 	_, err = ffmpeg.Do(params, info, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+
+	err = os.Chmod(outputPath, os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
 
 	return &EncodeResult{
 		Path: outputPath,

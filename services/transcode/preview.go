@@ -92,6 +92,11 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 		return nil, err
 	}
 
+	err = os.Chmod(outputPath, os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+
 	return &PreviewResult{
 		LowResolutionPath: outputPath,
 		AudioOnly:         !hasVideo && hasAudio,
