@@ -270,14 +270,11 @@ type MergeExportDataParams struct {
 func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*MergeExportDataResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting MergeExportData")
-
-	options := GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, options)
-
 	data := params.ExportData
 
 	mergeInput, audioMergeInputs, subtitleMergeInputs := exportDataToMergeInputs(data, params.TempPath, params.OutputPath)
 
+	options := GetDefaultActivityOptions()
 	options.TaskQueue = utils.GetTranscodeQueue()
 	ctx = workflow.WithActivityOptions(ctx, options)
 	var err error

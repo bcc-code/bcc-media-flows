@@ -3,6 +3,7 @@ package vidispine
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -290,6 +291,9 @@ func getEmbeddedAudio(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 	return clip, nil
 }
 
+var nonAlphanumeric = regexp.MustCompile("[^a-zA-Z0-9_]+")
+var consecutiveUnderscores = regexp.MustCompile("_+")
+
 // GetDataForExport returns the data needed to export the item with the given VXID
 // If exportSubclip is true, the subclip will be exported, otherwise the whole clip
 func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
@@ -320,6 +324,11 @@ func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
 
 	// TODO: This appears to define the shape used for export. Validate how and where this is used
 	// exportFormat := meta.Get("portal_mf868653", "original")
+
+	// clean up the title
+	title = strings.ReplaceAll(title, " ", "_")
+	title = nonAlphanumeric.ReplaceAllString(title, "")
+	title = consecutiveUnderscores.ReplaceAllString(title, "_")
 
 	out := ExportData{
 		Title: title,
