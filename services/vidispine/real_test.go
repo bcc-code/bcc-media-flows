@@ -9,6 +9,8 @@ package vidispine_test
 // Be careful, this will manipulate data in Vidispine.
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 
@@ -75,6 +77,12 @@ func Test_GetDataForExport(t *testing.T) {
 	c := getClient()
 	var err error
 
+	// SEQ - Chapters
+	res, err := c.GetDataForExport("VX-431566")
+	assert.NoError(t, err)
+	j, _ := json.MarshalIndent(res, "", "  ")
+	fmt.Printf("%s", j)
+
 	// SEQ - Embedded audio
 	_, err = c.GetDataForExport("VX-464406")
 	assert.NoError(t, err)
@@ -83,8 +91,8 @@ func Test_GetDataForExport(t *testing.T) {
 	// _, err = c.GetDataForExport("VX-447219")
 
 	// SEQ - Master, Embedded Audio, Subtitles
-	_, err = c.GetDataForExport("VX-447459")
-	assert.NoError(t, err)
+	//_, err = c.GetDataForExport("VX-447459", true)
+	//assert.NoError(t, err)
 
 	// SEQ - Related Audio
 	//err = c.GetDataForExport("VX-464448")
@@ -97,4 +105,36 @@ func Test_GetDataForExport(t *testing.T) {
 
 	// Subclip
 	//c.GetDataForExport("VX-460824")
+}
+
+func Test_GetMetaChapterData(t *testing.T) {
+	c := getClient()
+	res, err := c.GetChapterMeta("VX-431552", 52171.48, 52280.0)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(res))
+}
+
+func Test_GetChapterData(t *testing.T) {
+	c := getClient()
+
+	testVXIDs := []string{
+		"VX-431566",
+		"VX-411326",
+		"VX-410884",
+		"VX-467749",
+	}
+
+	for _, vxid := range testVXIDs {
+		spew.Dump(vxid)
+		exportData, err := c.GetDataForExport(vxid)
+		assert.NoError(t, err)
+		assert.NotNil(t, exportData)
+
+		chapters, err := c.GetChapterData(exportData)
+		assert.NoError(t, err)
+		assert.NotNil(t, chapters)
+		// spew.Dump(lo.Filter(chapters, func(c vidispine.Chapter, _ int) bool { return c.ChapterType == "song" }))
+		spew.Dump(chapters)
+	}
+
 }

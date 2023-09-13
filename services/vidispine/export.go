@@ -8,18 +8,19 @@ import (
 
 	bccmflows "github.com/bcc-code/bccm-flows"
 	mapset "github.com/deckarep/golang-set/v2"
+	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
 )
 
-type ExportAudioSource string
-
 type Clip struct {
-	VideoFile  string
-	InSeconds  float64
-	OutSeconds float64
-	AudioFile  map[string]*AudioFile
-	SubFile    map[string]string
-	VXID       string
+	VideoFile   string
+	InSeconds   float64
+	OutSeconds  float64
+	SequenceIn  float64
+	SequenceOut float64
+	AudioFile   map[string]*AudioFile
+	SubFile     map[string]string
+	VXID        string
 }
 
 type AudioFile struct {
@@ -33,16 +34,14 @@ type ExportData struct {
 	Title string
 }
 
+type ExportAudioSource enum.Member[string]
+
+var (
+	ExportAudioSourceEmbedded = ExportAudioSource{"embedded"}
+	ExportAudioSourceRelated  = ExportAudioSource{"related"}
+)
+
 const (
-	FieldExportAudioSource = "portal_mf452504"
-	FieldTitle             = "title"
-	FieldSubclipToExport   = "portal_mf230973"
-	FieldLangsToExport     = "portal_mf326592"
-	FieldStartTC           = "startTimeCode"
-
-	ExportAudioSourceEmbedded ExportAudioSource = "embedded"
-	ExportAudioSourceRelated  ExportAudioSource = "related"
-
 	EmptyWAVFile = "empty.wav"
 	EmtpySRTFile = "/mnt/isilon/assets/empty.srt"
 )
@@ -71,7 +70,7 @@ func TCToSeconds(tc string) (float64, error) {
 // for use with ffmpeg
 func (m *MetadataResult) GetInOut(beginTC string) (float64, float64, error) {
 	var v *MetadataField
-	if val, ok := m.Terse["title"]; !ok {
+	if val, ok := m.Terse[FieldTitle.Value]; !ok {
 		// This should not happen as everything should have a title
 		return 0, 0, errors.New("Missing title")
 	} else {
@@ -81,7 +80,7 @@ func (m *MetadataResult) GetInOut(beginTC string) (float64, float64, error) {
 	start := 0.0
 	if v.Start == "-INF" && v.End == "+INF" {
 		// This is a full asset so we return 0.0 start and the lenght of the asset as end
-		endString := m.Get("durationSeconds", "0")
+		endString := m.Get(FieldDurationSeconds, "0")
 		end, err := strconv.ParseFloat(endString, 64)
 		return start, end, err
 	}
@@ -172,7 +171,7 @@ func getRelatedAudios(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 		}
 
 		// Now we know what audio to export
-		relatedAudioVXID := clipMeta.Get(relatedField, "")
+		relatedAudioVXID := clipMeta.Get(FieldType{relatedField}, "")
 		if relatedAudioVXID == "" {
 			// If nor (floor language) is missing we fall back to silece
 			if lang == "nor" {
@@ -300,7 +299,7 @@ func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
 
 	// Check for subclip
 	// This check needs to happen on the original metadata, not the split one
-	isSubclip := len(meta.GetArray("title")) > 1
+	isSubclip := len(meta.GetArray(FieldTitle)) > 1
 
 	metaClips := meta.SplitByClips()
 
@@ -309,14 +308,14 @@ func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
 
 	// Determine where to take the audio from
 	audioSource := ExportAudioSourceEmbedded
-	if ExportAudioSource(meta.Get(FieldExportAudioSource, "")) == ExportAudioSourceRelated {
+	if meta.Get(FieldExportAudioSource, "") == ExportAudioSourceRelated.Value {
 		audioSource = ExportAudioSourceRelated
 	}
 
 	// Check for sequence
-	isSequence := meta.Get("__sequence_size", "0") != "0"
+	isSequence := meta.Get(FieldSeuenceSize, "0") != "0"
 
-	title := meta.Get("title", "")
+	title := meta.Get(FieldTitle, "")
 
 	// TODO: This appears to define the shape used for export. Validate how and where this is used
 	// exportFormat := meta.Get("portal_mf868653", "original")
@@ -398,4 +397,34 @@ func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
 	}
 
 	return &out, nil
+}
+
+// ConvertFromClipTCTimeSpaceToSequenceRelativeTimeSpace ain't this a nice name?
+func ConvertFromClipTCTimeSpaceToSequenceRelativeTimeSpace(clip *Clip, chapter *MetadataResult, tcStart float64) *MetadataResult {
+	out := MetadataResult{
+		Terse: map[string][]*MetadataField{},
+	}
+
+	// Claculate the offset from the clip position to the sequence position
+	delta := clip.SequenceIn - clip.InSeconds
+
+	for name, terseValue := range chapter.Terse {
+		out.Terse[name] = terseValue
+
+		for i, value := range chapter.Terse[name] {
+			// Convert to seconds so we can use math
+			chapterStart, _ := TCToSeconds(value.Start)
+			chapterEnd, _ := TCToSeconds(value.End)
+
+			// Convert to be relative to start of the media
+			chapterStart = chapterStart - tcStart
+			chapterEnd = chapterEnd - tcStart
+
+			// Apply the offset to the chapter and convert back to TC
+			out.Terse[name][i].Start = fmt.Sprintf("%.0f@PAL", (chapterStart+delta)*25)
+			out.Terse[name][i].End = fmt.Sprintf("%.0f@PAL", (chapterEnd+delta)*25)
+		}
+	}
+
+	return &out
 }

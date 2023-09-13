@@ -14,8 +14,8 @@ type MetadataResult struct {
 
 // Get returns the first value of the given key, or the fallback if the key is not present
 // It does not check what clip the metadata belongs to!
-func (m *MetadataResult) Get(key string, fallback string) string {
-	if val, ok := m.Terse[key]; !ok {
+func (m *MetadataResult) Get(key FieldType, fallback string) string {
+	if val, ok := m.Terse[key.Value]; !ok {
 		return fallback
 	} else if len(val) == 0 {
 		return fallback
@@ -24,8 +24,8 @@ func (m *MetadataResult) Get(key string, fallback string) string {
 	}
 }
 
-func (m *MetadataResult) GetArray(key string) []string {
-	if val, ok := m.Terse[key]; !ok {
+func (m *MetadataResult) GetArray(key FieldType) []string {
+	if val, ok := m.Terse[key.Value]; !ok {
 		return []string{}
 	} else {
 		out := []string{}

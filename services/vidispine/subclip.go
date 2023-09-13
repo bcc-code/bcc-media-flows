@@ -66,7 +66,7 @@ func (meta *MetadataResult) SplitByClips() map[string]*MetadataResult {
 		if key == "-INF-+INF" {
 			key = OriginalClip
 		} else {
-			key = val.Get("title", key)
+			key = val.Get(FieldTitle, key)
 		}
 
 		out[key] = val

@@ -54,7 +54,7 @@ func Test_GetInOut_Subclip(t *testing.T) {
 
 	meta := m.SplitByClips()
 
-	tcStart := meta[vidispine.OriginalClip].Get("startTimeCode", "0@PAL")
+	tcStart := meta[vidispine.OriginalClip].Get(vidispine.FieldStartTC, "0@PAL")
 
 	in, out, err := meta["John Doe - Speech"].GetInOut(tcStart)
 	assert.NoError(t, err)

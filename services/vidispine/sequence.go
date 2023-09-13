@@ -35,18 +35,6 @@ type SequenceDocument struct {
 	Track   []Track  `xml:"track"`
 }
 
-func (s *SequenceDocument) ValidateTimeBase() bool {
-	// Currently we only support 25fps, so we can just check the denominator
-	for _, track := range s.Track {
-		for _, segment := range track.Segments {
-			if segment.In.TimeBase.Denominator != 25 {
-				return false
-			}
-		}
-	}
-	return true
-}
-
 func (s *SequenceDocument) ToClips(c *Client, audioSource ExportAudioSource) ([]*Clip, error) {
 	out := []*Clip{}
 
@@ -60,8 +48,11 @@ func (s *SequenceDocument) ToClips(c *Client, audioSource ExportAudioSource) ([]
 				VXID: segment.VXID,
 			}
 
-			clip.InSeconds = float64(segment.SourceIn.Samples) / 25.0
-			clip.OutSeconds = float64(segment.SourceOut.Samples) / 25.0
+			clip.InSeconds = float64(segment.SourceIn.Samples) / float64(segment.SourceIn.TimeBase.Denominator)
+			clip.OutSeconds = float64(segment.SourceOut.Samples) / float64(segment.SourceOut.TimeBase.Denominator)
+
+			clip.SequenceIn = float64(segment.In.Samples) / float64(segment.In.TimeBase.Denominator)
+			clip.SequenceOut = float64(segment.Out.Samples) / float64(segment.Out.TimeBase.Denominator)
 
 			shapes, err := c.GetShapes(segment.VXID)
 			if err != nil {
