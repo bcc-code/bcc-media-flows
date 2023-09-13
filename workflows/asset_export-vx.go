@@ -409,7 +409,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 		var result common.AudioResult
 		err := workflow.ExecuteActivity(ctx, activities.TranscodeToAudioAac, common.AudioInput{
 			Path:            path,
-			Bitrate:         "128k",
+			Bitrate:         "190k",
 			DestinationPath: tempFolder,
 		}).Get(ctx, &result)
 		if err != nil {
