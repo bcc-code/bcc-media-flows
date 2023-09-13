@@ -84,6 +84,27 @@ func triggerHandler(ctx *gin.Context) {
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.TranscodePreviewFile, workflows.TranscodePreviewFileInput{
 			FilePath: file,
 		})
+	case "ExportAssetVX":
+		if vxID == "" {
+			ctx.Status(http.StatusBadRequest)
+			return
+		}
+
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.AssetExportVX, workflows.AssetExportParams{
+			VXID:      vxID,
+			WithFiles: getParamFromCtx(ctx, "withFiles") == "true",
+		})
+	case "ExecuteFFmpeg":
+		var input struct {
+			Arguments []string `json:"arguments"`
+		}
+		if err = ctx.BindJSON(&input); err != nil {
+			ctx.Status(http.StatusBadRequest)
+			return
+		}
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.ExecuteFFmpeg, workflows.ExecuteFFmpegInput{
+			Arguments: input.Arguments,
+		})
 	}
 
 	if err != nil {

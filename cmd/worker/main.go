@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/workflows"
 	"log"
 	"os"
@@ -12,6 +13,49 @@ import (
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 )
+
+var utilActivities = []any{
+	activities.MoveFile,
+	activities.CreateFolder,
+	activities.WriteFile,
+	activities.DeletePath,
+	activities.StandardizeFileName,
+}
+
+var vidispineActivities = []any{
+	vidispine.GetFileFromVXActivity,
+	vidispine.ImportFileAsShapeActivity,
+	vidispine.ImportFileAsSidecarActivity,
+	vidispine.SetVXMetadataFieldActivity,
+	vidispine.GetExportDataActivity,
+}
+
+var transcodeActivities = []any{
+	activities.TranscodePreview,
+	activities.TranscodeToProResActivity,
+	activities.TranscodeToH264Activity,
+	activities.TranscodeToXDCAMActivity,
+	activities.TranscodeMergeAudio,
+	activities.TranscodeMergeVideo,
+	activities.TranscodeMergeSubtitles,
+	activities.TranscodeToVideoH264,
+	activities.TranscodeToAudioAac,
+	activities.TranscodeMux,
+	activities.ExecuteFFmpeg,
+}
+
+var workerWorkflows = []any{
+	workflows.TranscodePreviewVX,
+	workflows.TranscodePreviewFile,
+	workflows.TranscribeFile,
+	workflows.TranscribeVX,
+	workflows.WatchFolderTranscode,
+	workflows.AssetExportVX,
+	workflows.MergeExportData,
+	workflows.MuxFiles,
+	workflows.PrepareFiles,
+	workflows.ExecuteFFmpeg,
+}
 
 func main() {
 	c, err := client.Dial(client.Options{
@@ -37,45 +81,51 @@ func main() {
 		Identity:                           identity,
 		LocalActivityWorkerOnly:            false,
 		MaxConcurrentActivityExecutionSize: 100, // Doesn't make sense to have more than one activity running at a time
-
 	}
 
-	queue := os.Getenv("QUEUE")
-	if queue == "" {
-		queue = common.QueueWorker
-	}
-	w := worker.New(c, queue, workerOptions)
+	w := worker.New(c, utils.GetQueue(), workerOptions)
 
-	switch queue {
+	switch utils.GetQueue() {
 	case common.QueueDebug:
 		w.RegisterActivity(activities.Transcribe)
-		w.RegisterActivity(vidispine.GetFileFromVXActivity)
-		w.RegisterActivity(vidispine.ImportFileAsShapeActivity)
-		w.RegisterActivity(vidispine.ImportFileAsSidecarActivity)
-		w.RegisterActivity(vidispine.SetVXMetadataFieldActivity)
-		w.RegisterWorkflow(workflows.TranscodePreviewVX)
-		w.RegisterWorkflow(workflows.TranscodePreviewFile)
-		w.RegisterWorkflow(workflows.TranscribeFile)
-		w.RegisterWorkflow(workflows.TranscribeVX)
-		w.RegisterWorkflow(workflows.WatchFolderTranscode)
-		w.RegisterActivity(activities.TranscodePreview)
-		w.RegisterActivity(activities.TranscodeToProResActivity)
+		w.RegisterActivity(activities.RcloneUploadDir)
+		w.RegisterActivity(activities.PubsubPublish)
+
+		for _, a := range utilActivities {
+			w.RegisterActivity(a)
+		}
+
+		for _, a := range vidispineActivities {
+			w.RegisterActivity(a)
+		}
+
+		for _, a := range transcodeActivities {
+			w.RegisterActivity(a)
+		}
+
+		for _, wf := range workerWorkflows {
+			w.RegisterWorkflow(wf)
+		}
 	case common.QueueWorker:
 		w.RegisterActivity(activities.Transcribe)
-		w.RegisterActivity(vidispine.GetFileFromVXActivity)
-		w.RegisterActivity(vidispine.ImportFileAsShapeActivity)
-		w.RegisterActivity(vidispine.ImportFileAsSidecarActivity)
-		w.RegisterActivity(vidispine.SetVXMetadataFieldActivity)
-		w.RegisterWorkflow(workflows.TranscodePreviewVX)
-		w.RegisterWorkflow(workflows.TranscodePreviewFile)
-		w.RegisterWorkflow(workflows.TranscribeFile)
-		w.RegisterWorkflow(workflows.TranscribeVX)
-		w.RegisterWorkflow(workflows.WatchFolderTranscode)
+		w.RegisterActivity(activities.RcloneUploadDir)
+		w.RegisterActivity(activities.PubsubPublish)
+
+		for _, a := range utilActivities {
+			w.RegisterActivity(a)
+		}
+
+		for _, a := range vidispineActivities {
+			w.RegisterActivity(a)
+		}
+
+		for _, wf := range workerWorkflows {
+			w.RegisterWorkflow(wf)
+		}
 	case common.QueueTranscode:
-		w.RegisterActivity(activities.TranscodePreview)
-		w.RegisterActivity(activities.TranscodeToProResActivity)
-		w.RegisterActivity(activities.TranscodeToH264Activity)
-		w.RegisterActivity(activities.TranscodeToXDCAMActivity)
+		for _, a := range transcodeActivities {
+			w.RegisterActivity(a)
+		}
 	}
 
 	err = w.Run(worker.InterruptCh())

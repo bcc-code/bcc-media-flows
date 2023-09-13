@@ -2,6 +2,7 @@ package vidispine
 
 import (
 	"github.com/samber/lo"
+	"net/url"
 )
 
 func (sr ShapeResult) GetShape(tag string) *Shape {
@@ -16,13 +17,15 @@ func (sr ShapeResult) GetShape(tag string) *Shape {
 func (s Shape) GetPath() string {
 	// Cut off the "file://" prefix
 	for _, fc := range s.ContainerComponent.File {
-		return fc.URI[0][7:]
+		p, _ := url.PathUnescape(fc.URI[0][7:])
+		return p
 	}
 
 	// Does this make sense, can it be multiple files???
 	for _, bc := range s.BinaryComponent {
 		for _, f := range bc.File {
-			return f.URI[0][7:]
+			p, _ := url.PathUnescape(f.URI[0][7:])
+			return p
 		}
 	}
 

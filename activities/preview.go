@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/services/transcode"
 	"go.temporal.io/sdk/activity"
-	"time"
 )
 
 type TranscodePreviewParams struct {
@@ -16,32 +15,6 @@ type TranscodePreviewParams struct {
 type TranscodePreviewResponse struct {
 	PreviewFilePath string
 	AudioOnly       bool
-}
-
-func registerProgressCallback(ctx context.Context) (chan struct{}, func(transcode.Progress)) {
-	var current transcode.Progress
-
-	progressCallback := func(percent transcode.Progress) {
-		current = percent
-	}
-
-	stopChan := make(chan struct{})
-
-	go func() {
-		timer := time.NewTicker(time.Second * 15)
-		defer timer.Stop()
-
-		for {
-			select {
-			case <-timer.C:
-				activity.RecordHeartbeat(ctx, current)
-			case <-stopChan:
-				return
-			}
-		}
-	}()
-
-	return stopChan, progressCallback
 }
 
 // TranscodePreview is the activity definition for transcoding a video to preview. It only uses the specified filepath
@@ -57,7 +30,7 @@ func TranscodePreview(ctx context.Context, input TranscodePreviewParams) (*Trans
 		FilePath:  input.FilePath,
 	}, progressCallback)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(err.Error())
 		return nil, err
 	}
 

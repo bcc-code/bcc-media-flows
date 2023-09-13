@@ -3,6 +3,8 @@ package activities
 import (
 	"context"
 	"fmt"
+	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"github.com/bcc-code/bccm-flows/services/transcode"
 	"go.temporal.io/sdk/activity"
 )
@@ -89,4 +91,114 @@ func TranscodeToXDCAMActivity(ctx context.Context, input EncodeParams) (*EncodeR
 	return &EncodeResult{
 		OutputPath: transcodeResult.Path,
 	}, nil
+}
+
+func TranscodeMergeVideo(ctx context.Context, params common.MergeInput) (*common.MergeResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeMergeVideo")
+	log.Info("Starting TranscodeMergeVideoActivity")
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	result, err := transcode.MergeVideo(params, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func TranscodeMergeAudio(ctx context.Context, params common.MergeInput) (*common.MergeResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeMergeAudio")
+	log.Info("Starting TranscodeMergeAudioActivity")
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	result, err := transcode.MergeAudio(params, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func TranscodeMergeSubtitles(ctx context.Context, params common.MergeInput) (*common.MergeResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeMergeSubtitles")
+	log.Info("Starting TranscodeMergeSubtitlesActivity")
+
+	// No easy way of reporting progress, so this just triggers heartbeats
+	stopChan, _ := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	result, err := transcode.MergeSubtitles(params)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func TranscodeToVideoH264(ctx context.Context, input common.VideoInput) (*common.VideoResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeToVideoH264")
+	log.Info("Starting TranscodeToVideoH264Activity")
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	result, err := transcode.VideoH264(input, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func TranscodeToAudioAac(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeToAudioAac")
+	log.Info("Starting TranscodeToAudioAacActivity")
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	result, err := transcode.AudioAac(input, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func TranscodeMux(ctx context.Context, input common.MuxInput) (*common.MuxResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeMux")
+	log.Info("Starting TranscodeMuxActivity")
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	result, err := transcode.Mux(input, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+type ExecuteFFmpegInput struct {
+	Arguments []string
+}
+
+func ExecuteFFmpeg(ctx context.Context, input ExecuteFFmpegInput) error {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "ExecuteFFmpeg")
+	log.Info("Starting ExecuteFFmpeg")
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	_, err := ffmpeg.Do(input.Arguments, ffmpeg.StreamInfo{}, progressCallback)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -3,6 +3,7 @@ package vidispine
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -13,14 +14,14 @@ import (
 )
 
 type Clip struct {
-	VideoFile   string
-	InSeconds   float64
-	OutSeconds  float64
+	VideoFile  string
+	InSeconds  float64
+	OutSeconds float64
 	SequenceIn  float64
 	SequenceOut float64
-	AudioFile   map[string]*AudioFile
-	SubFile     map[string]string
-	VXID        string
+	AudioFiles    map[string]*AudioFile
+	SubtitleFiles map[string]string
+	VXID          string
 }
 
 type AudioFile struct {
@@ -42,8 +43,8 @@ var (
 )
 
 const (
-	EmptyWAVFile = "empty.wav"
-	EmtpySRTFile = "/mnt/isilon/assets/empty.srt"
+	EmptyWAVFile = "/mnt/isilon/system/assets/BlankAudio10h.wav"
+	EmtpySRTFile = "/mnt/isilon/system/assets/empty.srt"
 )
 
 func TCToSeconds(tc string) (float64, error) {
@@ -175,13 +176,13 @@ func getRelatedAudios(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 		if relatedAudioVXID == "" {
 			// If nor (floor language) is missing we fall back to silece
 			if lang == "nor" {
-				clip.AudioFile[lang] = &AudioFile{
+				clip.AudioFiles[lang] = &AudioFile{
 					Channels: []int{1, 2},
-					File:     "/mnt/isilon/assets/BlankAudio10h.wav",
+					File:     EmptyWAVFile,
 				}
 			} else if languagesToExport[0] == "nor" {
 				// Fall back to "nor" audio and issue a warning *somewhere*
-				clip.AudioFile[lang] = clip.AudioFile["nor"]
+				clip.AudioFiles[lang] = clip.AudioFiles["nor"]
 			}
 
 			continue
@@ -197,7 +198,7 @@ func getRelatedAudios(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 		if relatedAudioShape == nil {
 			if languagesToExport[0] == "nor" {
 				// Fall back to "nor" audio and issue a warning *somewhere*
-				clip.AudioFile[lang] = clip.AudioFile["nor"]
+				clip.AudioFiles[lang] = clip.AudioFiles["nor"]
 			} else {
 				return clip, fmt.Errorf("no original or fallback shape found for item %s", relatedAudioVXID)
 			}
@@ -213,7 +214,7 @@ func getRelatedAudios(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 			return clip, fmt.Errorf("no audio components found for item %s", relatedAudioVXID)
 		}
 
-		clip.AudioFile[lang] = &AudioFile{
+		clip.AudioFiles[lang] = &AudioFile{
 			VXID:     relatedAudioVXID,
 			File:     relatedAudioShape.GetPath(),
 			Channels: channels,
@@ -239,8 +240,8 @@ func getEmbeddedAudio(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 		// We have no audio, so we fall back to silence
 		channels := []int{1, 2}
 		for _, lang := range languagesToExport {
-			clip.AudioFile[lang] = &AudioFile{
-				File:     "/mnt/isilon/assets/BlankAudio10h.wav",
+			clip.AudioFiles[lang] = &AudioFile{
+				File:     EmptyWAVFile,
 				Channels: channels,
 			}
 		}
@@ -257,7 +258,7 @@ func getEmbeddedAudio(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 		}
 
 		for _, lang := range languagesToExport {
-			clip.AudioFile[lang] = &AudioFile{
+			clip.AudioFiles[lang] = &AudioFile{
 				VXID:     clip.VXID,
 				File:     shape.GetPath(),
 				Channels: channels,
@@ -276,7 +277,7 @@ func getEmbeddedAudio(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 				channels = append(channels, l.MU1ChannelStart+i)
 			}
 
-			clip.AudioFile[lang] = &AudioFile{
+			clip.AudioFiles[lang] = &AudioFile{
 				VXID:     clip.VXID,
 				File:     clip.VideoFile,
 				Channels: channels,
@@ -288,6 +289,9 @@ func getEmbeddedAudio(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 
 	return clip, nil
 }
+
+var nonAlphanumeric = regexp.MustCompile("[^a-zA-Z0-9_]+")
+var consecutiveUnderscores = regexp.MustCompile("_+")
 
 // GetDataForExport returns the data needed to export the item with the given VXID
 // If exportSubclip is true, the subclip will be exported, otherwise the whole clip
@@ -320,6 +324,11 @@ func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
 	// TODO: This appears to define the shape used for export. Validate how and where this is used
 	// exportFormat := meta.Get("portal_mf868653", "original")
 
+	// clean up the title
+	title = strings.ReplaceAll(title, " ", "_")
+	title = nonAlphanumeric.ReplaceAllString(title, "")
+	title = consecutiveUnderscores.ReplaceAllString(title, "_")
+
 	out := ExportData{
 		Title: title,
 		Clips: []*Clip{},
@@ -345,7 +354,7 @@ func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
 
 	// Process the video clips and get the audio parts
 	for _, clip := range out.Clips {
-		clip.AudioFile = map[string]*AudioFile{}
+		clip.AudioFiles = map[string]*AudioFile{}
 
 		languagesToExport := meta.GetArray(FieldLangsToExport)
 
@@ -364,7 +373,7 @@ func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
 
 	// Fetch subs
 	for _, clip := range out.Clips {
-		clip.SubFile = map[string]string{}
+		clip.SubtitleFiles = map[string]string{}
 
 		// This is independent of audio language export config, we include all subs available
 		clipShapes, err := c.GetShapes(clip.VXID)
@@ -379,7 +388,7 @@ func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
 				continue
 			}
 
-			clip.SubFile[langCode] = shape.GetPath()
+			clip.SubtitleFiles[langCode] = shape.GetPath()
 
 			// Collect all languages that any of the clips have subs for
 			allSubLanguages.Add(langCode)
@@ -388,10 +397,10 @@ func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
 
 	for _, clip := range out.Clips {
 		// Add empty subs for all languages that any of the clips have subs for if they are missing
-		// This is so it is easier to handle down the line if we always have a sub file for all languages
+		// This makes it easier to handle down the line if we always have a sub file for all languages
 		for langCode := range allSubLanguages.Iter() {
-			if _, ok := clip.SubFile[langCode]; !ok {
-				clip.SubFile[langCode] = EmtpySRTFile
+			if _, ok := clip.SubtitleFiles[langCode]; !ok {
+				clip.SubtitleFiles[langCode] = EmtpySRTFile
 			}
 		}
 	}

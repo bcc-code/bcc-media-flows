@@ -3,21 +3,24 @@ package utils
 import (
 	"fmt"
 	"go.temporal.io/sdk/workflow"
-	"os"
 	"time"
 )
 
 const BaseDestinationPath = "/mnt/isilon/Production/aux"
+const BaseTempPath = "/mnt/isilon/system/tmp"
 
 // GetWorkflowOutputFolder retrieves the path and creates necessary folders for the workflow to use as an output.
-func GetWorkflowOutputFolder(ctx workflow.Context) (string, error) {
+func GetWorkflowOutputFolder(ctx workflow.Context) string {
 	info := workflow.GetInfo(ctx)
 
 	date := time.Now()
 
-	destinationPath := fmt.Sprintf("%s/%04d/%02d/%02d/%s", BaseDestinationPath, date.Year(), date.Month(), date.Day(), info.OriginalRunID)
+	return fmt.Sprintf("%s/%04d/%02d/%02d/%s", BaseDestinationPath, date.Year(), date.Month(), date.Day(), info.OriginalRunID)
+}
 
-	err := os.MkdirAll(destinationPath, os.ModePerm)
+// GetWorkflowTempFolder retrieves the path and creates necessary folders for the workflow to use as an output.
+func GetWorkflowTempFolder(ctx workflow.Context) string {
+	info := workflow.GetInfo(ctx)
 
-	return destinationPath, err
+	return fmt.Sprintf("%s/workflows/%s", BaseTempPath, info.OriginalRunID)
 }
