@@ -88,7 +88,7 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempFolder, subtitlesFo
 				Path:    af.File,
 				Start:   clip.InSeconds,
 				End:     clip.OutSeconds,
-				Streams: af.Channels,
+				Streams: af.Streams,
 			})
 		}
 

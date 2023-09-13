@@ -24,9 +24,9 @@ type Clip struct {
 }
 
 type AudioFile struct {
-	VXID     string
-	Channels []int
-	File     string
+	VXID    string
+	Streams []int
+	File    string
 }
 
 type ExportData struct {
@@ -178,8 +178,8 @@ func getRelatedAudios(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 			// If nor (floor language) is missing we fall back to silece
 			if lang == "nor" {
 				clip.AudioFiles[lang] = &AudioFile{
-					Channels: []int{1, 2},
-					File:     EmptyWAVFile,
+					Streams: []int{0},
+					File:    EmptyWAVFile,
 				}
 			} else if languagesToExport[0] == "nor" {
 				// Fall back to "nor" audio and issue a warning *somewhere*
@@ -205,22 +205,19 @@ func getRelatedAudios(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 			}
 		}
 
-		channels := []int{}
+		var streams []int
 
 		if len(relatedAudioShape.AudioComponent) > 0 {
-			for i := 0; i < relatedAudioShape.AudioComponent[0].ChannelCount; i++ {
-				channels = append(channels, i+1)
-			}
+			streams = append(streams, relatedAudioShape.AudioComponent[0].EssenceStreamID)
 		} else {
 			return clip, fmt.Errorf("no audio components found for item %s", relatedAudioVXID)
 		}
 
 		clip.AudioFiles[lang] = &AudioFile{
-			VXID:     relatedAudioVXID,
-			File:     relatedAudioShape.GetPath(),
-			Channels: channels,
+			VXID:    relatedAudioVXID,
+			File:    relatedAudioShape.GetPath(),
+			Streams: streams,
 		}
-
 	}
 
 	return clip, nil
@@ -233,39 +230,34 @@ func getEmbeddedAudio(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 	}
 
 	shape := shapes.GetShape("original")
-	if len(shape.AudioComponent) != 16 && len(shape.AudioComponent) > 2 {
-		return clip, fmt.Errorf("Found %d audio components, expected 2 or 16", len(shape.AudioComponent))
+	if len(shape.AudioComponent) != 16 && len(shape.AudioComponent) > 1 {
+		return clip, fmt.Errorf("found %d audio components, expected 1 or 16", len(shape.AudioComponent))
 	}
 
 	if len(shape.AudioComponent) == 0 {
 		// We have no audio, so we fall back to silence
-		channels := []int{1, 2}
+		streams := []int{0}
 		for _, lang := range languagesToExport {
 			clip.AudioFiles[lang] = &AudioFile{
-				File:     EmptyWAVFile,
-				Channels: channels,
+				File:    EmptyWAVFile,
+				Streams: streams,
 			}
 		}
 
 		return clip, nil
 	}
 
-	if shape.AudioComponent[0].ChannelCount <= 2 {
+	if len(shape.AudioComponent) == 1 {
 		// We have stereo or mono audio, so we copy it to all languages
-
-		channels := []int{}
-		for i := 1; i <= shape.AudioComponent[0].ChannelCount; i++ {
-			channels = append(channels, i)
-		}
-
 		for _, lang := range languagesToExport {
 			clip.AudioFiles[lang] = &AudioFile{
-				VXID:     clip.VXID,
-				File:     shape.GetPath(),
-				Channels: channels,
+				VXID:    clip.VXID,
+				File:    shape.GetPath(),
+				Streams: []int{shape.AudioComponent[0].EssenceStreamID},
 			}
 		}
 
+		return clip, nil
 	}
 
 	for _, lang := range languagesToExport {
@@ -273,15 +265,15 @@ func getEmbeddedAudio(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 		// and assign them to the correct language
 
 		if l, ok := bccmflows.LanguagesByISO[lang]; ok {
-			channels := []int{}
+			var streams []int
 			for i := 0; i < l.MU1ChannelCount; i++ {
-				channels = append(channels, l.MU1ChannelStart+i)
+				streams = append(streams, l.MU1ChannelStart+i)
 			}
 
 			clip.AudioFiles[lang] = &AudioFile{
-				VXID:     clip.VXID,
-				File:     clip.VideoFile,
-				Channels: channels,
+				VXID:    clip.VXID,
+				File:    clip.VideoFile,
+				Streams: streams,
 			}
 		} else {
 			return clip, errors.New("No language " + lang + " found in bccmflows.LanguagesByISO")
