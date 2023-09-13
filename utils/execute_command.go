@@ -2,8 +2,8 @@ package utils
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
-	"log"
 	"os/exec"
 )
 
@@ -12,14 +12,13 @@ func ExecuteCmd(cmd *exec.Cmd, outputCallback func(string)) (string, error) {
 	stdout, _ := cmd.StdoutPipe()
 	//stderr, _ := cmd.StderrPipe()
 
-	log.Default()
+	errorBytes := bytes.Buffer{}
+	cmd.Stderr = &errorBytes
 
 	err := cmd.Start()
 	if err != nil {
 		return "", fmt.Errorf("start failed %s", err.Error())
 	}
-
-	var errorString string
 
 	//go func() {
 	//	scanner := bufio.NewScanner(stderr)
@@ -43,7 +42,7 @@ func ExecuteCmd(cmd *exec.Cmd, outputCallback func(string)) (string, error) {
 
 	err = cmd.Wait()
 	if err != nil {
-		return "", fmt.Errorf("execution failed error: %s,\nmessage: %s", err.Error(), errorString)
+		return "", fmt.Errorf("execution failed error: %s,\nmessage: %s", err.Error(), errorBytes.String())
 	}
 
 	return result, err
