@@ -16,6 +16,7 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 
 	params := []string{
 		"-progress", "pipe:1",
+		"-hide_banner",
 		"-i", input.Path,
 		"-c:v", h264encoder,
 		"-b:v", input.Bitrate,

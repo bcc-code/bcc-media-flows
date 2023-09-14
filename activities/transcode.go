@@ -129,10 +129,10 @@ func TranscodeMergeSubtitles(ctx context.Context, params common.MergeInput) (*co
 	log.Info("Starting TranscodeMergeSubtitlesActivity")
 
 	// No easy way of reporting progress, so this just triggers heartbeats
-	stopChan, _ := registerProgressCallback(ctx)
+	stopChan, progressCallback := registerProgressCallback(ctx)
 	defer close(stopChan)
 
-	result, err := transcode.MergeSubtitles(params)
+	result, err := transcode.MergeSubtitles(params, progressCallback)
 	if err != nil {
 		return nil, err
 	}

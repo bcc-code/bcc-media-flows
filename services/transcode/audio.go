@@ -10,6 +10,7 @@ import (
 func AudioAac(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.AudioResult, error) {
 	params := []string{
 		"-progress", "pipe:1",
+		"-hide_banner",
 		"-i", input.Path,
 		"-c:a", "aac",
 		"-b:a", input.Bitrate,

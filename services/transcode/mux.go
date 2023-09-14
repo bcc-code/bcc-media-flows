@@ -54,6 +54,7 @@ func Mux(input common.MuxInput, progressCallback ffmpeg.ProgressCallback) (*comm
 
 	params := []string{
 		"-progress", "pipe:1",
+		"-hide_banner",
 		"-i", input.VideoFilePath,
 	}
 

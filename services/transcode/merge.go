@@ -41,6 +41,7 @@ func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 
 	params = append(params,
 		"-progress", "pipe:1",
+		"-hide_banner",
 		"-filter_complex", filterComplex,
 		"-map", "[v]",
 		"-c:v", "prores",
@@ -123,13 +124,18 @@ func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) 
 
 // MergeAudio merges MXF audio files into one stereo file.
 func MergeAudio(input common.MergeInput, progressCallback ffmpeg.ProgressCallback) (*common.MergeResult, error) {
-	var params []string
+	params := []string{
+		"-progress", "pipe:1",
+		"-hide_banner",
+	}
 
 	for _, i := range input.Items {
 		params = append(params, "-i", i.Path)
 	}
 
-	params = append(params, "-c:a", "pcm_s16le")
+	params = append(params,
+		"-c:a", "pcm_s16le",
+	)
 
 	var filterComplex string
 
@@ -161,7 +167,7 @@ func MergeAudio(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 	}, err
 }
 
-func MergeSubtitles(input common.MergeInput) (*common.MergeResult, error) {
+func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCallback) (*common.MergeResult, error) {
 	var files []string
 	// for each file, extract the specified range and save the result to a file.
 	for index, item := range input.Items {
@@ -192,16 +198,18 @@ func MergeSubtitles(input common.MergeInput) (*common.MergeResult, error) {
 	}
 
 	outputPath := filepath.Join(input.OutputDir, filepath.Clean(input.Title)+".srt")
-	cmd := exec.Command("ffmpeg",
+
+	params := []string{
+		"-progress", "pipe:1",
+		"-hide_banner",
 		"-f", "concat",
 		"-safe", "0",
 		"-i", subtitlesFile,
-		"-y", outputPath,
-	)
-	_, err = utils.ExecuteCmd(cmd, nil)
-	if err != nil {
-		return nil, err
+		"-y",
+		outputPath,
 	}
+
+	_, err = ffmpeg.Do(params, ffmpeg.StreamInfo{}, progressCallback)
 
 	return &common.MergeResult{
 		Path: outputPath,

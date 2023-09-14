@@ -38,6 +38,7 @@ func H264(input EncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeR
 		"-i", input.FilePath,
 		"-c:v", h264encoder,
 		"-progress", "pipe:1",
+		"-hide_banner",
 		"-profile:v", "high422",
 		"-pix_fmt", "yuv422p10le",
 		"-vf", "setfield=tff,format=yuv422p10le",
