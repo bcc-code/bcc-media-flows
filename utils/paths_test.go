@@ -1,15 +1,17 @@
 package utils
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func Test_GetSiblingFolder(t *testing.T) {
-	// test of GetSiblingFolder
+	//test of GetSiblingFolder
 
-	//path := "./testdata/folder/test.txt"
-	//
-	//path = GetSiblingFolder(path, "sibling")
-	//
-	//fmt.Println(path)
+	path := "/mnt/isilon/Transcoding/ProRes422HQ_Native/in/MFTB_2022_beauty_night_0004.MP4"
+
+	path, err := GetSiblingFolder(path, "sibling")
+
+	assert.Nil(t, err)
+	assert.Equal(t, "/mnt/isilon/Transcoding/ProRes422HQ_Native/sibling", path)
 }
