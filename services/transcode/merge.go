@@ -213,5 +213,5 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 
 	return &common.MergeResult{
 		Path: outputPath,
-	}, nil
+	}, err
 }
