@@ -80,7 +80,11 @@ func main() {
 		EnableSessionWorker:                true,
 		Identity:                           identity,
 		LocalActivityWorkerOnly:            false,
-		MaxConcurrentActivityExecutionSize: 100, // Doesn't make sense to have more than one activity running at a time
+		MaxConcurrentActivityExecutionSize: 5, // Doesn't make sense to have more than one activity running at a time
+	}
+
+	if utils.GetQueue() == utils.GetTranscodeQueue() {
+		workerOptions.MaxConcurrentActivityExecutionSize = 1
 	}
 
 	w := worker.New(c, utils.GetQueue(), workerOptions)
@@ -123,6 +127,7 @@ func main() {
 			w.RegisterWorkflow(wf)
 		}
 	case common.QueueTranscode:
+
 		for _, a := range transcodeActivities {
 			w.RegisterActivity(a)
 		}
