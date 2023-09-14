@@ -115,6 +115,8 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 		err = fmt.Errorf("codec not supported: %s", params.FolderName)
 	}
 
+	ctx = workflow.WithTaskQueue(ctx, utils.GetWorkerQueue())
+
 	if err != nil {
 		path, _ = moveToFolder(ctx, path, errorFolder)
 		return err
