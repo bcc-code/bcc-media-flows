@@ -35,6 +35,7 @@ func H264(input EncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeR
 		"-hide_banner",
 		"-progress", "pipe:1",
 		"-i", input.FilePath,
+		"-vf", "yadif=0:-1:0",
 		"-c:v", h264encoder,
 	}
 	switch h264encoder {
@@ -42,6 +43,7 @@ func H264(input EncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeR
 		params = append(params,
 			"-profile:v", "high",
 			"-level:v", "1.3",
+			"-crf", "18",
 		)
 	}
 
