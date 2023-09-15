@@ -134,7 +134,6 @@ func main() {
 			w.RegisterWorkflow(wf)
 		}
 	case common.QueueTranscode:
-
 		for _, a := range transcodeActivities {
 			w.RegisterActivity(a)
 		}

@@ -279,11 +279,22 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 	options := GetDefaultActivityOptions()
 	options.TaskQueue = utils.GetTranscodeQueue()
 	ctx = workflow.WithActivityOptions(ctx, options)
-	var err error
+	videoTask := workflow.ExecuteActivity(ctx, activities.TranscodeMergeVideo, mergeInput)
+
+	var audioTasks = map[string]workflow.Future{}
+	for lang, mi := range audioMergeInputs {
+		audioTasks[lang] = workflow.ExecuteActivity(ctx, activities.TranscodeMergeAudio, *mi)
+	}
+
+	var subtitleTasks = map[string]workflow.Future{}
+	for lang, mi := range subtitleMergeInputs {
+		subtitleTasks[lang] = workflow.ExecuteActivity(ctx, activities.TranscodeMergeSubtitles, *mi)
+	}
+
 	var videoFile string
 	{
 		var result common.MergeResult
-		err = workflow.ExecuteActivity(ctx, activities.TranscodeMergeVideo, mergeInput).Get(ctx, &result)
+		err := videoTask.Get(ctx, &result)
 		if err != nil {
 			return nil, err
 		}
@@ -291,9 +302,9 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 	}
 
 	var audioFiles = map[string]string{}
-	for lang, mi := range audioMergeInputs {
+	for lang, task := range audioTasks {
 		var result common.MergeResult
-		err = workflow.ExecuteActivity(ctx, activities.TranscodeMergeAudio, *mi).Get(ctx, &result)
+		err := task.Get(ctx, &result)
 		if err != nil {
 			return nil, err
 		}
@@ -301,9 +312,9 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 	}
 
 	var subtitleFiles = map[string]string{}
-	for lang, mi := range subtitleMergeInputs {
+	for lang, task := range subtitleTasks {
 		var result common.MergeResult
-		err = workflow.ExecuteActivity(ctx, activities.TranscodeMergeSubtitles, *mi).Get(ctx, &result)
+		err := task.Get(ctx, &result)
 		if err != nil {
 			return nil, err
 		}
@@ -338,7 +349,8 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 
 	ctx = workflow.WithTaskQueue(ctx, utils.GetTranscodeQueue())
 	tempFolder := params.OutputPath
-	videoFiles := map[string]string{}
+
+	var videoTasks = map[string]workflow.Future{}
 	{
 		videoFile := params.VideoFile
 		qualities := map[string]common.VideoInput{
@@ -394,28 +406,39 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 
 		for key := range qualities {
 			input := qualities[key]
-			var result common.VideoResult
-			err := workflow.ExecuteActivity(ctx, activities.TranscodeToVideoH264, input).Get(ctx, &result)
-			if err != nil {
-				return nil, err
-			}
-			videoFiles[key] = result.OutputPath
+			videoTasks[key] = workflow.ExecuteActivity(ctx, activities.TranscodeToVideoH264, input)
 		}
 	}
 
-	var audioFiles = map[string]string{}
+	var audioTasks = map[string]workflow.Future{}
 	for lang, path := range params.AudioFiles {
-		var result common.AudioResult
-		err := workflow.ExecuteActivity(ctx, activities.TranscodeToAudioAac, common.AudioInput{
+		audioTasks[lang] = workflow.ExecuteActivity(ctx, activities.TranscodeToAudioAac, common.AudioInput{
 			Path:            path,
 			Bitrate:         "190k",
 			DestinationPath: tempFolder,
-		}).Get(ctx, &result)
+		})
+	}
+
+	var audioFiles = map[string]string{}
+	for lang, task := range audioTasks {
+		var result common.AudioResult
+		err := task.Get(ctx, &result)
 		if err != nil {
 			return nil, err
 		}
 		audioFiles[lang] = result.OutputPath
 	}
+
+	var videoFiles = map[string]string{}
+	for key, task := range videoTasks {
+		var result common.VideoResult
+		err := task.Get(ctx, &result)
+		if err != nil {
+			return nil, err
+		}
+		videoFiles[key] = result.OutputPath
+	}
+
 	return &PrepareFilesResult{
 		VideoFiles: videoFiles,
 		AudioFiles: audioFiles,
