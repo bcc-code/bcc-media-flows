@@ -32,18 +32,17 @@ func H264(input EncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeR
 	h264encoder := "libx264"
 
 	params := []string{
+		"-hide_banner",
+		"-progress", "pipe:1",
 		"-i", input.FilePath,
 		"-c:v", h264encoder,
-		"-profile:v", "high",
-		"-level:v", "1.3",
-		"-progress", "pipe:1",
-		"-hide_banner",
-		"-pix_fmt", "yuv422p10le",
-		"-vf", "setfield=tff,format=yuv422p10le",
-		"-color_primaries", "bt709",
-		"-color_trc", "bt709",
-		"-colorspace", "bt709",
-		"-y",
+	}
+	switch h264encoder {
+	case "libx264":
+		params = append(params,
+			"-profile:v", "high",
+			"-level:v", "1.3",
+		)
 	}
 
 	if input.Bitrate != "" {
@@ -69,6 +68,7 @@ func H264(input EncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeR
 
 	params = append(
 		params,
+		"-y",
 		outputPath,
 	)
 
