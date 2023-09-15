@@ -17,7 +17,7 @@ jobs:
         image: [
           temporal-worker/worker.Dockerfile,
           temporal-httpin/httpin.Dockerfile,
-          temporal-transcode-worker/transcode-worker.Dockerfile,
+#          temporal-transcode-worker/transcode-worker.Dockerfile,
         ]
     steps:
       - uses: actions/checkout@v3
