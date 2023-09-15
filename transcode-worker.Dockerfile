@@ -7,5 +7,5 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /app ./cmd/worker
 
 FROM linuxserver/ffmpeg AS runtime
 WORKDIR /
-COPY --from=build /app /app
-ENTRYPOINT ["/app"]
+COPY --from=build /app /worker/bin
+ENTRYPOINT ["/worker/bin"]
