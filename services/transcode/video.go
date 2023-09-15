@@ -15,17 +15,29 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 	}
 
 	params := []string{
-		"-progress", "pipe:1",
 		"-hide_banner",
+		"-progress", "pipe:1",
 		"-i", input.Path,
+		"-vf", "yadif=0:-1:0",
 		"-c:v", h264encoder,
-		"-b:v", input.Bitrate,
+	}
+	switch h264encoder {
+	case "libx264":
+		params = append(params,
+			"-profile:v", "high",
+			"-level:v", "1.3",
+			"-crf", "18",
+			"-maxrate", input.Bitrate,
+		)
+	}
+
+	params = append(params,
 		"-r", fmt.Sprintf("%d", input.FrameRate),
 		"-vf", fmt.Sprintf("scale=%[1]d:%[2]d:force_original_aspect_ratio=decrease,pad=%[1]d:%[2]d:(ow-iw)/2:(oh-ih)/2",
 			input.Width,
 			input.Height,
 		),
-	}
+	)
 
 	filename := filepath.Base(input.Path)
 	filename = filename[:len(filename)-len(filepath.Ext(filename))] +
@@ -33,7 +45,9 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 
 	outputPath := filepath.Join(input.DestinationPath, filename)
 
-	params = append(params, "-y", outputPath)
+	params = append(params,
+		"-y", outputPath,
+	)
 
 	info, err := ffmpeg.GetStreamInfo(input.Path)
 	if err != nil {
