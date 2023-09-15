@@ -1,3 +1,4 @@
+//go:generate mockgen -destination vsmock/mock_VSClient.go -package vsmock . VSClient
 package vidispine
 
 import (

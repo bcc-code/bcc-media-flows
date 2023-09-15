@@ -1,0 +1,3633 @@
+{
+	"terse": {
+		"portal_mf225957": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "1ade5add-8b8b-4623-8fd4-34c20906fa05",
+				"value": ""
+			}
+		],
+		"portal_mf164510": [
+			{
+				"end": "1390450@PAL",
+				"start": "1386836@PAL",
+				"uuid": "fbd230f3-b959-40a4-b7ae-79bb3f43ce48",
+				"value": ""
+			},
+			{
+				"end": "1316493@PAL",
+				"start": "1310408@PAL",
+				"uuid": "ee7cb2d2-4518-4786-affd-a079ccf2347f",
+				"value": ""
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "94e9e1e3-2cb7-4756-b8ed-b532024f030c",
+				"value": "Kinesisk er på dansk lydspor"
+			},
+			{
+				"end": "1382599@PAL",
+				"start": "1370174@PAL",
+				"uuid": "7b266c06-47da-4e3c-b22d-f23129f5e183",
+				"value": ""
+			},
+			{
+				"end": "1415546@PAL",
+				"start": "1412458@PAL",
+				"uuid": "ff82c5d0-be9a-4a53-b91e-d4f5d1436381",
+				"value": ""
+			},
+			{
+				"end": "1427433@PAL",
+				"start": "1415661@PAL",
+				"uuid": "7c222c64-feea-4ac6-87d0-65980151c9ba",
+				"value": ""
+			},
+			{
+				"end": "1370169@PAL",
+				"start": "1367034@PAL",
+				"uuid": "aa203826-a4e3-4a23-9192-bdb6a1e075f2",
+				"value": ""
+			},
+			{
+				"end": "1321712@PAL",
+				"start": "1320174@PAL",
+				"uuid": "adf1b5ff-b192-48d7-8f69-e5334b5cd5f5",
+				"value": ""
+			},
+			{
+				"end": "1347010@PAL",
+				"start": "1341651@PAL",
+				"uuid": "1213a2e4-18aa-4b83-aedd-2c6972a3ffa8",
+				"value": ""
+			},
+			{
+				"end": "1320132@PAL",
+				"start": "1319391@PAL",
+				"uuid": "baf0d9bb-b97e-46a0-a697-cf3a337c8259",
+				"value": ""
+			},
+			{
+				"end": "1341545@PAL",
+				"start": "1325979@PAL",
+				"uuid": "b4cdc7d2-630b-421e-88cd-2fcbca251393",
+				"value": ""
+			},
+			{
+				"end": "1385740@PAL",
+				"start": "1382778@PAL",
+				"uuid": "aa724955-b189-434d-b7f3-935fb3d19863",
+				"value": ""
+			},
+			{
+				"end": "1412413@PAL",
+				"start": "1390467@PAL",
+				"uuid": "52b5659d-8047-4c04-8f3c-a3239d43bd62",
+				"value": ""
+			},
+			{
+				"end": "1325960@PAL",
+				"start": "1322009@PAL",
+				"uuid": "44bfc219-88ce-44c0-bf6d-4c2a3075df54",
+				"value": ""
+			},
+			{
+				"end": "1386852@PAL",
+				"start": "1385694@PAL",
+				"uuid": "43cfa072-e478-4da6-a748-eabbfd5b9758",
+				"value": ""
+			},
+			{
+				"end": "1319373@PAL",
+				"start": "1316635@PAL",
+				"uuid": "fb48248b-76c3-41da-b0b1-1b961548ba3a",
+				"value": ""
+			},
+			{
+				"end": "1367008@PAL",
+				"start": "1363259@PAL",
+				"uuid": "5ac1f502-ba4c-4463-9ad9-e30119fdb67c",
+				"value": ""
+			},
+			{
+				"end": "1310183@PAL",
+				"start": "1305446@PAL",
+				"uuid": "3beacf39-5580-4e97-8e8b-ff7314a3e6fe",
+				"value": ""
+			},
+			{
+				"end": "1431355@PAL",
+				"start": "1427988@PAL",
+				"uuid": "10247603-e3b4-4010-b595-6ab431a1e1ff",
+				"value": ""
+			},
+			{
+				"end": "1305064@PAL",
+				"start": "1294226@PAL",
+				"uuid": "1211911a-dd88-4806-9de8-f53ff8f65661",
+				"value": ""
+			},
+			{
+				"end": "1362538@PAL",
+				"start": "1347018@PAL",
+				"uuid": "067a1c1d-6bba-4720-8f68-e4846fab72ae",
+				"value": ""
+			}
+		],
+		"__shapetag_lowres_watermarked_hash": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0601f6d82d15cf20254370d062c839fc38163cfe"
+			}
+		],
+		"portal_mf903178": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "b08a5aed-8484-44a1-93e5-cdc7f8647fa1",
+				"value": "VX-431551"
+			}
+		],
+		"__shapetag_finnish_hash": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "3f50357d23fe4dfd73809a04bea3cc98f90f46a4"
+			}
+		],
+		"portal_mf961978": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "25eed879-7912-4cf7-a0b3-0debeb946bd0",
+				"value": ""
+			}
+		],
+		"originalFormat": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c7411c25-5dc3-435c-b0c0-9cd0bea58d13",
+				"value": "mxf"
+			}
+		],
+		"portal_mf442906": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d5021f32-f7f8-4033-859c-8f128f8edb89",
+				"value": "VX-431550"
+			}
+		],
+		"portal_mf770551": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "226424e2-e37f-42a0-be90-deaa68f25955",
+				"value": "high"
+			}
+		],
+		"__storage_finnish_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__version": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"portal_mf866907": [
+			{
+				"end": "1369503@PAL",
+				"start": "1369078@PAL",
+				"uuid": "ed781181-6e0b-45b5-8ec7-43b61450fbfb",
+				"value": "18"
+			},
+			{
+				"end": "1335504@PAL",
+				"start": "1334467@PAL",
+				"uuid": "65cf8753-507f-4e64-8f1f-7e039589ac17",
+				"value": "1"
+			},
+			{
+				"end": "1421227@PAL",
+				"start": "1420100@PAL",
+				"uuid": "9a60e58b-183b-4880-a7e7-494db3be9d41",
+				"value": "6"
+			},
+			{
+				"end": "1332298@PAL",
+				"start": "1331924@PAL",
+				"uuid": "0a7544a8-366b-4cd5-be52-0ef21918baa2",
+				"value": "3"
+			},
+			{
+				"end": "1328130@PAL",
+				"start": "1327538@PAL",
+				"uuid": "952cedfb-2f83-445b-b2e0-cf906aca2f49",
+				"value": "1"
+			},
+			{
+				"end": "1357629@PAL",
+				"start": "1356686@PAL",
+				"uuid": "c2e2b147-a72b-4154-98e0-16801fb13d92",
+				"value": "1"
+			},
+			{
+				"end": "1354627@PAL",
+				"start": "1353239@PAL",
+				"uuid": "c27cf8a0-2fda-4a57-8284-30ea2f2b2057",
+				"value": "4"
+			}
+		],
+		"portal_mf616220": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "7ce5903f-5224-4541-a1f8-77903279fecd",
+				"value": "mpeg2video"
+			}
+		],
+		"original_mimetype": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d1b42c9e-a96a-4c2e-8303-ccb830bc659a",
+				"value": "video/x-mxf-mpeg2video-pcm_s24le"
+			}
+		],
+		"__sequence_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"portal_mf868653": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d888ec24-5cd8-4a94-b30d-8363138e3ce4",
+				"value": "original"
+			}
+		],
+		"__storage_finnish": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-42"
+			}
+		],
+		"portal_mf624761": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "73347c22-dccd-41e9-9b87-d8c644139d17",
+				"value": ""
+			}
+		],
+		"portal_mf472706": [
+			{
+				"end": "1390450@PAL",
+				"start": "1386836@PAL",
+				"uuid": "5b415df3-a0be-4677-aef7-bed271a8a148",
+				"value": ""
+			},
+			{
+				"end": "1316493@PAL",
+				"start": "1310408@PAL",
+				"uuid": "435d0e4b-c11d-4637-bab6-5b9977ca0b3c",
+				"value": ""
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "726bd4f6-7c7c-4016-ad97-56d423a7f226",
+				"value": ""
+			},
+			{
+				"end": "1382599@PAL",
+				"start": "1370174@PAL",
+				"uuid": "7dce4b45-6e36-4f48-9e9a-51be6a8a2038",
+				"value": ""
+			},
+			{
+				"end": "1415546@PAL",
+				"start": "1412458@PAL",
+				"uuid": "f756d80b-a70b-473f-afe3-bb016cb12d7c",
+				"value": ""
+			},
+			{
+				"end": "1427433@PAL",
+				"start": "1415661@PAL",
+				"uuid": "854878a8-4feb-4eff-98a4-4a2bc808d08d",
+				"value": ""
+			},
+			{
+				"end": "1370169@PAL",
+				"start": "1367034@PAL",
+				"uuid": "fac304c5-9349-421b-bf50-87d606699dde",
+				"value": ""
+			},
+			{
+				"end": "1321712@PAL",
+				"start": "1320174@PAL",
+				"uuid": "06970486-5327-4670-967e-f30154d1ce16",
+				"value": ""
+			},
+			{
+				"end": "1347010@PAL",
+				"start": "1341651@PAL",
+				"uuid": "c2f65e31-dd20-4ee0-a401-51bc2ee9ad77",
+				"value": ""
+			},
+			{
+				"end": "1320132@PAL",
+				"start": "1319391@PAL",
+				"uuid": "f70755f6-077b-4872-8d6b-72ffd18f9366",
+				"value": ""
+			},
+			{
+				"end": "1341545@PAL",
+				"start": "1325979@PAL",
+				"uuid": "69a40302-3f23-4279-af69-ca98500f9be5",
+				"value": ""
+			},
+			{
+				"end": "1385740@PAL",
+				"start": "1382778@PAL",
+				"uuid": "b9a3d8a0-580a-4814-afaf-e07d4a4f858e",
+				"value": ""
+			},
+			{
+				"end": "1412413@PAL",
+				"start": "1390467@PAL",
+				"uuid": "e1a01e31-7ac3-4d93-98ff-1d4d10605a65",
+				"value": ""
+			},
+			{
+				"end": "1325960@PAL",
+				"start": "1322009@PAL",
+				"uuid": "46533375-9f6e-4a48-a68b-4ee49510f5b4",
+				"value": ""
+			},
+			{
+				"end": "1386852@PAL",
+				"start": "1385694@PAL",
+				"uuid": "0df41e19-ca86-4763-9bb9-d9849a3bd0df",
+				"value": ""
+			},
+			{
+				"end": "1319373@PAL",
+				"start": "1316635@PAL",
+				"uuid": "a7600921-9646-41ef-934c-94ae35e45019",
+				"value": ""
+			},
+			{
+				"end": "1367008@PAL",
+				"start": "1363259@PAL",
+				"uuid": "7edb62d4-06b4-48cc-a193-df61bb0a4377",
+				"value": ""
+			},
+			{
+				"end": "1310183@PAL",
+				"start": "1305446@PAL",
+				"uuid": "7c7ca88a-48c3-4eb5-8ca5-e756a05fea91",
+				"value": ""
+			},
+			{
+				"end": "1431355@PAL",
+				"start": "1427988@PAL",
+				"uuid": "b4a36432-43e1-47af-a770-bac433e9bc3a",
+				"value": ""
+			},
+			{
+				"end": "1305064@PAL",
+				"start": "1294226@PAL",
+				"uuid": "15aa6530-f2af-4023-aebc-4f1066b7b7b6",
+				"value": ""
+			},
+			{
+				"end": "1362538@PAL",
+				"start": "1347018@PAL",
+				"uuid": "cfb60d33-ea5c-4072-98cc-c78325059fc4",
+				"value": ""
+			}
+		],
+		"__user": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "vsapiuser"
+			}
+		],
+		"__storage_dutch": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-42"
+			}
+		],
+		"portal_mf957223": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "98f173b2-ba47-42c2-9452-f2e76a10d151",
+				"value": ""
+			}
+		],
+		"portal_mf139381": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c2fbda22-d366-417e-914f-898df77dd3c7",
+				"value": ""
+			}
+		],
+		"__storage_french": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-42"
+			}
+		],
+		"__storage_lowres_watermarked_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"itemId": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "38072d0c-bb64-4353-8a6f-f46cd6c39e4b",
+				"value": "VX-431552"
+			}
+		],
+		"portal_mf769691": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "5de68292-776c-4c1a-a6b3-0b01da2449b9",
+				"value": ""
+			}
+		],
+		"portal_mf351607": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "94a24e58-2e68-4031-980c-63b4913c1564",
+				"value": "VX-431558"
+			}
+		],
+		"portal_mf176737": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c9560a18-67a7-41f4-a455-b66121aa7c14",
+				"value": ""
+			}
+		],
+		"portal_mf371915": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "4409f2d0-ca46-44b1-a3d6-f94659e87aad",
+				"value": "vod"
+			}
+		],
+		"durationTimeCode": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "1338218e-48ec-4460-8b52-1ab535faabf7",
+				"value": "5516400000@1000000"
+			}
+		],
+		"__storage_dutch_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__storage_german": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-42"
+			}
+		],
+		"originalAudioCodec": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "60c9ba4d-0607-4d4e-9aa4-17e9767f5861",
+				"value": "pcm_s24le"
+			}
+		],
+		"__storage": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-42"
+			}
+		],
+		"portal_mf93393": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "885d2aab-7107-459d-8f0a-81ea05eda219",
+				"value": "VX-431549"
+			}
+		],
+		"__collection_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "3"
+			}
+		],
+		"portal_mf736581": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "0dd3750e-b811-4d25-a78a-3451ae44f60b",
+				"value": "VX-431556"
+			}
+		],
+		"portal_mf561452": [
+			{
+				"end": "1390450@PAL",
+				"start": "1386836@PAL",
+				"uuid": "10f81ee4-3495-4ad3-a59c-bf34664345d7",
+				"value": ""
+			},
+			{
+				"end": "1316493@PAL",
+				"start": "1310408@PAL",
+				"uuid": "015a0af8-e76b-4c9d-9bda-be7c8e3a28b0",
+				"value": ""
+			},
+			{
+				"end": "1382599@PAL",
+				"start": "1370174@PAL",
+				"uuid": "c1b96bcd-c49d-4d02-83ed-76fec7e4b634",
+				"value": ""
+			},
+			{
+				"end": "1415546@PAL",
+				"start": "1412458@PAL",
+				"uuid": "eb106e17-149c-402b-8c32-cbdab6843ec9",
+				"value": ""
+			},
+			{
+				"end": "1427433@PAL",
+				"start": "1415661@PAL",
+				"uuid": "2cb309a1-6d52-4642-b2f0-14fee5fae21b",
+				"value": ""
+			},
+			{
+				"end": "1370169@PAL",
+				"start": "1367034@PAL",
+				"uuid": "aa36233a-b3e6-4913-ae02-9c1cfa7c31d1",
+				"value": ""
+			},
+			{
+				"end": "1321712@PAL",
+				"start": "1320174@PAL",
+				"uuid": "04b3f61f-e8df-4f3d-82f7-e179ac137333",
+				"value": ""
+			},
+			{
+				"end": "1347010@PAL",
+				"start": "1341651@PAL",
+				"uuid": "69d53b07-8022-48c8-99e5-f3b04f7a356f",
+				"value": "Desire Tombre"
+			},
+			{
+				"end": "1320132@PAL",
+				"start": "1319391@PAL",
+				"uuid": "420feffb-eb25-44cb-98f4-ba929cb76fb0",
+				"value": ""
+			},
+			{
+				"end": "1341545@PAL",
+				"start": "1325979@PAL",
+				"uuid": "a6c9d0c3-0e75-423a-ab39-1af0c9c54e0c",
+				"value": ""
+			},
+			{
+				"end": "1385740@PAL",
+				"start": "1382778@PAL",
+				"uuid": "ebd9c314-ca64-4392-8979-f7e902fc7781",
+				"value": ""
+			},
+			{
+				"end": "1412413@PAL",
+				"start": "1390467@PAL",
+				"uuid": "e6e2059e-e5fa-4ed1-8da7-050d86184962",
+				"value": ""
+			},
+			{
+				"end": "1325960@PAL",
+				"start": "1322009@PAL",
+				"uuid": "ca266232-4ab6-42a9-97db-f849c5b1557f",
+				"value": ""
+			},
+			{
+				"end": "1386852@PAL",
+				"start": "1385694@PAL",
+				"uuid": "f60d8a61-b0b4-45f0-9224-fdbac81a198a",
+				"value": ""
+			},
+			{
+				"end": "1319373@PAL",
+				"start": "1316635@PAL",
+				"uuid": "e48929d6-a845-49c8-9d82-c8aaac30b0a7",
+				"value": ""
+			},
+			{
+				"end": "1367008@PAL",
+				"start": "1363259@PAL",
+				"uuid": "199c5c89-944f-481e-a020-2f21c1534b24",
+				"value": ""
+			},
+			{
+				"end": "1310183@PAL",
+				"start": "1305446@PAL",
+				"uuid": "e30a6433-e525-4614-8ff7-7cbe8465aef6",
+				"value": ""
+			},
+			{
+				"end": "1431355@PAL",
+				"start": "1427988@PAL",
+				"uuid": "b1a47906-8476-4b45-9725-1a72f610b6c8",
+				"value": ""
+			},
+			{
+				"end": "1305064@PAL",
+				"start": "1294226@PAL",
+				"uuid": "1b638cc0-0ade-4016-af42-718d1c469e24",
+				"value": ""
+			},
+			{
+				"end": "1362538@PAL",
+				"start": "1347018@PAL",
+				"uuid": "e306df5e-84ad-4f60-9fc4-cc1a09cba687",
+				"value": ""
+			}
+		],
+		"__storage_polish": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-42"
+			}
+		],
+		"__shapetag_original_hash": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "bf2aacab61102ca99a9aaa9bdbe13e827b945d7b"
+			}
+		],
+		"portal_mf848898": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ed152aee-6eb8-4f59-a9ba-487ddb2832ec",
+				"value": ""
+			}
+		],
+		"__storage_polish_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"portal_mf625008": [
+			{
+				"end": "1390450@PAL",
+				"start": "1386836@PAL",
+				"uuid": "b4ba7928-5b09-4c80-9748-2c8bb7ad66a5",
+				"value": ""
+			},
+			{
+				"end": "1316493@PAL",
+				"start": "1310408@PAL",
+				"uuid": "39bdf58f-bd95-478e-bce4-6042f4328f2f",
+				"value": "Elihu Pedersen"
+			},
+			{
+				"end": "1382599@PAL",
+				"start": "1370174@PAL",
+				"uuid": "2e7209b9-acbf-426c-9426-abb79040866a",
+				"value": ""
+			},
+			{
+				"end": "1415546@PAL",
+				"start": "1412458@PAL",
+				"uuid": "a4910688-61d4-4cb6-aba9-23b76c3711af",
+				"value": "Håkon Johannessen"
+			},
+			{
+				"end": "1427433@PAL",
+				"start": "1415661@PAL",
+				"uuid": "7de67d31-f217-4ade-ae14-38ac43f6fb72",
+				"value": ""
+			},
+			{
+				"end": "1370169@PAL",
+				"start": "1367034@PAL",
+				"uuid": "2b1ce8b3-1cc2-4d53-83eb-5c0b369b7c8f",
+				"value": ""
+			},
+			{
+				"end": "1321712@PAL",
+				"start": "1320174@PAL",
+				"uuid": "f1c4b60a-0c9b-4bb5-b142-f1f1ebd79b98",
+				"value": ""
+			},
+			{
+				"end": "1347010@PAL",
+				"start": "1341651@PAL",
+				"uuid": "2094c5b2-fab9-4a2e-8a71-ac09aa4d92b0",
+				"value": "Lorentz Risnes"
+			},
+			{
+				"end": "1320132@PAL",
+				"start": "1319391@PAL",
+				"uuid": "a3346b08-8575-490e-9989-1bbe25729af2",
+				"value": ""
+			},
+			{
+				"end": "1341545@PAL",
+				"start": "1325979@PAL",
+				"uuid": "9dbe6ed9-24cc-42b2-ae6e-930aab1af63b",
+				"value": ""
+			},
+			{
+				"end": "1385740@PAL",
+				"start": "1382778@PAL",
+				"uuid": "3ff49603-f42b-4bdc-a7da-c04755ae0bf9",
+				"value": "Elihu Pedersen"
+			},
+			{
+				"end": "1412413@PAL",
+				"start": "1390467@PAL",
+				"uuid": "adc03850-c6a5-4d56-a0b5-a5280c111b2a",
+				"value": ""
+			},
+			{
+				"end": "1325960@PAL",
+				"start": "1322009@PAL",
+				"uuid": "03d5b7df-bfb1-440f-824e-29c8f8304232",
+				"value": "Pauli Sander "
+			},
+			{
+				"end": "1386852@PAL",
+				"start": "1385694@PAL",
+				"uuid": "367b9509-8235-4ea4-85ad-0dee3957cad9",
+				"value": ""
+			},
+			{
+				"end": "1319373@PAL",
+				"start": "1316635@PAL",
+				"uuid": "687731b4-ac5c-4c23-9e34-cadc1bf56512",
+				"value": ""
+			},
+			{
+				"end": "1367008@PAL",
+				"start": "1363259@PAL",
+				"uuid": "1171a594-5fdb-42e0-be97-88de75e13444",
+				"value": "Thordis Nyfeldt Huseby "
+			},
+			{
+				"end": "1310183@PAL",
+				"start": "1305446@PAL",
+				"uuid": "70edcca7-dedc-434a-aa80-9e898ca95e38",
+				"value": "Aksel J. Smith"
+			},
+			{
+				"end": "1431355@PAL",
+				"start": "1427988@PAL",
+				"uuid": "c7adbb51-66db-4700-be9b-38847a6b98a4",
+				"value": "Edwin Bekkevold"
+			},
+			{
+				"end": "1305064@PAL",
+				"start": "1294226@PAL",
+				"uuid": "4f0af3fc-4ab1-48bf-ab4b-c703db8c6809",
+				"value": ""
+			},
+			{
+				"end": "1362538@PAL",
+				"start": "1347018@PAL",
+				"uuid": "f396a282-6498-463f-bdab-2cd62a1b5535",
+				"value": ""
+			}
+		],
+		"__storage_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"portal_mf532126": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "a07810ec-f9bb-4c88-89ca-9a11fdaedbc4",
+				"value": "video"
+			}
+		],
+		"portal_mf426791": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "647968a6-cd95-4f0a-8427-ae78500c852f",
+				"value": ""
+			}
+		],
+		"portal_mf424370": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "badc901d-0d0f-40ae-a17a-3371cc39dd27",
+				"value": ""
+			}
+		],
+		"portal_mf406543": [
+			{
+				"end": "1390450@PAL",
+				"start": "1386836@PAL",
+				"uuid": "8fce994f-8a4e-434d-9570-56cccda9ae20",
+				"value": "tro-troens-nd"
+			},
+			{
+				"end": "1316493@PAL",
+				"start": "1310408@PAL",
+				"uuid": "bb980088-fc90-427f-b219-f7242cfaa51b",
+				"value": ""
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "b345584f-1360-4632-8662-0042290cac80",
+				"value": "tro-troens-nd"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "87a066fd-8ee5-4563-ac46-37004404b2e4",
+				"value": "renhet-urenhet-urene-tanker"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "8b1419ba-35ed-482a-91d5-874ab2a486a1",
+				"value": "tjener-tjenersinn-tjeneste"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "5b8c5e13-c333-42fc-add5-302407aa90f2",
+				"value": "seier-seier-over-synd-seierspris-overvinne"
+			},
+			{
+				"end": "1382599@PAL",
+				"start": "1370174@PAL",
+				"uuid": "cfc44d0d-473f-4ef4-8bb3-d87fec62bca3",
+				"value": ""
+			},
+			{
+				"end": "1415546@PAL",
+				"start": "1412458@PAL",
+				"uuid": "ea6f7224-e806-415c-9a62-134522ebbaee",
+				"value": ""
+			},
+			{
+				"end": "1427433@PAL",
+				"start": "1415661@PAL",
+				"uuid": "d60a6f28-d92a-49ee-9a24-02431aa16078",
+				"value": "tjener-tjenersinn-tjeneste"
+			},
+			{
+				"end": "1370169@PAL",
+				"start": "1367034@PAL",
+				"uuid": "6f800e6d-ce13-486f-80ff-b963d70f539b",
+				"value": "tro-troens-nd"
+			},
+			{
+				"end": "1321712@PAL",
+				"start": "1320174@PAL",
+				"uuid": "1591677f-8052-4e76-9d56-b04ea11acf44",
+				"value": ""
+			},
+			{
+				"end": "1347010@PAL",
+				"start": "1341651@PAL",
+				"uuid": "e61ff1c5-32ea-4306-8801-0bc695ed77b9",
+				"value": ""
+			},
+			{
+				"end": "1320132@PAL",
+				"start": "1319391@PAL",
+				"uuid": "2131e757-b794-4a1b-9fcb-15042c521561",
+				"value": ""
+			},
+			{
+				"end": "1341545@PAL",
+				"start": "1325979@PAL",
+				"uuid": "ce005470-3085-4420-857a-364c420edee3",
+				"value": "tro-troens-nd"
+			},
+			{
+				"end": "1341545@PAL",
+				"start": "1325979@PAL",
+				"uuid": "757c2fb7-4cc2-44be-b307-5085feac909d",
+				"value": "renhet-urenhet-urene-tanker"
+			},
+			{
+				"end": "1385740@PAL",
+				"start": "1382778@PAL",
+				"uuid": "beae0b60-b152-4ea2-bef6-cf7232404db6",
+				"value": ""
+			},
+			{
+				"end": "1412413@PAL",
+				"start": "1390467@PAL",
+				"uuid": "e85c2632-009b-4c5a-983f-87d53ac2d318",
+				"value": ""
+			},
+			{
+				"end": "1325960@PAL",
+				"start": "1322009@PAL",
+				"uuid": "8ac26419-90d5-4cc7-961e-08d7e0efcbc9",
+				"value": ""
+			},
+			{
+				"end": "1386852@PAL",
+				"start": "1385694@PAL",
+				"uuid": "009df864-1374-464e-b193-34190a5551e8",
+				"value": ""
+			},
+			{
+				"end": "1319373@PAL",
+				"start": "1316635@PAL",
+				"uuid": "30e68100-38b1-4413-9841-6563e19c323c",
+				"value": ""
+			},
+			{
+				"end": "1367008@PAL",
+				"start": "1363259@PAL",
+				"uuid": "ee158639-8196-4d9b-9ed4-21f5d96af918",
+				"value": ""
+			},
+			{
+				"end": "1310183@PAL",
+				"start": "1305446@PAL",
+				"uuid": "7bcb18df-c334-403c-bd7d-fa59cdb2a490",
+				"value": ""
+			},
+			{
+				"end": "1431355@PAL",
+				"start": "1427988@PAL",
+				"uuid": "1c017088-de43-4f03-a1c3-fa01ebfcabc4",
+				"value": ""
+			},
+			{
+				"end": "1305064@PAL",
+				"start": "1294226@PAL",
+				"uuid": "0dd76f68-9be2-435b-a364-611e671e2644",
+				"value": ""
+			},
+			{
+				"end": "1362538@PAL",
+				"start": "1347018@PAL",
+				"uuid": "9f70701b-b56f-4e50-8131-944b7b9c270d",
+				"value": "seier-seier-over-synd-seierspris-overvinne"
+			}
+		],
+		"portal_mf307547": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "41f34776-23e9-491e-9c35-2f8148151df5",
+				"value": "VX-431555"
+			}
+		],
+		"__shapetag_german_hash": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "5fa4d53ed5b1b3d4604772f987516866c880b7cd"
+			}
+		],
+		"portal_mf75574": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "0dfd2b0c-2b79-40ce-8167-0de41f2da893",
+				"value": ""
+			}
+		],
+		"startTimeCode": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ad892904-e40c-4b14-b159-42ac29d57cf7",
+				"value": "1294111@PAL"
+			}
+		],
+		"portal_mf50574": [
+			{
+				"end": "1390450@PAL",
+				"start": "1386836@PAL",
+				"uuid": "e52a03c7-9ecc-45ab-a534-edcbbae0db1e",
+				"value": "Sverre L. Riksfjord"
+			},
+			{
+				"end": "1316493@PAL",
+				"start": "1310408@PAL",
+				"uuid": "669914af-2444-4322-8667-9614d9f0bece",
+				"value": ""
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "a4f1b1b2-7dae-4fe4-a3ce-6c6eea280205",
+				"value": "Einar  Ådalen"
+			},
+			{
+				"end": "1382599@PAL",
+				"start": "1370174@PAL",
+				"uuid": "480b9eb2-bd1f-4788-8b1a-96caebee3062",
+				"value": ""
+			},
+			{
+				"end": "1415546@PAL",
+				"start": "1412458@PAL",
+				"uuid": "89d1fa62-d43b-4754-a8fd-fb593e5eee5d",
+				"value": ""
+			},
+			{
+				"end": "1427433@PAL",
+				"start": "1415661@PAL",
+				"uuid": "8950e3bf-6cef-41d3-928d-5b1a6d2db31b",
+				"value": "Harald Kronstad"
+			},
+			{
+				"end": "1370169@PAL",
+				"start": "1367034@PAL",
+				"uuid": "d3c30212-60c5-4105-bbb8-e6ca5766fee1",
+				"value": "Andreas Espegard"
+			},
+			{
+				"end": "1321712@PAL",
+				"start": "1320174@PAL",
+				"uuid": "905a5d95-361a-4848-bce1-d9b220da497d",
+				"value": "Haakon Pedersen"
+			},
+			{
+				"end": "1347010@PAL",
+				"start": "1341651@PAL",
+				"uuid": "e69e8fb5-ab2f-44e5-9f50-0401315a3250",
+				"value": ""
+			},
+			{
+				"end": "1320132@PAL",
+				"start": "1319391@PAL",
+				"uuid": "012d3878-8ccf-4671-922c-3090aae0ccc6",
+				"value": ""
+			},
+			{
+				"end": "1341545@PAL",
+				"start": "1325979@PAL",
+				"uuid": "017e5c7e-8bb2-470c-b335-61cd9e832df6",
+				"value": "Einar  Ådalen"
+			},
+			{
+				"end": "1385740@PAL",
+				"start": "1382778@PAL",
+				"uuid": "c3b0892b-bf95-49bf-af8a-6c22001810ea",
+				"value": ""
+			},
+			{
+				"end": "1412413@PAL",
+				"start": "1390467@PAL",
+				"uuid": "74d3ab82-62cb-4eed-af6b-ef146f35b90c",
+				"value": ""
+			},
+			{
+				"end": "1325960@PAL",
+				"start": "1322009@PAL",
+				"uuid": "bcc0b9b3-fed9-4107-b1c2-5099f4334cbb",
+				"value": ""
+			},
+			{
+				"end": "1386852@PAL",
+				"start": "1385694@PAL",
+				"uuid": "10a0771c-d5a8-4d5f-9bcb-bdf01ceb9c85",
+				"value": "Einar  Ådalen"
+			},
+			{
+				"end": "1319373@PAL",
+				"start": "1316635@PAL",
+				"uuid": "c0f67efc-f0eb-472a-a772-79199d270cfb",
+				"value": "Einar  Ådalen"
+			},
+			{
+				"end": "1367008@PAL",
+				"start": "1363259@PAL",
+				"uuid": "7875f6cb-8ad4-43c6-acbb-728719e730b8",
+				"value": ""
+			},
+			{
+				"end": "1310183@PAL",
+				"start": "1305446@PAL",
+				"uuid": "a760f00b-8a8e-4196-a9d7-811efab2a038",
+				"value": ""
+			},
+			{
+				"end": "1431355@PAL",
+				"start": "1427988@PAL",
+				"uuid": "6abf14a5-924a-468b-9734-bd627927155b",
+				"value": ""
+			},
+			{
+				"end": "1305064@PAL",
+				"start": "1294226@PAL",
+				"uuid": "635f0fb9-b531-482e-821f-4b9bffa39069",
+				"value": ""
+			},
+			{
+				"end": "1362538@PAL",
+				"start": "1347018@PAL",
+				"uuid": "fea08450-5a24-40ee-b304-84a770f58885",
+				"value": "Gershon Twilley"
+			}
+		],
+		"portal_mf379573": [
+			{
+				"end": "1369503@PAL",
+				"start": "1369078@PAL",
+				"uuid": "5233436d-f649-4370-8e48-477527244499",
+				"value": "21"
+			},
+			{
+				"end": "1335504@PAL",
+				"start": "1334467@PAL",
+				"uuid": "dad20a49-0fd4-4cc5-a8f2-df8103460306",
+				"value": "5"
+			},
+			{
+				"end": "1421227@PAL",
+				"start": "1420100@PAL",
+				"uuid": "39495ab5-3d60-4404-9c0c-7ddd5193691b",
+				"value": "19"
+			},
+			{
+				"end": "1332298@PAL",
+				"start": "1331924@PAL",
+				"uuid": "97ad623b-457f-46f6-87f2-8ad6beae5f82",
+				"value": "17"
+			},
+			{
+				"end": "1328130@PAL",
+				"start": "1327538@PAL",
+				"uuid": "f7b47048-e474-46dc-b15a-393f601e135f",
+				"value": "7"
+			},
+			{
+				"end": "1357629@PAL",
+				"start": "1356686@PAL",
+				"uuid": "801018b0-a235-4c2c-a2c7-0ea2392a1dca",
+				"value": "6"
+			},
+			{
+				"end": "1354627@PAL",
+				"start": "1353239@PAL",
+				"uuid": "61cf0a74-3b16-4d0e-9069-2e574346a00a",
+				"value": "12"
+			}
+		],
+		"portal_mf230973": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ac96dcf8-b802-4b31-a30e-a6906b48950d",
+				"value": "Einar Gershon tale"
+			}
+		],
+		"portal_mf103965": [
+			{
+				"end": "1390450@PAL",
+				"start": "1386836@PAL",
+				"uuid": "2eb5bc03-760f-487b-8568-37222804ac22",
+				"value": ""
+			},
+			{
+				"end": "1316493@PAL",
+				"start": "1310408@PAL",
+				"uuid": "2d0d4872-6453-4706-93ea-5a3efd4d3699",
+				"value": "266"
+			},
+			{
+				"end": "1316493@PAL",
+				"start": "1310408@PAL",
+				"uuid": "c1d47996-4d97-437d-9be8-ca581c9f92be",
+				"value": "herrens-veier"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c5c2a10b-c1fa-4a30-8fa7-6c57bb19af01",
+				"value": "hstcamp"
+			},
+			{
+				"end": "1382599@PAL",
+				"start": "1370174@PAL",
+				"uuid": "2fa13ead-6660-4610-8413-7215cd34e213",
+				"value": ""
+			},
+			{
+				"end": "1415546@PAL",
+				"start": "1412458@PAL",
+				"uuid": "b11828ec-2128-43bd-be0c-3e4ff10d41c9",
+				"value": "herrens-veier"
+			},
+			{
+				"end": "1415546@PAL",
+				"start": "1412458@PAL",
+				"uuid": "81feb61d-a207-46fd-a2a6-7905137ea27d",
+				"value": "357"
+			},
+			{
+				"end": "1427433@PAL",
+				"start": "1415661@PAL",
+				"uuid": "6f50829f-04ea-4c19-b85e-d6bbd24d3a69",
+				"value": ""
+			},
+			{
+				"end": "1370169@PAL",
+				"start": "1367034@PAL",
+				"uuid": "db22730c-bdb2-4b03-93e4-013867b42e78",
+				"value": ""
+			},
+			{
+				"end": "1321712@PAL",
+				"start": "1320174@PAL",
+				"uuid": "78eecb23-9bcd-404e-85e2-54f8b78c7134",
+				"value": ""
+			},
+			{
+				"end": "1347010@PAL",
+				"start": "1341651@PAL",
+				"uuid": "b4dbd168-f2e9-4600-912b-0dbf54f2326c",
+				"value": "herrens-veier"
+			},
+			{
+				"end": "1347010@PAL",
+				"start": "1341651@PAL",
+				"uuid": "a817d8c5-4aec-4bfe-83a1-596e1aa78c19",
+				"value": "171"
+			},
+			{
+				"end": "1320132@PAL",
+				"start": "1319391@PAL",
+				"uuid": "363be278-3a54-4b2f-b440-593ea70d684b",
+				"value": ""
+			},
+			{
+				"end": "1341545@PAL",
+				"start": "1325979@PAL",
+				"uuid": "c80eb534-2aa1-4249-a83d-b0fbdbd47fb9",
+				"value": ""
+			},
+			{
+				"end": "1385740@PAL",
+				"start": "1382778@PAL",
+				"uuid": "fec92761-9780-4b4a-90c0-4da0f46ce70f",
+				"value": "herrens-veier"
+			},
+			{
+				"end": "1385740@PAL",
+				"start": "1382778@PAL",
+				"uuid": "10f22393-84e8-4572-99cb-b8ad1646dcd5",
+				"value": "334"
+			},
+			{
+				"end": "1412413@PAL",
+				"start": "1390467@PAL",
+				"uuid": "4e735d5b-2e8b-44f2-8216-f022c614cb88",
+				"value": ""
+			},
+			{
+				"end": "1325960@PAL",
+				"start": "1322009@PAL",
+				"uuid": "d28480d4-8453-46b0-a1f4-93bbcaf0c48c",
+				"value": "260"
+			},
+			{
+				"end": "1325960@PAL",
+				"start": "1322009@PAL",
+				"uuid": "e4001af3-533d-4b9b-b9ea-5d3988d88b87",
+				"value": "herrens-veier"
+			},
+			{
+				"end": "1386852@PAL",
+				"start": "1385694@PAL",
+				"uuid": "725c1d10-0327-4f8f-9750-0c16909e3985",
+				"value": ""
+			},
+			{
+				"end": "1319373@PAL",
+				"start": "1316635@PAL",
+				"uuid": "6bff58fa-875f-4f40-bc54-6372321efb08",
+				"value": ""
+			},
+			{
+				"end": "1367008@PAL",
+				"start": "1363259@PAL",
+				"uuid": "7e0b88ab-afdf-4ec3-8100-7008632355d1",
+				"value": "herrens-veier"
+			},
+			{
+				"end": "1367008@PAL",
+				"start": "1363259@PAL",
+				"uuid": "87e426d0-ea0a-4b3d-a362-73f595cab40a",
+				"value": "311"
+			},
+			{
+				"end": "1310183@PAL",
+				"start": "1305446@PAL",
+				"uuid": "455ddb4c-065c-4256-95b1-ef445bc619c6",
+				"value": "416"
+			},
+			{
+				"end": "1310183@PAL",
+				"start": "1305446@PAL",
+				"uuid": "b431437e-7d5c-422b-a253-c487a92f1c13",
+				"value": "herrens-veier"
+			},
+			{
+				"end": "1431355@PAL",
+				"start": "1427988@PAL",
+				"uuid": "9cc84eb6-c23b-45b5-8463-2dfac097ec8f",
+				"value": "herrens-veier"
+			},
+			{
+				"end": "1431355@PAL",
+				"start": "1427988@PAL",
+				"uuid": "67d6f838-1a20-4da0-88ea-5878121562cd",
+				"value": "223"
+			},
+			{
+				"end": "1305064@PAL",
+				"start": "1294226@PAL",
+				"uuid": "aed4bbfb-91ae-4fe4-9085-40dac90f7e1c",
+				"value": ""
+			},
+			{
+				"end": "1362538@PAL",
+				"start": "1347018@PAL",
+				"uuid": "46b91a95-e676-414e-8ae3-2c02de3583e8",
+				"value": ""
+			}
+		],
+		"__storage_lowres_watermarked": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-42"
+			}
+		],
+		"__storage_original": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-42"
+			}
+		],
+		"portal_mf431847": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "6311c0a9-1373-4063-ab5d-6e16fd56adc5",
+				"value": "ungdom"
+			}
+		],
+		"portal_mf122460": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "64cab1e1-24f1-49d8-a28f-97a09eb5ad30",
+				"value": "VX-431560"
+			}
+		],
+		"portal_mf261320": [
+			{
+				"end": "1369503@PAL",
+				"start": "1369078@PAL",
+				"uuid": "2fa7dedd-7bb6-4c39-bd50-a7d7de44d16d",
+				"value": "1 Kongebok"
+			},
+			{
+				"end": "1335504@PAL",
+				"start": "1334467@PAL",
+				"uuid": "a7ef1bb5-85e6-43a4-9211-05edd9dfbb39",
+				"value": "Jakob"
+			},
+			{
+				"end": "1421227@PAL",
+				"start": "1420100@PAL",
+				"uuid": "2c7519e3-6693-4953-99e7-3889c7559107",
+				"value": "1 Korinter"
+			},
+			{
+				"end": "1332298@PAL",
+				"start": "1331924@PAL",
+				"uuid": "4c6368a4-3bb6-4dc5-8677-68ee13e12f6a",
+				"value": "Jakob"
+			},
+			{
+				"end": "1328130@PAL",
+				"start": "1327538@PAL",
+				"uuid": "342355d5-7b65-4819-afc2-fa48cc0c1aee",
+				"value": "2 Timoteus"
+			},
+			{
+				"end": "1357629@PAL",
+				"start": "1356686@PAL",
+				"uuid": "ea71c45b-4d01-4ede-a267-082ef0e0bb59",
+				"value": "1 Peter"
+			},
+			{
+				"end": "1354627@PAL",
+				"start": "1353239@PAL",
+				"uuid": "d03fd0ed-1c60-4084-9720-4802b47ffd28",
+				"value": "1 Peter"
+			}
+		],
+		"__storage_french_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__version_count": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__shape_last_added": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "2022-10-30T15:28:36.071Z"
+			}
+		],
+		"__metadata_last_modified": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "2023-06-10T16:41:17.603+02:00"
+			}
+		],
+		"portal_mf529506": [
+			{
+				"end": "1390450@PAL",
+				"start": "1386836@PAL",
+				"uuid": "eddd9180-f16f-4758-a694-7c3b9c078a8f",
+				"value": ""
+			},
+			{
+				"end": "1316493@PAL",
+				"start": "1310408@PAL",
+				"uuid": "7e641882-4521-43e7-8f9a-5aa70247a0b1",
+				"value": ""
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "72fc227e-b76c-4973-890c-a298304e54e0",
+				"value": ""
+			},
+			{
+				"end": "1382599@PAL",
+				"start": "1370174@PAL",
+				"uuid": "616fcdc5-fda5-4592-953e-868e666048b2",
+				"value": ""
+			},
+			{
+				"end": "1415546@PAL",
+				"start": "1412458@PAL",
+				"uuid": "0fe46dac-f5e1-43a0-8ced-249230b8016e",
+				"value": ""
+			},
+			{
+				"end": "1427433@PAL",
+				"start": "1415661@PAL",
+				"uuid": "60c85bc9-d802-4d9c-8644-10260164422f",
+				"value": ""
+			},
+			{
+				"end": "1370169@PAL",
+				"start": "1367034@PAL",
+				"uuid": "b85b7c8a-37de-4d64-aa96-aa9b69024fdd",
+				"value": ""
+			},
+			{
+				"end": "1321712@PAL",
+				"start": "1320174@PAL",
+				"uuid": "73eb805e-5131-4393-89f6-af2745b83be3",
+				"value": ""
+			},
+			{
+				"end": "1347010@PAL",
+				"start": "1341651@PAL",
+				"uuid": "13163e37-bac2-4747-943d-10496398db6c",
+				"value": ""
+			},
+			{
+				"end": "1320132@PAL",
+				"start": "1319391@PAL",
+				"uuid": "2d92b271-05e5-4b3a-8e2c-86f6ec12dcf1",
+				"value": ""
+			},
+			{
+				"end": "1341545@PAL",
+				"start": "1325979@PAL",
+				"uuid": "069f493a-128e-441a-83a1-319fcb7f48bd",
+				"value": ""
+			},
+			{
+				"end": "1385740@PAL",
+				"start": "1382778@PAL",
+				"uuid": "242c3b49-5462-45fd-bf94-8471ffc950f3",
+				"value": ""
+			},
+			{
+				"end": "1412413@PAL",
+				"start": "1390467@PAL",
+				"uuid": "a2f7ff5f-341f-4a31-9775-0f5ed59040bc",
+				"value": ""
+			},
+			{
+				"end": "1325960@PAL",
+				"start": "1322009@PAL",
+				"uuid": "7e8fff19-63d5-4363-b21a-63efc17e2bcf",
+				"value": ""
+			},
+			{
+				"end": "1386852@PAL",
+				"start": "1385694@PAL",
+				"uuid": "479b2234-b862-4c14-a46c-3f8dddb773ec",
+				"value": ""
+			},
+			{
+				"end": "1319373@PAL",
+				"start": "1316635@PAL",
+				"uuid": "a43fa674-8cc9-41f0-953e-54e3ad159f57",
+				"value": ""
+			},
+			{
+				"end": "1367008@PAL",
+				"start": "1363259@PAL",
+				"uuid": "3a7359ad-6a23-425f-8451-7fbadbb1ec7a",
+				"value": ""
+			},
+			{
+				"end": "1310183@PAL",
+				"start": "1305446@PAL",
+				"uuid": "524042bb-61ae-4410-ba08-67788ef6c83b",
+				"value": ""
+			},
+			{
+				"end": "1431355@PAL",
+				"start": "1427988@PAL",
+				"uuid": "da8581ee-8da3-46a7-a193-02af7be092c8",
+				"value": ""
+			},
+			{
+				"end": "1305064@PAL",
+				"start": "1294226@PAL",
+				"uuid": "22488c7c-e93f-4f85-82e1-0fd229dd3657",
+				"value": ""
+			},
+			{
+				"end": "1362538@PAL",
+				"start": "1347018@PAL",
+				"uuid": "d195f4fb-b0ab-4e88-9d09-055936e9cac2",
+				"value": ""
+			}
+		],
+		"portal_mf16851": [
+			{
+				"end": "1390450@PAL",
+				"start": "1386836@PAL",
+				"uuid": "f8478524-ed52-4992-b34d-09b2eddbc277",
+				"value": ""
+			},
+			{
+				"end": "1316493@PAL",
+				"start": "1310408@PAL",
+				"uuid": "f6bead28-6456-4cf6-94fd-91b3f49d0139",
+				"value": ""
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ce0920f9-c53a-45c8-895e-d4a24fba86b5",
+				"value": ""
+			},
+			{
+				"end": "1382599@PAL",
+				"start": "1370174@PAL",
+				"uuid": "8eb14f3b-7ccf-4093-89a0-3d79948994d5",
+				"value": ""
+			},
+			{
+				"end": "1415546@PAL",
+				"start": "1412458@PAL",
+				"uuid": "8693caa1-6f0d-4735-81b6-9613ed6cdec9",
+				"value": ""
+			},
+			{
+				"end": "1427433@PAL",
+				"start": "1415661@PAL",
+				"uuid": "cb2c7164-de98-4b2a-bb7d-cf0b2c1d7bcc",
+				"value": ""
+			},
+			{
+				"end": "1370169@PAL",
+				"start": "1367034@PAL",
+				"uuid": "bebe19a7-5583-4189-ba12-2903d6b8f4ef",
+				"value": ""
+			},
+			{
+				"end": "1321712@PAL",
+				"start": "1320174@PAL",
+				"uuid": "c8dc81bc-0504-42f4-b599-57119cda671f",
+				"value": ""
+			},
+			{
+				"end": "1347010@PAL",
+				"start": "1341651@PAL",
+				"uuid": "2561af2b-e6c3-4837-b7f8-e0b791916961",
+				"value": ""
+			},
+			{
+				"end": "1320132@PAL",
+				"start": "1319391@PAL",
+				"uuid": "f0ecaa50-eea2-40de-8611-2db1e5cd5488",
+				"value": ""
+			},
+			{
+				"end": "1341545@PAL",
+				"start": "1325979@PAL",
+				"uuid": "32a7ba0f-249b-4454-b4b9-f8245e42ff6a",
+				"value": ""
+			},
+			{
+				"end": "1385740@PAL",
+				"start": "1382778@PAL",
+				"uuid": "397ddb31-9642-48fc-bcab-c3b0458a39d1",
+				"value": ""
+			},
+			{
+				"end": "1412413@PAL",
+				"start": "1390467@PAL",
+				"uuid": "2a68df3c-f3ef-46a8-944d-2cce3be413da",
+				"value": ""
+			},
+			{
+				"end": "1325960@PAL",
+				"start": "1322009@PAL",
+				"uuid": "fce7b544-a082-429d-9396-4303343f976c",
+				"value": ""
+			},
+			{
+				"end": "1386852@PAL",
+				"start": "1385694@PAL",
+				"uuid": "0a9b044d-d530-4054-8d6a-63fe01667219",
+				"value": ""
+			},
+			{
+				"end": "1319373@PAL",
+				"start": "1316635@PAL",
+				"uuid": "5ac912a1-349a-4fd6-a218-83c87177d369",
+				"value": ""
+			},
+			{
+				"end": "1367008@PAL",
+				"start": "1363259@PAL",
+				"uuid": "9d4db898-5391-4815-a1e0-65b1232e85bf",
+				"value": ""
+			},
+			{
+				"end": "1310183@PAL",
+				"start": "1305446@PAL",
+				"uuid": "90e301de-d2a1-437f-9619-46c0c7c30372",
+				"value": ""
+			},
+			{
+				"end": "1431355@PAL",
+				"start": "1427988@PAL",
+				"uuid": "5b595c3c-4aaa-4f29-8c06-b7ab366e3771",
+				"value": ""
+			},
+			{
+				"end": "1305064@PAL",
+				"start": "1294226@PAL",
+				"uuid": "26417de6-c86a-4327-b673-f696af7d26e0",
+				"value": ""
+			},
+			{
+				"end": "1362538@PAL",
+				"start": "1347018@PAL",
+				"uuid": "06f83fc4-6337-47ed-9a0b-2fb84293bed3",
+				"value": ""
+			}
+		],
+		"portal_mf747349": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "cba3d798-6df0-4bba-bf54-382ef3ca0d1a",
+				"value": "raw"
+			}
+		],
+		"portal_mf464621": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ae43c2ca-4b25-4b32-9a94-51ce324be6de",
+				"value": ""
+			}
+		],
+		"originalFilename": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "3e0521d5-b8a0-47cd-ad70-967aa92abd23",
+				"value": "HC22_20221030_1430_PGM_MU1.mxf"
+			}
+		],
+		"__collection": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-2483"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-2483"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-1844"
+			}
+		],
+		"portal_mf31408": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c2cb40f3-df63-4594-adeb-df698e8c9dbd",
+				"value": "VX-431548"
+			}
+		],
+		"__shapetag_french_hash": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "827ee37b76e42e8654a06020a46084afab1bbd93"
+			}
+		],
+		"__placeholder_shape_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"__shapetag_polish_hash": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "41ebfb26a7734e432028e1a99ba3105460d156d4"
+			}
+		],
+		"portal_mf194005": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "f27aaa20-6ca1-4fe1-83f7-ac7528bfc6b0",
+				"value": "pcm_s24le"
+			}
+		],
+		"mimeType": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "8e480cae-9dc2-4311-9104-fb09d1746d27",
+				"value": "video/x-mxf-mpeg2video-pcm_s24le"
+			}
+		],
+		"portal_mf99398": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "29905446-249a-47e9-b6d1-b2f80de851c3",
+				"value": "HC22_20221030_1430_PGM_MU1.mxf"
+			}
+		],
+		"portal_mf399151": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "44d278af-ad8c-43db-b3a8-24e060bbfd0c",
+				"value": "mte"
+			}
+		],
+		"portal_mf234867": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ada69551-9824-4ac5-917e-1567c1f586f5",
+				"value": "chipo-naare"
+			}
+		],
+		"portal_re3_seen_by_rule": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "79324992-f7f4-4bf1-a334-0f27da433541",
+				"value": "0be60879-dbb9-4fcd-8b49-1e2ba275ff38"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "9d91af26-408e-4216-8c72-6a3919c0fc7a",
+				"value": "fa3ff0eb-9ef7-47e9-8596-8e6684a1f380"
+			}
+		],
+		"portal_mf903539": [
+			{
+				"end": "1390450@PAL",
+				"start": "1386836@PAL",
+				"uuid": "8eebac92-c4cc-4149-a442-4aa630aed45a",
+				"value": "test111"
+			},
+			{
+				"end": "1316493@PAL",
+				"start": "1310408@PAL",
+				"uuid": "92767b10-599b-4c64-857c-2dfb27b12a6f",
+				"value": "test111"
+			},
+			{
+				"end": "1382599@PAL",
+				"start": "1370174@PAL",
+				"uuid": "fd98b45a-a770-472e-8bea-92252a836f6a",
+				"value": "test111"
+			},
+			{
+				"end": "1415546@PAL",
+				"start": "1412458@PAL",
+				"uuid": "fcc1db8b-e981-47e1-a15f-9c801364d987",
+				"value": "test111"
+			},
+			{
+				"end": "1427433@PAL",
+				"start": "1415661@PAL",
+				"uuid": "3113bfef-f289-4b83-a26c-dad4c1ddd416",
+				"value": "test111"
+			},
+			{
+				"end": "1370169@PAL",
+				"start": "1367034@PAL",
+				"uuid": "f58d63d5-2c80-4c84-9aec-9a9bc94fcdcd",
+				"value": "test111"
+			},
+			{
+				"end": "1321712@PAL",
+				"start": "1320174@PAL",
+				"uuid": "a5c36a3b-a017-4753-8ed7-6c95fa7f28c6",
+				"value": "test111"
+			},
+			{
+				"end": "1347010@PAL",
+				"start": "1341651@PAL",
+				"uuid": "3f65bca4-ca47-48c6-b956-6a977f8a2aaf",
+				"value": "test111"
+			},
+			{
+				"end": "1320132@PAL",
+				"start": "1319391@PAL",
+				"uuid": "d99a55d2-b857-46fa-a15d-0b669664e291",
+				"value": "test111"
+			},
+			{
+				"end": "1341545@PAL",
+				"start": "1325979@PAL",
+				"uuid": "0b377a4a-a9b3-4eab-87dd-cac70053bd47",
+				"value": "test111"
+			},
+			{
+				"end": "1385740@PAL",
+				"start": "1382778@PAL",
+				"uuid": "a327a32f-75ec-4be3-a9f4-da1a213e41f7",
+				"value": "test111"
+			},
+			{
+				"end": "1412413@PAL",
+				"start": "1390467@PAL",
+				"uuid": "75f8a14a-8964-4bfd-81ef-c9bf8e0974cb",
+				"value": "test111"
+			},
+			{
+				"end": "1325960@PAL",
+				"start": "1322009@PAL",
+				"uuid": "abbfaaa2-7976-45a3-9e2c-204d0f3f78a9",
+				"value": "test111"
+			},
+			{
+				"end": "1386852@PAL",
+				"start": "1385694@PAL",
+				"uuid": "89066d39-2fe8-414b-85c1-6e543a02c24c",
+				"value": "test111"
+			},
+			{
+				"end": "1319373@PAL",
+				"start": "1316635@PAL",
+				"uuid": "476623e5-c930-46f3-9927-da52c50420e1",
+				"value": "test111"
+			},
+			{
+				"end": "1367008@PAL",
+				"start": "1363259@PAL",
+				"uuid": "e088dcf8-c2fd-4d21-a8ba-5d155498eb4e",
+				"value": "test111"
+			},
+			{
+				"end": "1310183@PAL",
+				"start": "1305446@PAL",
+				"uuid": "5833f03d-4ffc-4115-9830-9f8b50326841",
+				"value": "test111"
+			},
+			{
+				"end": "1431355@PAL",
+				"start": "1427988@PAL",
+				"uuid": "03fa3808-8605-402a-a413-e5a28dc41bde",
+				"value": "test111"
+			},
+			{
+				"end": "1305064@PAL",
+				"start": "1294226@PAL",
+				"uuid": "bc0533c1-6852-4ee0-81a3-114e45d6aca4",
+				"value": "test111"
+			},
+			{
+				"end": "1362538@PAL",
+				"start": "1347018@PAL",
+				"uuid": "d16a12dc-eed8-4c68-8641-f00ac1a61829",
+				"value": "test111"
+			}
+		],
+		"portal_mf416770": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "7de7f357-72f9-4232-ac52-10251f478c6b",
+				"value": "file:///path/to/file/HC22_20221030_1430_PGM_MU1.mxf"
+			}
+		],
+		"portal_mf831437": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "abb7eb98-e529-4981-8aa8-06f79732d42d",
+				"value": "VX-431553"
+			}
+		],
+		"portal_mf714817": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "a6df07ad-8831-4745-a89e-cc31bb94c8b2",
+				"value": ""
+			}
+		],
+		"portal_mf460370": [
+			{
+				"end": "1390450@PAL",
+				"start": "1386836@PAL",
+				"uuid": "3fc6980d-a723-4b78-9764-a73ba02e788d",
+				"value": ""
+			},
+			{
+				"end": "1316493@PAL",
+				"start": "1310408@PAL",
+				"uuid": "5ee2da68-bba8-4bd2-90e7-658c0167c6f1",
+				"value": ""
+			},
+			{
+				"end": "1382599@PAL",
+				"start": "1370174@PAL",
+				"uuid": "a2ddcd73-1e75-4ee2-8b6c-f6c197fe7954",
+				"value": ""
+			},
+			{
+				"end": "1415546@PAL",
+				"start": "1412458@PAL",
+				"uuid": "daffae12-f37f-4413-ba30-531a5a935b06",
+				"value": ""
+			},
+			{
+				"end": "1427433@PAL",
+				"start": "1415661@PAL",
+				"uuid": "6091264b-6fd5-4603-9225-4aa93c115f37",
+				"value": ""
+			},
+			{
+				"end": "1370169@PAL",
+				"start": "1367034@PAL",
+				"uuid": "ca353a96-8ecb-46b2-b513-38468fe3ffa1",
+				"value": ""
+			},
+			{
+				"end": "1321712@PAL",
+				"start": "1320174@PAL",
+				"uuid": "5647c4f1-d1df-4676-b60d-48bd4ea8fe54",
+				"value": ""
+			},
+			{
+				"end": "1347010@PAL",
+				"start": "1341651@PAL",
+				"uuid": "b822f8a1-ae09-48e0-bcb6-a7ee582e7106",
+				"value": "Ørjan Bolsønes "
+			},
+			{
+				"end": "1320132@PAL",
+				"start": "1319391@PAL",
+				"uuid": "e729fc2e-d08c-40f8-8d64-332a55603045",
+				"value": ""
+			},
+			{
+				"end": "1341545@PAL",
+				"start": "1325979@PAL",
+				"uuid": "739b0caf-fed2-4825-a6e6-a5397bfbcb5c",
+				"value": ""
+			},
+			{
+				"end": "1385740@PAL",
+				"start": "1382778@PAL",
+				"uuid": "9a645867-4e7a-41b4-8abf-ed91e794d662",
+				"value": ""
+			},
+			{
+				"end": "1412413@PAL",
+				"start": "1390467@PAL",
+				"uuid": "e3d9af51-96bc-4e72-b3e8-42505142d9be",
+				"value": ""
+			},
+			{
+				"end": "1325960@PAL",
+				"start": "1322009@PAL",
+				"uuid": "98e05743-40ea-4715-ad54-4ea36bfc682f",
+				"value": ""
+			},
+			{
+				"end": "1386852@PAL",
+				"start": "1385694@PAL",
+				"uuid": "818ed959-96d8-4a32-a21d-680980d9cccb",
+				"value": ""
+			},
+			{
+				"end": "1319373@PAL",
+				"start": "1316635@PAL",
+				"uuid": "37042003-f352-4bf0-8f98-12429119ee22",
+				"value": ""
+			},
+			{
+				"end": "1367008@PAL",
+				"start": "1363259@PAL",
+				"uuid": "ca0aefe1-70f8-447e-a64f-a5ee29133270",
+				"value": ""
+			},
+			{
+				"end": "1310183@PAL",
+				"start": "1305446@PAL",
+				"uuid": "c91a4647-60be-4d7e-b775-04270b46e1d7",
+				"value": ""
+			},
+			{
+				"end": "1431355@PAL",
+				"start": "1427988@PAL",
+				"uuid": "d708cfd8-63fa-4afa-9d9d-efa3dfb8ed2d",
+				"value": ""
+			},
+			{
+				"end": "1305064@PAL",
+				"start": "1294226@PAL",
+				"uuid": "56e97e69-2df0-4e0d-970c-e14706fd1d3c",
+				"value": ""
+			},
+			{
+				"end": "1362538@PAL",
+				"start": "1347018@PAL",
+				"uuid": "20c0c593-e547-4823-a8c9-738fe8f39dba",
+				"value": ""
+			}
+		],
+		"__storage_english": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-42"
+			}
+		],
+		"portal_mf189850": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "879f6614-cca1-4aee-a173-b9876ee46fa1",
+				"value": "fin"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "dac4e286-c1b4-47e8-bf1e-33f3fc19e0c2",
+				"value": "pol"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "f13ca732-7a22-4725-af29-9d5f8a54aed2",
+				"value": "tur"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "76697f2d-ba40-4149-a8bd-b2ac25a34fe5",
+				"value": "nor"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "5c4cf548-94bf-4ff5-94f0-4235a01eea4a",
+				"value": "slv"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "86d2134a-9488-4a8f-9ab0-8c193bd6c2be",
+				"value": "ita"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "74e9caba-75bc-4940-9d35-01b2803686c1",
+				"value": "hun"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "9dc9180b-3f99-4bd3-85c2-69e01b853837",
+				"value": "deu"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "a8526468-d240-4e70-b43a-611643319157",
+				"value": "eng"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "274fda7e-22d6-41b6-b4ff-17bd56c74748",
+				"value": "nld"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "de0ecb78-e663-4e7f-9c98-f54e2dea8892",
+				"value": "spa"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "87618e65-623c-4bfc-9b03-8d89f524f375",
+				"value": "fra"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "dc89dd1a-16c7-4cc5-904d-ff02e43ab83e",
+				"value": "ron"
+			}
+		],
+		"portal_mf890483": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "0e8d303e-920d-4fa6-a7b0-bf33486104fb",
+				"value": ""
+			}
+		],
+		"originalHeight": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "de6e02fd-ee08-4fe8-98a3-69096a398ede",
+				"value": "1080"
+			}
+		],
+		"portal_mf489927": [
+			{
+				"end": "1390450@PAL",
+				"start": "1386836@PAL",
+				"uuid": "638de47f-258f-4979-90eb-d622b68803ff",
+				"value": ""
+			},
+			{
+				"end": "1316493@PAL",
+				"start": "1310408@PAL",
+				"uuid": "ba602ae8-2d80-4f05-8497-242a9dc45f2e",
+				"value": "Charles H. Gabriel"
+			},
+			{
+				"end": "1382599@PAL",
+				"start": "1370174@PAL",
+				"uuid": "0ed74c0c-4031-467b-a9ce-4d5e5181f6a2",
+				"value": ""
+			},
+			{
+				"end": "1415546@PAL",
+				"start": "1412458@PAL",
+				"uuid": "e44357a8-dce1-4f7b-80b7-23accaac0d8c",
+				"value": "Svensk folkemelodi"
+			},
+			{
+				"end": "1427433@PAL",
+				"start": "1415661@PAL",
+				"uuid": "b6d5b724-7dec-472d-ba01-a24b4e7185b7",
+				"value": ""
+			},
+			{
+				"end": "1370169@PAL",
+				"start": "1367034@PAL",
+				"uuid": "12bd182a-84cb-412a-b5cd-929cd63bdf8b",
+				"value": ""
+			},
+			{
+				"end": "1321712@PAL",
+				"start": "1320174@PAL",
+				"uuid": "56a4861e-46ea-46da-bf5f-d141fadb5fd7",
+				"value": ""
+			},
+			{
+				"end": "1347010@PAL",
+				"start": "1341651@PAL",
+				"uuid": "6e98256d-bf58-4010-921b-c7ebbe4adbb3",
+				"value": "Irsk folkemelodi(omformet) "
+			},
+			{
+				"end": "1320132@PAL",
+				"start": "1319391@PAL",
+				"uuid": "013d14f9-2b5f-4520-a339-79bb7e0a5eba",
+				"value": ""
+			},
+			{
+				"end": "1341545@PAL",
+				"start": "1325979@PAL",
+				"uuid": "9232de19-26a2-4267-bef4-af107408f7f3",
+				"value": ""
+			},
+			{
+				"end": "1385740@PAL",
+				"start": "1382778@PAL",
+				"uuid": "5f9f5b02-dfaa-4323-91ca-e5b26a226fc0",
+				"value": "Joseph P. Webster "
+			},
+			{
+				"end": "1412413@PAL",
+				"start": "1390467@PAL",
+				"uuid": "5f96a73a-2ddf-4322-a7f0-dab289ef607b",
+				"value": ""
+			},
+			{
+				"end": "1325960@PAL",
+				"start": "1322009@PAL",
+				"uuid": "78bb065f-de96-4e67-a29d-028b30ee7546",
+				"value": "Pauli Sander"
+			},
+			{
+				"end": "1386852@PAL",
+				"start": "1385694@PAL",
+				"uuid": "726c88bd-0e8b-4b3a-a3c7-25be121bbf59",
+				"value": ""
+			},
+			{
+				"end": "1319373@PAL",
+				"start": "1316635@PAL",
+				"uuid": "b208a998-37a9-412a-881c-992a9e7535fa",
+				"value": ""
+			},
+			{
+				"end": "1367008@PAL",
+				"start": "1363259@PAL",
+				"uuid": "c59052db-005b-4777-904d-705abe60415a",
+				"value": "Elise Petersen"
+			},
+			{
+				"end": "1310183@PAL",
+				"start": "1305446@PAL",
+				"uuid": "45cb9664-6267-4f94-b1c6-6648e56452b2",
+				"value": "Dag Kristoffersen"
+			},
+			{
+				"end": "1431355@PAL",
+				"start": "1427988@PAL",
+				"uuid": "bf96138d-c663-4a48-98fc-1ad67fd44e8d",
+				"value": "Lowell Mason"
+			},
+			{
+				"end": "1305064@PAL",
+				"start": "1294226@PAL",
+				"uuid": "a72a4038-32f8-4f1b-abac-2eb66466b351",
+				"value": ""
+			},
+			{
+				"end": "1362538@PAL",
+				"start": "1347018@PAL",
+				"uuid": "23fa9f8e-735f-4d71-aea3-3a10b8ab4f2b",
+				"value": ""
+			}
+		],
+		"portal_mf223187": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "bb3ba45f-903e-42d0-ba61-6fa203a4e7bc",
+				"value": "VX-431562"
+			}
+		],
+		"created": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "59027d99-734f-4d49-a762-e9de3851e087",
+				"value": "2022-10-30T13:47:50.684Z"
+			}
+		],
+		"portal_mf706061": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "0a840970-67cb-41ce-bd64-afcdc0ed4078",
+				"value": "mxf"
+			}
+		],
+		"representativeThumbnailNoAuth": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "cdce5d36-b13b-458f-9980-76a26b7ade14",
+				"value": "/APInoauth/thumbnail/VX-6/VX-431552;version=0/68750@PAL?hash=b7502b3728144c1b7934d688ef5ffe1e"
+			}
+		],
+		"portal_mf806195": [
+			{
+				"end": "1390450@PAL",
+				"start": "1386836@PAL",
+				"uuid": "729059da-2553-4021-ba84-a18a360847fd",
+				"value": ""
+			},
+			{
+				"end": "1316493@PAL",
+				"start": "1310408@PAL",
+				"uuid": "04e57e08-8cb6-4eb0-9c8b-ce186f401d59",
+				"value": ""
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "44c65916-ce10-4e21-b68b-92a6d11b70da",
+				"value": "Plenumssal"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "af7be07d-2fa9-4f18-8603-0eeaeef32446",
+				"value": "Brunstad"
+			},
+			{
+				"end": "1382599@PAL",
+				"start": "1370174@PAL",
+				"uuid": "5161e93a-7200-4d1f-a5e1-34767e5c368e",
+				"value": ""
+			},
+			{
+				"end": "1415546@PAL",
+				"start": "1412458@PAL",
+				"uuid": "b1f84d18-6221-47fd-9c25-cd7b9fd6cd01",
+				"value": ""
+			},
+			{
+				"end": "1427433@PAL",
+				"start": "1415661@PAL",
+				"uuid": "0cfb2411-283c-4770-bd13-13e06de98c9f",
+				"value": ""
+			},
+			{
+				"end": "1370169@PAL",
+				"start": "1367034@PAL",
+				"uuid": "77e5f3e6-0cb6-4af8-b246-b449e54b93d6",
+				"value": ""
+			},
+			{
+				"end": "1321712@PAL",
+				"start": "1320174@PAL",
+				"uuid": "0f511e8a-d940-48a9-97a5-03027997cfbe",
+				"value": ""
+			},
+			{
+				"end": "1347010@PAL",
+				"start": "1341651@PAL",
+				"uuid": "0f65ff4a-79ee-4829-86d4-a0ce5ba9f2b8",
+				"value": ""
+			},
+			{
+				"end": "1320132@PAL",
+				"start": "1319391@PAL",
+				"uuid": "56f0e52c-6efc-400b-8047-33765dd8deb2",
+				"value": ""
+			},
+			{
+				"end": "1341545@PAL",
+				"start": "1325979@PAL",
+				"uuid": "0cb2819e-5427-4b55-b04a-c51fc6794a30",
+				"value": ""
+			},
+			{
+				"end": "1385740@PAL",
+				"start": "1382778@PAL",
+				"uuid": "6f68203d-9ed3-415a-8788-f5265fba3295",
+				"value": ""
+			},
+			{
+				"end": "1412413@PAL",
+				"start": "1390467@PAL",
+				"uuid": "73d2cd1a-3953-4105-bd00-23ab51ab79f6",
+				"value": ""
+			},
+			{
+				"end": "1325960@PAL",
+				"start": "1322009@PAL",
+				"uuid": "f88c9a3d-898b-4ef8-b388-379be8a7cadb",
+				"value": ""
+			},
+			{
+				"end": "1386852@PAL",
+				"start": "1385694@PAL",
+				"uuid": "440c4be7-eddc-4557-9ed0-610ef338854c",
+				"value": ""
+			},
+			{
+				"end": "1319373@PAL",
+				"start": "1316635@PAL",
+				"uuid": "8175e161-e2e7-4005-a2fd-aa1219498cea",
+				"value": ""
+			},
+			{
+				"end": "1367008@PAL",
+				"start": "1363259@PAL",
+				"uuid": "6caaed92-13e2-4904-807f-2cae9267b968",
+				"value": ""
+			},
+			{
+				"end": "1310183@PAL",
+				"start": "1305446@PAL",
+				"uuid": "b85fe0e3-13db-4b4d-93d3-28bf379a9781",
+				"value": ""
+			},
+			{
+				"end": "1431355@PAL",
+				"start": "1427988@PAL",
+				"uuid": "a3569561-b9c3-4c0a-acd1-4709e500fdac",
+				"value": ""
+			},
+			{
+				"end": "1305064@PAL",
+				"start": "1294226@PAL",
+				"uuid": "3b172abc-a4d7-47a7-a543-ffc264cdfad6",
+				"value": ""
+			},
+			{
+				"end": "1362538@PAL",
+				"start": "1347018@PAL",
+				"uuid": "a1f94e7e-90c2-4905-95de-e49f31f541ac",
+				"value": ""
+			}
+		],
+		"mediaType": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "e73e98dc-6c52-42d1-8336-c27c9753ae38",
+				"value": "video"
+			}
+		],
+		"portal_ingested": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c003b53f-ae20-4372-88f0-d47ffd89d25e",
+				"value": "2022-10-30T13:51:22.294Z"
+			}
+		],
+		"__shapetag_english_hash": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "086b218fda9c162f91de53e43e098c693acbbf9a"
+			}
+		],
+		"portal_mf830874": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "a296e238-6ec5-4d55-8c36-b455697171a0",
+				"value": "VX-431552"
+			}
+		],
+		"shapeTag": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d51681ed-5fa8-448c-92f3-311949cbc434",
+				"value": "finnish"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d51ddd73-4c50-4ca5-bf6c-065cf73ab97b",
+				"value": "polish"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "1a40956e-bbd4-4084-bbe6-669786660448",
+				"value": "lowres_watermarked"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "042b2f98-48fe-4e8c-9aa2-8311c0c365a9",
+				"value": "english"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d01b41c2-9879-4923-8fb2-6dccfa936e76",
+				"value": "french"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "513fc6d3-487a-4ab7-a5ef-affc2a36dbe0",
+				"value": "original"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "e1f60f8a-70b7-464d-ac8e-09efe85b7878",
+				"value": "dutch"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "1e76f566-8ebd-43fc-b84f-95cd93a898fd",
+				"value": "german"
+			}
+		],
+		"portal_mf452504": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "161c1208-17cf-43fc-b726-a097eaed8a7f",
+				"value": "embedded"
+			}
+		],
+		"portal_mf683496": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "794bd347-1579-4ed8-8f62-bad109e4ac7f",
+				"value": "VX-431554"
+			}
+		],
+		"portal_mf184670": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "fcb1143e-01dd-4baf-a6c6-537f397015e5",
+				"value": "VX-431547"
+			}
+		],
+		"__storage_german_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__storage_english_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"portal_mf319181": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c724c9d8-2474-479f-9265-1a6f62a01557",
+				"value": "VX-431557"
+			}
+		],
+		"portal_mf326592": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "9aebc0bc-b80e-454a-8e14-086c60eb5fd6",
+				"value": ""
+			}
+		],
+		"durationSeconds": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "71114430-7878-4b4a-8690-40c263fb8ce1",
+				"value": "5516.4"
+			}
+		],
+		"portal_mf47652": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "9b32a4b2-118d-4a95-83d0-6b0df2c05149",
+				"value": ""
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "8017fc44-e6d8-44a1-b694-a71e9de90875",
+				"value": ""
+			}
+		],
+		"portal_mf99053": [
+			{
+				"end": "1390450@PAL",
+				"start": "1386836@PAL",
+				"uuid": "2cbecfc5-df0f-40f8-850f-59e4e95a66d1",
+				"value": ""
+			},
+			{
+				"end": "1316493@PAL",
+				"start": "1310408@PAL",
+				"uuid": "3671307a-bb9d-4342-9d07-720a7fab4222",
+				"value": ""
+			},
+			{
+				"end": "1382599@PAL",
+				"start": "1370174@PAL",
+				"uuid": "559b2e4b-5db7-4196-9ecd-a7c7a0c3849e",
+				"value": ""
+			},
+			{
+				"end": "1415546@PAL",
+				"start": "1412458@PAL",
+				"uuid": "a858c679-fcc0-442f-a1bf-5e0f040a61cc",
+				"value": ""
+			},
+			{
+				"end": "1427433@PAL",
+				"start": "1415661@PAL",
+				"uuid": "95c573ea-e1de-4b09-8818-aa963283cfba",
+				"value": ""
+			},
+			{
+				"end": "1370169@PAL",
+				"start": "1367034@PAL",
+				"uuid": "bf4f5325-33e9-49ba-afd0-69229cc023b6",
+				"value": ""
+			},
+			{
+				"end": "1321712@PAL",
+				"start": "1320174@PAL",
+				"uuid": "b64ec6d7-0591-44cf-b2c3-d3c9a0b42d08",
+				"value": ""
+			},
+			{
+				"end": "1347010@PAL",
+				"start": "1341651@PAL",
+				"uuid": "dffe46f0-dd89-4d9b-a45f-eb79401d136a",
+				"value": ""
+			},
+			{
+				"end": "1320132@PAL",
+				"start": "1319391@PAL",
+				"uuid": "1a2095ce-9ceb-4c0f-a7ef-1710383e190e",
+				"value": ""
+			},
+			{
+				"end": "1341545@PAL",
+				"start": "1325979@PAL",
+				"uuid": "4e30602e-96de-4d7d-92b4-f518db720484",
+				"value": ""
+			},
+			{
+				"end": "1385740@PAL",
+				"start": "1382778@PAL",
+				"uuid": "a51b569a-c5b9-445d-8d27-df0f49b5aeb2",
+				"value": ""
+			},
+			{
+				"end": "1412413@PAL",
+				"start": "1390467@PAL",
+				"uuid": "88ce1e99-9d1c-4bc1-bcfc-2e8f1fbb0ced",
+				"value": ""
+			},
+			{
+				"end": "1325960@PAL",
+				"start": "1322009@PAL",
+				"uuid": "8c03ff5d-2856-4346-af76-d707244996b0",
+				"value": ""
+			},
+			{
+				"end": "1386852@PAL",
+				"start": "1385694@PAL",
+				"uuid": "7e7737e1-d8b5-4218-9388-acc83bf309b6",
+				"value": ""
+			},
+			{
+				"end": "1319373@PAL",
+				"start": "1316635@PAL",
+				"uuid": "17ee098a-7f02-41d3-9a1b-2ffbed9040e8",
+				"value": ""
+			},
+			{
+				"end": "1367008@PAL",
+				"start": "1363259@PAL",
+				"uuid": "21d62c6d-537b-45f8-a608-3452dc6d1d28",
+				"value": ""
+			},
+			{
+				"end": "1310183@PAL",
+				"start": "1305446@PAL",
+				"uuid": "bb8ef8e2-ef5a-4d78-b135-ceb2817b8c0c",
+				"value": ""
+			},
+			{
+				"end": "1431355@PAL",
+				"start": "1427988@PAL",
+				"uuid": "f6a88689-53b5-4d40-9241-ebe5e122723a",
+				"value": ""
+			},
+			{
+				"end": "1305064@PAL",
+				"start": "1294226@PAL",
+				"uuid": "7ec098b6-d4d3-422f-ac94-aae43fa4b160",
+				"value": ""
+			},
+			{
+				"end": "1362538@PAL",
+				"start": "1347018@PAL",
+				"uuid": "fea64bb7-79db-42c0-9f17-36dcd6ad88a1",
+				"value": ""
+			}
+		],
+		"title": [
+			{
+				"end": "1390450@PAL",
+				"start": "1386836@PAL",
+				"uuid": "5a00a646-7332-47c5-926c-393f8cda9386",
+				"value": "Sverre L. Riksfjord - Appell "
+			},
+			{
+				"end": "1316493@PAL",
+				"start": "1310408@PAL",
+				"uuid": "c2d936ab-6ce4-469b-8814-a6bf37db3ca3",
+				"value": "HV 266 | Ta Guds fulle rustning, grip nå Åndens sverd - Sang"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "533443de-02f2-4f0f-9124-402ac0c3117c",
+				"value": "HC22_20221030_1430_PGM_MU1.mxf"
+			},
+			{
+				"end": "1369503@PAL",
+				"start": "1369078@PAL",
+				"uuid": "5a576e32-85a9-4cfd-b22a-401375171464",
+				"value": ""
+			},
+			{
+				"end": "1382599@PAL",
+				"start": "1370174@PAL",
+				"uuid": "f8bacb98-b3a3-4cb9-84d9-b4dd1fee6324",
+				"value": "Vitnesbyrd"
+			},
+			{
+				"end": "1335504@PAL",
+				"start": "1334467@PAL",
+				"uuid": "2b4132e0-d0df-41e2-abd3-0ba243543bcd",
+				"value": ""
+			},
+			{
+				"end": "1415546@PAL",
+				"start": "1412458@PAL",
+				"uuid": "5aa88b38-0611-4ee6-99a2-f03af3cfdb51",
+				"value": "HV 357 | Ja, nå er tid til å gå på - Sang "
+			},
+			{
+				"end": "1427433@PAL",
+				"start": "1415661@PAL",
+				"uuid": "6c31e1d4-06a2-4026-964a-7544b2d760c8",
+				"value": "Harald Kronstad - Appell"
+			},
+			{
+				"end": "1370169@PAL",
+				"start": "1367034@PAL",
+				"uuid": "5eb51795-60db-45f6-86e7-e20401b94f8d",
+				"value": "Andreas Espegard - Appell"
+			},
+			{
+				"end": "1421227@PAL",
+				"start": "1420100@PAL",
+				"uuid": "a3658708-144e-4744-a345-a08cd785d268",
+				"value": ""
+			},
+			{
+				"end": "1332298@PAL",
+				"start": "1331924@PAL",
+				"uuid": "e504d5b4-0068-4055-b832-7194b131a3b3",
+				"value": ""
+			},
+			{
+				"end": "1321712@PAL",
+				"start": "1320174@PAL",
+				"uuid": "4e864a4e-3332-474d-80af-db304d16a982",
+				"value": "Haakon Pedersen - Informasjon"
+			},
+			{
+				"end": "1347010@PAL",
+				"start": "1341651@PAL",
+				"uuid": "21addbd7-a0eb-40c5-b451-e910ba8f00c8",
+				"value": "HV 171 | Ill frem i løpet! Vær freidig og glad! - "
+			},
+			{
+				"end": "1320132@PAL",
+				"start": "1319391@PAL",
+				"uuid": "961a4908-b98d-473d-8a17-1e6de78eadba",
+				"value": "Bønn"
+			},
+			{
+				"end": "1341545@PAL",
+				"start": "1325979@PAL",
+				"uuid": "09be5b76-4fc8-4500-b513-37fe9041a547",
+				"value": "Einar Ådalen - Tale "
+			},
+			{
+				"end": "1385740@PAL",
+				"start": "1382778@PAL",
+				"uuid": "2852108e-b991-4dbb-aba8-f3276f4419f4",
+				"value": "HV 334 - Jesu tale er tindrende klar - Sang "
+			},
+			{
+				"end": "1412413@PAL",
+				"start": "1390467@PAL",
+				"uuid": "0ba41bb1-13fa-41af-b094-b28ab48dea4b",
+				"value": "Vitnesbyrd"
+			},
+			{
+				"end": "1325960@PAL",
+				"start": "1322009@PAL",
+				"uuid": "acc33b1e-d19e-4ce2-a065-0a715513e1bd",
+				"value": "HV 260 | Hvorfor lever du på kanten mellom synd og sei'r - Sang"
+			},
+			{
+				"end": "1386852@PAL",
+				"start": "1385694@PAL",
+				"uuid": "a8590b84-b20b-4d80-a205-1853ca8d5f90",
+				"value": "Einar Ådalen Tydning "
+			},
+			{
+				"end": "1319373@PAL",
+				"start": "1316635@PAL",
+				"uuid": "7d52601d-83fc-496e-b5ef-2295bb6faadf",
+				"value": "Einar Ådalen - Programleder"
+			},
+			{
+				"end": "1367008@PAL",
+				"start": "1363259@PAL",
+				"uuid": "60958e87-3c61-4e43-945f-5da680cdc204",
+				"value": "HV 311 | Kjære ungdom, hør, la deg ei hindre - Sang "
+			},
+			{
+				"end": "1310183@PAL",
+				"start": "1305446@PAL",
+				"uuid": "780aa7d7-a6ad-4b20-bdc0-9fcf39afb08a",
+				"value": "HV 416 | Opp til kampen, du utvalgte skare! - Sang "
+			},
+			{
+				"end": "1328130@PAL",
+				"start": "1327538@PAL",
+				"uuid": "fc04ff33-1a2b-4c64-b6ee-e1891cb3ba3d",
+				"value": ""
+			},
+			{
+				"end": "1357629@PAL",
+				"start": "1356686@PAL",
+				"uuid": "c7a7f142-fba2-4432-9262-14cd3789159f",
+				"value": ""
+			},
+			{
+				"end": "1431355@PAL",
+				"start": "1427988@PAL",
+				"uuid": "7a037532-bd80-42d4-b371-70890e09a5ef",
+				"value": "HV 223 | Hellig er Herrens krig - Sang "
+			},
+			{
+				"end": "1305064@PAL",
+				"start": "1294226@PAL",
+				"uuid": "8bfe541a-cd49-4bc7-8b0a-900f04cad06b",
+				"value": "Førsending "
+			},
+			{
+				"end": "1354627@PAL",
+				"start": "1353239@PAL",
+				"uuid": "147f2ee1-19e5-41e3-91c8-2b4751882bb9",
+				"value": ""
+			},
+			{
+				"end": "1362538@PAL",
+				"start": "1347018@PAL",
+				"uuid": "8b0c0b13-bee0-400f-b9ae-efeffa576346",
+				"value": "Gershon Twilley -  Tale"
+			}
+		],
+		"__shapetag_dutch_hash": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "bb8bc90fa3de552e5e02c43bc7fc8e7a818a2650"
+			}
+		],
+		"__shape": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-855418"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-855419"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-855371"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-855416"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-855417"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-855415"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-855406"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-855405"
+			}
+		],
+		"representativeThumbnail": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "e4fb6087-da04-488c-83cc-316acf255ae2",
+				"value": "/API/thumbnail/VX-6/VX-431552;version=0/68750@PAL"
+			}
+		],
+		"portal_mf206332": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c7720b7b-ecb9-4b6b-8b7e-999c58ca0ee6",
+				"value": "fedotov-illia"
+			}
+		],
+		"startSeconds": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "b7250297-59dd-47e6-801d-e7fa55bb4d42",
+				"value": "51764.44"
+			}
+		],
+		"__shape_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "8"
+			}
+		],
+		"portal_mf982016": [
+			{
+				"end": "1390450@PAL",
+				"start": "1386836@PAL",
+				"uuid": "ec1d3b51-5213-4804-a79f-8ef434540d9f",
+				"value": ""
+			},
+			{
+				"end": "1316493@PAL",
+				"start": "1310408@PAL",
+				"uuid": "3ac8bb06-f151-4f89-a002-1b1ca51b7d2e",
+				"value": ""
+			},
+			{
+				"end": "1382599@PAL",
+				"start": "1370174@PAL",
+				"uuid": "5ffa4271-5acf-4b7d-9245-fec2d017a7b4",
+				"value": ""
+			},
+			{
+				"end": "1415546@PAL",
+				"start": "1412458@PAL",
+				"uuid": "f8c477f6-2ccc-41e9-8611-e1b63bcc076d",
+				"value": ""
+			},
+			{
+				"end": "1427433@PAL",
+				"start": "1415661@PAL",
+				"uuid": "b9377b86-82f8-4337-84dc-ef647ea8a582",
+				"value": ""
+			},
+			{
+				"end": "1370169@PAL",
+				"start": "1367034@PAL",
+				"uuid": "71eb472f-6faf-452c-aea2-4ea20bce40c0",
+				"value": ""
+			},
+			{
+				"end": "1321712@PAL",
+				"start": "1320174@PAL",
+				"uuid": "ca2d7f8b-c5a7-4e24-b438-2df2170bba44",
+				"value": ""
+			},
+			{
+				"end": "1347010@PAL",
+				"start": "1341651@PAL",
+				"uuid": "710b561f-b427-42d5-8b1c-846421660c08",
+				"value": ""
+			},
+			{
+				"end": "1320132@PAL",
+				"start": "1319391@PAL",
+				"uuid": "3b8f817b-d390-4d5f-a0a6-5c269b9c1586",
+				"value": ""
+			},
+			{
+				"end": "1341545@PAL",
+				"start": "1325979@PAL",
+				"uuid": "6290b89a-edf2-491c-8333-8bfd1babbf3b",
+				"value": ""
+			},
+			{
+				"end": "1385740@PAL",
+				"start": "1382778@PAL",
+				"uuid": "9ef0a464-3eee-4a30-bd9d-3a3ee6e567a4",
+				"value": ""
+			},
+			{
+				"end": "1412413@PAL",
+				"start": "1390467@PAL",
+				"uuid": "134744b9-accb-4b70-b7fa-56d8bf89d932",
+				"value": ""
+			},
+			{
+				"end": "1325960@PAL",
+				"start": "1322009@PAL",
+				"uuid": "942c72f0-1bc1-43e0-93f7-503427c224f3",
+				"value": ""
+			},
+			{
+				"end": "1386852@PAL",
+				"start": "1385694@PAL",
+				"uuid": "4753d003-21c7-48ce-a8d6-a75da5913bf3",
+				"value": ""
+			},
+			{
+				"end": "1319373@PAL",
+				"start": "1316635@PAL",
+				"uuid": "e3bf78ba-4503-433f-89e3-adc8018f30f1",
+				"value": ""
+			},
+			{
+				"end": "1367008@PAL",
+				"start": "1363259@PAL",
+				"uuid": "525e0e49-0fe4-41d3-b19f-308a17f37742",
+				"value": ""
+			},
+			{
+				"end": "1310183@PAL",
+				"start": "1305446@PAL",
+				"uuid": "28176d14-f8a4-4e3e-8e3d-562b5192081b",
+				"value": ""
+			},
+			{
+				"end": "1431355@PAL",
+				"start": "1427988@PAL",
+				"uuid": "d6477e83-849f-4795-ba12-a5d2ffa29245",
+				"value": ""
+			},
+			{
+				"end": "1305064@PAL",
+				"start": "1294226@PAL",
+				"uuid": "9217f698-bddf-4c6d-8951-898357f136e9",
+				"value": ""
+			},
+			{
+				"end": "1362538@PAL",
+				"start": "1347018@PAL",
+				"uuid": "5b3dd88d-97f5-423a-b0f1-08a0318815bd",
+				"value": ""
+			}
+		],
+		"portal_mf594493": [
+			{
+				"end": "1390450@PAL",
+				"start": "1386836@PAL",
+				"uuid": "ad30bf57-0110-4586-876d-cde9253612cd",
+				"value": "appelle"
+			},
+			{
+				"end": "1316493@PAL",
+				"start": "1310408@PAL",
+				"uuid": "c47b1616-3d08-42ff-a996-3c946eee0986",
+				"value": "sang"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c65facd5-f878-4cfd-9d9d-772a8f28c8dd",
+				"value": ""
+			},
+			{
+				"end": "1382599@PAL",
+				"start": "1370174@PAL",
+				"uuid": "914638c2-ecd3-48ae-bc75-d550ba3e945a",
+				"value": "vitnesbyrd"
+			},
+			{
+				"end": "1415546@PAL",
+				"start": "1412458@PAL",
+				"uuid": "d3461e55-fa10-4f48-b0a6-9fcc758d7a11",
+				"value": "sang"
+			},
+			{
+				"end": "1427433@PAL",
+				"start": "1415661@PAL",
+				"uuid": "669698c6-1a1d-406c-adcf-53012aa7ee44",
+				"value": "appelle"
+			},
+			{
+				"end": "1370169@PAL",
+				"start": "1367034@PAL",
+				"uuid": "b91227e3-18ad-4b44-90c7-82d0240c6267",
+				"value": "appelle"
+			},
+			{
+				"end": "1321712@PAL",
+				"start": "1320174@PAL",
+				"uuid": "d6ef7841-68b3-40c0-ae1f-633ceac414e8",
+				"value": "informasjon"
+			},
+			{
+				"end": "1347010@PAL",
+				"start": "1341651@PAL",
+				"uuid": "8314a716-f744-48a8-a7c3-dc8ab6ebb8b7",
+				"value": "sang"
+			},
+			{
+				"end": "1320132@PAL",
+				"start": "1319391@PAL",
+				"uuid": "3374d7ff-23cb-44a6-a5ba-011ac3235f99",
+				"value": "bnn"
+			},
+			{
+				"end": "1341545@PAL",
+				"start": "1325979@PAL",
+				"uuid": "ed6b6eb2-aecc-4db5-8c42-9bf8067d6eb7",
+				"value": "tale"
+			},
+			{
+				"end": "1385740@PAL",
+				"start": "1382778@PAL",
+				"uuid": "01d13ffb-139c-4601-8861-72649e5ae9bc",
+				"value": "sang"
+			},
+			{
+				"end": "1412413@PAL",
+				"start": "1390467@PAL",
+				"uuid": "0783c1e0-c912-48ed-a351-c7244f50b1b9",
+				"value": "vitnesbyrd"
+			},
+			{
+				"end": "1325960@PAL",
+				"start": "1322009@PAL",
+				"uuid": "08482b35-9895-41a2-80f9-e0b4ebe28891",
+				"value": "sang"
+			},
+			{
+				"end": "1386852@PAL",
+				"start": "1385694@PAL",
+				"uuid": "4aef21db-2c89-4ebc-9968-3586397426ad",
+				"value": "tydning"
+			},
+			{
+				"end": "1319373@PAL",
+				"start": "1316635@PAL",
+				"uuid": "fb0726a5-e341-4677-839b-b2fec4c21628",
+				"value": "programleder"
+			},
+			{
+				"end": "1367008@PAL",
+				"start": "1363259@PAL",
+				"uuid": "bbb406ea-7d56-46ff-b183-bea1aa68242a",
+				"value": "sang"
+			},
+			{
+				"end": "1310183@PAL",
+				"start": "1305446@PAL",
+				"uuid": "836478e4-778b-45fa-a0ee-319bc84cb61a",
+				"value": "sang"
+			},
+			{
+				"end": "1431355@PAL",
+				"start": "1427988@PAL",
+				"uuid": "a2e5fbdc-376a-41d0-bac9-9ce2103235b7",
+				"value": "sang"
+			},
+			{
+				"end": "1305064@PAL",
+				"start": "1294226@PAL",
+				"uuid": "fe16ef82-1ec6-4d00-9f80-dd4a7fb60af7",
+				"value": "frsending"
+			},
+			{
+				"end": "1362538@PAL",
+				"start": "1347018@PAL",
+				"uuid": "48649da6-c169-42df-b0e7-582a070cbe63",
+				"value": "tale"
+			}
+		],
+		"__ancestor_collection_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "6"
+			}
+		],
+		"__storagegroup_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"portal_mf384324": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "7af6adb4-99a6-4646-ba26-854c3eaf7711",
+				"value": "VX-431561"
+			}
+		],
+		"portal_archive_action_status": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "03f88207-5e7e-4045-a759-fad80cb30468",
+				"value": ""
+			}
+		],
+		"originalVideoCodec": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "9aeb5f38-516f-407c-be80-c9ecdd039ef4",
+				"value": "mpeg2video"
+			}
+		],
+		"portal_mf162929": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "11daa7ee-3d38-424d-a531-fffb00265f8a",
+				"value": ""
+			}
+		],
+		"__storage_original_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"portal_mf499625": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "68a66ea5-45d8-411a-a36a-7e8e2c820ba1",
+				"value": "HC22_20221030_1430_PGM_MU1.mxf"
+			}
+		],
+		"originalWidth": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "aca10c3d-d75e-43fc-ac61-6b1d6b41d095",
+				"value": "1920"
+			}
+		],
+		"originalUri": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "5cdf1983-90be-4d60-b58b-e039de94788b",
+				"value": "file:///path/to/file/HC22_20221030_1430_PGM_MU1.mxf"
+			}
+		],
+		"portal_mf432615": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "e3683745-0442-4a7e-a4ac-5906c44d8638",
+				"value": "No"
+			}
+		],
+		"portal_mf878591": [
+			{
+				"end": "1369503@PAL",
+				"start": "1369078@PAL",
+				"uuid": "a38cc03b-526c-4686-add4-abfc47f9b5fb",
+				"value": ""
+			},
+			{
+				"end": "1335504@PAL",
+				"start": "1334467@PAL",
+				"uuid": "30125eca-595d-4e4e-86ce-03bdf79c1bdb",
+				"value": "7"
+			},
+			{
+				"end": "1421227@PAL",
+				"start": "1420100@PAL",
+				"uuid": "4038e96a-fabe-4a01-a565-5ef97eb38541",
+				"value": "20"
+			},
+			{
+				"end": "1332298@PAL",
+				"start": "1331924@PAL",
+				"uuid": "4b69d202-82a5-45dc-bba7-e0b0c4d48e2f",
+				"value": ""
+			},
+			{
+				"end": "1328130@PAL",
+				"start": "1327538@PAL",
+				"uuid": "dcf0a12d-0d5c-4fdf-98a2-522dbf7596bf",
+				"value": ""
+			},
+			{
+				"end": "1357629@PAL",
+				"start": "1356686@PAL",
+				"uuid": "0ee83ea0-79c2-45ab-bc0e-1cca8a310277",
+				"value": "7"
+			},
+			{
+				"end": "1354627@PAL",
+				"start": "1353239@PAL",
+				"uuid": "0de6cfd0-e203-401c-ba2f-d021a35af1f9",
+				"value": "13"
+			}
+		],
+		"__ancestor_collection": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-1291"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-1844"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-2483"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-1288"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-1831"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-1290"
+			}
+		],
+		"portal_mf393661": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "98aa9e32-c006-4067-87ac-db104cc4edb7",
+				"value": "approved"
+			}
+		],
+		"portal_mf924191": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "71286fbb-8eae-45e1-86b5-69891391d12d",
+				"value": "2223"
+			}
+		],
+		"portal_mf929480": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "cdee3c41-6ba3-41d8-95ea-c5a879d58325",
+				"value": ""
+			}
+		],
+		"portal_mf68177": [
+			{
+				"end": "1369503@PAL",
+				"start": "1369078@PAL",
+				"uuid": "ebf37ddd-a984-4484-a6b5-b2476fc7efa5",
+				"value": ""
+			},
+			{
+				"end": "1335504@PAL",
+				"start": "1334467@PAL",
+				"uuid": "07e18a52-9ff9-4cab-aa21-c7a0f04ef711",
+				"value": ""
+			},
+			{
+				"end": "1421227@PAL",
+				"start": "1420100@PAL",
+				"uuid": "18af1ff6-5919-411a-91c2-558ae0754f62",
+				"value": ""
+			},
+			{
+				"end": "1332298@PAL",
+				"start": "1331924@PAL",
+				"uuid": "01722038-53f9-468b-80f2-0ff05be24fe9",
+				"value": ""
+			},
+			{
+				"end": "1328130@PAL",
+				"start": "1327538@PAL",
+				"uuid": "7f5b0222-bd18-4851-982f-fd7bb49b1937",
+				"value": ""
+			},
+			{
+				"end": "1357629@PAL",
+				"start": "1356686@PAL",
+				"uuid": "317a2a41-b4e7-4a1c-a896-57ff2d38b702",
+				"value": ""
+			},
+			{
+				"end": "1354627@PAL",
+				"start": "1353239@PAL",
+				"uuid": "b5315dc2-c01c-4656-b576-306e6ef69c29",
+				"value": ""
+			}
+		],
+		"user": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "vsapiuser"
+			}
+		],
+		"portal_mf299396": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "6a619462-ebe1-4cc7-8b0e-5d49e0bce9d0",
+				"value": "VX-431559"
+			}
+		]
+	},
+	"id": "VX-431552"
+}

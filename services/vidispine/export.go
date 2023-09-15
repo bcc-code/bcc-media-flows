@@ -150,6 +150,7 @@ func (s *VidispineService) getRelatedAudios(clip *Clip, languagesToExport []stri
 			} else {
 				return clip, fmt.Errorf("no original or fallback shape found for item %s", relatedAudioVXID)
 			}
+			continue
 		}
 
 		channels := []int{}

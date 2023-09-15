@@ -1,0 +1,15 @@
+{
+  "Clips": [
+    {
+      "VideoFile": "/path/to/file/SS23_20230717_1100_MAS_NOR.mov",
+      "InSeconds": 0,
+      "OutSeconds": 7012,
+      "SequenceIn": 0,
+      "SequenceOut": 0,
+      "AudioFiles": {},
+      "SubtitleFiles": {},
+      "VXID": "VX-464458"
+    }
+  ],
+  "Title": "SS23_20230717_1100_MAS_NOR"
+}

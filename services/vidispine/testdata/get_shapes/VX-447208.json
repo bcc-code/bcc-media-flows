@@ -1,0 +1,3751 @@
+{
+	"shape": [
+		{
+			"id": "VX-894725",
+			"created": "2023-03-24T12:22:45.810+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"lowres_watermarked"
+			],
+			"mimeType": [
+				"video/mp4"
+			],
+			"containerComponent": {
+				"duration": {
+					"samples": 648640000,
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 1000000
+					}
+				},
+				"format": "mov,mp4,m4a,3gp,3g2,mj2",
+				"startTimestamp": {
+					"samples": 0,
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 25
+					}
+				},
+				"mediaInfo": {
+					"property": [
+						{
+							"key": "Audio codecs",
+							"value": "AAC LC"
+						},
+						{
+							"key": "Audio_Format_List",
+							"value": "AAC"
+						},
+						{
+							"key": "Audio_Format_WithHint_List",
+							"value": "AAC"
+						},
+						{
+							"key": "Codec",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Codec ID",
+							"value": "mp42"
+						},
+						{
+							"key": "Codec ID/Url",
+							"value": "http://www.apple.com/quicktime/download/standalone.html"
+						},
+						{
+							"key": "Codec/Extensions usually used",
+							"value": "mov mp4 m4v m4a m4b m4p 3ga 3gpa 3gpp 3gp 3gpp2 3g2 k3g jpm jpx mqv ismv isma ismt f4a f4b f4v"
+						},
+						{
+							"key": "CodecID_Compatible",
+							"value": "mp42/isom"
+						},
+						{
+							"key": "Codecs Video",
+							"value": "AVC"
+						},
+						{
+							"key": "Commercial name",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Count",
+							"value": "325"
+						},
+						{
+							"key": "Count of audio streams",
+							"value": "1"
+						},
+						{
+							"key": "Count of stream of this kind",
+							"value": "1"
+						},
+						{
+							"key": "Count of video streams",
+							"value": "1"
+						},
+						{
+							"key": "DataSize",
+							"value": "147416851"
+						},
+						{
+							"key": "Duration",
+							"value": "648640"
+						},
+						{
+							"key": "Encoded date",
+							"value": "UTC 2023-03-24 13:21:21"
+						},
+						{
+							"key": "File extension",
+							"value": "mp4"
+						},
+						{
+							"key": "File size",
+							"value": "147856155"
+						},
+						{
+							"key": "FooterSize",
+							"value": "0"
+						},
+						{
+							"key": "Format",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Format profile",
+							"value": "Base Media / Version 2"
+						},
+						{
+							"key": "Format/Extensions usually used",
+							"value": "mov mp4 m4v m4a m4b m4p 3ga 3gpa 3gpp 3gp 3gpp2 3g2 k3g jpm jpx mqv ismv isma ismt f4a f4b f4v"
+						},
+						{
+							"key": "Frame count",
+							"value": "16216"
+						},
+						{
+							"key": "Frame rate",
+							"value": "25.000"
+						},
+						{
+							"key": "HeaderSize",
+							"value": "439304"
+						},
+						{
+							"key": "Internet media type",
+							"value": "video/mp4"
+						},
+						{
+							"key": "IsStreamable",
+							"value": "Yes"
+						},
+						{
+							"key": "Kind of stream",
+							"value": "General"
+						},
+						{
+							"key": "Overall bit rate",
+							"value": "1823584"
+						},
+						{
+							"key": "Proportion of this stream",
+							"value": "0.00577"
+						},
+						{
+							"key": "Stream identifier",
+							"value": "0"
+						},
+						{
+							"key": "Stream size",
+							"value": "852716"
+						},
+						{
+							"key": "Tagged date",
+							"value": "UTC 2023-03-24 13:21:21"
+						},
+						{
+							"key": "Video_Format_List",
+							"value": "AVC"
+						},
+						{
+							"key": "Video_Format_WithHint_List",
+							"value": "AVC"
+						},
+						{
+							"key": "Video_Language_List",
+							"value": "English"
+						}
+					]
+				},
+				"file": [
+					{
+						"id": "VX-1419766",
+						"path": "aux/2023/03/24/132112/SOTM_7v2123_MAS_ENG.mp4",
+						"uri": [
+							"file:///path/to/file/SOTM_7v2123_MAS_ENG.mp4"
+						],
+						"state": "CLOSED",
+						"size": 147856155,
+						"hash": "e27b89fc91322d06d48319ff0992466b89dfbb09",
+						"timestamp": "2023-03-24T12:24:49.642+0000",
+						"refreshFlag": 1,
+						"storage": "VX-42",
+						"metadata": {
+							"field": [
+								{
+									"key": "created",
+									"value": "1679660564319"
+								},
+								{
+									"key": "mtime",
+									"value": "1679660564319"
+								}
+							]
+						}
+					}
+				],
+				"id": "VX-2339749",
+				"metadata": [
+					{
+						"key": "creation_time",
+						"value": "2023-03-24T13:21:21.000000Z"
+					},
+					{
+						"key": "componentOriginalFilename",
+						"value": "aux/2023/03/24/132112/SOTM_7v2123_MAS_ENG.mp4"
+					},
+					{
+						"key": "major_brand",
+						"value": "mp42"
+					},
+					{
+						"key": "compatible_brands",
+						"value": "mp42isom"
+					},
+					{
+						"key": "minor_version",
+						"value": "0"
+					}
+				]
+			},
+			"audioComponent": [
+				{
+					"channelCount": 2,
+					"channelLayout": 3,
+					"sampleFormat": "AV_SAMPLE_FMT_FLTP",
+					"frameSize": 1024,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit rate",
+								"value": "128000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "Channel positions",
+								"value": "2/0/0"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "2"
+							},
+							{
+								"key": "ChannelLayout",
+								"value": "L R"
+							},
+							{
+								"key": "Codec",
+								"value": "AAC LC"
+							},
+							{
+								"key": "Codec ID",
+								"value": "40"
+							},
+							{
+								"key": "Codec/CC",
+								"value": "40"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "AAC"
+							},
+							{
+								"key": "Commercial name",
+								"value": "AAC"
+							},
+							{
+								"key": "Compression mode",
+								"value": "Lossy"
+							},
+							{
+								"key": "Count",
+								"value": "277"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "1"
+							},
+							{
+								"key": "Duration",
+								"value": "648640"
+							},
+							{
+								"key": "Encoded date",
+								"value": "UTC 2023-03-24 13:21:21"
+							},
+							{
+								"key": "Format",
+								"value": "AAC"
+							},
+							{
+								"key": "Format profile",
+								"value": "LC"
+							},
+							{
+								"key": "Format/Info",
+								"value": "Advanced Audio Codec"
+							},
+							{
+								"key": "Frame count",
+								"value": "27935"
+							},
+							{
+								"key": "Frame rate",
+								"value": "43.066"
+							},
+							{
+								"key": "ID",
+								"value": "2"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.07019"
+							},
+							{
+								"key": "Samples count",
+								"value": "28605024"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1024"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "44100"
+							},
+							{
+								"key": "Source duration",
+								"value": "648696"
+							},
+							{
+								"key": "Source frame count",
+								"value": "27937"
+							},
+							{
+								"key": "Source stream size",
+								"value": "10378327"
+							},
+							{
+								"key": "Source_Delay",
+								"value": "-48"
+							},
+							{
+								"key": "Source_Delay_Source",
+								"value": "Container"
+							},
+							{
+								"key": "Source_StreamSize_Proportion",
+								"value": "0.07019"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "0"
+							},
+							{
+								"key": "Stream size",
+								"value": "10378307"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "1"
+							},
+							{
+								"key": "Tagged date",
+								"value": "UTC 2023-03-24 13:21:21"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1419766",
+							"path": "aux/2023/03/24/132112/SOTM_7v2123_MAS_ENG.mp4",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG.mp4"
+							],
+							"state": "CLOSED",
+							"size": 147856155,
+							"hash": "e27b89fc91322d06d48319ff0992466b89dfbb09",
+							"timestamp": "2023-03-24T12:24:49.642+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1679660564319"
+									},
+									{
+										"key": "mtime",
+										"value": "1679660564319"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2339750",
+					"metadata": [
+						{
+							"key": "creation_time",
+							"value": "2023-03-24T13:21:21.000000Z"
+						},
+						{
+							"key": "vendor_id",
+							"value": "[0][0][0][0]"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/24/132112/SOTM_7v2123_MAS_ENG.mp4"
+						},
+						{
+							"key": "language",
+							"value": "und"
+						}
+					],
+					"codec": "aac",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 44100
+					},
+					"itemTrack": "A1",
+					"essenceStreamId": 1,
+					"bitrate": 127990,
+					"numberOfPackets": 27935,
+					"extradata": "1210",
+					"pid": 2,
+					"duration": {
+						"samples": 28605024,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 44100
+						}
+					},
+					"profile": 1,
+					"edl": {
+						"timeScale": {
+							"numerator": 1,
+							"denominator": 25
+						},
+						"entry": [
+							{
+								"start": 960,
+								"length": 16216,
+								"mediaRate": 65536
+							}
+						]
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 44100
+						}
+					}
+				}
+			],
+			"videoComponent": [
+				{
+					"resolution": {
+						"width": 960,
+						"height": 540
+					},
+					"pixelFormat": "yuv420p",
+					"maxBFrames": 0,
+					"pixelAspectRatio": {
+						"horizontal": 1,
+						"vertical": 1
+					},
+					"fieldOrder": "progressive",
+					"codecTimeBase": {
+						"numerator": 1,
+						"denominator": 50
+					},
+					"averageFrameRate": {
+						"numerator": 25,
+						"denominator": 1
+					},
+					"realBaseFrameRate": {
+						"numerator": 25,
+						"denominator": 1
+					},
+					"displayWidth": {
+						"numerator": 960,
+						"denominator": 1
+					},
+					"displayHeight": {
+						"numerator": 540,
+						"denominator": 1
+					},
+					"containerSAR": {
+						"horizontal": 1,
+						"vertical": 1
+					},
+					"colr_primaries": 1,
+					"colr_transfer_function": 1,
+					"colr_matrix": 1,
+					"ticks_per_frame": 2,
+					"bitDepth": 8,
+					"bitsPerPixel": 12,
+					"colorPrimaries": "BT709",
+					"mediaInfo": {
+						"Format_Settings_GOP": "M=1, N=15",
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "8"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1685066"
+							},
+							{
+								"key": "Bits/(Pixel*Frame)",
+								"value": "0.130"
+							},
+							{
+								"key": "Chroma subsampling",
+								"value": "4:2:0"
+							},
+							{
+								"key": "Codec",
+								"value": "AVC"
+							},
+							{
+								"key": "Codec ID",
+								"value": "avc1"
+							},
+							{
+								"key": "Codec ID/Info",
+								"value": "Advanced Video Coding"
+							},
+							{
+								"key": "Codec profile",
+								"value": "High@L3.1"
+							},
+							{
+								"key": "Codec settings",
+								"value": "1 Ref Frames"
+							},
+							{
+								"key": "Codec settings, CABAC",
+								"value": "No"
+							},
+							{
+								"key": "Codec/CC",
+								"value": "avc1"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "AVC"
+							},
+							{
+								"key": "Codec/Info",
+								"value": "Advanced Video Codec"
+							},
+							{
+								"key": "Codec/Url",
+								"value": "http://developers.videolan.org/x264.html"
+							},
+							{
+								"key": "Codec_Settings_RefFrames",
+								"value": "1"
+							},
+							{
+								"key": "Color primaries",
+								"value": "BT.709"
+							},
+							{
+								"key": "Color range",
+								"value": "Limited"
+							},
+							{
+								"key": "Color space",
+								"value": "YUV"
+							},
+							{
+								"key": "Colorimetry",
+								"value": "4:2:0"
+							},
+							{
+								"key": "Commercial name",
+								"value": "AVC"
+							},
+							{
+								"key": "Count",
+								"value": "338"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "1"
+							},
+							{
+								"key": "Display aspect ratio",
+								"value": "1.778"
+							},
+							{
+								"key": "Duration",
+								"value": "648640"
+							},
+							{
+								"key": "Encoded date",
+								"value": "UTC 2023-03-24 13:21:21"
+							},
+							{
+								"key": "Encoded_Library_Name",
+								"value": "x264"
+							},
+							{
+								"key": "Encoded_Library_Version",
+								"value": "core 159"
+							},
+							{
+								"key": "Encoding settings",
+								"value": "cabac=0 / ref=1 / deblock=0:0:0 / analyse=0x3:0x3 / me=dia / subme=1 / psy=1 / psy_rd=1.00:0.00 / mixed_ref=0 / me_range=16 / chroma_me=1 / trellis=0 / 8x8dct=1 / cqm=0 / deadzone=21,11 / fast_pskip=1 / chroma_qp_offset=0 / threads=56 / lookahead_threads=4 / sliced_threads=0 / nr=0 / decimate=1 / interlaced=0 / bluray_compat=0 / constrained_intra=0 / bframes=0 / weightp=0 / keyint=15 / keyint_min=1 / scenecut=0 / intra_refresh=0 / rc_lookahead=25 / rc=cbr / mbtree=0 / bitrate=1900 / ratetol=1.0 / qcomp=0.60 / qpmin=0 / qpmax=69 / qpstep=4 / vbv_maxrate=1900 / vbv_bufsize=1900 / nal_hrd=none / filler=0 / ip_ratio=1.40 / aq=1:1.00"
+							},
+							{
+								"key": "Format",
+								"value": "AVC"
+							},
+							{
+								"key": "Format profile",
+								"value": "High@L3.1"
+							},
+							{
+								"key": "Format settings",
+								"value": "1 Ref Frames"
+							},
+							{
+								"key": "Format settings, CABAC",
+								"value": "No"
+							},
+							{
+								"key": "Format settings, GOP",
+								"value": "M=1, N=15"
+							},
+							{
+								"key": "Format settings, ReFrames",
+								"value": "1"
+							},
+							{
+								"key": "Format/Info",
+								"value": "Advanced Video Codec"
+							},
+							{
+								"key": "Format/Url",
+								"value": "http://developers.videolan.org/x264.html"
+							},
+							{
+								"key": "Frame count",
+								"value": "16216"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "Frame rate mode",
+								"value": "CFR"
+							},
+							{
+								"key": "Height",
+								"value": "540"
+							},
+							{
+								"key": "ID",
+								"value": "1"
+							},
+							{
+								"key": "Interlacement",
+								"value": "PPF"
+							},
+							{
+								"key": "Internet media type",
+								"value": "video/H264"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Video"
+							},
+							{
+								"key": "Language",
+								"value": "en"
+							},
+							{
+								"key": "Matrix coefficients",
+								"value": "BT.709"
+							},
+							{
+								"key": "Maximum bit rate",
+								"value": "2042560"
+							},
+							{
+								"key": "Nominal bit rate",
+								"value": "1900000"
+							},
+							{
+								"key": "Pixel aspect ratio",
+								"value": "1.000"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.92404"
+							},
+							{
+								"key": "Resolution",
+								"value": "8"
+							},
+							{
+								"key": "Rotation",
+								"value": "0.000"
+							},
+							{
+								"key": "Sampled_Height",
+								"value": "540"
+							},
+							{
+								"key": "Sampled_Width",
+								"value": "960"
+							},
+							{
+								"key": "Scan type",
+								"value": "Progressive"
+							},
+							{
+								"key": "Stored_Height",
+								"value": "544"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "0"
+							},
+							{
+								"key": "Stream size",
+								"value": "136625132"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "0"
+							},
+							{
+								"key": "Tagged date",
+								"value": "UTC 2023-03-24 13:21:21"
+							},
+							{
+								"key": "Transfer characteristics",
+								"value": "BT.709"
+							},
+							{
+								"key": "Width",
+								"value": "960"
+							},
+							{
+								"key": "Writing library",
+								"value": "x264 core 159"
+							},
+							{
+								"key": "colour_description_present",
+								"value": "Yes"
+							}
+						]
+					},
+					"file": [
+						{
+							"id": "VX-1419766",
+							"path": "aux/2023/03/24/132112/SOTM_7v2123_MAS_ENG.mp4",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG.mp4"
+							],
+							"state": "CLOSED",
+							"size": 147856155,
+							"hash": "e27b89fc91322d06d48319ff0992466b89dfbb09",
+							"timestamp": "2023-03-24T12:24:49.642+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1679660564319"
+									},
+									{
+										"key": "mtime",
+										"value": "1679660564319"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2339751",
+					"metadata": [
+						{
+							"key": "creation_time",
+							"value": "2023-03-24T13:21:21.000000Z"
+						},
+						{
+							"key": "vendor_id",
+							"value": "TELE"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/24/132112/SOTM_7v2123_MAS_ENG.mp4"
+						},
+						{
+							"key": "language",
+							"value": "eng"
+						},
+						{
+							"key": "encoder",
+							"value": "AVC"
+						},
+						{
+							"key": "firstSEITimestamp",
+							"value": "00:00:00:00"
+						}
+					],
+					"codec": "h264",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 25
+					},
+					"itemTrack": "V1",
+					"essenceStreamId": 0,
+					"bitrate": 1685065,
+					"numberOfPackets": 16216,
+					"extradata": "0164001FFFE1001C6764001FACB407808BF780B501010140000003004000000CA7C60CA801000468CE3CB0",
+					"pid": 1,
+					"duration": {
+						"samples": 16216,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"profile": 100,
+					"level": 31,
+					"edl": {
+						"timeScale": {
+							"numerator": 1,
+							"denominator": 25
+						},
+						"entry": [
+							{
+								"start": 0,
+								"length": 16216,
+								"mediaRate": 65536
+							}
+						]
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					}
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG.mp4"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-894724",
+			"created": "2023-03-24T12:21:02.743+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"original"
+			],
+			"mimeType": [
+				"video/quicktime"
+			],
+			"containerComponent": {
+				"duration": {
+					"samples": 648640000,
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 1000000
+					}
+				},
+				"format": "mov,mp4,m4a,3gp,3g2,mj2",
+				"firstSMPTETimecode": "00:00:00:00",
+				"startTimecode": 0,
+				"startTimestamp": {
+					"samples": 0,
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 25
+					}
+				},
+				"roundedTimeBase": 25,
+				"dropFrame": false,
+				"timeCodeTimeBase": {
+					"numerator": 1,
+					"denominator": 25
+				},
+				"mediaInfo": {
+					"property": [
+						{
+							"key": "Audio codecs",
+							"value": "PCM"
+						},
+						{
+							"key": "Audio_Format_List",
+							"value": "PCM"
+						},
+						{
+							"key": "Audio_Format_WithHint_List",
+							"value": "PCM"
+						},
+						{
+							"key": "Audio_Language_List",
+							"value": "English"
+						},
+						{
+							"key": "Codec",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Codec ID",
+							"value": "qt"
+						},
+						{
+							"key": "Codec ID/Url",
+							"value": "http://www.apple.com/quicktime/download/standalone.html"
+						},
+						{
+							"key": "Codec/Extensions usually used",
+							"value": "mov mp4 m4v m4a m4b m4p 3ga 3gpa 3gpp 3gp 3gpp2 3g2 k3g jpm jpx mqv ismv isma ismt f4a f4b f4v"
+						},
+						{
+							"key": "CodecID_Compatible",
+							"value": "qt"
+						},
+						{
+							"key": "CodecID_Version",
+							"value": "2005.03"
+						},
+						{
+							"key": "Codecs Video",
+							"value": "apcn"
+						},
+						{
+							"key": "Commercial name",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Count",
+							"value": "328"
+						},
+						{
+							"key": "Count of audio streams",
+							"value": "1"
+						},
+						{
+							"key": "Count of stream of this kind",
+							"value": "1"
+						},
+						{
+							"key": "Count of video streams",
+							"value": "1"
+						},
+						{
+							"key": "DataSize",
+							"value": "13364933047"
+						},
+						{
+							"key": "Duration",
+							"value": "648640"
+						},
+						{
+							"key": "Encoded date",
+							"value": "UTC 2023-03-24 10:19:53"
+						},
+						{
+							"key": "Encoded_Library_Name",
+							"value": "Apple QuickTime"
+						},
+						{
+							"key": "File extension",
+							"value": "mov"
+						},
+						{
+							"key": "File size",
+							"value": "13367967589"
+						},
+						{
+							"key": "FooterSize",
+							"value": "1985982"
+						},
+						{
+							"key": "Format",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Format profile",
+							"value": "QuickTime"
+						},
+						{
+							"key": "Format/Extensions usually used",
+							"value": "mov mp4 m4v m4a m4b m4p 3ga 3gpa 3gpp 3gp 3gpp2 3g2 k3g jpm jpx mqv ismv isma ismt f4a f4b f4v"
+						},
+						{
+							"key": "Frame count",
+							"value": "16216"
+						},
+						{
+							"key": "Frame rate",
+							"value": "25.000"
+						},
+						{
+							"key": "HeaderSize",
+							"value": "1048560"
+						},
+						{
+							"key": "Internet media type",
+							"value": "video/mp4"
+						},
+						{
+							"key": "IsStreamable",
+							"value": "No"
+						},
+						{
+							"key": "Kind of stream",
+							"value": "General"
+						},
+						{
+							"key": "OtherCount",
+							"value": "1"
+						},
+						{
+							"key": "Other_Format_List",
+							"value": "QuickTime TC"
+						},
+						{
+							"key": "Other_Format_WithHint_List",
+							"value": "QuickTime TC"
+						},
+						{
+							"key": "Other_Language_List",
+							"value": "English"
+						},
+						{
+							"key": "Overall bit rate",
+							"value": "164873792"
+						},
+						{
+							"key": "Overall bit rate mode",
+							"value": "VBR"
+						},
+						{
+							"key": "Proportion of this stream",
+							"value": "0.00023"
+						},
+						{
+							"key": "Stream identifier",
+							"value": "0"
+						},
+						{
+							"key": "Stream size",
+							"value": "3034562"
+						},
+						{
+							"key": "Tagged date",
+							"value": "UTC 2023-03-24 10:52:37"
+						},
+						{
+							"key": "Video_Format_List",
+							"value": "ProRes"
+						},
+						{
+							"key": "Video_Format_WithHint_List",
+							"value": "ProRes"
+						},
+						{
+							"key": "Video_Language_List",
+							"value": "English"
+						},
+						{
+							"key": "Writing library",
+							"value": "Apple QuickTime"
+						},
+						{
+							"key": "©TIM",
+							"value": "00:00:00:00"
+						},
+						{
+							"key": "©TSC",
+							"value": "25"
+						},
+						{
+							"key": "©TSZ",
+							"value": "1"
+						}
+					]
+				},
+				"file": [
+					{
+						"id": "VX-1419765",
+						"path": "2023/03/24/131907/SOTM_7v2123_MAS_ENG.mov",
+						"uri": [
+							"file:///path/to/file/SOTM_7v2123_MAS_ENG.mov"
+						],
+						"state": "CLOSED",
+						"size": 13367967589,
+						"hash": "bce266f0e81790040dc0e6e2961658d1bcb3c84d",
+						"timestamp": "2023-08-08T22:52:05.816+0000",
+						"refreshFlag": 1,
+						"storage": "VX-56",
+						"metadata": {
+							"field": [
+								{
+									"key": "created",
+									"value": "1679660456751"
+								},
+								{
+									"key": "mtime",
+									"value": "1679660456751"
+								}
+							]
+						}
+					}
+				],
+				"id": "VX-2339746",
+				"metadata": [
+					{
+						"key": "creation_time",
+						"value": "2023-03-24T10:19:53.000000Z"
+					},
+					{
+						"key": "portal_archive_policy_uuid",
+						"value": "aw-10024"
+					},
+					{
+						"key": "portal_archive_status",
+						"value": "ARCHIVED"
+					},
+					{
+						"key": "drop_frame",
+						"value": "false"
+					},
+					{
+						"key": "major_brand",
+						"value": "qt  "
+					},
+					{
+						"key": "rounded_time_base",
+						"value": "25"
+					},
+					{
+						"key": "minor_version",
+						"value": "537199360"
+					},
+					{
+						"key": "portal_archive_plugin_uuid",
+						"value": "c4c1d403-801b-4b1a-95a1-6a692f64c262"
+					},
+					{
+						"key": "componentOriginalFilename",
+						"value": "SOTM_7v2123_MAS_ENG.mov"
+					},
+					{
+						"key": "portal_archive_external_id",
+						"value": "Default-Archive#ZTBkNDU4MWYtZTM2My00ZTc4LTY2YzQtZjI1Y2I1YzRhZjUz"
+					},
+					{
+						"key": "portal_sha1",
+						"value": "bce266f0e81790040dc0e6e2961658d1bcb3c84d"
+					},
+					{
+						"key": "start_timecode",
+						"value": "0"
+					},
+					{
+						"key": "compatible_brands",
+						"value": "qt  "
+					}
+				]
+			},
+			"audioComponent": [
+				{
+					"channelCount": 2,
+					"channelLayout": 3,
+					"sampleFormat": "AV_SAMPLE_FMT_S16",
+					"frameSize": 1,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "16"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1536000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "Channel positions",
+								"value": "Front: L R"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "2"
+							},
+							{
+								"key": "ChannelLayout",
+								"value": "L R"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "sowt"
+							},
+							{
+								"key": "Codec ID/Url",
+								"value": "http://www.apple.com/quicktime/download/standalone.html"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little / Signed"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Sign",
+								"value": "Signed"
+							},
+							{
+								"key": "Codec/CC",
+								"value": "sowt"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec/Url",
+								"value": "http://www.apple.com/quicktime/download/standalone.html"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "276"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "1"
+							},
+							{
+								"key": "Delay",
+								"value": "0"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Duration",
+								"value": "648640"
+							},
+							{
+								"key": "Encoded date",
+								"value": "UTC 2023-03-24 10:19:53"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little / Signed"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Sign",
+								"value": "Signed"
+							},
+							{
+								"key": "ID",
+								"value": "2"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Language",
+								"value": "en"
+							},
+							{
+								"key": "Menus",
+								"value": "0"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.00932"
+							},
+							{
+								"key": "Resolution",
+								"value": "16"
+							},
+							{
+								"key": "Samples count",
+								"value": "31134720"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "0"
+							},
+							{
+								"key": "Stream size",
+								"value": "124538880"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "1"
+							},
+							{
+								"key": "Tagged date",
+								"value": "UTC 2023-03-24 10:19:53"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1419765",
+							"path": "2023/03/24/131907/SOTM_7v2123_MAS_ENG.mov",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG.mov"
+							],
+							"state": "CLOSED",
+							"size": 13367967589,
+							"hash": "bce266f0e81790040dc0e6e2961658d1bcb3c84d",
+							"timestamp": "2023-08-08T22:52:05.816+0000",
+							"refreshFlag": 1,
+							"storage": "VX-56",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1679660456751"
+									},
+									{
+										"key": "mtime",
+										"value": "1679660456751"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2339747",
+					"metadata": [
+						{
+							"key": "creation_time",
+							"value": "2023-03-24T10:19:53.000000Z"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "2023/03/24/131907/SOTM_7v2123_MAS_ENG.mov"
+						},
+						{
+							"key": "handler_name",
+							"value": "Apple Sound Media Handler"
+						},
+						{
+							"key": "vendor_id",
+							"value": "    "
+						},
+						{
+							"key": "language",
+							"value": "eng"
+						},
+						{
+							"key": "timecode",
+							"value": "00:00:00:00"
+						}
+					],
+					"codec": "pcm_s16le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A1",
+					"essenceStreamId": 1,
+					"bitrate": 1536000,
+					"numberOfPackets": 16216,
+					"pid": 2,
+					"duration": {
+						"samples": 31134720,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					},
+					"edl": {
+						"timeScale": {
+							"numerator": 1,
+							"denominator": 25
+						},
+						"entry": [
+							{
+								"start": 0,
+								"length": 16216,
+								"mediaRate": 65536
+							}
+						]
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				}
+			],
+			"videoComponent": [
+				{
+					"resolution": {
+						"width": 2560,
+						"height": 1080
+					},
+					"pixelFormat": "yuv422p16le",
+					"maxBFrames": 0,
+					"pixelAspectRatio": {
+						"horizontal": 1,
+						"vertical": 1
+					},
+					"fieldOrder": "progressive",
+					"codecTimeBase": {
+						"numerator": 1,
+						"denominator": 25
+					},
+					"averageFrameRate": {
+						"numerator": 25,
+						"denominator": 1
+					},
+					"realBaseFrameRate": {
+						"numerator": 25,
+						"denominator": 1
+					},
+					"displayWidth": {
+						"numerator": 2560,
+						"denominator": 1
+					},
+					"displayHeight": {
+						"numerator": 1080,
+						"denominator": 1
+					},
+					"containerSAR": {
+						"horizontal": 1,
+						"vertical": 1
+					},
+					"colr_primaries": 1,
+					"colr_transfer_function": 1,
+					"colr_matrix": 1,
+					"bitDepth": 16,
+					"bitsPerPixel": 32,
+					"colorPrimaries": "BT709",
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit rate",
+								"value": "163300372"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "VBR"
+							},
+							{
+								"key": "Bits/(Pixel*Frame)",
+								"value": "2.363"
+							},
+							{
+								"key": "Chroma subsampling",
+								"value": "4:2:2"
+							},
+							{
+								"key": "Codec",
+								"value": "apcn"
+							},
+							{
+								"key": "Codec ID",
+								"value": "apcn"
+							},
+							{
+								"key": "Codec ID/Url",
+								"value": "http://www.apple.com/quicktime/download/standalone.html"
+							},
+							{
+								"key": "Codec/CC",
+								"value": "apcn"
+							},
+							{
+								"key": "Color primaries",
+								"value": "BT.709"
+							},
+							{
+								"key": "Color space",
+								"value": "YUV"
+							},
+							{
+								"key": "Commercial name",
+								"value": "ProRes"
+							},
+							{
+								"key": "Count",
+								"value": "339"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "1"
+							},
+							{
+								"key": "Delay",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_Settings",
+								"value": "DropFrame=No / 24HourMax=No / IsVisual=No"
+							},
+							{
+								"key": "Display aspect ratio",
+								"value": "2.370"
+							},
+							{
+								"key": "Duration",
+								"value": "648640"
+							},
+							{
+								"key": "Encoded date",
+								"value": "UTC 2023-03-24 10:19:53"
+							},
+							{
+								"key": "Format",
+								"value": "ProRes"
+							},
+							{
+								"key": "Format profile",
+								"value": "422"
+							},
+							{
+								"key": "Format version",
+								"value": "Version 0"
+							},
+							{
+								"key": "Frame count",
+								"value": "16216"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "Frame rate mode",
+								"value": "CFR"
+							},
+							{
+								"key": "Height",
+								"value": "1080"
+							},
+							{
+								"key": "ID",
+								"value": "1"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Video"
+							},
+							{
+								"key": "Language",
+								"value": "en"
+							},
+							{
+								"key": "Matrix coefficients",
+								"value": "BT.709"
+							},
+							{
+								"key": "Menus",
+								"value": "0"
+							},
+							{
+								"key": "Pixel aspect ratio",
+								"value": "1.000"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.99046"
+							},
+							{
+								"key": "Rotation",
+								"value": "0.000"
+							},
+							{
+								"key": "Scan type",
+								"value": "Progressive"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "0"
+							},
+							{
+								"key": "Stream size",
+								"value": "13240394147"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "0"
+							},
+							{
+								"key": "Tagged date",
+								"value": "UTC 2023-03-24 10:19:53"
+							},
+							{
+								"key": "Transfer characteristics",
+								"value": "BT.709"
+							},
+							{
+								"key": "Width",
+								"value": "2560"
+							},
+							{
+								"key": "Writing library",
+								"value": "Apple"
+							},
+							{
+								"key": "colour_description_present",
+								"value": "Yes"
+							}
+						],
+						"Bit_rate_mode": "VBR"
+					},
+					"file": [
+						{
+							"id": "VX-1419765",
+							"path": "2023/03/24/131907/SOTM_7v2123_MAS_ENG.mov",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG.mov"
+							],
+							"state": "CLOSED",
+							"size": 13367967589,
+							"hash": "bce266f0e81790040dc0e6e2961658d1bcb3c84d",
+							"timestamp": "2023-08-08T22:52:05.816+0000",
+							"refreshFlag": 1,
+							"storage": "VX-56",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1679660456751"
+									},
+									{
+										"key": "mtime",
+										"value": "1679660456751"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2339748",
+					"metadata": [
+						{
+							"key": "creation_time",
+							"value": "2023-03-24T10:19:53.000000Z"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "2023/03/24/131907/SOTM_7v2123_MAS_ENG.mov"
+						},
+						{
+							"key": "handler_name",
+							"value": "Apple Video Media Handler"
+						},
+						{
+							"key": "vendor_id",
+							"value": "appl"
+						},
+						{
+							"key": "language",
+							"value": "eng"
+						},
+						{
+							"key": "encoder",
+							"value": "Apple ProRes 422"
+						},
+						{
+							"key": "timecode",
+							"value": "00:00:00:00"
+						}
+					],
+					"codec": "prores",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 25
+					},
+					"itemTrack": "V1",
+					"essenceStreamId": 0,
+					"bitrate": 163300371,
+					"numberOfPackets": 16216,
+					"pid": 1,
+					"duration": {
+						"samples": 16216,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"edl": {
+						"timeScale": {
+							"numerator": 1,
+							"denominator": 25
+						},
+						"entry": [
+							{
+								"start": 0,
+								"length": 16216,
+								"mediaRate": 65536
+							}
+						]
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					}
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG.mov"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895524",
+			"created": "2023-03-28T14:50:37.848+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_pol_txt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 10446,
+					"file": [
+						{
+							"id": "VX-1420868",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_pol.txt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_pol.txt"
+							],
+							"state": "CLOSED",
+							"size": 10446,
+							"hash": "8ffa2d2d4d5fd46b45e0d8d285fced8f3989bdcf",
+							"timestamp": "2023-03-28T14:51:48.883+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680015028143"
+									},
+									{
+										"key": "mtime",
+										"value": "1680015028143"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341347",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_pol.txt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_pol.txt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895521",
+			"created": "2023-03-28T14:50:35.529+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_hrv_txt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 9956,
+					"file": [
+						{
+							"id": "VX-1420861",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_hrv.txt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_hrv.txt"
+							],
+							"state": "CLOSED",
+							"size": 9956,
+							"hash": "4454945283e87c5a80634796a1985d4b5affd994",
+							"timestamp": "2023-03-28T14:51:48.883+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680015016876"
+									},
+									{
+										"key": "mtime",
+										"value": "1680015016876"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341344",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_hrv.txt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_hrv.txt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895516",
+			"created": "2023-03-28T14:50:32.827+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_tam_txt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 24759,
+					"file": [
+						{
+							"id": "VX-1420864",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_tam.txt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_tam.txt"
+							],
+							"state": "CLOSED",
+							"size": 24759,
+							"hash": "0921e95928b1f7cd69adfecd049876056584236e",
+							"timestamp": "2023-03-28T14:51:48.883+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680015021992"
+									},
+									{
+										"key": "mtime",
+										"value": "1680015021992"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341339",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_tam.txt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_tam.txt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895505",
+			"created": "2023-03-28T14:50:27.690+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_slv_txt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 9084,
+					"file": [
+						{
+							"id": "VX-1420848",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_slv.txt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_slv.txt"
+							],
+							"state": "CLOSED",
+							"size": 9084,
+							"hash": "4fee5216fd588e3afd5d629e124c637fb00f1de8",
+							"timestamp": "2023-03-28T14:51:48.883+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014991132"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014991132"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341328",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_slv.txt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_slv.txt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895497",
+			"created": "2023-03-28T14:50:21.967+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_ita_txt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 9589,
+					"file": [
+						{
+							"id": "VX-1420857",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_ita.txt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_ita.txt"
+							],
+							"state": "CLOSED",
+							"size": 9589,
+							"hash": "86d763420892de162de7cebb1de7a214583f55e0",
+							"timestamp": "2023-03-28T14:51:48.883+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680015011394"
+									},
+									{
+										"key": "mtime",
+										"value": "1680015011394"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341320",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_ita.txt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_ita.txt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895487",
+			"created": "2023-03-28T14:50:16.611+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_est_txt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 10017,
+					"file": [
+						{
+							"id": "VX-1420854",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_est.txt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_est.txt"
+							],
+							"state": "CLOSED",
+							"size": 10017,
+							"hash": "0f15278bd3bdabb3f2682ca000bdb0ea377c0645",
+							"timestamp": "2023-03-28T14:51:48.883+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680015005923"
+									},
+									{
+										"key": "mtime",
+										"value": "1680015005923"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341310",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_est.txt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_est.txt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895481",
+			"created": "2023-03-28T14:50:11.565+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_fin_txt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 9685,
+					"file": [
+						{
+							"id": "VX-1420852",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_fin.txt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_fin.txt"
+							],
+							"state": "CLOSED",
+							"size": 9685,
+							"hash": "4859b84864dc2e2820bbfc5ec8164c798b16215e",
+							"timestamp": "2023-03-28T14:51:48.883+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680015000964"
+									},
+									{
+										"key": "mtime",
+										"value": "1680015000964"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341304",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_fin.txt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_fin.txt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895474",
+			"created": "2023-03-28T14:50:05.689+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_rus_txt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 13381,
+					"file": [
+						{
+							"id": "VX-1420850",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_rus.txt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_rus.txt"
+							],
+							"state": "CLOSED",
+							"size": 13381,
+							"hash": "490931b8f7f95c1cc12b98240302a4851a08cc50",
+							"timestamp": "2023-03-28T14:51:48.883+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014999921"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014999921"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341297",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_rus.txt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_rus.txt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895470",
+			"created": "2023-03-28T14:50:00.864+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_dan_txt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 9760,
+					"file": [
+						{
+							"id": "VX-1420847",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_dan.txt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_dan.txt"
+							],
+							"state": "CLOSED",
+							"size": 9760,
+							"hash": "0464798babb3a9aebd171e40087874b967052c5b",
+							"timestamp": "2023-03-28T14:51:48.883+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014985527"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014985527"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341293",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_dan.txt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_dan.txt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895465",
+			"created": "2023-03-28T14:49:50.931+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_nld_txt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 9928,
+					"file": [
+						{
+							"id": "VX-1420846",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_nld.txt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_nld.txt"
+							],
+							"state": "CLOSED",
+							"size": 9928,
+							"hash": "4f9be3938d79d5437f3861923bdcccfc6fce1ae9",
+							"timestamp": "2023-03-28T14:51:48.883+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014979573"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014979573"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341288",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_nld.txt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_nld.txt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895462",
+			"created": "2023-03-28T14:49:45.320+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_por_txt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 9548,
+					"file": [
+						{
+							"id": "VX-1420843",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_por.txt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_por.txt"
+							],
+							"state": "CLOSED",
+							"size": 9548,
+							"hash": "0f6abc0f0b2302ac998ff1e88d99f5b2dc78c972",
+							"timestamp": "2023-03-28T14:51:48.883+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014974417"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014974417"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341285",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_por.txt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_por.txt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895459",
+			"created": "2023-03-28T14:49:39.376+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_ron_txt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 10737,
+					"file": [
+						{
+							"id": "VX-1420840",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_ron.txt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_ron.txt"
+							],
+							"state": "CLOSED",
+							"size": 10737,
+							"hash": "2f24329894869e391f2ef2d8b9895fd63bc8f4c1",
+							"timestamp": "2023-03-28T14:51:48.883+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014969079"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014969079"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341282",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_ron.txt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_ron.txt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895453",
+			"created": "2023-03-28T14:49:34.181+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_bul_txt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 13415,
+					"file": [
+						{
+							"id": "VX-1420838",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_bul.txt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_bul.txt"
+							],
+							"state": "CLOSED",
+							"size": 13415,
+							"hash": "a80061d08aa85f6476ccda3cc8ca6d0264a0e68f",
+							"timestamp": "2023-03-28T14:51:48.883+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014960000"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014960000"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341276",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_bul.txt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_bul.txt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895451",
+			"created": "2023-03-28T14:49:28.804+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_fra_txt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 11143,
+					"file": [
+						{
+							"id": "VX-1420837",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_fra.txt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_fra.txt"
+							],
+							"state": "CLOSED",
+							"size": 11143,
+							"hash": "488e78feeb8a88ab237398f8f78eb8a8019b41e2",
+							"timestamp": "2023-03-28T14:51:48.883+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014954557"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014954557"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341274",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_fra.txt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_fra.txt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895449",
+			"created": "2023-03-28T14:49:19.824+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_nor_txt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 10120,
+					"file": [
+						{
+							"id": "VX-1420836",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_nor.txt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_nor.txt"
+							],
+							"state": "CLOSED",
+							"size": 10120,
+							"hash": "cf23806c50bd95dc79336ba898c8e8066a3838f3",
+							"timestamp": "2023-03-28T14:51:48.883+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014950715"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014950715"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341272",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_nor.txt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_nor.txt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895446",
+			"created": "2023-03-28T14:49:14.282+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_eng_txt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 8532,
+					"file": [
+						{
+							"id": "VX-1420834",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_eng.txt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_eng.txt"
+							],
+							"state": "CLOSED",
+							"size": 8532,
+							"hash": "9c5eeb33afeaece544f0db95eb20551a38012701",
+							"timestamp": "2023-03-28T14:51:48.883+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014946867"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014946867"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341269",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_eng.txt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_eng.txt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895443",
+			"created": "2023-03-28T14:48:44.466+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_pol_srt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 11546,
+					"file": [
+						{
+							"id": "VX-1420832",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_pol.srt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_pol.srt"
+							],
+							"state": "CLOSED",
+							"size": 11546,
+							"hash": "3640f2c2d896c134dab35879c798d9e80b03dbfe",
+							"timestamp": "2023-03-28T14:51:48.883+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014916997"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014916997"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341266",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_pol.srt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_pol.srt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895438",
+			"created": "2023-03-28T14:47:48.885+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_tam_srt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 27673,
+					"file": [
+						{
+							"id": "VX-1420827",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_tam.srt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_tam.srt"
+							],
+							"state": "CLOSED",
+							"size": 27673,
+							"hash": "7341cec4d44c2381333e19e2ddab716931de9c22",
+							"timestamp": "2023-03-28T14:48:27.956+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014861546"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014861546"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341261",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_tam.srt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_tam.srt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895435",
+			"created": "2023-03-28T14:47:23.230+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_hrv_srt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 11229,
+					"file": [
+						{
+							"id": "VX-1420824",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_hrv.srt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_hrv.srt"
+							],
+							"state": "CLOSED",
+							"size": 11229,
+							"hash": "a562f1c16d51e792dfec93fc33a7c049e561fbb1",
+							"timestamp": "2023-03-28T14:48:27.956+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014835953"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014835953"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341258",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_hrv.srt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_hrv.srt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895432",
+			"created": "2023-03-28T14:46:58.866+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_ita_srt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 11060,
+					"file": [
+						{
+							"id": "VX-1420821",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_ita.srt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_ita.srt"
+							],
+							"state": "CLOSED",
+							"size": 11060,
+							"hash": "047c9e8ac6af11c477288bc809a0188e4038a47b",
+							"timestamp": "2023-03-28T14:48:27.956+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014810908"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014810908"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341255",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_ita.srt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_ita.srt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895429",
+			"created": "2023-03-28T14:46:33.447+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_est_srt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 11488,
+					"file": [
+						{
+							"id": "VX-1420818",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_est.srt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_est.srt"
+							],
+							"state": "CLOSED",
+							"size": 11488,
+							"hash": "46b5e63796f4765b76bc6172393171b745b0f514",
+							"timestamp": "2023-03-28T14:48:27.955+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014786347"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014786347"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341252",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_est.srt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_est.srt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895426",
+			"created": "2023-03-28T14:46:08.665+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_fin_srt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 11156,
+					"file": [
+						{
+							"id": "VX-1420815",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_fin.srt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_fin.srt"
+							],
+							"state": "CLOSED",
+							"size": 11156,
+							"hash": "2e3d7bddc11f117bc585d4f852bd2c42f0caa593",
+							"timestamp": "2023-03-28T14:48:27.955+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014762002"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014762002"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341249",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_fin.srt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_fin.srt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895422",
+			"created": "2023-03-28T14:45:44.439+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_rus_srt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 14852,
+					"file": [
+						{
+							"id": "VX-1420811",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_rus.srt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_rus.srt"
+							],
+							"state": "CLOSED",
+							"size": 14852,
+							"hash": "93e707d066e0829153d3e9fd793584c24686cd76",
+							"timestamp": "2023-03-28T14:48:27.956+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014737453"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014737453"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341245",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_rus.srt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_rus.srt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895419",
+			"created": "2023-03-28T14:45:20.187+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_slv_srt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 10555,
+					"file": [
+						{
+							"id": "VX-1420808",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_slv.srt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_slv.srt"
+							],
+							"state": "CLOSED",
+							"size": 10555,
+							"hash": "81d9ec64780578517c4a15abd577cfc0ace2d110",
+							"timestamp": "2023-03-28T14:48:27.956+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014712939"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014712939"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341242",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_slv.srt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_slv.srt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895416",
+			"created": "2023-03-28T14:44:55.213+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_dan_srt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 11231,
+					"file": [
+						{
+							"id": "VX-1420803",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_dan.srt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_dan.srt"
+							],
+							"state": "CLOSED",
+							"size": 11231,
+							"hash": "6f6fd564a22eae33d560d5cf69fe9d238effe0bc",
+							"timestamp": "2023-03-28T14:44:58.160+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014687564"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014687564"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341239",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_dan.srt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_dan.srt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895413",
+			"created": "2023-03-28T14:44:30.154+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_nld_srt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 11392,
+					"file": [
+						{
+							"id": "VX-1420800",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_nld.srt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_nld.srt"
+							],
+							"state": "CLOSED",
+							"size": 11392,
+							"hash": "d808783fe2bd918c56f942d1a96f24a02b0c838e",
+							"timestamp": "2023-03-28T14:44:58.160+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014662667"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014662667"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341236",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_nld.srt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_nld.srt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895410",
+			"created": "2023-03-28T14:44:05.433+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_por_srt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 11019,
+					"file": [
+						{
+							"id": "VX-1420797",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_por.srt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_por.srt"
+							],
+							"state": "CLOSED",
+							"size": 11019,
+							"hash": "b98ee50d2f7850865d4f8b646edfb75874ce48c4",
+							"timestamp": "2023-03-28T14:44:58.161+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014637461"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014637461"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341233",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_por.srt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_por.srt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895407",
+			"created": "2023-03-28T14:43:40.059+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_ron_srt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 11849,
+					"file": [
+						{
+							"id": "VX-1420794",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_ron.srt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_ron.srt"
+							],
+							"state": "CLOSED",
+							"size": 11849,
+							"hash": "1642756c743309b8d4941b6f7524865bb0f7c114",
+							"timestamp": "2023-03-28T14:44:58.161+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014613158"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014613158"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341230",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_ron.srt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_ron.srt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895404",
+			"created": "2023-03-28T14:43:16.285+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_bul_srt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 14886,
+					"file": [
+						{
+							"id": "VX-1420792",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_bul.srt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_bul.srt"
+							],
+							"state": "CLOSED",
+							"size": 14886,
+							"hash": "6128c58ef60b69adbc6f4a59b92de4be9fad9b49",
+							"timestamp": "2023-03-28T14:44:58.160+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014588680"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014588680"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341227",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_bul.srt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_bul.srt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895403",
+			"created": "2023-03-28T14:42:50.735+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_fra_srt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 12534,
+					"file": [
+						{
+							"id": "VX-1420790",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_fra.srt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_fra.srt"
+							],
+							"state": "CLOSED",
+							"size": 12534,
+							"hash": "ba358ad333d1de8bb03d2c6126cb715d8cfccbc0",
+							"timestamp": "2023-03-28T14:44:58.160+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1680014564170"
+									},
+									{
+										"key": "mtime",
+										"value": "1680014564170"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2341226",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_fra.srt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_fra.srt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895401",
+			"created": "2023-03-28T14:42:21.119+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_nor_srt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 11504,
+					"file": [
+						{
+							"id": "VX-1420787",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_nor.srt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_nor.srt"
+							],
+							"state": "CLOSED",
+							"size": 11504,
+							"hash": "ee3b6a39aa22d95294c10c748ca97dd5c5add95d",
+							"timestamp": "2023-03-28T14:42:14.542+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {}
+						}
+					],
+					"id": "VX-2341224",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_nor.srt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_nor.srt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-895400",
+			"created": "2023-03-28T14:41:47.373+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"sub_eng_srt"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 9772,
+					"file": [
+						{
+							"id": "VX-1420786",
+							"path": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_eng.srt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_eng.srt"
+							],
+							"state": "CLOSED",
+							"size": 9772,
+							"hash": "7bb64cc95bddf15515e055b1a249866d0829e4d2",
+							"timestamp": "2023-03-28T14:41:38.007+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {}
+						}
+					],
+					"id": "VX-2341223",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/28/4137/SOTM_7v2123_MAS_ENG_eng.srt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_eng.srt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-894734",
+			"created": "2023-03-24T12:32:03.159+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"Transcribed_Subtitle_SRT"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 10288,
+					"file": [
+						{
+							"id": "VX-1419775",
+							"path": "aux/2023/03/24/2826/SOTM_7v2123_MAS_ENG.srt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG.srt"
+							],
+							"state": "CLOSED",
+							"size": 10288,
+							"hash": "533d265fd7a9f2f73f83f9d08ebb22dd62dc02e6",
+							"timestamp": "2023-03-24T12:33:47.489+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1679661109384"
+									},
+									{
+										"key": "mtime",
+										"value": "1679661109384"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2339765",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/24/2826/SOTM_7v2123_MAS_ENG.srt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG.srt"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-894733",
+			"created": "2023-03-24T12:31:56.426+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"Transcribed_text"
+			],
+			"mimeType": [
+				"text/plain"
+			],
+			"binaryComponent": [
+				{
+					"length": 5741,
+					"file": [
+						{
+							"id": "VX-1419774",
+							"path": "aux/2023/03/24/2826/SOTM_7v2123_MAS_ENG.txt",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG.txt"
+							],
+							"state": "CLOSED",
+							"size": 5741,
+							"hash": "d4131b40fdc2bec247ac4924fbff053c73d7128c",
+							"timestamp": "2023-03-24T12:33:47.490+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1679661109373"
+									},
+									{
+										"key": "mtime",
+										"value": "1679661109373"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2339764",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/24/2826/SOTM_7v2123_MAS_ENG.txt"
+						}
+					]
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG.txt"
+					}
+				]
+			}
+		}
+	],
+	"id": "VX-447219"
+}

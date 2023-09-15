@@ -10,9 +10,11 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/google/uuid v1.3.0
+	github.com/orsinium-labs/enum v1.3.0
 	github.com/samber/lo v1.38.1
 	github.com/stretchr/testify v1.8.3
 	go.temporal.io/sdk v1.24.0
+	go.uber.org/mock v0.2.0
 )
 
 require (
@@ -46,7 +48,6 @@ require (
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/orsinium-labs/enum v1.3.0 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
