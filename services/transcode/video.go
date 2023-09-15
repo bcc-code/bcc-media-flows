@@ -18,7 +18,6 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		"-hide_banner",
 		"-progress", "pipe:1",
 		"-i", input.Path,
-		"-vf", "yadif=0:-1:0",
 		"-c:v", h264encoder,
 	}
 	switch h264encoder {
@@ -26,7 +25,9 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		params = append(params,
 			"-profile:v", "high",
 			"-level:v", "1.3",
-			"-crf", "18",
+			"-pix_fmt", "yuv420p",
+			//"-crf", "18",
+			"-vf", "yadif=0:-1:0",
 			"-maxrate", input.Bitrate,
 		)
 	}

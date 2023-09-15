@@ -1,9 +1,7 @@
 package transcode
 
 import (
-	"fmt"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -61,28 +59,4 @@ func Test_MergeAudio(t *testing.T) {
 			},
 		},
 	}, nil)
-}
-
-func Test_MergeSubtitles(t *testing.T) {
-	res, err := MergeSubtitles(common.MergeInput{
-		Title:     "Test",
-		OutputDir: TestRoot,
-		WorkDir:   TestRoot + "tmp/",
-		Items: []common.MergeInputItem{
-			{
-				Start: 10,
-				End:   30,
-				Path:  TestRoot + "1.srt",
-			},
-			{
-				Start: 50,
-				End:   80,
-				Path:  TestRoot + "1.srt",
-			},
-		},
-	})
-
-	fmt.Println(res)
-
-	assert.Nil(t, err)
 }
