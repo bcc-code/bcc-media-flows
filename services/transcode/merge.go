@@ -25,12 +25,12 @@ func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 
 	for index, i := range input.Items {
 		// Add the video stream and timestamps to the filter, with setpts to let the transcoder know to continue the timestamp from the previous file.
-		filterComplex += fmt.Sprintf("[%d:v] trim=start=%f:end=%f,setpts=PTS-STARTPTS [v%d];", index, i.Start, i.End, index)
+		filterComplex += fmt.Sprintf("[%d:v] trim=start=%f:end=%f,setpts=PTS-STARTPTS,yadif[v%d];", index, i.Start, i.End, index)
 	}
 
 	filterComplex += " "
-
 	for index := range input.Items {
+
 		filterComplex += fmt.Sprintf("[v%d] ", index)
 	}
 

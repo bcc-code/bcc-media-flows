@@ -15,6 +15,7 @@ type Progress struct {
 	CurrentFrame   int     `json:"currentFrame"`
 	TotalFrames    int     `json:"totalFrames"`
 	Bitrate        string  `json:"bitrate"`
+	Speed          string  `json:"speed"`
 }
 
 type StreamInfo struct {
@@ -82,6 +83,8 @@ func parseProgressCallback(info StreamInfo, cb func(Progress)) func(string) {
 			}
 		} else if parts[0] == "bitrate" {
 			progress.Bitrate = parts[1]
+		} else if parts[0] == "speed" {
+			progress.Speed = parts[1]
 		}
 		if parts[0] == "progress" {
 			cb(progress)
