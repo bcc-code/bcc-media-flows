@@ -18,7 +18,7 @@ func ImportFileAsShapeActivity(ctx context.Context, params *ImportFileAsShapePar
 	log := activity.GetLogger(ctx)
 	log.Info("Starting ImportFileAsShapeActivity")
 
-	vsClient := vidispine.NewClient(os.Getenv("VIDISPINE_BASE_URL"), os.Getenv("VIDISPINE_USERNAME"), os.Getenv("VIDISPINE_PASSWORD"))
+	vsClient := getClient()
 
 	fileID, err := vsClient.RegisterFile(params.FilePath, vidispine.FILE_STATE_CLOSED)
 	if err != nil {

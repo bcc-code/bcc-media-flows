@@ -145,7 +145,7 @@
             1,
             2
           ],
-          "File": "/path/to/file/BlankAudio10h.wav"
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "deu": {
           "VXID": "",
@@ -153,7 +153,7 @@
             1,
             2
           ],
-          "File": "/path/to/file/BlankAudio10h.wav"
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "eng": {
           "VXID": "",
@@ -161,7 +161,7 @@
             1,
             2
           ],
-          "File": "/path/to/file/BlankAudio10h.wav"
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "fra": {
           "VXID": "",
@@ -169,7 +169,7 @@
             1,
             2
           ],
-          "File": "/path/to/file/BlankAudio10h.wav"
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "hun": {
           "VXID": "",
@@ -177,7 +177,7 @@
             1,
             2
           ],
-          "File": "/path/to/file/BlankAudio10h.wav"
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "kha": {
           "VXID": "",
@@ -185,7 +185,7 @@
             1,
             2
           ],
-          "File": "/path/to/file/BlankAudio10h.wav"
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "nld": {
           "VXID": "",
@@ -193,7 +193,7 @@
             1,
             2
           ],
-          "File": "/path/to/file/BlankAudio10h.wav"
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "nor": {
           "VXID": "",
@@ -201,7 +201,7 @@
             1,
             2
           ],
-          "File": "/path/to/file/BlankAudio10h.wav"
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "por": {
           "VXID": "",
@@ -209,7 +209,7 @@
             1,
             2
           ],
-          "File": "/path/to/file/BlankAudio10h.wav"
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "ron": {
           "VXID": "",
@@ -217,7 +217,7 @@
             1,
             2
           ],
-          "File": "/path/to/file/BlankAudio10h.wav"
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "rus": {
           "VXID": "",
@@ -225,7 +225,7 @@
             1,
             2
           ],
-          "File": "/path/to/file/BlankAudio10h.wav"
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "spa": {
           "VXID": "",
@@ -233,7 +233,7 @@
             1,
             2
           ],
-          "File": "/path/to/file/BlankAudio10h.wav"
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "tur": {
           "VXID": "",
@@ -241,26 +241,26 @@
             1,
             2
           ],
-          "File": "/path/to/file/BlankAudio10h.wav"
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         }
       },
       "SubtitleFiles": {
-        "bul": "/path/to/file/empty.srt",
-        "dan": "/path/to/file/empty.srt",
-        "eng": "/path/to/file/empty.srt",
-        "est": "/path/to/file/empty.srt",
-        "fin": "/path/to/file/empty.srt",
-        "fra": "/path/to/file/empty.srt",
-        "hrv": "/path/to/file/empty.srt",
-        "ita": "/path/to/file/empty.srt",
-        "nld": "/path/to/file/empty.srt",
-        "nor": "/path/to/file/empty.srt",
-        "pol": "/path/to/file/empty.srt",
-        "por": "/path/to/file/empty.srt",
-        "ron": "/path/to/file/empty.srt",
-        "rus": "/path/to/file/empty.srt",
-        "slv": "/path/to/file/empty.srt",
-        "tam": "/path/to/file/empty.srt"
+        "bul": "/mnt/isilon/system/assets/empty.srt",
+        "dan": "/mnt/isilon/system/assets/empty.srt",
+        "eng": "/mnt/isilon/system/assets/empty.srt",
+        "est": "/mnt/isilon/system/assets/empty.srt",
+        "fin": "/mnt/isilon/system/assets/empty.srt",
+        "fra": "/mnt/isilon/system/assets/empty.srt",
+        "hrv": "/mnt/isilon/system/assets/empty.srt",
+        "ita": "/mnt/isilon/system/assets/empty.srt",
+        "nld": "/mnt/isilon/system/assets/empty.srt",
+        "nor": "/mnt/isilon/system/assets/empty.srt",
+        "pol": "/mnt/isilon/system/assets/empty.srt",
+        "por": "/mnt/isilon/system/assets/empty.srt",
+        "ron": "/mnt/isilon/system/assets/empty.srt",
+        "rus": "/mnt/isilon/system/assets/empty.srt",
+        "slv": "/mnt/isilon/system/assets/empty.srt",
+        "tam": "/mnt/isilon/system/assets/empty.srt"
       },
       "VXID": "VX-439354"
     }
