@@ -38,7 +38,7 @@ var (
 		"ordforklaring":   ChapterTypeOther,
 		"frsending":       ChapterTypeOther,
 		"ettersending":    ChapterTypeOther,
-		"bildekavaalkade": ChapterTypeOther,
+		"bildekavalkade": ChapterTypeOther,
 		"skuespill":       ChapterTypeOther,
 		"aksjonstatus":    ChapterTypeOther,
 		"hilse":           ChapterTypeOther,
