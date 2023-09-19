@@ -12,11 +12,11 @@ const (
 	PlaceholderTypeRaw    placeholderType = "raw"
 )
 
-type fileState string
+type FileState string
 
 const (
-	FileStateClosed fileState = "CLOSED"
-	FileStateOpen   fileState = "OPEN"
+	FileStateClosed FileState = "CLOSED"
+	FileStateOpen   FileState = "OPEN"
 )
 
 type PlacholderTplData struct {
@@ -54,7 +54,7 @@ func (c *Client) CreatePlaceholder(ingestType placeholderType, title, email stri
 	return result.Result().(*IDOnlyResult).VXID, nil
 }
 
-func (c *Client) AddFileToPlaceholder(itemID, fileID, tag string, fileState fileState) string {
+func (c *Client) AddFileToPlaceholder(itemID, fileID, tag string, fileState FileState) string {
 	panic("Not implemented")
 	// TODO: Unfinished, not needed ritht now
 	requestURL, _ := url.Parse(c.baseURL)

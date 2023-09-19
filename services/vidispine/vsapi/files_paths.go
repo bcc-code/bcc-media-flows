@@ -25,7 +25,7 @@ func (c *Client) GetAbsoluteStoragePath(storageID string) (string, error) {
 	return "", fmt.Errorf("No local storage found for storage ID %s", storageID)
 }
 
-func (c *Client) RegisterFile(filePath string, fileState fileState) (string, error) {
+func (c *Client) RegisterFile(filePath string, fileState FileState) (string, error) {
 
 	// We need the absolute path to the storage in order to remove it from the file path
 	// Yeah, briliant design. I know.

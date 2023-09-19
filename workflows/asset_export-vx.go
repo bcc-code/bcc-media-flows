@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"path/filepath"
+	"strings"
+
 	bccmflows "github.com/bcc-code/bccm-flows"
 	"github.com/bcc-code/bccm-flows/activities"
 	avidispine "github.com/bcc-code/bccm-flows/activities/vidispine"
@@ -16,20 +19,20 @@ import (
 	"github.com/google/uuid"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
-	"path/filepath"
-	"strings"
 )
 
 type AssetExportParams struct {
-	VXID      string
-	WithFiles bool
+	VXID         string
+	WithFiles    bool
+	WithChapters bool
 }
 
 type AssetExportResult struct {
-	Duration string `json:"duration"`
-	ID       string `json:"id"`
-	SmilFile string `json:"smil_file"`
-	Title    string `json:"title"`
+	Duration     string `json:"duration"`
+	ID           string `json:"id"`
+	SmilFile     string `json:"smil_file"`
+	Title        string `json:"title"`
+	ChaptersFile string `json:"chapters_file"`
 }
 
 const (

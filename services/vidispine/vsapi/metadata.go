@@ -60,7 +60,7 @@ func (c *Client) GetMetadata(vsID string) (*MetadataResult, error) {
 	return resp.Result().(*MetadataResult), nil
 }
 
-func (c *Client) SetItemMetadataField(itemID, key, value string) (string, error) {
+func (c *Client) SetItemMetadataField(itemID, key, value string) error {
 	requestURL, _ := url.Parse(c.baseURL)
 	requestURL.Path += fmt.Sprintf("/item/%s/metadata", url.PathEscape(itemID))
 	q := requestURL.Query()
@@ -75,19 +75,19 @@ func (c *Client) SetItemMetadataField(itemID, key, value string) (string, error)
 		value,
 	})
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	result, err := c.restyClient.R().
+	_, err = c.restyClient.R().
 		SetHeader("content-type", "application/xml").
 		SetBody(body.String()).
 		Put(requestURL.String())
 
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return result.String(), nil
+	return nil
 }
 
 // GetInOut returns the in and out point of the clip in seconds, suitable
