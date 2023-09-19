@@ -23,9 +23,10 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProRe
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mov"
 
 	params := []string{
+		"-progress", "pipe:1",
+		"-hide_banner",
 		"-i", input.FilePath,
 		"-c:v", "prores",
-		"-progress", "pipe:1",
 		"-profile:v", "3",
 		"-vendor", "ap10",
 		"-vf", "setfield=tff",

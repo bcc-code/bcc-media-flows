@@ -7,6 +7,7 @@ import (
 	"github.com/bcc-code/bccm-flows/workflows"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
@@ -74,13 +75,23 @@ func main() {
 		identity = "worker"
 	}
 
+	activityCountString := os.Getenv("ACTIVITY_COUNT")
+	if activityCountString == "" {
+		activityCountString = "5"
+	}
+
+	activityCount, err := strconv.Atoi(activityCountString)
+	if err != nil {
+		panic(err)
+	}
+
 	workerOptions := worker.Options{
 		DeadlockDetectionTimeout:           time.Hour * 3,
 		DisableRegistrationAliasing:        true, // Recommended according to readme, default false for backwards compatibility
 		EnableSessionWorker:                true,
 		Identity:                           identity,
 		LocalActivityWorkerOnly:            false,
-		MaxConcurrentActivityExecutionSize: 100, // Doesn't make sense to have more than one activity running at a time
+		MaxConcurrentActivityExecutionSize: activityCount, // Doesn't make sense to have more than one activity running at a time
 	}
 
 	w := worker.New(c, utils.GetQueue(), workerOptions)

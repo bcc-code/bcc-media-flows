@@ -6,6 +6,7 @@ type VideoInput struct {
 	Width           int
 	Height          int
 	FrameRate       int
+	WatermarkPath   string
 	DestinationPath string
 }
 

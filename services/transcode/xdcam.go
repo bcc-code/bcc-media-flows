@@ -13,9 +13,10 @@ func XDCAM(input EncodeInput, progressCallback ffmpeg.ProgressCallback) (*Encode
 	outputPath := filepath.Join(input.OutputDir, filename)
 
 	params := []string{
+		"-progress", "pipe:1",
+		"-hide_banner",
 		"-i", input.FilePath,
 		"-c:v", "mpeg2video",
-		"-progress", "pipe:1",
 		"-pix_fmt", "yuv422p",
 		"-color_primaries", "bt709",
 		"-color_trc", "bt709",

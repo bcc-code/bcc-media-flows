@@ -56,7 +56,7 @@ func moveFile(ctx workflow.Context, source, destination string) error {
 }
 
 func moveToFolder(ctx workflow.Context, file, folder string) (string, error) {
-	newPath := filepath.Join(filepath.Dir(folder), filepath.Base(file))
+	newPath := filepath.Join(folder, filepath.Base(file))
 	err := moveFile(ctx, file, newPath)
 	return newPath, err
 }

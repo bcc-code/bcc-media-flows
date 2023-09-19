@@ -46,7 +46,11 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	if err != nil {
 		return err
 	}
-	outFolder, err := utils.GetSiblingFolder(path, "tmp")
+	outFolder, err := utils.GetSiblingFolder(path, "out")
+	if err != nil {
+		return err
+	}
+	tmpFolder, err := utils.GetSiblingFolder(path, "tmp")
 	if err != nil {
 		return err
 	}
@@ -66,32 +70,32 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	case common.FolderProRes422HQHD:
 		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:   path,
-			OutputDir:  outFolder,
+			OutputDir:  tmpFolder,
 			Resolution: "1920x1080",
 			FrameRate:  25,
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderProRes422HQNative:
 		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:  path,
-			OutputDir: outFolder,
+			OutputDir: tmpFolder,
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderProRes422HQNative25FPS:
 		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:  path,
-			OutputDir: outFolder,
+			OutputDir: tmpFolder,
 			FrameRate: 25,
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderProRes4444K25FPS:
 		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:   path,
-			OutputDir:  outFolder,
+			OutputDir:  tmpFolder,
 			Resolution: "3840x2160",
 			FrameRate:  25,
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderAVCIntra100HD:
 		err = workflow.ExecuteActivity(ctx, activities.TranscodeToH264Activity, activities.EncodeParams{
 			FilePath:   path,
-			OutputDir:  outFolder,
+			OutputDir:  tmpFolder,
 			Resolution: "1920x1080",
 			FrameRate:  25,
 			Bitrate:    "100M",
@@ -99,7 +103,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	case common.FolderXDCAMHD422:
 		err = workflow.ExecuteActivity(ctx, activities.TranscodeToXDCAMActivity, activities.EncodeParams{
 			FilePath:   path,
-			OutputDir:  outFolder,
+			OutputDir:  tmpFolder,
 			Resolution: "1920x1080",
 			FrameRate:  25,
 			Bitrate:    "60M",
@@ -109,11 +113,13 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 		err = workflow.ExecuteActivity(ctx, activities.Transcribe, activities.TranscribeParams{
 			Language:        "no",
 			File:            path,
-			DestinationPath: outFolder,
+			DestinationPath: tmpFolder,
 		}).Get(ctx, &transcribeOutput)
 	default:
 		err = fmt.Errorf("codec not supported: %s", params.FolderName)
 	}
+
+	ctx = workflow.WithTaskQueue(ctx, utils.GetWorkerQueue())
 
 	if err != nil {
 		path, _ = moveToFolder(ctx, path, errorFolder)

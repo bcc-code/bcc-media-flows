@@ -12,6 +12,13 @@ jobs:
     permissions:
       packages: write
       contents: read
+    strategy:
+      matrix:
+        image: [
+          temporal-worker/worker.Dockerfile,
+          temporal-httpin/httpin.Dockerfile,
+          temporal-transcode-worker/transcode-worker.Dockerfile,
+        ]
     steps:
       - uses: actions/checkout@v3
 
@@ -22,22 +29,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push worker image
-        env:
-          IMAGE_NAME_LATEST: ghcr.io/bcc-code/bcc-media/temporal-worker:latest
-          IMAGE_NAME: ghcr.io/bcc-code/bcc-media/temporal-worker:${{ github.sha }}
+      - name: Build and push image
         run: |
-          docker build . --file worker.Dockerfile --tag $IMAGE_NAME
-          docker tag $IMAGE_NAME $IMAGE_NAME_LATEST
-          docker push $IMAGE_NAME
-          docker push $IMAGE_NAME_LATEST
-
-      - name: Build and push http trigger image
-        env:
-          IMAGE_NAME_LATEST: ghcr.io/bcc-code/bcc-media/temporal-httpin:latest
-          IMAGE_NAME: ghcr.io/bcc-code/bcc-media/temporal-httpin:${{ github.sha }}
-        run: |
-          docker build . --file httpin.Dockerfile --tag $IMAGE_NAME
-          docker tag $IMAGE_NAME $IMAGE_NAME_LATEST
-          docker push $IMAGE_NAME
-          docker push $IMAGE_NAME_LATEST
+          IMAGE=${{matrix.image}}
+          IMAGE_NAME=${IMAGE%/*}:${{ github.sha }}
+          IMAGE_NAME_LATEST=${IMAGE%/*}:latest
+          DOCKER_FILE=${IMAGE#*/}
+          docker build . --file $DOCKER_FILE --tag ghcr.io/bcc-code/bcc-media/$IMAGE_NAME
+          docker tag ghcr.io/bcc-code/bcc-media/$IMAGE_NAME ghcr.io/bcc-code/bcc-media/$IMAGE_NAME_LATEST
+          docker push ghcr.io/bcc-code/bcc-media/$IMAGE_NAME
+          docker push ghcr.io/bcc-code/bcc-media/$IMAGE_NAME_LATEST

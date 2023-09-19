@@ -91,8 +91,9 @@ func triggerHandler(ctx *gin.Context) {
 		}
 
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.AssetExportVX, workflows.AssetExportParams{
-			VXID:      vxID,
-			WithFiles: getParamFromCtx(ctx, "withFiles") == "true",
+			VXID:          vxID,
+			WithFiles:     getParamFromCtx(ctx, "withFiles") == "true",
+			WatermarkPath: getParamFromCtx(ctx, "watermarkPath"),
 		})
 	case "ExecuteFFmpeg":
 		var input struct {

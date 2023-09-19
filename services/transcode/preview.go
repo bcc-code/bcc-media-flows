@@ -52,10 +52,10 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 	outputPath := filepath.Join(input.OutputDir, filename)
 
 	var params = []string{
+		"-progress", "pipe:1",
 		"-hide_banner",
 		"-loglevel",
 		"+level",
-		"-progress", "pipe:1",
 		"-y",
 	}
 	if hasVideo {

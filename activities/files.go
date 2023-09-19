@@ -34,7 +34,7 @@ func MoveFile(ctx context.Context, input MoveFileInput) (*FileResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = os.Chmod(input.Destination, os.ModePerm)
+	_ = os.Chmod(input.Destination, os.ModePerm)
 	return &FileResult{
 		Path: input.Destination,
 	}, nil
@@ -50,10 +50,7 @@ func StandardizeFileName(ctx context.Context, input FileInput) (*FileResult, err
 	if err != nil {
 		return nil, err
 	}
-	err = os.Chmod(path, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
+	_ = os.Chmod(path, os.ModePerm)
 	return &FileResult{
 		Path: path,
 	}, nil
@@ -93,10 +90,7 @@ func WriteFile(ctx context.Context, input WriteFileInput) error {
 	if err != nil {
 		return err
 	}
-	err = os.Chmod(input.Path, os.ModePerm)
-	if err != nil {
-		return err
-	}
+	_ = os.Chmod(input.Path, os.ModePerm)
 	return nil
 }
 

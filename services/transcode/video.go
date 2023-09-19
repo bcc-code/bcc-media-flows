@@ -15,16 +15,54 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 	}
 
 	params := []string{
+		"-hide_banner",
 		"-progress", "pipe:1",
 		"-i", input.Path,
-		"-c:v", h264encoder,
-		"-b:v", input.Bitrate,
-		"-r", fmt.Sprintf("%d", input.FrameRate),
-		"-vf", fmt.Sprintf("scale=%[1]d:%[2]d:force_original_aspect_ratio=decrease,pad=%[1]d:%[2]d:(ow-iw)/2:(oh-ih)/2",
-			input.Width,
-			input.Height,
-		),
 	}
+
+	if input.WatermarkPath != "" {
+		params = append(params,
+			"-i", input.WatermarkPath,
+		)
+	}
+
+	switch h264encoder {
+	case "libx264":
+		params = append(params,
+			"-c:v", h264encoder,
+			"-profile:v", "high",
+			"-level:v", "1.3",
+			"-pix_fmt", "yuv420p",
+			//"-crf", "18",
+			"-maxrate", input.Bitrate,
+		)
+	}
+
+	var filterComplex string
+
+	filterComplex += fmt.Sprintf("[0] scale=%[1]d:%[2]d:force_original_aspect_ratio=decrease,pad=%[1]d:%[2]d:(ow-iw)/2:(oh-ih)/2 [main];",
+		1920,
+		1080,
+	)
+
+	if input.WatermarkPath != "" {
+		filterComplex += "[main][1] overlay=main_w-overlay_w:0 [main];"
+	}
+
+	filterComplex += fmt.Sprintf("[main] scale=%[1]d:%[2]d:force_original_aspect_ratio=decrease [out]",
+		input.Width,
+		input.Height,
+	)
+
+	//if input.WatermarkPath != "" {
+	//	filterComplex += fmt.Sprintf(";[main][1] overlay=main_w-overlay_w:0")
+	//}
+
+	params = append(params,
+		"-r", fmt.Sprintf("%d", input.FrameRate),
+		"-filter_complex", filterComplex,
+		"-map", "[out]",
+	)
 
 	filename := filepath.Base(input.Path)
 	filename = filename[:len(filename)-len(filepath.Ext(filename))] +
@@ -32,7 +70,9 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 
 	outputPath := filepath.Join(input.DestinationPath, filename)
 
-	params = append(params, "-y", outputPath)
+	params = append(params,
+		"-y", outputPath,
+	)
 
 	info, err := ffmpeg.GetStreamInfo(input.Path)
 	if err != nil {
