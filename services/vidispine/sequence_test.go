@@ -1,4 +1,4 @@
-package vidispine_test
+package vidispine
 
 import (
 	"encoding/xml"
@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/bcc-code/bccm-flows/services/vidispine"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,7 +18,7 @@ func Test_DecodeSequenceXML(t *testing.T) {
 		f, err := os.ReadFile(file)
 		assert.NoError(t, err)
 
-		doc := &vidispine.SequenceDocument{}
+		doc := &SequenceDocument{}
 		err = xml.Unmarshal(f, doc)
 		assert.NoError(t, err)
 	}
@@ -27,17 +26,17 @@ func Test_DecodeSequenceXML(t *testing.T) {
 
 func Test_Convert(t *testing.T) {
 
-	clip := &vidispine.Clip{
+	clip := &Clip{
 		InSeconds:   10,
 		OutSeconds:  20,
 		SequenceIn:  30,
 		SequenceOut: 40,
 	}
 
-	chapter := &vidispine.MetadataResult{
-		Terse: map[string][]*vidispine.MetadataField{
-			"title": []*vidispine.MetadataField{
-				&vidispine.MetadataField{
+	chapter := &MetadataResult{
+		Terse: map[string][]*MetadataField{
+			"title": []*MetadataField{
+				&MetadataField{
 					Start: "250@PAL",
 					End:   "300@PAL",
 					UUID:  "uuid1",
@@ -49,10 +48,10 @@ func Test_Convert(t *testing.T) {
 
 	tcStart := 0.0
 
-	expectd := &vidispine.MetadataResult{
-		Terse: map[string][]*vidispine.MetadataField{
-			"title": []*vidispine.MetadataField{
-				&vidispine.MetadataField{
+	expectd := &MetadataResult{
+		Terse: map[string][]*MetadataField{
+			"title": []*MetadataField{
+				&MetadataField{
 					Start: "750@PAL",
 					End:   "800@PAL",
 					UUID:  "uuid1",
@@ -62,22 +61,22 @@ func Test_Convert(t *testing.T) {
 		},
 	}
 
-	out := vidispine.ConvertFromClipTCTimeSpaceToSequenceRelativeTimeSpace(clip, chapter, tcStart)
+	out := convertFromClipTCTimeToSequenceRelativeTime(clip, chapter, tcStart)
 	assert.Equal(t, expectd, out)
 }
 
 func Test_Convert2(t *testing.T) {
-	clip := &vidispine.Clip{
+	clip := &Clip{
 		InSeconds:   10,
 		OutSeconds:  20,
 		SequenceIn:  30,
 		SequenceOut: 40,
 	}
 
-	chapter := &vidispine.MetadataResult{
-		Terse: map[string][]*vidispine.MetadataField{
-			"title": []*vidispine.MetadataField{
-				&vidispine.MetadataField{
+	chapter := &MetadataResult{
+		Terse: map[string][]*MetadataField{
+			"title": []*MetadataField{
+				&MetadataField{
 					Start: "25250@PAL",
 					End:   "25300@PAL",
 					UUID:  "uuid1",
@@ -89,10 +88,10 @@ func Test_Convert2(t *testing.T) {
 
 	tcStart := 1000.0
 
-	expectd := &vidispine.MetadataResult{
-		Terse: map[string][]*vidispine.MetadataField{
-			"title": []*vidispine.MetadataField{
-				&vidispine.MetadataField{
+	expectd := &MetadataResult{
+		Terse: map[string][]*MetadataField{
+			"title": []*MetadataField{
+				&MetadataField{
 					Start: "750@PAL",
 					End:   "800@PAL",
 					UUID:  "uuid1",
@@ -102,6 +101,6 @@ func Test_Convert2(t *testing.T) {
 		},
 	}
 
-	out := vidispine.ConvertFromClipTCTimeSpaceToSequenceRelativeTimeSpace(clip, chapter, tcStart)
+	out := convertFromClipTCTimeToSequenceRelativeTime(clip, chapter, tcStart)
 	assert.Equal(t, expectd, out)
 }

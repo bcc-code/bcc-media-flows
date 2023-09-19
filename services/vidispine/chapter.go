@@ -103,7 +103,7 @@ func (c *Client) GetChapterData(exportData *ExportData) ([]Chapter, error) {
 
 		for title, data := range chapterMeta {
 			// We need to convert the timestamps from Vidispine into something we can calculate with on sequence level
-			data := ConvertFromClipTCTimeSpaceToSequenceRelativeTimeSpace(clip, data, tcStartSeconds)
+			data := convertFromClipTCTimeToSequenceRelativeTime(clip, data, tcStartSeconds)
 
 			// We don't have this chapter yet
 			if _, ok := allChapters[title]; !ok {
@@ -135,13 +135,13 @@ func (c *Client) GetChapterData(exportData *ExportData) ([]Chapter, error) {
 
 	chapters := []Chapter{}
 	for _, data := range allChapters {
-		chapters = append(chapters, MetaToChapter(data))
+		chapters = append(chapters, metaToChapter(data))
 	}
 
 	return chapters, nil
 }
 
-func MetaToChapter(meta *MetadataResult) Chapter {
+func metaToChapter(meta *MetadataResult) Chapter {
 	out := Chapter{}
 
 	out.Label = meta.Get(FieldTitle, "")

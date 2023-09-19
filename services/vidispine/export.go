@@ -14,11 +14,11 @@ import (
 )
 
 type Clip struct {
-	VideoFile  string
-	InSeconds  float64
-	OutSeconds float64
-	SequenceIn  float64
-	SequenceOut float64
+	VideoFile     string
+	InSeconds     float64
+	OutSeconds    float64
+	SequenceIn    float64
+	SequenceOut   float64
 	AudioFiles    map[string]*AudioFile
 	SubtitleFiles map[string]string
 	VXID          string
@@ -408,8 +408,8 @@ func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
 	return &out, nil
 }
 
-// ConvertFromClipTCTimeSpaceToSequenceRelativeTimeSpace ain't this a nice name?
-func ConvertFromClipTCTimeSpaceToSequenceRelativeTimeSpace(clip *Clip, chapter *MetadataResult, tcStart float64) *MetadataResult {
+// convertFromClipTCTimeToSequenceRelativeTime ain't this a nice name?
+func convertFromClipTCTimeToSequenceRelativeTime(clip *Clip, chapter *MetadataResult, tcStart float64) *MetadataResult {
 	out := MetadataResult{
 		Terse: map[string][]*MetadataField{},
 	}
