@@ -1,0 +1,104 @@
+{
+  "Clips": [
+    {
+      "VideoFile": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf",
+      "InSeconds": 530.28,
+      "OutSeconds": 4328.56,
+      "SequenceIn": 0,
+      "SequenceOut": 3798.28,
+      "AudioFiles": {
+        "deu": {
+          "VXID": "VX-464402",
+          "Channels": [
+            3,
+            4
+          ],
+          "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+        },
+        "eng": {
+          "VXID": "VX-464402",
+          "Channels": [
+            7,
+            8
+          ],
+          "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+        },
+        "fin": {
+          "VXID": "VX-464402",
+          "Channels": [
+            11
+          ],
+          "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+        },
+        "fra": {
+          "VXID": "VX-464402",
+          "Channels": [
+            9
+          ],
+          "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+        },
+        "nld": {
+          "VXID": "VX-464402",
+          "Channels": [
+            5,
+            6
+          ],
+          "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+        },
+        "nor": {
+          "VXID": "VX-464402",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+        },
+        "pol": {
+          "VXID": "VX-464402",
+          "Channels": [
+            16
+          ],
+          "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+        },
+        "por": {
+          "VXID": "VX-464402",
+          "Channels": [
+            13
+          ],
+          "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+        },
+        "ron": {
+          "VXID": "VX-464402",
+          "Channels": [
+            14
+          ],
+          "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+        },
+        "rus": {
+          "VXID": "VX-464402",
+          "Channels": [
+            12
+          ],
+          "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+        },
+        "spa": {
+          "VXID": "VX-464402",
+          "Channels": [
+            10
+          ],
+          "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+        },
+        "tur": {
+          "VXID": "VX-464402",
+          "Channels": [
+            15
+          ],
+          "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+        }
+      },
+      "SubtitleFiles": {},
+      "VXID": "VX-464402"
+    }
+  ],
+  "Title": "SEQ_TITLE_2"
+}

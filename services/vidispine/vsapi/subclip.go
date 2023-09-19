@@ -1,7 +1,9 @@
-package vidispine
+package vsapi
 
 import (
 	"fmt"
+
+	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 )
 
 // Subclips are defined by using the same start and end timecode on various
@@ -66,7 +68,7 @@ func (meta *MetadataResult) SplitByClips() map[string]*MetadataResult {
 		if key == "-INF-+INF" {
 			key = OriginalClip
 		} else {
-			key = val.Get("title", key)
+			key = val.Get(vscommon.FieldTitle, key)
 		}
 
 		out[key] = val

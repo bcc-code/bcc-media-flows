@@ -1,0 +1,811 @@
+{
+	"shape": [
+		{
+			"id": "VX-894710",
+			"created": "2023-03-24T11:29:34.960+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"lowaudio"
+			],
+			"mimeType": [
+				"video/mp4"
+			],
+			"containerComponent": {
+				"duration": {
+					"samples": 652013333,
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 1000000
+					}
+				},
+				"format": "mov,mp4,m4a,3gp,3g2,mj2",
+				"startTimestamp": {
+					"samples": 0,
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 44100
+					}
+				},
+				"mediaInfo": {
+					"property": [
+						{
+							"key": "Audio codecs",
+							"value": "AAC LC"
+						},
+						{
+							"key": "Audio_Format_List",
+							"value": "AAC"
+						},
+						{
+							"key": "Audio_Format_WithHint_List",
+							"value": "AAC"
+						},
+						{
+							"key": "Codec",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Codec ID",
+							"value": "mp42"
+						},
+						{
+							"key": "Codec ID/Url",
+							"value": "http://www.apple.com/quicktime/download/standalone.html"
+						},
+						{
+							"key": "Codec/Extensions usually used",
+							"value": "mov mp4 m4v m4a m4b m4p 3ga 3gpa 3gpp 3gp 3gpp2 3g2 k3g jpm jpx mqv ismv isma ismt f4a f4b f4v"
+						},
+						{
+							"key": "CodecID_Compatible",
+							"value": "mp42/isom"
+						},
+						{
+							"key": "Commercial name",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Count",
+							"value": "325"
+						},
+						{
+							"key": "Count of audio streams",
+							"value": "1"
+						},
+						{
+							"key": "Count of stream of this kind",
+							"value": "1"
+						},
+						{
+							"key": "DataSize",
+							"value": "10683615"
+						},
+						{
+							"key": "Duration",
+							"value": "652013"
+						},
+						{
+							"key": "Encoded date",
+							"value": "UTC 2023-03-24 12:28:36"
+						},
+						{
+							"key": "File extension",
+							"value": "mp4"
+						},
+						{
+							"key": "File size",
+							"value": "10918631"
+						},
+						{
+							"key": "FooterSize",
+							"value": "0"
+						},
+						{
+							"key": "Format",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Format profile",
+							"value": "Base Media / Version 2"
+						},
+						{
+							"key": "Format/Extensions usually used",
+							"value": "mov mp4 m4v m4a m4b m4p 3ga 3gpa 3gpp 3gp 3gpp2 3g2 k3g jpm jpx mqv ismv isma ismt f4a f4b f4v"
+						},
+						{
+							"key": "HeaderSize",
+							"value": "235016"
+						},
+						{
+							"key": "Internet media type",
+							"value": "audio/mp4"
+						},
+						{
+							"key": "IsStreamable",
+							"value": "Yes"
+						},
+						{
+							"key": "Kind of stream",
+							"value": "General"
+						},
+						{
+							"key": "Overall bit rate",
+							"value": "133968"
+						},
+						{
+							"key": "Overall bit rate mode",
+							"value": "CBR"
+						},
+						{
+							"key": "Proportion of this stream",
+							"value": "0.04465"
+						},
+						{
+							"key": "Stream identifier",
+							"value": "0"
+						},
+						{
+							"key": "Stream size",
+							"value": "487532"
+						},
+						{
+							"key": "Tagged date",
+							"value": "UTC 2023-03-24 12:28:36"
+						}
+					]
+				},
+				"file": [
+					{
+						"id": "VX-1419751",
+						"path": "aux/2023/03/24/122830/SOTM_7v2123_MAS_ENG_DEU.mp4",
+						"uri": [
+							"file:///path/to/file/SOTM_7v2123_MAS_ENG_DEU.mp4"
+						],
+						"state": "CLOSED",
+						"size": 10918631,
+						"hash": "59ddb591167a29b235a723d915c9c04dabcc5c15",
+						"timestamp": "2023-03-24T11:31:12.710+0000",
+						"refreshFlag": 1,
+						"storage": "VX-42",
+						"metadata": {
+							"field": [
+								{
+									"key": "created",
+									"value": "1679657373808"
+								},
+								{
+									"key": "mtime",
+									"value": "1679657373808"
+								}
+							]
+						}
+					}
+				],
+				"id": "VX-2339716",
+				"metadata": [
+					{
+						"key": "creation_time",
+						"value": "2023-03-24T12:28:36.000000Z"
+					},
+					{
+						"key": "componentOriginalFilename",
+						"value": "aux/2023/03/24/122830/SOTM_7v2123_MAS_ENG_DEU.mp4"
+					},
+					{
+						"key": "major_brand",
+						"value": "mp42"
+					},
+					{
+						"key": "compatible_brands",
+						"value": "mp42isom"
+					},
+					{
+						"key": "minor_version",
+						"value": "0"
+					}
+				]
+			},
+			"audioComponent": [
+				{
+					"channelCount": 2,
+					"channelLayout": 3,
+					"sampleFormat": "AV_SAMPLE_FMT_FLTP",
+					"frameSize": 1024,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit rate",
+								"value": "128000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "Channel positions",
+								"value": "2/0/0"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "2"
+							},
+							{
+								"key": "ChannelLayout",
+								"value": "L R"
+							},
+							{
+								"key": "Codec",
+								"value": "AAC LC"
+							},
+							{
+								"key": "Codec ID",
+								"value": "40"
+							},
+							{
+								"key": "Codec/CC",
+								"value": "40"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "AAC"
+							},
+							{
+								"key": "Commercial name",
+								"value": "AAC"
+							},
+							{
+								"key": "Compression mode",
+								"value": "Lossy"
+							},
+							{
+								"key": "Count",
+								"value": "277"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "1"
+							},
+							{
+								"key": "Duration",
+								"value": "652013"
+							},
+							{
+								"key": "Encoded date",
+								"value": "UTC 2023-03-24 12:28:36"
+							},
+							{
+								"key": "Format",
+								"value": "AAC"
+							},
+							{
+								"key": "Format profile",
+								"value": "LC"
+							},
+							{
+								"key": "Format/Info",
+								"value": "Advanced Audio Codec"
+							},
+							{
+								"key": "Frame count",
+								"value": "28080"
+							},
+							{
+								"key": "Frame rate",
+								"value": "43.066"
+							},
+							{
+								"key": "ID",
+								"value": "1"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.95535"
+							},
+							{
+								"key": "Samples count",
+								"value": "28753774"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1024"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "44100"
+							},
+							{
+								"key": "Source duration",
+								"value": "652063"
+							},
+							{
+								"key": "Source frame count",
+								"value": "28082"
+							},
+							{
+								"key": "Source stream size",
+								"value": "10431842"
+							},
+							{
+								"key": "Source_Delay",
+								"value": "-48"
+							},
+							{
+								"key": "Source_Delay_Source",
+								"value": "Container"
+							},
+							{
+								"key": "Source_StreamSize_Proportion",
+								"value": "0.95542"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "0"
+							},
+							{
+								"key": "Stream size",
+								"value": "10431099"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "0"
+							},
+							{
+								"key": "Tagged date",
+								"value": "UTC 2023-03-24 12:28:36"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1419751",
+							"path": "aux/2023/03/24/122830/SOTM_7v2123_MAS_ENG_DEU.mp4",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_DEU.mp4"
+							],
+							"state": "CLOSED",
+							"size": 10918631,
+							"hash": "59ddb591167a29b235a723d915c9c04dabcc5c15",
+							"timestamp": "2023-03-24T11:31:12.710+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1679657373808"
+									},
+									{
+										"key": "mtime",
+										"value": "1679657373808"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2339717",
+					"metadata": [
+						{
+							"key": "creation_time",
+							"value": "2023-03-24T12:28:36.000000Z"
+						},
+						{
+							"key": "vendor_id",
+							"value": "[0][0][0][0]"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/03/24/122830/SOTM_7v2123_MAS_ENG_DEU.mp4"
+						},
+						{
+							"key": "language",
+							"value": "und"
+						}
+					],
+					"codec": "aac",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 44100
+					},
+					"itemTrack": "A1",
+					"essenceStreamId": 0,
+					"bitrate": 127985,
+					"numberOfPackets": 28080,
+					"extradata": "1210",
+					"pid": 1,
+					"duration": {
+						"samples": 28753788,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 44100
+						}
+					},
+					"profile": 1,
+					"edl": {
+						"timeScale": {
+							"numerator": 1,
+							"denominator": 600
+						},
+						"entry": [
+							{
+								"start": 960,
+								"length": 391208,
+								"mediaRate": 65536
+							}
+						]
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 44100
+						}
+					}
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_DEU.mp4"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-894698",
+			"created": "2023-03-24T11:28:12.962+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"original"
+			],
+			"mimeType": [
+				"audio/x-wav"
+			],
+			"containerComponent": {
+				"duration": {
+					"samples": 652000000,
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 1000000
+					}
+				},
+				"format": "wav",
+				"mediaInfo": {
+					"property": [
+						{
+							"key": "Audio codecs",
+							"value": "PCM"
+						},
+						{
+							"key": "Audio_Format_List",
+							"value": "PCM"
+						},
+						{
+							"key": "Audio_Format_WithHint_List",
+							"value": "PCM"
+						},
+						{
+							"key": "Codec",
+							"value": "Wave"
+						},
+						{
+							"key": "Codec/Extensions usually used",
+							"value": "act wav"
+						},
+						{
+							"key": "Commercial name",
+							"value": "Wave"
+						},
+						{
+							"key": "Count",
+							"value": "325"
+						},
+						{
+							"key": "Count of audio streams",
+							"value": "1"
+						},
+						{
+							"key": "Count of stream of this kind",
+							"value": "1"
+						},
+						{
+							"key": "Duration",
+							"value": "652000"
+						},
+						{
+							"key": "File extension",
+							"value": "wav"
+						},
+						{
+							"key": "File size",
+							"value": "187780096"
+						},
+						{
+							"key": "Format",
+							"value": "Wave"
+						},
+						{
+							"key": "Format/Extensions usually used",
+							"value": "act wav"
+						},
+						{
+							"key": "Internet media type",
+							"value": "audio/vnd.wave"
+						},
+						{
+							"key": "Kind of stream",
+							"value": "General"
+						},
+						{
+							"key": "Overall bit rate",
+							"value": "2304050"
+						},
+						{
+							"key": "Overall bit rate mode",
+							"value": "CBR"
+						},
+						{
+							"key": "Proportion of this stream",
+							"value": "0.00002"
+						},
+						{
+							"key": "Stream identifier",
+							"value": "0"
+						},
+						{
+							"key": "Stream size",
+							"value": "4096"
+						}
+					]
+				},
+				"file": [
+					{
+						"id": "VX-1419739",
+						"path": "raw/2023/03/24/SOTM_7v2123_MAS_ENG_DEU.wav",
+						"uri": [
+							"file:///path/to/file/SOTM_7v2123_MAS_ENG_DEU.wav"
+						],
+						"state": "CLOSED",
+						"size": 187780096,
+						"hash": "dc079db919f62f4f11df1afa0890c6778e056614",
+						"timestamp": "2023-03-24T11:30:31.473+0000",
+						"refreshFlag": 1,
+						"storage": "VX-42",
+						"metadata": {
+							"field": [
+								{
+									"key": "created",
+									"value": "1679656760000"
+								},
+								{
+									"key": "mtime",
+									"value": "1679656760000"
+								}
+							]
+						}
+					}
+				],
+				"id": "VX-2339692",
+				"metadata": [
+					{
+						"key": "portal_archive_policy_uuid",
+						"value": "aw-10024"
+					},
+					{
+						"key": "portal_archive_status",
+						"value": "ARCHIVED"
+					},
+					{
+						"key": "portal_archive_plugin_uuid",
+						"value": "c4c1d403-801b-4b1a-95a1-6a692f64c262"
+					},
+					{
+						"key": "componentOriginalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_DEU.wav"
+					},
+					{
+						"key": "portal_archive_external_id",
+						"value": "Default-Archive#M2I3NzJlNTctZTdlNC00ZDM0LTYwNjYtYjVkOTFhZjljZGFk"
+					},
+					{
+						"key": "portal_sha1",
+						"value": "dc079db919f62f4f11df1afa0890c6778e056614"
+					}
+				]
+			},
+			"audioComponent": [
+				{
+					"channelCount": 2,
+					"channelLayout": 3,
+					"sampleFormat": "AV_SAMPLE_FMT_S32",
+					"frameSize": 1,
+					"blockAlign": 6,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "24"
+							},
+							{
+								"key": "Bit rate",
+								"value": "2304000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "Channel positions",
+								"value": "2/0/0"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "2"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "00001000-0000-0100-8000-00AA00389B71"
+							},
+							{
+								"key": "Codec ID/Url",
+								"value": "http://www.microsoft.com/windows/"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little / Signed"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Sign",
+								"value": "Signed"
+							},
+							{
+								"key": "Codec/CC",
+								"value": "FFFE"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec/Info",
+								"value": "Extensible wave format"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "275"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "1"
+							},
+							{
+								"key": "Duration",
+								"value": "652000"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little / Signed"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Sign",
+								"value": "Signed"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.99998"
+							},
+							{
+								"key": "Resolution",
+								"value": "24"
+							},
+							{
+								"key": "Samples count",
+								"value": "31296000"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "0"
+							},
+							{
+								"key": "Stream size",
+								"value": "187776000"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1419739",
+							"path": "raw/2023/03/24/SOTM_7v2123_MAS_ENG_DEU.wav",
+							"uri": [
+								"file:///path/to/file/SOTM_7v2123_MAS_ENG_DEU.wav"
+							],
+							"state": "CLOSED",
+							"size": 187780096,
+							"hash": "dc079db919f62f4f11df1afa0890c6778e056614",
+							"timestamp": "2023-03-24T11:30:31.473+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1679656760000"
+									},
+									{
+										"key": "mtime",
+										"value": "1679656760000"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2339693",
+					"metadata": [
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/03/24/SOTM_7v2123_MAS_ENG_DEU.wav"
+						}
+					],
+					"codec": "pcm_s24le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A1",
+					"essenceStreamId": 0,
+					"bitrate": 2304000,
+					"duration": {
+						"samples": 31296000,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_7v2123_MAS_ENG_DEU.wav"
+					}
+				]
+			}
+		}
+	],
+	"id": "VX-447206"
+}

@@ -2,6 +2,7 @@ package vidispine
 
 import (
 	"context"
+
 	"github.com/bcc-code/bccm-flows/services/vidispine"
 	"go.temporal.io/sdk/activity"
 )
@@ -23,4 +24,18 @@ func GetExportDataActivity(ctx context.Context, params *GetExportDataParams) (*v
 	}
 
 	return data, nil
+}
+
+type GetChapterDataParams struct {
+	ExportData *vidispine.ExportData
+}
+
+func GetChapterDataActivity(ctx context.Context, params *GetChapterDataParams) ([]vidispine.Chapter, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "GetChapterDataActivity")
+	log.Info("Starting GetChapterDataActivity")
+
+	client := getClient()
+
+	return client.GetChapterData(params.ExportData)
 }

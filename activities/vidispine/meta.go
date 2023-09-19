@@ -3,6 +3,7 @@ package vidispine
 import (
 	"context"
 	"fmt"
+
 	"go.temporal.io/sdk/activity"
 )
 
@@ -58,6 +59,6 @@ func SetVXMetadataFieldActivity(ctx context.Context, params SetVXMetadataFieldPa
 
 	vsClient := getClient()
 
-	_, err := vsClient.SetItemMetadataField(params.VXID, params.Key, params.Value)
+	err := vsClient.SetItemMetadataField(params.VXID, params.Key, params.Value)
 	return nil, err
 }

@@ -1,0 +1,269 @@
+{
+  "Clips": [
+    {
+      "VideoFile": "/path/to/file/SOTM_7v2123_MAS_ENG.mov",
+      "InSeconds": 0,
+      "OutSeconds": 648.6,
+      "SequenceIn": 0,
+      "SequenceOut": 648.6,
+      "AudioFiles": {
+        "cmn": {
+          "VXID": "VX-447208",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/path/to/file/SOTM_7v2123_MAS_ENG.mov"
+        },
+        "deu": {
+          "VXID": "VX-447206",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/path/to/file/SOTM_7v2123_MAS_ENG_DEU.wav"
+        },
+        "eng": {
+          "VXID": "VX-447499",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/path/to/file/SOTM_7v2123_MAS_ENG_ENG.wav"
+        },
+        "fra": {
+          "VXID": "VX-447214",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/path/to/file/SOTM_7v2123_MAS_ENG_NOR.wav"
+        },
+        "hun": {
+          "VXID": "VX-447207",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/path/to/file/SOTM_7v2123_MAS_ENG_HUN.wav"
+        },
+        "kha": {
+          "VXID": "VX-447215",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/path/to/file/SOTM_7v2123_MAS_ENG_KHA.wav"
+        },
+        "nld": {
+          "VXID": "VX-447216",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/path/to/file/SOTM_7v2123_MAS_ENG_NLD.wav"
+        },
+        "nor": {
+          "VXID": "VX-447214",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/path/to/file/SOTM_7v2123_MAS_ENG_NOR.wav"
+        },
+        "por": {
+          "VXID": "VX-447212",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/path/to/file/SOTM_7v2123_MAS_ENG_POR.wav"
+        },
+        "ron": {
+          "VXID": "VX-447211",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/path/to/file/SOTM_7v2123_MAS_ENG_RON.wav"
+        },
+        "rus": {
+          "VXID": "VX-447217",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/path/to/file/SOTM_7v2123_MAS_ENG_RUS.wav"
+        },
+        "spa": {
+          "VXID": "VX-447213",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/path/to/file/SOTM_7v2123_MAS_ENG_SPA.wav"
+        },
+        "tur": {
+          "VXID": "VX-447210",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/path/to/file/SOTM_7v2123_MAS_ENG_TUR.wav"
+        }
+      },
+      "SubtitleFiles": {
+        "bul": "/path/to/file/SOTM_7v2123_MAS_ENG_bul.srt",
+        "dan": "/path/to/file/SOTM_7v2123_MAS_ENG_dan.srt",
+        "eng": "/path/to/file/SOTM_7v2123_MAS_ENG_eng.srt",
+        "est": "/path/to/file/SOTM_7v2123_MAS_ENG_est.srt",
+        "fin": "/path/to/file/SOTM_7v2123_MAS_ENG_fin.srt",
+        "fra": "/path/to/file/SOTM_7v2123_MAS_ENG_fra.srt",
+        "hrv": "/path/to/file/SOTM_7v2123_MAS_ENG_hrv.srt",
+        "ita": "/path/to/file/SOTM_7v2123_MAS_ENG_ita.srt",
+        "nld": "/path/to/file/SOTM_7v2123_MAS_ENG_nld.srt",
+        "nor": "/path/to/file/SOTM_7v2123_MAS_ENG_nor.srt",
+        "pol": "/path/to/file/SOTM_7v2123_MAS_ENG_pol.srt",
+        "por": "/path/to/file/SOTM_7v2123_MAS_ENG_por.srt",
+        "ron": "/path/to/file/SOTM_7v2123_MAS_ENG_ron.srt",
+        "rus": "/path/to/file/SOTM_7v2123_MAS_ENG_rus.srt",
+        "slv": "/path/to/file/SOTM_7v2123_MAS_ENG_slv.srt",
+        "tam": "/path/to/file/SOTM_7v2123_MAS_ENG_tam.srt"
+      },
+      "VXID": "VX-447219"
+    },
+    {
+      "VideoFile": "/path/to/file/SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K.mov",
+      "InSeconds": 0,
+      "OutSeconds": 8,
+      "SequenceIn": 648.6,
+      "SequenceOut": 656.6,
+      "AudioFiles": {
+        "cmn": {
+          "VXID": "",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
+        },
+        "deu": {
+          "VXID": "",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
+        },
+        "eng": {
+          "VXID": "",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
+        },
+        "fra": {
+          "VXID": "",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
+        },
+        "hun": {
+          "VXID": "",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
+        },
+        "kha": {
+          "VXID": "",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
+        },
+        "nld": {
+          "VXID": "",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
+        },
+        "nor": {
+          "VXID": "",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
+        },
+        "por": {
+          "VXID": "",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
+        },
+        "ron": {
+          "VXID": "",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
+        },
+        "rus": {
+          "VXID": "",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
+        },
+        "spa": {
+          "VXID": "",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
+        },
+        "tur": {
+          "VXID": "",
+          "Channels": [
+            1,
+            2
+          ],
+          "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
+        }
+      },
+      "SubtitleFiles": {
+        "bul": "/mnt/isilon/system/assets/empty.srt",
+        "dan": "/mnt/isilon/system/assets/empty.srt",
+        "eng": "/mnt/isilon/system/assets/empty.srt",
+        "est": "/mnt/isilon/system/assets/empty.srt",
+        "fin": "/mnt/isilon/system/assets/empty.srt",
+        "fra": "/mnt/isilon/system/assets/empty.srt",
+        "hrv": "/mnt/isilon/system/assets/empty.srt",
+        "ita": "/mnt/isilon/system/assets/empty.srt",
+        "nld": "/mnt/isilon/system/assets/empty.srt",
+        "nor": "/mnt/isilon/system/assets/empty.srt",
+        "pol": "/mnt/isilon/system/assets/empty.srt",
+        "por": "/mnt/isilon/system/assets/empty.srt",
+        "ron": "/mnt/isilon/system/assets/empty.srt",
+        "rus": "/mnt/isilon/system/assets/empty.srt",
+        "slv": "/mnt/isilon/system/assets/empty.srt",
+        "tam": "/mnt/isilon/system/assets/empty.srt"
+      },
+      "VXID": "VX-439354"
+    }
+  ],
+  "Title": "SOTM_7v2123_SEQ"
+}

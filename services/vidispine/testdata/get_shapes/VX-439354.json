@@ -1,0 +1,1849 @@
+{
+	"shape": [
+		{
+			"id": "VX-871290",
+			"created": "2023-01-13T12:50:09.324+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"lowres_watermarked"
+			],
+			"mimeType": [
+				"video/mp4"
+			],
+			"containerComponent": {
+				"duration": {
+					"samples": 8040000,
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 1000000
+					}
+				},
+				"format": "mov,mp4,m4a,3gp,3g2,mj2",
+				"firstSMPTETimecode": "00:00:00:24",
+				"startTimecode": 24,
+				"startTimestamp": {
+					"samples": 0,
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 25000
+					}
+				},
+				"roundedTimeBase": 25,
+				"dropFrame": false,
+				"timeCodeTimeBase": {
+					"numerator": 1,
+					"denominator": 25
+				},
+				"mediaInfo": {
+					"property": [
+						{
+							"key": "Audio codecs",
+							"value": "AAC LC"
+						},
+						{
+							"key": "Audio_Format_List",
+							"value": "AAC"
+						},
+						{
+							"key": "Audio_Format_WithHint_List",
+							"value": "AAC"
+						},
+						{
+							"key": "Audio_Language_List",
+							"value": "English"
+						},
+						{
+							"key": "Codec",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Codec ID",
+							"value": "mp42"
+						},
+						{
+							"key": "Codec ID/Url",
+							"value": "http://www.apple.com/quicktime/download/standalone.html"
+						},
+						{
+							"key": "Codec/Extensions usually used",
+							"value": "mov mp4 m4v m4a m4b m4p 3ga 3gpa 3gpp 3gp 3gpp2 3g2 k3g jpm jpx mqv ismv isma ismt f4a f4b f4v"
+						},
+						{
+							"key": "CodecID_Compatible",
+							"value": "mp42/isom"
+						},
+						{
+							"key": "Codecs Video",
+							"value": "AVC"
+						},
+						{
+							"key": "Commercial name",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Count",
+							"value": "325"
+						},
+						{
+							"key": "Count of audio streams",
+							"value": "1"
+						},
+						{
+							"key": "Count of stream of this kind",
+							"value": "1"
+						},
+						{
+							"key": "Count of video streams",
+							"value": "1"
+						},
+						{
+							"key": "DataSize",
+							"value": "1921384"
+						},
+						{
+							"key": "Duration",
+							"value": "8040"
+						},
+						{
+							"key": "Encoded date",
+							"value": "UTC 2023-01-13 13:49:42"
+						},
+						{
+							"key": "File extension",
+							"value": "mp4"
+						},
+						{
+							"key": "File size",
+							"value": "1932656"
+						},
+						{
+							"key": "FooterSize",
+							"value": "0"
+						},
+						{
+							"key": "Format",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Format profile",
+							"value": "Base Media / Version 2"
+						},
+						{
+							"key": "Format/Extensions usually used",
+							"value": "mov mp4 m4v m4a m4b m4p 3ga 3gpa 3gpp 3gp 3gpp2 3g2 k3g jpm jpx mqv ismv isma ismt f4a f4b f4v"
+						},
+						{
+							"key": "Frame count",
+							"value": "201"
+						},
+						{
+							"key": "Frame rate",
+							"value": "25.000"
+						},
+						{
+							"key": "HeaderSize",
+							"value": "11272"
+						},
+						{
+							"key": "Internet media type",
+							"value": "video/mp4"
+						},
+						{
+							"key": "IsStreamable",
+							"value": "Yes"
+						},
+						{
+							"key": "Kind of stream",
+							"value": "General"
+						},
+						{
+							"key": "OtherCount",
+							"value": "1"
+						},
+						{
+							"key": "Other_Format_List",
+							"value": "QuickTime TC"
+						},
+						{
+							"key": "Other_Format_WithHint_List",
+							"value": "QuickTime TC"
+						},
+						{
+							"key": "Other_Language_List",
+							"value": "English"
+						},
+						{
+							"key": "Overall bit rate",
+							"value": "1923041"
+						},
+						{
+							"key": "Overall bit rate mode",
+							"value": "VBR"
+						},
+						{
+							"key": "Proportion of this stream",
+							"value": "0.00808"
+						},
+						{
+							"key": "Stream identifier",
+							"value": "0"
+						},
+						{
+							"key": "Stream size",
+							"value": "15624"
+						},
+						{
+							"key": "Tagged date",
+							"value": "UTC 2023-01-13 13:49:42"
+						},
+						{
+							"key": "Video_Format_List",
+							"value": "AVC"
+						},
+						{
+							"key": "Video_Format_WithHint_List",
+							"value": "AVC"
+						}
+					]
+				},
+				"file": [
+					{
+						"id": "VX-1397482",
+						"path": "aux/2023/01/13/134925/SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K_lowres_watermarked.mp4",
+						"uri": [
+							"file:///path/to/file/SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K_lowres_watermarked.mp4"
+						],
+						"state": "CLOSED",
+						"size": 1932656,
+						"hash": "11ae9208ebaeb7e62b9ea8eaed88af05d17ebc50",
+						"timestamp": "2023-01-13T12:52:06.229+0000",
+						"refreshFlag": 1,
+						"storage": "VX-42",
+						"metadata": {
+							"field": [
+								{
+									"key": "created",
+									"value": "1673614189180"
+								},
+								{
+									"key": "mtime",
+									"value": "1673614189180"
+								}
+							]
+						}
+					}
+				],
+				"id": "VX-2293069",
+				"metadata": [
+					{
+						"key": "creation_time",
+						"value": "2023-01-13T13:49:42.000000Z"
+					},
+					{
+						"key": "componentOriginalFilename",
+						"value": "aux/2023/01/13/134925/SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K_lowres_watermarked.mp4"
+					},
+					{
+						"key": "drop_frame",
+						"value": "false"
+					},
+					{
+						"key": "major_brand",
+						"value": "mp42"
+					},
+					{
+						"key": "rounded_time_base",
+						"value": "25"
+					},
+					{
+						"key": "start_timecode",
+						"value": "24"
+					},
+					{
+						"key": "timecode",
+						"value": "00:00:00:24"
+					},
+					{
+						"key": "compatible_brands",
+						"value": "mp42isom"
+					},
+					{
+						"key": "minor_version",
+						"value": "0"
+					}
+				]
+			},
+			"audioComponent": [
+				{
+					"channelCount": 2,
+					"channelLayout": 3,
+					"sampleFormat": "AV_SAMPLE_FMT_FLTP",
+					"frameSize": 1024,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit rate",
+								"value": "108213"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "VBR"
+							},
+							{
+								"key": "Channel positions",
+								"value": "2/0/0"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "2"
+							},
+							{
+								"key": "ChannelLayout",
+								"value": "L R"
+							},
+							{
+								"key": "Codec",
+								"value": "AAC LC"
+							},
+							{
+								"key": "Codec ID",
+								"value": "40"
+							},
+							{
+								"key": "Codec/CC",
+								"value": "40"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "AAC"
+							},
+							{
+								"key": "Commercial name",
+								"value": "AAC"
+							},
+							{
+								"key": "Compression mode",
+								"value": "Lossy"
+							},
+							{
+								"key": "Count",
+								"value": "275"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "1"
+							},
+							{
+								"key": "Delay",
+								"value": "960"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Duration",
+								"value": "8040"
+							},
+							{
+								"key": "Encoded date",
+								"value": "UTC 2023-01-13 13:49:42"
+							},
+							{
+								"key": "Format",
+								"value": "AAC"
+							},
+							{
+								"key": "Format profile",
+								"value": "LC"
+							},
+							{
+								"key": "Format/Info",
+								"value": "Advanced Audio Codec"
+							},
+							{
+								"key": "Frame count",
+								"value": "377"
+							},
+							{
+								"key": "Frame rate",
+								"value": "46.875"
+							},
+							{
+								"key": "ID",
+								"value": "3"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Language",
+								"value": "en"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.05627"
+							},
+							{
+								"key": "Samples count",
+								"value": "385920"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1024"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Source duration",
+								"value": "8064"
+							},
+							{
+								"key": "Source frame count",
+								"value": "378"
+							},
+							{
+								"key": "Source stream size",
+								"value": "109047"
+							},
+							{
+								"key": "Source_StreamSize_Proportion",
+								"value": "0.05642"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "0"
+							},
+							{
+								"key": "Stream size",
+								"value": "108754"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "2"
+							},
+							{
+								"key": "Tagged date",
+								"value": "UTC 2023-01-13 13:49:42"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "VBR"
+					},
+					"file": [
+						{
+							"id": "VX-1397482",
+							"path": "aux/2023/01/13/134925/SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K_lowres_watermarked.mp4",
+							"uri": [
+								"file:///path/to/file/SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K_lowres_watermarked.mp4"
+							],
+							"state": "CLOSED",
+							"size": 1932656,
+							"hash": "11ae9208ebaeb7e62b9ea8eaed88af05d17ebc50",
+							"timestamp": "2023-01-13T12:52:06.229+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1673614189180"
+									},
+									{
+										"key": "mtime",
+										"value": "1673614189180"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2293070",
+					"metadata": [
+						{
+							"key": "creation_time",
+							"value": "2023-01-13T13:49:42.000000Z"
+						},
+						{
+							"key": "vendor_id",
+							"value": "[0][0][0][0]"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/01/13/134925/SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K_lowres_watermarked.mp4"
+						},
+						{
+							"key": "language",
+							"value": "eng"
+						}
+					],
+					"codec": "aac",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A1",
+					"essenceStreamId": 2,
+					"bitrate": 108181,
+					"numberOfPackets": 377,
+					"extradata": "1190",
+					"pid": 3,
+					"duration": {
+						"samples": 385920,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					},
+					"profile": 1,
+					"edl": {
+						"timeScale": {
+							"numerator": 1,
+							"denominator": 25000
+						},
+						"entry": [
+							{
+								"start": 0,
+								"length": 201000,
+								"mediaRate": 65536
+							}
+						]
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				}
+			],
+			"videoComponent": [
+				{
+					"resolution": {
+						"width": 640,
+						"height": 270
+					},
+					"pixelFormat": "yuv420p",
+					"maxBFrames": 0,
+					"pixelAspectRatio": {
+						"horizontal": 1,
+						"vertical": 1
+					},
+					"fieldOrder": "progressive",
+					"codecTimeBase": {
+						"numerator": 1,
+						"denominator": 50
+					},
+					"averageFrameRate": {
+						"numerator": 25,
+						"denominator": 1
+					},
+					"realBaseFrameRate": {
+						"numerator": 25,
+						"denominator": 1
+					},
+					"displayWidth": {
+						"numerator": 640,
+						"denominator": 1
+					},
+					"displayHeight": {
+						"numerator": 270,
+						"denominator": 1
+					},
+					"containerSAR": {
+						"horizontal": 1,
+						"vertical": 1
+					},
+					"colr_primaries": 1,
+					"colr_transfer_function": 1,
+					"colr_matrix": 1,
+					"ticks_per_frame": 2,
+					"bitDepth": 8,
+					"bitsPerPixel": 12,
+					"colorPrimaries": "BT709",
+					"mediaInfo": {
+						"Format_Settings_GOP": "M=1, N=15",
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "8"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1799282"
+							},
+							{
+								"key": "Bits/(Pixel*Frame)",
+								"value": "0.417"
+							},
+							{
+								"key": "Chroma subsampling",
+								"value": "4:2:0"
+							},
+							{
+								"key": "Codec",
+								"value": "AVC"
+							},
+							{
+								"key": "Codec ID",
+								"value": "avc1"
+							},
+							{
+								"key": "Codec ID/Info",
+								"value": "Advanced Video Coding"
+							},
+							{
+								"key": "Codec profile",
+								"value": "High@L3.1"
+							},
+							{
+								"key": "Codec settings",
+								"value": "1 Ref Frames"
+							},
+							{
+								"key": "Codec settings, CABAC",
+								"value": "No"
+							},
+							{
+								"key": "Codec/CC",
+								"value": "avc1"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "AVC"
+							},
+							{
+								"key": "Codec/Info",
+								"value": "Advanced Video Codec"
+							},
+							{
+								"key": "Codec/Url",
+								"value": "http://developers.videolan.org/x264.html"
+							},
+							{
+								"key": "Codec_Settings_RefFrames",
+								"value": "1"
+							},
+							{
+								"key": "Color primaries",
+								"value": "BT.709"
+							},
+							{
+								"key": "Color range",
+								"value": "Limited"
+							},
+							{
+								"key": "Color space",
+								"value": "YUV"
+							},
+							{
+								"key": "Colorimetry",
+								"value": "4:2:0"
+							},
+							{
+								"key": "Commercial name",
+								"value": "AVC"
+							},
+							{
+								"key": "Count",
+								"value": "338"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "1"
+							},
+							{
+								"key": "Delay",
+								"value": "960"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_Settings",
+								"value": "DropFrame=No / 24HourMax=Yes / IsVisual=No"
+							},
+							{
+								"key": "Display aspect ratio",
+								"value": "2.370"
+							},
+							{
+								"key": "Duration",
+								"value": "8040"
+							},
+							{
+								"key": "Encoded date",
+								"value": "UTC 2023-01-13 13:49:42"
+							},
+							{
+								"key": "Encoded_Library_Name",
+								"value": "x264"
+							},
+							{
+								"key": "Encoded_Library_Version",
+								"value": "core 161"
+							},
+							{
+								"key": "Encoding settings",
+								"value": "cabac=0 / ref=1 / deblock=0:0:0 / analyse=0x3:0x3 / me=dia / subme=1 / psy=1 / psy_rd=1.00:0.00 / mixed_ref=0 / me_range=16 / chroma_me=1 / trellis=0 / 8x8dct=1 / cqm=0 / deadzone=21,11 / fast_pskip=1 / chroma_qp_offset=0 / threads=56 / lookahead_threads=2 / sliced_threads=0 / nr=0 / decimate=1 / interlaced=0 / bluray_compat=0 / constrained_intra=0 / bframes=0 / weightp=0 / keyint=15 / keyint_min=1 / scenecut=0 / intra_refresh=0 / rc_lookahead=25 / rc=cbr / mbtree=0 / bitrate=1900 / ratetol=1.0 / qcomp=0.60 / qpmin=0 / qpmax=51 / qpstep=4 / vbv_maxrate=1900 / vbv_bufsize=1900 / nal_hrd=none / filler=0 / ip_ratio=1.40 / aq=1:1.00"
+							},
+							{
+								"key": "Format",
+								"value": "AVC"
+							},
+							{
+								"key": "Format profile",
+								"value": "High@L3.1"
+							},
+							{
+								"key": "Format settings",
+								"value": "1 Ref Frames"
+							},
+							{
+								"key": "Format settings, CABAC",
+								"value": "No"
+							},
+							{
+								"key": "Format settings, GOP",
+								"value": "M=1, N=15"
+							},
+							{
+								"key": "Format settings, ReFrames",
+								"value": "1"
+							},
+							{
+								"key": "Format/Info",
+								"value": "Advanced Video Codec"
+							},
+							{
+								"key": "Format/Url",
+								"value": "http://developers.videolan.org/x264.html"
+							},
+							{
+								"key": "Frame count",
+								"value": "201"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "Frame rate mode",
+								"value": "CFR"
+							},
+							{
+								"key": "Height",
+								"value": "270"
+							},
+							{
+								"key": "ID",
+								"value": "2"
+							},
+							{
+								"key": "Interlacement",
+								"value": "PPF"
+							},
+							{
+								"key": "Internet media type",
+								"value": "video/H264"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Video"
+							},
+							{
+								"key": "Matrix coefficients",
+								"value": "BT.709"
+							},
+							{
+								"key": "Maximum bit rate",
+								"value": "2119544"
+							},
+							{
+								"key": "Nominal bit rate",
+								"value": "1900000"
+							},
+							{
+								"key": "Pixel aspect ratio",
+								"value": "1.000"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.93564"
+							},
+							{
+								"key": "Resolution",
+								"value": "8"
+							},
+							{
+								"key": "Rotation",
+								"value": "0.000"
+							},
+							{
+								"key": "Sampled_Height",
+								"value": "270"
+							},
+							{
+								"key": "Sampled_Width",
+								"value": "640"
+							},
+							{
+								"key": "Scan type",
+								"value": "Progressive"
+							},
+							{
+								"key": "Stored_Height",
+								"value": "272"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "0"
+							},
+							{
+								"key": "Stream size",
+								"value": "1808278"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "1"
+							},
+							{
+								"key": "Tagged date",
+								"value": "UTC 2023-01-13 13:49:42"
+							},
+							{
+								"key": "Transfer characteristics",
+								"value": "BT.709"
+							},
+							{
+								"key": "Width",
+								"value": "640"
+							},
+							{
+								"key": "Writing library",
+								"value": "x264 core 161"
+							},
+							{
+								"key": "colour_description_present",
+								"value": "Yes"
+							}
+						]
+					},
+					"file": [
+						{
+							"id": "VX-1397482",
+							"path": "aux/2023/01/13/134925/SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K_lowres_watermarked.mp4",
+							"uri": [
+								"file:///path/to/file/SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K_lowres_watermarked.mp4"
+							],
+							"state": "CLOSED",
+							"size": 1932656,
+							"hash": "11ae9208ebaeb7e62b9ea8eaed88af05d17ebc50",
+							"timestamp": "2023-01-13T12:52:06.229+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1673614189180"
+									},
+									{
+										"key": "mtime",
+										"value": "1673614189180"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2293071",
+					"metadata": [
+						{
+							"key": "creation_time",
+							"value": "2023-01-13T13:49:42.000000Z"
+						},
+						{
+							"key": "vendor_id",
+							"value": "TELE"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/01/13/134925/SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K_lowres_watermarked.mp4"
+						},
+						{
+							"key": "language",
+							"value": "und"
+						},
+						{
+							"key": "encoder",
+							"value": "AVC"
+						},
+						{
+							"key": "firstSEITimestamp",
+							"value": "00:00:00:24"
+						}
+					],
+					"codec": "h264",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 25000
+					},
+					"itemTrack": "V1",
+					"essenceStreamId": 1,
+					"bitrate": 1799281,
+					"numberOfPackets": 201,
+					"extradata": "0164001FFFE1001D6764001FACB405011FD602D4040405000003000100000300329F1832A001000468CE3CB0",
+					"pid": 2,
+					"duration": {
+						"samples": 201000,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25000
+						}
+					},
+					"profile": 100,
+					"level": 31,
+					"edl": {
+						"timeScale": {
+							"numerator": 1,
+							"denominator": 25000
+						},
+						"entry": [
+							{
+								"start": 0,
+								"length": 201000,
+								"mediaRate": 65536
+							}
+						]
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25000
+						}
+					}
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K_lowres_watermarked.mp4"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-870554",
+			"created": "2023-01-11T16:13:59.234+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"original"
+			],
+			"mimeType": [
+				"video/quicktime"
+			],
+			"containerComponent": {
+				"duration": {
+					"samples": 8040000,
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 1000000
+					}
+				},
+				"format": "mov,mp4,m4a,3gp,3g2,mj2",
+				"firstSMPTETimecode": "00:00:00:24",
+				"startTimecode": 24,
+				"startTimestamp": {
+					"samples": 0,
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 25
+					}
+				},
+				"roundedTimeBase": 25,
+				"dropFrame": false,
+				"timeCodeTimeBase": {
+					"numerator": 1,
+					"denominator": 25
+				},
+				"mediaInfo": {
+					"property": [
+						{
+							"key": "Audio codecs",
+							"value": "PCM"
+						},
+						{
+							"key": "Audio_Format_List",
+							"value": "PCM"
+						},
+						{
+							"key": "Audio_Format_WithHint_List",
+							"value": "PCM"
+						},
+						{
+							"key": "Audio_Language_List",
+							"value": "English"
+						},
+						{
+							"key": "Codec",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Codec ID",
+							"value": "qt"
+						},
+						{
+							"key": "Codec ID/Url",
+							"value": "http://www.apple.com/quicktime/download/standalone.html"
+						},
+						{
+							"key": "Codec/Extensions usually used",
+							"value": "mov mp4 m4v m4a m4b m4p 3ga 3gpa 3gpp 3gp 3gpp2 3g2 k3g jpm jpx mqv ismv isma ismt f4a f4b f4v"
+						},
+						{
+							"key": "CodecID_Compatible",
+							"value": "qt"
+						},
+						{
+							"key": "CodecID_Version",
+							"value": "2005.03"
+						},
+						{
+							"key": "Codecs Video",
+							"value": "apch"
+						},
+						{
+							"key": "Commercial name",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Count",
+							"value": "328"
+						},
+						{
+							"key": "Count of audio streams",
+							"value": "1"
+						},
+						{
+							"key": "Count of stream of this kind",
+							"value": "1"
+						},
+						{
+							"key": "Count of video streams",
+							"value": "1"
+						},
+						{
+							"key": "DataSize",
+							"value": "231595212"
+						},
+						{
+							"key": "Duration",
+							"value": "8040"
+						},
+						{
+							"key": "Encoded date",
+							"value": "UTC 2023-01-11 15:36:38"
+						},
+						{
+							"key": "Encoded_Library_Name",
+							"value": "Apple QuickTime"
+						},
+						{
+							"key": "File extension",
+							"value": "mov"
+						},
+						{
+							"key": "File size",
+							"value": "232643780"
+						},
+						{
+							"key": "FooterSize",
+							"value": "0"
+						},
+						{
+							"key": "Format",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Format profile",
+							"value": "QuickTime"
+						},
+						{
+							"key": "Format/Extensions usually used",
+							"value": "mov mp4 m4v m4a m4b m4p 3ga 3gpa 3gpp 3gp 3gpp2 3g2 k3g jpm jpx mqv ismv isma ismt f4a f4b f4v"
+						},
+						{
+							"key": "Frame count",
+							"value": "201"
+						},
+						{
+							"key": "Frame rate",
+							"value": "25.000"
+						},
+						{
+							"key": "HeaderSize",
+							"value": "1048568"
+						},
+						{
+							"key": "Internet media type",
+							"value": "video/mp4"
+						},
+						{
+							"key": "IsStreamable",
+							"value": "Yes"
+						},
+						{
+							"key": "Kind of stream",
+							"value": "General"
+						},
+						{
+							"key": "OtherCount",
+							"value": "1"
+						},
+						{
+							"key": "Other_Format_List",
+							"value": "QuickTime TC"
+						},
+						{
+							"key": "Other_Format_WithHint_List",
+							"value": "QuickTime TC"
+						},
+						{
+							"key": "Other_Language_List",
+							"value": "English"
+						},
+						{
+							"key": "Overall bit rate",
+							"value": "231486352"
+						},
+						{
+							"key": "Overall bit rate mode",
+							"value": "VBR"
+						},
+						{
+							"key": "Proportion of this stream",
+							"value": "0.00451"
+						},
+						{
+							"key": "Stream identifier",
+							"value": "0"
+						},
+						{
+							"key": "Stream size",
+							"value": "1048580"
+						},
+						{
+							"key": "Tagged date",
+							"value": "UTC 2023-01-11 15:36:48"
+						},
+						{
+							"key": "Video_Format_List",
+							"value": "ProRes"
+						},
+						{
+							"key": "Video_Format_WithHint_List",
+							"value": "ProRes"
+						},
+						{
+							"key": "Video_Language_List",
+							"value": "English"
+						},
+						{
+							"key": "Writing library",
+							"value": "Apple QuickTime"
+						},
+						{
+							"key": "©TIM",
+							"value": "00:00:00:24"
+						},
+						{
+							"key": "©TSC",
+							"value": "25"
+						},
+						{
+							"key": "©TSZ",
+							"value": "1"
+						}
+					]
+				},
+				"file": [
+					{
+						"id": "VX-1396846",
+						"path": "raw/2023/01/11/SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K.mov",
+						"uri": [
+							"file:///path/to/file/SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K.mov"
+						],
+						"state": "CLOSED",
+						"size": 232643780,
+						"hash": "9833c51c88156178b624250794d0d5e58d2bd4a1",
+						"timestamp": "2023-01-11T16:15:32.494+0000",
+						"refreshFlag": 1,
+						"storage": "VX-42",
+						"metadata": {
+							"field": [
+								{
+									"key": "created",
+									"value": "1673451408000"
+								},
+								{
+									"key": "mtime",
+									"value": "1673451408000"
+								}
+							]
+						}
+					}
+				],
+				"id": "VX-2292016",
+				"metadata": [
+					{
+						"key": "creation_time",
+						"value": "2023-01-11T15:36:38.000000Z"
+					},
+					{
+						"key": "componentOriginalFilename",
+						"value": "SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K.mov"
+					},
+					{
+						"key": "drop_frame",
+						"value": "false"
+					},
+					{
+						"key": "major_brand",
+						"value": "qt  "
+					},
+					{
+						"key": "portal_sha1",
+						"value": "9833c51c88156178b624250794d0d5e58d2bd4a1"
+					},
+					{
+						"key": "rounded_time_base",
+						"value": "25"
+					},
+					{
+						"key": "start_timecode",
+						"value": "24"
+					},
+					{
+						"key": "compatible_brands",
+						"value": "qt  "
+					},
+					{
+						"key": "minor_version",
+						"value": "537199360"
+					}
+				]
+			},
+			"audioComponent": [
+				{
+					"channelCount": 2,
+					"channelLayout": 3,
+					"sampleFormat": "AV_SAMPLE_FMT_S16",
+					"frameSize": 1,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "16"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1536000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "Channel positions",
+								"value": "Front: L R"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "2"
+							},
+							{
+								"key": "ChannelLayout",
+								"value": "L R"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "sowt"
+							},
+							{
+								"key": "Codec ID/Url",
+								"value": "http://www.apple.com/quicktime/download/standalone.html"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little / Signed"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Sign",
+								"value": "Signed"
+							},
+							{
+								"key": "Codec/CC",
+								"value": "sowt"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec/Url",
+								"value": "http://www.apple.com/quicktime/download/standalone.html"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "275"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "1"
+							},
+							{
+								"key": "Delay",
+								"value": "960"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Duration",
+								"value": "8040"
+							},
+							{
+								"key": "Encoded date",
+								"value": "UTC 2023-01-11 15:36:38"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little / Signed"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Sign",
+								"value": "Signed"
+							},
+							{
+								"key": "ID",
+								"value": "2"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Language",
+								"value": "en"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.00664"
+							},
+							{
+								"key": "Resolution",
+								"value": "16"
+							},
+							{
+								"key": "Samples count",
+								"value": "385920"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "0"
+							},
+							{
+								"key": "Stream size",
+								"value": "1543680"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "1"
+							},
+							{
+								"key": "Tagged date",
+								"value": "UTC 2023-01-11 15:36:38"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1396846",
+							"path": "raw/2023/01/11/SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K.mov",
+							"uri": [
+								"file:///path/to/file/SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K.mov"
+							],
+							"state": "CLOSED",
+							"size": 232643780,
+							"hash": "9833c51c88156178b624250794d0d5e58d2bd4a1",
+							"timestamp": "2023-01-11T16:15:32.494+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1673451408000"
+									},
+									{
+										"key": "mtime",
+										"value": "1673451408000"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2292018",
+					"metadata": [
+						{
+							"key": "creation_time",
+							"value": "2023-01-11T15:36:38.000000Z"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/01/11/SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K.mov"
+						},
+						{
+							"key": "handler_name",
+							"value": "Apple Sound Media Handler"
+						},
+						{
+							"key": "vendor_id",
+							"value": "    "
+						},
+						{
+							"key": "language",
+							"value": "eng"
+						},
+						{
+							"key": "timecode",
+							"value": "00:00:00:24"
+						}
+					],
+					"codec": "pcm_s16le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A1",
+					"essenceStreamId": 1,
+					"bitrate": 1536000,
+					"numberOfPackets": 201,
+					"pid": 2,
+					"duration": {
+						"samples": 385920,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					},
+					"edl": {
+						"timeScale": {
+							"numerator": 1,
+							"denominator": 25
+						},
+						"entry": [
+							{
+								"start": 0,
+								"length": 201,
+								"mediaRate": 65536
+							}
+						]
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				}
+			],
+			"videoComponent": [
+				{
+					"resolution": {
+						"width": 2560,
+						"height": 1080
+					},
+					"pixelFormat": "yuv422p16le",
+					"maxBFrames": 0,
+					"pixelAspectRatio": {
+						"horizontal": 1,
+						"vertical": 1
+					},
+					"fieldOrder": "progressive",
+					"codecTimeBase": {
+						"numerator": 1,
+						"denominator": 25
+					},
+					"averageFrameRate": {
+						"numerator": 25,
+						"denominator": 1
+					},
+					"realBaseFrameRate": {
+						"numerator": 25,
+						"denominator": 1
+					},
+					"displayWidth": {
+						"numerator": 2560,
+						"denominator": 1
+					},
+					"displayHeight": {
+						"numerator": 1080,
+						"denominator": 1
+					},
+					"containerSAR": {
+						"horizontal": 1,
+						"vertical": 1
+					},
+					"colr_primaries": 1,
+					"colr_transfer_function": 1,
+					"colr_matrix": 1,
+					"bitDepth": 16,
+					"bitsPerPixel": 32,
+					"colorPrimaries": "BT709",
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit rate",
+								"value": "228906985"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "VBR"
+							},
+							{
+								"key": "Bits/(Pixel*Frame)",
+								"value": "3.312"
+							},
+							{
+								"key": "Chroma subsampling",
+								"value": "4:2:2"
+							},
+							{
+								"key": "Codec",
+								"value": "apch"
+							},
+							{
+								"key": "Codec ID",
+								"value": "apch"
+							},
+							{
+								"key": "Codec ID/Url",
+								"value": "http://www.apple.com/quicktime/download/standalone.html"
+							},
+							{
+								"key": "Codec/CC",
+								"value": "apch"
+							},
+							{
+								"key": "Color primaries",
+								"value": "BT.709"
+							},
+							{
+								"key": "Color space",
+								"value": "YUV"
+							},
+							{
+								"key": "Commercial name",
+								"value": "ProRes"
+							},
+							{
+								"key": "Count",
+								"value": "338"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "1"
+							},
+							{
+								"key": "Delay",
+								"value": "960"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_Settings",
+								"value": "DropFrame=No / 24HourMax=No / IsVisual=No"
+							},
+							{
+								"key": "Display aspect ratio",
+								"value": "2.370"
+							},
+							{
+								"key": "Duration",
+								"value": "8040"
+							},
+							{
+								"key": "Encoded date",
+								"value": "UTC 2023-01-11 15:36:38"
+							},
+							{
+								"key": "Format",
+								"value": "ProRes"
+							},
+							{
+								"key": "Format profile",
+								"value": "422 HQ"
+							},
+							{
+								"key": "Format version",
+								"value": "Version 0"
+							},
+							{
+								"key": "Frame count",
+								"value": "201"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "Frame rate mode",
+								"value": "CFR"
+							},
+							{
+								"key": "Height",
+								"value": "1080"
+							},
+							{
+								"key": "ID",
+								"value": "1"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Video"
+							},
+							{
+								"key": "Language",
+								"value": "en"
+							},
+							{
+								"key": "Matrix coefficients",
+								"value": "BT.709"
+							},
+							{
+								"key": "Pixel aspect ratio",
+								"value": "1.000"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.98886"
+							},
+							{
+								"key": "Rotation",
+								"value": "0.000"
+							},
+							{
+								"key": "Scan type",
+								"value": "Progressive"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "0"
+							},
+							{
+								"key": "Stream size",
+								"value": "230051520"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "0"
+							},
+							{
+								"key": "Tagged date",
+								"value": "UTC 2023-01-11 15:36:38"
+							},
+							{
+								"key": "Transfer characteristics",
+								"value": "BT.709"
+							},
+							{
+								"key": "Width",
+								"value": "2560"
+							},
+							{
+								"key": "Writing library",
+								"value": "Apple"
+							},
+							{
+								"key": "colour_description_present",
+								"value": "Yes"
+							}
+						],
+						"Bit_rate_mode": "VBR"
+					},
+					"file": [
+						{
+							"id": "VX-1396846",
+							"path": "raw/2023/01/11/SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K.mov",
+							"uri": [
+								"file:///path/to/file/SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K.mov"
+							],
+							"state": "CLOSED",
+							"size": 232643780,
+							"hash": "9833c51c88156178b624250794d0d5e58d2bd4a1",
+							"timestamp": "2023-01-11T16:15:32.494+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1673451408000"
+									},
+									{
+										"key": "mtime",
+										"value": "1673451408000"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2292019",
+					"metadata": [
+						{
+							"key": "creation_time",
+							"value": "2023-01-11T15:36:38.000000Z"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/01/11/SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K.mov"
+						},
+						{
+							"key": "handler_name",
+							"value": "Apple Video Media Handler"
+						},
+						{
+							"key": "vendor_id",
+							"value": "appl"
+						},
+						{
+							"key": "language",
+							"value": "eng"
+						},
+						{
+							"key": "encoder",
+							"value": "Apple ProRes 422 HQ"
+						},
+						{
+							"key": "timecode",
+							"value": "00:00:00:24"
+						}
+					],
+					"codec": "prores",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 25
+					},
+					"itemTrack": "V1",
+					"essenceStreamId": 0,
+					"bitrate": 228906985,
+					"numberOfPackets": 201,
+					"pid": 1,
+					"duration": {
+						"samples": 201,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"edl": {
+						"timeScale": {
+							"numerator": 1,
+							"denominator": 25
+						},
+						"entry": [
+							{
+								"start": 0,
+								"length": 201,
+								"mediaRate": 65536
+							}
+						]
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					}
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "SOTM_GFX_COPYRIGHT_FRAK_BCCM_2K.mov"
+					}
+				]
+			}
+		}
+	],
+	"id": "VX-439354"
+}

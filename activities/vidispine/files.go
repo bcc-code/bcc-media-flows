@@ -2,9 +2,8 @@ package vidispine
 
 import (
 	"context"
-	"os"
 
-	"github.com/bcc-code/bccm-flows/services/vidispine"
+	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
 	"go.temporal.io/sdk/activity"
 )
 
@@ -18,9 +17,9 @@ func ImportFileAsShapeActivity(ctx context.Context, params *ImportFileAsShapePar
 	log := activity.GetLogger(ctx)
 	log.Info("Starting ImportFileAsShapeActivity")
 
-	vsClient := vidispine.NewClient(os.Getenv("VIDISPINE_BASE_URL"), os.Getenv("VIDISPINE_USERNAME"), os.Getenv("VIDISPINE_PASSWORD"))
+	vsClient := getClient()
 
-	fileID, err := vsClient.RegisterFile(params.FilePath, vidispine.FILE_STATE_CLOSED)
+	fileID, err := vsClient.RegisterFile(params.FilePath, vsapi.FileStateClosed)
 	if err != nil {
 		return err
 	}
@@ -39,7 +38,7 @@ func ImportFileAsSidecarActivity(ctx context.Context, params *ImportSubtitleAsSi
 	log := activity.GetLogger(ctx)
 	log.Info("Starting ImportSubtitleAsSidecarParams")
 
-	vsClient := vidispine.NewClient(os.Getenv("VIDISPINE_BASE_URL"), os.Getenv("VIDISPINE_USERNAME"), os.Getenv("VIDISPINE_PASSWORD"))
+	vsClient := getClient()
 
 	_, err := vsClient.AddSidecarToItem(params.AssetID, params.FilePath, params.Language)
 	return err

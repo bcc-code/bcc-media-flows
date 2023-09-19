@@ -1,4 +1,4 @@
-package vidispine_test
+package vsapi_test
 
 import (
 	"encoding/xml"
@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/bcc-code/bccm-flows/services/vidispine"
+	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,7 +19,7 @@ func Test_DecodeSequenceXML(t *testing.T) {
 		f, err := os.ReadFile(file)
 		assert.NoError(t, err)
 
-		doc := &vidispine.SequenceDocument{}
+		doc := &vsapi.SequenceDocument{}
 		err = xml.Unmarshal(f, doc)
 		assert.NoError(t, err)
 	}
