@@ -1,11 +1,12 @@
 package ingest
 
 type Data struct {
-	Duration string `json:"duration"`
-	Files    []File `json:"files"`
-	Id       string `json:"id"`
-	SmilFile string `json:"smil_File"`
-	Title    string `json:"title"`
+	Duration     string `json:"duration"`
+	Files        []File `json:"files"`
+	Id           string `json:"id"`
+	SmilFile     string `json:"smil_File"`
+	Title        string `json:"title"`
+	ChaptersFile string `json:"chapters_file"`
 }
 
 type File struct {
