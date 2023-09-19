@@ -1,4 +1,4 @@
-package vidispine
+package vsapi
 
 import "text/template"
 

@@ -1,0 +1,377 @@
+{
+	"terse": {
+		"__placeholder_shape_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__collection_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"portal_mf326592": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "5fefda82-308c-43fe-b445-e59bff816e32",
+				"value": "rus"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "484152a4-2066-40f3-828e-ace18e67874a",
+				"value": "deu"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "00458386-2c9e-46f7-8bc8-ecce19b6fd29",
+				"value": "tur"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c89fa84a-3cb9-4d6d-ad8e-77e71ff627b0",
+				"value": "eng"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "fb8782da-d245-4f88-9d14-ff8f1c831ef5",
+				"value": "por"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "a25d364e-808d-4736-ae1c-ecceaf7ff828",
+				"value": "ron"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "59d31a7e-8cfe-472f-b99e-5d248bfb3c1a",
+				"value": "fin"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "a755bac4-e58d-43d5-8f1c-4ce5cacebfe0",
+				"value": "nor"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "f3d8253f-9bee-492c-a0c2-946b198f448d",
+				"value": "fra"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "c6277007-9e50-4aa2-874d-d3034ac57ca5",
+				"value": "hun"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "b505a388-a046-458e-a8ac-1d61842ec670",
+				"value": "nld"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "bdb0ac2e-26b2-44cd-b5d2-2de6f19668ed",
+				"value": "spa"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "5a9dc804-2812-4f51-8bcf-666dfacdcec1",
+				"value": "ita"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "a7e90302-e1e1-47e2-bb55-4097a51fe790",
+				"value": "slv"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "87a55c0b-7bc4-4ef8-bc3e-c3a962c9d0ed",
+				"value": "pol"
+			}
+		],
+		"portal_mf47652": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "2ce11d01-eee2-4409-ab0b-fff86e7e3602",
+				"value": ""
+			}
+		],
+		"title": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ff9cb56d-b4fb-4278-8386-9d9d2dc4589b",
+				"value": "TITLE_OF_THE_SEQUENCE"
+			}
+		],
+		"portal_re3_seen_by_rule": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "313a28fd-7421-4b96-9dd3-8979e7c39f82",
+				"value": "4089a315-fe5b-4de0-a3d2-1a31a733d46b"
+			}
+		],
+		"__storage_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"__shape": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-855414"
+			}
+		],
+		"__version": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"__shape_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__sequence_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__ancestor_collection_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"portal_mf259": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "0a429e2a-8642-4d4b-9ee5-1171caf80fec",
+				"value": "username"
+			}
+		],
+		"portal_mf868653": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "2dda0417-5bb8-4afb-8a2b-3a74dac65a26",
+				"value": "original"
+			}
+		],
+		"portal_mf50574": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "9f7afb86-d8e1-4b2f-ad4f-29f16c51aa7c",
+				"value": ""
+			}
+		],
+		"portal_mf472706": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "98d989fb-f347-42fb-a269-32559e9cd5bf",
+				"value": ""
+			}
+		],
+		"__user": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "username"
+			}
+		],
+		"created": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "23b335bb-a38f-456d-a69d-0e8b721e9993",
+				"value": "2022-10-30T15:18:46.520Z"
+			}
+		],
+		"portal_mf882282": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "5dab3447-ddff-4ce9-a515-14055459bdb3",
+				"value": ""
+			}
+		],
+		"portal_mf957223": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "cb757bd5-cbf8-4734-ac6a-909dcce6ceb3",
+				"value": ""
+			}
+		],
+		"portal_mf806195": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "3a4aa51b-23c6-48a5-ad7f-6d5a81b8cd11",
+				"value": ""
+			}
+		],
+		"__storagegroup_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"mediaType": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "b2123be4-c1fb-44fe-b518-17f169db5940",
+				"value": "none"
+			}
+		],
+		"portal_mf573509": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "fc8feec4-167b-4655-8738-91b01ac3999c",
+				"value": "user.name"
+			}
+		],
+		"itemId": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "57254cd0-beaf-4de3-82d4-34eb19c8989d",
+				"value": "VX-431566"
+			}
+		],
+		"portal_mf431847": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "4ca248f6-46fc-478c-bfbf-492bf892ecdd",
+				"value": ""
+			}
+		],
+		"portal_mf371915": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "8f7ea404-553f-407d-a13c-e6c671587405",
+				"value": "vod"
+			}
+		],
+		"shapeTag": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "4256beb0-b195-4e96-a5bd-0d93575db1e6",
+				"value": "original"
+			}
+		],
+		"portal_mf452504": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "439b15ec-8976-4474-852c-17be052a8b33",
+				"value": "related"
+			}
+		],
+		"__sequence": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "vidispine"
+			}
+		],
+		"__version_count": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__shape_last_added": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "2022-10-30T15:18:46.827Z"
+			}
+		],
+		"__metadata_last_modified": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "2022-11-19T16:18:56.109+01:00"
+			}
+		],
+		"portal_mf529506": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ebbb6507-1384-4024-af97-046f45ea3c3c",
+				"value": ""
+			}
+		],
+		"portal_mf16851": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "9daf5f6b-9b42-4d8c-84d7-0d48b78dc688",
+				"value": ""
+			}
+		],
+		"user": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "username"
+			}
+		]
+	},
+	"id": "VX-431566"
+}

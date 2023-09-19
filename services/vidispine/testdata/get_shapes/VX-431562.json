@@ -1,0 +1,812 @@
+{
+	"shape": [
+		{
+			"id": "VX-855412",
+			"created": "2022-10-30T15:16:06.548+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"lowaudio"
+			],
+			"mimeType": [
+				"video/mp4"
+			],
+			"containerComponent": {
+				"duration": {
+					"samples": 5519265000,
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 1000000
+					}
+				},
+				"format": "mov,mp4,m4a,3gp,3g2,mj2",
+				"startTimestamp": {
+					"samples": 0,
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 44100
+					}
+				},
+				"mediaInfo": {
+					"property": [
+						{
+							"key": "Audio codecs",
+							"value": "AAC LC"
+						},
+						{
+							"key": "Audio_Format_List",
+							"value": "AAC"
+						},
+						{
+							"key": "Audio_Format_WithHint_List",
+							"value": "AAC"
+						},
+						{
+							"key": "Codec",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Codec ID",
+							"value": "mp42"
+						},
+						{
+							"key": "Codec ID/Url",
+							"value": "http://www.apple.com/quicktime/download/standalone.html"
+						},
+						{
+							"key": "Codec/Extensions usually used",
+							"value": "mov mp4 m4v m4a m4b m4p 3ga 3gpa 3gpp 3gp 3gpp2 3g2 k3g jpm jpx mqv ismv isma ismt f4a f4b f4v"
+						},
+						{
+							"key": "CodecID_Compatible",
+							"value": "mp42/isom"
+						},
+						{
+							"key": "Commercial name",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Count",
+							"value": "325"
+						},
+						{
+							"key": "Count of audio streams",
+							"value": "1"
+						},
+						{
+							"key": "Count of stream of this kind",
+							"value": "1"
+						},
+						{
+							"key": "DataSize",
+							"value": "90445336"
+						},
+						{
+							"key": "Duration",
+							"value": "5519265"
+						},
+						{
+							"key": "Encoded date",
+							"value": "UTC 2022-10-30 16:13:36"
+						},
+						{
+							"key": "File extension",
+							"value": "mp4"
+						},
+						{
+							"key": "File size",
+							"value": "92396064"
+						},
+						{
+							"key": "FooterSize",
+							"value": "0"
+						},
+						{
+							"key": "Format",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Format profile",
+							"value": "Base Media / Version 2"
+						},
+						{
+							"key": "Format/Extensions usually used",
+							"value": "mov mp4 m4v m4a m4b m4p 3ga 3gpa 3gpp 3gp 3gpp2 3g2 k3g jpm jpx mqv ismv isma ismt f4a f4b f4v"
+						},
+						{
+							"key": "HeaderSize",
+							"value": "1950728"
+						},
+						{
+							"key": "Internet media type",
+							"value": "audio/mp4"
+						},
+						{
+							"key": "IsStreamable",
+							"value": "Yes"
+						},
+						{
+							"key": "Kind of stream",
+							"value": "General"
+						},
+						{
+							"key": "Overall bit rate",
+							"value": "133925"
+						},
+						{
+							"key": "Overall bit rate mode",
+							"value": "CBR"
+						},
+						{
+							"key": "Proportion of this stream",
+							"value": "0.04424"
+						},
+						{
+							"key": "Stream identifier",
+							"value": "0"
+						},
+						{
+							"key": "Stream size",
+							"value": "4087839"
+						},
+						{
+							"key": "Tagged date",
+							"value": "UTC 2022-10-30 16:13:36"
+						}
+					]
+				},
+				"file": [
+					{
+						"id": "VX-1382529",
+						"path": "aux/2022/10/30/HC22_20221030_1430_PGM_MU1_SLV_low.mp4",
+						"uri": [
+							"file:///path/to/file/HC22_20221030_1430_PGM_MU1_SLV_low.mp4"
+						],
+						"state": "CLOSED",
+						"size": 92396064,
+						"hash": "2c8c1b8db01f3e78ff1a1b3582867bcabbc844bb",
+						"timestamp": "2022-10-30T15:16:03.790+0000",
+						"refreshFlag": 1,
+						"storage": "VX-42",
+						"metadata": {
+							"field": [
+								{
+									"key": "created",
+									"value": "1667142916255"
+								},
+								{
+									"key": "mtime",
+									"value": "1667142916255"
+								}
+							]
+						}
+					}
+				],
+				"id": "VX-2257511",
+				"metadata": [
+					{
+						"key": "creation_time",
+						"value": "2022-10-30T16:13:36.000000Z"
+					},
+					{
+						"key": "componentOriginalFilename",
+						"value": "aux/2022/10/30/HC22_20221030_1430_PGM_MU1_SLV_low.mp4"
+					},
+					{
+						"key": "major_brand",
+						"value": "mp42"
+					},
+					{
+						"key": "compatible_brands",
+						"value": "mp42isom"
+					},
+					{
+						"key": "minor_version",
+						"value": "0"
+					}
+				]
+			},
+			"audioComponent": [
+				{
+					"channelCount": 2,
+					"channelLayout": 3,
+					"sampleFormat": "AV_SAMPLE_FMT_FLTP",
+					"frameSize": 1024,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit rate",
+								"value": "128000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "Channel positions",
+								"value": "2/0/0"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "2"
+							},
+							{
+								"key": "ChannelLayout",
+								"value": "L R"
+							},
+							{
+								"key": "Codec",
+								"value": "AAC LC"
+							},
+							{
+								"key": "Codec ID",
+								"value": "40"
+							},
+							{
+								"key": "Codec/CC",
+								"value": "40"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "AAC"
+							},
+							{
+								"key": "Commercial name",
+								"value": "AAC"
+							},
+							{
+								"key": "Compression mode",
+								"value": "Lossy"
+							},
+							{
+								"key": "Count",
+								"value": "277"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "1"
+							},
+							{
+								"key": "Duration",
+								"value": "5519265"
+							},
+							{
+								"key": "Encoded date",
+								"value": "UTC 2022-10-30 16:13:36"
+							},
+							{
+								"key": "Format",
+								"value": "AAC"
+							},
+							{
+								"key": "Format profile",
+								"value": "LC"
+							},
+							{
+								"key": "Format/Info",
+								"value": "Advanced Audio Codec"
+							},
+							{
+								"key": "Frame count",
+								"value": "237695"
+							},
+							{
+								"key": "Frame rate",
+								"value": "43.066"
+							},
+							{
+								"key": "ID",
+								"value": "1"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.95576"
+							},
+							{
+								"key": "Samples count",
+								"value": "243399584"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1024"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "44100"
+							},
+							{
+								"key": "Source duration",
+								"value": "5519314"
+							},
+							{
+								"key": "Source frame count",
+								"value": "237697"
+							},
+							{
+								"key": "Source stream size",
+								"value": "88308773"
+							},
+							{
+								"key": "Source_Delay",
+								"value": "-48"
+							},
+							{
+								"key": "Source_Delay_Source",
+								"value": "Container"
+							},
+							{
+								"key": "Source_StreamSize_Proportion",
+								"value": "0.95576"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "0"
+							},
+							{
+								"key": "Stream size",
+								"value": "88308225"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "0"
+							},
+							{
+								"key": "Tagged date",
+								"value": "UTC 2022-10-30 16:13:36"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1382529",
+							"path": "aux/2022/10/30/HC22_20221030_1430_PGM_MU1_SLV_low.mp4",
+							"uri": [
+								"file:///path/to/file/HC22_20221030_1430_PGM_MU1_SLV_low.mp4"
+							],
+							"state": "CLOSED",
+							"size": 92396064,
+							"hash": "2c8c1b8db01f3e78ff1a1b3582867bcabbc844bb",
+							"timestamp": "2022-10-30T15:16:03.790+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1667142916255"
+									},
+									{
+										"key": "mtime",
+										"value": "1667142916255"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2257512",
+					"metadata": [
+						{
+							"key": "creation_time",
+							"value": "2022-10-30T16:13:36.000000Z"
+						},
+						{
+							"key": "vendor_id",
+							"value": "[0][0][0][0]"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2022/10/30/HC22_20221030_1430_PGM_MU1_SLV_low.mp4"
+						},
+						{
+							"key": "language",
+							"value": "und"
+						}
+					],
+					"codec": "aac",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 44100
+					},
+					"itemTrack": "A1",
+					"essenceStreamId": 0,
+					"bitrate": 127999,
+					"numberOfPackets": 237695,
+					"extradata": "1210",
+					"pid": 1,
+					"duration": {
+						"samples": 243399587,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 44100
+						}
+					},
+					"profile": 1,
+					"edl": {
+						"timeScale": {
+							"numerator": 1,
+							"denominator": 600
+						},
+						"entry": [
+							{
+								"start": 960,
+								"length": 3311559,
+								"mediaRate": 65536
+							}
+						]
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 44100
+						}
+					}
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "HC22_20221030_1430_PGM_MU1_SLV_low.mp4"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-855390",
+			"created": "2022-10-30T15:05:01.827+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"original"
+			],
+			"mimeType": [
+				"audio/x-wav"
+			],
+			"containerComponent": {
+				"duration": {
+					"samples": 5519252688,
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 1000000
+					}
+				},
+				"format": "wav",
+				"startTimecode": 2484695040,
+				"roundedTimeBase": 48000,
+				"dropFrame": false,
+				"timeCodeTimeBase": {
+					"numerator": 1,
+					"denominator": 48000
+				},
+				"mediaInfo": {
+					"property": [
+						{
+							"key": "Audio codecs",
+							"value": "PCM"
+						},
+						{
+							"key": "Audio_Format_List",
+							"value": "PCM"
+						},
+						{
+							"key": "Audio_Format_WithHint_List",
+							"value": "PCM"
+						},
+						{
+							"key": "Codec",
+							"value": "Wave"
+						},
+						{
+							"key": "Codec/Extensions usually used",
+							"value": "act wav"
+						},
+						{
+							"key": "Commercial name",
+							"value": "Wave"
+						},
+						{
+							"key": "Count",
+							"value": "325"
+						},
+						{
+							"key": "Count of audio streams",
+							"value": "1"
+						},
+						{
+							"key": "Count of stream of this kind",
+							"value": "1"
+						},
+						{
+							"key": "Duration",
+							"value": "5514532"
+						},
+						{
+							"key": "Encoded date",
+							"value": ""
+						},
+						{
+							"key": "Encoding settings",
+							"value": "A=LPCM,F=48000,W=16,M=stereo"
+						},
+						{
+							"key": "File extension",
+							"value": "wav"
+						},
+						{
+							"key": "File size",
+							"value": "1059697250"
+						},
+						{
+							"key": "Format",
+							"value": "Wave"
+						},
+						{
+							"key": "Format/Extensions usually used",
+							"value": "act wav"
+						},
+						{
+							"key": "Internet media type",
+							"value": "audio/vnd.wave"
+						},
+						{
+							"key": "Kind of stream",
+							"value": "General"
+						},
+						{
+							"key": "Overall bit rate",
+							"value": "1537316"
+						},
+						{
+							"key": "Overall bit rate mode",
+							"value": "CBR"
+						},
+						{
+							"key": "Proportion of this stream",
+							"value": "0.00000"
+						},
+						{
+							"key": "Stream identifier",
+							"value": "0"
+						},
+						{
+							"key": "Stream size",
+							"value": "734"
+						}
+					]
+				},
+				"file": [
+					{
+						"id": "VX-1382507",
+						"path": "raw/2022/10/30/HC22_20221030_1430_PGM_MU1_SLV.wav",
+						"uri": [
+							"file:///path/to/file/HC22_20221030_1430_PGM_MU1_SLV.wav"
+						],
+						"state": "CLOSED",
+						"size": 1059697250,
+						"hash": "20c4f6611b1f3f43507f10bb98490232cb17d533",
+						"timestamp": "2022-10-30T15:05:01.360+0000",
+						"refreshFlag": 1,
+						"storage": "VX-42",
+						"metadata": {}
+					}
+				],
+				"id": "VX-2257465",
+				"metadata": [
+					{
+						"key": "coding_history",
+						"value": "A=LPCM,F=48000,W=16,M=stereo\n"
+					},
+					{
+						"key": "componentOriginalFilename",
+						"value": "raw/2022/10/30/HC22_20221030_1430_PGM_MU1_SLV.wav"
+					},
+					{
+						"key": "portal_sha1",
+						"value": "20c4f6611b1f3f43507f10bb98490232cb17d533"
+					},
+					{
+						"key": "time_reference",
+						"value": "2484695040"
+					}
+				]
+			},
+			"audioComponent": [
+				{
+					"channelCount": 2,
+					"channelLayout": 0,
+					"sampleFormat": "AV_SAMPLE_FMT_S16",
+					"frameSize": 1,
+					"blockAlign": 4,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "16"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1536000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "2"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "1"
+							},
+							{
+								"key": "Codec ID/Url",
+								"value": "http://www.microsoft.com/windows/"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little / Signed"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Sign",
+								"value": "Signed"
+							},
+							{
+								"key": "Codec/CC",
+								"value": "1"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec/Info",
+								"value": "Microsoft PCM"
+							},
+							{
+								"key": "Codec/Url",
+								"value": "http://www.microsoft.com/windows/"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "275"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "1"
+							},
+							{
+								"key": "Delay",
+								"value": "51764480"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container (bext)"
+							},
+							{
+								"key": "Duration",
+								"value": "5514532"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little / Signed"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Sign",
+								"value": "Signed"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "1.00000"
+							},
+							{
+								"key": "Resolution",
+								"value": "16"
+							},
+							{
+								"key": "Samples count",
+								"value": "264697536"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "0"
+							},
+							{
+								"key": "Stream size",
+								"value": "1059696516"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1382507",
+							"path": "raw/2022/10/30/HC22_20221030_1430_PGM_MU1_SLV.wav",
+							"uri": [
+								"file:///path/to/file/HC22_20221030_1430_PGM_MU1_SLV.wav"
+							],
+							"state": "CLOSED",
+							"size": 1059697250,
+							"hash": "20c4f6611b1f3f43507f10bb98490232cb17d533",
+							"timestamp": "2022-10-30T15:05:01.360+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {}
+						}
+					],
+					"id": "VX-2257466",
+					"metadata": [
+						{
+							"key": "coding_history",
+							"value": "A=LPCM,F=48000,W=16,M=stereo\n"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2022/10/30/HC22_20221030_1430_PGM_MU1_SLV.wav"
+						},
+						{
+							"key": "time_reference",
+							"value": "2484695040"
+						}
+					],
+					"codec": "pcm_s16le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A1",
+					"essenceStreamId": 0,
+					"bitrate": 1536000,
+					"duration": {
+						"samples": 264924129,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "HC22_20221030_1430_PGM_MU1_SLV.wav"
+					}
+				]
+			}
+		}
+	],
+	"id": "VX-431562"
+}

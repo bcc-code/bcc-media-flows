@@ -1,0 +1,365 @@
+{
+	"terse": {
+		"__placeholder_shape_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__collection_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"portal_mf326592": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "4a63ec12-af15-4e23-969e-1b035f6d1c85",
+				"value": "hun"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d924b538-d6ee-4bb1-a4be-75fccdd2225f",
+				"value": "cmn"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "7dac6731-70ef-4346-8164-45671b38b152",
+				"value": "fra"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "3f96594a-2374-46e5-88fe-9fd10e8f7be0",
+				"value": "tur"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "8933e183-67ae-47b9-ac4d-c302dfb7839c",
+				"value": "ron"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "28e0af89-ecaf-4d48-bf3c-1c17c71376ab",
+				"value": "por"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "28c7822a-8973-4626-b054-d3f62c1c2409",
+				"value": "spa"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "50caebfc-4a48-4df1-8a71-fef7408e4b46",
+				"value": "eng"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "102ba7d1-3fe7-4c2d-8319-35b48bdb4873",
+				"value": "nor"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "aa086d40-4888-4c06-bc2e-91da969ec0e8",
+				"value": "kha"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "862d1310-c1ed-4679-81e3-dd2397c23fd0",
+				"value": "nld"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "e0efd29b-90b0-4424-a054-feab81030c16",
+				"value": "rus"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "0f1114ef-68ae-4fc7-a97b-49166b8a966b",
+				"value": "deu"
+			}
+		],
+		"portal_mf47652": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "b735a013-ebd5-4363-aa74-4947cb866e00",
+				"value": ""
+			}
+		],
+		"title": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "0d741d9e-4a24-4aaf-816f-66cc042c8500",
+				"value": "SOTM_7v2123_SEQ"
+			}
+		],
+		"portal_re3_seen_by_rule": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "80ee06c9-7479-4c75-b622-af5ce9429fd7",
+				"value": "4089a315-fe5b-4de0-a3d2-1a31a733d46b"
+			}
+		],
+		"__storage_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"__shape": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-895173"
+			}
+		],
+		"__version": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"__shape_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__sequence_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__ancestor_collection_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"portal_mf259": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "5bc65a8a-ff37-4e17-8f5e-a068a5f06494",
+				"value": "admin"
+			}
+		],
+		"portal_mf868653": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "bb3ad871-deea-42b1-876a-86b64d433a5e",
+				"value": "original"
+			}
+		],
+		"portal_mf50574": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ab120d45-9018-4c60-91d4-f6e4933e6b1f",
+				"value": ""
+			}
+		],
+		"portal_mf472706": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "6a7aa50c-b39e-407f-96a9-a136242a8170",
+				"value": ""
+			}
+		],
+		"__user": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "admin"
+			}
+		],
+		"created": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "4172c5b1-30a0-4592-8cd3-237eb60f45b8",
+				"value": "2023-03-27T13:04:00.235Z"
+			}
+		],
+		"portal_mf882282": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "30fc6a47-03b3-4cc0-8ec7-f25e7cbd3892",
+				"value": ""
+			}
+		],
+		"portal_mf957223": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d4c96ac6-72d3-4c5b-b565-cf906deb4384",
+				"value": ""
+			}
+		],
+		"portal_mf806195": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "82ae4010-8a49-4915-9ccd-d73224e74df5",
+				"value": ""
+			}
+		],
+		"__storagegroup_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"mediaType": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "4c032623-c31a-4527-9a8c-0549aecf064a",
+				"value": "none"
+			}
+		],
+		"portal_mf573509": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "f6c9e3d8-66c3-416e-aab9-a38d763658d3",
+				"value": ""
+			}
+		],
+		"itemId": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "6afae9e4-c032-488b-b71b-3911f0262fca",
+				"value": "VX-447459"
+			}
+		],
+		"portal_mf431847": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "79b16daf-2362-4ae5-842e-ea609980255b",
+				"value": ""
+			}
+		],
+		"portal_mf371915": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "4566f116-cb97-4860-b0dc-a406a16532fb",
+				"value": "vod"
+			}
+		],
+		"shapeTag": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "763c0439-bd98-45a6-814c-781d7116f6b6",
+				"value": "original"
+			}
+		],
+		"portal_mf452504": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "0e6cd953-c808-4357-9b0c-a71b856610ea",
+				"value": "related"
+			}
+		],
+		"__sequence": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "vidispine"
+			}
+		],
+		"__version_count": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__shape_last_added": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "2023-03-27T13:04:00.550Z"
+			}
+		],
+		"__metadata_last_modified": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "2023-04-16T15:04:01.319+02:00"
+			}
+		],
+		"portal_mf529506": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ec9019b0-ae94-49b2-991c-bf7885b0a9e4",
+				"value": ""
+			}
+		],
+		"portal_mf16851": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "dbe28b08-a9e5-47b6-92f5-01970c42d939",
+				"value": ""
+			}
+		],
+		"user": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "admin"
+			}
+		]
+	},
+	"id": "VX-447459"
+}

@@ -4,14 +4,18 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 
 	bccmflows "github.com/bcc-code/bccm-flows"
+	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
+	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
 )
+
+var nonAlphanumeric = regexp.MustCompile("[^a-zA-Z0-9_]+")
+var consecutiveUnderscores = regexp.MustCompile("_+")
 
 type Clip struct {
 	VideoFile     string
@@ -47,69 +51,13 @@ const (
 	EmtpySRTFile = "/mnt/isilon/system/assets/empty.srt"
 )
 
-func TCToSeconds(tc string) (float64, error) {
-	splits := strings.Split(tc, "@")
-	if len(splits) != 2 {
-		return 0, errors.New("Invalid timecode: " + tc)
-	}
-
-	samples, err := strconv.ParseFloat(splits[0], 64)
-	if err != nil {
-		return 0, err
-	}
-
-	if splits[1] != "PAL" {
-		return 0, errors.New("Invalid timecode. Currently only <NUMBER>@PAL is supported: " + tc)
-	}
-
-	// PAL = 25 fps
-	// http://10.12.128.15:8080/APIdoc/time.html#time-bases
-	return samples / 25, nil
-}
-
-// GetInOut returns the in and out point of the clip in seconds, suitable
-// for use with ffmpeg
-func (m *MetadataResult) GetInOut(beginTC string) (float64, float64, error) {
-	var v *MetadataField
-	if val, ok := m.Terse[FieldTitle.Value]; !ok {
-		// This should not happen as everything should have a title
-		return 0, 0, errors.New("Missing title")
-	} else {
-		v = val[0]
-	}
-
-	start := 0.0
-	if v.Start == "-INF" && v.End == "+INF" {
-		// This is a full asset so we return 0.0 start and the lenght of the asset as end
-		endString := m.Get(FieldDurationSeconds, "0")
-		end, err := strconv.ParseFloat(endString, 64)
-		return start, end, err
-	}
-
-	// Now we are in subclip territory. Here we need to extract the TC of the in and out point
-	// and convert it to seconds for use with ffmpeg
-
-	inTCseconds, err := TCToSeconds(v.Start)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	outTCseconds, err := TCToSeconds(v.End)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	// This is basically the offset of the tc that we have to remove from the in and out point
-	beginTCseconds, err := TCToSeconds(beginTC)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	return inTCseconds - beginTCseconds, outTCseconds - beginTCseconds, nil
-}
-
-func getClipForAssetOrSubclip(c *Client, itemVXID string, isSubclip bool, meta *MetadataResult, clipsMeta map[string]*MetadataResult) (*Clip, error) {
-	shapes, err := c.GetShapes(itemVXID)
+func (s *VidispineService) getClipForAssetOrSubclip(
+	itemVXID string,
+	isSubclip bool,
+	meta *vsapi.MetadataResult,
+	clipsMeta map[string]*vsapi.MetadataResult,
+) (*Clip, error) {
+	shapes, err := s.apiClient.GetShapes(itemVXID)
 	if err != nil {
 		return nil, err
 	}
@@ -134,22 +82,22 @@ func getClipForAssetOrSubclip(c *Client, itemVXID string, isSubclip bool, meta *
 		return &clip, nil
 	}
 
-	var subclipMeta *MetadataResult
+	var subclipMeta *vsapi.MetadataResult
 
-	subclipName := meta.Get(FieldSubclipToExport, "")
+	subclipName := meta.Get(vscommon.FieldSubclipToExport, "")
 	if scMeta, ok := clipsMeta[subclipName]; ok {
 		subclipMeta = scMeta
 	} else {
 		return nil, errors.New("Subclip " + subclipName + " does not exist")
 	}
 
-	in, out, err := subclipMeta.GetInOut(meta.Get(FieldStartTC, "0@PAL"))
+	in, out, err := subclipMeta.GetInOut(meta.Get(vscommon.FieldStartTC, "0@PAL"))
 	clip.InSeconds = in
 	clip.OutSeconds = out
 	return &clip, err
 }
 
-func getRelatedAudios(c *Client, clip *Clip, languagesToExport []string) (*Clip, error) {
+func (s *VidispineService) getRelatedAudios(clip *Clip, languagesToExport []string) (*Clip, error) {
 
 	if _, i, ok := lo.FindIndexOf(languagesToExport, func(l string) bool { return l == "nor" }); ok {
 		// Move "nor" to the front if available, so we can use it as fallback
@@ -166,13 +114,13 @@ func getRelatedAudios(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 		}
 
 		// Get metadata for the video clip
-		clipMeta, err := c.GetMetadata(clip.VXID)
+		clipMeta, err := s.apiClient.GetMetadata(clip.VXID)
 		if err != nil {
 			return clip, err
 		}
 
 		// Now we know what audio to export
-		relatedAudioVXID := clipMeta.Get(FieldType{relatedField}, "")
+		relatedAudioVXID := clipMeta.Get(vscommon.FieldType{relatedField}, "")
 		if relatedAudioVXID == "" {
 			// If nor (floor language) is missing we fall back to silece
 			if lang == "nor" {
@@ -188,7 +136,7 @@ func getRelatedAudios(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 			continue
 		}
 
-		relatedAudioShapes, err := c.GetShapes(relatedAudioVXID)
+		relatedAudioShapes, err := s.apiClient.GetShapes(relatedAudioVXID)
 		if err != nil {
 			return clip, err
 		}
@@ -202,6 +150,7 @@ func getRelatedAudios(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 			} else {
 				return clip, fmt.Errorf("no original or fallback shape found for item %s", relatedAudioVXID)
 			}
+			continue
 		}
 
 		channels := []int{}
@@ -225,8 +174,8 @@ func getRelatedAudios(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 	return clip, nil
 }
 
-func getEmbeddedAudio(c *Client, clip *Clip, languagesToExport []string) (*Clip, error) {
-	shapes, err := c.GetShapes(clip.VXID)
+func (s *VidispineService) getEmbeddedAudio(clip *Clip, languagesToExport []string) (*Clip, error) {
+	shapes, err := s.apiClient.GetShapes(clip.VXID)
 	if err != nil {
 		return clip, err
 	}
@@ -290,36 +239,33 @@ func getEmbeddedAudio(c *Client, clip *Clip, languagesToExport []string) (*Clip,
 	return clip, nil
 }
 
-var nonAlphanumeric = regexp.MustCompile("[^a-zA-Z0-9_]+")
-var consecutiveUnderscores = regexp.MustCompile("_+")
-
 // GetDataForExport returns the data needed to export the item with the given VXID
 // If exportSubclip is true, the subclip will be exported, otherwise the whole clip
-func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
-	meta, err := c.GetMetadata(itemVXID)
+func (s *VidispineService) GetDataForExport(itemVXID string) (*ExportData, error) {
+	meta, err := s.apiClient.GetMetadata(itemVXID)
 	if err != nil {
 		return nil, err
 	}
 
 	// Check for subclip
 	// This check needs to happen on the original metadata, not the split one
-	isSubclip := len(meta.GetArray(FieldTitle)) > 1
+	isSubclip := len(meta.GetArray(vscommon.FieldTitle)) > 1
 
 	metaClips := meta.SplitByClips()
 
 	// Get the metadata for the original clip
-	meta = metaClips[OriginalClip]
+	meta = metaClips[vsapi.OriginalClip]
 
 	// Determine where to take the audio from
 	audioSource := ExportAudioSourceEmbedded
-	if meta.Get(FieldExportAudioSource, "") == ExportAudioSourceRelated.Value {
+	if meta.Get(vscommon.FieldExportAudioSource, "") == ExportAudioSourceRelated.Value {
 		audioSource = ExportAudioSourceRelated
 	}
 
 	// Check for sequence
-	isSequence := meta.Get(FieldSeuenceSize, "0") != "0"
+	isSequence := meta.Get(vscommon.FieldSeuenceSize, "0") != "0"
 
-	title := meta.Get(FieldTitle, "")
+	title := meta.Get(vscommon.FieldTitle, "")
 
 	// TODO: This appears to define the shape used for export. Validate how and where this is used
 	// exportFormat := meta.Get("portal_mf868653", "original")
@@ -336,16 +282,16 @@ func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
 
 	// Get the video clips as a base
 	if isSequence {
-		seq, err := c.GetSequence(itemVXID)
+		seq, err := s.apiClient.GetSequence(itemVXID)
 		if err != nil {
 			return nil, err
 		}
-		out.Clips, err = seq.ToClips(c, audioSource)
+		out.Clips, err = s.SeqToClips(seq, audioSource)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		clip, err := getClipForAssetOrSubclip(c, itemVXID, isSubclip, meta, metaClips)
+		clip, err := s.getClipForAssetOrSubclip(itemVXID, isSubclip, meta, metaClips)
 		if err != nil {
 			return nil, err
 		}
@@ -356,12 +302,12 @@ func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
 	for _, clip := range out.Clips {
 		clip.AudioFiles = map[string]*AudioFile{}
 
-		languagesToExport := meta.GetArray(FieldLangsToExport)
+		languagesToExport := meta.GetArray(vscommon.FieldLangsToExport)
 
 		if audioSource == ExportAudioSourceRelated {
-			clip, err = getRelatedAudios(c, clip, languagesToExport)
+			clip, err = s.getRelatedAudios(clip, languagesToExport)
 		} else if audioSource == ExportAudioSourceEmbedded {
-			clip, err = getEmbeddedAudio(c, clip, languagesToExport)
+			clip, err = s.getEmbeddedAudio(clip, languagesToExport)
 		}
 
 		if err != nil {
@@ -376,7 +322,7 @@ func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
 		clip.SubtitleFiles = map[string]string{}
 
 		// This is independent of audio language export config, we include all subs available
-		clipShapes, err := c.GetShapes(clip.VXID)
+		clipShapes, err := s.apiClient.GetShapes(clip.VXID)
 		if err != nil {
 			return nil, err
 		}
@@ -409,9 +355,9 @@ func (c *Client) GetDataForExport(itemVXID string) (*ExportData, error) {
 }
 
 // convertFromClipTCTimeToSequenceRelativeTime ain't this a nice name?
-func convertFromClipTCTimeToSequenceRelativeTime(clip *Clip, chapter *MetadataResult, tcStart float64) *MetadataResult {
-	out := MetadataResult{
-		Terse: map[string][]*MetadataField{},
+func convertFromClipTCTimeToSequenceRelativeTime(clip *Clip, chapter *vsapi.MetadataResult, tcStart float64) *vsapi.MetadataResult {
+	out := vsapi.MetadataResult{
+		Terse: map[string][]*vsapi.MetadataField{},
 	}
 
 	// Claculate the offset from the clip position to the sequence position
@@ -422,8 +368,8 @@ func convertFromClipTCTimeToSequenceRelativeTime(clip *Clip, chapter *MetadataRe
 
 		for i, value := range chapter.Terse[name] {
 			// Convert to seconds so we can use math
-			chapterStart, _ := TCToSeconds(value.Start)
-			chapterEnd, _ := TCToSeconds(value.End)
+			chapterStart, _ := vscommon.TCToSeconds(value.Start)
+			chapterEnd, _ := vscommon.TCToSeconds(value.End)
 
 			// Convert to be relative to start of the media
 			chapterStart = chapterStart - tcStart

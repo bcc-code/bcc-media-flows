@@ -1,28 +1,11 @@
 package vidispine
 
 import (
-	"encoding/xml"
-	"os"
-	"path/filepath"
 	"testing"
 
+	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
 	"github.com/stretchr/testify/assert"
 )
-
-// Just make sure decoding works
-func Test_DecodeSequenceXML(t *testing.T) {
-	glob, err := filepath.Glob("testdata/sequences/*.xml")
-	assert.NoError(t, err)
-
-	for _, file := range glob {
-		f, err := os.ReadFile(file)
-		assert.NoError(t, err)
-
-		doc := &SequenceDocument{}
-		err = xml.Unmarshal(f, doc)
-		assert.NoError(t, err)
-	}
-}
 
 func Test_Convert(t *testing.T) {
 
@@ -33,10 +16,10 @@ func Test_Convert(t *testing.T) {
 		SequenceOut: 40,
 	}
 
-	chapter := &MetadataResult{
-		Terse: map[string][]*MetadataField{
-			"title": []*MetadataField{
-				&MetadataField{
+	chapter := &vsapi.MetadataResult{
+		Terse: map[string][]*vsapi.MetadataField{
+			"title": {
+				{
 					Start: "250@PAL",
 					End:   "300@PAL",
 					UUID:  "uuid1",
@@ -48,10 +31,10 @@ func Test_Convert(t *testing.T) {
 
 	tcStart := 0.0
 
-	expectd := &MetadataResult{
-		Terse: map[string][]*MetadataField{
-			"title": []*MetadataField{
-				&MetadataField{
+	expectd := &vsapi.MetadataResult{
+		Terse: map[string][]*vsapi.MetadataField{
+			"title": {
+				{
 					Start: "750@PAL",
 					End:   "800@PAL",
 					UUID:  "uuid1",
@@ -73,10 +56,10 @@ func Test_Convert2(t *testing.T) {
 		SequenceOut: 40,
 	}
 
-	chapter := &MetadataResult{
-		Terse: map[string][]*MetadataField{
-			"title": []*MetadataField{
-				&MetadataField{
+	chapter := &vsapi.MetadataResult{
+		Terse: map[string][]*vsapi.MetadataField{
+			"title": {
+				{
 					Start: "25250@PAL",
 					End:   "25300@PAL",
 					UUID:  "uuid1",
@@ -88,10 +71,10 @@ func Test_Convert2(t *testing.T) {
 
 	tcStart := 1000.0
 
-	expectd := &MetadataResult{
-		Terse: map[string][]*MetadataField{
-			"title": []*MetadataField{
-				&MetadataField{
+	expectd := &vsapi.MetadataResult{
+		Terse: map[string][]*vsapi.MetadataField{
+			"title": {
+				{
 					Start: "750@PAL",
 					End:   "800@PAL",
 					UUID:  "uuid1",

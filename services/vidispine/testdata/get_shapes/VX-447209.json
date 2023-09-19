@@ -1,0 +1,345 @@
+{
+	"terse": {
+		"__placeholder_shape_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"__collection_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"__shapetag_lowaudio_hash": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "eb00dc7bd8c733785ae77864f799390eecb2c887"
+			}
+		],
+		"durationSeconds": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "6ae5a6be-baf9-4c57-9ceb-855b72c959fa",
+				"value": "652.0"
+			}
+		],
+		"__shapetag_original_hash": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "aefd1db0fdf9b6272373502531267b0f6f269257"
+			}
+		],
+		"originalFormat": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d594a0dd-2a16-44a0-93ed-e18ad8e26fe8",
+				"value": "wav"
+			}
+		],
+		"mimeType": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "81c3c8fa-4885-4a93-bc0e-aae92fec8d71",
+				"value": "audio/x-wav"
+			}
+		],
+		"title": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "ab650bbe-5a58-46a0-9046-77215b9d96b2",
+				"value": "SOTM_7v2123_MAS_ENG_FRA"
+			}
+		],
+		"__storage_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__shape": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-894714"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-894701"
+			}
+		],
+		"__version": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"portal_archive_external_ids": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "b48c14be-5f54-4f9b-b2b6-9149d15ac1a2",
+				"value": "Default-Archive#MTk0MTNkMjgtZGQ5NC00MDY5LTQ0ODUtZGRjYThkM2JlMzM5"
+			}
+		],
+		"__shape_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "2"
+			}
+		],
+		"af_p5_tape_names": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "f83e645e-860c-4bfb-984e-0d324aab0680",
+				"value": "14962, 14963"
+			}
+		],
+		"__sequence_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"__ancestor_collection_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"af_p5_barcodes": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "aa403b29-6cbd-48b2-9d83-a3eec8e1b48c",
+				"value": "TT1707L, TT1705L"
+			}
+		],
+		"portal_archive_status": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "85add957-ce42-4c38-9812-196b3bf786f9",
+				"value": "Archived/Restored"
+			}
+		],
+		"__storage_lowaudio": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-42"
+			}
+		],
+		"af_p5_tape_labels": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "d9c7ef8d-f8ab-4fa7-8142-6e829e87555c",
+				"value": "CantemoArchive.0141, CantemoArchive.0142"
+			}
+		],
+		"__user": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "vsapiuser"
+			}
+		],
+		"created": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "28330914-a53a-45e0-a980-2e6dab3ccaae",
+				"value": "2023-03-24T11:28:14.677Z"
+			}
+		],
+		"__storagegroup_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "0"
+			}
+		],
+		"mediaType": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "59a8316b-4383-45c4-8986-4d3ef3e9bb4a",
+				"value": "audio"
+			}
+		],
+		"portal_archive_action_status": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "7e1b5a44-6e67-491c-b601-8c326bb6f74c",
+				"value": ""
+			}
+		],
+		"originalVideoCodec": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "59255248-de69-42e4-9a0c-20714374e054",
+				"value": ""
+			}
+		],
+		"__storage_original_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"originalUri": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "51b9a217-b228-44ec-81f2-366e898dc6a2",
+				"value": "file:///path/to/file/SOTM_7v2123_MAS_ENG_FRA.wav"
+			}
+		],
+		"portal_archive_ts": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "18d77df0-dfe4-4d79-944f-8c7e8842bf26",
+				"value": "2023-03-24T11:46:54.953920"
+			}
+		],
+		"itemId": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "9c8bee86-cd90-4e9f-b46f-71b9faa37f83",
+				"value": "VX-447209"
+			}
+		],
+		"__storage_original": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-42"
+			}
+		],
+		"durationTimeCode": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "4d52ee8b-463b-4d4c-8269-5d5940c616ee",
+				"value": "652000000@1000000"
+			}
+		],
+		"__storage_lowaudio_size": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"shapeTag": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "0d1eb777-8085-4bc3-8d4b-f1a2126701ee",
+				"value": "original"
+			},
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "7fc7c430-d72f-4403-a07a-8b82ca555f90",
+				"value": "lowaudio"
+			}
+		],
+		"__version_count": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "1"
+			}
+		],
+		"__shape_last_added": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "2023-03-24T11:29:42.463Z"
+			}
+		],
+		"__metadata_last_modified": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "2023-06-10T18:28:37.185+02:00"
+			}
+		],
+		"user": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "vsapiuser"
+			}
+		],
+		"originalFilename": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "940f4f1f-c6b0-4ce7-bf9e-7a24c299591a",
+				"value": "SOTM_7v2123_MAS_ENG_FRA.wav"
+			}
+		],
+		"originalAudioCodec": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "39746031-1b9b-44f3-a1e5-6f899cebe230",
+				"value": "pcm_s24le"
+			}
+		],
+		"__storage": [
+			{
+				"end": "+INF",
+				"start": "-INF",
+				"uuid": "",
+				"value": "VX-42"
+			}
+		]
+	},
+	"id": "VX-447209"
+}

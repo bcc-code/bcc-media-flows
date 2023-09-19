@@ -1,0 +1,5620 @@
+{
+	"shape": [
+		{
+			"id": "VX-929787",
+			"created": "2023-08-08T18:50:03.917+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"original"
+			],
+			"mimeType": [
+				"video/x-mxf-mpeg2video-pcm_s24le"
+			],
+			"containerComponent": {
+				"duration": {
+					"samples": 109481,
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 25
+					}
+				},
+				"format": "mxf",
+				"firstSMPTETimecode": "18:51:10:00",
+				"startTimecode": 1696750,
+				"startTimestamp": {
+					"samples": 0,
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 90000
+					}
+				},
+				"roundedTimeBase": 25,
+				"dropFrame": false,
+				"timeCodeTimeBase": {
+					"numerator": 1,
+					"denominator": 25
+				},
+				"mediaInfo": {
+					"property": [
+						{
+							"key": "Audio codecs",
+							"value": "PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM"
+						},
+						{
+							"key": "Audio_Format_List",
+							"value": "PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM"
+						},
+						{
+							"key": "Audio_Format_WithHint_List",
+							"value": "PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM / PCM"
+						},
+						{
+							"key": "Codec",
+							"value": "MXF"
+						},
+						{
+							"key": "Codec settings",
+							"value": "Closed / Complete"
+						},
+						{
+							"key": "Codec/Extensions usually used",
+							"value": "mxf"
+						},
+						{
+							"key": "Codecs Video",
+							"value": "MPEG-2 Video"
+						},
+						{
+							"key": "Commercial name",
+							"value": "XDCAM HD422"
+						},
+						{
+							"key": "Count",
+							"value": "325"
+						},
+						{
+							"key": "Count of audio streams",
+							"value": "16"
+						},
+						{
+							"key": "Count of stream of this kind",
+							"value": "1"
+						},
+						{
+							"key": "Count of video streams",
+							"value": "1"
+						},
+						{
+							"key": "Duration",
+							"value": "4379240"
+						},
+						{
+							"key": "Encoded date",
+							"value": "0-00-00 00:00:00.000"
+						},
+						{
+							"key": "Encoded_Application_CompanyName",
+							"value": "FFmpeg"
+						},
+						{
+							"key": "Encoded_Application_Name",
+							"value": "OP1a Muxer"
+						},
+						{
+							"key": "Encoded_Application_Version",
+							"value": "58.76.100.0.0"
+						},
+						{
+							"key": "Encoded_Library_Name",
+							"value": "Lavf (mingw32)"
+						},
+						{
+							"key": "Encoded_Library_Version",
+							"value": "58.76.100.0.0"
+						},
+						{
+							"key": "File extension",
+							"value": "mxf"
+						},
+						{
+							"key": "File size",
+							"value": "38226111099"
+						},
+						{
+							"key": "FooterSize",
+							"value": "7291"
+						},
+						{
+							"key": "Format",
+							"value": "MXF"
+						},
+						{
+							"key": "Format profile",
+							"value": "OP-1a"
+						},
+						{
+							"key": "Format settings",
+							"value": "Closed / Complete"
+						},
+						{
+							"key": "Format version",
+							"value": "1.3"
+						},
+						{
+							"key": "Format/Extensions usually used",
+							"value": "mxf"
+						},
+						{
+							"key": "Frame count",
+							"value": "109481"
+						},
+						{
+							"key": "Frame rate",
+							"value": "25.000"
+						},
+						{
+							"key": "Internet media type",
+							"value": "application/mxf"
+						},
+						{
+							"key": "Kind of stream",
+							"value": "General"
+						},
+						{
+							"key": "OtherCount",
+							"value": "3"
+						},
+						{
+							"key": "Other_Format_List",
+							"value": "MXF TC / MXF TC / SMPTE TC"
+						},
+						{
+							"key": "Other_Format_WithHint_List",
+							"value": "MXF TC / MXF TC / SMPTE TC"
+						},
+						{
+							"key": "Overall bit rate",
+							"value": "69831496"
+						},
+						{
+							"key": "Proportion of this stream",
+							"value": "0.02004"
+						},
+						{
+							"key": "Stream identifier",
+							"value": "0"
+						},
+						{
+							"key": "Stream size",
+							"value": "766092139"
+						},
+						{
+							"key": "Video_Format_List",
+							"value": "MPEG Video"
+						},
+						{
+							"key": "Video_Format_WithHint_List",
+							"value": "MPEG Video"
+						},
+						{
+							"key": "Writing application",
+							"value": "FFmpeg OP1a Muxer 58.76.100.0.0"
+						},
+						{
+							"key": "Writing library",
+							"value": "Lavf (mingw32) 58.76.100.0.0"
+						}
+					]
+				},
+				"file": [
+					{
+						"id": "VX-1460820",
+						"path": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf",
+						"uri": [
+							"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+						],
+						"state": "CLOSED",
+						"size": 38226111099,
+						"hash": "8cfc9b0d1c1dff0c681a5f127d1cb83e282d03e7",
+						"timestamp": "2023-08-08T18:50:25.704+0000",
+						"refreshFlag": 1,
+						"storage": "VX-42",
+						"metadata": {
+							"field": [
+								{
+									"key": "created",
+									"value": "1691520581852"
+								},
+								{
+									"key": "mtime",
+									"value": "1691520581852"
+								}
+							]
+						}
+					}
+				],
+				"id": "VX-2438147",
+				"metadata": [
+					{
+						"key": "product_version",
+						"value": "58.76.100"
+					},
+					{
+						"key": "operational_pattern_ul",
+						"value": "060e2b34.04010101.0d010201.01010900"
+					},
+					{
+						"key": "application_platform",
+						"value": "Lavf (mingw32)"
+					},
+					{
+						"key": "material_package_umid",
+						"value": "060A2B340101010501010D00139916D852947134429916D80052947134429900"
+					},
+					{
+						"key": "umid",
+						"value": "060A2B340101010501010D00139916D852947134429916D80052947134429900"
+					},
+					{
+						"key": "drop_frame",
+						"value": "false"
+					},
+					{
+						"key": "toolkit_version_num",
+						"value": "58.76.100.0.0"
+					},
+					{
+						"key": "rounded_time_base",
+						"value": "25"
+					},
+					{
+						"key": "product_name",
+						"value": "OP1a Muxer"
+					},
+					{
+						"key": "source_track_rollout",
+						"value": "0"
+					},
+					{
+						"key": "timecode",
+						"value": "18:51:10:00"
+					},
+					{
+						"key": "material_track_duration",
+						"value": "109481"
+					},
+					{
+						"key": "uid",
+						"value": "adab4424-2f25-4dc7-92ff-29bd000c0000"
+					},
+					{
+						"key": "generation_uid",
+						"value": "adab4424-2f25-4dc7-92ff-29bd000c0001"
+					},
+					{
+						"key": "componentOriginalFilename",
+						"value": "MAGA_20230808_1800_PGM_MU1.mxf"
+					},
+					{
+						"key": "company_name",
+						"value": "FFmpeg"
+					},
+					{
+						"key": "source_track_duration",
+						"value": "109481"
+					},
+					{
+						"key": "product_uid",
+						"value": "adab4424-2f25-4dc7-92ff-29bd000c0002"
+					},
+					{
+						"key": "product_version_num",
+						"value": "58.76.100.0.0"
+					},
+					{
+						"key": "start_timecode",
+						"value": "1696750"
+					}
+				]
+			},
+			"audioComponent": [
+				{
+					"channelCount": 1,
+					"channelLayout": 0,
+					"sampleFormat": "AV_SAMPLE_FMT_S32",
+					"frameSize": 1,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "24"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1152000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "BlockAlignment",
+								"value": "3"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "1"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "0D01030102060300"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "278"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "16"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_SDTI",
+								"value": "67870000"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, wrapping mode",
+								"value": "Frame (AES)"
+							},
+							{
+								"key": "Frame count",
+								"value": "109481"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "ID",
+								"value": "3"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Locked",
+								"value": "Yes"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.01650"
+							},
+							{
+								"key": "Resolution",
+								"value": "24"
+							},
+							{
+								"key": "Samples count",
+								"value": "210203520"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1920"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "0"
+							},
+							{
+								"key": "Stream size",
+								"value": "630610560"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "1"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1460820",
+							"path": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+							],
+							"state": "CLOSED",
+							"size": 38226111099,
+							"hash": "8cfc9b0d1c1dff0c681a5f127d1cb83e282d03e7",
+							"timestamp": "2023-08-08T18:50:25.704+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691520581852"
+									},
+									{
+										"key": "mtime",
+										"value": "1691520581852"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438148",
+					"metadata": [
+						{
+							"key": "material_track_duration",
+							"value": "109481"
+						},
+						{
+							"key": "material_track_editrate",
+							"value": "25/1"
+						},
+						{
+							"key": "Locked",
+							"value": "1"
+						},
+						{
+							"key": "source_track_number",
+							"value": "370148096"
+						},
+						{
+							"key": "umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf"
+						},
+						{
+							"key": "file_package_umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "material_track_number",
+							"value": "0"
+						},
+						{
+							"key": "AudioSamplingRate",
+							"value": "48000/1"
+						}
+					],
+					"codec": "pcm_s24le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A0",
+					"essenceStreamId": 2,
+					"bitrate": 1152000,
+					"pid": 3,
+					"duration": {
+						"samples": 109481,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				},
+				{
+					"channelCount": 1,
+					"channelLayout": 0,
+					"sampleFormat": "AV_SAMPLE_FMT_S32",
+					"frameSize": 1,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "24"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1152000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "BlockAlignment",
+								"value": "3"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "1"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "0D01030102060300"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "278"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "16"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_SDTI",
+								"value": "67870000"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, wrapping mode",
+								"value": "Frame (AES)"
+							},
+							{
+								"key": "Frame count",
+								"value": "109481"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "ID",
+								"value": "4"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Locked",
+								"value": "Yes"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.01650"
+							},
+							{
+								"key": "Resolution",
+								"value": "24"
+							},
+							{
+								"key": "Samples count",
+								"value": "210203520"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1920"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "1"
+							},
+							{
+								"key": "Stream size",
+								"value": "630610560"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "2"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1460820",
+							"path": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+							],
+							"state": "CLOSED",
+							"size": 38226111099,
+							"hash": "8cfc9b0d1c1dff0c681a5f127d1cb83e282d03e7",
+							"timestamp": "2023-08-08T18:50:25.704+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691520581852"
+									},
+									{
+										"key": "mtime",
+										"value": "1691520581852"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438149",
+					"metadata": [
+						{
+							"key": "material_track_duration",
+							"value": "109481"
+						},
+						{
+							"key": "material_track_editrate",
+							"value": "25/1"
+						},
+						{
+							"key": "Locked",
+							"value": "1"
+						},
+						{
+							"key": "source_track_number",
+							"value": "370148097"
+						},
+						{
+							"key": "umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf"
+						},
+						{
+							"key": "file_package_umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "material_track_number",
+							"value": "0"
+						},
+						{
+							"key": "AudioSamplingRate",
+							"value": "48000/1"
+						}
+					],
+					"codec": "pcm_s24le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A1",
+					"essenceStreamId": 3,
+					"bitrate": 1152000,
+					"pid": 4,
+					"duration": {
+						"samples": 109481,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				},
+				{
+					"channelCount": 1,
+					"channelLayout": 0,
+					"sampleFormat": "AV_SAMPLE_FMT_S32",
+					"frameSize": 1,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "24"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1152000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "BlockAlignment",
+								"value": "3"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "1"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "0D01030102060300"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "278"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "16"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_SDTI",
+								"value": "67870000"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, wrapping mode",
+								"value": "Frame (AES)"
+							},
+							{
+								"key": "Frame count",
+								"value": "109481"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "ID",
+								"value": "5"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Locked",
+								"value": "Yes"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.01650"
+							},
+							{
+								"key": "Resolution",
+								"value": "24"
+							},
+							{
+								"key": "Samples count",
+								"value": "210203520"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1920"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "2"
+							},
+							{
+								"key": "Stream size",
+								"value": "630610560"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "3"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1460820",
+							"path": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+							],
+							"state": "CLOSED",
+							"size": 38226111099,
+							"hash": "8cfc9b0d1c1dff0c681a5f127d1cb83e282d03e7",
+							"timestamp": "2023-08-08T18:50:25.704+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691520581852"
+									},
+									{
+										"key": "mtime",
+										"value": "1691520581852"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438150",
+					"metadata": [
+						{
+							"key": "material_track_duration",
+							"value": "109481"
+						},
+						{
+							"key": "material_track_editrate",
+							"value": "25/1"
+						},
+						{
+							"key": "Locked",
+							"value": "1"
+						},
+						{
+							"key": "source_track_number",
+							"value": "370148098"
+						},
+						{
+							"key": "umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf"
+						},
+						{
+							"key": "file_package_umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "material_track_number",
+							"value": "0"
+						},
+						{
+							"key": "AudioSamplingRate",
+							"value": "48000/1"
+						}
+					],
+					"codec": "pcm_s24le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A2",
+					"essenceStreamId": 4,
+					"bitrate": 1152000,
+					"pid": 5,
+					"duration": {
+						"samples": 109481,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				},
+				{
+					"channelCount": 1,
+					"channelLayout": 0,
+					"sampleFormat": "AV_SAMPLE_FMT_S32",
+					"frameSize": 1,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "24"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1152000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "BlockAlignment",
+								"value": "3"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "1"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "0D01030102060300"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "278"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "16"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_SDTI",
+								"value": "67870000"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, wrapping mode",
+								"value": "Frame (AES)"
+							},
+							{
+								"key": "Frame count",
+								"value": "109481"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "ID",
+								"value": "6"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Locked",
+								"value": "Yes"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.01650"
+							},
+							{
+								"key": "Resolution",
+								"value": "24"
+							},
+							{
+								"key": "Samples count",
+								"value": "210203520"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1920"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "3"
+							},
+							{
+								"key": "Stream size",
+								"value": "630610560"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "4"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1460820",
+							"path": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+							],
+							"state": "CLOSED",
+							"size": 38226111099,
+							"hash": "8cfc9b0d1c1dff0c681a5f127d1cb83e282d03e7",
+							"timestamp": "2023-08-08T18:50:25.704+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691520581852"
+									},
+									{
+										"key": "mtime",
+										"value": "1691520581852"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438151",
+					"metadata": [
+						{
+							"key": "material_track_duration",
+							"value": "109481"
+						},
+						{
+							"key": "material_track_editrate",
+							"value": "25/1"
+						},
+						{
+							"key": "Locked",
+							"value": "1"
+						},
+						{
+							"key": "source_track_number",
+							"value": "370148099"
+						},
+						{
+							"key": "umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf"
+						},
+						{
+							"key": "file_package_umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "material_track_number",
+							"value": "0"
+						},
+						{
+							"key": "AudioSamplingRate",
+							"value": "48000/1"
+						}
+					],
+					"codec": "pcm_s24le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A3",
+					"essenceStreamId": 5,
+					"bitrate": 1152000,
+					"pid": 6,
+					"duration": {
+						"samples": 109481,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				},
+				{
+					"channelCount": 1,
+					"channelLayout": 0,
+					"sampleFormat": "AV_SAMPLE_FMT_S32",
+					"frameSize": 1,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "24"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1152000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "BlockAlignment",
+								"value": "3"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "1"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "0D01030102060300"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "278"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "16"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_SDTI",
+								"value": "67870000"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, wrapping mode",
+								"value": "Frame (AES)"
+							},
+							{
+								"key": "Frame count",
+								"value": "109481"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "ID",
+								"value": "7"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Locked",
+								"value": "Yes"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.01650"
+							},
+							{
+								"key": "Resolution",
+								"value": "24"
+							},
+							{
+								"key": "Samples count",
+								"value": "210203520"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1920"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "4"
+							},
+							{
+								"key": "Stream size",
+								"value": "630610560"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "5"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1460820",
+							"path": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+							],
+							"state": "CLOSED",
+							"size": 38226111099,
+							"hash": "8cfc9b0d1c1dff0c681a5f127d1cb83e282d03e7",
+							"timestamp": "2023-08-08T18:50:25.704+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691520581852"
+									},
+									{
+										"key": "mtime",
+										"value": "1691520581852"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438152",
+					"metadata": [
+						{
+							"key": "material_track_duration",
+							"value": "109481"
+						},
+						{
+							"key": "material_track_editrate",
+							"value": "25/1"
+						},
+						{
+							"key": "Locked",
+							"value": "1"
+						},
+						{
+							"key": "source_track_number",
+							"value": "370148100"
+						},
+						{
+							"key": "umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf"
+						},
+						{
+							"key": "file_package_umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "material_track_number",
+							"value": "0"
+						},
+						{
+							"key": "AudioSamplingRate",
+							"value": "48000/1"
+						}
+					],
+					"codec": "pcm_s24le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A4",
+					"essenceStreamId": 6,
+					"bitrate": 1152000,
+					"pid": 7,
+					"duration": {
+						"samples": 109481,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				},
+				{
+					"channelCount": 1,
+					"channelLayout": 0,
+					"sampleFormat": "AV_SAMPLE_FMT_S32",
+					"frameSize": 1,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "24"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1152000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "BlockAlignment",
+								"value": "3"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "1"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "0D01030102060300"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "278"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "16"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_SDTI",
+								"value": "67870000"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, wrapping mode",
+								"value": "Frame (AES)"
+							},
+							{
+								"key": "Frame count",
+								"value": "109481"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "ID",
+								"value": "8"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Locked",
+								"value": "Yes"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.01650"
+							},
+							{
+								"key": "Resolution",
+								"value": "24"
+							},
+							{
+								"key": "Samples count",
+								"value": "210203520"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1920"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "5"
+							},
+							{
+								"key": "Stream size",
+								"value": "630610560"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "6"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1460820",
+							"path": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+							],
+							"state": "CLOSED",
+							"size": 38226111099,
+							"hash": "8cfc9b0d1c1dff0c681a5f127d1cb83e282d03e7",
+							"timestamp": "2023-08-08T18:50:25.704+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691520581852"
+									},
+									{
+										"key": "mtime",
+										"value": "1691520581852"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438153",
+					"metadata": [
+						{
+							"key": "material_track_duration",
+							"value": "109481"
+						},
+						{
+							"key": "material_track_editrate",
+							"value": "25/1"
+						},
+						{
+							"key": "Locked",
+							"value": "1"
+						},
+						{
+							"key": "source_track_number",
+							"value": "370148101"
+						},
+						{
+							"key": "umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf"
+						},
+						{
+							"key": "file_package_umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "material_track_number",
+							"value": "0"
+						},
+						{
+							"key": "AudioSamplingRate",
+							"value": "48000/1"
+						}
+					],
+					"codec": "pcm_s24le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A5",
+					"essenceStreamId": 7,
+					"bitrate": 1152000,
+					"pid": 8,
+					"duration": {
+						"samples": 109481,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				},
+				{
+					"channelCount": 1,
+					"channelLayout": 0,
+					"sampleFormat": "AV_SAMPLE_FMT_S32",
+					"frameSize": 1,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "24"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1152000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "BlockAlignment",
+								"value": "3"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "1"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "0D01030102060300"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "278"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "16"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_SDTI",
+								"value": "67870000"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, wrapping mode",
+								"value": "Frame (AES)"
+							},
+							{
+								"key": "Frame count",
+								"value": "109481"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "ID",
+								"value": "9"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Locked",
+								"value": "Yes"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.01650"
+							},
+							{
+								"key": "Resolution",
+								"value": "24"
+							},
+							{
+								"key": "Samples count",
+								"value": "210203520"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1920"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "6"
+							},
+							{
+								"key": "Stream size",
+								"value": "630610560"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "7"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1460820",
+							"path": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+							],
+							"state": "CLOSED",
+							"size": 38226111099,
+							"hash": "8cfc9b0d1c1dff0c681a5f127d1cb83e282d03e7",
+							"timestamp": "2023-08-08T18:50:25.704+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691520581852"
+									},
+									{
+										"key": "mtime",
+										"value": "1691520581852"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438154",
+					"metadata": [
+						{
+							"key": "material_track_duration",
+							"value": "109481"
+						},
+						{
+							"key": "material_track_editrate",
+							"value": "25/1"
+						},
+						{
+							"key": "Locked",
+							"value": "1"
+						},
+						{
+							"key": "source_track_number",
+							"value": "370148102"
+						},
+						{
+							"key": "umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf"
+						},
+						{
+							"key": "file_package_umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "material_track_number",
+							"value": "0"
+						},
+						{
+							"key": "AudioSamplingRate",
+							"value": "48000/1"
+						}
+					],
+					"codec": "pcm_s24le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A6",
+					"essenceStreamId": 8,
+					"bitrate": 1152000,
+					"pid": 9,
+					"duration": {
+						"samples": 109481,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				},
+				{
+					"channelCount": 1,
+					"channelLayout": 0,
+					"sampleFormat": "AV_SAMPLE_FMT_S32",
+					"frameSize": 1,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "24"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1152000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "BlockAlignment",
+								"value": "3"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "1"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "0D01030102060300"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "278"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "16"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_SDTI",
+								"value": "67870000"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, wrapping mode",
+								"value": "Frame (AES)"
+							},
+							{
+								"key": "Frame count",
+								"value": "109481"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "ID",
+								"value": "10"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Locked",
+								"value": "Yes"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.01650"
+							},
+							{
+								"key": "Resolution",
+								"value": "24"
+							},
+							{
+								"key": "Samples count",
+								"value": "210203520"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1920"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "7"
+							},
+							{
+								"key": "Stream size",
+								"value": "630610560"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "8"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1460820",
+							"path": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+							],
+							"state": "CLOSED",
+							"size": 38226111099,
+							"hash": "8cfc9b0d1c1dff0c681a5f127d1cb83e282d03e7",
+							"timestamp": "2023-08-08T18:50:25.704+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691520581852"
+									},
+									{
+										"key": "mtime",
+										"value": "1691520581852"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438155",
+					"metadata": [
+						{
+							"key": "material_track_duration",
+							"value": "109481"
+						},
+						{
+							"key": "material_track_editrate",
+							"value": "25/1"
+						},
+						{
+							"key": "Locked",
+							"value": "1"
+						},
+						{
+							"key": "source_track_number",
+							"value": "370148103"
+						},
+						{
+							"key": "umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf"
+						},
+						{
+							"key": "file_package_umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "material_track_number",
+							"value": "0"
+						},
+						{
+							"key": "AudioSamplingRate",
+							"value": "48000/1"
+						}
+					],
+					"codec": "pcm_s24le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A7",
+					"essenceStreamId": 9,
+					"bitrate": 1152000,
+					"pid": 10,
+					"duration": {
+						"samples": 109481,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				},
+				{
+					"channelCount": 1,
+					"channelLayout": 0,
+					"sampleFormat": "AV_SAMPLE_FMT_S32",
+					"frameSize": 1,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "24"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1152000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "BlockAlignment",
+								"value": "3"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "1"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "0D01030102060300"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "278"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "16"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_SDTI",
+								"value": "67870000"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, wrapping mode",
+								"value": "Frame (AES)"
+							},
+							{
+								"key": "Frame count",
+								"value": "109481"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "ID",
+								"value": "11"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Locked",
+								"value": "Yes"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.01650"
+							},
+							{
+								"key": "Resolution",
+								"value": "24"
+							},
+							{
+								"key": "Samples count",
+								"value": "210203520"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1920"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "8"
+							},
+							{
+								"key": "Stream size",
+								"value": "630610560"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "9"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1460820",
+							"path": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+							],
+							"state": "CLOSED",
+							"size": 38226111099,
+							"hash": "8cfc9b0d1c1dff0c681a5f127d1cb83e282d03e7",
+							"timestamp": "2023-08-08T18:50:25.704+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691520581852"
+									},
+									{
+										"key": "mtime",
+										"value": "1691520581852"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438156",
+					"metadata": [
+						{
+							"key": "material_track_duration",
+							"value": "109481"
+						},
+						{
+							"key": "material_track_editrate",
+							"value": "25/1"
+						},
+						{
+							"key": "Locked",
+							"value": "1"
+						},
+						{
+							"key": "source_track_number",
+							"value": "370148104"
+						},
+						{
+							"key": "umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf"
+						},
+						{
+							"key": "file_package_umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "material_track_number",
+							"value": "0"
+						},
+						{
+							"key": "AudioSamplingRate",
+							"value": "48000/1"
+						}
+					],
+					"codec": "pcm_s24le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A8",
+					"essenceStreamId": 10,
+					"bitrate": 1152000,
+					"pid": 11,
+					"duration": {
+						"samples": 109481,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				},
+				{
+					"channelCount": 1,
+					"channelLayout": 0,
+					"sampleFormat": "AV_SAMPLE_FMT_S32",
+					"frameSize": 1,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "24"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1152000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "BlockAlignment",
+								"value": "3"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "1"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "0D01030102060300"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "278"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "16"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_SDTI",
+								"value": "67870000"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, wrapping mode",
+								"value": "Frame (AES)"
+							},
+							{
+								"key": "Frame count",
+								"value": "109481"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "ID",
+								"value": "12"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Locked",
+								"value": "Yes"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.01650"
+							},
+							{
+								"key": "Resolution",
+								"value": "24"
+							},
+							{
+								"key": "Samples count",
+								"value": "210203520"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1920"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "9"
+							},
+							{
+								"key": "Stream size",
+								"value": "630610560"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "10"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1460820",
+							"path": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+							],
+							"state": "CLOSED",
+							"size": 38226111099,
+							"hash": "8cfc9b0d1c1dff0c681a5f127d1cb83e282d03e7",
+							"timestamp": "2023-08-08T18:50:25.704+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691520581852"
+									},
+									{
+										"key": "mtime",
+										"value": "1691520581852"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438157",
+					"metadata": [
+						{
+							"key": "material_track_duration",
+							"value": "109481"
+						},
+						{
+							"key": "material_track_editrate",
+							"value": "25/1"
+						},
+						{
+							"key": "Locked",
+							"value": "1"
+						},
+						{
+							"key": "source_track_number",
+							"value": "370148105"
+						},
+						{
+							"key": "umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf"
+						},
+						{
+							"key": "file_package_umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "material_track_number",
+							"value": "0"
+						},
+						{
+							"key": "AudioSamplingRate",
+							"value": "48000/1"
+						}
+					],
+					"codec": "pcm_s24le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A9",
+					"essenceStreamId": 11,
+					"bitrate": 1152000,
+					"pid": 12,
+					"duration": {
+						"samples": 109481,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				},
+				{
+					"channelCount": 1,
+					"channelLayout": 0,
+					"sampleFormat": "AV_SAMPLE_FMT_S32",
+					"frameSize": 1,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "24"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1152000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "BlockAlignment",
+								"value": "3"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "1"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "0D01030102060300"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "278"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "16"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_SDTI",
+								"value": "67870000"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, wrapping mode",
+								"value": "Frame (AES)"
+							},
+							{
+								"key": "Frame count",
+								"value": "109481"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "ID",
+								"value": "13"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Locked",
+								"value": "Yes"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.01650"
+							},
+							{
+								"key": "Resolution",
+								"value": "24"
+							},
+							{
+								"key": "Samples count",
+								"value": "210203520"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1920"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "10"
+							},
+							{
+								"key": "Stream size",
+								"value": "630610560"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "11"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1460820",
+							"path": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+							],
+							"state": "CLOSED",
+							"size": 38226111099,
+							"hash": "8cfc9b0d1c1dff0c681a5f127d1cb83e282d03e7",
+							"timestamp": "2023-08-08T18:50:25.704+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691520581852"
+									},
+									{
+										"key": "mtime",
+										"value": "1691520581852"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438158",
+					"metadata": [
+						{
+							"key": "material_track_duration",
+							"value": "109481"
+						},
+						{
+							"key": "material_track_editrate",
+							"value": "25/1"
+						},
+						{
+							"key": "Locked",
+							"value": "1"
+						},
+						{
+							"key": "source_track_number",
+							"value": "370148106"
+						},
+						{
+							"key": "umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf"
+						},
+						{
+							"key": "file_package_umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "material_track_number",
+							"value": "0"
+						},
+						{
+							"key": "AudioSamplingRate",
+							"value": "48000/1"
+						}
+					],
+					"codec": "pcm_s24le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A10",
+					"essenceStreamId": 12,
+					"bitrate": 1152000,
+					"pid": 13,
+					"duration": {
+						"samples": 109481,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				},
+				{
+					"channelCount": 1,
+					"channelLayout": 0,
+					"sampleFormat": "AV_SAMPLE_FMT_S32",
+					"frameSize": 1,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "24"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1152000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "BlockAlignment",
+								"value": "3"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "1"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "0D01030102060300"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "278"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "16"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_SDTI",
+								"value": "67870000"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, wrapping mode",
+								"value": "Frame (AES)"
+							},
+							{
+								"key": "Frame count",
+								"value": "109481"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "ID",
+								"value": "14"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Locked",
+								"value": "Yes"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.01650"
+							},
+							{
+								"key": "Resolution",
+								"value": "24"
+							},
+							{
+								"key": "Samples count",
+								"value": "210203520"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1920"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "11"
+							},
+							{
+								"key": "Stream size",
+								"value": "630610560"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "12"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1460820",
+							"path": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+							],
+							"state": "CLOSED",
+							"size": 38226111099,
+							"hash": "8cfc9b0d1c1dff0c681a5f127d1cb83e282d03e7",
+							"timestamp": "2023-08-08T18:50:25.704+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691520581852"
+									},
+									{
+										"key": "mtime",
+										"value": "1691520581852"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438159",
+					"metadata": [
+						{
+							"key": "material_track_duration",
+							"value": "109481"
+						},
+						{
+							"key": "material_track_editrate",
+							"value": "25/1"
+						},
+						{
+							"key": "Locked",
+							"value": "1"
+						},
+						{
+							"key": "source_track_number",
+							"value": "370148107"
+						},
+						{
+							"key": "umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf"
+						},
+						{
+							"key": "file_package_umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "material_track_number",
+							"value": "0"
+						},
+						{
+							"key": "AudioSamplingRate",
+							"value": "48000/1"
+						}
+					],
+					"codec": "pcm_s24le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A11",
+					"essenceStreamId": 13,
+					"bitrate": 1152000,
+					"pid": 14,
+					"duration": {
+						"samples": 109481,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				},
+				{
+					"channelCount": 1,
+					"channelLayout": 0,
+					"sampleFormat": "AV_SAMPLE_FMT_S32",
+					"frameSize": 1,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "24"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1152000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "BlockAlignment",
+								"value": "3"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "1"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "0D01030102060300"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "278"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "16"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_SDTI",
+								"value": "67870000"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, wrapping mode",
+								"value": "Frame (AES)"
+							},
+							{
+								"key": "Frame count",
+								"value": "109481"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "ID",
+								"value": "15"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Locked",
+								"value": "Yes"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.01650"
+							},
+							{
+								"key": "Resolution",
+								"value": "24"
+							},
+							{
+								"key": "Samples count",
+								"value": "210203520"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1920"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "12"
+							},
+							{
+								"key": "Stream size",
+								"value": "630610560"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "13"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1460820",
+							"path": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+							],
+							"state": "CLOSED",
+							"size": 38226111099,
+							"hash": "8cfc9b0d1c1dff0c681a5f127d1cb83e282d03e7",
+							"timestamp": "2023-08-08T18:50:25.704+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691520581852"
+									},
+									{
+										"key": "mtime",
+										"value": "1691520581852"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438160",
+					"metadata": [
+						{
+							"key": "material_track_duration",
+							"value": "109481"
+						},
+						{
+							"key": "material_track_editrate",
+							"value": "25/1"
+						},
+						{
+							"key": "Locked",
+							"value": "1"
+						},
+						{
+							"key": "source_track_number",
+							"value": "370148108"
+						},
+						{
+							"key": "umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf"
+						},
+						{
+							"key": "file_package_umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "material_track_number",
+							"value": "0"
+						},
+						{
+							"key": "AudioSamplingRate",
+							"value": "48000/1"
+						}
+					],
+					"codec": "pcm_s24le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A12",
+					"essenceStreamId": 14,
+					"bitrate": 1152000,
+					"pid": 15,
+					"duration": {
+						"samples": 109481,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				},
+				{
+					"channelCount": 1,
+					"channelLayout": 0,
+					"sampleFormat": "AV_SAMPLE_FMT_S32",
+					"frameSize": 1,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "24"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1152000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "BlockAlignment",
+								"value": "3"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "1"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "0D01030102060300"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "278"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "16"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_SDTI",
+								"value": "67870000"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, wrapping mode",
+								"value": "Frame (AES)"
+							},
+							{
+								"key": "Frame count",
+								"value": "109481"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "ID",
+								"value": "16"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Locked",
+								"value": "Yes"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.01650"
+							},
+							{
+								"key": "Resolution",
+								"value": "24"
+							},
+							{
+								"key": "Samples count",
+								"value": "210203520"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1920"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "13"
+							},
+							{
+								"key": "Stream size",
+								"value": "630610560"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "14"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1460820",
+							"path": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+							],
+							"state": "CLOSED",
+							"size": 38226111099,
+							"hash": "8cfc9b0d1c1dff0c681a5f127d1cb83e282d03e7",
+							"timestamp": "2023-08-08T18:50:25.704+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691520581852"
+									},
+									{
+										"key": "mtime",
+										"value": "1691520581852"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438161",
+					"metadata": [
+						{
+							"key": "material_track_duration",
+							"value": "109481"
+						},
+						{
+							"key": "material_track_editrate",
+							"value": "25/1"
+						},
+						{
+							"key": "Locked",
+							"value": "1"
+						},
+						{
+							"key": "source_track_number",
+							"value": "370148109"
+						},
+						{
+							"key": "umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf"
+						},
+						{
+							"key": "file_package_umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "material_track_number",
+							"value": "0"
+						},
+						{
+							"key": "AudioSamplingRate",
+							"value": "48000/1"
+						}
+					],
+					"codec": "pcm_s24le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A13",
+					"essenceStreamId": 15,
+					"bitrate": 1152000,
+					"pid": 16,
+					"duration": {
+						"samples": 109481,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				},
+				{
+					"channelCount": 1,
+					"channelLayout": 0,
+					"sampleFormat": "AV_SAMPLE_FMT_S32",
+					"frameSize": 1,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "24"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1152000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "BlockAlignment",
+								"value": "3"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "1"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "0D01030102060300"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "278"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "16"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_SDTI",
+								"value": "67870000"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, wrapping mode",
+								"value": "Frame (AES)"
+							},
+							{
+								"key": "Frame count",
+								"value": "109481"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "ID",
+								"value": "17"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Locked",
+								"value": "Yes"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.01650"
+							},
+							{
+								"key": "Resolution",
+								"value": "24"
+							},
+							{
+								"key": "Samples count",
+								"value": "210203520"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1920"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "14"
+							},
+							{
+								"key": "Stream size",
+								"value": "630610560"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "15"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1460820",
+							"path": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+							],
+							"state": "CLOSED",
+							"size": 38226111099,
+							"hash": "8cfc9b0d1c1dff0c681a5f127d1cb83e282d03e7",
+							"timestamp": "2023-08-08T18:50:25.704+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691520581852"
+									},
+									{
+										"key": "mtime",
+										"value": "1691520581852"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438162",
+					"metadata": [
+						{
+							"key": "material_track_duration",
+							"value": "109481"
+						},
+						{
+							"key": "material_track_editrate",
+							"value": "25/1"
+						},
+						{
+							"key": "Locked",
+							"value": "1"
+						},
+						{
+							"key": "source_track_number",
+							"value": "370148110"
+						},
+						{
+							"key": "umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf"
+						},
+						{
+							"key": "file_package_umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "material_track_number",
+							"value": "0"
+						},
+						{
+							"key": "AudioSamplingRate",
+							"value": "48000/1"
+						}
+					],
+					"codec": "pcm_s24le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A14",
+					"essenceStreamId": 16,
+					"bitrate": 1152000,
+					"pid": 17,
+					"duration": {
+						"samples": 109481,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				},
+				{
+					"channelCount": 1,
+					"channelLayout": 0,
+					"sampleFormat": "AV_SAMPLE_FMT_S32",
+					"frameSize": 1,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "24"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1152000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "BlockAlignment",
+								"value": "3"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "1"
+							},
+							{
+								"key": "Codec",
+								"value": "PCM"
+							},
+							{
+								"key": "Codec ID",
+								"value": "0D01030102060300"
+							},
+							{
+								"key": "Codec settings",
+								"value": "Little"
+							},
+							{
+								"key": "Codec settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "PCM"
+							},
+							{
+								"key": "Commercial name",
+								"value": "PCM"
+							},
+							{
+								"key": "Count",
+								"value": "278"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "16"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_SDTI",
+								"value": "67870000"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "PCM"
+							},
+							{
+								"key": "Format settings",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, Endianness",
+								"value": "Little"
+							},
+							{
+								"key": "Format settings, wrapping mode",
+								"value": "Frame (AES)"
+							},
+							{
+								"key": "Frame count",
+								"value": "109481"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "ID",
+								"value": "18"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Locked",
+								"value": "Yes"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.01650"
+							},
+							{
+								"key": "Resolution",
+								"value": "24"
+							},
+							{
+								"key": "Samples count",
+								"value": "210203520"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1920"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "48000"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "15"
+							},
+							{
+								"key": "Stream size",
+								"value": "630610560"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "16"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1460820",
+							"path": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+							],
+							"state": "CLOSED",
+							"size": 38226111099,
+							"hash": "8cfc9b0d1c1dff0c681a5f127d1cb83e282d03e7",
+							"timestamp": "2023-08-08T18:50:25.704+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691520581852"
+									},
+									{
+										"key": "mtime",
+										"value": "1691520581852"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438163",
+					"metadata": [
+						{
+							"key": "material_track_duration",
+							"value": "109481"
+						},
+						{
+							"key": "material_track_editrate",
+							"value": "25/1"
+						},
+						{
+							"key": "Locked",
+							"value": "1"
+						},
+						{
+							"key": "source_track_number",
+							"value": "370148111"
+						},
+						{
+							"key": "umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf"
+						},
+						{
+							"key": "file_package_umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "material_track_number",
+							"value": "0"
+						},
+						{
+							"key": "AudioSamplingRate",
+							"value": "48000/1"
+						}
+					],
+					"codec": "pcm_s24le",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 48000
+					},
+					"itemTrack": "A15",
+					"essenceStreamId": 17,
+					"bitrate": 1152000,
+					"pid": 18,
+					"duration": {
+						"samples": 109481,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 48000
+						}
+					}
+				}
+			],
+			"videoComponent": [
+				{
+					"resolution": {
+						"width": 1920,
+						"height": 1080
+					},
+					"pixelFormat": "yuv422p",
+					"maxBFrames": 1,
+					"pixelAspectRatio": {
+						"horizontal": 1,
+						"vertical": 1
+					},
+					"fieldOrder": "F1",
+					"codecTimeBase": {
+						"numerator": 1,
+						"denominator": 25
+					},
+					"averageFrameRate": {
+						"numerator": 25,
+						"denominator": 1
+					},
+					"realBaseFrameRate": {
+						"numerator": 25,
+						"denominator": 1
+					},
+					"displayWidth": {
+						"numerator": 1920,
+						"denominator": 1
+					},
+					"displayHeight": {
+						"numerator": 1080,
+						"denominator": 1
+					},
+					"containerSAR": {
+						"horizontal": 1,
+						"vertical": 1
+					},
+					"colr_primaries": 1,
+					"colr_transfer_function": 1,
+					"colr_matrix": 1,
+					"startTimecode": 1696750,
+					"dropFrame": false,
+					"bitDepth": 8,
+					"bitsPerPixel": 16,
+					"colorPrimaries": "BT709",
+					"mediaInfo": {
+						"Format_Settings_GOP": "M=3, N=12",
+						"intra_dc_precision": 11,
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "8"
+							},
+							{
+								"key": "Bit rate",
+								"value": "50000000"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "Bits/(Pixel*Frame)",
+								"value": "0.965"
+							},
+							{
+								"key": "Buffer size",
+								"value": "2228224"
+							},
+							{
+								"key": "Chroma subsampling",
+								"value": "4:2:2"
+							},
+							{
+								"key": "Codec",
+								"value": "MPEG-2V"
+							},
+							{
+								"key": "Codec ID",
+								"value": "0D01030102046001-0401020201040300"
+							},
+							{
+								"key": "Codec profile",
+								"value": "4:2:2@High"
+							},
+							{
+								"key": "Codec settings, Matrix",
+								"value": "Default"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "MPEG-V"
+							},
+							{
+								"key": "Color primaries",
+								"value": "BT.709"
+							},
+							{
+								"key": "Color space",
+								"value": "YUV"
+							},
+							{
+								"key": "Colorimetry",
+								"value": "4:2:2"
+							},
+							{
+								"key": "Commercial name",
+								"value": "XDCAM HD422"
+							},
+							{
+								"key": "Compression mode",
+								"value": "Lossy"
+							},
+							{
+								"key": "Count",
+								"value": "340"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "1"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_Original",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay_Original_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_Original_Settings",
+								"value": "drop_frame_flag=0 / closed_gop=1 / broken_link=0"
+							},
+							{
+								"key": "Delay_Original_Source",
+								"value": "Stream"
+							},
+							{
+								"key": "Delay_SDTI",
+								"value": "67870000"
+							},
+							{
+								"key": "Display aspect ratio",
+								"value": "1.778"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "MPEG Video"
+							},
+							{
+								"key": "Format profile",
+								"value": "4:2:2@High"
+							},
+							{
+								"key": "Format settings",
+								"value": "BVOP"
+							},
+							{
+								"key": "Format settings, BVOP",
+								"value": "Yes"
+							},
+							{
+								"key": "Format settings, GOP",
+								"value": "M=3, N=12"
+							},
+							{
+								"key": "Format settings, Matrix",
+								"value": "Default"
+							},
+							{
+								"key": "Format settings, picture structure",
+								"value": "Frame"
+							},
+							{
+								"key": "Format settings, wrapping mode",
+								"value": "Frame"
+							},
+							{
+								"key": "Format version",
+								"value": "Version 2"
+							},
+							{
+								"key": "Frame count",
+								"value": "109481"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "GOP, Open/Closed",
+								"value": "Open"
+							},
+							{
+								"key": "GOP, Open/Closed of first frame",
+								"value": "Closed"
+							},
+							{
+								"key": "Height",
+								"value": "1080"
+							},
+							{
+								"key": "ID",
+								"value": "2"
+							},
+							{
+								"key": "Interlacement",
+								"value": "TFF"
+							},
+							{
+								"key": "Internet media type",
+								"value": "video/MPV"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Video"
+							},
+							{
+								"key": "Matrix coefficients",
+								"value": "BT.709"
+							},
+							{
+								"key": "Pixel aspect ratio",
+								"value": "1.000"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.71601"
+							},
+							{
+								"key": "Resolution",
+								"value": "8"
+							},
+							{
+								"key": "Sampled_Height",
+								"value": "1080"
+							},
+							{
+								"key": "Sampled_Width",
+								"value": "1920"
+							},
+							{
+								"key": "Scan order",
+								"value": "TFF"
+							},
+							{
+								"key": "Scan type",
+								"value": "Interlaced"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "0"
+							},
+							{
+								"key": "Stream size",
+								"value": "27370250000"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "0"
+							},
+							{
+								"key": "Time code of first frame",
+								"value": "18:51:10:00"
+							},
+							{
+								"key": "Time code source",
+								"value": "Group of pictures header"
+							},
+							{
+								"key": "Transfer characteristics",
+								"value": "BT.709"
+							},
+							{
+								"key": "Width",
+								"value": "1920"
+							},
+							{
+								"key": "colour_description_present",
+								"value": "Yes"
+							},
+							{
+								"key": "intra_dc_precision",
+								"value": "11"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1460820",
+							"path": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
+							],
+							"state": "CLOSED",
+							"size": 38226111099,
+							"hash": "8cfc9b0d1c1dff0c681a5f127d1cb83e282d03e7",
+							"timestamp": "2023-08-08T18:50:25.704+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691520581852"
+									},
+									{
+										"key": "mtime",
+										"value": "1691520581852"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438164",
+					"metadata": [
+						{
+							"key": "material_track_duration",
+							"value": "109481"
+						},
+						{
+							"key": "material_track_editrate",
+							"value": "25/1"
+						},
+						{
+							"key": "AspectRatio",
+							"value": "16/9"
+						},
+						{
+							"key": "PictureEssenceCoding",
+							"value": "060E2B34040101030401020201040300"
+						},
+						{
+							"key": "source_track_number",
+							"value": "352388352"
+						},
+						{
+							"key": "umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "raw/2023/08/08/0150/MAGA_20230808_1800_PGM_MU1.mxf"
+						},
+						{
+							"key": "file_package_umid",
+							"value": "060A2B340101010501010D00139916D852947134429916D80052947134429901"
+						},
+						{
+							"key": "material_track_number",
+							"value": "0"
+						}
+					],
+					"codec": "mpeg2video",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 25
+					},
+					"itemTrack": "V0",
+					"essenceStreamId": 1,
+					"bitrate": 50000000,
+					"numberOfPackets": 109481,
+					"extradata": "000001B3780438337A122200000001B5182400010100000001B52B0101011E0221C0",
+					"pid": 2,
+					"duration": {
+						"samples": 109481,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					},
+					"profile": 0,
+					"level": 2,
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 25
+						}
+					}
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "MAGA_20230808_1800_PGM_MU1.mxf"
+					}
+				]
+			}
+		},
+		{
+			"id": "VX-929791",
+			"created": "2023-08-08T19:20:19.306+0000",
+			"essenceVersion": 0,
+			"tag": [
+				"lowres_watermarked"
+			],
+			"mimeType": [
+				"video/mp4"
+			],
+			"containerComponent": {
+				"duration": {
+					"samples": 4379240000,
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 1000000
+					}
+				},
+				"format": "mov,mp4,m4a,3gp,3g2,mj2",
+				"firstSMPTETimecode": "18:51:10:00",
+				"startTimecode": 1696750,
+				"startTimestamp": {
+					"samples": 0,
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 12800
+					}
+				},
+				"roundedTimeBase": 25,
+				"dropFrame": false,
+				"timeCodeTimeBase": {
+					"numerator": 1,
+					"denominator": 25
+				},
+				"mediaInfo": {
+					"property": [
+						{
+							"key": "Audio codecs",
+							"value": "AAC LC"
+						},
+						{
+							"key": "Audio_Format_List",
+							"value": "AAC"
+						},
+						{
+							"key": "Audio_Format_WithHint_List",
+							"value": "AAC"
+						},
+						{
+							"key": "Codec",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Codec ID",
+							"value": "isom"
+						},
+						{
+							"key": "Codec ID/Url",
+							"value": "http://www.apple.com/quicktime/download/standalone.html"
+						},
+						{
+							"key": "Codec/Extensions usually used",
+							"value": "mov mp4 m4v m4a m4b m4p 3ga 3gpa 3gpp 3gp 3gpp2 3g2 k3g jpm jpx mqv ismv isma ismt f4a f4b f4v"
+						},
+						{
+							"key": "CodecID_Compatible",
+							"value": "isom/iso2/avc1/mp41"
+						},
+						{
+							"key": "Codecs Video",
+							"value": "AVC"
+						},
+						{
+							"key": "Comment",
+							"value": "Transcoded using Encore"
+						},
+						{
+							"key": "Commercial name",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Count",
+							"value": "325"
+						},
+						{
+							"key": "Count of audio streams",
+							"value": "1"
+						},
+						{
+							"key": "Count of stream of this kind",
+							"value": "1"
+						},
+						{
+							"key": "Count of video streams",
+							"value": "1"
+						},
+						{
+							"key": "DataSize",
+							"value": "741560813"
+						},
+						{
+							"key": "Duration",
+							"value": "4379240"
+						},
+						{
+							"key": "File extension",
+							"value": "mp4"
+						},
+						{
+							"key": "File size",
+							"value": "745240269"
+						},
+						{
+							"key": "FooterSize",
+							"value": "3679416"
+						},
+						{
+							"key": "Format",
+							"value": "MPEG-4"
+						},
+						{
+							"key": "Format profile",
+							"value": "Base Media"
+						},
+						{
+							"key": "Format/Extensions usually used",
+							"value": "mov mp4 m4v m4a m4b m4p 3ga 3gpa 3gpp 3gp 3gpp2 3g2 k3g jpm jpx mqv ismv isma ismt f4a f4b f4v"
+						},
+						{
+							"key": "Frame count",
+							"value": "109481"
+						},
+						{
+							"key": "Frame rate",
+							"value": "25.000"
+						},
+						{
+							"key": "HeaderSize",
+							"value": "40"
+						},
+						{
+							"key": "Internet media type",
+							"value": "video/mp4"
+						},
+						{
+							"key": "IsStreamable",
+							"value": "No"
+						},
+						{
+							"key": "Kind of stream",
+							"value": "General"
+						},
+						{
+							"key": "OtherCount",
+							"value": "1"
+						},
+						{
+							"key": "Other_Format_List",
+							"value": "QuickTime TC"
+						},
+						{
+							"key": "Other_Format_WithHint_List",
+							"value": "QuickTime TC"
+						},
+						{
+							"key": "Other_Language_List",
+							"value": "English"
+						},
+						{
+							"key": "Overall bit rate",
+							"value": "1361406"
+						},
+						{
+							"key": "Proportion of this stream",
+							"value": "0.00494"
+						},
+						{
+							"key": "Stream identifier",
+							"value": "0"
+						},
+						{
+							"key": "Stream size",
+							"value": "3679899"
+						},
+						{
+							"key": "Video_Format_List",
+							"value": "AVC"
+						},
+						{
+							"key": "Video_Format_WithHint_List",
+							"value": "AVC"
+						},
+						{
+							"key": "Writing application",
+							"value": "Lavf59.27.100"
+						}
+					]
+				},
+				"file": [
+					{
+						"id": "VX-1460886",
+						"path": "aux/2023/08/08/205317/MAGA_20230808_1800_PGM_MU1.mp4",
+						"uri": [
+							"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mp4"
+						],
+						"state": "CLOSED",
+						"size": 745240269,
+						"hash": "0de95a6d759b4fbf81e7c66bd832cd2fe4ed2b0b",
+						"timestamp": "2023-08-08T19:22:05.368+0000",
+						"refreshFlag": 1,
+						"storage": "VX-42",
+						"metadata": {
+							"field": [
+								{
+									"key": "created",
+									"value": "1691522416374"
+								},
+								{
+									"key": "mtime",
+									"value": "1691522416374"
+								}
+							]
+						}
+					}
+				],
+				"id": "VX-2438168",
+				"metadata": [
+					{
+						"key": "componentOriginalFilename",
+						"value": "aux/2023/08/08/205317/MAGA_20230808_1800_PGM_MU1.mp4"
+					},
+					{
+						"key": "drop_frame",
+						"value": "false"
+					},
+					{
+						"key": "major_brand",
+						"value": "isom"
+					},
+					{
+						"key": "comment",
+						"value": "Transcoded using Encore"
+					},
+					{
+						"key": "rounded_time_base",
+						"value": "25"
+					},
+					{
+						"key": "encoder",
+						"value": "Lavf59.27.100"
+					},
+					{
+						"key": "start_timecode",
+						"value": "1696750"
+					},
+					{
+						"key": "compatible_brands",
+						"value": "isomiso2avc1mp41"
+					},
+					{
+						"key": "minor_version",
+						"value": "512"
+					}
+				]
+			},
+			"audioComponent": [
+				{
+					"channelCount": 2,
+					"channelLayout": 3,
+					"sampleFormat": "AV_SAMPLE_FMT_FLTP",
+					"frameSize": 1024,
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Alternate group",
+								"value": "1"
+							},
+							{
+								"key": "Bit rate",
+								"value": "128956"
+							},
+							{
+								"key": "Bit rate mode",
+								"value": "CBR"
+							},
+							{
+								"key": "Channel positions",
+								"value": "2/0/0"
+							},
+							{
+								"key": "Channel(s)",
+								"value": "2"
+							},
+							{
+								"key": "ChannelLayout",
+								"value": "L R"
+							},
+							{
+								"key": "Codec",
+								"value": "AAC LC"
+							},
+							{
+								"key": "Codec ID",
+								"value": "40"
+							},
+							{
+								"key": "Codec/CC",
+								"value": "40"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "AAC"
+							},
+							{
+								"key": "Commercial name",
+								"value": "AAC"
+							},
+							{
+								"key": "Compression mode",
+								"value": "Lossy"
+							},
+							{
+								"key": "Count",
+								"value": "277"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "1"
+							},
+							{
+								"key": "Default",
+								"value": "Yes"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay relative to video",
+								"value": "0"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "AAC"
+							},
+							{
+								"key": "Format profile",
+								"value": "LC"
+							},
+							{
+								"key": "Format settings, SBR",
+								"value": "No (Explicit)"
+							},
+							{
+								"key": "Format/Info",
+								"value": "Advanced Audio Codec"
+							},
+							{
+								"key": "Frame count",
+								"value": "188598"
+							},
+							{
+								"key": "Frame rate",
+								"value": "43.066"
+							},
+							{
+								"key": "ID",
+								"value": "2"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Audio"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.09472"
+							},
+							{
+								"key": "Samples count",
+								"value": "193124480"
+							},
+							{
+								"key": "Samples per frame",
+								"value": "1024"
+							},
+							{
+								"key": "Sampling rate",
+								"value": "44100"
+							},
+							{
+								"key": "Source duration",
+								"value": "4379263"
+							},
+							{
+								"key": "Source frame count",
+								"value": "188600"
+							},
+							{
+								"key": "Source stream size",
+								"value": "70591959"
+							},
+							{
+								"key": "Source_Delay",
+								"value": "67869977"
+							},
+							{
+								"key": "Source_Delay_Source",
+								"value": "Container"
+							},
+							{
+								"key": "Source_Duration_LastFrame",
+								"value": "-20"
+							},
+							{
+								"key": "Source_StreamSize_Proportion",
+								"value": "0.09472"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "0"
+							},
+							{
+								"key": "Stream size",
+								"value": "70591528"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "1"
+							},
+							{
+								"key": "Video0 delay",
+								"value": "0"
+							}
+						],
+						"Bit_rate_mode": "CBR"
+					},
+					"file": [
+						{
+							"id": "VX-1460886",
+							"path": "aux/2023/08/08/205317/MAGA_20230808_1800_PGM_MU1.mp4",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mp4"
+							],
+							"state": "CLOSED",
+							"size": 745240269,
+							"hash": "0de95a6d759b4fbf81e7c66bd832cd2fe4ed2b0b",
+							"timestamp": "2023-08-08T19:22:05.368+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691522416374"
+									},
+									{
+										"key": "mtime",
+										"value": "1691522416374"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438169",
+					"metadata": [
+						{
+							"key": "handler_name",
+							"value": "SoundHandler"
+						},
+						{
+							"key": "vendor_id",
+							"value": "[0][0][0][0]"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/08/08/205317/MAGA_20230808_1800_PGM_MU1.mp4"
+						},
+						{
+							"key": "language",
+							"value": "und"
+						}
+					],
+					"codec": "aac",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 44100
+					},
+					"itemTrack": "A1",
+					"essenceStreamId": 1,
+					"bitrate": 128956,
+					"numberOfPackets": 188598,
+					"extradata": "121056E500",
+					"pid": 2,
+					"duration": {
+						"samples": 193124484,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 44100
+						}
+					},
+					"profile": 1,
+					"edl": {
+						"timeScale": {
+							"numerator": 1,
+							"denominator": 1000
+						},
+						"entry": [
+							{
+								"start": 0,
+								"length": 4379240,
+								"mediaRate": 65536
+							}
+						]
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 44100
+						}
+					}
+				}
+			],
+			"videoComponent": [
+				{
+					"resolution": {
+						"width": 960,
+						"height": 540
+					},
+					"pixelFormat": "yuv420p",
+					"maxBFrames": 3,
+					"pixelAspectRatio": {
+						"horizontal": 1,
+						"vertical": 1
+					},
+					"fieldOrder": "progressive",
+					"codecTimeBase": {
+						"numerator": 1,
+						"denominator": 50
+					},
+					"averageFrameRate": {
+						"numerator": 25,
+						"denominator": 1
+					},
+					"realBaseFrameRate": {
+						"numerator": 25,
+						"denominator": 1
+					},
+					"displayWidth": {
+						"numerator": 960,
+						"denominator": 1
+					},
+					"displayHeight": {
+						"numerator": 540,
+						"denominator": 1
+					},
+					"containerSAR": {
+						"horizontal": 1,
+						"vertical": 1
+					},
+					"colr_primaries": 1,
+					"colr_transfer_function": 1,
+					"colr_matrix": 1,
+					"ticks_per_frame": 2,
+					"bitDepth": 8,
+					"bitsPerPixel": 12,
+					"colorPrimaries": "BT709",
+					"mediaInfo": {
+						"property": [
+							{
+								"key": "Bit depth",
+								"value": "8"
+							},
+							{
+								"key": "Bit rate",
+								"value": "1225726"
+							},
+							{
+								"key": "Bits/(Pixel*Frame)",
+								"value": "0.095"
+							},
+							{
+								"key": "Chroma subsampling",
+								"value": "4:2:0"
+							},
+							{
+								"key": "Codec",
+								"value": "AVC"
+							},
+							{
+								"key": "Codec ID",
+								"value": "avc1"
+							},
+							{
+								"key": "Codec ID/Info",
+								"value": "Advanced Video Coding"
+							},
+							{
+								"key": "Codec profile",
+								"value": "High@L3.1"
+							},
+							{
+								"key": "Codec settings",
+								"value": "CABAC / 3 Ref Frames"
+							},
+							{
+								"key": "Codec settings, CABAC",
+								"value": "Yes"
+							},
+							{
+								"key": "Codec/CC",
+								"value": "avc1"
+							},
+							{
+								"key": "Codec/Family",
+								"value": "AVC"
+							},
+							{
+								"key": "Codec/Info",
+								"value": "Advanced Video Codec"
+							},
+							{
+								"key": "Codec/Url",
+								"value": "http://developers.videolan.org/x264.html"
+							},
+							{
+								"key": "Codec_Settings_RefFrames",
+								"value": "3"
+							},
+							{
+								"key": "Color primaries",
+								"value": "BT.709"
+							},
+							{
+								"key": "Color range",
+								"value": "Limited"
+							},
+							{
+								"key": "Color space",
+								"value": "YUV"
+							},
+							{
+								"key": "Colorimetry",
+								"value": "4:2:0"
+							},
+							{
+								"key": "Commercial name",
+								"value": "AVC"
+							},
+							{
+								"key": "Count",
+								"value": "338"
+							},
+							{
+								"key": "Count of stream of this kind",
+								"value": "1"
+							},
+							{
+								"key": "Delay",
+								"value": "67870000"
+							},
+							{
+								"key": "Delay, origin",
+								"value": "Container"
+							},
+							{
+								"key": "Delay_DropFrame",
+								"value": "No"
+							},
+							{
+								"key": "Delay_Settings",
+								"value": "DropFrame=No / 24HourMax=No / IsVisual=No"
+							},
+							{
+								"key": "Display aspect ratio",
+								"value": "1.778"
+							},
+							{
+								"key": "Duration",
+								"value": "4379240"
+							},
+							{
+								"key": "Format",
+								"value": "AVC"
+							},
+							{
+								"key": "Format profile",
+								"value": "High@L3.1"
+							},
+							{
+								"key": "Format settings",
+								"value": "CABAC / 3 Ref Frames"
+							},
+							{
+								"key": "Format settings, CABAC",
+								"value": "Yes"
+							},
+							{
+								"key": "Format settings, ReFrames",
+								"value": "3"
+							},
+							{
+								"key": "Format/Info",
+								"value": "Advanced Video Codec"
+							},
+							{
+								"key": "Format/Url",
+								"value": "http://developers.videolan.org/x264.html"
+							},
+							{
+								"key": "Frame count",
+								"value": "109481"
+							},
+							{
+								"key": "Frame rate",
+								"value": "25.000"
+							},
+							{
+								"key": "Frame rate mode",
+								"value": "CFR"
+							},
+							{
+								"key": "Height",
+								"value": "540"
+							},
+							{
+								"key": "ID",
+								"value": "1"
+							},
+							{
+								"key": "Interlacement",
+								"value": "PPF"
+							},
+							{
+								"key": "Internet media type",
+								"value": "video/H264"
+							},
+							{
+								"key": "Kind of stream",
+								"value": "Video"
+							},
+							{
+								"key": "Matrix coefficients",
+								"value": "BT.709"
+							},
+							{
+								"key": "Pixel aspect ratio",
+								"value": "1.000"
+							},
+							{
+								"key": "Proportion of this stream",
+								"value": "0.90034"
+							},
+							{
+								"key": "Resolution",
+								"value": "8"
+							},
+							{
+								"key": "Rotation",
+								"value": "0.000"
+							},
+							{
+								"key": "Sampled_Height",
+								"value": "540"
+							},
+							{
+								"key": "Sampled_Width",
+								"value": "960"
+							},
+							{
+								"key": "Scan type",
+								"value": "Progressive"
+							},
+							{
+								"key": "Stored_Height",
+								"value": "544"
+							},
+							{
+								"key": "Stream identifier",
+								"value": "0"
+							},
+							{
+								"key": "Stream size",
+								"value": "670968842"
+							},
+							{
+								"key": "StreamOrder",
+								"value": "0"
+							},
+							{
+								"key": "Transfer characteristics",
+								"value": "BT.709"
+							},
+							{
+								"key": "Width",
+								"value": "960"
+							},
+							{
+								"key": "colour_description_present",
+								"value": "Yes"
+							}
+						]
+					},
+					"file": [
+						{
+							"id": "VX-1460886",
+							"path": "aux/2023/08/08/205317/MAGA_20230808_1800_PGM_MU1.mp4",
+							"uri": [
+								"file:///path/to/file/MAGA_20230808_1800_PGM_MU1.mp4"
+							],
+							"state": "CLOSED",
+							"size": 745240269,
+							"hash": "0de95a6d759b4fbf81e7c66bd832cd2fe4ed2b0b",
+							"timestamp": "2023-08-08T19:22:05.368+0000",
+							"refreshFlag": 1,
+							"storage": "VX-42",
+							"metadata": {
+								"field": [
+									{
+										"key": "created",
+										"value": "1691522416374"
+									},
+									{
+										"key": "mtime",
+										"value": "1691522416374"
+									}
+								]
+							}
+						}
+					],
+					"id": "VX-2438170",
+					"metadata": [
+						{
+							"key": "handler_name",
+							"value": "VideoHandler"
+						},
+						{
+							"key": "vendor_id",
+							"value": "[0][0][0][0]"
+						},
+						{
+							"key": "componentOriginalFilename",
+							"value": "aux/2023/08/08/205317/MAGA_20230808_1800_PGM_MU1.mp4"
+						},
+						{
+							"key": "language",
+							"value": "und"
+						},
+						{
+							"key": "encoder",
+							"value": "Lavc59.37.100 h264_ni_logan_enc"
+						},
+						{
+							"key": "timecode",
+							"value": "18:51:10:00"
+						}
+					],
+					"codec": "h264",
+					"timeBase": {
+						"numerator": 1,
+						"denominator": 12800
+					},
+					"itemTrack": "V1",
+					"essenceStreamId": 0,
+					"bitrate": 1225726,
+					"numberOfPackets": 109481,
+					"extradata": "0164001FFFE1001D6764001FACD100F0117EF016A020202800001F4000061A846D0402042401000468EA8F2CFDF8F800",
+					"pid": 1,
+					"duration": {
+						"samples": 56054272,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 12800
+						}
+					},
+					"profile": 100,
+					"level": 31,
+					"edl": {
+						"timeScale": {
+							"numerator": 1,
+							"denominator": 1000
+						},
+						"entry": [
+							{
+								"start": 1024,
+								"length": 4379240,
+								"mediaRate": 65536
+							}
+						]
+					},
+					"startTimestamp": {
+						"samples": 0,
+						"timeBase": {
+							"numerator": 1,
+							"denominator": 12800
+						}
+					}
+				}
+			],
+			"metadata": {
+				"field": [
+					{
+						"key": "originalFilename",
+						"value": "MAGA_20230808_1800_PGM_MU1.mp4"
+					}
+				]
+			}
+		}
+	],
+	"id": "VX-464402"
+}
