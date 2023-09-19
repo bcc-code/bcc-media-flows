@@ -34,6 +34,36 @@ func (m *MockVSClient) EXPECT() *MockVSClientMockRecorder {
 	return m.recorder
 }
 
+// AddShapeToItem mocks base method.
+func (m *MockVSClient) AddShapeToItem(arg0, arg1, arg2 string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddShapeToItem", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddShapeToItem indicates an expected call of AddShapeToItem.
+func (mr *MockVSClientMockRecorder) AddShapeToItem(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddShapeToItem", reflect.TypeOf((*MockVSClient)(nil).AddShapeToItem), arg0, arg1, arg2)
+}
+
+// AddSidecarToItem mocks base method.
+func (m *MockVSClient) AddSidecarToItem(arg0, arg1, arg2 string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddSidecarToItem", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddSidecarToItem indicates an expected call of AddSidecarToItem.
+func (mr *MockVSClientMockRecorder) AddSidecarToItem(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSidecarToItem", reflect.TypeOf((*MockVSClient)(nil).AddSidecarToItem), arg0, arg1, arg2)
+}
+
 // GetChapterMeta mocks base method.
 func (m *MockVSClient) GetChapterMeta(arg0 string, arg1, arg2 float64) (map[string]*vsapi.MetadataResult, error) {
 	m.ctrl.T.Helper()
@@ -92,4 +122,33 @@ func (m *MockVSClient) GetShapes(arg0 string) (*vsapi.ShapeResult, error) {
 func (mr *MockVSClientMockRecorder) GetShapes(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetShapes", reflect.TypeOf((*MockVSClient)(nil).GetShapes), arg0)
+}
+
+// RegisterFile mocks base method.
+func (m *MockVSClient) RegisterFile(arg0 string, arg1 vsapi.FileState) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RegisterFile", arg0, arg1)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RegisterFile indicates an expected call of RegisterFile.
+func (mr *MockVSClientMockRecorder) RegisterFile(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterFile", reflect.TypeOf((*MockVSClient)(nil).RegisterFile), arg0, arg1)
+}
+
+// SetItemMetadataField mocks base method.
+func (m *MockVSClient) SetItemMetadataField(arg0, arg1, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetItemMetadataField", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetItemMetadataField indicates an expected call of SetItemMetadataField.
+func (mr *MockVSClientMockRecorder) SetItemMetadataField(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetItemMetadataField", reflect.TypeOf((*MockVSClient)(nil).SetItemMetadataField), arg0, arg1, arg2)
 }
