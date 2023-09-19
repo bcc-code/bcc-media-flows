@@ -32,7 +32,7 @@ var (
 		"panel":           ChapterTypeOther,
 		"intervju":        ChapterTypeOther,
 		"temafilm":        ChapterTypeOther,
-		"animation":       ChapterTypeOther,
+		"animasjon":       ChapterTypeOther,
 		"programleder":    ChapterTypeOther,
 		"dokumentar":      ChapterTypeOther,
 		"ordforklaring":   ChapterTypeOther,
