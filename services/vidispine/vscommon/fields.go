@@ -1,4 +1,4 @@
-package vidispine
+package vscommon
 
 import "github.com/orsinium-labs/enum"
 

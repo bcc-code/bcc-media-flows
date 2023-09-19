@@ -1,7 +1,9 @@
-package vidispine
+package vsapi
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_GetPath(t *testing.T) {
@@ -21,7 +23,5 @@ func Test_GetPath(t *testing.T) {
 	}
 
 	path := sr.GetShape("tag1").GetPath()
-	if path != "/path/to/file" {
-		t.Error("Path is not correct")
-	}
+	assert.Equal(t, "/path/to/file", path)
 }

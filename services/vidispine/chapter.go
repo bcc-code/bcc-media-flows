@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
+	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
 )
@@ -77,14 +79,14 @@ type Chapter struct {
 	Persons        []string
 }
 
-func (c *Client) GetChapterData(exportData *ExportData) ([]Chapter, error) {
-	metaCache := map[string]*MetadataResult{}
+func (s *VidispineService) GetChapterData(exportData *ExportData) ([]Chapter, error) {
+	metaCache := map[string]*vsapi.MetadataResult{}
 
-	allChapters := map[string]*MetadataResult{}
+	allChapters := map[string]*vsapi.MetadataResult{}
 
 	for _, clip := range exportData.Clips {
 		if _, ok := metaCache[clip.VXID]; !ok {
-			meta, err := c.GetMetadata(clip.VXID)
+			meta, err := s.apiClient.GetMetadata(clip.VXID)
 			if err != nil {
 				return nil, err
 			}
@@ -92,11 +94,11 @@ func (c *Client) GetChapterData(exportData *ExportData) ([]Chapter, error) {
 		}
 
 		sourceMeta := metaCache[clip.VXID]
-		startTC := sourceMeta.Get(FieldStartTC, "0")
-		tcStartSeconds, _ := TCToSeconds(startTC)
+		startTC := sourceMeta.Get(vscommon.FieldStartTC, "0")
+		tcStartSeconds, _ := vscommon.TCToSeconds(startTC)
 
 		// The result here is in TC of the original MEDIA.
-		chapterMeta, err := c.GetChapterMeta(clip.VXID, clip.InSeconds+tcStartSeconds, clip.OutSeconds+tcStartSeconds)
+		chapterMeta, err := s.apiClient.GetChapterMeta(clip.VXID, clip.InSeconds+tcStartSeconds, clip.OutSeconds+tcStartSeconds)
 		if err != nil {
 			return nil, err
 		}
@@ -115,11 +117,11 @@ func (c *Client) GetChapterData(exportData *ExportData) ([]Chapter, error) {
 			// Since the source is the same the only diff is the in and out point
 			// i.e. we only need the earlies in and latest out point on all values
 
-			tcIn1, _ := TCToSeconds(data.Terse["title"][0].Start)
-			tcOut1, _ := TCToSeconds(data.Terse["title"][0].End)
+			tcIn1, _ := vscommon.TCToSeconds(data.Terse["title"][0].Start)
+			tcOut1, _ := vscommon.TCToSeconds(data.Terse["title"][0].End)
 
-			tcIn2, _ := TCToSeconds(allChapters[title].Terse["title"][0].Start)
-			tcOut2, _ := TCToSeconds(allChapters[title].Terse["title"][0].End)
+			tcIn2, _ := vscommon.TCToSeconds(allChapters[title].Terse["title"][0].Start)
+			tcOut2, _ := vscommon.TCToSeconds(allChapters[title].Terse["title"][0].End)
 
 			newIn := math.Min(tcIn1, tcIn2)
 			newOut := math.Max(tcOut1, tcOut2)
@@ -141,15 +143,15 @@ func (c *Client) GetChapterData(exportData *ExportData) ([]Chapter, error) {
 	return chapters, nil
 }
 
-func MetaToChapter(meta *MetadataResult) Chapter {
+func MetaToChapter(meta *vsapi.MetadataResult) Chapter {
 	out := Chapter{}
 
-	out.Label = meta.Get(FieldTitle, "")
-	out.Title = meta.Get(FieldTitle, "")
-	start, _ := TCToSeconds(meta.Terse["title"][0].Start)
+	out.Label = meta.Get(vscommon.FieldTitle, "")
+	out.Title = meta.Get(vscommon.FieldTitle, "")
+	start, _ := vscommon.TCToSeconds(meta.Terse["title"][0].Start)
 	out.Timestamp = start
 
-	if chapterType, ok := ChapterTypeMap[meta.Get(FieldSubclipType, "")]; ok {
+	if chapterType, ok := ChapterTypeMap[meta.Get(vscommon.FieldSubclipType, "")]; ok {
 		out.ChapterType = chapterType.Value
 	} else {
 		out.ChapterType = ChapterTypeOther.Value
@@ -160,7 +162,7 @@ func MetaToChapter(meta *MetadataResult) Chapter {
 
 	out.Highlight = false // When do we set this?
 
-	out.Persons = lo.Filter(meta.GetArray(FieldPersonsAppearing), func(p string, _ int) bool { return p != "" })
+	out.Persons = lo.Filter(meta.GetArray(vscommon.FieldPersonsAppearing), func(p string, _ int) bool { return p != "" })
 
 	if out.ChapterType == ChapterTypeSong.Value {
 		match := SongExtract.FindStringSubmatch(strings.ToUpper(out.Label))
@@ -171,47 +173,4 @@ func MetaToChapter(meta *MetadataResult) Chapter {
 	}
 
 	return out
-}
-
-func (c *Client) GetChapterMeta(itemVXID string, inTc, outTc float64) (map[string]*MetadataResult, error) {
-	inString := fmt.Sprintf("%.2f", inTc)
-	outString := fmt.Sprintf("%.2f", outTc)
-
-	url := fmt.Sprintf("%s/item/%s?content=metadata&terse=true&sampleRate=PAL&interval=%s-%s&group=Subclips", c.baseURL, itemVXID, inString, outString)
-
-	resp, err := c.restyClient.R().
-		SetResult(&MetadataResult{}).
-		Get(url)
-
-	if err != nil {
-		return nil, err
-	}
-
-	metaResult := resp.Result().(*MetadataResult)
-
-	clips := metaResult.SplitByClips()
-	outClips := map[string]*MetadataResult{}
-	for key, clip := range clips {
-
-		if clip.Get(FieldExportAsChapter, "") != "export_as_chapter" {
-			continue
-		}
-
-		for _, field := range clip.Terse {
-			for _, value := range field {
-				if valueStart, _ := TCToSeconds(value.Start); valueStart < inTc {
-					value.Start = fmt.Sprintf("%.0f@PAL", inTc*25)
-				}
-
-				if valueEnd, _ := TCToSeconds(value.End); valueEnd > outTc {
-					value.End = fmt.Sprintf("%.0f@PAL", outTc*25)
-				}
-
-			}
-		}
-
-		outClips[key] = clip
-	}
-
-	return outClips, nil
 }

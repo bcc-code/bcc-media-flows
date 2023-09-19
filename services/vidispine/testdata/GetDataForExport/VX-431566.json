@@ -1,17 +1,19 @@
 {
   "Clips": [
     {
-      "VideoFile": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1.mxf",
+      "VideoFile": "/path/to/file/HC22_20221030_1430_PGM_MU1.mxf",
       "InSeconds": 407.04,
       "OutSeconds": 2733.6,
-      "AudioFile": {
+      "SequenceIn": 0,
+      "SequenceOut": 2326.56,
+      "AudioFiles": {
         "deu": {
           "VXID": "VX-431548",
           "Channels": [
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_DEU.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_DEU.wav"
         },
         "eng": {
           "VXID": "VX-431550",
@@ -19,7 +21,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_ENG.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_ENG.wav"
         },
         "fin": {
           "VXID": "VX-431554",
@@ -27,7 +29,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_FIN.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_FIN.wav"
         },
         "fra": {
           "VXID": "VX-431551",
@@ -35,7 +37,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_FRA.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_FRA.wav"
         },
         "hun": {
           "VXID": "VX-431560",
@@ -43,7 +45,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_HUN.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_HUN.wav"
         },
         "ita": {
           "VXID": "VX-431561",
@@ -51,7 +53,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_ITA.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_ITA.wav"
         },
         "nld": {
           "VXID": "VX-431549",
@@ -59,7 +61,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_NLD.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_NLD.wav"
         },
         "nor": {
           "VXID": "VX-431547",
@@ -67,7 +69,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_NOR.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_NOR.wav"
         },
         "pol": {
           "VXID": "VX-431559",
@@ -75,7 +77,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_POL.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_POL.wav"
         },
         "por": {
           "VXID": "VX-431556",
@@ -83,7 +85,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_POR.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_POR.wav"
         },
         "ron": {
           "VXID": "VX-431557",
@@ -91,7 +93,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_RON.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_RON.wav"
         },
         "rus": {
           "VXID": "VX-431555",
@@ -99,7 +101,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_RUS.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_RUS.wav"
         },
         "slv": {
           "VXID": "VX-431562",
@@ -107,7 +109,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_SLV.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_SLV.wav"
         },
         "spa": {
           "VXID": "VX-431553",
@@ -115,7 +117,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_SPA.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_SPA.wav"
         },
         "tur": {
           "VXID": "VX-431558",
@@ -123,24 +125,26 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_TUR.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_TUR.wav"
         }
       },
-      "SubFile": {},
+      "SubtitleFiles": {},
       "VXID": "VX-431552"
     },
     {
-      "VideoFile": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1.mxf",
+      "VideoFile": "/path/to/file/HC22_20221030_1430_PGM_MU1.mxf",
       "InSeconds": 3556.52,
       "OutSeconds": 3854.12,
-      "AudioFile": {
+      "SequenceIn": 2326.56,
+      "SequenceOut": 2624.16,
+      "AudioFiles": {
         "deu": {
           "VXID": "VX-431548",
           "Channels": [
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_DEU.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_DEU.wav"
         },
         "eng": {
           "VXID": "VX-431550",
@@ -148,7 +152,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_ENG.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_ENG.wav"
         },
         "fin": {
           "VXID": "VX-431554",
@@ -156,7 +160,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_FIN.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_FIN.wav"
         },
         "fra": {
           "VXID": "VX-431551",
@@ -164,7 +168,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_FRA.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_FRA.wav"
         },
         "hun": {
           "VXID": "VX-431560",
@@ -172,7 +176,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_HUN.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_HUN.wav"
         },
         "ita": {
           "VXID": "VX-431561",
@@ -180,7 +184,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_ITA.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_ITA.wav"
         },
         "nld": {
           "VXID": "VX-431549",
@@ -188,7 +192,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_NLD.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_NLD.wav"
         },
         "nor": {
           "VXID": "VX-431547",
@@ -196,7 +200,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_NOR.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_NOR.wav"
         },
         "pol": {
           "VXID": "VX-431559",
@@ -204,7 +208,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_POL.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_POL.wav"
         },
         "por": {
           "VXID": "VX-431556",
@@ -212,7 +216,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_POR.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_POR.wav"
         },
         "ron": {
           "VXID": "VX-431557",
@@ -220,7 +224,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_RON.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_RON.wav"
         },
         "rus": {
           "VXID": "VX-431555",
@@ -228,7 +232,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_RUS.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_RUS.wav"
         },
         "slv": {
           "VXID": "VX-431562",
@@ -236,7 +240,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_SLV.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_SLV.wav"
         },
         "spa": {
           "VXID": "VX-431553",
@@ -244,7 +248,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_SPA.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_SPA.wav"
         },
         "tur": {
           "VXID": "VX-431558",
@@ -252,24 +256,26 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_TUR.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_TUR.wav"
         }
       },
-      "SubFile": {},
+      "SubtitleFiles": {},
       "VXID": "VX-431552"
     },
     {
-      "VideoFile": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1.mxf",
+      "VideoFile": "/path/to/file/HC22_20221030_1430_PGM_MU1.mxf",
       "InSeconds": 4727.36,
       "OutSeconds": 5516.4,
-      "AudioFile": {
+      "SequenceIn": 2624.16,
+      "SequenceOut": 3413.2,
+      "AudioFiles": {
         "deu": {
           "VXID": "VX-431548",
           "Channels": [
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_DEU.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_DEU.wav"
         },
         "eng": {
           "VXID": "VX-431550",
@@ -277,7 +283,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_ENG.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_ENG.wav"
         },
         "fin": {
           "VXID": "VX-431554",
@@ -285,7 +291,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_FIN.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_FIN.wav"
         },
         "fra": {
           "VXID": "VX-431551",
@@ -293,7 +299,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_FRA.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_FRA.wav"
         },
         "hun": {
           "VXID": "VX-431560",
@@ -301,7 +307,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_HUN.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_HUN.wav"
         },
         "ita": {
           "VXID": "VX-431561",
@@ -309,7 +315,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_ITA.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_ITA.wav"
         },
         "nld": {
           "VXID": "VX-431549",
@@ -317,7 +323,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_NLD.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_NLD.wav"
         },
         "nor": {
           "VXID": "VX-431547",
@@ -325,7 +331,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_NOR.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_NOR.wav"
         },
         "pol": {
           "VXID": "VX-431559",
@@ -333,7 +339,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_POL.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_POL.wav"
         },
         "por": {
           "VXID": "VX-431556",
@@ -341,7 +347,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_POR.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_POR.wav"
         },
         "ron": {
           "VXID": "VX-431557",
@@ -349,7 +355,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_RON.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_RON.wav"
         },
         "rus": {
           "VXID": "VX-431555",
@@ -357,7 +363,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_RUS.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_RUS.wav"
         },
         "slv": {
           "VXID": "VX-431562",
@@ -365,7 +371,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_SLV.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_SLV.wav"
         },
         "spa": {
           "VXID": "VX-431553",
@@ -373,7 +379,7 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_SPA.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_SPA.wav"
         },
         "tur": {
           "VXID": "VX-431558",
@@ -381,12 +387,12 @@
             1,
             2
           ],
-          "File": "/mnt/isilon/Production/raw/2022/10/30/HC22_20221030_1430_PGM_MU1_TUR.wav"
+          "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_TUR.wav"
         }
       },
-      "SubFile": {},
+      "SubtitleFiles": {},
       "VXID": "VX-431552"
     }
   ],
-  "Title": "HC22_20221030_1430_SEQ"
+  "Title": "TITLE_OF_THE_SEQUENCE"
 }

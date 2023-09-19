@@ -1,49 +1,95 @@
-package vidispine
+package vsapi
 
-type MetadataField struct {
-	End   string `json:"end"`
-	Start string `json:"start"`
-	UUID  string `json:"uuid"`
-	Value string `json:"value"`
-}
+import (
+	"net/url"
 
-type MetadataResult struct {
-	Terse map[string]([]*MetadataField) `json:"terse"`
-	ID    string                        `json:"id"`
-}
+	"github.com/samber/lo"
+)
 
-// Get returns the first value of the given key, or the fallback if the key is not present
-// It does not check what clip the metadata belongs to!
-func (m *MetadataResult) Get(key FieldType, fallback string) string {
-	if val, ok := m.Terse[key.Value]; !ok {
-		return fallback
-	} else if len(val) == 0 {
-		return fallback
-	} else {
-		return val[0].Value
+func (c *Client) GetShapes(vsID string) (*ShapeResult, error) {
+	url := c.baseURL + "/item/" + vsID + "?content=shape&terse=true"
+
+	resp, err := c.restyClient.R().
+		SetResult(&ShapeResult{}).
+		Get(url)
+
+	if err != nil {
+		return nil, err
 	}
+
+	return resp.Result().(*ShapeResult), nil
 }
 
-func (m *MetadataResult) GetArray(key FieldType) []string {
-	if val, ok := m.Terse[key.Value]; !ok {
-		return []string{}
-	} else {
-		out := []string{}
-		for _, v := range val {
-			out = append(out, v.Value)
+func (c *Client) AddShapeToItem(tag, itemID, fileID string) (string, error) {
+	requestURL, _ := url.Parse(c.baseURL)
+	requestURL.Path += "/item/" + url.PathEscape(itemID) + "/shape"
+	q := requestURL.Query()
+	q.Set("storageId", DefaultStorageID)
+	q.Set("fileId", fileID)
+	q.Set("tag", tag)
+	requestURL.RawQuery = q.Encode()
+
+	result, err := c.restyClient.R().
+		Post(requestURL.String())
+
+	//TODO: make sure to not return until the shape is actually imported
+	if err != nil {
+		return "", err
+	}
+
+	return result.String(), nil
+}
+
+func (c *Client) AddSidecarToItem(itemID, filePath, language string) (string, error) {
+	requestURL, _ := url.Parse(c.baseURL)
+	requestURL.Path += "/import/sidecar/" + url.PathEscape(itemID)
+	q := requestURL.Query()
+	q.Set("sidecar", "file://"+filePath)
+	q.Set("jobmetadata", "subtitleLanguage="+language)
+	requestURL.RawQuery = q.Encode()
+
+	result, err := c.restyClient.R().
+		Post(requestURL.String())
+
+	if err != nil {
+		return "", err
+	}
+
+	return result.String(), nil
+}
+
+func (sr ShapeResult) GetShape(tag string) *Shape {
+	for _, s := range sr.Shape {
+		if lo.Contains(s.Tag, tag) {
+			return &s
 		}
-		return out
 	}
+	return nil
 }
+
+func (s Shape) GetPath() string {
+	// Cut off the "file://" prefix
+	for _, fc := range s.ContainerComponent.File {
+		p, _ := url.PathUnescape(fc.URI[0][7:])
+		return p
+	}
+
+	// Does this make sense, can it be multiple files???
+	for _, bc := range s.BinaryComponent {
+		for _, f := range bc.File {
+			p, _ := url.PathUnescape(f.URI[0][7:])
+			return p
+		}
+	}
+
+	return ""
+}
+
+///// SUPPORTING TYPES /////
 
 type ShapeResult struct {
 	Shape []Shape `json:"shape"`
 	ID    string  `json:"id"`
-}
-
-type Timestamp struct {
-	Samples  int      `json:"samples"`
-	TimeBase Fraction `json:"timeBase"`
 }
 
 type KV struct {
@@ -62,40 +108,6 @@ type File struct {
 	RefreshFlag int      `json:"refreshFlag"`
 	Storage     string   `json:"storage"`
 	Metadata    KV       `json:"metadata"`
-}
-
-type ContainerComponent struct {
-	Duration           Timestamp `json:"duration"`
-	Format             string    `json:"format"`
-	FirstSMPTETimecode string    `json:"firstSMPTETimecode"`
-	StartTimecode      int       `json:"startTimecode"`
-	StartTimestamp     Timestamp `json:"startTimestamp"`
-	RoundedTimeBase    int       `json:"roundedTimeBase"`
-	DropFrame          bool      `json:"dropFrame"`
-	TimeCodeTimeBase   Fraction  `json:"timeCodeTimeBase"`
-	MediaInfo          MediaInfo `json:"mediaInfo"`
-	File               []File    `json:"file"`
-	ID                 string    `json:"id"`
-	Metadata           []KV      `json:"metadata"`
-}
-
-type AudioComponent struct {
-	ChannelCount    int       `json:"channelCount"`
-	ChannelLayout   int       `json:"channelLayout"`
-	SampleFormat    string    `json:"sampleFormat"`
-	FrameSize       int       `json:"frameSize"`
-	MediaInfo       MediaInfo `json:"mediaInfo"`
-	File            []File    `json:"file"`
-	ID              string    `json:"id"`
-	Metadata        []KV      `json:"metadata"`
-	Codec           string    `json:"codec"`
-	TimeBase        Fraction  `json:"timeBase"`
-	ItemTrack       string    `json:"itemTrack"`
-	EssenceStreamID int       `json:"essenceStreamId"`
-	Bitrate         int       `json:"bitrate"`
-	Pid             int       `json:"pid"`
-	Duration        Timestamp `json:"duration"`
-	StartTimestamp  Timestamp `json:"startTimestamp"`
 }
 
 type Resolution struct {
@@ -176,4 +188,43 @@ type Shape struct {
 	VideoComponent     []VideoComponent   `json:"videoComponent"`
 	BinaryComponent    []BinaryComponent  `json:"binaryComponent"`
 	Metadata           KV                 `json:"metadata"`
+}
+
+type Timestamp struct {
+	Samples  int      `json:"samples"`
+	TimeBase Fraction `json:"timeBase"`
+}
+
+type ContainerComponent struct {
+	Duration           Timestamp `json:"duration"`
+	Format             string    `json:"format"`
+	FirstSMPTETimecode string    `json:"firstSMPTETimecode"`
+	StartTimecode      int       `json:"startTimecode"`
+	StartTimestamp     Timestamp `json:"startTimestamp"`
+	RoundedTimeBase    int       `json:"roundedTimeBase"`
+	DropFrame          bool      `json:"dropFrame"`
+	TimeCodeTimeBase   Fraction  `json:"timeCodeTimeBase"`
+	MediaInfo          MediaInfo `json:"mediaInfo"`
+	File               []File    `json:"file"`
+	ID                 string    `json:"id"`
+	Metadata           []KV      `json:"metadata"`
+}
+
+type AudioComponent struct {
+	ChannelCount    int       `json:"channelCount"`
+	ChannelLayout   int       `json:"channelLayout"`
+	SampleFormat    string    `json:"sampleFormat"`
+	FrameSize       int       `json:"frameSize"`
+	MediaInfo       MediaInfo `json:"mediaInfo"`
+	File            []File    `json:"file"`
+	ID              string    `json:"id"`
+	Metadata        []KV      `json:"metadata"`
+	Codec           string    `json:"codec"`
+	TimeBase        Fraction  `json:"timeBase"`
+	ItemTrack       string    `json:"itemTrack"`
+	EssenceStreamID int       `json:"essenceStreamId"`
+	Bitrate         int       `json:"bitrate"`
+	Pid             int       `json:"pid"`
+	Duration        Timestamp `json:"duration"`
+	StartTimestamp  Timestamp `json:"startTimestamp"`
 }
