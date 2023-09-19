@@ -9,6 +9,7 @@ import (
 type ProgressCallback func(Progress)
 
 type Progress struct {
+	Params         string  `json:"command"`
 	Percent        float64 `json:"percent"`
 	CurrentSeconds int     `json:"currentSeconds"`
 	TotalSeconds   float64 `json:"totalSeconds"`
@@ -49,12 +50,14 @@ func ProbeResultToInfo(info *FFProbeResult) StreamInfo {
 	}
 }
 
-func parseProgressCallback(info StreamInfo, cb func(Progress)) func(string) {
+func parseProgressCallback(command []string, info StreamInfo, cb func(Progress)) func(string) {
 	var progress Progress
 
+	progress.Params = strings.Join(command, " ")
+	progress.TotalFrames = info.TotalFrames
+	progress.TotalSeconds = info.TotalSeconds
+
 	return func(line string) {
-		totalFrames := info.TotalFrames
-		totalSeconds := info.TotalSeconds
 
 		parts := strings.Split(line, "=")
 
@@ -64,17 +67,15 @@ func parseProgressCallback(info StreamInfo, cb func(Progress)) func(string) {
 
 		if parts[0] == "frame" {
 			frame, _ := strconv.ParseInt(parts[1], 10, 64)
-			progress.TotalFrames = totalFrames
 			progress.CurrentFrame = int(frame)
-			if totalFrames != 0 && frame != 0 {
-				progress.Percent = float64(frame) / float64(totalFrames) * 100
+			if progress.TotalFrames != 0 && frame != 0 {
+				progress.Percent = float64(frame) / float64(progress.TotalFrames) * 100
 			}
 		} else if parts[0] == "out_time_us" {
 			ms, _ := strconv.ParseFloat(parts[1], 64)
-			progress.TotalSeconds = totalSeconds
 			progress.CurrentSeconds = int(ms / 1000 / 1000)
-			if totalSeconds != 0 && ms != 0 {
-				progress.Percent = ms / (totalSeconds * 1000 * 1000) * 100
+			if progress.TotalSeconds != 0 && ms != 0 {
+				progress.Percent = ms / (progress.TotalSeconds * 1000 * 1000) * 100
 			}
 		} else if parts[0] == "progress" {
 			// Audio doesn't report progress in a conceivable way, so just return 1 on complete

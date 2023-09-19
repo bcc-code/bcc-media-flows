@@ -21,8 +21,9 @@ import (
 )
 
 type AssetExportParams struct {
-	VXID      string
-	WithFiles bool
+	VXID          string
+	WithFiles     bool
+	WatermarkPath string
 }
 
 type AssetExportResult struct {
@@ -166,9 +167,10 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 		var result PrepareFilesResult
 		ctx = workflow.WithChildOptions(ctx, GetDefaultWorkflowOptions())
 		err = workflow.ExecuteChildWorkflow(ctx, PrepareFiles, PrepareFilesParams{
-			OutputPath: tempFolder,
-			VideoFile:  mergeResult.VideoFile,
-			AudioFiles: mergeResult.AudioFiles,
+			OutputPath:    tempFolder,
+			VideoFile:     mergeResult.VideoFile,
+			AudioFiles:    mergeResult.AudioFiles,
+			WatermarkPath: params.WatermarkPath,
 		}).Get(ctx, &result)
 		if err != nil {
 			return nil, err
@@ -330,9 +332,10 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 }
 
 type PrepareFilesParams struct {
-	OutputPath string
-	VideoFile  string
-	AudioFiles map[string]string
+	OutputPath    string
+	VideoFile     string
+	WatermarkPath string
+	AudioFiles    map[string]string
 }
 
 type PrepareFilesResult struct {
@@ -361,6 +364,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 				Height:          1080,
 				Bitrate:         "5M",
 				DestinationPath: tempFolder,
+				WatermarkPath:   params.WatermarkPath,
 			},
 			r720p: {
 				Path:            videoFile,
@@ -369,6 +373,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 				Height:          720,
 				Bitrate:         "3M",
 				DestinationPath: tempFolder,
+				WatermarkPath:   params.WatermarkPath,
 			},
 			r540p: {
 				Path:            videoFile,
@@ -377,6 +382,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 				Height:          540,
 				Bitrate:         "1900k",
 				DestinationPath: tempFolder,
+				WatermarkPath:   params.WatermarkPath,
 			},
 			r360p: {
 				Path:            videoFile,
@@ -385,6 +391,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 				Height:          360,
 				Bitrate:         "980k",
 				DestinationPath: tempFolder,
+				WatermarkPath:   params.WatermarkPath,
 			},
 			r270p: {
 				Path:            videoFile,
@@ -393,6 +400,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 				Height:          270,
 				Bitrate:         "610k",
 				DestinationPath: tempFolder,
+				WatermarkPath:   params.WatermarkPath,
 			},
 			r180p: {
 				Path:            videoFile,
@@ -401,6 +409,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 				Height:          180,
 				Bitrate:         "320k",
 				DestinationPath: tempFolder,
+				WatermarkPath:   params.WatermarkPath,
 			},
 		}
 
