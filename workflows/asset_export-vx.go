@@ -136,7 +136,6 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 
 	logger.Info("Retrieved data from vidispine")
 
-
 	tempFolder, err := getWorkflowTempFolder(ctx)
 	if err != nil {
 		return nil, err
@@ -244,7 +243,7 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 
 	if chapterDataWF != nil {
 		ingestData.ChaptersFile = "chapters.json"
-		var chaptersData []vidispine.Chapter
+		var chaptersData []asset.Chapter
 		err = chapterDataWF.Get(ctx, &chaptersData)
 		if err != nil {
 			return nil, err
