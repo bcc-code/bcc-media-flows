@@ -249,8 +249,6 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 		}
 	}
 
-	//err = deletePath(ctx, tempFolder)
-
 	ingestFolder := data.Title + "_" + workflow.GetInfo(ctx).OriginalRunID
 
 	err = workflow.ExecuteActivity(ctx, activities.RcloneUploadDir, activities.RcloneUploadDirInput{
@@ -280,6 +278,11 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 	}
 
 	err = workflow.ExecuteActivity(ctx, activities.PubsubPublish, event).Get(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	//err = deletePath(ctx, tempFolder)
 
 	return &AssetExportResult{
 		ChaptersFile: ingestData.ChaptersFile,
@@ -287,7 +290,7 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 		ID:           params.VXID,
 		Duration:     ingestData.Duration,
 		Title:        ingestData.Title,
-	}, err
+	}, nil
 }
 
 type MergeExportDataResult struct {
