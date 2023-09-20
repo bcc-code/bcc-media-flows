@@ -24,16 +24,15 @@ import (
 type AssetExportParams struct {
 	VXID          string
 	WithFiles     bool
-	WithChapters bool
+	WithChapters  bool
 	WatermarkPath string
 }
 
 type AssetExportResult struct {
-	Duration     string `json:"duration"`
-	ID           string `json:"id"`
-	SmilFile     string `json:"smil_file"`
-	Title        string `json:"title"`
-	ChaptersFile string `json:"chapters_file"`
+	Duration string `json:"duration"`
+	ID       string `json:"id"`
+	SmilFile string `json:"smil_file"`
+	Title    string `json:"title"`
 }
 
 const (
@@ -158,6 +157,14 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 		return nil, err
 	}
 
+	// We start chapter export and pick the results up later when needed
+	var chapterDataWF workflow.Future
+	if params.WithChapters {
+		chapterDataWF = workflow.ExecuteActivity(ctx, avidispine.GetChapterDataActivity, avidispine.GetChapterDataParams{
+			ExportData: data,
+		})
+	}
+
 	ingestData := ingest.Data{
 		Title:    data.Title,
 		Id:       params.VXID,
@@ -226,6 +233,24 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 	if err != nil {
 		return nil, err
 	}
+
+	if chapterDataWF != nil {
+		ingestData.ChaptersFile = "chapters.json"
+		var chaptersData []vidispine.Chapter
+		err = chapterDataWF.Get(ctx, &chaptersData)
+		if err != nil {
+			return nil, err
+		}
+		marshalled, err = json.Marshal(chaptersData)
+		if err != nil {
+			return nil, err
+		}
+		err = writeFile(ctx, filepath.Join(outputFolder, "chapters.json"), marshalled)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	//err = deletePath(ctx, tempFolder)
 
 	ingestFolder := data.Title + "_" + workflow.GetInfo(ctx).OriginalRunID
