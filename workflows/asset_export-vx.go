@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	"path/filepath"
 	"strings"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/bcc-code/bccm-flows/activities"
 	avidispine "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/common/ingest"
 	"github.com/bcc-code/bccm-flows/common/smil"
 	"github.com/bcc-code/bccm-flows/services/vidispine"
 	"github.com/bcc-code/bccm-flows/utils"
@@ -29,10 +29,11 @@ type AssetExportParams struct {
 }
 
 type AssetExportResult struct {
-	Duration string `json:"duration"`
-	ID       string `json:"id"`
-	SmilFile string `json:"smil_file"`
-	Title    string `json:"title"`
+	ID           string `json:"id"`
+	Title        string `json:"title"`
+	Duration     string `json:"duration"`
+	SmilFile     string `json:"smil_file"`
+	ChaptersFile string `json:"chapters_file"`
 }
 
 const (
@@ -135,15 +136,12 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 
 	logger.Info("Retrieved data from vidispine")
 
-	outputFolder, err := getWorkflowOutputFolder(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	tempFolder, err := getWorkflowTempFolder(ctx)
 	if err != nil {
 		return nil, err
 	}
+
+	outputFolder := filepath.Join(tempFolder, "output")
 
 	ctx = workflow.WithChildOptions(ctx, GetDefaultWorkflowOptions())
 
@@ -165,9 +163,9 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 		})
 	}
 
-	ingestData := ingest.Data{
+	ingestData := asset.IngestJSONMeta{
 		Title:    data.Title,
-		Id:       params.VXID,
+		ID:       params.VXID,
 		Duration: formatSecondsToTimestamp(mergeResult.Duration),
 	}
 
@@ -236,7 +234,7 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 
 	if chapterDataWF != nil {
 		ingestData.ChaptersFile = "chapters.json"
-		var chaptersData []vidispine.Chapter
+		var chaptersData []asset.Chapter
 		err = chapterDataWF.Get(ctx, &chaptersData)
 		if err != nil {
 			return nil, err
@@ -283,7 +281,13 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 
 	err = workflow.ExecuteActivity(ctx, activities.PubsubPublish, event).Get(ctx, nil)
 
-	return nil, err
+	return &AssetExportResult{
+		ChaptersFile: ingestData.ChaptersFile,
+		SmilFile:     ingestData.SmilFile,
+		ID:           params.VXID,
+		Duration:     ingestData.Duration,
+		Title:        ingestData.Title,
+	}, err
 }
 
 type MergeExportDataResult struct {
@@ -491,7 +495,7 @@ type MuxFilesParams struct {
 }
 
 type MuxFilesResult struct {
-	Files     []ingest.File
+	Files     []asset.IngestFileMeta
 	Streams   []smil.Video
 	Subtitles []smil.TextStream
 }
@@ -505,7 +509,7 @@ func MuxFiles(ctx workflow.Context, params MuxFilesParams) (*MuxFilesResult, err
 
 	ctx = workflow.WithTaskQueue(ctx, utils.GetTranscodeQueue())
 
-	var files []ingest.File
+	var files []asset.IngestFileMeta
 	audioLanguages := utils.LanguageKeysToOrderedLanguages(lo.Keys(params.AudioFiles))
 	if params.WithFiles {
 		for _, lang := range audioLanguages {
@@ -528,7 +532,7 @@ func MuxFiles(ctx workflow.Context, params MuxFilesParams) (*MuxFilesResult, err
 				if code == "" {
 					code = lang.ISO6391
 				}
-				files = append(files, ingest.File{
+				files = append(files, asset.IngestFileMeta{
 					Resolution:    q,
 					AudioLanguage: code,
 					Mime:          "video/mp4",
