@@ -169,15 +169,6 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 		Duration: formatSecondsToTimestamp(mergeResult.Duration),
 	}
 
-	var chapters []asset.Chapter
-
-	err = workflow.ExecuteActivity(ctx, avidispine.GetChapterDataActivity, avidispine.GetChapterDataParams{
-		ExportData: data,
-	}).Get(ctx, &chapters)
-	if err != nil {
-		return nil, err
-	}
-
 	var videoFiles map[string]string
 	var audioFiles map[string]string
 	{
