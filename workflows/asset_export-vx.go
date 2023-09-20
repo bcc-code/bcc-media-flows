@@ -136,10 +136,6 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 
 	logger.Info("Retrieved data from vidispine")
 
-	//outputFolder, err := getWorkflowOutputFolder(ctx)
-	//if err != nil {
-	//	return nil, err
-	//}
 
 	tempFolder, err := getWorkflowTempFolder(ctx)
 	if err != nil {
@@ -160,6 +156,14 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 		return nil, err
 	}
 
+	// We start chapter export and pick the results up later when needed
+	var chapterDataWF workflow.Future
+	if params.WithChapters {
+		chapterDataWF = workflow.ExecuteActivity(ctx, avidispine.GetChapterDataActivity, avidispine.GetChapterDataParams{
+			ExportData: data,
+		})
+	}
+
 	ingestData := asset.IngestJSONMeta{
 		Title:    data.Title,
 		ID:       params.VXID,
@@ -173,19 +177,6 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 	}).Get(ctx, &chapters)
 	if err != nil {
 		return nil, err
-	}
-
-	if len(chapters) > 0 {
-		chapterMarshalled, err := json.Marshal(chapters)
-		if err != nil {
-			return nil, err
-		}
-
-		err = writeFile(ctx, filepath.Join(outputFolder, "chapters.json"), chapterMarshalled)
-		if err != nil {
-			return nil, err
-		}
-		ingestData.ChaptersFile = "chapters.json"
 	}
 
 	var videoFiles map[string]string
@@ -250,6 +241,24 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 	if err != nil {
 		return nil, err
 	}
+
+	if chapterDataWF != nil {
+		ingestData.ChaptersFile = "chapters.json"
+		var chaptersData []vidispine.Chapter
+		err = chapterDataWF.Get(ctx, &chaptersData)
+		if err != nil {
+			return nil, err
+		}
+		marshalled, err = json.Marshal(chaptersData)
+		if err != nil {
+			return nil, err
+		}
+		err = writeFile(ctx, filepath.Join(outputFolder, "chapters.json"), marshalled)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	//err = deletePath(ctx, tempFolder)
 
 	ingestFolder := data.Title + "_" + workflow.GetInfo(ctx).OriginalRunID
