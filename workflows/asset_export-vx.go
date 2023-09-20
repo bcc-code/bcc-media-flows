@@ -145,15 +145,17 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 		return nil, err
 	}
 
-	outputFolder, err := getWorkflowOutputFolder(ctx)
-	if err != nil {
-		return nil, err
-	}
+	//outputFolder, err := getWorkflowOutputFolder(ctx)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	tempFolder, err := getWorkflowTempFolder(ctx)
 	if err != nil {
 		return nil, err
 	}
+
+	outputFolder := filepath.Join(tempFolder, "output")
 
 	chapterMarshalled, err := json.Marshal(chapters)
 	if err != nil {

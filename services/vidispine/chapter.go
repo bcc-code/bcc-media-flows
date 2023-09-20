@@ -157,7 +157,7 @@ func metaToChapter(meta *vsapi.MetadataResult) asset.Chapter {
 		match := SongExtract.FindStringSubmatch(strings.ToUpper(out.Label))
 		if len(match) == 3 {
 			out.SongCollection = match[1]
-			out.SongCollection = match[2]
+			out.SongNumber = match[2]
 		}
 	}
 
