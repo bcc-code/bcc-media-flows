@@ -2,6 +2,7 @@ package vidispine
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	"math"
 	"regexp"
 	"strings"
@@ -22,42 +23,42 @@ var (
 	ChapterTypeCredits   = ChapterType{"credits"}
 
 	ChapterTypeMap = map[string]ChapterType{
-		"sang":            ChapterTypeSong,
-		"musikkvideo":     ChapterTypeSong,
-		"musikal":         ChapterTypeSong,
-		"tale":            ChapterTypeSpeech,
-		"appelle":         ChapterTypeSpeech,
-		"vitnesbyrd":      ChapterTypeTestimony,
-		"end-credit":      ChapterTypeCredits,
-		"panel":           ChapterTypeOther,
-		"intervju":        ChapterTypeOther,
-		"temafilm":        ChapterTypeOther,
-		"animasjon":       ChapterTypeOther,
-		"programleder":    ChapterTypeOther,
-		"dokumentar":      ChapterTypeOther,
-		"ordforklaring":   ChapterTypeOther,
-		"frsending":       ChapterTypeOther,
-		"ettersending":    ChapterTypeOther,
+		"sang":           ChapterTypeSong,
+		"musikkvideo":    ChapterTypeSong,
+		"musikal":        ChapterTypeSong,
+		"tale":           ChapterTypeSpeech,
+		"appelle":        ChapterTypeSpeech,
+		"vitnesbyrd":     ChapterTypeTestimony,
+		"end-credit":     ChapterTypeCredits,
+		"panel":          ChapterTypeOther,
+		"intervju":       ChapterTypeOther,
+		"temafilm":       ChapterTypeOther,
+		"animasjon":      ChapterTypeOther,
+		"programleder":   ChapterTypeOther,
+		"dokumentar":     ChapterTypeOther,
+		"ordforklaring":  ChapterTypeOther,
+		"frsending":      ChapterTypeOther,
+		"ettersending":   ChapterTypeOther,
 		"bildekavalkade": ChapterTypeOther,
-		"skuespill":       ChapterTypeOther,
-		"aksjonstatus":    ChapterTypeOther,
-		"hilse":           ChapterTypeOther,
-		"konkuranse":      ChapterTypeOther,
-		"informasjon":     ChapterTypeOther,
-		"bnn":             ChapterTypeOther,
-		"promo":           ChapterTypeOther,
-		"mte":             ChapterTypeOther,
-		"fest":            ChapterTypeOther,
-		"underholdning":   ChapterTypeOther,
-		"kortfilm":        ChapterTypeOther,
-		"anslag":          ChapterTypeOther,
-		"teaser":          ChapterTypeOther,
-		"reality":         ChapterTypeOther,
-		"studio":          ChapterTypeOther,
-		"talk-show":       ChapterTypeOther,
-		"presentasjon":    ChapterTypeOther,
-		"seminar":         ChapterTypeOther,
-		"reportasje":      ChapterTypeOther,
+		"skuespill":      ChapterTypeOther,
+		"aksjonstatus":   ChapterTypeOther,
+		"hilse":          ChapterTypeOther,
+		"konkuranse":     ChapterTypeOther,
+		"informasjon":    ChapterTypeOther,
+		"bnn":            ChapterTypeOther,
+		"promo":          ChapterTypeOther,
+		"mte":            ChapterTypeOther,
+		"fest":           ChapterTypeOther,
+		"underholdning":  ChapterTypeOther,
+		"kortfilm":       ChapterTypeOther,
+		"anslag":         ChapterTypeOther,
+		"teaser":         ChapterTypeOther,
+		"reality":        ChapterTypeOther,
+		"studio":         ChapterTypeOther,
+		"talk-show":      ChapterTypeOther,
+		"presentasjon":   ChapterTypeOther,
+		"seminar":        ChapterTypeOther,
+		"reportasje":     ChapterTypeOther,
 	}
 )
 
@@ -67,19 +68,7 @@ var SongCollectionMap = map[string]string{
 	"HV":  "WOTL",
 }
 
-type Chapter struct {
-	ChapterType    string
-	Timestamp      float64
-	Label          string
-	Title          string
-	Description    string
-	SongCollection string
-	SongNumber     string
-	Highlight      bool
-	Persons        []string
-}
-
-func (s *VidispineService) GetChapterData(exportData *ExportData) ([]Chapter, error) {
+func (s *VidispineService) GetChapterData(exportData *ExportData) ([]asset.Chapter, error) {
 	metaCache := map[string]*vsapi.MetadataResult{}
 
 	allChapters := map[string]*vsapi.MetadataResult{}
@@ -135,7 +124,7 @@ func (s *VidispineService) GetChapterData(exportData *ExportData) ([]Chapter, er
 		}
 	}
 
-	chapters := []Chapter{}
+	var chapters []asset.Chapter
 	for _, data := range allChapters {
 		chapters = append(chapters, metaToChapter(data))
 	}
@@ -143,8 +132,8 @@ func (s *VidispineService) GetChapterData(exportData *ExportData) ([]Chapter, er
 	return chapters, nil
 }
 
-func metaToChapter(meta *vsapi.MetadataResult) Chapter {
-	out := Chapter{}
+func metaToChapter(meta *vsapi.MetadataResult) asset.Chapter {
+	out := asset.Chapter{}
 
 	out.Label = meta.Get(vscommon.FieldTitle, "")
 	out.Title = meta.Get(vscommon.FieldTitle, "")

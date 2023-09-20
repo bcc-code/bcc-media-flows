@@ -29,6 +29,7 @@ var vidispineActivities = []any{
 	vidispine.ImportFileAsSidecarActivity,
 	vidispine.SetVXMetadataFieldActivity,
 	vidispine.GetExportDataActivity,
+	vidispine.GetChapterDataActivity,
 }
 
 var transcodeActivities = []any{
