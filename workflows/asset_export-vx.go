@@ -142,6 +142,10 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 	}
 
 	outputFolder := filepath.Join(tempFolder, "output")
+	err = createFolder(ctx, outputFolder)
+	if err != nil {
+		return nil, err
+	}
 
 	ctx = workflow.WithChildOptions(ctx, GetDefaultWorkflowOptions())
 
