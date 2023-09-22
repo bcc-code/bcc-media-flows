@@ -80,7 +80,6 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		"-r", fmt.Sprintf("%d", framerate),
 		"-filter_complex", filterComplex,
 		"-map", "[out]",
-		"-map", "[audio]",
 	)
 
 	filename := filepath.Base(input.Path)
