@@ -9,6 +9,7 @@ import (
 )
 
 func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.VideoResult, error) {
+
 	h264encoder := os.Getenv("H264_ENCODER")
 	if h264encoder == "" {
 		h264encoder = "libx264"
@@ -58,8 +59,22 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 	//	filterComplex += fmt.Sprintf(";[main][1] overlay=main_w-overlay_w:0")
 	//}
 
+	info, err := ffmpeg.GetStreamInfo(input.Path)
+	if err != nil {
+		return nil, err
+	}
+
+	framerate := input.FrameRate
+	if framerate == 0 {
+		if info.FrameRate > 40 {
+			framerate = 50
+		} else {
+			framerate = 25
+		}
+	}
+
 	params = append(params,
-		"-r", fmt.Sprintf("%d", input.FrameRate),
+		"-r", fmt.Sprintf("%d", framerate),
 		"-filter_complex", filterComplex,
 		"-map", "[out]",
 	)
@@ -73,11 +88,6 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 	params = append(params,
 		"-y", outputPath,
 	)
-
-	info, err := ffmpeg.GetStreamInfo(input.Path)
-	if err != nil {
-		return nil, err
-	}
 
 	_, err = ffmpeg.Do(params, info, cb)
 	if err != nil {

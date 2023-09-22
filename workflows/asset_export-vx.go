@@ -398,7 +398,6 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 		qualities := map[string]common.VideoInput{
 			r1080p: {
 				Path:            videoFile,
-				FrameRate:       25,
 				Width:           1920,
 				Height:          1080,
 				Bitrate:         "5M",
@@ -407,7 +406,6 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 			},
 			r720p: {
 				Path:            videoFile,
-				FrameRate:       25,
 				Width:           1280,
 				Height:          720,
 				Bitrate:         "3M",

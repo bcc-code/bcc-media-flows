@@ -1,6 +1,7 @@
 package ffmpeg
 
 import (
+	"github.com/samber/lo"
 	"strconv"
 	"strings"
 	"time"
@@ -22,14 +23,22 @@ type Progress struct {
 type StreamInfo struct {
 	TotalFrames  int
 	TotalSeconds float64
+	FrameRate    int
 }
 
 func ProbeResultToInfo(info *FFProbeResult) StreamInfo {
+	stream, found := lo.Find(info.Streams, func(i FFProbeStream) bool {
+		return i.CodecType == "video"
+	})
+	if !found {
+		stream = info.Streams[0]
+	}
+
 	var totalFrames int64
 	var totalSeconds float64
 	if info != nil {
-		totalFrames, _ = strconv.ParseInt(info.Streams[0].NbFrames, 10, 64)
-		duration := info.Streams[0].Tags.Duration
+		totalFrames, _ = strconv.ParseInt(stream.NbFrames, 10, 64)
+		duration := stream.Tags.Duration
 		if duration != "" {
 			layout := "15:04:05.999999999"
 			t, err := time.Parse(layout, duration)
@@ -38,15 +47,29 @@ func ProbeResultToInfo(info *FFProbeResult) StreamInfo {
 			}
 		}
 		if totalSeconds == 0 {
-			floatSeconds, _ := strconv.ParseFloat(info.Streams[0].Duration, 64)
+			floatSeconds, _ := strconv.ParseFloat(stream.Duration, 64)
 			if floatSeconds != 0 {
 				totalSeconds = floatSeconds
 			}
 		}
 	}
+
+	var framerate int
+	if stream.RFrameRate != "" {
+		parts := strings.Split(stream.RFrameRate, "/")
+		if len(parts) == 2 {
+			frames, _ := strconv.ParseFloat(parts[0], 64)
+			seconds, _ := strconv.ParseFloat(parts[1], 64)
+			if seconds != 0 {
+				framerate = int(frames / seconds)
+			}
+		}
+	}
+
 	return StreamInfo{
 		TotalFrames:  int(totalFrames),
 		TotalSeconds: totalSeconds,
+		FrameRate:    framerate,
 	}
 }
 

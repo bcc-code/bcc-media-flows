@@ -6,7 +6,6 @@ import (
 	"github.com/bcc-code/bccm-flows/cache"
 	"github.com/bcc-code/bccm-flows/utils"
 	"os/exec"
-	"strings"
 	"time"
 )
 
@@ -100,12 +99,15 @@ type FFProbeResult struct {
 }
 
 func doProbe(path string) (*FFProbeResult, error) {
-	options := strings.Split("-v quiet -print_format json -show_format -show_streams", " ")
-	options = append(options, path)
 
 	cmd := exec.Command(
 		"ffprobe",
-		options...,
+		"-hide_banner",
+		"-v", "quiet",
+		"-print_format", "json",
+		"-show_format",
+		"-show_streams",
+		path,
 	)
 
 	result, err := utils.ExecuteCmd(cmd, nil)
