@@ -62,7 +62,7 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		input.Width,
 		input.Height)
 
-	filterComplex += "[0:a]loudnorm[audio];"
+	filterComplex += "[0:a]loudnorm[audio]"
 
 	info, err := ffmpeg.GetStreamInfo(input.Path)
 	if err != nil {
