@@ -3,6 +3,7 @@ package common
 type VideoInput struct {
 	Path            string
 	Bitrate         string
+	BufferSize      string
 	Width           int
 	Height          int
 	FrameRate       int
