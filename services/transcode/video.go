@@ -50,7 +50,7 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 
 	var filterComplex string
 
-	filterComplex += fmt.Sprintf("[0:v] scale=%[1]d:%[2]d:force_original_aspect_ratio=decrease,pad=%[1]d:%[2]d:(ow-iw)/2:(oh-ih)/2 [main];",
+	filterComplex += fmt.Sprintf("[0] scale=%[1]d:%[2]d:force_original_aspect_ratio=decrease,pad=%[1]d:%[2]d:(ow-iw)/2:(oh-ih)/2 [main];",
 		1920,
 		1080)
 
@@ -58,11 +58,9 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		filterComplex += "[main][1] overlay=main_w-overlay_w:0 [main];"
 	}
 
-	filterComplex += fmt.Sprintf("[main] scale=%[1]d:%[2]d:force_original_aspect_ratio=decrease [out];",
+	filterComplex += fmt.Sprintf("[main] scale=%[1]d:%[2]d:force_original_aspect_ratio=decrease [out]",
 		input.Width,
 		input.Height)
-
-	filterComplex += "[0:a]loudnorm[audio]"
 
 	info, err := ffmpeg.GetStreamInfo(input.Path)
 	if err != nil {

@@ -13,6 +13,7 @@ func AudioAac(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 		"-hide_banner",
 		"-i", input.Path,
 		"-c:a", "aac",
+		"-af", "loudnorm",
 		"-b:a", input.Bitrate,
 	}
 
