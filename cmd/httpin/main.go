@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/workflows"
 	"net/http"
 	"os"
+
+	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/workflows"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -106,6 +107,14 @@ func triggerHandler(ctx *gin.Context) {
 		}
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.ExecuteFFmpeg, workflows.ExecuteFFmpegInput{
 			Arguments: input.Arguments,
+		})
+	case "ImportSubtitlesFromSubtrans":
+		if vxID == "" {
+			ctx.Status(http.StatusBadRequest)
+			return
+		}
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.ImportSubtitlesFromSubtrans, workflows.ImportSubtitlesFromSubtransInput{
+			VXId: vxID,
 		})
 	}
 

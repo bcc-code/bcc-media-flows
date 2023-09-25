@@ -1,14 +1,15 @@
 package main
 
 import (
-	"github.com/bcc-code/bccm-flows/activities"
-	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils"
-	"github.com/bcc-code/bccm-flows/workflows"
 	"log"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/bcc-code/bccm-flows/activities"
+	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bccm-flows/workflows"
 
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
 	"go.temporal.io/sdk/client"
@@ -21,6 +22,7 @@ var utilActivities = []any{
 	activities.WriteFile,
 	activities.DeletePath,
 	activities.StandardizeFileName,
+	activities.GetSubtitlesActivity,
 }
 
 var vidispineActivities = []any{
@@ -30,6 +32,7 @@ var vidispineActivities = []any{
 	vidispine.SetVXMetadataFieldActivity,
 	vidispine.GetExportDataActivity,
 	vidispine.GetChapterDataActivity,
+	activities.GetSubtransIDActivity,
 }
 
 var transcodeActivities = []any{
@@ -57,6 +60,7 @@ var workerWorkflows = []any{
 	workflows.MuxFiles,
 	workflows.PrepareFiles,
 	workflows.ExecuteFFmpeg,
+	workflows.ImportSubtitlesFromSubtrans,
 }
 
 func main() {

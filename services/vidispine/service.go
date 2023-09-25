@@ -3,6 +3,7 @@ package vidispine
 
 import (
 	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
+	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 )
 
 type VSClient interface {
@@ -40,6 +41,15 @@ func (s *VidispineService) AddSidecarToItem(itemVXID, filePath, language string)
 
 func (s *VidispineService) SetItemMetadataField(itemVXID, field, value string) error {
 	return s.apiClient.SetItemMetadataField(itemVXID, field, value)
+}
+
+func (s *VidispineService) GetItemMetadataField(vsID string, field vscommon.FieldType) (string, error) {
+	meta, err := s.apiClient.GetMetadata(vsID)
+	if err != nil {
+		return "", err
+	}
+
+	return meta.Get(field, ""), nil
 }
 
 func (s *VidispineService) GetShapes(itemVXID string) (*vsapi.ShapeResult, error) {

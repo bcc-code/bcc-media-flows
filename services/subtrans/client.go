@@ -3,6 +3,7 @@ package subtrans
 import (
 	"bytes"
 	"fmt"
+	"strings"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -25,9 +26,9 @@ func NewClient(baseURL string, apiKey string) *Client {
 	}
 }
 
-func (c *Client) SearchByName(name string) (*[]SubtransResult, error) {
-	res := &[]SubtransResult{}
-	_, err := c.restyClient.R().SetResult(res).Get("/api/external/story/files/" + name + "?incLanguages=true&returnApprovedOnly=true&key=" + c.apiKey)
+func (c *Client) SearchByName(name string) ([]*SubtransResult, error) {
+	res := []*SubtransResult{}
+	_, err := c.restyClient.R().SetResult(&res).Get("/api/external/story/files/" + name + "?incLanguages=true&returnApprovedOnly=true&key=" + c.apiKey)
 	return res, err
 }
 
@@ -35,6 +36,17 @@ func (c *Client) SearchByID(id string) (*SubtransResult, error) {
 	res := &SubtransResult{}
 	_, err := c.restyClient.R().SetResult(res).Get("/api/external/story/storyid/" + id + "?incLanguages=true&key=" + c.apiKey)
 	return res, err
+}
+
+func (c *Client) GetFilePrefix(id string) (string, error) {
+	res := &SubtransResult{}
+	_, err := c.restyClient.R().SetResult(res).Get("/api/external/story/storyid/" + id + "?incLanguages=true&key=" + c.apiKey)
+
+	if err != nil {
+		return "", err
+	}
+
+	return strings.ReplaceAll(res.Name, "%lang%", ""), nil
 }
 
 const SubTypeSRT = "srt"

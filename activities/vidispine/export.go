@@ -2,6 +2,7 @@ package vidispine
 
 import (
 	"context"
+
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
 
 	"github.com/bcc-code/bccm-flows/services/vidispine"
@@ -17,7 +18,7 @@ func GetExportDataActivity(ctx context.Context, params *GetExportDataParams) (*v
 	activity.RecordHeartbeat(ctx, "GetExportDataActivity")
 	log.Info("Starting GetExportDataActivity")
 
-	client := getClient()
+	client := GetClient()
 
 	data, err := client.GetDataForExport(params.VXID)
 	if err != nil {
@@ -36,7 +37,7 @@ func GetChapterDataActivity(ctx context.Context, params *GetChapterDataParams) (
 	activity.RecordHeartbeat(ctx, "GetChapterDataActivity")
 	log.Info("Starting GetChapterDataActivity")
 
-	client := getClient()
+	client := GetClient()
 
 	return client.GetChapterData(params.ExportData)
 }
