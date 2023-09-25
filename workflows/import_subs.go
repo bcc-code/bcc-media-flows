@@ -74,7 +74,9 @@ func ImportSubtitlesFromSubtrans(
 			FilePath: sub,
 		})
 
-		workflow.ExecuteActivity(ctx, vidispine.ImportFileAsShapeActivity, vidispine.ImportFileAsShapeParams{
+		activities = append(activities, act)
+
+		act = workflow.ExecuteActivity(ctx, vidispine.ImportFileAsShapeActivity, vidispine.ImportFileAsShapeParams{
 			AssetID:  params.VXId,
 			FilePath: sub,
 			ShapeTag: fmt.Sprintf("sub_%s_%s", lang, "srt"),
