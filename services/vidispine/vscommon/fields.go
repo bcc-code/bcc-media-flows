@@ -17,4 +17,6 @@ var (
 	FieldTitle             = FieldType{"title"}
 	FieldSource            = FieldType{"portal_mf103965"}
 	FieldExportAsChapter   = FieldType{"portal_mf457300"}
+	FieldSubtransStoryID   = FieldType{"portal_mf397928"}
+	FieldOriginalURI       = FieldType{"originalUri"}
 )

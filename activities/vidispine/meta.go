@@ -21,7 +21,7 @@ func GetFileFromVXActivity(ctx context.Context, params GetFileFromVXParams) (*Ge
 	log := activity.GetLogger(ctx)
 	log.Info("Starting GetFileFromVXActivity")
 
-	vsClient := getClient()
+	vsClient := GetClient()
 
 	shapes, err := vsClient.GetShapes(params.VXID)
 	if err != nil {
@@ -57,7 +57,7 @@ func SetVXMetadataFieldActivity(ctx context.Context, params SetVXMetadataFieldPa
 	log := activity.GetLogger(ctx)
 	log.Info("Starting SetVXMetadataFieldActivity")
 
-	vsClient := getClient()
+	vsClient := GetClient()
 
 	err := vsClient.SetItemMetadataField(params.VXID, params.Key, params.Value)
 	return nil, err
