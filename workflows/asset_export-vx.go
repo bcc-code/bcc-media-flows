@@ -415,7 +415,6 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 			},
 			r540p: {
 				Path:            videoFile,
-				FrameRate:       25,
 				Width:           960,
 				Height:          540,
 				Bitrate:         "1900k",
@@ -424,7 +423,6 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 			},
 			r360p: {
 				Path:            videoFile,
-				FrameRate:       25,
 				Width:           640,
 				Height:          360,
 				Bitrate:         "980k",
@@ -433,7 +431,6 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 			},
 			r270p: {
 				Path:            videoFile,
-				FrameRate:       25,
 				Width:           480,
 				Height:          270,
 				Bitrate:         "610k",
@@ -442,7 +439,6 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 			},
 			r180p: {
 				Path:            videoFile,
-				FrameRate:       25,
 				Width:           320,
 				Height:          180,
 				Bitrate:         "320k",

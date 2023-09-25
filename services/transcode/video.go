@@ -10,9 +10,7 @@ import (
 
 func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.VideoResult, error) {
 	h264encoder := os.Getenv("H264_ENCODER")
-	if h264encoder == "" {
-		h264encoder = "libx264"
-	}
+	h264encoder = "libx264"
 
 	params := []string{
 		"-hide_banner",
@@ -32,6 +30,14 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 			"-c:v", h264encoder,
 			"-profile:v", "high",
 			"-level:v", "1.3",
+			"-pix_fmt", "yuv420p",
+			"-x264-params", "scenecut=0:open_gop=0:min-keyint=72:keyint=72",
+			//"-crf", "18",
+		)
+	case "libx265":
+		params = append(params,
+			"-c:v", h264encoder,
+			"-profile:v", "main",
 			"-pix_fmt", "yuv420p",
 			//"-crf", "18",
 		)

@@ -74,7 +74,11 @@ func Mux(input common.MuxInput, progressCallback ffmpeg.ProgressCallback) (*comm
 	}
 
 	streams := 0
-	params = append(params, "-map", fmt.Sprintf("%d:v", streams))
+	params = append(
+		params,
+		"-map", fmt.Sprintf("%d:v", streams),
+		fmt.Sprintf("-metadata:s:%d", streams), "language=eng",
+	)
 	streams++
 
 	for _, f := range audioFiles {
