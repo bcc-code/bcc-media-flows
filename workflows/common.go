@@ -3,6 +3,7 @@ package workflows
 import (
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/samber/lo"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 	"path/filepath"
@@ -82,4 +83,13 @@ func getWorkflowOutputFolder(ctx workflow.Context) (string, error) {
 func getWorkflowTempFolder(ctx workflow.Context) (string, error) {
 	path := utils.GetWorkflowTempFolder(ctx)
 	return path, createFolder(ctx, path)
+}
+
+// getMapKeysSafely makes sure that the order of the keys returned are identical to other workflow executions.
+func getMapKeysSafely[T any](ctx workflow.Context, m map[string]T) ([]string, error) {
+	var keys []string
+	err := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
+		return lo.Keys(m)
+	}).Get(&keys)
+	return keys, err
 }
