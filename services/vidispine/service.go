@@ -14,6 +14,7 @@ type VSClient interface {
 	RegisterFile(filePath string, state vsapi.FileState) (string, error)
 	AddShapeToItem(shapeTag, itemVXID, fileVXID string) (string, error)
 	AddSidecarToItem(itemVXID, filePath, language string) (string, error)
+	AddItem(filePath string) (string, error)
 	SetItemMetadataField(itemVXID, field, value string) error
 }
 
@@ -37,6 +38,10 @@ func (s *VidispineService) AddShapeToItem(shapeTag, itemVXID, fileVXID string) (
 
 func (s *VidispineService) AddSidecarToItem(itemVXID, filePath, language string) (string, error) {
 	return s.apiClient.AddSidecarToItem(itemVXID, filePath, language)
+}
+
+func (s *VidispineService) AddItem(filePath string) (string, error) {
+	return s.apiClient.AddItem(filePath)
 }
 
 func (s *VidispineService) SetItemMetadataField(itemVXID, field, value string) error {

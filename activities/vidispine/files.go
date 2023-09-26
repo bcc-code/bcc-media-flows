@@ -43,3 +43,17 @@ func ImportFileAsSidecarActivity(ctx context.Context, params *ImportSubtitleAsSi
 	_, err := vsClient.AddSidecarToItem(params.AssetID, params.FilePath, params.Language)
 	return err
 }
+
+type ImportFileAsItemParams struct {
+	FilePath string
+}
+
+func ImportFileAsItemActivity(ctx context.Context, params *ImportFileAsItemParams) error {
+	log := activity.GetLogger(ctx)
+	log.Info("Starting ImportFileAsItemActivity")
+
+	vsClient := GetClient()
+
+	_, err := vsClient.AddItem(params.FilePath)
+	return err
+}
