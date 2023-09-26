@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/bcc-code/bccm-flows/utils"
 )
 
 const DefaultStorageID = "VX-42"
@@ -18,7 +20,8 @@ func (c *Client) GetAbsoluteStoragePath(storageID string) (string, error) {
 	}
 	for _, m := range result.Result().(*StorageResult).Methods {
 		if strings.HasPrefix(m.URI, "file://") {
-			return strings.TrimPrefix(m.URI, "file://"), nil
+			path := strings.TrimPrefix(m.URI, "file://")
+			strings.ReplaceAll(path, "/mnt/isilon", utils.GetIsilonPrefix())
 		}
 	}
 
