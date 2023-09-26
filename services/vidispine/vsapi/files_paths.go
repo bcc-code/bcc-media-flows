@@ -21,7 +21,7 @@ func (c *Client) GetAbsoluteStoragePath(storageID string) (string, error) {
 	for _, m := range result.Result().(*StorageResult).Methods {
 		if strings.HasPrefix(m.URI, "file://") {
 			path := strings.TrimPrefix(m.URI, "file://")
-			strings.ReplaceAll(path, "/mnt/isilon", utils.GetIsilonPrefix())
+			path = strings.ReplaceAll(path, "/mnt/isilon", utils.GetIsilonPrefix())
 		}
 	}
 
