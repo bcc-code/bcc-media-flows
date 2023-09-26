@@ -50,9 +50,12 @@ func triggerHandler(ctx *gin.Context) {
 	workflowOptions := client.StartWorkflowOptions{
 		ID:        uuid.NewString(),
 		TaskQueue: queue,
-		SearchAttributes: map[string]any{
+	}
+
+	if os.Getenv("DEBUG") == "" {
+		workflowOptions.SearchAttributes = map[string]any{
 			"CustomStringField": vxID,
-		},
+		}
 	}
 
 	var res client.WorkflowRun
