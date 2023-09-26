@@ -1,6 +1,7 @@
 package workflows
 
 import (
+	"encoding/xml"
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/samber/lo"
@@ -69,10 +70,33 @@ func writeFile(ctx workflow.Context, file string, data []byte) error {
 	}).Get(ctx, nil)
 }
 
+func readFile(ctx workflow.Context, file string) ([]byte, error) {
+	var res []byte
+	err := workflow.ExecuteActivity(ctx, activities.ReadFile, activities.FileInput{
+		Path: file,
+	}).Get(ctx, &res)
+	return res, err
+}
+
+func unmarshalXMLFile[T any](ctx workflow.Context, file string) (*T, error) {
+	var r T
+	res, err := readFile(ctx, file)
+	if err != nil {
+		return nil, err
+	}
+	err = xml.Unmarshal(res, &r)
+	return &r, err
+}
+
 func deletePath(ctx workflow.Context, path string) error {
 	return workflow.ExecuteActivity(ctx, activities.DeletePath, activities.FileInput{
 		Path: path,
 	}).Get(ctx, nil)
+}
+
+func getWorkflowRawOutputFolder(ctx workflow.Context) (string, error) {
+	path := utils.GetWorkflowRawOutputFolder(ctx)
+	return path, createFolder(ctx, path)
 }
 
 func getWorkflowOutputFolder(ctx workflow.Context) (string, error) {

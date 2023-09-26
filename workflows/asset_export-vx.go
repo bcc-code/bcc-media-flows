@@ -256,7 +256,7 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 
 	ingestFolder := data.Title + "_" + workflow.GetInfo(ctx).OriginalRunID
 
-	err = workflow.ExecuteActivity(ctx, activities.RcloneUploadDir, activities.RcloneUploadDirInput{
+	err = workflow.ExecuteActivity(ctx, activities.RcloneCopy, activities.RcloneCopyDirInput{
 		Source:      strings.Replace(outputFolder, utils.GetIsilonPrefix()+"/", "isilon:isilon/", 1),
 		Destination: fmt.Sprintf("s3prod:vod-asset-ingest-prod/" + ingestFolder),
 	}).Get(ctx, nil)

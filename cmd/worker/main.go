@@ -20,6 +20,7 @@ var utilActivities = []any{
 	activities.MoveFile,
 	activities.CreateFolder,
 	activities.WriteFile,
+	activities.ReadFile,
 	activities.DeletePath,
 	activities.StandardizeFileName,
 	activities.GetSubtitlesActivity,
@@ -61,6 +62,8 @@ var workerWorkflows = []any{
 	workflows.PrepareFiles,
 	workflows.ExecuteFFmpeg,
 	workflows.ImportSubtitlesFromSubtrans,
+	workflows.AssetIngest,
+	workflows.AssetIngestRawMaterial,
 }
 
 func main() {
@@ -104,7 +107,7 @@ func main() {
 	switch utils.GetQueue() {
 	case common.QueueDebug:
 		w.RegisterActivity(activities.Transcribe)
-		w.RegisterActivity(activities.RcloneUploadDir)
+		w.RegisterActivity(activities.RcloneCopy)
 		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {
@@ -124,7 +127,7 @@ func main() {
 		}
 	case common.QueueWorker:
 		w.RegisterActivity(activities.Transcribe)
-		w.RegisterActivity(activities.RcloneUploadDir)
+		w.RegisterActivity(activities.RcloneCopy)
 		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {

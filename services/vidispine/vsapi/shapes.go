@@ -64,6 +64,9 @@ func (c *Client) AddItem(filePath string) (string, error) {
 
 	q := requestURL.Query()
 	q.Set("uri", "file://"+filePath)
+	// is this a good idea?
+	q.Set("no-transcode", "true")
+	q.Set("no-mediacheck", "true")
 
 	requestURL.RawQuery = q.Encode()
 

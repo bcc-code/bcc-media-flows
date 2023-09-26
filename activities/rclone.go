@@ -7,15 +7,15 @@ import (
 	"time"
 )
 
-type RcloneUploadDirInput struct {
+type RcloneCopyDirInput struct {
 	Source      string
 	Destination string
 }
 
-func RcloneUploadDir(ctx context.Context, input RcloneUploadDirInput) (bool, error) {
+func RcloneCopy(ctx context.Context, input RcloneCopyDirInput) (bool, error) {
 	activity.RecordHeartbeat(ctx, "Rclone Upload Dir")
 
-	res, err := rclone.CopyDir(input.Source, input.Destination)
+	res, err := rclone.Copy(input.Source, input.Destination)
 	if err != nil {
 		return false, err
 	}
