@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	"path/filepath"
 	"strings"
+
+	"github.com/bcc-code/bcc-media-platform/backend/asset"
 
 	bccmflows "github.com/bcc-code/bccm-flows"
 	"github.com/bcc-code/bccm-flows/activities"
@@ -256,7 +257,7 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 	ingestFolder := data.Title + "_" + workflow.GetInfo(ctx).OriginalRunID
 
 	err = workflow.ExecuteActivity(ctx, activities.RcloneUploadDir, activities.RcloneUploadDirInput{
-		Source:      strings.Replace(outputFolder, "/mnt/isilon/", "isilon:isilon/", 1),
+		Source:      strings.Replace(outputFolder, utils.GetIsilonPrefix()+"/", "isilon:isilon/", 1),
 		Destination: fmt.Sprintf("s3prod:vod-asset-ingest-prod/" + ingestFolder),
 	}).Get(ctx, nil)
 	if err != nil {

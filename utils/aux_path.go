@@ -2,12 +2,13 @@ package utils
 
 import (
 	"fmt"
-	"go.temporal.io/sdk/workflow"
 	"time"
+
+	"go.temporal.io/sdk/workflow"
 )
 
-const BaseDestinationPath = "/mnt/isilon/Production/aux"
-const BaseTempPath = "/mnt/isilon/system/tmp"
+var BaseDestinationPath = GetIsilonPrefix() + "/Production/aux"
+var BaseTempPath = GetIsilonPrefix() + "/system/tmp"
 
 // GetWorkflowOutputFolder retrieves the path and creates necessary folders for the workflow to use as an output.
 func GetWorkflowOutputFolder(ctx workflow.Context) string {
