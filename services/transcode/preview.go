@@ -2,9 +2,11 @@ package transcode
 
 import (
 	"errors"
-	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"os"
 	"path/filepath"
+
+	"github.com/bcc-code/bccm-flows/services/ffmpeg"
+	"github.com/bcc-code/bccm-flows/utils"
 )
 
 type PreviewInput struct {
@@ -17,7 +19,7 @@ type PreviewResult struct {
 	AudioOnly         bool
 }
 
-const previewWatermarkPath = "/mnt/isilon/system/graphics/LOGO_BTV_Preview_960-540.mov"
+var previewWatermarkPath = utils.GetIsilonPrefix() + "/system/graphics/LOGO_BTV_Preview_960-540.mov"
 
 func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*PreviewResult, error) {
 	encoder := os.Getenv("ENCODER")

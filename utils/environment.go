@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"github.com/bcc-code/bccm-flows/common"
 	"os"
+
+	"github.com/bcc-code/bccm-flows/common"
 )
 
 var queue = os.Getenv("QUEUE")
@@ -26,4 +27,14 @@ func GetTranscodeQueue() string {
 		return common.QueueDebug
 	}
 	return common.QueueTranscode
+}
+
+var isilonPrefix = os.Getenv("ISILON_PREFIX")
+
+func GetIsilonPrefix() string {
+	// For local testing
+	if isilonPrefix != "" {
+		return isilonPrefix
+	}
+	return "/mnt/isilon"
 }

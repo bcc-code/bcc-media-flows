@@ -9,6 +9,7 @@ import (
 	bccmflows "github.com/bcc-code/bccm-flows"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
+	"github.com/bcc-code/bccm-flows/utils"
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
@@ -44,11 +45,9 @@ type ExportAudioSource enum.Member[string]
 var (
 	ExportAudioSourceEmbedded = ExportAudioSource{"embedded"}
 	ExportAudioSourceRelated  = ExportAudioSource{"related"}
-)
 
-const (
-	EmptyWAVFile = "/mnt/isilon/system/assets/BlankAudio10h.wav"
-	EmtpySRTFile = "/mnt/isilon/system/assets/empty.srt"
+	EmptyWAVFile = utils.GetIsilonPrefix() + "/system/assets/BlankAudio10h.wav"
+	EmtpySRTFile = utils.GetIsilonPrefix() + "/system/assets/empty.srt"
 )
 
 func (s *VidispineService) getClipForAssetOrSubclip(
