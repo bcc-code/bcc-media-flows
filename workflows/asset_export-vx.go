@@ -454,7 +454,8 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 	}
 
 	var audioTasks = map[string]workflow.Future{}
-	for lang, path := range params.AudioFiles {
+	for lang := range params.AudioFiles {
+		path := params.AudioFiles[lang]
 		audioTasks[lang] = workflow.ExecuteActivity(ctx, activities.TranscodeToAudioAac, common.AudioInput{
 			Path:            path,
 			Bitrate:         "190k",
@@ -463,7 +464,8 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 	}
 
 	var audioFiles = map[string]string{}
-	for lang, task := range audioTasks {
+	for lang := range audioTasks {
+		task := audioTasks[lang]
 		var result common.AudioResult
 		err := task.Get(ctx, &result)
 		if err != nil {
@@ -473,7 +475,8 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 	}
 
 	var videoFiles = map[string]string{}
-	for key, task := range videoTasks {
+	for key := range videoTasks {
+		task := videoTasks[key]
 		var result common.VideoResult
 		err := task.Get(ctx, &result)
 		if err != nil {
