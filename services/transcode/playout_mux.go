@@ -110,8 +110,6 @@ func generateAudioSplitFilter(input string, count int) (string, []string) {
 }
 
 func generateFFmpegParamsForPlayoutMux(input common.PlayoutMuxInput, outputPath string) ([]string, error) {
-	const fallbackLanguage = "nor"
-
 	params := []string{
 		"-progress", "pipe:1",
 		"-hide_banner",
@@ -133,11 +131,11 @@ func generateFFmpegParamsForPlayoutMux(input common.PlayoutMuxInput, outputPath 
 		})
 	}, []inputFile{})
 
-	_, fallbackLanguageFound := lo.Find(audioFiles, func(f inputFile) bool {
-		return f.Language == fallbackLanguage
+	fallbackLanguage, fallbackLanguageFound := lo.Find(audioFiles, func(f inputFile) bool {
+		return f.Language == input.FallbackLanguage
 	})
 	if !fallbackLanguageFound {
-		return nil, fmt.Errorf("norwegian audio file not found")
+		return nil, fmt.Errorf("fallback audio file not found, fallbackLanguage is: %s", input.FallbackLanguage)
 	}
 
 	trackMaps := [12]*trackMap{}
@@ -147,7 +145,7 @@ func generateFFmpegParamsForPlayoutMux(input common.PlayoutMuxInput, outputPath 
 		})
 		copyFrom := ""
 		if !found {
-			copyFrom = "nor"
+			copyFrom = fallbackLanguage.Language
 		}
 		trackMaps[i] = &trackMap{
 			file:     file,
@@ -237,7 +235,6 @@ func generateFFmpegParamsForPlayoutMux(input common.PlayoutMuxInput, outputPath 
 			params = append(params, "-map", fmt.Sprintf("[%s]", label))
 		}
 	}
-
 	params = append(params,
 		"-c:v", "copy",
 		"-c:a", "pcm_s24le",
