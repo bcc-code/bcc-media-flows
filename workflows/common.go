@@ -78,6 +78,14 @@ func readFile(ctx workflow.Context, file string) ([]byte, error) {
 	return res, err
 }
 
+func listFiles(ctx workflow.Context, path string) ([]string, error) {
+	var res []string
+	err := workflow.ExecuteActivity(ctx, activities.ListFiles, activities.FileInput{
+		Path: path,
+	}).Get(ctx, &res)
+	return res, err
+}
+
 func unmarshalXMLFile[T any](ctx workflow.Context, file string) (*T, error) {
 	var r T
 	res, err := readFile(ctx, file)

@@ -3,6 +3,7 @@ package workflows
 import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/activities"
+	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/samber/lo"
@@ -53,13 +54,14 @@ func AssetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 	options := GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
+	outputFolder, err := getWorkflowRawOutputFolder(ctx)
+	if err != nil {
+		return err
+	}
+
 	for _, path := range params.FilePaths {
 		if !utils.ValidFilename(filepath.Base(path)) {
 			return fmt.Errorf("invalid filename: %s", path)
-		}
-		outputFolder, err := getWorkflowRawOutputFolder(ctx)
-		if err != nil {
-			return err
 		}
 		err = workflow.ExecuteActivity(ctx, activities.RcloneCopy, activities.RcloneCopyDirInput{
 			Source:      "dmz:dmzshare" + path,
@@ -68,7 +70,21 @@ func AssetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 		if err != nil {
 			return err
 		}
-
 	}
+
+	files, err := listFiles(ctx, outputFolder)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		err = workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsItemActivity, vsactivity.ImportFileAsItemParams{
+			FilePath: file,
+		}).Get(ctx, nil)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

@@ -21,6 +21,7 @@ var utilActivities = []any{
 	activities.CreateFolder,
 	activities.WriteFile,
 	activities.ReadFile,
+	activities.ListFiles,
 	activities.DeletePath,
 	activities.StandardizeFileName,
 	activities.GetSubtitlesActivity,

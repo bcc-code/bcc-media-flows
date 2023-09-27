@@ -102,6 +102,18 @@ func ReadFile(ctx context.Context, input FileInput) ([]byte, error) {
 	return os.ReadFile(input.Path)
 }
 
+func ListFiles(ctx context.Context, input FileInput) ([]string, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "ListFiles")
+	log.Info("Starting ListFilesActivity")
+
+	files, err := filepath.Glob(filepath.Join(input.Path, "*"))
+	if err != nil {
+		return nil, err
+	}
+	return files, err
+}
+
 func DeletePath(ctx context.Context, input FileInput) error {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "DeletePath")
