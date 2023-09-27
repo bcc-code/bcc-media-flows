@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/workflows"
@@ -118,6 +119,15 @@ func triggerHandler(ctx *gin.Context) {
 		}
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.ImportSubtitlesFromSubtrans, workflows.ImportSubtitlesFromSubtransInput{
 			VXId: vxID,
+		})
+	case "AnalyzeEBUR128":
+
+		target, _ := strconv.ParseFloat(getParamFromCtx(ctx, "targetLUFS"), 64)
+
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.NormalizeAudioLevelWorkflow, workflows.NormalizeAudioParams{
+			FilePath:              getParamFromCtx(ctx, "file"),
+			TargetLUFS:            target,
+			PerformOutputAnalysis: true,
 		})
 	}
 

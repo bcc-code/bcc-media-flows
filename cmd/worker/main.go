@@ -47,6 +47,8 @@ var transcodeActivities = []any{
 	activities.TranscodeToAudioAac,
 	activities.TranscodeMux,
 	activities.ExecuteFFmpeg,
+	activities.AnalyzeEBUR128Activity,
+	activities.LinearAdjustAudioActivity,
 }
 
 var workerWorkflows = []any{
@@ -61,6 +63,7 @@ var workerWorkflows = []any{
 	workflows.PrepareFiles,
 	workflows.ExecuteFFmpeg,
 	workflows.ImportSubtitlesFromSubtrans,
+	workflows.AnalyzeEBUR128Workflow,
 }
 
 func main() {
