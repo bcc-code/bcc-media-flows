@@ -9,7 +9,6 @@ import (
 
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
-	"github.com/samber/lo"
 )
 
 /***
@@ -76,27 +75,7 @@ func createMonoFilter(input string, output string) string {
 	return fmt.Sprintf("[%s]aresample=48000[%s]", input, output)
 }
 
-func createSplitFilter(input string, splitCount int) string {
-	filter := fmt.Sprintf("[%s]asplit=%d", input, splitCount)
-	for i := 0; i < splitCount; i++ {
-		filter += fmt.Sprintf("[%s_copy_%d]", input, i)
-	}
-	return filter
-}
-
-type inputFile struct {
-	languageFile
-	inputIndex int
-}
-
-type trackMap struct {
-	file        inputFile
-	stereo      bool
-	copyFrom    string
-	streamLabel string
-}
-
-func generateAudioSplitFilter(input string, count int) (string, []string) {
+func createSplitFilter(input string, count int) (string, []string) {
 	filter := fmt.Sprintf("[%s]asplit=%d", input, count)
 	labels := []string{}
 
@@ -110,10 +89,20 @@ func generateAudioSplitFilter(input string, count int) (string, []string) {
 }
 
 func generateFFmpegParamsForPlayoutMux(input common.PlayoutMuxInput, outputPath string) ([]string, error) {
+	type PlayoutLanguageState struct {
+		Code       string
+		FilePath   string
+		CopyFrom   string
+		InputIndex int
+		Stereo     bool
+	}
+
 	params := []string{
 		"-progress", "pipe:1",
 		"-hide_banner",
 	}
+
+	// Inputs
 	ffmpegInputCount := 0
 	addInput := func(path string) {
 		params = append(params, "-i", path)
@@ -121,101 +110,88 @@ func generateFFmpegParamsForPlayoutMux(input common.PlayoutMuxInput, outputPath 
 	}
 	addInput(input.VideoFilePath)
 
-	audioFiles := lo.Reduce(languageFilesForPaths(input.AudioFilePaths), func(agg []inputFile, item languageFile, index int) []inputFile {
-		if item.Path == "" {
-			return agg
-		}
-		return append(agg, inputFile{
-			languageFile: item,
-			inputIndex:   -1,
-		})
-	}, []inputFile{})
-
-	fallbackLanguage, fallbackLanguageFound := lo.Find(audioFiles, func(f inputFile) bool {
-		return f.Language == input.FallbackLanguage
-	})
-	if !fallbackLanguageFound {
+	_, fallbackExists := input.AudioFilePaths[input.FallbackLanguage]
+	if !fallbackExists {
 		return nil, fmt.Errorf("fallback audio file not found, fallbackLanguage is: %s", input.FallbackLanguage)
 	}
 
-	trackMaps := [12]*trackMap{}
+	audioLanguages := [12]*PlayoutLanguageState{}
 	for i, lang := range playoutLanguages {
-		file, found := lo.Find(audioFiles, func(f inputFile) bool {
-			return f.Language == lang
-		})
+		filePath, hasFile := input.AudioFilePaths[lang]
+
+		inputIndex := -1
 		copyFrom := ""
-		if !found {
-			copyFrom = fallbackLanguage.Language
+		if hasFile {
+			inputIndex = ffmpegInputCount
+			addInput(filePath)
+		} else {
+			copyFrom = input.FallbackLanguage
 		}
-		trackMaps[i] = &trackMap{
-			file:     file,
-			copyFrom: copyFrom,
-			stereo:   i < 4,
+
+		audioLanguages[i] = &PlayoutLanguageState{
+			Code:       lang,
+			FilePath:   filePath,
+			CopyFrom:   copyFrom,
+			InputIndex: inputIndex,
+			Stereo:     i < 4,
 		}
-	}
-
-	tracksWithInputFile := lo.Filter(trackMaps[:], func(f *trackMap, i int) bool {
-		return f.file.Path != ""
-	})
-
-	for _, f := range tracksWithInputFile {
-		f.file.inputIndex = ffmpegInputCount
-		addInput(f.file.Path)
 	}
 
 	leftStreams := map[string][]string{}
 	useLeftStream := func(lang string) string {
-		copy := leftStreams[lang][0]
+		stream := leftStreams[lang][0]
 		leftStreams[lang] = leftStreams[lang][1:]
-		return copy
+		return stream
 	}
 	rightStreams := map[string][]string{}
 	useRightStream := func(lang string) string {
-		copy := rightStreams[lang][0]
+		stream := rightStreams[lang][0]
 		rightStreams[lang] = rightStreams[lang][1:]
-		return copy
+		return stream
 	}
 
 	filterParts := []string{}
-	for _, track := range tracksWithInputFile {
-		input := fmt.Sprintf("%d:a", track.file.inputIndex)
-		outputL := fmt.Sprintf("%s_l", track.file.Language)
-		outputR := fmt.Sprintf("%s_r", track.file.Language)
+	for _, lang := range audioLanguages {
+		if lang.InputIndex == -1 {
+			continue
+		}
+		input := fmt.Sprintf("%d:a", lang.InputIndex)
+		outputL := fmt.Sprintf("%s_l", lang.Code)
+		outputR := fmt.Sprintf("%s_r", lang.Code)
 
 		leftStreamsNeeded := 1
 		rightStreamsNeeded := 0
 
-		if track.stereo {
+		if lang.Stereo {
 			filterParts = append(filterParts, createStereoFilter(input, outputL, outputR))
 			rightStreamsNeeded++
 		} else {
 			filterParts = append(filterParts, createMonoFilter(input, outputL))
 		}
-		for _, m := range trackMaps {
-			if m.copyFrom == track.file.Language {
+		for _, m := range audioLanguages {
+			if m.CopyFrom == lang.Code {
 				leftStreamsNeeded++
-				if m.stereo {
+				if m.Stereo {
 					rightStreamsNeeded++
 				}
 			}
 		}
 
 		if leftStreamsNeeded == 1 {
-			leftStreams[track.file.Language] = []string{outputL}
+			leftStreams[lang.Code] = []string{outputL}
 		} else if leftStreamsNeeded > 1 {
-			filter, labels := generateAudioSplitFilter(outputL, leftStreamsNeeded)
+			filter, labels := createSplitFilter(outputL, leftStreamsNeeded)
 			filterParts = append(filterParts, filter)
-			leftStreams[track.file.Language] = labels
+			leftStreams[lang.Code] = labels
 		}
 
 		if rightStreamsNeeded == 1 {
-			rightStreams[track.file.Language] = []string{outputR}
+			rightStreams[lang.Code] = []string{outputR}
 		} else if rightStreamsNeeded > 1 {
-			filter, labels := generateAudioSplitFilter(outputR, rightStreamsNeeded)
+			filter, labels := createSplitFilter(outputR, rightStreamsNeeded)
 			filterParts = append(filterParts, filter)
-			rightStreams[track.file.Language] = labels
+			rightStreams[lang.Code] = labels
 		}
-
 	}
 
 	params = append(params, "-filter_complex", strings.Join(filterParts, ";"))
@@ -223,14 +199,14 @@ func generateFFmpegParamsForPlayoutMux(input common.PlayoutMuxInput, outputPath 
 	// Video must be first in the map
 	params = append(params, "-map", "0:v")
 
-	for _, f := range trackMaps {
-		lang := f.file.Language
-		if f.copyFrom != "" {
-			lang = f.copyFrom
+	for _, f := range audioLanguages {
+		lang := f.Code
+		if f.CopyFrom != "" {
+			lang = f.CopyFrom
 		}
 		label := useLeftStream(lang)
 		params = append(params, "-map", fmt.Sprintf("[%s]", label))
-		if f.stereo {
+		if f.Stereo {
 			label = useRightStream(lang)
 			params = append(params, "-map", fmt.Sprintf("[%s]", label))
 		}

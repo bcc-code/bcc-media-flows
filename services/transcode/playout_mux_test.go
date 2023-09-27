@@ -38,10 +38,11 @@ func Test_PlayoutMux(t *testing.T) {
 	printer, stop := printProgress()
 	defer close(stop)
 	_, err := PlayoutMux(common.PlayoutMuxInput{
-		FileName:        "BERG_TS01_ISRAEL_VOD",
-		StereoLanguages: []string{"nor", "eng", "fin"},
-		DestinationPath: "/Users/andreasgangso/dev/div/520a9155-2c8f-4560-868b-53be9c6e9b96/transcoded/",
-		VideoFilePath:   root + "BERG_TS01_ISRAEL_VOD.mxf",
+		FallbackLanguage: "nor",
+		FileName:         "BERG_TS01_ISRAEL_VOD",
+		StereoLanguages:  []string{"nor", "eng", "fin"},
+		DestinationPath:  "/Users/andreasgangso/dev/div/520a9155-2c8f-4560-868b-53be9c6e9b96/transcoded/",
+		VideoFilePath:    root + "BERG_TS01_ISRAEL_VOD.mxf",
 		SubtitleFilePaths: map[string]string{
 			"nor": root + "0.srt",
 			"nld": root + "1.srt",
