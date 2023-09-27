@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"github.com/bcc-code/bcc-media-platform/backend/events"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"github.com/bcc-code/bccm-flows/workflows"
 	"path/filepath"
@@ -199,8 +200,8 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 		return nil, err
 	}
 
-	err = wfutils.PublishEvent(ctx, "asset.delivered", map[string]string{
-		"jsonMetaPath": filepath.Join(ingestFolder, "ingest.json"),
+	err = wfutils.PublishEvent(ctx, "asset.delivered", events.AssetDelivered{
+		JSONMetaPath: filepath.Join(ingestFolder, "ingest.json"),
 	})
 	if err != nil {
 		return nil, err
