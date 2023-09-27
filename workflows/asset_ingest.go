@@ -33,11 +33,12 @@ func AssetIngest(ctx workflow.Context, params AssetIngestParams) (*AssetIngestRe
 	switch metadata.JobProperty.OrderForm {
 	case "Rawmaterial":
 		files := lo.Map(metadata.FileList.Files, func(file ingest.File, _ int) string {
-			return strings.Replace("/fcweb", file.FilePath, "", 1)
+			// dmz:dmzshare is the rclone path to the same files
+			return strings.Replace("/fcweb", file.FilePath, "dmz:dmzshare", 1)
 		})
-		err = workflow.ExecuteChildWorkflow(ctx, AssetIngestRawMaterial, AssetIngestRawMaterialParams{
+		err = assetIngestRawMaterial(ctx, AssetIngestRawMaterialParams{
 			FilePaths: files,
-		}).Get(ctx, nil)
+		})
 	}
 
 	return &AssetIngestResult{}, nil
@@ -47,7 +48,7 @@ type AssetIngestRawMaterialParams struct {
 	FilePaths []string
 }
 
-func AssetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialParams) error {
+func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialParams) error {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting AssetIngestRawMaterial")
 
@@ -64,7 +65,7 @@ func AssetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 			return fmt.Errorf("invalid filename: %s", path)
 		}
 		err = workflow.ExecuteActivity(ctx, activities.RcloneCopy, activities.RcloneCopyDirInput{
-			Source:      "dmz:dmzshare" + path,
+			Source:      path,
 			Destination: strings.Replace(outputFolder, utils.GetIsilonPrefix()+"/", "isilon:isilon/", 1),
 		}).Get(ctx, nil)
 		if err != nil {

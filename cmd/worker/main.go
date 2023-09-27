@@ -64,7 +64,6 @@ var workerWorkflows = []any{
 	workflows.ExecuteFFmpeg,
 	workflows.ImportSubtitlesFromSubtrans,
 	workflows.AssetIngest,
-	workflows.AssetIngestRawMaterial,
 }
 
 func main() {
