@@ -3,6 +3,7 @@ package workflows
 import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/activities"
+	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"os"
 	"time"
 
@@ -53,7 +54,7 @@ func TranscribeVX(
 		return err
 	}
 
-	destinationPath, err := getWorkflowOutputFolder(ctx)
+	destinationPath, err := wfutils.GetWorkflowOutputFolder(ctx)
 	if err != nil {
 		return err
 	}

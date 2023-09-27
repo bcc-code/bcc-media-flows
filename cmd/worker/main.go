@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/bcc-code/bccm-flows/workflows/export"
 	"log"
 	"os"
 	"strconv"
@@ -55,10 +56,10 @@ var workerWorkflows = []any{
 	workflows.TranscribeFile,
 	workflows.TranscribeVX,
 	workflows.WatchFolderTranscode,
-	workflows.AssetExportVX,
-	workflows.MergeExportData,
-	workflows.MuxFiles,
-	workflows.PrepareFiles,
+	export.AssetExportVX,
+	export.MergeExportData,
+	export.MuxFiles,
+	export.PrepareFiles,
 	workflows.ExecuteFFmpeg,
 	workflows.ImportSubtitlesFromSubtrans,
 }
