@@ -16,8 +16,6 @@ import (
 	"github.com/bcc-code/bccm-flows/common/smil"
 	"github.com/bcc-code/bccm-flows/services/vidispine"
 	"github.com/bcc-code/bccm-flows/utils"
-	cloudevents "github.com/cloudevents/sdk-go/v2"
-	"github.com/google/uuid"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -65,7 +63,6 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	var data *vidispine.ExportData
-
 	err := workflow.ExecuteActivity(ctx, avidispine.GetExportDataActivity, avidispine.GetExportDataParams{
 		VXID: params.VXID,
 	}).Get(ctx, &data)
@@ -202,25 +199,9 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 		return nil, err
 	}
 
-	event := cloudevents.NewEvent()
-	event.SetID(uuid.NewString())
-	event.SetSpecVersion(cloudevents.VersionV1)
-	event.SetSource("bccm-flows")
-	event.SetType("asset.delivered")
-	type r struct {
-		JSONMetaPath string `json:"jsonMetaPath"`
-	}
-	err = event.SetData(
-		cloudevents.ApplicationJSON,
-		r{
-			JSONMetaPath: filepath.Join(ingestFolder, "ingest.json"),
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	err = workflow.ExecuteActivity(ctx, activities.PubsubPublish, event).Get(ctx, nil)
+	err = wfutils.PublishEvent(ctx, "asset.delivered", map[string]string{
+		"jsonMetaPath": filepath.Join(ingestFolder, "ingest.json"),
+	})
 	if err != nil {
 		return nil, err
 	}
