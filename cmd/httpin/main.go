@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 
+	"strings"
+
 	"github.com/bcc-code/bccm-flows/workflows/export"
 
 	"github.com/bcc-code/bccm-flows/common"
@@ -97,11 +99,12 @@ func triggerHandler(ctx *gin.Context) {
 			return
 		}
 
-		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, export.AssetExportVX, export.AssetExportParams{
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, export.VXExport, export.VXExportParams{
 			VXID:          vxID,
 			WithFiles:     getParamFromCtx(ctx, "withFiles") == "true",
 			WithChapters:  getParamFromCtx(ctx, "withChapters") == "true",
 			WatermarkPath: getParamFromCtx(ctx, "watermarkPath"),
+			Destinations:  strings.Split(getParamFromCtx(ctx, "destinations"), ","),
 		})
 	case "ExecuteFFmpeg":
 		var input struct {

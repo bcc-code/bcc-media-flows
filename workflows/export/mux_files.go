@@ -2,6 +2,9 @@ package export
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
+
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	bccmflows "github.com/bcc-code/bccm-flows"
 	"github.com/bcc-code/bccm-flows/activities"
@@ -11,8 +14,15 @@ import (
 	"github.com/bcc-code/bccm-flows/workflows"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
-	"path/filepath"
-	"strings"
+)
+
+const (
+	r1080p = "1920x1080"
+	r720p  = "1280x720"
+	r540p  = "960x540"
+	r360p  = "640x360"
+	r270p  = "480x270"
+	r180p  = "320x180"
 )
 
 type MuxFilesParams struct {

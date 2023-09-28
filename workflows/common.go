@@ -1,11 +1,17 @@
 package workflows
 
 import (
+	"time"
+
 	"github.com/bcc-code/bccm-flows/utils"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
-	"time"
 )
+
+type ResultOrError[T any] struct {
+	Result *T
+	Error  error
+}
 
 func GetDefaultActivityOptions() workflow.ActivityOptions {
 	return workflow.ActivityOptions{

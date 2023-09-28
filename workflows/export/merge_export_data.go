@@ -18,9 +18,9 @@ type MergeExportDataResult struct {
 }
 
 type MergeExportDataParams struct {
-	ExportData *vidispine.ExportData
-	OutputPath string
-	TempPath   string
+	ExportData   *vidispine.ExportData
+	SubtitlesDir string
+	TempDir      string
 }
 
 func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*MergeExportDataResult, error) {
@@ -28,7 +28,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 	logger.Info("Starting MergeExportData")
 	data := params.ExportData
 
-	mergeInput, audioMergeInputs, subtitleMergeInputs := exportDataToMergeInputs(data, params.TempPath, params.OutputPath)
+	mergeInput, audioMergeInputs, subtitleMergeInputs := exportDataToMergeInputs(data, params.TempDir, params.SubtitlesDir)
 
 	options := workflows.GetDefaultActivityOptions()
 	options.TaskQueue = utils.GetTranscodeQueue()
@@ -111,15 +111,15 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 	}, nil
 }
 
-func exportDataToMergeInputs(data *vidispine.ExportData, tempFolder, subtitlesFolder string) (
+func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir string) (
 	mergeInput common.MergeInput,
 	audioMergeInputs map[string]*common.MergeInput,
 	subtitleMergeInputs map[string]*common.MergeInput,
 ) {
 	mergeInput = common.MergeInput{
 		Title:     data.Title,
-		OutputDir: tempFolder,
-		WorkDir:   tempFolder,
+		OutputDir: tempDir,
+		WorkDir:   tempDir,
 	}
 
 	audioMergeInputs = map[string]*common.MergeInput{}
@@ -137,8 +137,8 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempFolder, subtitlesFo
 			if _, ok := audioMergeInputs[lan]; !ok {
 				audioMergeInputs[lan] = &common.MergeInput{
 					Title:     data.Title + "-" + lan,
-					OutputDir: tempFolder,
-					WorkDir:   tempFolder,
+					OutputDir: tempDir,
+					WorkDir:   tempDir,
 				}
 			}
 
@@ -155,8 +155,8 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempFolder, subtitlesFo
 			if _, ok := subtitleMergeInputs[lan]; !ok {
 				subtitleMergeInputs[lan] = &common.MergeInput{
 					Title:     data.Title + "-" + lan,
-					OutputDir: subtitlesFolder,
-					WorkDir:   tempFolder,
+					OutputDir: subtitlesDir,
+					WorkDir:   tempDir,
 				}
 			}
 
