@@ -76,7 +76,7 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 	}
 
 	for _, f := range params.Files {
-		err = workflow.ExecuteActivity(ctx, activities.RcloneCopy, activities.RcloneCopyDirInput{
+		err = workflow.ExecuteActivity(ctx, activities.RcloneCopy, activities.RcloneCopyInput{
 			Source:      f.Path,
 			Destination: strings.Replace(outputFolder, utils.GetIsilonPrefix(), "isilon:isilon", 1),
 		}).Get(ctx, nil)
