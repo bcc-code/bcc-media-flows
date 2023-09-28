@@ -69,6 +69,15 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]workflows.ResultOr
 	options := workflows.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
+	var destinations []*AssetExportDestination
+	for _, dest := range params.Destinations {
+		d := AssetExportDestinations.Parse(dest)
+		if d == nil {
+			return nil, fmt.Errorf("invalid destination: %s", dest)
+		}
+		destinations = append(destinations, d)
+	}
+
 	var data *vidispine.ExportData
 	err := workflow.ExecuteActivity(ctx, avidispine.GetExportDataActivity, avidispine.GetExportDataParams{
 		VXID: params.VXID,
@@ -104,14 +113,10 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]workflows.ResultOr
 
 	// Destination branching:  VOD, playout, bmm, etc.
 	var resultFutures []workflow.Future
-	for _, dest := range params.Destinations {
-		destination := AssetExportDestinations.Parse(dest)
-		if destination == nil {
-			return nil, fmt.Errorf("invalid destination: %s", dest)
-		}
+	for _, dest := range destinations {
 
 		var w interface{}
-		switch *destination {
+		switch *dest {
 		case AssetExportDestinationVOD:
 			w = VXExportToVOD
 		case AssetExportDestinationPlayout:
