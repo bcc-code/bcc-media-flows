@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/bcc-code/bccm-flows/activities"
+	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/temporal"
@@ -18,8 +19,8 @@ type NormalizeAudioParams struct {
 
 type NormalizeAudioResult struct {
 	FilePath       string
-	InputAnalysis  *activities.AnalyzeEBUR128Result
-	OutputAnalysis *activities.AnalyzeEBUR128Result
+	InputAnalysis  *common.AnalyzeEBUR128Result
+	OutputAnalysis *common.AnalyzeEBUR128Result
 }
 
 func NormalizeAudioLevelWorkflow(
@@ -45,7 +46,7 @@ func NormalizeAudioLevelWorkflow(
 
 	logger.Info("Starting NormalizeAudio workflow")
 
-	r128Result := &activities.AnalyzeEBUR128Result{}
+	r128Result := &common.AnalyzeEBUR128Result{}
 	err := workflow.ExecuteActivity(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
 		FilePath:       params.FilePath,
 		TargetLoudness: params.TargetLUFS,
@@ -60,7 +61,7 @@ func NormalizeAudioLevelWorkflow(
 		return nil, err
 	}
 
-	adjustResult := &activities.LinearAdjustAudioResult{}
+	adjustResult := &common.AudioResult{}
 	err = workflow.ExecuteActivity(ctx, activities.LinearAdjustAudioActivity, activities.LinearAdjustAudioParams{
 		Adjustment:  r128Result.SuggestedAdjustment,
 		InFilePath:  params.FilePath,
@@ -70,12 +71,12 @@ func NormalizeAudioLevelWorkflow(
 		return nil, err
 	}
 
-	out.FilePath = adjustResult.OutFilePath
+	out.FilePath = adjustResult.OutputPath
 
 	if params.PerformOutputAnalysis {
-		r128Result := &activities.AnalyzeEBUR128Result{}
+		r128Result := &common.AnalyzeEBUR128Result{}
 		err := workflow.ExecuteActivity(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
-			FilePath:       adjustResult.OutFilePath,
+			FilePath:       adjustResult.OutputPath,
 			TargetLoudness: params.TargetLUFS,
 		}).Get(ctx, r128Result)
 		if err != nil {

@@ -14,14 +14,7 @@ type AnalyzeEBUR128Params struct {
 	TargetLoudness float64
 }
 
-type AnalyzeEBUR128Result struct {
-	IntegratedLoudness  float64
-	TruePeak            float64
-	LoudnessRange       float64
-	SuggestedAdjustment float64
-}
-
-func AnalyzeEBUR128Activity(ctx context.Context, input AnalyzeEBUR128Params) (*AnalyzeEBUR128Result, error) {
+func AnalyzeEBUR128Activity(ctx context.Context, input AnalyzeEBUR128Params) (*common.AnalyzeEBUR128Result, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "AnalyzeEBUR128")
 	log.Info("Starting AnalyzeEBUR128Activity")
@@ -34,7 +27,7 @@ func AnalyzeEBUR128Activity(ctx context.Context, input AnalyzeEBUR128Params) (*A
 		return nil, err
 	}
 
-	out := &AnalyzeEBUR128Result{
+	out := &common.AnalyzeEBUR128Result{
 		IntegratedLoudness:  analyzeResult.InputIntegratedLoudness,
 		TruePeak:            analyzeResult.InputTruePeak,
 		LoudnessRange:       analyzeResult.InputLoudnessRange,
@@ -60,11 +53,7 @@ type LinearAdjustAudioParams struct {
 	Adjustment  float64
 }
 
-type LinearAdjustAudioResult struct {
-	OutFilePath string
-}
-
-func LinearAdjustAudioActivity(ctx context.Context, input *LinearAdjustAudioParams) (*LinearAdjustAudioResult, error) {
+func LinearAdjustAudioActivity(ctx context.Context, input *LinearAdjustAudioParams) (*common.AudioResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "LinearAdjustAudio")
 	log.Info("Starting LinearAdjustAudioActivity")
@@ -72,16 +61,8 @@ func LinearAdjustAudioActivity(ctx context.Context, input *LinearAdjustAudioPara
 	stop, progressCallback := registerProgressCallback(ctx)
 	defer close(stop)
 
-	res, err := transcode.LinearNormalizeAudio(common.AudioInput{
+	return transcode.LinearNormalizeAudio(common.AudioInput{
 		Path:            input.InFilePath,
 		DestinationPath: input.OutFilePath,
 	}, input.Adjustment, progressCallback)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &LinearAdjustAudioResult{
-		OutFilePath: res.OutputPath,
-	}, nil
 }
