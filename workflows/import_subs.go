@@ -2,6 +2,7 @@ package workflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"strings"
 	"time"
 
@@ -50,7 +51,7 @@ func ImportSubtitlesFromSubtrans(
 		return err
 	}
 
-	outputPath, _ := getWorkflowOutputFolder(ctx)
+	outputPath, _ := wfutils.GetWorkflowOutputFolder(ctx)
 
 	subsList := map[string]string{}
 	err = workflow.ExecuteActivity(ctx, activities.GetSubtitlesActivity, activities.GetSubtitlesInput{
