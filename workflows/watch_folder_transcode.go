@@ -5,6 +5,7 @@ import (
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 	"time"
@@ -34,7 +35,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	logger.Info("Starting WatchFolderTranscode")
 
 	path := params.Path
-	path, err := standardizeFileName(ctx, path)
+	path, err := wfutils.StandardizeFileName(ctx, path)
 	if err != nil {
 		return err
 	}
@@ -42,7 +43,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	if err != nil {
 		return err
 	}
-	path, err = moveToFolder(ctx, path, processingFolder)
+	path, err = wfutils.MoveToFolder(ctx, path, processingFolder)
 	if err != nil {
 		return err
 	}
@@ -122,18 +123,18 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	ctx = workflow.WithTaskQueue(ctx, utils.GetWorkerQueue())
 
 	if err != nil {
-		path, _ = moveToFolder(ctx, path, errorFolder)
+		path, _ = wfutils.MoveToFolder(ctx, path, errorFolder)
 		return err
 	} else {
-		path, _ = moveToFolder(ctx, path, processedFolder)
+		path, _ = wfutils.MoveToFolder(ctx, path, processedFolder)
 
 		if transcodeOutput != nil {
-			_, _ = moveToFolder(ctx, transcodeOutput.OutputPath, outFolder)
+			_, _ = wfutils.MoveToFolder(ctx, transcodeOutput.OutputPath, outFolder)
 		}
 		if transcribeOutput != nil {
-			_, _ = moveToFolder(ctx, transcribeOutput.JSONPath, outFolder)
-			_, _ = moveToFolder(ctx, transcribeOutput.SRTPath, outFolder)
-			_, _ = moveToFolder(ctx, transcribeOutput.TXTPath, outFolder)
+			_, _ = wfutils.MoveToFolder(ctx, transcribeOutput.JSONPath, outFolder)
+			_, _ = wfutils.MoveToFolder(ctx, transcribeOutput.SRTPath, outFolder)
+			_, _ = wfutils.MoveToFolder(ctx, transcribeOutput.TXTPath, outFolder)
 		}
 	}
 
