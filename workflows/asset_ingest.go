@@ -67,15 +67,17 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 	}
 
 	var fileByFilename = map[string]assetFile{}
-
 	for _, f := range params.Files {
 		path := f.Path
-		if !utils.ValidFilename(filepath.Base(path)) {
+		fileByFilename[f.FileName] = f
+		if !utils.ValidRawFilename(filepath.Base(path)) {
 			return fmt.Errorf("invalid filename: %s", path)
 		}
-		fileByFilename[f.FileName] = f
+	}
+
+	for _, f := range params.Files {
 		err = workflow.ExecuteActivity(ctx, activities.RcloneCopy, activities.RcloneCopyDirInput{
-			Source:      path,
+			Source:      f.Path,
 			Destination: strings.Replace(outputFolder, utils.GetIsilonPrefix(), "isilon:isilon", 1),
 		}).Get(ctx, nil)
 		if err != nil {
@@ -88,14 +90,14 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 		return err
 	}
 
-	var assetIDs []string
+	var assetAnalyzeTasks = map[string]workflow.Future{}
 
 	for _, file := range files {
 		f, found := lo.Find(params.Files, func(f assetFile) bool {
 			return f.FileName == filepath.Base(file)
 		})
 		if !found {
-			continue
+			return fmt.Errorf("file not found: %s", file)
 		}
 		var vxID string
 		err = workflow.ExecuteActivity(ctx, vsactivity.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
@@ -104,13 +106,29 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 		if err != nil {
 			return err
 		}
-		assetIDs = append(assetIDs, vxID)
-
 		err = workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
 			AssetID:  vxID,
 			FilePath: file,
 			ShapeTag: "original",
 		}).Get(ctx, nil)
+		if err != nil {
+			return err
+		}
+
+		assetAnalyzeTasks[file] = workflow.ExecuteActivity(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
+			FilePath: file,
+		})
+	}
+
+	keys, err := wfutils.GetMapKeysSafely(ctx, assetAnalyzeTasks)
+	if err != nil {
+		return err
+	}
+
+	for _, key := range keys {
+		task := assetAnalyzeTasks[key]
+		var result activities.AnalyzeFileResult
+		err = task.Get(ctx, &result)
 		if err != nil {
 			return err
 		}

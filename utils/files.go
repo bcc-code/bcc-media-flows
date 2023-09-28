@@ -17,7 +17,7 @@ var supportedExtensions = []string{
 	".wav",
 }
 
-func ValidFilename(filename string) bool {
+func ValidRawFilename(filename string) bool {
 	extension := filepath.Ext(filename)
 	name := filename[:len(filename)-len(extension)]
 	return alphanumericalRegex.MatchString(name) && lo.Contains(supportedExtensions, extension)
