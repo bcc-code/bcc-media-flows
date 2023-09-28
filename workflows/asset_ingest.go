@@ -95,13 +95,21 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 		if !found {
 			continue
 		}
+		var vxID string
 		err = workflow.ExecuteActivity(ctx, vsactivity.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
 			Title: f.FileName,
+		}).Get(ctx, &vxID)
+		if err != nil {
+			return err
+		}
+		err = workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
+			AssetID:  vxID,
+			FilePath: file,
+			ShapeTag: "original",
 		}).Get(ctx, nil)
 		if err != nil {
 			return err
 		}
-
 	}
 
 	return nil
