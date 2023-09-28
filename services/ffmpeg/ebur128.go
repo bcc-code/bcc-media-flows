@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strconv"
 
+	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/utils"
 )
 
@@ -13,14 +14,6 @@ type loudnormResult struct {
 	InputIntegratedLoudness string `json:"input_i"`
 	InputTruePeak           string `json:"input_tp"`
 	InputLoudnessRange      string `json:"input_lra"`
-	InputThreshold          string `json:"input_thresh"`
-}
-
-type AnalyzeEBUR128Result struct {
-	InputIntegratedLoudness float64
-	InputTruePeak           float64
-	InputLoudnessRange      float64
-	InputThreshold          float64
 }
 
 func floatOrZero(s string) float64 {
@@ -28,7 +21,7 @@ func floatOrZero(s string) float64 {
 	return f
 }
 
-func AnalyzeEBUR128(path string, progressCallback ProgressCallback) (*AnalyzeEBUR128Result, error) {
+func AnalyzeEBUR128(path string, progressCallback ProgressCallback) (*common.AnalyzeEBUR128Result, error) {
 	cmd := exec.Command(
 		"/opt/homebrew/bin/ffmpeg",
 		"-hide_banner",
@@ -53,11 +46,10 @@ func AnalyzeEBUR128(path string, progressCallback ProgressCallback) (*AnalyzeEBU
 	var analyzeResult loudnormResult
 	err = json.Unmarshal([]byte(result), &analyzeResult)
 
-	out := AnalyzeEBUR128Result{}
-	out.InputIntegratedLoudness = floatOrZero(analyzeResult.InputIntegratedLoudness)
-	out.InputTruePeak = floatOrZero(analyzeResult.InputTruePeak)
-	out.InputLoudnessRange = floatOrZero(analyzeResult.InputLoudnessRange)
-	out.InputThreshold = floatOrZero(analyzeResult.InputThreshold)
+	out := common.AnalyzeEBUR128Result{}
+	out.IntegratedLoudness = floatOrZero(analyzeResult.InputIntegratedLoudness)
+	out.TruePeak = floatOrZero(analyzeResult.InputTruePeak)
+	out.LoudnessRange = floatOrZero(analyzeResult.InputLoudnessRange)
 
 	return &out, err
 }
