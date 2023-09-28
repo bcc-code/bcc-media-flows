@@ -6,6 +6,7 @@ import (
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 	"path/filepath"
@@ -25,7 +26,7 @@ func AssetIngest(ctx workflow.Context, params AssetIngestParams) (*AssetIngestRe
 	options := GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	metadata, err := unmarshalXMLFile[ingest.Metadata](ctx, params.XmlPath)
+	metadata, err := wfutils.UnmarshalXMLFile[ingest.Metadata](ctx, params.XmlPath)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +56,7 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 	options := GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	outputFolder, err := getWorkflowRawOutputFolder(ctx)
+	outputFolder, err := wfutils.GetWorkflowRawOutputFolder(ctx)
 	if err != nil {
 		return err
 	}
@@ -73,7 +74,7 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 		}
 	}
 
-	files, err := listFiles(ctx, outputFolder)
+	files, err := wfutils.ListFiles(ctx, outputFolder)
 	if err != nil {
 		return err
 	}
