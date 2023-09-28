@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/bcc-code/bccm-flows/workflows/export"
 	"net/http"
 	"os"
 	"strconv"
@@ -95,7 +96,7 @@ func triggerHandler(ctx *gin.Context) {
 			return
 		}
 
-		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.AssetExportVX, workflows.AssetExportParams{
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, export.AssetExportVX, export.AssetExportParams{
 			VXID:          vxID,
 			WithFiles:     getParamFromCtx(ctx, "withFiles") == "true",
 			WithChapters:  getParamFromCtx(ctx, "withChapters") == "true",

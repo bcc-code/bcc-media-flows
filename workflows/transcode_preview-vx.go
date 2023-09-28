@@ -4,6 +4,7 @@ import (
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"time"
 
 	"go.temporal.io/sdk/temporal"
@@ -51,7 +52,7 @@ func TranscodePreviewVX(
 		return err
 	}
 
-	destinationPath, err := getWorkflowOutputFolder(ctx)
+	destinationPath, err := wfutils.GetWorkflowOutputFolder(ctx)
 	if err != nil {
 		return err
 	}
