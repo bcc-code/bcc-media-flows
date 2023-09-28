@@ -14,10 +14,9 @@ func Test_GenerateFFmpegParamsForPlayoutMux(t *testing.T) {
 	const root = "root/"
 	const outputPath = "something/something.mxf"
 	cmd, err := generateFFmpegParamsForPlayoutMux(common.PlayoutMuxInput{
-		FileName:        "BERG_TS01_ISRAEL_VOD",
-		StereoLanguages: []string{"nor", "eng", "fin"},
-		DestinationPath: "transcoded/",
-		VideoFilePath:   root + "BERG_TS01_ISRAEL_VOD.mxf",
+		FallbackLanguage: "nor",
+		OutputDir:        "transcoded/",
+		VideoFilePath:    root + "BERG_TS01_ISRAEL_VOD.mxf",
 		SubtitleFilePaths: map[string]string{
 			"nor": root + "0.srt",
 			"nld": root + "1.srt",
@@ -39,9 +38,7 @@ func Test_PlayoutMux(t *testing.T) {
 	defer close(stop)
 	_, err := PlayoutMux(common.PlayoutMuxInput{
 		FallbackLanguage: "nor",
-		FileName:         "BERG_TS01_ISRAEL_VOD",
-		StereoLanguages:  []string{"nor", "eng", "fin"},
-		DestinationPath:  "/Users/andreasgangso/dev/div/520a9155-2c8f-4560-868b-53be9c6e9b96/transcoded/",
+		OutputDir:        "/Users/andreasgangso/dev/div/520a9155-2c8f-4560-868b-53be9c6e9b96/transcoded/",
 		VideoFilePath:    root + "BERG_TS01_ISRAEL_VOD.mxf",
 		SubtitleFilePaths: map[string]string{
 			"nor": root + "0.srt",

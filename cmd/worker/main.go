@@ -48,6 +48,7 @@ var transcodeActivities = []any{
 	activities.TranscodeToVideoH264,
 	activities.TranscodeToAudioAac,
 	activities.TranscodeMux,
+	activities.TranscodePlayoutMux,
 	activities.ExecuteFFmpeg,
 	activities.AnalyzeEBUR128Activity,
 	activities.AdjustAudioLevelActivity,
@@ -66,6 +67,8 @@ var workerWorkflows = []any{
 	workflows.ExecuteFFmpeg,
 	workflows.ImportSubtitlesFromSubtrans,
 	workflows.NormalizeAudioLevelWorkflow,
+	export.ExportToVOD,
+	export.ExportToPlayout,
 }
 
 func main() {
@@ -109,7 +112,7 @@ func main() {
 	switch utils.GetQueue() {
 	case common.QueueDebug:
 		w.RegisterActivity(activities.Transcribe)
-		w.RegisterActivity(activities.RcloneUploadDir)
+		w.RegisterActivity(activities.RcloneCopy)
 		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {
@@ -129,7 +132,7 @@ func main() {
 		}
 	case common.QueueWorker:
 		w.RegisterActivity(activities.Transcribe)
-		w.RegisterActivity(activities.RcloneUploadDir)
+		w.RegisterActivity(activities.RcloneCopy)
 		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {

@@ -185,6 +185,21 @@ func TranscodeMux(ctx context.Context, input common.MuxInput) (*common.MuxResult
 	return result, nil
 }
 
+func TranscodePlayoutMux(ctx context.Context, input common.PlayoutMuxInput) (*common.PlayoutMuxResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodePlayoutMux")
+	log.Info("Starting TranscodePlayoutMux")
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	result, err := transcode.PlayoutMux(input, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 type ExecuteFFmpegInput struct {
 	Arguments []string
 }
