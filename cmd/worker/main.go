@@ -32,7 +32,7 @@ var vidispineActivities = []any{
 	vidispine.GetFileFromVXActivity,
 	vidispine.ImportFileAsShapeActivity,
 	vidispine.ImportFileAsSidecarActivity,
-	vidispine.ImportRawMaterialAsItemActivity,
+	vidispine.CreatePlaceholderActivity,
 	vidispine.SetVXMetadataFieldActivity,
 	vidispine.GetExportDataActivity,
 	vidispine.GetChapterDataActivity,

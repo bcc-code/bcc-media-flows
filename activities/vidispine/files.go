@@ -2,7 +2,6 @@ package vidispine
 
 import (
 	"context"
-
 	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
 	"go.temporal.io/sdk/activity"
 )
@@ -44,17 +43,15 @@ func ImportFileAsSidecarActivity(ctx context.Context, params *ImportSubtitleAsSi
 	return err
 }
 
-type ImportFileAsItemParams struct {
-	Title    string
-	FilePath string
+type CreatePlaceholderParams struct {
+	Title string
 }
 
-func ImportRawMaterialAsItemActivity(ctx context.Context, params *ImportFileAsItemParams) error {
+func CreatePlaceholderActivity(ctx context.Context, params *CreatePlaceholderParams) (string, error) {
 	log := activity.GetLogger(ctx)
-	log.Info("Starting ImportRawMaterialAsItemActivity")
+	log.Info("Starting CreatePlaceholderActivity")
 
 	vsClient := GetClient()
 
-	_, err := vsClient.CreatePlaceholder(vsapi.PlaceholderTypeRaw, params.Title)
-	return err
+	return vsClient.CreatePlaceholder(vsapi.PlaceholderTypeRaw, params.Title)
 }
