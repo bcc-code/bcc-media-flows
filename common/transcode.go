@@ -42,3 +42,17 @@ type AnalyzeEBUR128Result struct {
 	LoudnessRange       float64
 	SuggestedAdjustment float64
 }
+
+type PlayoutMuxInput struct {
+	FileName          string
+	VideoFilePath     string
+	StereoLanguages   []string
+	AudioFilePaths    map[string]string
+	SubtitleFilePaths map[string]string
+	DestinationPath   string
+	FallbackLanguage  string
+}
+
+type PlayoutMuxResult struct {
+	Path string
+}

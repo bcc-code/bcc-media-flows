@@ -2,15 +2,16 @@ package transcode
 
 import (
 	"fmt"
-	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/services/ffmpeg"
-	"github.com/bcc-code/bccm-flows/utils"
-	"github.com/samber/lo"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/services/ffmpeg"
+	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/samber/lo"
 )
 
 // MergeVideo takes a list of video files and merges them into one file.
@@ -18,7 +19,7 @@ func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 	var params []string
 
 	for _, i := range input.Items {
-		params = append(params, "-i", i.Path)
+		params = append(params, "-i", utils.IsilonPathFix(i.Path))
 	}
 
 	var filterComplex string
@@ -130,7 +131,7 @@ func MergeAudio(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 	}
 
 	for _, i := range input.Items {
-		params = append(params, "-i", i.Path)
+		params = append(params, "-i", utils.IsilonPathFix(i.Path))
 	}
 
 	params = append(params,
@@ -172,7 +173,8 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 	// for each file, extract the specified range and save the result to a file.
 	for index, item := range input.Items {
 		file := filepath.Join(input.WorkDir, fmt.Sprintf("%d.srt", index))
-		cmd := exec.Command("ffmpeg", "-i", item.Path, "-ss", fmt.Sprintf("%f", item.Start), "-to", fmt.Sprintf("%f", item.End), "-y", file)
+		path := utils.IsilonPathFix(item.Path)
+		cmd := exec.Command("ffmpeg", "-i", path, "-ss", fmt.Sprintf("%f", item.Start), "-to", fmt.Sprintf("%f", item.End), "-y", file)
 
 		_, err := utils.ExecuteCmd(cmd, nil)
 		if err != nil {
