@@ -88,6 +88,8 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 		return err
 	}
 
+	var assetIDs []string
+
 	for _, file := range files {
 		f, found := lo.Find(params.Files, func(f assetFile) bool {
 			return f.FileName == filepath.Base(file)
@@ -102,6 +104,8 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 		if err != nil {
 			return err
 		}
+		assetIDs = append(assetIDs, vxID)
+
 		err = workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
 			AssetID:  vxID,
 			FilePath: file,
