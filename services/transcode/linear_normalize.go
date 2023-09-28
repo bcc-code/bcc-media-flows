@@ -9,7 +9,9 @@ import (
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 )
 
-func LinearNormalizeAudio(input common.AudioInput, adjustment float64, cb ffmpeg.ProgressCallback) (*common.AudioResult, error) {
+// AdjustAudioLevel adjusts the audio level of the input file by the given adjustment in dB
+// without changing the dynamic range. This function does not protect against clipping!
+func AdjustAudioLevel(input common.AudioInput, adjustment float64, cb ffmpeg.ProgressCallback) (*common.AudioResult, error) {
 	outputPath := filepath.Join(input.DestinationPath, filepath.Base(input.Path))
 	outputPath = outputPath[:len(outputPath)-len(filepath.Ext(outputPath))] + "_normalized" + filepath.Ext(outputPath)
 
@@ -20,7 +22,6 @@ func LinearNormalizeAudio(input common.AudioInput, adjustment float64, cb ffmpeg
 		outputPath,
 	}
 
-	//replace output extension to .aac
 	params = append(params, "-y", outputPath)
 
 	info, err := ffmpeg.GetStreamInfo(input.Path)

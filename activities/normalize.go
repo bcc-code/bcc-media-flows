@@ -47,13 +47,13 @@ func AnalyzeEBUR128Activity(ctx context.Context, input AnalyzeEBUR128Params) (*c
 	return out, nil
 }
 
-type LinearAdjustAudioParams struct {
+type AdjustAudioLevelParams struct {
 	InFilePath  string
 	OutFilePath string
 	Adjustment  float64
 }
 
-func LinearAdjustAudioActivity(ctx context.Context, input *LinearAdjustAudioParams) (*common.AudioResult, error) {
+func AdjustAudioLevelActivity(ctx context.Context, input *AdjustAudioLevelParams) (*common.AudioResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "LinearAdjustAudio")
 	log.Info("Starting LinearAdjustAudioActivity")
@@ -61,7 +61,7 @@ func LinearAdjustAudioActivity(ctx context.Context, input *LinearAdjustAudioPara
 	stop, progressCallback := registerProgressCallback(ctx)
 	defer close(stop)
 
-	return transcode.LinearNormalizeAudio(common.AudioInput{
+	return transcode.AdjustAudioLevel(common.AudioInput{
 		Path:            input.InFilePath,
 		DestinationPath: input.OutFilePath,
 	}, input.Adjustment, progressCallback)

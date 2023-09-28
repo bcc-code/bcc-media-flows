@@ -50,7 +50,7 @@ var transcodeActivities = []any{
 	activities.TranscodeMux,
 	activities.ExecuteFFmpeg,
 	activities.AnalyzeEBUR128Activity,
-	activities.LinearAdjustAudioActivity,
+	activities.AdjustAudioLevelActivity,
 }
 
 var workerWorkflows = []any{

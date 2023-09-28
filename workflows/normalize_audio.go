@@ -62,7 +62,7 @@ func NormalizeAudioLevelWorkflow(
 	}
 
 	adjustResult := &common.AudioResult{}
-	err = workflow.ExecuteActivity(ctx, activities.LinearAdjustAudioActivity, activities.LinearAdjustAudioParams{
+	err = workflow.ExecuteActivity(ctx, activities.AdjustAudioLevelActivity, activities.AdjustAudioLevelParams{
 		Adjustment:  r128Result.SuggestedAdjustment,
 		InFilePath:  params.FilePath,
 		OutFilePath: outputFolder,
