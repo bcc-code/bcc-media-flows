@@ -60,15 +60,15 @@ var workerWorkflows = []any{
 	workflows.TranscribeFile,
 	workflows.TranscribeVX,
 	workflows.WatchFolderTranscode,
-	export.AssetExportVX,
+	export.VXExport,
+	export.VXExportToVOD,
+	export.VXExportToPlayout,
 	export.MergeExportData,
 	export.MuxFiles,
 	export.PrepareFiles,
 	workflows.ExecuteFFmpeg,
 	workflows.ImportSubtitlesFromSubtrans,
 	workflows.NormalizeAudioLevelWorkflow,
-	export.ExportToVOD,
-	export.ExportToPlayout,
 }
 
 func main() {

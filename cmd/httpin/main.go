@@ -99,7 +99,7 @@ func triggerHandler(ctx *gin.Context) {
 			return
 		}
 
-		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, export.AssetExportVX, export.AssetExportParams{
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, export.VXExport, export.VXExportParams{
 			VXID:          vxID,
 			WithFiles:     getParamFromCtx(ctx, "withFiles") == "true",
 			WithChapters:  getParamFromCtx(ctx, "withChapters") == "true",
