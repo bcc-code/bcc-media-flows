@@ -44,12 +44,10 @@ type AnalyzeEBUR128Result struct {
 }
 
 type PlayoutMuxInput struct {
-	FileName          string
 	VideoFilePath     string
-	StereoLanguages   []string
 	AudioFilePaths    map[string]string
 	SubtitleFilePaths map[string]string
-	DestinationPath   string
+	OutputDir         string
 	FallbackLanguage  string
 }
 
