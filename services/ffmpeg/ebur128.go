@@ -10,17 +10,17 @@ import (
 )
 
 type loudnormResult struct {
-	InputIntegratedLoudnes string `json:"input_i"`
-	InputTruePeak          string `json:"input_tp"`
-	InputLoudnesRange      string `json:"input_lra"`
-	InputThreshold         string `json:"input_thresh"`
+	InputIntegratedLoudness string `json:"input_i"`
+	InputTruePeak           string `json:"input_tp"`
+	InputLoudnessRange      string `json:"input_lra"`
+	InputThreshold          string `json:"input_thresh"`
 }
 
 type AnalyzeEBUR128Result struct {
-	InputIntegratedLoudnes float64
-	InputTruePeak          float64
-	InputLoudnesRange      float64
-	InputThreshold         float64
+	InputIntegratedLoudness float64
+	InputTruePeak           float64
+	InputLoudnessRange      float64
+	InputThreshold          float64
 }
 
 func floatOrZero(s string) float64 {
@@ -54,9 +54,9 @@ func AnalyzeEBUR128(path string, progressCallback ProgressCallback) (*AnalyzeEBU
 	err = json.Unmarshal([]byte(result), &analyzeResult)
 
 	out := AnalyzeEBUR128Result{}
-	out.InputIntegratedLoudnes = floatOrZero(analyzeResult.InputIntegratedLoudnes)
+	out.InputIntegratedLoudness = floatOrZero(analyzeResult.InputIntegratedLoudness)
 	out.InputTruePeak = floatOrZero(analyzeResult.InputTruePeak)
-	out.InputLoudnesRange = floatOrZero(analyzeResult.InputLoudnesRange)
+	out.InputLoudnessRange = floatOrZero(analyzeResult.InputLoudnessRange)
 	out.InputThreshold = floatOrZero(analyzeResult.InputThreshold)
 
 	return &out, err

@@ -15,9 +15,9 @@ type AnalyzeEBUR128Params struct {
 }
 
 type AnalyzeEBUR128Result struct {
-	IntegratedLoudnes   float64
+	IntegratedLoudness  float64
 	TruePeak            float64
-	LoudnesRange        float64
+	LoudnessRange       float64
 	SuggestedAdjustment float64
 }
 
@@ -35,9 +35,9 @@ func AnalyzeEBUR128Activity(ctx context.Context, input AnalyzeEBUR128Params) (*A
 	}
 
 	out := &AnalyzeEBUR128Result{
-		IntegratedLoudnes:   analyzeResult.InputIntegratedLoudnes,
+		IntegratedLoudness:  analyzeResult.InputIntegratedLoudness,
 		TruePeak:            analyzeResult.InputTruePeak,
-		LoudnesRange:        analyzeResult.InputLoudnesRange,
+		LoudnessRange:       analyzeResult.InputLoudnessRange,
 		SuggestedAdjustment: 0.0,
 	}
 
@@ -45,7 +45,7 @@ func AnalyzeEBUR128Activity(ctx context.Context, input AnalyzeEBUR128Params) (*A
 	// but never suggests above -0.9 dBTP. This means it may suggest a
 	// negative adjustment if the input according to TP mesaurements is already too loud,
 	// event if the integrated loudness is below the target.
-	out.SuggestedAdjustment = input.TargetLoudness - analyzeResult.InputIntegratedLoudnes
+	out.SuggestedAdjustment = input.TargetLoudness - analyzeResult.InputIntegratedLoudness
 
 	if analyzeResult.InputTruePeak+out.SuggestedAdjustment > -0.9 {
 		out.SuggestedAdjustment = -0.9 - analyzeResult.InputTruePeak
