@@ -1,11 +1,12 @@
 package transcode
 
 import (
-	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 )
 
 type EncodeInput struct {
@@ -14,6 +15,7 @@ type EncodeInput struct {
 	Resolution string
 	FrameRate  int
 	Bitrate    string
+	Interlace  bool
 }
 
 type EncodeResult struct {
