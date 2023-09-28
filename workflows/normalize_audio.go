@@ -5,6 +5,7 @@ import (
 
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -54,14 +55,16 @@ func NormalizeAudioLevelWorkflow(
 	}
 
 	out.InputAnalysis = r128Result
-
-	utils.GetWorkflowTempFolder(ctx)
+	outputFolder, err := wfutils.GetWorkflowOutputFolder(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	adjustResult := &activities.LinearAdjustAudioResult{}
 	err = workflow.ExecuteActivity(ctx, activities.LinearAdjustAudioActivity, activities.LinearAdjustAudioParams{
 		Adjustment:  r128Result.SuggestedAdjustment,
 		InFilePath:  params.FilePath,
-		OutFilePath: utils.GetWorkflowOutputFolder(ctx),
+		OutFilePath: outputFolder,
 	}).Get(ctx, adjustResult)
 	if err != nil {
 		return nil, err

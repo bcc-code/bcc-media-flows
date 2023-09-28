@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"os/exec"
 	"strconv"
-	"strings"
 
 	"github.com/bcc-code/bccm-flows/utils"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type loudnormResult struct {
@@ -30,7 +28,7 @@ func floatOrZero(s string) float64 {
 	return f
 }
 
-func AnalyzeEBUR128(path string) (*AnalyzeEBUR128Result, error) {
+func AnalyzeEBUR128(path string, progressCallback ProgressCallback) (*AnalyzeEBUR128Result, error) {
 	cmd := exec.Command(
 		"/opt/homebrew/bin/ffmpeg",
 		"-hide_banner",
@@ -42,10 +40,14 @@ func AnalyzeEBUR128(path string) (*AnalyzeEBUR128Result, error) {
 		"-",
 	)
 
-	spew.Dump(strings.Join(cmd.Args, " "))
-	result, err := utils.ExecuteAnalysisCmd(cmd, nil)
+	info, err := GetStreamInfo(path)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't execute ffmpeg %s, %s", path, err.Error())
+		return nil, err
+	}
+
+	result, err := utils.ExecuteAnalysisCmd(cmd, parseProgressCallback(cmd.Args, info, progressCallback))
+	if err != nil {
+		return nil, fmt.Errorf("couldn't execute ffmpeg %s, %s, CMD: '%s'", path, err.Error(), cmd.String())
 	}
 
 	var analyzeResult loudnormResult

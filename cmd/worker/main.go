@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/bcc-code/bccm-flows/workflows/export"
 	"log"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/bcc-code/bccm-flows/workflows/export"
 
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
@@ -64,7 +65,7 @@ var workerWorkflows = []any{
 	export.PrepareFiles,
 	workflows.ExecuteFFmpeg,
 	workflows.ImportSubtitlesFromSubtrans,
-	workflows.AnalyzeEBUR128Workflow,
+	workflows.NormalizeAudioLevelWorkflow,
 }
 
 func main() {

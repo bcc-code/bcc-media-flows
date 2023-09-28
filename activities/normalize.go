@@ -26,7 +26,10 @@ func AnalyzeEBUR128Activity(ctx context.Context, input AnalyzeEBUR128Params) (*A
 	activity.RecordHeartbeat(ctx, "AnalyzeEBUR128")
 	log.Info("Starting AnalyzeEBUR128Activity")
 
-	analyzeResult, err := ffmpeg.AnalyzeEBUR128(input.FilePath)
+	stop, progressCallback := registerProgressCallback(ctx)
+	defer close(stop)
+
+	analyzeResult, err := ffmpeg.AnalyzeEBUR128(input.FilePath, progressCallback)
 	if err != nil {
 		return nil, err
 	}
@@ -66,10 +69,19 @@ func LinearAdjustAudioActivity(ctx context.Context, input *LinearAdjustAudioPara
 	activity.RecordHeartbeat(ctx, "LinearAdjustAudio")
 	log.Info("Starting LinearAdjustAudioActivity")
 
-	transcode.LinearNormalizeAudio(common.AudioInput{
+	stop, progressCallback := registerProgressCallback(ctx)
+	defer close(stop)
+
+	res, err := transcode.LinearNormalizeAudio(common.AudioInput{
 		Path:            input.InFilePath,
 		DestinationPath: input.OutFilePath,
-	}, input.Adjustment, nil)
+	}, input.Adjustment, progressCallback)
 
-	return nil, nil
+	if err != nil {
+		return nil, err
+	}
+
+	return &LinearAdjustAudioResult{
+		OutFilePath: res.OutputPath,
+	}, nil
 }

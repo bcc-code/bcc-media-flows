@@ -5,8 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 // ExecuteCmd executes the cmd and returns through outputCallback line-by-line before returning the whole stdout at the end.
@@ -53,6 +51,7 @@ func ExecuteCmd(cmd *exec.Cmd, outputCallback func(string)) (string, error) {
 // ExecuteAnalysisCmd executes the cmd and returns through outputCallback line-by-line and retrutning only
 // the part that is a valid JSON string
 func ExecuteAnalysisCmd(cmd *exec.Cmd, outputCallback func(string)) (string, error) {
+	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
 
 	err := cmd.Start()
@@ -64,11 +63,20 @@ func ExecuteAnalysisCmd(cmd *exec.Cmd, outputCallback func(string)) (string, err
 
 	jsonStarted := false
 
-	scanner := bufio.NewScanner(stderr)
-	scanner.Split(bufio.ScanLines)
-	for scanner.Scan() {
-		spew.Dump(scanner.Text())
-		line := scanner.Text()
+	scannerOut := bufio.NewScanner(stdout)
+	scannerOut.Split(bufio.ScanLines)
+	for scannerOut.Scan() {
+		line := scannerOut.Text()
+		result += line + "\n"
+		if outputCallback != nil {
+			outputCallback(line)
+		}
+	}
+
+	scannerErr := bufio.NewScanner(stderr)
+	scannerErr.Split(bufio.ScanLines)
+	for scannerErr.Scan() {
+		line := scannerErr.Text()
 
 		if line == "{" {
 			jsonStarted = true
@@ -78,9 +86,6 @@ func ExecuteAnalysisCmd(cmd *exec.Cmd, outputCallback func(string)) (string, err
 			result += line + "\n"
 		}
 
-		if outputCallback != nil {
-			outputCallback(line)
-		}
 	}
 
 	err = cmd.Wait()
