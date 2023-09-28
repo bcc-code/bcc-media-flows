@@ -35,3 +35,17 @@ type MuxInput struct {
 type MuxResult struct {
 	Path string
 }
+
+type PlayoutMuxInput struct {
+	FileName          string
+	VideoFilePath     string
+	StereoLanguages   []string
+	AudioFilePaths    map[string]string
+	SubtitleFilePaths map[string]string
+	DestinationPath   string
+	FallbackLanguage  string
+}
+
+type PlayoutMuxResult struct {
+	Path string
+}

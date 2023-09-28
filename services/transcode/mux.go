@@ -2,15 +2,16 @@ package transcode
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+	"strings"
+
 	bccmflows "github.com/bcc-code/bccm-flows"
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/samber/lo"
-	"log"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 type languageFile struct {
@@ -19,24 +20,12 @@ type languageFile struct {
 }
 
 // Order and respect the global language ordering.
-func getMuxAudioFiles(input common.MuxInput) []languageFile {
-	languages := utils.LanguageKeysToOrderedLanguages(lo.Keys(input.AudioFilePaths))
+func languageFilesForPaths(paths map[string]string) []languageFile {
+	languages := utils.LanguageKeysToOrderedLanguages(lo.Keys(paths))
 
 	return lo.Map(languages, func(lang bccmflows.Language, _ int) languageFile {
 		return languageFile{
-			Path:     input.AudioFilePaths[lang.ISO6391],
-			Language: lang.ISO6391,
-		}
-	})
-}
-
-// Order and respect the global language ordering.
-func getMuxSubtitleFiles(input common.MuxInput) []languageFile {
-	languages := utils.LanguageKeysToOrderedLanguages(lo.Keys(input.SubtitleFilePaths))
-
-	return lo.Map(languages, func(lang bccmflows.Language, _ int) languageFile {
-		return languageFile{
-			Path:     input.SubtitleFilePaths[lang.ISO6391],
+			Path:     paths[lang.ISO6391],
 			Language: lang.ISO6391,
 		}
 	})
@@ -58,8 +47,8 @@ func Mux(input common.MuxInput, progressCallback ffmpeg.ProgressCallback) (*comm
 		"-i", input.VideoFilePath,
 	}
 
-	audioFiles := getMuxAudioFiles(input)
-	subtitleFiles := getMuxSubtitleFiles(input)
+	audioFiles := languageFilesForPaths(input.AudioFilePaths)
+	subtitleFiles := languageFilesForPaths(input.SubtitleFilePaths)
 
 	for _, f := range audioFiles {
 		params = append(params,

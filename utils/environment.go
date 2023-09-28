@@ -2,6 +2,7 @@ package utils
 
 import (
 	"os"
+	"strings"
 
 	"github.com/bcc-code/bccm-flows/common"
 )
@@ -37,4 +38,8 @@ func GetIsilonPrefix() string {
 		return isilonPrefix
 	}
 	return "/mnt/isilon"
+}
+
+func IsilonPathFix(path string) string {
+	return strings.Replace(path, "/mnt/isilon", GetIsilonPrefix(), 1)
 }
