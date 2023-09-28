@@ -59,20 +59,18 @@ func ExecuteAnalysisCmd(cmd *exec.Cmd, outputCallback func(string)) (string, err
 		return "", fmt.Errorf("start failed %s", err.Error())
 	}
 
-	var result string
-
 	jsonStarted := false
 
 	scannerOut := bufio.NewScanner(stdout)
 	scannerOut.Split(bufio.ScanLines)
 	for scannerOut.Scan() {
 		line := scannerOut.Text()
-		result += line + "\n"
 		if outputCallback != nil {
 			outputCallback(line)
 		}
 	}
 
+	var result string
 	scannerErr := bufio.NewScanner(stderr)
 	scannerErr.Split(bufio.ScanLines)
 	for scannerErr.Scan() {

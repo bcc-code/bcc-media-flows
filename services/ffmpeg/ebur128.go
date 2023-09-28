@@ -30,6 +30,7 @@ func AnalyzeEBUR128(path string, progressCallback ProgressCallback) (*common.Ana
 		"-i", path,
 		"-af", "loudnorm=print_format=json",
 		"-f", "null",
+		"-progress", "pipe:1",
 		"-",
 	)
 
@@ -40,11 +41,14 @@ func AnalyzeEBUR128(path string, progressCallback ProgressCallback) (*common.Ana
 
 	result, err := utils.ExecuteAnalysisCmd(cmd, parseProgressCallback(cmd.Args, info, progressCallback))
 	if err != nil {
-		return nil, fmt.Errorf("couldn't execute ffmpeg %s, %s, CMD: '%s'", path, err.Error(), cmd.String())
+		return nil, fmt.Errorf("couldn't execute ffmpeg %s, %w, CMD: '%s'", path, err, cmd.String())
 	}
 
 	var analyzeResult loudnormResult
 	err = json.Unmarshal([]byte(result), &analyzeResult)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't parse ffmpeg output %s, %w, CMD: '%s', Res: \n---------\n%s\n--------------\n", path, err, cmd.String(), result)
+	}
 
 	out := common.AnalyzeEBUR128Result{}
 	out.IntegratedLoudness = floatOrZero(analyzeResult.InputIntegratedLoudness)
