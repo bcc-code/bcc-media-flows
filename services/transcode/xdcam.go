@@ -47,7 +47,7 @@ func generateFfmpegParamsForXDCAM(input EncodeInput, output string) []string {
 		params = append(
 			params,
 			"-flags", "+ilme+ildct",
-			"-top", "1",
+			"-vf", "setfield=tff,fieldorder=tff",
 		)
 	}
 
