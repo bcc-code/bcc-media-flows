@@ -1,17 +1,15 @@
 package transcode
 
 import (
-	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 )
 
-func XDCAM(input EncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeResult, error) {
-	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mxf"
-	outputPath := filepath.Join(input.OutputDir, filename)
-
+func generateFfmpegParamsForXDCAM(input EncodeInput, output string) []string {
 	params := []string{
 		"-progress", "pipe:1",
 		"-hide_banner",
@@ -45,10 +43,26 @@ func XDCAM(input EncodeInput, progressCallback ffmpeg.ProgressCallback) (*Encode
 		)
 	}
 
+	if input.Interlace {
+		params = append(
+			params,
+			"-flags", "+ilme+ildct",
+			"-top", "1",
+		)
+	}
+
 	params = append(
 		params,
-		outputPath,
+		output,
 	)
+
+	return params
+}
+
+func XDCAM(input EncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeResult, error) {
+	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mxf"
+	outputPath := filepath.Join(input.OutputDir, filename)
+	params := generateFfmpegParamsForXDCAM(input, outputPath)
 
 	info, err := ffmpeg.GetStreamInfo(input.FilePath)
 	if err != nil {
