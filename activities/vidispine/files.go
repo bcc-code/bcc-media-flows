@@ -45,15 +45,16 @@ func ImportFileAsSidecarActivity(ctx context.Context, params *ImportSubtitleAsSi
 }
 
 type ImportFileAsItemParams struct {
+	Title    string
 	FilePath string
 }
 
-func ImportFileAsItemActivity(ctx context.Context, params *ImportFileAsItemParams) error {
+func ImportRawMaterialAsItemActivity(ctx context.Context, params *ImportFileAsItemParams) error {
 	log := activity.GetLogger(ctx)
-	log.Info("Starting ImportFileAsItemActivity")
+	log.Info("Starting ImportRawMaterialAsItemActivity")
 
 	vsClient := GetClient()
 
-	_, err := vsClient.AddItem(params.FilePath)
+	_, err := vsClient.CreatePlaceholder(vsapi.PlaceholderTypeRaw, params.Title)
 	return err
 }

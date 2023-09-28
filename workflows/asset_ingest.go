@@ -80,7 +80,7 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 	}
 
 	for _, file := range files {
-		err = workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsItemActivity, vsactivity.ImportFileAsItemParams{
+		err = workflow.ExecuteActivity(ctx, vsactivity.ImportRawMaterialAsItemActivity, vsactivity.ImportFileAsItemParams{
 			FilePath: file,
 		}).Get(ctx, nil)
 		if err != nil {

@@ -58,25 +58,6 @@ func (c *Client) AddSidecarToItem(itemID, filePath, language string) (string, er
 	return result.String(), nil
 }
 
-func (c *Client) AddItem(filePath string) (string, error) {
-	requestURL, _ := url.Parse(c.baseURL)
-	requestURL.Path += "/import"
-
-	q := requestURL.Query()
-	q.Set("uri", "file://"+filePath)
-	// is this a good idea?
-	q.Set("no-transcode", "true")
-	q.Set("no-mediacheck", "true")
-
-	requestURL.RawQuery = q.Encode()
-
-	result, err := c.restyClient.R().Post(requestURL.String())
-	if err != nil {
-		return "", err
-	}
-	return result.String(), nil
-}
-
 func (sr ShapeResult) GetShape(tag string) *Shape {
 	for _, s := range sr.Shape {
 		if lo.Contains(s.Tag, tag) {
