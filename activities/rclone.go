@@ -2,20 +2,21 @@ package activities
 
 import (
 	"context"
+	"time"
+
 	"github.com/bcc-code/bccm-flows/services/rclone"
 	"go.temporal.io/sdk/activity"
-	"time"
 )
 
-type RcloneUploadDirInput struct {
+type RcloneCopyInput struct {
 	Source      string
 	Destination string
 }
 
-func RcloneUploadDir(ctx context.Context, input RcloneUploadDirInput) (bool, error) {
-	activity.RecordHeartbeat(ctx, "Rclone Upload Dir")
+func RcloneCopy(ctx context.Context, input RcloneCopyInput) (bool, error) {
+	activity.RecordHeartbeat(ctx, "Rclone Copy")
 
-	res, err := rclone.CopyDir(input.Source, input.Destination)
+	res, err := rclone.Copy(input.Source, input.Destination)
 	if err != nil {
 		return false, err
 	}

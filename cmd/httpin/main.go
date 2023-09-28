@@ -5,6 +5,7 @@ import (
 	"github.com/bcc-code/bccm-flows/workflows/export"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/workflows"
@@ -100,6 +101,7 @@ func triggerHandler(ctx *gin.Context) {
 			WithFiles:     getParamFromCtx(ctx, "withFiles") == "true",
 			WithChapters:  getParamFromCtx(ctx, "withChapters") == "true",
 			WatermarkPath: getParamFromCtx(ctx, "watermarkPath"),
+			Destinations:  strings.Split(getParamFromCtx(ctx, "destinations"), ","),
 		})
 	case "ExecuteFFmpeg":
 		var input struct {

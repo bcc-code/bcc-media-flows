@@ -72,7 +72,7 @@ func createStereoFilter(input string, leftOutput string, rightOutput string) str
 }
 
 func createMonoFilter(input string, output string) string {
-	return fmt.Sprintf("[%s]aresample=48000[%s]", input, output)
+	return fmt.Sprintf("[%s]aresample=48000,pan=1c|c0=c0[%s]", input, output)
 }
 
 func createSplitFilter(input string, count int) (string, []string) {
@@ -220,7 +220,9 @@ func generateFFmpegParamsForPlayoutMux(input common.PlayoutMuxInput, outputPath 
 }
 
 func PlayoutMux(input common.PlayoutMuxInput, progressCallback ffmpeg.ProgressCallback) (*common.PlayoutMuxResult, error) {
-	outputPath := filepath.Join(input.DestinationPath, input.FileName+".mxf")
+	base := filepath.Base(input.VideoFilePath)
+	fileNameWithoutExtension := base[:len(base)-len(filepath.Ext(base))]
+	outputPath := filepath.Join(input.OutputDir, fileNameWithoutExtension+".mxf")
 
 	params, err := generateFFmpegParamsForPlayoutMux(input, outputPath)
 	if err != nil {

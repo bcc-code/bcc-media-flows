@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/bcc-code/bccm-flows/workflows/export"
 	"log"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/bcc-code/bccm-flows/workflows/export"
 
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
@@ -47,6 +48,7 @@ var transcodeActivities = []any{
 	activities.TranscodeToVideoH264,
 	activities.TranscodeToAudioAac,
 	activities.TranscodeMux,
+	activities.TranscodePlayoutMux,
 	activities.ExecuteFFmpeg,
 }
 
@@ -62,6 +64,8 @@ var workerWorkflows = []any{
 	export.PrepareFiles,
 	workflows.ExecuteFFmpeg,
 	workflows.ImportSubtitlesFromSubtrans,
+	export.ExportToVOD,
+	export.ExportToPlayout,
 }
 
 func main() {
@@ -105,7 +109,7 @@ func main() {
 	switch utils.GetQueue() {
 	case common.QueueDebug:
 		w.RegisterActivity(activities.Transcribe)
-		w.RegisterActivity(activities.RcloneUploadDir)
+		w.RegisterActivity(activities.RcloneCopy)
 		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {
@@ -125,7 +129,7 @@ func main() {
 		}
 	case common.QueueWorker:
 		w.RegisterActivity(activities.Transcribe)
-		w.RegisterActivity(activities.RcloneUploadDir)
+		w.RegisterActivity(activities.RcloneCopy)
 		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {

@@ -4,20 +4,35 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/bcc-code/bcc-media-platform/backend/events"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
-	"github.com/bcc-code/bccm-flows/workflows"
 	"path/filepath"
 	"strings"
 
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
+	"github.com/bcc-code/bcc-media-platform/backend/events"
+	"github.com/orsinium-labs/enum"
 
 	"github.com/bcc-code/bccm-flows/activities"
 	avidispine "github.com/bcc-code/bccm-flows/activities/vidispine"
+	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/common/smil"
 	"github.com/bcc-code/bccm-flows/services/vidispine"
 	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/bcc-code/bccm-flows/workflows"
 	"go.temporal.io/sdk/workflow"
+)
+
+type AssetExportDestination enum.Member[string]
+
+var (
+	AssetExportDestinationPlayout = AssetExportDestination{"playout"}
+	AssetExportDestinationVOD     = AssetExportDestination{"vod"}
+	AssetExportDestinationBMM     = AssetExportDestination{"bmm"}
+	AssetExportDestinations       = enum.New(
+		AssetExportDestinationPlayout,
+		AssetExportDestinationVOD,
+		AssetExportDestinationBMM,
+	)
 )
 
 type AssetExportParams struct {
@@ -25,6 +40,7 @@ type AssetExportParams struct {
 	WithFiles     bool
 	WithChapters  bool
 	WatermarkPath string
+	Destinations  []string
 }
 
 type AssetExportResult struct {
@@ -56,9 +72,9 @@ func formatSecondsToTimestamp(seconds float64) string {
 	return fmt.Sprintf("%02d:%02d:%02d:00", hours, minutes, secondsInt)
 }
 
-func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExportResult, error) {
+func AssetExportVX(ctx workflow.Context, params AssetExportParams) ([]*AssetExportResult, error) {
 	logger := workflow.GetLogger(ctx)
-	logger.Info("Starting AssetExport")
+	logger.Info("Starting AssetExportVX")
 
 	options := workflows.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
@@ -73,13 +89,13 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 
 	logger.Info("Retrieved data from vidispine")
 
-	tempFolder, err := wfutils.GetWorkflowTempFolder(ctx)
+	tempDir, err := wfutils.GetWorkflowTempFolder(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	outputFolder := filepath.Join(tempFolder, "output")
-	err = wfutils.CreateFolder(ctx, outputFolder)
+	outputDir := filepath.Join(tempDir, "output")
+	err = wfutils.CreateFolder(ctx, outputDir)
 	if err != nil {
 		return nil, err
 	}
@@ -88,26 +104,149 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 
 	var mergeResult MergeExportDataResult
 	err = workflow.ExecuteChildWorkflow(ctx, MergeExportData, MergeExportDataParams{
-		ExportData: data,
-		TempPath:   tempFolder,
-		OutputPath: outputFolder,
+		ExportData:   data,
+		TempDir:      tempDir,
+		SubtitlesDir: outputDir,
 	}).Get(ctx, &mergeResult)
 	if err != nil {
 		return nil, err
 	}
 
+	// Destination branching:  VOD, playout, bmm, etc.
+	var results []*AssetExportResult
+	for _, dest := range params.Destinations {
+		destination := AssetExportDestinations.Parse(dest)
+		if destination == nil {
+			return nil, fmt.Errorf("invalid destination: %s", dest)
+		}
+		switch *destination {
+		case AssetExportDestinationVOD:
+			var result *AssetExportResult
+			ctx = workflow.WithChildOptions(ctx, workflows.GetDefaultWorkflowOptions())
+			err := workflow.ExecuteChildWorkflow(ctx, ExportToVOD, ExportToVODParams{
+				ParentParams: params,
+				ExportData:   *data,
+				MergeResult:  mergeResult,
+				TempFolder:   tempDir,
+				OutputFolder: outputDir,
+			}).Get(ctx, &result)
+			if err != nil {
+				return nil, err
+			}
+			results = append(results, result)
+		case AssetExportDestinationPlayout:
+			var result *AssetExportResult
+			ctx = workflow.WithChildOptions(ctx, workflows.GetDefaultWorkflowOptions())
+			err := workflow.ExecuteChildWorkflow(ctx, ExportToPlayout, ExportToPlayoutParams{
+				ParentParams: params,
+				ExportData:   *data,
+				MergeResult:  mergeResult,
+				TempDir:      tempDir,
+				OutputDir:    outputDir,
+			}).Get(ctx, &result)
+			if err != nil {
+				return nil, err
+			}
+			results = append(results, result)
+		}
+	}
+
+	return results, nil
+}
+
+type ExportToPlayoutParams struct {
+	ParentParams AssetExportParams    `json:"parent_params"`
+	ExportData   vidispine.ExportData `json:"export_data"`
+	MergeResult  MergeExportDataResult
+	TempDir      string
+	OutputDir    string
+}
+
+func ExportToPlayout(ctx workflow.Context, params ExportToPlayoutParams) (*AssetExportResult, error) {
+	logger := workflow.GetLogger(ctx)
+	logger.Info("Starting ExportToPlayout")
+
+	options := workflows.GetDefaultActivityOptions()
+	ctx = workflow.WithActivityOptions(ctx, options)
+
+	xdcamOutputDir := filepath.Join(params.TempDir, "xdcam_output")
+	err := wfutils.CreateFolder(ctx, xdcamOutputDir)
+	if err != nil {
+		return nil, err
+	}
+
+	// Transcode video using playout encoding
+	var videoResult common.VideoResult
+	err = workflow.ExecuteActivity(ctx, activities.TranscodeToXDCAMActivity, activities.EncodeParams{
+		Bitrate:    "50M",
+		FilePath:   params.MergeResult.VideoFile,
+		OutputDir:  xdcamOutputDir,
+		Resolution: r1080p,
+		FrameRate:  25,
+	}).Get(ctx, &videoResult)
+	if err != nil {
+		return nil, err
+	}
+
+	// Mux into MXF file with 16 audio channels
+	var muxResult *common.PlayoutMuxResult
+	err = workflow.ExecuteActivity(ctx, activities.TranscodePlayoutMux, common.PlayoutMuxInput{
+		VideoFilePath:     videoResult.OutputPath,
+		AudioFilePaths:    params.MergeResult.AudioFiles,
+		SubtitleFilePaths: params.MergeResult.SubtitleFiles,
+		OutputDir:         params.OutputDir,
+		FallbackLanguage:  "nor",
+	}).Get(ctx, &muxResult)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Rclone to playout
+	source := strings.Replace(muxResult.Path, utils.GetIsilonPrefix()+"/", "isilon:isilon/", 1)
+	destination := "playout:/dropbox" + filepath.Base(muxResult.Path)
+	err = workflow.ExecuteActivity(ctx, activities.RcloneCopy, activities.RcloneCopyInput{
+		Source:      source,
+		Destination: destination,
+	}).Get(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AssetExportResult{
+		ID:       params.ParentParams.VXID,
+		Title:    params.ExportData.Title,
+		Duration: formatSecondsToTimestamp(params.MergeResult.Duration),
+	}, nil
+}
+
+type ExportToVODParams struct {
+	ParentParams AssetExportParams
+	ExportData   vidispine.ExportData
+	MergeResult  MergeExportDataResult
+	TempFolder   string
+	OutputFolder string
+}
+
+func ExportToVOD(ctx workflow.Context, params ExportToVODParams) (*AssetExportResult, error) {
+	logger := workflow.GetLogger(ctx)
+	logger.Info("Starting ExportToVOD")
+
+	options := workflows.GetDefaultActivityOptions()
+	ctx = workflow.WithActivityOptions(ctx, options)
+
 	// We start chapter export and pick the results up later when needed
 	var chapterDataWF workflow.Future
-	if params.WithChapters {
+	if params.ParentParams.WithChapters {
 		chapterDataWF = workflow.ExecuteActivity(ctx, avidispine.GetChapterDataActivity, avidispine.GetChapterDataParams{
-			ExportData: data,
+			ExportData: &params.ExportData,
 		})
 	}
 
 	ingestData := asset.IngestJSONMeta{
-		Title:    data.Title,
-		ID:       params.VXID,
-		Duration: formatSecondsToTimestamp(mergeResult.Duration),
+		Title:    params.ExportData.Title,
+		ID:       params.ParentParams.VXID,
+		Duration: formatSecondsToTimestamp(params.MergeResult.Duration),
 	}
 
 	var videoFiles map[string]string
@@ -115,11 +254,11 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 	{
 		var result PrepareFilesResult
 		ctx = workflow.WithChildOptions(ctx, workflows.GetDefaultWorkflowOptions())
-		err = workflow.ExecuteChildWorkflow(ctx, PrepareFiles, PrepareFilesParams{
-			OutputPath:    tempFolder,
-			VideoFile:     mergeResult.VideoFile,
-			AudioFiles:    mergeResult.AudioFiles,
-			WatermarkPath: params.WatermarkPath,
+		err := workflow.ExecuteChildWorkflow(ctx, PrepareFiles, PrepareFilesParams{
+			OutputPath:    params.TempFolder,
+			VideoFile:     params.MergeResult.VideoFile,
+			AudioFiles:    params.MergeResult.AudioFiles,
+			WatermarkPath: params.ParentParams.WatermarkPath,
 		}).Get(ctx, &result)
 		if err != nil {
 			return nil, err
@@ -128,7 +267,7 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 		audioFiles = result.AudioFiles
 	}
 
-	subtitleFiles := mergeResult.SubtitleFiles
+	subtitleFiles := params.MergeResult.SubtitleFiles
 
 	var smilData smil.Smil
 	smilData.XMLName.Local = "smil"
@@ -138,12 +277,12 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 
 	{
 		var result *MuxFilesResult
-		err = workflow.ExecuteChildWorkflow(ctx, MuxFiles, MuxFilesParams{
+		err := workflow.ExecuteChildWorkflow(ctx, MuxFiles, MuxFilesParams{
 			VideoFiles:    videoFiles,
 			AudioFiles:    audioFiles,
 			SubtitleFiles: subtitleFiles,
-			OutputPath:    outputFolder,
-			WithFiles:     params.WithFiles,
+			OutputPath:    params.OutputFolder,
+			WithFiles:     params.ParentParams.WithFiles,
 		}).Get(ctx, &result)
 		if err != nil {
 			return nil, err
@@ -155,7 +294,7 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 
 	xmlData, _ := xml.MarshalIndent(smilData, "", "\t")
 	xmlData = append([]byte("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n"), xmlData...)
-	err = wfutils.WriteFile(ctx, filepath.Join(outputFolder, "aws.smil"), xmlData)
+	err := wfutils.WriteFile(ctx, filepath.Join(params.OutputFolder, "aws.smil"), xmlData)
 	if err != nil {
 
 		return nil, err
@@ -168,7 +307,7 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 		return nil, err
 	}
 
-	err = wfutils.WriteFile(ctx, filepath.Join(outputFolder, "ingest.json"), marshalled)
+	err = wfutils.WriteFile(ctx, filepath.Join(params.OutputFolder, "ingest.json"), marshalled)
 	if err != nil {
 		return nil, err
 	}
@@ -184,16 +323,16 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 		if err != nil {
 			return nil, err
 		}
-		err = wfutils.WriteFile(ctx, filepath.Join(outputFolder, "chapters.json"), marshalled)
+		err = wfutils.WriteFile(ctx, filepath.Join(params.OutputFolder, "chapters.json"), marshalled)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	ingestFolder := data.Title + "_" + workflow.GetInfo(ctx).OriginalRunID
+	ingestFolder := params.ExportData.Title + "_" + workflow.GetInfo(ctx).OriginalRunID
 
-	err = workflow.ExecuteActivity(ctx, activities.RcloneUploadDir, activities.RcloneUploadDirInput{
-		Source:      strings.Replace(outputFolder, utils.GetIsilonPrefix()+"/", "isilon:isilon/", 1),
+	err = workflow.ExecuteActivity(ctx, activities.RcloneCopy, activities.RcloneCopyInput{
+		Source:      strings.Replace(params.OutputFolder, utils.GetIsilonPrefix()+"/", "isilon:isilon/", 1),
 		Destination: fmt.Sprintf("s3prod:vod-asset-ingest-prod/" + ingestFolder),
 	}).Get(ctx, nil)
 	if err != nil {
@@ -212,7 +351,7 @@ func AssetExportVX(ctx workflow.Context, params AssetExportParams) (*AssetExport
 	return &AssetExportResult{
 		ChaptersFile: ingestData.ChaptersFile,
 		SmilFile:     ingestData.SmilFile,
-		ID:           params.VXID,
+		ID:           params.ParentParams.VXID,
 		Duration:     ingestData.Duration,
 		Title:        ingestData.Title,
 	}, nil
