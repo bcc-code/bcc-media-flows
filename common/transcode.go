@@ -36,6 +36,13 @@ type MuxResult struct {
 	Path string
 }
 
+type AnalyzeEBUR128Result struct {
+	IntegratedLoudness  float64
+	TruePeak            float64
+	LoudnessRange       float64
+	SuggestedAdjustment float64
+}
+
 type PlayoutMuxInput struct {
 	FileName          string
 	VideoFilePath     string

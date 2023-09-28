@@ -47,3 +47,49 @@ func ExecuteCmd(cmd *exec.Cmd, outputCallback func(string)) (string, error) {
 
 	return result, err
 }
+
+// ExecuteAnalysisCmd executes the cmd and returns through outputCallback line-by-line and retrutning only
+// the part that is a valid JSON string
+func ExecuteAnalysisCmd(cmd *exec.Cmd, outputCallback func(string)) (string, error) {
+	stdout, _ := cmd.StdoutPipe()
+	stderr, _ := cmd.StderrPipe()
+
+	err := cmd.Start()
+	if err != nil {
+		return "", fmt.Errorf("start failed %s", err.Error())
+	}
+
+	jsonStarted := false
+
+	scannerOut := bufio.NewScanner(stdout)
+	scannerOut.Split(bufio.ScanLines)
+	for scannerOut.Scan() {
+		line := scannerOut.Text()
+		if outputCallback != nil {
+			outputCallback(line)
+		}
+	}
+
+	var result string
+	scannerErr := bufio.NewScanner(stderr)
+	scannerErr.Split(bufio.ScanLines)
+	for scannerErr.Scan() {
+		line := scannerErr.Text()
+
+		if line == "{" {
+			jsonStarted = true
+		}
+
+		if jsonStarted {
+			result += line + "\n"
+		}
+
+	}
+
+	err = cmd.Wait()
+	if err != nil {
+		return "", fmt.Errorf("execution failed error: %s", err.Error())
+	}
+
+	return result, err
+}

@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/bcc-code/bccm-flows/workflows/export"
 	"net/http"
 	"os"
+	"strconv"
+
+	"github.com/bcc-code/bccm-flows/workflows/export"
 
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/workflows"
@@ -119,6 +121,18 @@ func triggerHandler(ctx *gin.Context) {
 		}
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.ImportSubtitlesFromSubtrans, workflows.ImportSubtitlesFromSubtransInput{
 			VXId: vxID,
+		})
+	case "NormalizeAudio":
+		target, err := strconv.ParseFloat(getParamFromCtx(ctx, "targetLUFS"), 64)
+		if err != nil {
+			ctx.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.NormalizeAudioLevelWorkflow, workflows.NormalizeAudioParams{
+			FilePath:              getParamFromCtx(ctx, "file"),
+			TargetLUFS:            target,
+			PerformOutputAnalysis: true,
 		})
 	}
 
