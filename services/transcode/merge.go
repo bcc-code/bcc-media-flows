@@ -192,7 +192,7 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 		content += fmt.Sprintf("file '%s'\n", f)
 	}
 
-	subtitlesFile := filepath.Join(input.WorkDir, "subtitles.txt")
+	subtitlesFile := filepath.Join(input.WorkDir, input.Title+"-subtitles.txt")
 
 	err := os.WriteFile(subtitlesFile, []byte(content), os.ModePerm)
 	if err != nil {
