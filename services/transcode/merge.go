@@ -172,7 +172,7 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 	var files []string
 	// for each file, extract the specified range and save the result to a file.
 	for index, item := range input.Items {
-		file := filepath.Join(input.WorkDir, fmt.Sprintf("%d.srt", index))
+		file := filepath.Join(input.WorkDir, fmt.Sprintf("%s-%d.srt", input.Title, index))
 		path := utils.IsilonPathFix(item.Path)
 		cmd := exec.Command("ffmpeg", "-i", path, "-ss", fmt.Sprintf("%f", item.Start), "-to", fmt.Sprintf("%f", item.End), "-y", file)
 
