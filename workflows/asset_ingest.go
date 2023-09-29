@@ -99,15 +99,15 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 		if !found {
 			return fmt.Errorf("file not found: %s", file)
 		}
-		var vxID string
+		var result vsactivity.CreatePlaceholderResult
 		err = workflow.ExecuteActivity(ctx, vsactivity.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
 			Title: f.FileName,
-		}).Get(ctx, &vxID)
+		}).Get(ctx, &result)
 		if err != nil {
 			return err
 		}
 		err = workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
-			AssetID:  vxID,
+			AssetID:  result.AssetID,
 			FilePath: file,
 			ShapeTag: "original",
 		}).Get(ctx, nil)
@@ -115,20 +115,42 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 			return err
 		}
 
-		assetAnalyzeTasks[file] = workflow.ExecuteActivity(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
+		assetAnalyzeTasks[result.AssetID] = workflow.ExecuteActivity(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
 			FilePath: file,
 		})
 	}
 
-	keys, err := wfutils.GetMapKeysSafely(ctx, assetAnalyzeTasks)
+	assetIDs, err := wfutils.GetMapKeysSafely(ctx, assetAnalyzeTasks)
 	if err != nil {
 		return err
 	}
 
-	for _, key := range keys {
-		task := assetAnalyzeTasks[key]
+	var wfFutures []workflow.ChildWorkflowFuture
+
+	for _, id := range assetIDs {
+		task := assetAnalyzeTasks[id]
 		var result activities.AnalyzeFileResult
 		err = task.Get(ctx, &result)
+		if err != nil {
+			return err
+		}
+		// Only create thumbnails if the file has video
+		if result.HasVideo {
+			err = workflow.ExecuteActivity(ctx, vsactivity.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
+				AssetID: id,
+			}).Get(ctx, nil)
+			if err != nil {
+				return err
+			}
+		}
+
+		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, TranscodePreviewVX, TranscodePreviewVXInput{
+			VXID: id,
+		}))
+	}
+
+	for _, f := range wfFutures {
+		err = f.Get(ctx, nil)
 		if err != nil {
 			return err
 		}

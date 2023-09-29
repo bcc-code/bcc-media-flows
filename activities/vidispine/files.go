@@ -47,11 +47,34 @@ type CreatePlaceholderParams struct {
 	Title string
 }
 
-func CreatePlaceholderActivity(ctx context.Context, params *CreatePlaceholderParams) (string, error) {
+type CreatePlaceholderResult struct {
+	AssetID string
+}
+
+func CreatePlaceholderActivity(ctx context.Context, params *CreatePlaceholderParams) (*CreatePlaceholderResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting CreatePlaceholderActivity")
 
 	vsClient := GetClient()
 
-	return vsClient.CreatePlaceholder(vsapi.PlaceholderTypeRaw, params.Title)
+	id, err := vsClient.CreatePlaceholder(vsapi.PlaceholderTypeRaw, params.Title)
+	if err != nil {
+		return nil, err
+	}
+	return &CreatePlaceholderResult{
+		AssetID: id,
+	}, nil
+}
+
+type CreateThumbnailsParams struct {
+	AssetID string
+}
+
+func CreateThumbnailsActivity(ctx context.Context, params *CreateThumbnailsParams) error {
+	log := activity.GetLogger(ctx)
+	log.Info("Starting CreateThumbnailsActivity")
+
+	vsClient := GetClient()
+
+	return vsClient.CreateThumbnails(params.AssetID)
 }

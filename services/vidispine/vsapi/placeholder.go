@@ -79,3 +79,11 @@ func (c *Client) AddFileToPlaceholder(itemID, fileID, tag string, fileState File
 
 	return requestURL.String()
 }
+
+func (c *Client) CreateThumbnails(itemID string) error {
+	_, err := c.restyClient.R().
+		SetHeader("content-type", "application/xml").
+		Post("/item/" + url.PathEscape(itemID) + "/thumbnail?createThumbnails=true")
+
+	return err
+}

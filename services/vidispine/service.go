@@ -16,6 +16,7 @@ type VSClient interface {
 	AddSidecarToItem(itemVXID, filePath, language string) (string, error)
 	SetItemMetadataField(itemVXID, field, value string) error
 	CreatePlaceholder(ingestType vsapi.PlaceholderType, title string) (string, error)
+	CreateThumbnails(assetID string) error
 }
 
 type VidispineService struct {
@@ -59,4 +60,8 @@ func (s *VidispineService) GetShapes(itemVXID string) (*vsapi.ShapeResult, error
 
 func (s *VidispineService) CreatePlaceholder(ingestType vsapi.PlaceholderType, title string) (string, error) {
 	return s.apiClient.CreatePlaceholder(ingestType, title)
+}
+
+func (s *VidispineService) CreateThumbnails(assetID string) error {
+	return s.apiClient.CreateThumbnails(assetID)
 }
