@@ -14,7 +14,7 @@ import (
 )
 
 type AssetIngestParams struct {
-	XmlPath string
+	XMLPath string
 }
 
 type AssetIngestResult struct{}
@@ -31,7 +31,7 @@ func AssetIngest(ctx workflow.Context, params AssetIngestParams) (*AssetIngestRe
 	options := GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	metadata, err := wfutils.UnmarshalXMLFile[ingest.Metadata](ctx, params.XmlPath)
+	metadata, err := wfutils.UnmarshalXMLFile[ingest.Metadata](ctx, params.XMLPath)
 	if err != nil {
 		return nil, err
 	}

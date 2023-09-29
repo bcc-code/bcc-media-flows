@@ -117,6 +117,15 @@ func triggerHandler(ctx *gin.Context) {
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.ExecuteFFmpeg, workflows.ExecuteFFmpegInput{
 			Arguments: input.Arguments,
 		})
+	case "AssetIngest":
+		xmlPath := getParamFromCtx(ctx, "xmlPath")
+		if xmlPath == "" {
+			ctx.Status(http.StatusBadRequest)
+			return
+		}
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.AssetIngest, workflows.AssetIngestParams{
+			XMLPath: xmlPath,
+		})
 	case "ImportSubtitlesFromSubtrans":
 		if vxID == "" {
 			ctx.Status(http.StatusBadRequest)
