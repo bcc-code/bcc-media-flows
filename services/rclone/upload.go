@@ -14,7 +14,7 @@ type copyRequest struct {
 	Destination string `json:"dstFs"`
 }
 
-func Copy(source, destination string) (*JobResponse, error) {
+func CopyDir(source, destination string) (*JobResponse, error) {
 	body, err := json.Marshal(copyRequest{
 		Async:       true,
 		Source:      source,

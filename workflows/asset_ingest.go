@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/activities"
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
+	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/services/ingest"
+	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -20,9 +23,11 @@ type AssetIngestParams struct {
 type AssetIngestResult struct{}
 
 type assetFile struct {
-	Path     string
-	FileName string
+	Directory string
+	FileName  string
 }
+
+const fcWorkflowRcloneRoot = "dmz:dmzshare/workflow"
 
 func AssetIngest(ctx workflow.Context, params AssetIngestParams) (*AssetIngestResult, error) {
 	logger := workflow.GetLogger(ctx)
@@ -36,17 +41,31 @@ func AssetIngest(ctx workflow.Context, params AssetIngestParams) (*AssetIngestRe
 		return nil, err
 	}
 
+	job := common.IngestJob{
+		JobID:        strconv.Itoa(metadata.JobProperty.JobID),
+		SenderEmails: strings.Split(metadata.JobProperty.SenderEmail, ","),
+	}
+
+	var directories []string
+	for _, file := range metadata.FileList.Files {
+		p := file.FilePath
+		if !lo.Contains(directories, p) {
+			directories = append(directories, p)
+		}
+	}
+
 	switch metadata.JobProperty.OrderForm {
 	case "Rawmaterial":
 		files := lo.Map(metadata.FileList.Files, func(file ingest.File, _ int) assetFile {
-			// dmz:dmzshare is the rclone path to the same files
 			return assetFile{
-				Path:     strings.Replace("/fcweb", file.FilePath, "dmz:dmzshare", 1),
-				FileName: file.FileName,
+				Directory: file.FilePath,
+				FileName:  file.FileName,
 			}
 		})
 		err = assetIngestRawMaterial(ctx, AssetIngestRawMaterialParams{
-			Files: files,
+			Job:         job,
+			Files:       files,
+			Directories: directories,
 		})
 	}
 
@@ -54,7 +73,9 @@ func AssetIngest(ctx workflow.Context, params AssetIngestParams) (*AssetIngestRe
 }
 
 type AssetIngestRawMaterialParams struct {
-	Files []assetFile
+	Job         common.IngestJob
+	Directories []string
+	Files       []assetFile
 }
 
 func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialParams) error {
@@ -68,17 +89,19 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 
 	var fileByFilename = map[string]assetFile{}
 	for _, f := range params.Files {
-		path := f.Path
+		path := f.Directory
 		fileByFilename[f.FileName] = f
-		if !utils.ValidRawFilename(filepath.Base(path)) {
+		if !utils.ValidRawFilename(f.FileName) {
 			return fmt.Errorf("invalid filename: %s", path)
 		}
 	}
 
-	for _, f := range params.Files {
-		err = workflow.ExecuteActivity(ctx, activities.RcloneCopy, activities.RcloneCopyInput{
-			Source:      f.Path,
-			Destination: strings.Replace(outputFolder, utils.GetIsilonPrefix(), "isilon:isilon", 1),
+	for _, d := range params.Directories {
+		err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
+			Source: filepath.Join(fcWorkflowRcloneRoot, d),
+			Destination: filepath.Join(
+				strings.Replace(outputFolder, utils.GetIsilonPrefix(), "isilon:isilon", 1),
+			),
 		}).Get(ctx, nil)
 		if err != nil {
 			return err
@@ -142,6 +165,24 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 			if err != nil {
 				return err
 			}
+		}
+
+		err = workflow.ExecuteActivity(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
+			VXID:  id,
+			Key:   vscommon.FieldUploadedBy.Value,
+			Value: strings.Join(params.Job.SenderEmails, ", "),
+		}).Get(ctx, nil)
+		if err != nil {
+			return err
+		}
+
+		err = workflow.ExecuteActivity(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
+			VXID:  id,
+			Key:   vscommon.FieldUploadJob.Value,
+			Value: params.Job.JobID,
+		}).Get(ctx, nil)
+		if err != nil {
+			return err
 		}
 
 		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, TranscodePreviewVX, TranscodePreviewVXInput{

@@ -37,6 +37,7 @@ var vidispineActivities = []any{
 	vidispine.SetVXMetadataFieldActivity,
 	vidispine.GetExportDataActivity,
 	vidispine.GetChapterDataActivity,
+	vidispine.CreateThumbnailsActivity,
 	activities.GetSubtransIDActivity,
 }
 
@@ -55,6 +56,7 @@ var transcodeActivities = []any{
 	activities.ExecuteFFmpeg,
 	activities.AnalyzeEBUR128Activity,
 	activities.AdjustAudioLevelActivity,
+	activities.AnalyzeFile,
 }
 
 var workerWorkflows = []any{
@@ -116,7 +118,7 @@ func main() {
 	switch utils.GetQueue() {
 	case common.QueueDebug:
 		w.RegisterActivity(activities.Transcribe)
-		w.RegisterActivity(activities.RcloneCopy)
+		w.RegisterActivity(activities.RcloneCopyDir)
 		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {
@@ -136,7 +138,7 @@ func main() {
 		}
 	case common.QueueWorker:
 		w.RegisterActivity(activities.Transcribe)
-		w.RegisterActivity(activities.RcloneCopy)
+		w.RegisterActivity(activities.RcloneCopyDir)
 		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {

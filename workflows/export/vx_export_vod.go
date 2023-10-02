@@ -121,7 +121,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorklowParams) (*VX
 
 	ingestFolder := params.ExportData.Title + "_" + workflow.GetInfo(ctx).OriginalRunID
 
-	err = workflow.ExecuteActivity(ctx, activities.RcloneCopy, activities.RcloneCopyInput{
+	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
 		Source:      strings.Replace(params.OutputDir, utils.GetIsilonPrefix()+"/", "isilon:isilon/", 1),
 		Destination: fmt.Sprintf("s3prod:vod-asset-ingest-prod/" + ingestFolder),
 	}).Get(ctx, nil)
