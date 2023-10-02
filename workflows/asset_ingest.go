@@ -153,8 +153,6 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 		return err
 	}
 
-	var wfFutures []workflow.ChildWorkflowFuture
-
 	for _, id := range assetIDs {
 		task := assetAnalyzeTasks[id]
 		var result activities.AnalyzeFileResult
@@ -172,20 +170,12 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 			}
 		}
 
-		err = workflow.ExecuteActivity(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
-			VXID:  id,
-			Key:   vscommon.FieldUploadedBy.Value,
-			Value: strings.Join(params.Job.SenderEmails, ", "),
-		}).Get(ctx, nil)
+		err = wfutils.SetVidispineMeta(ctx, id, vscommon.FieldUploadedBy.Value, strings.Join(params.Job.SenderEmails, ", "))
 		if err != nil {
 			return err
 		}
 
-		err = workflow.ExecuteActivity(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
-			VXID:  id,
-			Key:   vscommon.FieldUploadJob.Value,
-			Value: params.Job.JobID,
-		}).Get(ctx, nil)
+		err = wfutils.SetVidispineMeta(ctx, id, vscommon.FieldUploadJob.Value, params.Job.JobID)
 		if err != nil {
 			return err
 		}
@@ -198,6 +188,7 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 		}
 	}
 
+	var wfFutures []workflow.ChildWorkflowFuture
 	for _, id := range assetIDs {
 		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, TranscodePreviewVX, TranscodePreviewVXInput{
 			VXID: id,
