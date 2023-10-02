@@ -115,6 +115,8 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 
 	var assetAnalyzeTasks = map[string]workflow.Future{}
 
+	var vidispineJobIDs []string
+
 	for _, file := range files {
 		f, found := lo.Find(params.Files, func(f assetFile) bool {
 			return f.FileName == filepath.Base(file)
@@ -135,13 +137,11 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 			FilePath: file,
 			ShapeTag: "original",
 		}).Get(ctx, &job)
+
 		if err != nil {
 			return err
 		}
-		err = wfutils.WaitForVidispineJob(ctx, job.JobID)
-		if err != nil {
-			return err
-		}
+		vidispineJobIDs = append(vidispineJobIDs, job.JobID)
 
 		assetAnalyzeTasks[result.AssetID] = workflow.ExecuteActivity(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
 			FilePath: file,
@@ -189,7 +189,16 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 		if err != nil {
 			return err
 		}
+	}
 
+	for _, id := range vidispineJobIDs {
+		err = wfutils.WaitForVidispineJob(ctx, id)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, id := range assetIDs {
 		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, TranscodePreviewVX, TranscodePreviewVXInput{
 			VXID: id,
 		}))
