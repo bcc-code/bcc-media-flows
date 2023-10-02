@@ -38,6 +38,7 @@ var vidispineActivities = []any{
 	vidispine.GetExportDataActivity,
 	vidispine.GetChapterDataActivity,
 	vidispine.CreateThumbnailsActivity,
+	vidispine.WaitForJobCompletion,
 	activities.GetSubtransIDActivity,
 }
 

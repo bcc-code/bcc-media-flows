@@ -33,14 +33,20 @@ type ImportSubtitleAsSidecarParams struct {
 	Language string
 }
 
-func ImportFileAsSidecarActivity(ctx context.Context, params *ImportSubtitleAsSidecarParams) error {
+type ImportFileAsSidecarResult struct {
+	JobID string
+}
+
+func ImportFileAsSidecarActivity(ctx context.Context, params *ImportSubtitleAsSidecarParams) (*ImportFileAsSidecarResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting ImportSubtitleAsSidecarParams")
 
 	vsClient := GetClient()
 
-	_, err := vsClient.AddSidecarToItem(params.AssetID, params.FilePath, params.Language)
-	return err
+	jobID, err := vsClient.AddSidecarToItem(params.AssetID, params.FilePath, params.Language)
+	return &ImportFileAsSidecarResult{
+		JobID: jobID,
+	}, err
 }
 
 type CreatePlaceholderParams struct {
@@ -70,11 +76,18 @@ type CreateThumbnailsParams struct {
 	AssetID string
 }
 
-func CreateThumbnailsActivity(ctx context.Context, params *CreateThumbnailsParams) error {
+type JobResult struct {
+	JobID string
+}
+
+func CreateThumbnailsActivity(ctx context.Context, params *CreateThumbnailsParams) (*JobResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting CreateThumbnailsActivity")
 
 	vsClient := GetClient()
 
-	return vsClient.CreateThumbnails(params.AssetID)
+	res, err := vsClient.CreateThumbnails(params.AssetID)
+	return &JobResult{
+		JobID: res,
+	}, err
 }

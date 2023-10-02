@@ -129,11 +129,16 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 		if err != nil {
 			return err
 		}
+		var job vsactivity.JobResult
 		err = workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
 			AssetID:  result.AssetID,
 			FilePath: file,
 			ShapeTag: "original",
-		}).Get(ctx, nil)
+		}).Get(ctx, &job)
+		if err != nil {
+			return err
+		}
+		err = wfutils.WaitForVidispineJob(ctx, job.JobID)
 		if err != nil {
 			return err
 		}
