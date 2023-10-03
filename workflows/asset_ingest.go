@@ -56,6 +56,14 @@ func AssetIngest(ctx workflow.Context, params AssetIngestParams) (*AssetIngestRe
 
 	switch metadata.JobProperty.OrderForm {
 	case "Rawmaterial":
+		_, err = wfutils.MoveToFolder(ctx,
+			params.XMLPath,
+			filepath.Join(filepath.Dir(params.XMLPath), "processed"),
+		)
+		if err != nil {
+			return nil, err
+		}
+
 		files := lo.Map(metadata.FileList.Files, func(file ingest.File, _ int) assetFile {
 			return assetFile{
 				Directory: file.FilePath,
