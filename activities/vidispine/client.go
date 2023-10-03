@@ -48,3 +48,17 @@ func WaitForJobCompletion(ctx context.Context, params WaitForJobCompletionParams
 		time.Sleep(time.Second * 30)
 	}
 }
+
+func GetJob(ctx context.Context, params WaitForJobCompletionParams) (*vsapi.JobDocument, error) {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Starting WaitForJobCompletionActivity")
+
+	vsClient := GetClient()
+
+	job, err := vsClient.GetJob(params.JobID)
+	if err != nil {
+		return nil, err
+	}
+
+	return job, nil
+}
