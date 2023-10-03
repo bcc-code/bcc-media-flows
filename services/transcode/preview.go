@@ -22,9 +22,9 @@ type PreviewResult struct {
 var previewWatermarkPath = utils.GetIsilonPrefix() + "/system/graphics/LOGO_BTV_Preview_960-540.mov"
 
 func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*PreviewResult, error) {
-	encoder := os.Getenv("ENCODER")
+	encoder := os.Getenv("H264_ENCODER")
 	if encoder == "" {
-		encoder = "hevc"
+		encoder = "libx264"
 	}
 
 	info, err := ffmpeg.ProbeFile(input.FilePath)
