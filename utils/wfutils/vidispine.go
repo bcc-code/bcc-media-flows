@@ -11,9 +11,9 @@ func WaitForVidispineJob(ctx workflow.Context, jobID string) error {
 	options := workflows.GetDefaultActivityOptions()
 	options.RetryPolicy = &temporal.RetryPolicy{
 		MaximumAttempts:        240,
-		BackoffCoefficient:     1.0,
+		BackoffCoefficient:     1.5,
 		InitialInterval:        30,
-		MaximumInterval:        30,
+		MaximumInterval:        300,
 		NonRetryableErrorTypes: []string{"JOB_FAILED"},
 	}
 	ctx = workflow.WithActivityOptions(ctx, options)
