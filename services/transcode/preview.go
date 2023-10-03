@@ -42,7 +42,7 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 		}
 	}
 
-	filename := filepath.Base(input.FilePath)
+	filename := filepath.Base(input.FilePath)[:len(filepath.Base(input.FilePath))-len(filepath.Ext(input.FilePath))]
 	if hasVideo {
 		filename += "_lowres.mp4"
 	} else if hasAudio {
