@@ -1,33 +1,25 @@
 package wfutils
 
 import (
-	"fmt"
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
-	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
+	"github.com/bcc-code/bccm-flows/workflows"
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
-	"time"
 )
 
 func WaitForVidispineJob(ctx workflow.Context, jobID string) error {
-	for {
-		var job vsapi.JobDocument
-		err := workflow.ExecuteActivity(ctx, vsactivity.GetJob, vsactivity.WaitForJobCompletionParams{
-			JobID: jobID,
-		}).Get(ctx, &job)
-		if err != nil {
-			return err
-		}
-		if job.Status == "FINISHED" {
-			return nil
-		}
-		if job.Status != "STARTED" && job.Status != "READY" && job.Status != "WAITING" {
-			return fmt.Errorf("job failed with status: %s", job.Status)
-		}
-		err = workflow.Sleep(ctx, time.Second*30)
-		if err != nil {
-			return err
-		}
+	options := workflows.GetDefaultActivityOptions()
+	options.RetryPolicy = &temporal.RetryPolicy{
+		MaximumAttempts:        240,
+		BackoffCoefficient:     1.0,
+		InitialInterval:        30,
+		MaximumInterval:        30,
+		NonRetryableErrorTypes: []string{"JOB_FAILED"},
 	}
+	ctx = workflow.WithActivityOptions(ctx, options)
+	return workflow.ExecuteActivity(ctx, vsactivity.JobCompleteOrErr, vsactivity.WaitForJobCompletionParams{
+		JobID: jobID,
+	}).Get(ctx, nil)
 }
 
 func SetVidispineMeta(ctx workflow.Context, assetID, key, value string) error {

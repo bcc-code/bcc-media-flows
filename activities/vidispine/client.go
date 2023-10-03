@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/davecgh/go-spew/spew"
 	"go.temporal.io/sdk/activity"
+	"go.temporal.io/sdk/temporal"
 	"os"
 	"time"
 
@@ -49,7 +50,7 @@ func WaitForJobCompletion(ctx context.Context, params WaitForJobCompletionParams
 	}
 }
 
-func GetJob(ctx context.Context, params WaitForJobCompletionParams) (*vsapi.JobDocument, error) {
+func JobCompleteOrErr(ctx context.Context, params WaitForJobCompletionParams) (bool, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting WaitForJobCompletionActivity")
 
@@ -57,8 +58,14 @@ func GetJob(ctx context.Context, params WaitForJobCompletionParams) (*vsapi.JobD
 
 	job, err := vsClient.GetJob(params.JobID)
 	if err != nil {
-		return nil, err
+		return false, temporal.NewNonRetryableApplicationError("couldn't complete job", "JOB_FAILED", err)
+	}
+	if job.Status == "FINISHED" {
+		return true, nil
+	}
+	if job.Status != "STARTED" && job.Status != "READY" && job.Status != "WAITING" {
+		return false, temporal.NewNonRetryableApplicationError("couldn't complete job", "JOB_FAILED", fmt.Errorf("job failed with status: %s", job.Status), job)
 	}
 
-	return job, nil
+	return false, fmt.Errorf("job not finished yet")
 }
