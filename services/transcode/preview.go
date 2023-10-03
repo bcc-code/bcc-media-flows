@@ -24,7 +24,7 @@ var previewWatermarkPath = utils.GetIsilonPrefix() + "/system/graphics/LOGO_BTV_
 func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*PreviewResult, error) {
 	encoder := os.Getenv("ENCODER")
 	if encoder == "" {
-		encoder = "hevc"
+		encoder = "libx264"
 	}
 
 	info, err := ffmpeg.ProbeFile(input.FilePath)

@@ -12,7 +12,7 @@ type ImportFileAsShapeParams struct {
 	ShapeTag string
 }
 
-func ImportFileAsShapeActivity(ctx context.Context, params *ImportFileAsShapeParams) error {
+func ImportFileAsShapeActivity(ctx context.Context, params *ImportFileAsShapeParams) (*JobResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting ImportFileAsShapeActivity")
 
@@ -20,11 +20,13 @@ func ImportFileAsShapeActivity(ctx context.Context, params *ImportFileAsShapePar
 
 	fileID, err := vsClient.RegisterFile(params.FilePath, vsapi.FileStateClosed)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_, err = vsClient.AddShapeToItem(params.ShapeTag, params.AssetID, fileID)
-	return err
+	res, err := vsClient.AddShapeToItem(params.ShapeTag, params.AssetID, fileID)
+	return &JobResult{
+		JobID: res,
+	}, err
 }
 
 type ImportSubtitleAsSidecarParams struct {

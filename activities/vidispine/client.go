@@ -3,6 +3,7 @@ package vidispine
 import (
 	"context"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"go.temporal.io/sdk/activity"
 	"os"
 	"time"
@@ -36,7 +37,8 @@ func WaitForJobCompletion(ctx context.Context, params WaitForJobCompletionParams
 		if job.Status == "FINISHED" {
 			return nil
 		}
-		if job.Status != "STARTED" && job.Status != "READY" {
+		if job.Status != "STARTED" && job.Status != "READY" && job.Status != "WAITING" {
+			spew.Dump(job)
 			return fmt.Errorf("job failed with status: %s", job.Status)
 		}
 		activity.RecordHeartbeat(ctx, job)

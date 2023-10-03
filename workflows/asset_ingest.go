@@ -115,7 +115,7 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 
 	var assetAnalyzeTasks = map[string]workflow.Future{}
 
-	var vidispineJobIDs []string
+	var vidispineJobIDs = map[string]string{}
 
 	for _, file := range files {
 		f, found := lo.Find(params.Files, func(f assetFile) bool {
@@ -141,7 +141,7 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 		if err != nil {
 			return err
 		}
-		vidispineJobIDs = append(vidispineJobIDs, job.JobID)
+		vidispineJobIDs[result.AssetID] = job.JobID
 
 		assetAnalyzeTasks[result.AssetID] = workflow.ExecuteActivity(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
 			FilePath: file,
@@ -160,15 +160,6 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 		if err != nil {
 			return err
 		}
-		// Only create thumbnails if the file has video
-		if result.HasVideo {
-			err = workflow.ExecuteActivity(ctx, vsactivity.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
-				AssetID: id,
-			}).Get(ctx, nil)
-			if err != nil {
-				return err
-			}
-		}
 
 		err = wfutils.SetVidispineMeta(ctx, id, vscommon.FieldUploadedBy.Value, strings.Join(params.Job.SenderEmails, ", "))
 		if err != nil {
@@ -179,12 +170,20 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 		if err != nil {
 			return err
 		}
-	}
 
-	for _, id := range vidispineJobIDs {
-		err = wfutils.WaitForVidispineJob(ctx, id)
+		// need to wait for vidispine to import the file before we can create thumbnails
+		err = wfutils.WaitForVidispineJob(ctx, vidispineJobIDs[id])
 		if err != nil {
 			return err
+		}
+		// Only create thumbnails if the file has video
+		if result.HasVideo {
+			err = workflow.ExecuteActivity(ctx, vsactivity.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
+				AssetID: id,
+			}).Get(ctx, nil)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
