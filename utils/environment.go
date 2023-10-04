@@ -30,6 +30,10 @@ func GetTranscodeQueue() string {
 	return common.QueueTranscode
 }
 
+func GetAudioQueue() string {
+	return common.QueueAudio
+}
+
 var isilonPrefix = os.Getenv("ISILON_PREFIX")
 
 func GetIsilonPrefix() string {
