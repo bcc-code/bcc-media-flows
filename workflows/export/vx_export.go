@@ -9,7 +9,6 @@ import (
 	avidispine "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/services/vidispine"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
-	"github.com/bcc-code/bccm-flows/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -62,11 +61,11 @@ func formatSecondsToTimestamp(seconds float64) string {
 	return fmt.Sprintf("%02d:%02d:%02d:00", hours, minutes, secondsInt)
 }
 
-func VXExport(ctx workflow.Context, params VXExportParams) ([]workflows.ResultOrError[VXExportResult], error) {
+func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrError[VXExportResult], error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting VXExport")
 
-	options := workflows.GetDefaultActivityOptions()
+	options := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	var destinations []*AssetExportDestination
@@ -99,7 +98,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]workflows.ResultOr
 		return nil, err
 	}
 
-	ctx = workflow.WithChildOptions(ctx, workflows.GetDefaultWorkflowOptions())
+	ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
 
 	var mergeResult MergeExportDataResult
 	err = workflow.ExecuteChildWorkflow(ctx, MergeExportData, MergeExportDataParams{
@@ -125,7 +124,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]workflows.ResultOr
 			return nil, fmt.Errorf("destination not implemented: %s", dest)
 		}
 
-		ctx = workflow.WithChildOptions(ctx, workflows.GetDefaultWorkflowOptions())
+		ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
 		future := workflow.ExecuteChildWorkflow(ctx, w, VXExportChildWorklowParams{
 			ParentParams: params,
 			ExportData:   *data,
@@ -139,11 +138,11 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]workflows.ResultOr
 		resultFutures = append(resultFutures, future)
 	}
 
-	results := []workflows.ResultOrError[VXExportResult]{}
+	results := []wfutils.ResultOrError[VXExportResult]{}
 	for _, future := range resultFutures {
 		var result *VXExportResult
 		err = future.Get(ctx, &result)
-		results = append(results, workflows.ResultOrError[VXExportResult]{
+		results = append(results, wfutils.ResultOrError[VXExportResult]{
 			Result: result,
 			Error:  err,
 		})

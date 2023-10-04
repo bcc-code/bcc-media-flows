@@ -8,7 +8,6 @@ import (
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
-	"github.com/bcc-code/bccm-flows/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -16,7 +15,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorklowParams) 
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToPlayout")
 
-	options := workflows.GetDefaultActivityOptions()
+	options := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	xdcamOutputDir := filepath.Join(params.TempDir, "xdcam_output")

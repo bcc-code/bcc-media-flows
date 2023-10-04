@@ -2,13 +2,12 @@ package wfutils
 
 import (
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
-	"github.com/bcc-code/bccm-flows/workflows"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
 func WaitForVidispineJob(ctx workflow.Context, jobID string) error {
-	options := workflows.GetDefaultActivityOptions()
+	options := GetDefaultActivityOptions()
 	options.RetryPolicy = &temporal.RetryPolicy{
 		MaximumAttempts:        240,
 		BackoffCoefficient:     1.5,

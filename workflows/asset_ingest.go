@@ -27,13 +27,11 @@ type assetFile struct {
 	FileName  string
 }
 
-const fcWorkflowRcloneRoot = "dmz:dmzshare/workflow"
-
 func AssetIngest(ctx workflow.Context, params AssetIngestParams) (*AssetIngestResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting AssetIngest")
 
-	options := GetDefaultActivityOptions()
+	options := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	metadata, err := wfutils.UnmarshalXMLFile[ingest.Metadata](ctx, params.XMLPath)
@@ -46,14 +44,6 @@ func AssetIngest(ctx workflow.Context, params AssetIngestParams) (*AssetIngestRe
 		SenderEmails: strings.Split(metadata.JobProperty.SenderEmail, ","),
 	}
 
-	var directories []string
-	for _, file := range metadata.FileList.Files {
-		p := file.FilePath
-		if !lo.Contains(directories, p) {
-			directories = append(directories, p)
-		}
-	}
-
 	switch metadata.JobProperty.OrderForm {
 	case "Rawmaterial":
 		_, err = wfutils.MoveToFolder(ctx,
@@ -64,16 +54,15 @@ func AssetIngest(ctx workflow.Context, params AssetIngestParams) (*AssetIngestRe
 			return nil, err
 		}
 
-		files := lo.Map(metadata.FileList.Files, func(file ingest.File, _ int) assetFile {
-			return assetFile{
-				Directory: file.FilePath,
-				FileName:  file.FileName,
+		files := lo.Map(metadata.FileList.Files, func(file ingest.File, _ int) utils.Path {
+			return utils.Path{
+				Drive: utils.DMZShareDrive,
+				Path:  filepath.Join("workflow", file.FilePath, file.FileName),
 			}
 		})
 		err = assetIngestRawMaterial(ctx, AssetIngestRawMaterialParams{
-			Job:         job,
-			Files:       files,
-			Directories: directories,
+			Job:   job,
+			Files: files,
 		})
 	}
 
@@ -81,35 +70,36 @@ func AssetIngest(ctx workflow.Context, params AssetIngestParams) (*AssetIngestRe
 }
 
 type AssetIngestRawMaterialParams struct {
-	Job         common.IngestJob
-	Directories []string
-	Files       []assetFile
+	Job   common.IngestJob
+	Files []utils.Path
 }
 
 func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialParams) error {
-	options := GetDefaultActivityOptions()
+	options := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	outputFolder, err := wfutils.GetWorkflowRawOutputFolder(ctx)
 	if err != nil {
 		return err
 	}
+	outputPath, err := utils.ParsePath(outputFolder)
+	if err != nil {
+		return err
+	}
 
-	var fileByFilename = map[string]assetFile{}
+	var fileByFilename = map[string]utils.Path{}
 	for _, f := range params.Files {
-		path := f.Directory
-		fileByFilename[f.FileName] = f
-		if !utils.ValidRawFilename(f.FileName) {
-			return fmt.Errorf("invalid filename: %s", path)
+		fileName := filepath.Base(f.FileName())
+		fileByFilename[fileName] = f
+		if !utils.ValidRawFilename(fileName) {
+			return fmt.Errorf("invalid filename: %s, %s", f.Drive, f.Path)
 		}
 	}
 
-	for _, d := range params.Directories {
-		err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-			Source: filepath.Join(fcWorkflowRcloneRoot, d),
-			Destination: filepath.Join(
-				strings.Replace(outputFolder, utils.GetIsilonPrefix(), "isilon:isilon", 1),
-			),
+	for _, f := range params.Files {
+		err = workflow.ExecuteActivity(ctx, activities.RcloneMoveFileActivity, activities.RcloneMoveFileInput{
+			Source:      f,
+			Destination: outputPath.Append(filepath.Base(f.Path)),
 		}).Get(ctx, nil)
 		if err != nil {
 			return err
@@ -126,15 +116,15 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 	var vidispineJobIDs = map[string]string{}
 
 	for _, file := range files {
-		f, found := lo.Find(params.Files, func(f assetFile) bool {
-			return f.FileName == filepath.Base(file)
+		f, found := lo.Find(params.Files, func(f utils.Path) bool {
+			return f.FileName() == filepath.Base(file)
 		})
 		if !found {
 			return fmt.Errorf("file not found: %s", file)
 		}
 		var result vsactivity.CreatePlaceholderResult
 		err = workflow.ExecuteActivity(ctx, vsactivity.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
-			Title: f.FileName,
+			Title: f.FileName(),
 		}).Get(ctx, &result)
 		if err != nil {
 			return err
