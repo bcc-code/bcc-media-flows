@@ -91,6 +91,22 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorklowParams) (*VX
 	}
 
 	ingestData.SmilFile = "aws.smil"
+	if chapterDataWF != nil {
+		ingestData.ChaptersFile = "chapters.json"
+		var chaptersData []asset.Chapter
+		err = chapterDataWF.Get(ctx, &chaptersData)
+		if err != nil {
+			return nil, err
+		}
+		marshalled, err := json.Marshal(chaptersData)
+		if err != nil {
+			return nil, err
+		}
+		err = wfutils.WriteFile(ctx, filepath.Join(params.OutputDir, "chapters.json"), marshalled)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	marshalled, err := json.Marshal(ingestData)
 	if err != nil {
@@ -100,23 +116,6 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorklowParams) (*VX
 	err = wfutils.WriteFile(ctx, filepath.Join(params.OutputDir, "ingest.json"), marshalled)
 	if err != nil {
 		return nil, err
-	}
-
-	if chapterDataWF != nil {
-		ingestData.ChaptersFile = "chapters.json"
-		var chaptersData []asset.Chapter
-		err = chapterDataWF.Get(ctx, &chaptersData)
-		if err != nil {
-			return nil, err
-		}
-		marshalled, err = json.Marshal(chaptersData)
-		if err != nil {
-			return nil, err
-		}
-		err = wfutils.WriteFile(ctx, filepath.Join(params.OutputDir, "chapters.json"), marshalled)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	ingestFolder := params.ExportData.Title + "_" + workflow.GetInfo(ctx).OriginalRunID

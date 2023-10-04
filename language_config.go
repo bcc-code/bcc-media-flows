@@ -413,7 +413,7 @@ var languages = LanguageList{
 		LanguageNameNative: "தமிழ்",
 		LanguageNameSystem: "Tamil",
 		ISO6391:            "tam",
-		ISO6392TwoLetter:   "",
+		ISO6392TwoLetter:   "ta",
 		ReaperChannel:      23,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    -1,

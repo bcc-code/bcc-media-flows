@@ -115,7 +115,7 @@ func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) 
 	if channels == 0 {
 		streamString += fmt.Sprintf("anullsrc=channel_layout=stereo[%s]", tag)
 	} else if channels == 2 {
-		streamString += fmt.Sprintf("amerge[%s]", tag)
+		streamString += fmt.Sprintf("amerge=inputs=2[%s]", tag)
 	} else {
 		streamString += fmt.Sprintf("amerge=inputs=%d[%s]", channels, tag)
 	}
@@ -172,7 +172,7 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 	var files []string
 	// for each file, extract the specified range and save the result to a file.
 	for index, item := range input.Items {
-		file := filepath.Join(input.WorkDir, fmt.Sprintf("%d.srt", index))
+		file := filepath.Join(input.WorkDir, fmt.Sprintf("%s-%d.srt", input.Title, index))
 		path := utils.IsilonPathFix(item.Path)
 		cmd := exec.Command("ffmpeg", "-i", path, "-ss", fmt.Sprintf("%f", item.Start), "-to", fmt.Sprintf("%f", item.End), "-y", file)
 
@@ -192,7 +192,7 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 		content += fmt.Sprintf("file '%s'\n", f)
 	}
 
-	subtitlesFile := filepath.Join(input.WorkDir, "subtitles.txt")
+	subtitlesFile := filepath.Join(input.WorkDir, input.Title+"-subtitles.txt")
 
 	err := os.WriteFile(subtitlesFile, []byte(content), os.ModePerm)
 	if err != nil {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"net/http"
 	"os"
@@ -158,6 +159,9 @@ func triggerHandler(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+//go:embed trigger.html
+var html string
+
 func main() {
 	r := gin.Default()
 
@@ -165,6 +169,10 @@ func main() {
 	r.GET("/trigger/:job", triggerHandler)
 
 	r.POST("/watchers", watchersHandler)
+
+	r.GET("/trigger", func(ctx *gin.Context) {
+		ctx.Writer.WriteString(html)
+	})
 
 	port := os.Getenv("PORT")
 	if port == "" {
