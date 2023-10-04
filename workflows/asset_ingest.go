@@ -199,5 +199,19 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 		}
 	}
 
+	wfFutures = []workflow.ChildWorkflowFuture{}
+	for _, id := range assetIDs {
+		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, TranscribeVX, TranscribeVXInput{
+			VXID: id,
+		}))
+	}
+
+	for _, f := range wfFutures {
+		err = f.Get(ctx, nil)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
