@@ -121,6 +121,8 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]workflows.ResultOr
 			w = VXExportToVOD
 		case AssetExportDestinationPlayout:
 			w = VXExportToPlayout
+		case AssetExportDestinationBMM:
+			w = VXExportToBMM
 		default:
 			return nil, fmt.Errorf("destination not implemented: %s", dest)
 		}

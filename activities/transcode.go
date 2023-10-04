@@ -163,11 +163,18 @@ func TranscodeToAudioAac(ctx context.Context, input common.AudioInput) (*common.
 	stopChan, progressCallback := registerProgressCallback(ctx)
 	defer close(stopChan)
 
-	result, err := transcode.AudioAac(input, progressCallback)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
+	return transcode.AudioAac(input, progressCallback)
+}
+
+func TranscodeToAudioMP3(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeToAudioMP3")
+	log.Info("Starting TranscodeToAudioMP3Activity")
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	return transcode.AudioMP3(input, progressCallback)
 }
 
 func TranscodeMux(ctx context.Context, input common.MuxInput) (*common.MuxResult, error) {
