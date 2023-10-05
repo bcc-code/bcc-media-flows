@@ -1,16 +1,18 @@
 package activities
 
 import (
-	"github.com/bcc-code/bccm-flows/utils"
-	"github.com/samber/lo"
 	"reflect"
 	"runtime"
 	"strings"
+
+	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/samber/lo"
 )
 
 func GetAudioTranscodeActivities() []any {
 	return []any{
 		TranscodeToAudioAac,
+		TranscodeToAudioWav,
 		TranscodeMergeAudio,
 		AnalyzeEBUR128Activity,
 		AdjustAudioLevelActivity,
