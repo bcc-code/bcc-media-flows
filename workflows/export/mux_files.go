@@ -58,7 +58,7 @@ func MuxFiles(ctx workflow.Context, params MuxFilesParams) (*MuxFilesResult, err
 				key := lang.ISO6391
 				fileName := base[:len(base)-len(filepath.Ext(base))] + "-" + key
 				var result common.MuxResult
-				err := wfutils.ExecuteWithQueue(ctx, utils.GetTranscodeQueue(), activities.TranscodeMux, common.MuxInput{
+				err := wfutils.ExecuteWithQueue(ctx, activities.TranscodeMux, common.MuxInput{
 					FileName:          fileName,
 					DestinationPath:   params.OutputPath,
 					VideoFilePath:     params.VideoFiles[q],
