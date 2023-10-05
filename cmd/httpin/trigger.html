@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Export asset</title>
+</head>
+<body>
+<form id="requestForm" action="https://temporal-trigger.lan.bcc.media/trigger/ExportAssetVX" method="get">
+    <label for="vxID">vxID:</label>
+    <input type="text" id="vxID" name="vxID" required><br>
+
+    <label for="watermarkPath">watermarkPath:</label>
+    <input type="text" id="watermarkPath" name="watermarkPath" required value="/mnt/isilon/system/assets/BTV_LOGO_WATERMARK_BUG_GFX_1080.png"><br>
+
+    <label for="withFiles">withFiles (true/false):</label>
+    <input type="text" id="withFiles" name="withFiles" required value="true"><br>
+
+    <label for="withChapters">withChapters (true/false):</label>
+    <input type="text" id="withChapters" name="withChapters" required value="true"><br>
+
+    <label for="destinations">destinations:</label>
+    <input type="text" id="destinations" name="destinations" required value="vod"><br>
+
+    <input type="submit" value="Start export">
+</form>
+</body>
+</html>

@@ -177,8 +177,8 @@ func (s *VidispineService) getEmbeddedAudio(clip *Clip, languagesToExport []stri
 	}
 
 	shape := shapes.GetShape("original")
-	if len(shape.AudioComponent) != 16 && len(shape.AudioComponent) > 1 {
-		return clip, fmt.Errorf("found %d audio components, expected 1 or 16", len(shape.AudioComponent))
+	if len(shape.AudioComponent) != 16 && len(shape.AudioComponent) > 2 {
+		return clip, fmt.Errorf("found %d audio components, expected 1, 2 or 16", len(shape.AudioComponent))
 	}
 
 	if len(shape.AudioComponent) == 0 {
@@ -205,6 +205,25 @@ func (s *VidispineService) getEmbeddedAudio(clip *Clip, languagesToExport []stri
 		}
 
 		return clip, nil
+	}
+
+	if len(shape.AudioComponent) == 2 {
+		var streams []int
+		for _, c := range shape.AudioComponent {
+			streams = append(streams, c.EssenceStreamID)
+			if c.ChannelCount != 1 {
+				return clip, fmt.Errorf("found %d channels in audio component, expected 1", c.ChannelCount)
+			}
+		}
+
+		for _, lang := range languagesToExport {
+
+			clip.AudioFiles[lang] = &AudioFile{
+				VXID:    clip.VXID,
+				File:    shape.GetPath(),
+				Streams: streams,
+			}
+		}
 	}
 
 	for _, lang := range languagesToExport {

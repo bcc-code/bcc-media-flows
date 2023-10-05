@@ -233,7 +233,6 @@ func PlayoutMux(input common.PlayoutMuxInput, progressCallback ffmpeg.ProgressCa
 	if err != nil {
 		return nil, err
 	}
-	print(strings.Join(params, "\n"))
 	_, err = ffmpeg.Do(params, info, progressCallback)
 	if err != nil {
 		log.Default().Println("mux failed", err)

@@ -25,6 +25,9 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorklowParams) 
 		return nil, err
 	}
 
+	options.TaskQueue = utils.GetTranscodeQueue()
+	ctx = workflow.WithActivityOptions(ctx, options)
+
 	// Transcode video using playout encoding
 	var videoResult common.VideoResult
 	err = workflow.ExecuteActivity(ctx, activities.TranscodeToXDCAMActivity, activities.EncodeParams{
@@ -47,14 +50,16 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorklowParams) 
 		OutputDir:         params.OutputDir,
 		FallbackLanguage:  "nor",
 	}).Get(ctx, &muxResult)
-
 	if err != nil {
 		return nil, err
 	}
 
+	options.TaskQueue = utils.GetWorkerQueue()
+	ctx = workflow.WithActivityOptions(ctx, options)
+
 	// Rclone to playout
-	source := strings.Replace(muxResult.Path, utils.GetIsilonPrefix()+"/", "isilon:isilon/", 1)
-	destination := "playout:/dropbox" + filepath.Base(muxResult.Path)
+	source := strings.Replace(params.OutputDir, utils.GetIsilonPrefix()+"/", "isilon:isilon/", 1)
+	destination := "playout:/dropbox"
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopy, activities.RcloneCopyInput{
 		Source:      source,
 		Destination: destination,
