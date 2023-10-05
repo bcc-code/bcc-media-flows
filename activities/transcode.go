@@ -155,17 +155,6 @@ func TranscodeToVideoH264(ctx context.Context, input common.VideoInput) (*common
 	return result, nil
 }
 
-func TranscodeToAudioAac(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
-	log := activity.GetLogger(ctx)
-	activity.RecordHeartbeat(ctx, "TranscodeToAudioAac")
-	log.Info("Starting TranscodeToAudioAacActivity")
-
-	stopChan, progressCallback := registerProgressCallback(ctx)
-	defer close(stopChan)
-
-	return transcode.AudioAac(input, progressCallback)
-}
-
 func TranscodeToAudioMP3(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeToAudioMP3")
