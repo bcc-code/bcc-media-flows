@@ -77,6 +77,20 @@ func triggerHandler(ctx *gin.Context) {
 			Language: language,
 			VXID:     vxID,
 		})
+	case "TranscribeFile":
+		language := getParamFromCtx(ctx, "language")
+		destinationPath := getParamFromCtx(ctx, "destinationPath")
+		file := getParamFromCtx(ctx, "file")
+
+		if language == "" || destinationPath == "" || file == "" {
+			ctx.Status(http.StatusBadRequest)
+			return
+		}
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.TranscribeFile, workflows.TranscribeFileInput{
+			Language:        language,
+			DestinationPath: getParamFromCtx(ctx, "destinationPath"),
+			File:            getParamFromCtx(ctx, "file"),
+		})
 	case "TranscodePreviewVX":
 		if vxID == "" {
 			ctx.Status(http.StatusBadRequest)

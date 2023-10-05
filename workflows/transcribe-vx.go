@@ -2,10 +2,12 @@ package workflows
 
 import (
 	"fmt"
-	"github.com/bcc-code/bccm-flows/activities"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"os"
 	"time"
+
+	"github.com/bcc-code/bccm-flows/activities"
+	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/utils/wfutils"
 
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/davecgh/go-spew/spew"
@@ -54,6 +56,17 @@ func TranscribeVX(
 		return err
 	}
 
+	tempFolder, err := wfutils.GetWorkflowTempFolder(ctx)
+	if err != nil {
+		return err
+	}
+
+	wavFile := common.AudioResult{}
+	workflow.ExecuteActivity(ctx, activities.TranscodeToAudioWav, common.AudioInput{
+		Path:            shapes.FilePath,
+		DestinationPath: tempFolder,
+	}).Get(ctx, &wavFile)
+
 	destinationPath, err := wfutils.GetWorkflowOutputFolder(ctx)
 	if err != nil {
 		return err
@@ -62,7 +75,7 @@ func TranscribeVX(
 	transcriptionJob := &activities.TranscribeResponse{}
 	err = workflow.ExecuteActivity(ctx, activities.Transcribe, activities.TranscribeParams{
 		Language:        params.Language,
-		File:            shapes.FilePath,
+		File:            wavFile.OutputPath,
 		DestinationPath: destinationPath,
 	}).Get(ctx, transcriptionJob)
 

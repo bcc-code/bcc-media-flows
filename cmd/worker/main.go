@@ -47,6 +47,7 @@ var transcodeActivities = []any{
 	activities.TranscodeMergeSubtitles,
 	activities.TranscodeToVideoH264,
 	activities.TranscodeToAudioAac,
+	activities.TranscodeToAudioWav,
 	activities.TranscodeMux,
 	activities.TranscodePlayoutMux,
 	activities.ExecuteFFmpeg,
