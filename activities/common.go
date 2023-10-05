@@ -28,6 +28,9 @@ func newHeartBeater[T any](ctx context.Context) (chan struct{}, func(T)) {
 			select {
 			case <-timer.C:
 				activity.RecordHeartbeat(ctx, info)
+				if ctx.Err() != nil {
+					return
+				}
 			case <-stopChan:
 				return
 			}

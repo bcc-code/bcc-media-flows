@@ -14,7 +14,6 @@ import (
 	"github.com/bcc-code/bccm-flows/common/smil"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
-	"github.com/bcc-code/bccm-flows/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -22,7 +21,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorklowParams) (*VX
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToVOD")
 
-	options := workflows.GetDefaultActivityOptions()
+	options := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	// We start chapter export and pick the results up later when needed
@@ -43,7 +42,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorklowParams) (*VX
 	var audioFiles map[string]string
 	{
 		var result PrepareFilesResult
-		ctx = workflow.WithChildOptions(ctx, workflows.GetDefaultWorkflowOptions())
+		ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
 		err := workflow.ExecuteChildWorkflow(ctx, PrepareFiles, PrepareFilesParams{
 			OutputPath:    params.TempDir,
 			VideoFile:     params.MergeResult.VideoFile,
@@ -120,7 +119,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorklowParams) (*VX
 
 	ingestFolder := params.ExportData.Title + "_" + workflow.GetInfo(ctx).OriginalRunID
 
-	err = workflow.ExecuteActivity(ctx, activities.RcloneCopy, activities.RcloneCopyInput{
+	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
 		Source:      strings.Replace(params.OutputDir, utils.GetIsilonPrefix()+"/", "isilon:isilon/", 1),
 		Destination: fmt.Sprintf("s3prod:vod-asset-ingest-prod/" + ingestFolder),
 	}).Get(ctx, nil)

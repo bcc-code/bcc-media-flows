@@ -1,6 +1,7 @@
 package wfutils
 
 import (
+	"encoding/xml"
 	"fmt"
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/utils"
@@ -44,10 +45,46 @@ func WriteFile(ctx workflow.Context, file string, data []byte) error {
 	}).Get(ctx, nil)
 }
 
+func ReadFile(ctx workflow.Context, file string) ([]byte, error) {
+	var res []byte
+	err := workflow.ExecuteActivity(ctx, activities.ReadFile, activities.FileInput{
+		Path: file,
+	}).Get(ctx, &res)
+	return res, err
+}
+
+func ListFiles(ctx workflow.Context, path string) ([]string, error) {
+	var res []string
+	err := workflow.ExecuteActivity(ctx, activities.ListFiles, activities.FileInput{
+		Path: path,
+	}).Get(ctx, &res)
+	return res, err
+}
+
+func UnmarshalXMLFile[T any](ctx workflow.Context, file string) (*T, error) {
+	var r T
+	res, err := ReadFile(ctx, file)
+	if err != nil {
+		return nil, err
+	}
+	err = xml.Unmarshal(res, &r)
+	return &r, err
+}
+
 func DeletePath(ctx workflow.Context, path string) error {
 	return workflow.ExecuteActivity(ctx, activities.DeletePath, activities.FileInput{
 		Path: path,
 	}).Get(ctx, nil)
+}
+
+func GetWorkflowRawOutputFolder(ctx workflow.Context) (string, error) {
+	info := workflow.GetInfo(ctx)
+
+	date := time.Now()
+
+	path := fmt.Sprintf("%s/%04d/%02d/%02d/%s", utils.GetIsilonPrefix()+"/Production/raw", date.Year(), date.Month(), date.Day(), info.OriginalRunID)
+
+	return path, CreateFolder(ctx, path)
 }
 
 func GetWorkflowOutputFolder(ctx workflow.Context) (string, error) {
