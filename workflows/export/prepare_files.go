@@ -92,7 +92,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 		}
 		for _, key := range keys {
 			input := qualities[key]
-			videoTasks[key] = workflow.ExecuteActivity(ctx, activities.TranscodeToVideoH264, input)
+			videoTasks[key] = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToVideoH264, input)
 		}
 	}
 
@@ -104,7 +104,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 		}
 		for _, lang := range keys {
 			path := params.AudioFiles[lang]
-			audioTasks[lang] = workflow.ExecuteActivity(ctx, activities.TranscodeToAudioAac, common.AudioInput{
+			audioTasks[lang] = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToAudioAac, common.AudioInput{
 				Path:            path,
 				Bitrate:         "190k",
 				DestinationPath: tempFolder,
