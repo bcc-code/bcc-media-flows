@@ -31,6 +31,9 @@ func GetTranscodeQueue() string {
 }
 
 func GetAudioQueue() string {
+	if queue == common.QueueDebug {
+		return common.QueueDebug
+	}
 	return common.QueueAudio
 }
 
