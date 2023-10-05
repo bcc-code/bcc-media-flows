@@ -10,7 +10,7 @@ jobs:
       contents: write
     strategy:
       matrix:
-        goosarch: [ linux/amd64 ]
+        goosarch: [ linux/amd64, darwin/amd64 ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4

@@ -32,7 +32,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 	options := wfutils.GetDefaultActivityOptions()
 	options.TaskQueue = utils.GetTranscodeQueue()
 	ctx = workflow.WithActivityOptions(ctx, options)
-	videoTask := workflow.ExecuteActivity(ctx, activities.TranscodeMergeVideo, mergeInput)
+	videoTask := wfutils.ExecuteWithQueue(ctx, activities.TranscodeMergeVideo, mergeInput)
 
 	var audioTasks = map[string]workflow.Future{}
 	{
@@ -42,7 +42,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 		}
 		for _, lang := range keys {
 			mi := audioMergeInputs[lang]
-			audioTasks[lang] = workflow.ExecuteActivity(ctx, activities.TranscodeMergeAudio, *mi)
+			audioTasks[lang] = wfutils.ExecuteWithQueue(ctx, activities.TranscodeMergeAudio, *mi)
 		}
 	}
 
@@ -54,7 +54,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 		}
 		for _, lang := range keys {
 			mi := subtitleMergeInputs[lang]
-			subtitleTasks[lang] = workflow.ExecuteActivity(ctx, activities.TranscodeMergeSubtitles, *mi)
+			subtitleTasks[lang] = wfutils.ExecuteWithQueue(ctx, activities.TranscodeMergeSubtitles, *mi)
 		}
 
 	}

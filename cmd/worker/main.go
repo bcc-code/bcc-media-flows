@@ -43,23 +43,9 @@ var vidispineActivities = []any{
 	activities.GetSubtransIDActivity,
 }
 
-var transcodeActivities = []any{
-	activities.TranscodePreview,
-	activities.TranscodeToProResActivity,
-	activities.TranscodeToH264Activity,
-	activities.TranscodeToXDCAMActivity,
-	activities.TranscodeMergeAudio,
-	activities.TranscodeMergeVideo,
-	activities.TranscodeMergeSubtitles,
-	activities.TranscodeToVideoH264,
-	activities.TranscodeToAudioAac,
-	activities.TranscodeMux,
-	activities.TranscodePlayoutMux,
-	activities.ExecuteFFmpeg,
-	activities.AnalyzeEBUR128Activity,
-	activities.AdjustAudioLevelActivity,
-	activities.AnalyzeFile,
-}
+var transcodeActivities = activities.GetVideoTranscodeActivities()
+
+var audioTranscodeActivities = activities.GetAudioTranscodeActivities()
 
 var workerWorkflows = []any{
 	workflows.TranscodePreviewVX,
@@ -115,9 +101,13 @@ func main() {
 		MaxConcurrentActivityExecutionSize: activityCount, // Doesn't make sense to have more than one activity running at a time
 	}
 
-	w := worker.New(c, utils.GetQueue(), workerOptions)
+	registerWorker(c, utils.GetQueue(), workerOptions)
+}
 
-	switch utils.GetQueue() {
+func registerWorker(c client.Client, queue string, options worker.Options) {
+	w := worker.New(c, queue, options)
+
+	switch queue {
 	case common.QueueDebug:
 		w.RegisterActivity(activities.Transcribe)
 		w.RegisterActivity(activities.RcloneCopyDir)
@@ -160,8 +150,13 @@ func main() {
 		for _, a := range transcodeActivities {
 			w.RegisterActivity(a)
 		}
+	case common.QueueAudio:
+		for _, a := range audioTranscodeActivities {
+			w.RegisterActivity(a)
+		}
 	}
 
-	err = w.Run(worker.InterruptCh())
+	err := w.Run(worker.InterruptCh())
+
 	log.Printf("Worker finished: %v", err)
 }
