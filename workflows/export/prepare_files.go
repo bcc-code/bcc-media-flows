@@ -5,7 +5,6 @@ import (
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
-	"github.com/bcc-code/bccm-flows/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -25,7 +24,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting PrepareFiles")
 
-	options := workflows.GetDefaultActivityOptions()
+	options := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	ctx = workflow.WithTaskQueue(ctx, utils.GetTranscodeQueue())
@@ -92,7 +91,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 		}
 		for _, key := range keys {
 			input := qualities[key]
-			videoTasks[key] = workflow.ExecuteActivity(ctx, activities.TranscodeToVideoH264, input)
+			videoTasks[key] = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToVideoH264, input)
 		}
 	}
 
@@ -104,7 +103,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 		}
 		for _, lang := range keys {
 			path := params.AudioFiles[lang]
-			audioTasks[lang] = workflow.ExecuteActivity(ctx, activities.TranscodeToAudioAac, common.AudioInput{
+			audioTasks[lang] = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToAudioAac, common.AudioInput{
 				Path:            path,
 				Bitrate:         "190k",
 				DestinationPath: tempFolder,

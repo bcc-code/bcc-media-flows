@@ -1,9 +1,8 @@
 package vsapi
 
 import (
-	"net/url"
-
 	"github.com/samber/lo"
+	"net/url"
 )
 
 func (c *Client) GetShapes(vsID string) (*ShapeResult, error) {
@@ -20,6 +19,7 @@ func (c *Client) GetShapes(vsID string) (*ShapeResult, error) {
 	return resp.Result().(*ShapeResult), nil
 }
 
+// AddShapeToItem creates a job for adding the shape to the item. Returns the job ID.
 func (c *Client) AddShapeToItem(tag, itemID, fileID string) (string, error) {
 	requestURL, _ := url.Parse(c.baseURL)
 	requestURL.Path += "/item/" + url.PathEscape(itemID) + "/shape"
@@ -30,16 +30,18 @@ func (c *Client) AddShapeToItem(tag, itemID, fileID string) (string, error) {
 	requestURL.RawQuery = q.Encode()
 
 	result, err := c.restyClient.R().
+		SetHeader("Accept", "application/json").
+		SetResult(&JobDocument{}).
 		Post(requestURL.String())
 
-	//TODO: make sure to not return until the shape is actually imported
 	if err != nil {
 		return "", err
 	}
 
-	return result.String(), nil
+	return result.Result().(*JobDocument).JobID, nil
 }
 
+// AddSidecarToItem creates a job for adding the sidecar to the item. Returns the job ID.
 func (c *Client) AddSidecarToItem(itemID, filePath, language string) (string, error) {
 	requestURL, _ := url.Parse(c.baseURL)
 	requestURL.Path += "/import/sidecar/" + url.PathEscape(itemID)
@@ -49,13 +51,15 @@ func (c *Client) AddSidecarToItem(itemID, filePath, language string) (string, er
 	requestURL.RawQuery = q.Encode()
 
 	result, err := c.restyClient.R().
+		SetHeader("Accept", "application/json").
+		SetResult(&JobDocument{}).
 		Post(requestURL.String())
 
 	if err != nil {
 		return "", err
 	}
 
-	return result.String(), nil
+	return result.Result().(*JobDocument).JobID, nil
 }
 
 func (sr ShapeResult) GetShape(tag string) *Shape {

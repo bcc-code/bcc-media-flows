@@ -273,7 +273,7 @@ func (s *VidispineService) GetDataForExport(itemVXID string) (*ExportData, error
 	}
 
 	// Check for sequence
-	isSequence := meta.Get(vscommon.FieldSeuenceSize, "0") != "0"
+	isSequence := meta.Get(vscommon.FieldSequenceSize, "0") != "0"
 
 	title := meta.Get(vscommon.FieldTitle, "")
 

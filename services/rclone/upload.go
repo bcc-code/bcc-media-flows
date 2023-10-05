@@ -14,7 +14,7 @@ type copyRequest struct {
 	Destination string `json:"dstFs"`
 }
 
-func Copy(source, destination string) (*JobResponse, error) {
+func CopyDir(source, destination string) (*JobResponse, error) {
 	body, err := json.Marshal(copyRequest{
 		Async:       true,
 		Source:      source,
@@ -25,6 +25,34 @@ func Copy(source, destination string) (*JobResponse, error) {
 	}
 
 	req, err := http.NewRequest("POST", baseUrl+"/sync/copy", bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+
+	return doRequest[JobResponse](req)
+}
+
+type moveRequest struct {
+	Async             bool   `json:"_async"`
+	SourceRemote      string `json:"srcFs"`
+	SourcePath        string `json:"srcRemote"`
+	DestinationRemote string `json:"dstFs"`
+	DestinationPath   string `json:"dstRemote"`
+}
+
+func MoveFile(sourceRemote, sourcePath, destinationRemote, destinationPath string) (*JobResponse, error) {
+	body, err := json.Marshal(moveRequest{
+		Async:             true,
+		SourceRemote:      sourceRemote,
+		SourcePath:        sourcePath,
+		DestinationRemote: destinationRemote,
+		DestinationPath:   destinationPath,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", baseUrl+"/operations/movefile", bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}

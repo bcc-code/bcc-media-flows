@@ -2,6 +2,7 @@ package export
 
 import (
 	"fmt"
+	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"path/filepath"
 	"strings"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/common/smil"
 	"github.com/bcc-code/bccm-flows/utils"
-	"github.com/bcc-code/bccm-flows/workflows"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 )
@@ -43,7 +43,7 @@ func MuxFiles(ctx workflow.Context, params MuxFilesParams) (*MuxFilesResult, err
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting MuxFiles")
 
-	options := workflows.GetDefaultActivityOptions()
+	options := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	ctx = workflow.WithTaskQueue(ctx, utils.GetTranscodeQueue())
@@ -57,7 +57,7 @@ func MuxFiles(ctx workflow.Context, params MuxFilesParams) (*MuxFilesResult, err
 				key := lang.ISO6391
 				fileName := base[:len(base)-len(filepath.Ext(base))] + "-" + key
 				var result common.MuxResult
-				err := workflow.ExecuteActivity(ctx, activities.TranscodeMux, common.MuxInput{
+				err := wfutils.ExecuteWithQueue(ctx, activities.TranscodeMux, common.MuxInput{
 					FileName:          fileName,
 					DestinationPath:   params.OutputPath,
 					VideoFilePath:     params.VideoFiles[q],

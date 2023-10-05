@@ -21,56 +21,60 @@ type Progress struct {
 }
 
 type StreamInfo struct {
+	HasAudio     bool
+	HasVideo     bool
 	TotalFrames  int
 	TotalSeconds float64
 	FrameRate    int
 }
 
 func ProbeResultToInfo(info *FFProbeResult) StreamInfo {
+	streamInfo := StreamInfo{
+		HasAudio: lo.SomeBy(info.Streams, func(i FFProbeStream) bool {
+			return i.CodecType == "audio"
+		}),
+		HasVideo: lo.SomeBy(info.Streams, func(i FFProbeStream) bool {
+			return i.CodecType == "video"
+		}),
+	}
+
 	stream, found := lo.Find(info.Streams, func(i FFProbeStream) bool {
 		return i.CodecType == "video"
 	})
 	if !found {
 		stream = info.Streams[0]
 	}
-
-	var totalFrames int64
-	var totalSeconds float64
 	if info != nil {
-		totalFrames, _ = strconv.ParseInt(stream.NbFrames, 10, 64)
+		frames, _ := strconv.ParseInt(stream.NbFrames, 10, 64)
+		streamInfo.TotalFrames = int(frames)
 		duration := stream.Tags.Duration
 		if duration != "" {
 			layout := "15:04:05.999999999"
 			t, err := time.Parse(layout, duration)
 			if err == nil {
-				totalSeconds = float64(t.Hour()*3600 + t.Minute()*60 + t.Second())
+				streamInfo.TotalSeconds = float64(t.Hour()*3600 + t.Minute()*60 + t.Second())
 			}
 		}
-		if totalSeconds == 0 {
+		if streamInfo.TotalSeconds == 0 {
 			floatSeconds, _ := strconv.ParseFloat(stream.Duration, 64)
 			if floatSeconds != 0 {
-				totalSeconds = floatSeconds
+				streamInfo.TotalSeconds = floatSeconds
 			}
 		}
 	}
 
-	var framerate int
 	if stream.RFrameRate != "" {
 		parts := strings.Split(stream.RFrameRate, "/")
 		if len(parts) == 2 {
 			frames, _ := strconv.ParseFloat(parts[0], 64)
 			seconds, _ := strconv.ParseFloat(parts[1], 64)
 			if seconds != 0 {
-				framerate = int(frames / seconds)
+				streamInfo.FrameRate = int(frames / seconds)
 			}
 		}
 	}
 
-	return StreamInfo{
-		TotalFrames:  int(totalFrames),
-		TotalSeconds: totalSeconds,
-		FrameRate:    framerate,
-	}
+	return streamInfo
 }
 
 func parseProgressCallback(command []string, info StreamInfo, cb func(Progress)) func(string) {
