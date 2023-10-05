@@ -22,6 +22,8 @@ var utilActivities = []any{
 	activities.MoveFile,
 	activities.CreateFolder,
 	activities.WriteFile,
+	activities.ReadFile,
+	activities.ListFiles,
 	activities.DeletePath,
 	activities.StandardizeFileName,
 	activities.GetSubtitlesActivity,
@@ -31,9 +33,13 @@ var vidispineActivities = []any{
 	vidispine.GetFileFromVXActivity,
 	vidispine.ImportFileAsShapeActivity,
 	vidispine.ImportFileAsSidecarActivity,
+	vidispine.CreatePlaceholderActivity,
 	vidispine.SetVXMetadataFieldActivity,
 	vidispine.GetExportDataActivity,
 	vidispine.GetChapterDataActivity,
+	vidispine.CreateThumbnailsActivity,
+	vidispine.WaitForJobCompletion,
+	vidispine.JobCompleteOrErr,
 	activities.GetSubtransIDActivity,
 }
 
@@ -55,6 +61,7 @@ var workerWorkflows = []any{
 	export.PrepareFiles,
 	workflows.ExecuteFFmpeg,
 	workflows.ImportSubtitlesFromSubtrans,
+	workflows.AssetIngest,
 	workflows.NormalizeAudioLevelWorkflow,
 }
 
@@ -103,7 +110,8 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 	switch queue {
 	case common.QueueDebug:
 		w.RegisterActivity(activities.Transcribe)
-		w.RegisterActivity(activities.RcloneCopy)
+		w.RegisterActivity(activities.RcloneCopyDir)
+		w.RegisterActivity(activities.RcloneMoveFileActivity)
 		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {
@@ -123,7 +131,8 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		}
 	case common.QueueWorker:
 		w.RegisterActivity(activities.Transcribe)
-		w.RegisterActivity(activities.RcloneCopy)
+		w.RegisterActivity(activities.RcloneCopyDir)
+		w.RegisterActivity(activities.RcloneMoveFileActivity)
 		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {

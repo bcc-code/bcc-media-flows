@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"
 	"os"
+	"path/filepath"
 	"regexp"
 	"time"
 )
@@ -26,10 +27,23 @@ func watchersHandler(ctx *gin.Context) {
 	var result watcherResult
 	err := ctx.BindJSON(&result)
 	if err != nil {
-		print(err)
+		fmt.Println(err.Error())
+		ctx.String(400, err.Error())
+		return
 	}
 
-	err = doTranscode(ctx, result.Path)
+	xmlPath, err := filepath.Match("/mnt/dmzshare/workflow/xml/*", result.Path)
+	if err != nil {
+		fmt.Println(err.Error())
+		ctx.String(500, err.Error())
+		return
+	}
+	if xmlPath {
+		err = doIngest(ctx, result.Path)
+	} else {
+		err = doTranscode(ctx, result.Path)
+	}
+
 	if err != nil {
 		fmt.Println(err.Error())
 		ctx.String(500, err.Error())
@@ -63,6 +77,23 @@ func doTranscode(ctx context.Context, path string) error {
 	_, err = c.ExecuteWorkflow(ctx, workflowOptions, workflows.WatchFolderTranscode, workflows.WatchFolderTranscodeInput{
 		Path:       path,
 		FolderName: t,
+	})
+	return err
+}
+
+func doIngest(ctx context.Context, path string) error {
+	c, err := getClient()
+	if err != nil {
+		return err
+	}
+
+	workflowOptions := client.StartWorkflowOptions{
+		ID:        uuid.NewString(),
+		TaskQueue: utils.GetWorkerQueue(),
+	}
+
+	_, err = c.ExecuteWorkflow(ctx, workflowOptions, workflows.AssetIngest, workflows.AssetIngestParams{
+		XMLPath: path,
 	})
 	return err
 }

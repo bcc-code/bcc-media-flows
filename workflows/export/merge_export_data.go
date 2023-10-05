@@ -6,7 +6,6 @@ import (
 	"github.com/bcc-code/bccm-flows/services/vidispine"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
-	"github.com/bcc-code/bccm-flows/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -30,7 +29,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 
 	mergeInput, audioMergeInputs, subtitleMergeInputs := exportDataToMergeInputs(data, params.TempDir, params.SubtitlesDir)
 
-	options := workflows.GetDefaultActivityOptions()
+	options := wfutils.GetDefaultActivityOptions()
 	options.TaskQueue = utils.GetTranscodeQueue()
 	ctx = workflow.WithActivityOptions(ctx, options)
 	videoTask := wfutils.ExecuteWithQueue(ctx, activities.TranscodeMergeVideo, mergeInput)

@@ -5,11 +5,11 @@ import (
 	"net/url"
 )
 
-type placeholderType string
+type PlaceholderType string
 
 const (
-	PlaceholderTypeMaster placeholderType = "master"
-	PlaceholderTypeRaw    placeholderType = "raw"
+	PlaceholderTypeMaster PlaceholderType = "master"
+	PlaceholderTypeRaw    PlaceholderType = "raw"
 )
 
 type FileState string
@@ -21,10 +21,9 @@ const (
 
 type PlacholderTplData struct {
 	Title string
-	Email string
 }
 
-func (c *Client) CreatePlaceholder(ingestType placeholderType, title, email string) (string, error) {
+func (c *Client) CreatePlaceholder(ingestType PlaceholderType, title string) (string, error) {
 
 	tpl := xmlRawMaterialPlaceholderTmpl
 	switch ingestType {
@@ -37,7 +36,6 @@ func (c *Client) CreatePlaceholder(ingestType placeholderType, title, email stri
 	var body bytes.Buffer
 	tpl.Execute(&body, PlacholderTplData{
 		Title: title,
-		Email: email,
 	})
 
 	result, err := c.restyClient.R().
@@ -80,4 +78,18 @@ func (c *Client) AddFileToPlaceholder(itemID, fileID, tag string, fileState File
 	requestURL.RawQuery = q.Encode()
 
 	return requestURL.String()
+}
+
+func (c *Client) CreateThumbnails(itemID string) (string, error) {
+	result, err := c.restyClient.R().
+		SetHeader("content-type", "application/xml").
+		SetHeader("accept", "application/json").
+		SetResult(&JobDocument{}).
+		Post("/item/" + url.PathEscape(itemID) + "/thumbnail?createThumbnails=true")
+
+	if err != nil {
+		return "", err
+	}
+
+	return result.Result().(*JobDocument).JobID, err
 }

@@ -12,7 +12,6 @@ import (
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/common/smil"
 	"github.com/bcc-code/bccm-flows/utils"
-	"github.com/bcc-code/bccm-flows/workflows"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 )
@@ -44,7 +43,7 @@ func MuxFiles(ctx workflow.Context, params MuxFilesParams) (*MuxFilesResult, err
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting MuxFiles")
 
-	options := workflows.GetDefaultActivityOptions()
+	options := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	ctx = workflow.WithTaskQueue(ctx, utils.GetTranscodeQueue())
