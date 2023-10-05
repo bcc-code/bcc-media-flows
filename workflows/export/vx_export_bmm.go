@@ -1,6 +1,7 @@
 package export
 
 import (
+	"encoding/json"
 	"fmt"
 	"path"
 	"strconv"
@@ -21,7 +22,7 @@ var mp3Bitrates = []string{"256k"}
 
 func VXExportToBMM(ctx workflow.Context, params VXExportChildWorklowParams) (*VXExportResult, error) {
 	logger := workflow.GetLogger(ctx)
-	logger.Info("Starting ExportToPlayout")
+	logger.Info("Starting ExportToBMM")
 
 	options := workflows.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
@@ -29,7 +30,6 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorklowParams) (*VX
 	normalizedFutures := map[string]workflow.Future{}
 
 	// Normalize audio
-
 	for lang, audio := range params.MergeResult.AudioFiles {
 		ctx = workflow.WithChildOptions(ctx, workflows.GetDefaultWorkflowOptions())
 		future := workflow.ExecuteChildWorkflow(ctx, workflows.NormalizeAudioLevelWorkflow, workflows.NormalizeAudioParams{
@@ -99,9 +99,17 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorklowParams) (*VX
 	}
 
 	// Prepare data for the JSON file
-	prepareBMMData(audioResults, normalizedResults)
+	jsonData := prepareBMMData(audioResults, normalizedResults)
+	marshalled, err := json.Marshal(jsonData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal JSON: %w", err)
+	}
 
-	// TODO: Dump JSON
+	err = wfutils.WriteFile(ctx, path.Join(outputFolder, "bmm.json"), marshalled)
+	if err != nil {
+		return nil, fmt.Errorf("failed to write JSON file: %w", err)
+	}
+
 	// TODO: Upload
 	// TODO: Trigger BMM import
 
