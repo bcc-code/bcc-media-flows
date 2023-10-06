@@ -113,7 +113,6 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 	// Destination branching:  VOD, playout, bmm, etc.
 	var resultFutures []workflow.Future
 	for _, dest := range destinations {
-
 		var w interface{}
 		switch *dest {
 		case AssetExportDestinationVOD:
@@ -124,13 +123,19 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 			return nil, fmt.Errorf("destination not implemented: %s", dest)
 		}
 
+		p := filepath.Join(outputDir, dest.Value)
+		err = wfutils.CreateFolder(ctx, p)
+		if err != nil {
+			return nil, err
+		}
+
 		ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
 		future := workflow.ExecuteChildWorkflow(ctx, w, VXExportChildWorklowParams{
 			ParentParams: params,
 			ExportData:   *data,
 			MergeResult:  mergeResult,
 			TempDir:      tempDir,
-			OutputDir:    outputDir,
+			OutputDir:    p,
 		})
 		if err != nil {
 			return nil, err
