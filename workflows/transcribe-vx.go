@@ -52,7 +52,7 @@ func TranscribeVX(
 		StartToCloseTimeout:    time.Hour * 4,
 		ScheduleToCloseTimeout: time.Hour * 48,
 		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              utils.GetTranscodeQueue(),
+		TaskQueue:              utils.GetAudioQueue(),
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
