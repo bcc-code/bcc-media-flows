@@ -7,6 +7,7 @@ import (
 
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
@@ -42,6 +43,18 @@ func TranscribeVX(
 		HeartbeatTimeout:       time.Minute * 1,
 	}
 
+	transcodeOptions := workflow.ActivityOptions{
+		RetryPolicy: &temporal.RetryPolicy{
+			InitialInterval: time.Minute * 1,
+			MaximumAttempts: 10,
+			MaximumInterval: time.Hour * 1,
+		},
+		StartToCloseTimeout:    time.Hour * 4,
+		ScheduleToCloseTimeout: time.Hour * 48,
+		HeartbeatTimeout:       time.Minute * 1,
+		TaskQueue:              utils.GetTranscodeQueue(),
+	}
+
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	logger.Info("Starting TranscribeVX")
@@ -61,8 +74,9 @@ func TranscribeVX(
 		return err
 	}
 
+	transcodeCtx := workflow.WithActivityOptions(ctx, transcodeOptions)
 	wavFile := common.AudioResult{}
-	workflow.ExecuteActivity(ctx, activities.TranscodeToAudioWav, common.AudioInput{
+	workflow.ExecuteActivity(transcodeCtx, activities.TranscodeToAudioWav, common.AudioInput{
 		Path:            shapes.FilePath,
 		DestinationPath: tempFolder,
 	}).Get(ctx, &wavFile)
