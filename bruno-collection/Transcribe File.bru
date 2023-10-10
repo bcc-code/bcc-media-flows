@@ -5,6 +5,12 @@ meta {
 }
 
 get {
-  url: {{BASE}}/trigger/TranscribeFil
+  url: {{BASE}}/trigger/TranscribeFile?destinationPath=/destination&file=/path/to/file.mp3&language=no
   body: none
+}
+
+query {
+  destinationPath: /destination
+  file: /path/to/file.mp3
+  language: no
 }

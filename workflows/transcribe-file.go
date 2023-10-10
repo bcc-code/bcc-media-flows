@@ -5,6 +5,7 @@ import (
 
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 
 	"go.temporal.io/sdk/temporal"
@@ -38,6 +39,9 @@ func TranscribeFile(
 
 	ctx = workflow.WithActivityOptions(ctx, options)
 
+	options.TaskQueue = utils.GetAudioQueue()
+	audioCtx := workflow.WithActivityOptions(ctx, options)
+
 	logger.Info("Starting TranscribeFile")
 
 	tempFolder, err := wfutils.GetWorkflowTempFolder(ctx)
@@ -46,7 +50,7 @@ func TranscribeFile(
 	}
 
 	wavFile := common.AudioResult{}
-	workflow.ExecuteActivity(ctx, activities.TranscodeToAudioWav, common.AudioInput{
+	workflow.ExecuteActivity(audioCtx, activities.TranscodeToAudioWav, common.AudioInput{
 		Path:            params.File,
 		DestinationPath: tempFolder,
 	}).Get(ctx, &wavFile)
