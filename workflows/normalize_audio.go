@@ -38,7 +38,7 @@ func NormalizeAudioLevelWorkflow(
 		StartToCloseTimeout:    time.Hour * 4,
 		ScheduleToCloseTimeout: time.Hour * 48,
 		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              utils.GetTranscodeQueue(),
+		TaskQueue:              utils.GetAudioQueue(),
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
@@ -56,7 +56,7 @@ func NormalizeAudioLevelWorkflow(
 	}
 
 	out.InputAnalysis = r128Result
-	outputFolder, err := wfutils.GetWorkflowOutputFolder(ctx)
+	outputFolder, err := wfutils.GetWorkflowTempFolder(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -127,6 +127,10 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 			w.RegisterActivity(a)
 		}
 
+		for _, a := range audioTranscodeActivities {
+			w.RegisterActivity(a)
+		}
+
 		for _, wf := range workerWorkflows {
 			w.RegisterWorkflow(wf)
 		}

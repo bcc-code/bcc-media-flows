@@ -20,6 +20,10 @@ var aacBitrates = []string{"128k", "256k"}
 // This is what seems to be used today
 var mp3Bitrates = []string{"256k"}
 
+// Target LUFS for all audio files going to BMM
+// This is based on what Spotify uses
+const targetLufs = -14.0
+
 func VXExportToBMM(ctx workflow.Context, params VXExportChildWorklowParams) (*VXExportResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToBMM")
@@ -29,18 +33,26 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorklowParams) (*VX
 
 	normalizedFutures := map[string]workflow.Future{}
 
+	langs, err := wfutils.GetMapKeysSafely(ctx, params.MergeResult.AudioFiles)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get audio file keys: %w", err)
+	}
+
 	// Normalize audio
-	for lang, audio := range params.MergeResult.AudioFiles {
+	for _, lang := range langs {
+		audio := params.MergeResult.AudioFiles[lang]
 		ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
 		future := workflow.ExecuteChildWorkflow(ctx, workflows.NormalizeAudioLevelWorkflow, workflows.NormalizeAudioParams{
-			FilePath:   audio,
-			TargetLUFS: -14.0,
+			FilePath:              audio,
+			TargetLUFS:            targetLufs,
+			PerformOutputAnalysis: true,
 		})
 		normalizedFutures[lang] = future
 	}
 
 	normalizedResults := map[string]workflows.NormalizeAudioResult{}
-	for lang, future := range normalizedFutures {
+	for _, lang := range langs {
+		future := normalizedFutures[lang]
 		normalizedRes := workflows.NormalizeAudioResult{}
 		err := future.Get(ctx, &normalizedRes)
 		if err != nil {
@@ -60,10 +72,11 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorklowParams) (*VX
 	// Encode to AAC and MP3
 
 	encodingFutures := map[string][]workflow.Future{}
-	for lang, audio := range normalizedResults {
+	for _, lang := range langs {
+		audio := normalizedResults[lang]
 		encodings := []workflow.Future{}
 		for _, bitrate := range aacBitrates {
-			f := workflow.ExecuteActivity(ctx, activities.TranscodeToAudioAac, common.AudioInput{
+			f := wfutils.ExecuteWithQueue(ctx, activities.TranscodeToAudioAac, common.AudioInput{
 				Path:            audio.FilePath,
 				DestinationPath: outputFolder,
 				Bitrate:         bitrate,
@@ -72,7 +85,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorklowParams) (*VX
 		}
 
 		for _, bitrate := range mp3Bitrates {
-			f := workflow.ExecuteActivity(ctx, activities.TranscodeToAudioMP3, common.AudioInput{
+			f := wfutils.ExecuteWithQueue(ctx, activities.TranscodeToAudioMP3, common.AudioInput{
 				Path:            audio.FilePath,
 				DestinationPath: outputFolder,
 				Bitrate:         bitrate,
@@ -84,7 +97,8 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorklowParams) (*VX
 	}
 
 	audioResults := map[string][]common.AudioResult{}
-	for lang, futures := range encodingFutures {
+	for _, lang := range langs {
+		futures := encodingFutures[lang]
 		encodings := []common.AudioResult{}
 		for _, future := range futures {
 			var res common.AudioResult

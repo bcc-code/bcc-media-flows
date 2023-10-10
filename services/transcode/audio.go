@@ -44,6 +44,8 @@ func AudioAac(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 
 	return &common.AudioResult{
 		OutputPath: outputPath,
+		Bitrate:    input.Bitrate,
+		Format:     "aac",
 	}, nil
 }
 
@@ -79,7 +81,7 @@ func AudioWav(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 	return &common.AudioResult{
 		OutputPath: outputPath,
 		Bitrate:    input.Bitrate,
-		Format:     "aac",
+		Format:     "wav",
 	}, nil
 }
 
