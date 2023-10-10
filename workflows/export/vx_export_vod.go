@@ -17,7 +17,7 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-func VXExportToVOD(ctx workflow.Context, params VXExportChildWorklowParams) (*VXExportResult, error) {
+func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*VXExportResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToVOD")
 

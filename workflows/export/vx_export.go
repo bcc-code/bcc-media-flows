@@ -15,9 +15,9 @@ import (
 type AssetExportDestination enum.Member[string]
 
 var (
-	AssetExportDestinationPlayout = AssetExportDestination{"playout"}
-	AssetExportDestinationVOD     = AssetExportDestination{"vod"}
-	AssetExportDestinationBMM     = AssetExportDestination{"bmm"}
+	AssetExportDestinationPlayout = AssetExportDestination{Value: "playout"}
+	AssetExportDestinationVOD     = AssetExportDestination{Value: "vod"}
+	AssetExportDestinationBMM     = AssetExportDestination{Value: "bmm"}
 	AssetExportDestinations       = enum.New(
 		AssetExportDestinationPlayout,
 		AssetExportDestinationVOD,
@@ -41,7 +41,7 @@ type VXExportResult struct {
 	ChaptersFile string `json:"chapters_file"`
 }
 
-type VXExportChildWorklowParams struct {
+type VXExportChildWorkflowParams struct {
 	ParentParams VXExportParams       `json:"parent_params"`
 	ExportData   vidispine.ExportData `json:"export_data"`
 	MergeResult  MergeExportDataResult
@@ -130,7 +130,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		}
 
 		ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
-		future := workflow.ExecuteChildWorkflow(ctx, w, VXExportChildWorklowParams{
+		future := workflow.ExecuteChildWorkflow(ctx, w, VXExportChildWorkflowParams{
 			ParentParams: params,
 			ExportData:   *data,
 			MergeResult:  mergeResult,
@@ -143,7 +143,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		resultFutures = append(resultFutures, future)
 	}
 
-	results := []wfutils.ResultOrError[VXExportResult]{}
+	var results []wfutils.ResultOrError[VXExportResult]
 	for _, future := range resultFutures {
 		var result *VXExportResult
 		err = future.Get(ctx, &result)

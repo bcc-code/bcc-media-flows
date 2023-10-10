@@ -20,6 +20,60 @@ type PrepareFilesResult struct {
 	AudioFiles map[string]string
 }
 
+func getVideoQualities(videoFilePath, outputDir, watermarkPath string) map[string]common.VideoInput {
+	return map[string]common.VideoInput{
+		r1080p: {
+			Path:            videoFilePath,
+			DestinationPath: outputDir,
+			WatermarkPath:   watermarkPath,
+			Width:           1920,
+			Height:          1080,
+			Bitrate:         "8M",
+			BufferSize:      "5M",
+		},
+		r720p: {
+			Path:            videoFilePath,
+			DestinationPath: outputDir,
+			WatermarkPath:   watermarkPath,
+			Width:           1280,
+			Height:          720,
+			Bitrate:         "3M",
+		},
+		r540p: {
+			Path:            videoFilePath,
+			DestinationPath: outputDir,
+			WatermarkPath:   watermarkPath,
+			Width:           960,
+			Height:          540,
+			Bitrate:         "1900k",
+		},
+		r360p: {
+			Path:            videoFilePath,
+			DestinationPath: outputDir,
+			WatermarkPath:   watermarkPath,
+			Width:           640,
+			Height:          360,
+			Bitrate:         "980k",
+		},
+		r270p: {
+			Path:            videoFilePath,
+			DestinationPath: outputDir,
+			WatermarkPath:   watermarkPath,
+			Width:           480,
+			Height:          270,
+			Bitrate:         "610k",
+		},
+		r180p: {
+			Path:            videoFilePath,
+			DestinationPath: outputDir,
+			WatermarkPath:   watermarkPath,
+			Width:           320,
+			Height:          180,
+			Bitrate:         "320k",
+		},
+	}
+}
+
 func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFilesResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting PrepareFiles")
@@ -28,67 +82,16 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	ctx = workflow.WithTaskQueue(ctx, utils.GetTranscodeQueue())
-	tempFolder := params.OutputPath
 
 	var videoTasks = map[string]workflow.Future{}
 	{
-		videoFile := params.VideoFile
-		qualities := map[string]common.VideoInput{
-			r1080p: {
-				Path:            videoFile,
-				Width:           1920,
-				Height:          1080,
-				Bitrate:         "8M",
-				BufferSize:      "5M",
-				DestinationPath: tempFolder,
-				WatermarkPath:   params.WatermarkPath,
-			},
-			r720p: {
-				Path:            videoFile,
-				Width:           1280,
-				Height:          720,
-				Bitrate:         "3M",
-				DestinationPath: tempFolder,
-				WatermarkPath:   params.WatermarkPath,
-			},
-			r540p: {
-				Path:            videoFile,
-				Width:           960,
-				Height:          540,
-				Bitrate:         "1900k",
-				DestinationPath: tempFolder,
-				WatermarkPath:   params.WatermarkPath,
-			},
-			r360p: {
-				Path:            videoFile,
-				Width:           640,
-				Height:          360,
-				Bitrate:         "980k",
-				DestinationPath: tempFolder,
-				WatermarkPath:   params.WatermarkPath,
-			},
-			r270p: {
-				Path:            videoFile,
-				Width:           480,
-				Height:          270,
-				Bitrate:         "610k",
-				DestinationPath: tempFolder,
-				WatermarkPath:   params.WatermarkPath,
-			},
-			r180p: {
-				Path:            videoFile,
-				Width:           320,
-				Height:          180,
-				Bitrate:         "320k",
-				DestinationPath: tempFolder,
-				WatermarkPath:   params.WatermarkPath,
-			},
-		}
+		qualities := getVideoQualities(params.VideoFile, params.OutputPath, params.WatermarkPath)
 
 		keys, err := wfutils.GetMapKeysSafely(ctx, qualities)
 		if err != nil {
 			return nil, err
 		}
+
 		for _, key := range keys {
 			input := qualities[key]
 			videoTasks[key] = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToVideoH264, input)
@@ -106,7 +109,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 			audioTasks[lang] = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToAudioAac, common.AudioInput{
 				Path:            path,
 				Bitrate:         "190k",
-				DestinationPath: tempFolder,
+				DestinationPath: params.OutputPath,
 			})
 		}
 	}
