@@ -9,6 +9,7 @@ import (
 
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"github.com/bcc-code/bccm-flows/workflows"
 	"go.temporal.io/sdk/workflow"
@@ -64,9 +65,9 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorklowParams) (*VX
 		params.MergeResult.AudioFiles[lang] = normalizedRes.FilePath
 	}
 
-	outputFolder, err := wfutils.GetWorkflowOutputFolder(ctx)
+	outputFolder, err := wfutils.GetWorkflowTempFolder(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get workflow output folder: %w", err)
+		return nil, fmt.Errorf("failed to get workflow temp folder: %w", err)
 	}
 
 	// Encode to AAC and MP3
@@ -124,7 +125,15 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorklowParams) (*VX
 		return nil, fmt.Errorf("failed to write JSON file: %w", err)
 	}
 
-	// TODO: Upload
+	ingestFolder := params.ExportData.Title + "_" + workflow.GetInfo(ctx).OriginalRunID
+	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
+		Source:      strings.Replace(outputFolder, utils.GetIsilonPrefix()+"/", "isilon:isilon/", 1),
+		Destination: fmt.Sprintf("bmms3:/int-bmm-mediabanken/" + ingestFolder),
+	}).Get(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
 	// TODO: Trigger BMM import
 
 	return &VXExportResult{

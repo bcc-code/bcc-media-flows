@@ -164,6 +164,7 @@ func MergeAudio(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 
 	params = append(params, "-filter_complex", filterComplex, "-map", "[a]", "-y", outputPath)
 
+	log.Default().Println(strings.Join(params, " "))
 	_, err := ffmpeg.Do(params, ffmpeg.StreamInfo{}, progressCallback)
 
 	return &common.MergeResult{

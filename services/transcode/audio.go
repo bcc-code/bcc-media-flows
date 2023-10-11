@@ -21,9 +21,7 @@ func AudioAac(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 	}
 
 	outputPath := filepath.Join(input.DestinationPath, filepath.Base(input.Path))
-
-	//replace output extension to .aac
-	outputPath = outputPath[:len(outputPath)-len(filepath.Ext(outputPath))] + ".aac"
+	outputPath = fmt.Sprintf("%s-%s.aac", outputPath[:len(outputPath)-len(filepath.Ext(outputPath))], input.Bitrate)
 
 	params = append(params, "-y", outputPath)
 
@@ -57,9 +55,7 @@ func AudioWav(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 	}
 
 	outputPath := filepath.Join(input.DestinationPath, filepath.Base(input.Path))
-
-	//replace output extension to .wav
-	outputPath = outputPath[:len(outputPath)-len(filepath.Ext(outputPath))] + ".wav"
+	outputPath = fmt.Sprintf("%s-%s.wav", outputPath[:len(outputPath)-len(filepath.Ext(outputPath))], input.Bitrate)
 
 	params = append(params, "-y", outputPath)
 
@@ -123,9 +119,7 @@ func AudioMP3(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 	}
 
 	outputPath := filepath.Join(input.DestinationPath, filepath.Base(input.Path))
-
-	//replace output extension to .mp3
-	outputPath = outputPath[:len(outputPath)-len(filepath.Ext(outputPath))] + ".mp3"
+	outputPath = fmt.Sprintf("%s-%s.mp3", outputPath[:len(outputPath)-len(filepath.Ext(outputPath))], input.Bitrate)
 
 	params = append(params, "-y", outputPath)
 
