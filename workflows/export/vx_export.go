@@ -98,13 +98,19 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
+	vodOutputDir := filepath.Join(tempDir, "vod")
+	err = wfutils.CreateFolder(ctx, vodOutputDir)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
 
 	var mergeResult MergeExportDataResult
 	err = workflow.ExecuteChildWorkflow(ctx, MergeExportData, MergeExportDataParams{
 		ExportData:   data,
 		TempDir:      tempDir,
-		SubtitlesDir: outputDir,
+		SubtitlesDir: vodOutputDir,
 	}).Get(ctx, &mergeResult)
 	if err != nil {
 		return nil, err
