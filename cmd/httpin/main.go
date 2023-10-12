@@ -147,7 +147,7 @@ func triggerHandler(ctx *gin.Context) {
 			return
 		}
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.ImportSubtitlesFromSubtrans, workflows.ImportSubtitlesFromSubtransInput{
-			VXId: vxID,
+			VXID: vxID,
 		})
 	case "NormalizeAudio":
 		target, err := strconv.ParseFloat(getParamFromCtx(ctx, "targetLUFS"), 64)

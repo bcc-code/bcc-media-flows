@@ -14,7 +14,7 @@ import (
 )
 
 type ImportSubtitlesFromSubtransInput struct {
-	VXId string
+	VXID string
 }
 
 func ImportSubtitlesFromSubtrans(
@@ -41,12 +41,12 @@ func ImportSubtitlesFromSubtrans(
 	logger.Info("Starting sub import flow")
 
 	input := activities.GetSubtransIDInput{
-		VXID:     params.VXId,
+		VXID:     params.VXID,
 		NoSubsOK: true,
 	}
 
-	subtransIDRespone := &activities.GetSubtransIDOutput{}
-	err := workflow.ExecuteActivity(ctx, activities.GetSubtransIDActivity, input).Get(ctx, subtransIDRespone)
+	subtransIDResponse := &activities.GetSubtransIDOutput{}
+	err := workflow.ExecuteActivity(ctx, activities.GetSubtransIDActivity, input).Get(ctx, subtransIDResponse)
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func ImportSubtitlesFromSubtrans(
 
 	subsList := map[string]string{}
 	err = workflow.ExecuteActivity(ctx, activities.GetSubtitlesActivity, activities.GetSubtitlesInput{
-		SubtransID:        subtransIDRespone.SubtransID,
+		SubtransID:        subtransIDResponse.SubtransID,
 		Format:            "srt",
 		ApprovedOnly:      false,
 		DestinationFolder: outputPath,
@@ -65,29 +65,29 @@ func ImportSubtitlesFromSubtrans(
 		return err
 	}
 
-	activities := []workflow.Future{}
+	var futures []workflow.Future
 	for lang, sub := range subsList {
 		lang = strings.ToLower(lang)
 
-		act := workflow.ExecuteActivity(ctx, vidispine.ImportFileAsSidecarActivity, vidispine.ImportSubtitleAsSidecarParams{
-			AssetID:  params.VXId,
+		future := workflow.ExecuteActivity(ctx, vidispine.ImportFileAsSidecarActivity, vidispine.ImportSubtitleAsSidecarParams{
+			AssetID:  params.VXID,
 			Language: lang,
 			FilePath: sub,
 		})
 
-		activities = append(activities, act)
+		futures = append(futures, future)
 
-		act = workflow.ExecuteActivity(ctx, vidispine.ImportFileAsShapeActivity, vidispine.ImportFileAsShapeParams{
-			AssetID:  params.VXId,
+		future = workflow.ExecuteActivity(ctx, vidispine.ImportFileAsShapeActivity, vidispine.ImportFileAsShapeParams{
+			AssetID:  params.VXID,
 			FilePath: sub,
 			ShapeTag: fmt.Sprintf("sub_%s_%s", lang, "srt"),
 		})
 
-		activities = append(activities, act)
+		futures = append(futures, future)
 	}
 
-	for _, act := range activities {
-		err := act.Get(ctx, nil)
+	for _, future := range futures {
+		err = future.Get(ctx, nil)
 		if err != nil {
 			return err
 		}

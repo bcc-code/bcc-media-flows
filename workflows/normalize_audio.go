@@ -75,7 +75,7 @@ func NormalizeAudioLevelWorkflow(
 
 	if params.PerformOutputAnalysis {
 		r128Result := &common.AnalyzeEBUR128Result{}
-		err := workflow.ExecuteActivity(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
+		err = workflow.ExecuteActivity(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
 			FilePath:       adjustResult.OutputPath,
 			TargetLoudness: params.TargetLUFS,
 		}).Get(ctx, r128Result)

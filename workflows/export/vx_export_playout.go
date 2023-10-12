@@ -11,7 +11,7 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorklowParams) (*VXExportResult, error) {
+func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams) (*VXExportResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToPlayout")
 
