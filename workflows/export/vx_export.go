@@ -98,7 +98,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
-	vodOutputDir := filepath.Join(tempDir, "vod")
+	vodOutputDir := filepath.Join(outputDir, "vod")
 	err = wfutils.CreateFolder(ctx, vodOutputDir)
 	if err != nil {
 		return nil, err
