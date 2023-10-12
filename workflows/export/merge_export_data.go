@@ -17,9 +17,12 @@ type MergeExportDataResult struct {
 }
 
 type MergeExportDataParams struct {
-	ExportData   *vidispine.ExportData
-	SubtitlesDir string
-	TempDir      string
+	ExportData    *vidispine.ExportData
+	SubtitlesDir  string
+	TempDir       string
+	MakeVideo     bool
+	MakeSubtitles bool
+	MakeAudio     bool
 }
 
 func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*MergeExportDataResult, error) {
@@ -32,10 +35,9 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 	options := wfutils.GetDefaultActivityOptions()
 	options.TaskQueue = utils.GetTranscodeQueue()
 	ctx = workflow.WithActivityOptions(ctx, options)
-	videoTask := wfutils.ExecuteWithQueue(ctx, activities.TranscodeMergeVideo, mergeInput)
 
 	var audioTasks = map[string]workflow.Future{}
-	{
+	if params.MakeAudio {
 		keys, err := wfutils.GetMapKeysSafely(ctx, audioMergeInputs)
 		if err != nil {
 			return nil, err
@@ -47,7 +49,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 	}
 
 	var subtitleTasks = map[string]workflow.Future{}
-	{
+	if params.MakeSubtitles {
 		keys, err := wfutils.GetMapKeysSafely(ctx, subtitleMergeInputs)
 		if err != nil {
 			return nil, err
@@ -58,8 +60,10 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 		}
 
 	}
+
 	var videoFile string
-	{
+	if params.MakeVideo {
+		videoTask := wfutils.ExecuteWithQueue(ctx, activities.TranscodeMergeVideo, mergeInput)
 		var result common.MergeResult
 		err := videoTask.Get(ctx, &result)
 		if err != nil {
