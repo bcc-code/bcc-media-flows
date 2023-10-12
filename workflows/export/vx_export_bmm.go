@@ -25,7 +25,7 @@ var mp3Bitrates = []string{"256k"}
 // This is based on what Spotify uses
 const targetLufs = -14.0
 
-func VXExportToBMM(ctx workflow.Context, params VXExportChildWorklowParams) (*VXExportResult, error) {
+func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*VXExportResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToBMM")
 
