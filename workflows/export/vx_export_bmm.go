@@ -3,6 +3,8 @@ package export
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
 	"path"
 	"strconv"
 	"strings"
@@ -115,6 +117,12 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 
 	// Prepare data for the JSON file
 	jsonData := prepareBMMData(audioResults, normalizedResults)
+	jsonData.Length = int(params.MergeResult.Duration)
+	jsonData.MediabankenID = params.ParentParams.VXID
+
+	// TODO: Title is messy, we should have "Human readable" variant
+	jsonData.Title = params.ExportData.Title
+
 	marshalled, err := json.Marshal(jsonData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal JSON: %w", err)
@@ -134,7 +142,21 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, err
 	}
 
-	// TODO: Trigger BMM import
+	// TODO: Trigger as activity?
+	trigger := "https://int-bmm-api.brunstad.org/events/mediabanken-export/?path="
+	jsonS3Path := path.Join(ingestFolder, "bmm.json")
+	trigger += url.QueryEscape(jsonS3Path)
+
+	resp, err := http.Post(trigger, "application/json", nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to trigger BMM: %w", err)
+	}
+
+	resp.Body.Close()
+
+	if resp.StatusCode > 200 {
+		return nil, fmt.Errorf("failed to trigger BMM: %s", resp.Status)
+	}
 
 	return &VXExportResult{
 		ID:       params.ParentParams.VXID,
@@ -144,11 +166,11 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 }
 
 type BMMData struct {
-	MediabankenID string `json:"mediabanken_id"`
-	Title         string `json:"title"`
-	Length        int    `json:"length"`
-	Type          string `json:"type"`
-	AudioFiles    map[string][]BMMAudioFile
+	MediabankenID string                    `json:"mediabanken_id"`
+	Title         string                    `json:"title"`
+	Length        int                       `json:"length"`
+	Type          string                    `json:"type"`
+	AudioFiles    map[string][]BMMAudioFile `json:"audio_files"`
 }
 
 type BMMAudioFile struct {
