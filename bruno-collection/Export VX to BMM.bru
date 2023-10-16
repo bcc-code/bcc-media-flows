@@ -1,0 +1,17 @@
+meta {
+  name: Export VX to BMM
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{BASE}}/trigger/ExportAssetVX?vxID=VX-470043&withFiles=false&withChapters=false&destinations=bmm
+  body: none
+}
+
+query {
+  vxID: VX-470043
+  withFiles: false
+  withChapters: false
+  destinations: bmm
+}

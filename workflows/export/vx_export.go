@@ -106,11 +106,16 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 
 	ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
 
+	bmmOnly := len(params.Destinations) == 1 && params.Destinations[0] == AssetExportDestinationBMM.Value
+
 	var mergeResult MergeExportDataResult
 	err = workflow.ExecuteChildWorkflow(ctx, MergeExportData, MergeExportDataParams{
-		ExportData:   data,
-		TempDir:      tempDir,
+		ExportData:    data,
+		TempDir:       tempDir,
 		SubtitlesDir: vodOutputDir,
+		MakeVideo:     !bmmOnly,
+		MakeAudio:     true,
+		MakeSubtitles: true,
 	}).Get(ctx, &mergeResult)
 	if err != nil {
 		return nil, err
@@ -125,6 +130,8 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 			w = VXExportToVOD
 		case AssetExportDestinationPlayout:
 			w = VXExportToPlayout
+		case AssetExportDestinationBMM:
+			w = VXExportToBMM
 		default:
 			return nil, fmt.Errorf("destination not implemented: %s", dest)
 		}

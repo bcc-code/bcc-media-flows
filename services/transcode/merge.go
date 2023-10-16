@@ -43,6 +43,7 @@ func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 	params = append(params,
 		"-progress", "pipe:1",
 		"-hide_banner",
+		"-strict", "unofficial",
 		"-filter_complex", filterComplex,
 		"-map", "[v]",
 		"-c:v", "prores",
@@ -77,7 +78,9 @@ func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 
 // mergeItemToStereoStream takes a merge input item and returns a string that can be used in a filter_complex to merge the audio streams.
 func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) (string, error) {
-	info, _ := ffmpeg.ProbeFile(item.Path)
+	path := utils.IsilonPathFix(item.Path)
+	info, _ := ffmpeg.ProbeFile(path)
+
 	if info == nil || len(info.Streams) == 0 {
 		return fmt.Sprintf("anullsrc=channel_layout=stereo[%s]", tag), nil
 	}
@@ -161,6 +164,7 @@ func MergeAudio(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 
 	params = append(params, "-filter_complex", filterComplex, "-map", "[a]", "-y", outputPath)
 
+	log.Default().Println(strings.Join(params, " "))
 	_, err := ffmpeg.Do(params, ffmpeg.StreamInfo{}, progressCallback)
 
 	return &common.MergeResult{

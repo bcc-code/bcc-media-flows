@@ -23,6 +23,8 @@ type AudioInput struct {
 
 type AudioResult struct {
 	OutputPath string
+	Bitrate    string
+	Format     string
 }
 
 type MuxInput struct {

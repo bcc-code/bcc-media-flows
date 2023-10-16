@@ -12,6 +12,7 @@ import (
 func GetAudioTranscodeActivities() []any {
 	return []any{
 		TranscodeToAudioAac,
+		TranscodeToAudioMP3,
 		TranscodeToAudioWav,
 		TranscodeMergeAudio,
 		AnalyzeEBUR128Activity,

@@ -59,6 +59,7 @@ var workerWorkflows = []any{
 	export.MergeExportData,
 	export.MuxFiles,
 	export.PrepareFiles,
+	export.VXExportToBMM,
 	workflows.ExecuteFFmpeg,
 	workflows.ImportSubtitlesFromSubtrans,
 	workflows.AssetIngest,
@@ -123,6 +124,10 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		}
 
 		for _, a := range transcodeActivities {
+			w.RegisterActivity(a)
+		}
+
+		for _, a := range audioTranscodeActivities {
 			w.RegisterActivity(a)
 		}
 

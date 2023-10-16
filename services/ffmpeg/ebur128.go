@@ -23,10 +23,9 @@ func floatOrZero(s string) float64 {
 
 func AnalyzeEBUR128(path string, progressCallback ProgressCallback) (*common.AnalyzeEBUR128Result, error) {
 	cmd := exec.Command(
-		"/opt/homebrew/bin/ffmpeg",
+		"ffmpeg",
 		"-hide_banner",
 		"-nostats",
-		//"-v", "quiet",
 		"-i", path,
 		"-af", "loudnorm=print_format=json",
 		"-f", "null",
