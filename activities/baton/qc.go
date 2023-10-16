@@ -13,10 +13,7 @@ type QCParams struct {
 	Plan baton.TestPlan
 }
 
-type QCResult struct {
-}
-
-func QC(ctx context.Context, input *QCParams) (*QCResult, error) {
+func QC(ctx context.Context, input *QCParams) (*baton.QCReport, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting BatonQCActivity")
 
@@ -41,4 +38,11 @@ func QC(ctx context.Context, input *QCParams) (*QCResult, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	result, err := baton.GetQCReport(client, r.TaskID)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
