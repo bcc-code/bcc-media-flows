@@ -37,6 +37,11 @@ type AudioFile struct {
 
 type ExportData struct {
 	Clips []*Clip
+
+	// SafeTitle is a title that can be used in a filename
+	SafeTitle string
+
+	// Title is the original title containing spaces and other characters
 	Title string
 }
 
@@ -281,13 +286,14 @@ func (s *VidispineService) GetDataForExport(itemVXID string) (*ExportData, error
 	// exportFormat := meta.Get("portal_mf868653", "original")
 
 	// clean up the title
-	title = strings.ReplaceAll(title, " ", "_")
-	title = nonAlphanumeric.ReplaceAllString(title, "")
-	title = consecutiveUnderscores.ReplaceAllString(title, "_")
+	safeTitle := strings.ReplaceAll(title, " ", "_")
+	safeTitle = nonAlphanumeric.ReplaceAllString(safeTitle, "")
+	safeTitle = consecutiveUnderscores.ReplaceAllString(safeTitle, "_")
 
 	out := ExportData{
-		Title: title,
-		Clips: []*Clip{},
+		Title:     title,
+		SafeTitle: safeTitle,
+		Clips:     []*Clip{},
 	}
 
 	// Get the video clips as a base

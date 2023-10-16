@@ -69,7 +69,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 
 	return &VXExportResult{
 		ID:       params.ParentParams.VXID,
-		Title:    params.ExportData.Title,
+		Title:    params.ExportData.SafeTitle,
 		Duration: formatSecondsToTimestamp(params.MergeResult.Duration),
 	}, nil
 }
