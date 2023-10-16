@@ -79,6 +79,14 @@ func (d Path) RclonePath() string {
 	return ""
 }
 
+func (d Path) BatonPath() string {
+	switch d.Drive {
+	case IsilonDrive:
+		return filepath.Join("\\\\10.12.130.61\\isilon", strings.ReplaceAll(d.Path, "/", "\\"))
+	}
+	return ""
+}
+
 func (d Path) FileName() string {
 	return filepath.Base(d.Path)
 }

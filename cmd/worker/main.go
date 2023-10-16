@@ -1,6 +1,7 @@
 package main
 
 import (
+	batonactivities "github.com/bcc-code/bccm-flows/activities/baton"
 	"log"
 	"os"
 	"strconv"
@@ -27,6 +28,7 @@ var utilActivities = []any{
 	activities.DeletePath,
 	activities.StandardizeFileName,
 	activities.GetSubtitlesActivity,
+	batonactivities.QC,
 }
 
 var vidispineActivities = []any{
