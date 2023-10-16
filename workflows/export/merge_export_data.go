@@ -120,7 +120,7 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir s
 	subtitleMergeInputs map[string]*common.MergeInput,
 ) {
 	mergeInput = common.MergeInput{
-		Title:     data.Title,
+		Title:     data.SafeTitle,
 		OutputDir: tempDir,
 		WorkDir:   tempDir,
 	}
@@ -139,7 +139,7 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir s
 		for lan, af := range clip.AudioFiles {
 			if _, ok := audioMergeInputs[lan]; !ok {
 				audioMergeInputs[lan] = &common.MergeInput{
-					Title:     data.Title + "-" + lan,
+					Title:     data.SafeTitle + "-" + lan,
 					OutputDir: tempDir,
 					WorkDir:   tempDir,
 				}
@@ -157,7 +157,7 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir s
 		for lan, sf := range clip.SubtitleFiles {
 			if _, ok := subtitleMergeInputs[lan]; !ok {
 				subtitleMergeInputs[lan] = &common.MergeInput{
-					Title:     data.Title + "-" + lan,
+					Title:     data.SafeTitle + "-" + lan,
 					OutputDir: subtitlesDir,
 					WorkDir:   tempDir,
 				}

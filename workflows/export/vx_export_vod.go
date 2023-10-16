@@ -33,7 +33,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	}
 
 	ingestData := asset.IngestJSONMeta{
-		Title:    params.ExportData.Title,
+		Title:    params.ExportData.SafeTitle,
 		ID:       params.ParentParams.VXID,
 		Duration: formatSecondsToTimestamp(params.MergeResult.Duration),
 	}
@@ -117,7 +117,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, err
 	}
 
-	ingestFolder := params.ExportData.Title + "_" + workflow.GetInfo(ctx).OriginalRunID
+	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
 
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
 		Source:      strings.Replace(params.OutputDir, utils.GetIsilonPrefix()+"/", "isilon:isilon/", 1),
