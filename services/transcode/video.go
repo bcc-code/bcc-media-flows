@@ -34,15 +34,15 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 	case "libx264":
 		params = append(params,
 			"-c:v", h264encoder,
-			"-profile:v", "high",
-			"-preset", "veryfast",
+			"-profile:v", "high422",
+			"-preset", "slow",
 			"-level:v", "1.3",
 			"-tune", "film",
 			"-vsync", "1",
 			"-g", "48",
 			"-pix_fmt", "yuv420p",
 			"-x264opts", "no-scenecut",
-			//"-crf", "18",
+			"-crf", "18",
 		)
 	case "libx265":
 		params = append(params,

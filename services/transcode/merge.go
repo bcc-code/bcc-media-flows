@@ -26,17 +26,16 @@ func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 
 	for index, i := range input.Items {
 		// Add the video stream and timestamps to the filter, with setpts to let the transcoder know to continue the timestamp from the previous file.
-		filterComplex += fmt.Sprintf("[%d:v] trim=start=%f:end=%f,setpts=PTS-STARTPTS,yadif[v%d];", index, i.Start, i.End, index)
+		filterComplex += fmt.Sprintf("[%d:v]trim=start=%f:end=%f,setpts=PTS-STARTPTS,yadif[v%d];", index, i.Start, i.End, index)
 	}
 
-	filterComplex += " "
 	for index := range input.Items {
 
-		filterComplex += fmt.Sprintf("[v%d] ", index)
+		filterComplex += fmt.Sprintf("[v%d]", index)
 	}
 
 	// Concatenate the video streams.
-	filterComplex += fmt.Sprintf("concat=n=%d:v=1:a=0 [v]", len(input.Items))
+	filterComplex += fmt.Sprintf("concat=n=%d:v=1:a=0[v]", len(input.Items))
 
 	outputPath := filepath.Join(input.OutputDir, filepath.Clean(input.Title)+".mxf")
 
@@ -46,9 +45,10 @@ func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 		"-strict", "unofficial",
 		"-filter_complex", filterComplex,
 		"-map", "[v]",
-		"-c:v", "prores",
+		"-c:v", "prores_ks",
 		"-profile:v", "3",
 		"-vendor", "ap10",
+		"-bits_per_mb", "8000",
 		"-pix_fmt", "yuv422p10le",
 		"-color_primaries", "bt709",
 		"-color_trc", "bt709",
