@@ -45,7 +45,7 @@ func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 		"-strict", "unofficial",
 		"-filter_complex", filterComplex,
 		"-map", "[v]",
-		"-c:v", "prores_ks",
+		"-c:v", "prores",
 		"-profile:v", "3",
 		"-vendor", "ap10",
 		"-bits_per_mb", "8000",
