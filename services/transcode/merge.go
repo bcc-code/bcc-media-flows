@@ -57,8 +57,6 @@ func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 		outputPath,
 	)
 
-	log.Default().Println(strings.Join(params, " "))
-
 	_, err := ffmpeg.Do(params, ffmpeg.StreamInfo{
 		TotalSeconds: input.Duration,
 	}, progressCallback)
