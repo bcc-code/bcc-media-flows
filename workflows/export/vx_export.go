@@ -31,6 +31,7 @@ type VXExportParams struct {
 	WithChapters  bool
 	WatermarkPath string
 	Destinations  []string
+	Languages     []string
 }
 
 type VXExportResult struct {
@@ -112,10 +113,11 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 	err = workflow.ExecuteChildWorkflow(ctx, MergeExportData, MergeExportDataParams{
 		ExportData:    data,
 		TempDir:       tempDir,
-		SubtitlesDir: vodOutputDir,
+		SubtitlesDir:  vodOutputDir,
 		MakeVideo:     !bmmOnly,
 		MakeAudio:     true,
 		MakeSubtitles: true,
+		Languages:     params.Languages,
 	}).Get(ctx, &mergeResult)
 	if err != nil {
 		return nil, err

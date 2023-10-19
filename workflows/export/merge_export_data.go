@@ -6,6 +6,7 @@ import (
 	"github.com/bcc-code/bccm-flows/services/vidispine"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -23,6 +24,7 @@ type MergeExportDataParams struct {
 	MakeVideo     bool
 	MakeSubtitles bool
 	MakeAudio     bool
+	Languages     []string
 }
 
 func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*MergeExportDataResult, error) {
@@ -43,6 +45,9 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 			return nil, err
 		}
 		for _, lang := range keys {
+			if len(params.Languages) != 0 && !lo.Contains(params.Languages, lang) {
+				continue
+			}
 			mi := audioMergeInputs[lang]
 			audioTasks[lang] = wfutils.ExecuteWithQueue(ctx, activities.TranscodeMergeAudio, *mi)
 		}
