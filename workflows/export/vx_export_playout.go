@@ -58,10 +58,18 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 
 	// Rclone to playout
 	source := strings.Replace(params.OutputDir, utils.GetIsilonPrefix()+"/", "isilon:isilon/", 1)
-	destination := "playout:/dropbox"
+	destination := "playout:/dropbox/tmp"
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
 		Source:      source,
 		Destination: destination,
+	}).Get(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	err = workflow.ExecuteActivity(ctx, activities.FtpPlayoutRename, activities.FtpPlayoutRenameParams{
+		From: filepath.Join("/dropbox/tmp/", filepath.Base(muxResult.Path)),
+		To:   filepath.Join("/dropbox/", filepath.Base(muxResult.Path)),
 	}).Get(ctx, nil)
 	if err != nil {
 		return nil, err
