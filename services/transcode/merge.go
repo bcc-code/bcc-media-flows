@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/bcc-code/bccm-flows/common"
@@ -13,6 +14,24 @@ import (
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/samber/lo"
 )
+
+func getFramerate(input common.MergeInput) (int, error) {
+	longestItem := lo.MaxBy(input.Items, func(a common.MergeInputItem, b common.MergeInputItem) bool {
+		return a.End-a.Start > b.End-b.Start
+	})
+
+	info, err := ffmpeg.GetStreamInfo(longestItem.Path)
+	if err != nil {
+		return 0, err
+	}
+
+	var rate = 25
+	if info.FrameRate > 40 {
+		rate = 50
+	}
+
+	return rate, nil
+}
 
 // MergeVideo takes a list of video files and merges them into one file.
 func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallback) (*common.MergeResult, error) {
@@ -34,6 +53,11 @@ func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 		filterComplex += fmt.Sprintf("[v%d]", index)
 	}
 
+	rate, err := getFramerate(input)
+	if err != nil {
+		return nil, err
+	}
+
 	// Concatenate the video streams.
 	filterComplex += fmt.Sprintf("concat=n=%d:v=1:a=0[v]", len(input.Items))
 
@@ -49,6 +73,7 @@ func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 		"-profile:v", "3",
 		"-vendor", "ap10",
 		"-bits_per_mb", "8000",
+		"-r", strconv.Itoa(rate),
 		"-pix_fmt", "yuv422p10le",
 		"-color_primaries", "bt709",
 		"-color_trc", "bt709",
@@ -57,7 +82,7 @@ func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 		outputPath,
 	)
 
-	_, err := ffmpeg.Do(params, ffmpeg.StreamInfo{
+	_, err = ffmpeg.Do(params, ffmpeg.StreamInfo{
 		TotalSeconds: input.Duration,
 	}, progressCallback)
 	if err != nil {
