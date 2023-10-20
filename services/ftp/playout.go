@@ -6,7 +6,7 @@ import (
 
 var (
 	playoutIP       = os.Getenv("PLAYOUT_FTP_IP")
-	playoutUser     = os.Getenv("PLAYOUT_FTP_USER")
+	playoutUser     = os.Getenv("PLAYOUT_FTP_USERNAME")
 	playoutPassword = os.Getenv("PLAYOUT_FTP_PASSWORD")
 )
 

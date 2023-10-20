@@ -10,17 +10,19 @@ type FtpPlayoutRenameParams struct {
 	To   string
 }
 
-func FtpPlayoutRename(ctx context.Context, params FtpPlayoutRenameParams) error {
+type FtpPlayoutRenameResult struct{}
+
+func FtpPlayoutRename(ctx context.Context, params FtpPlayoutRenameParams) (*FtpPlayoutRenameResult, error) {
 	client, err := ftp.Playout()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer client.Close()
 
 	err = client.Rename(params.From, params.To)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }

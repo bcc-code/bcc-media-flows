@@ -29,6 +29,7 @@ var utilActivities = []any{
 	activities.StandardizeFileName,
 	activities.GetSubtitlesActivity,
 	batonactivities.QC,
+	activities.FtpPlayoutRename,
 }
 
 var vidispineActivities = []any{
