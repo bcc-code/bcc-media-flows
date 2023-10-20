@@ -260,7 +260,7 @@ func (s *VidispineService) getEmbeddedAudio(clip *Clip, languagesToExport []stri
 
 // GetDataForExport returns the data needed to export the item with the given VXID
 // If exportSubclip is true, the subclip will be exported, otherwise the whole clip
-func (s *VidispineService) GetDataForExport(itemVXID string, LanguagesToExport []string, audioSource *ExportAudioSource) (*ExportData, error) {
+func (s *VidispineService) GetDataForExport(itemVXID string, languagesToExport []string, audioSource *ExportAudioSource) (*ExportData, error) {
 	meta, err := s.apiClient.GetMetadata(itemVXID)
 	if err != nil {
 		return nil, err
@@ -324,7 +324,9 @@ func (s *VidispineService) GetDataForExport(itemVXID string, LanguagesToExport [
 	for _, clip := range out.Clips {
 		clip.AudioFiles = map[string]*AudioFile{}
 
-		languagesToExport := LanguagesToExport
+		if len(languagesToExport) == 0 {
+			languagesToExport = meta.GetArray(vscommon.FieldLangsToExport)
+		}
 
 		if audioSource == &ExportAudioSourceRelated {
 			clip, err = s.getRelatedAudios(clip, languagesToExport)
