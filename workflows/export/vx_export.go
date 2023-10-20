@@ -33,6 +33,7 @@ type VXExportParams struct {
 	Destinations      []string
 	LanguagesToExport []string
 	AudioSource       string
+	Languages         []string
 }
 
 type VXExportResult struct {
@@ -118,6 +119,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		MakeVideo:     !bmmOnly,
 		MakeAudio:     true,
 		MakeSubtitles: true,
+		Languages:     params.Languages,
 	}).Get(ctx, &mergeResult)
 	if err != nil {
 		return nil, err

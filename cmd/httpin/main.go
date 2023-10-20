@@ -114,12 +114,19 @@ func triggerHandler(ctx *gin.Context) {
 			return
 		}
 
+		languagesString := getParamFromCtx(ctx, "languages")
+		var languages []string
+		if languagesString != "" {
+			languages = strings.Split(languagesString, ",")
+		}
+
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, export.VXExport, export.VXExportParams{
 			VXID:          vxID,
 			WithFiles:     getParamFromCtx(ctx, "withFiles") == "true",
 			WithChapters:  getParamFromCtx(ctx, "withChapters") == "true",
 			WatermarkPath: getParamFromCtx(ctx, "watermarkPath"),
 			Destinations:  strings.Split(getParamFromCtx(ctx, "destinations"), ","),
+			Languages:     languages,
 		})
 	case "ExecuteFFmpeg":
 		var input struct {
