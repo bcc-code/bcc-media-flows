@@ -2,6 +2,7 @@ package main
 
 import (
 	batonactivities "github.com/bcc-code/bccm-flows/activities/baton"
+	"github.com/bcc-code/bccm-flows/workflows/ingest"
 	"log"
 	"os"
 	"strconv"
@@ -64,7 +65,7 @@ var workerWorkflows = []any{
 	export.VXExportToBMM,
 	workflows.ExecuteFFmpeg,
 	workflows.ImportSubtitlesFromSubtrans,
-	workflows.AssetIngest,
+	ingest.Asset,
 	workflows.NormalizeAudioLevelWorkflow,
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/workflows"
+	"github.com/bcc-code/bccm-flows/workflows/ingest"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"
@@ -92,7 +93,7 @@ func doIngest(ctx context.Context, path string) error {
 		TaskQueue: utils.GetWorkerQueue(),
 	}
 
-	_, err = c.ExecuteWorkflow(ctx, workflowOptions, workflows.AssetIngest, workflows.AssetIngestParams{
+	_, err = c.ExecuteWorkflow(ctx, workflowOptions, ingest.Asset, ingest.AssetParams{
 		XMLPath: path,
 	})
 	return err

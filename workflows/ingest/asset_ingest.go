@@ -1,4 +1,4 @@
-package workflows
+package ingest
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/bcc-code/bccm-flows/workflows"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 	"path/filepath"
@@ -16,20 +17,15 @@ import (
 	"strings"
 )
 
-type AssetIngestParams struct {
+type AssetParams struct {
 	XMLPath string
 }
 
-type AssetIngestResult struct{}
+type AssetResult struct{}
 
-type assetFile struct {
-	Directory string
-	FileName  string
-}
-
-func AssetIngest(ctx workflow.Context, params AssetIngestParams) (*AssetIngestResult, error) {
+func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 	logger := workflow.GetLogger(ctx)
-	logger.Info("Starting AssetIngest")
+	logger.Info("Starting Asset")
 
 	options := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
@@ -66,7 +62,7 @@ func AssetIngest(ctx workflow.Context, params AssetIngestParams) (*AssetIngestRe
 		})
 	}
 
-	return &AssetIngestResult{}, nil
+	return &AssetResult{}, nil
 }
 
 type AssetIngestRawMaterialParams struct {
@@ -187,7 +183,7 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 
 	var wfFutures []workflow.ChildWorkflowFuture
 	for _, id := range assetIDs {
-		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, TranscodePreviewVX, TranscodePreviewVXInput{
+		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
 			VXID: id,
 		}))
 	}
@@ -201,7 +197,7 @@ func assetIngestRawMaterial(ctx workflow.Context, params AssetIngestRawMaterialP
 
 	wfFutures = []workflow.ChildWorkflowFuture{}
 	for _, id := range assetIDs {
-		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, TranscribeVX, TranscribeVXInput{
+		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeVX, workflows.TranscribeVXInput{
 			VXID: id,
 		}))
 	}
