@@ -66,6 +66,7 @@ var workerWorkflows = []any{
 	workflows.ExecuteFFmpeg,
 	workflows.ImportSubtitlesFromSubtrans,
 	ingest.Asset,
+	ingest.RawMaterial,
 	workflows.NormalizeAudioLevelWorkflow,
 }
 
