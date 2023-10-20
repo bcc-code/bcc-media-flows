@@ -11,9 +11,9 @@ import (
 )
 
 type GetExportDataParams struct {
-	VXID              string
-	LanguagesToExport []string
-	AudioSource       string
+	VXID        string
+	Languages   []string
+	AudioSource string
 }
 
 func GetExportDataActivity(ctx context.Context, params *GetExportDataParams) (*vidispine.ExportData, error) {
@@ -28,7 +28,7 @@ func GetExportDataActivity(ctx context.Context, params *GetExportDataParams) (*v
 		return nil, fmt.Errorf("invalid audioSource: %s", params.AudioSource)
 	}
 
-	data, err := client.GetDataForExport(params.VXID, params.LanguagesToExport, audioSource)
+	data, err := client.GetDataForExport(params.VXID, params.Languages, audioSource)
 	if err != nil {
 		return nil, err
 	}

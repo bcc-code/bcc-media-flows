@@ -93,13 +93,13 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 	var res client.WorkflowRun
 
 	res, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, export.VXExport, export.VXExportParams{
-		VXID:              c.Query("id"),
-		WithFiles:         c.PostForm("withFiles") == "on",
-		WithChapters:      c.PostForm("withChapters") == "on",
-		WatermarkPath:     c.PostForm("watermarkPath"),
-		AudioSource:       c.PostForm("audioSource"),
-		Destinations:      c.PostFormArray("Destinations[]"),
-		LanguagesToExport: c.PostFormArray("Languages[]"),
+		VXID:          c.Query("id"),
+		WithFiles:     c.PostForm("withFiles") == "on",
+		WithChapters:  c.PostForm("withChapters") == "on",
+		WatermarkPath: c.PostForm("watermarkPath"),
+		AudioSource:   c.PostForm("audioSource"),
+		Destinations:  c.PostFormArray("Destinations[]"),
+		Languages:     c.PostFormArray("Languages[]"),
 	})
 
 	if err != nil {

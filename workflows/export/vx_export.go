@@ -26,14 +26,13 @@ var (
 )
 
 type VXExportParams struct {
-	VXID              string
-	WithFiles         bool
-	WithChapters      bool
-	WatermarkPath     string
-	Destinations      []string
-	LanguagesToExport []string
-	AudioSource       string
-	Languages         []string
+	VXID          string
+	WithFiles     bool
+	WithChapters  bool
+	WatermarkPath string
+	Destinations  []string
+	AudioSource   string
+	Languages     []string
 }
 
 type VXExportResult struct {
@@ -82,7 +81,9 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 
 	var data *vidispine.ExportData
 	err := workflow.ExecuteActivity(ctx, avidispine.GetExportDataActivity, avidispine.GetExportDataParams{
-		VXID: params.VXID,
+		VXID:        params.VXID,
+		Languages:   params.Languages,
+		AudioSource: params.AudioSource,
 	}).Get(ctx, &data)
 	if err != nil {
 		return nil, err
