@@ -1,0 +1,42 @@
+#requestForm {
+    background-color: rgb(220, 220, 220);
+    padding: 16px;
+    max-width: fit-content;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.dropdown {
+
+    margin-bottom: 10px;
+}
+
+.checkbox {
+    margin-bottom: 5px;
+    
+}
+
+#vxID {
+    margin-bottom: 10px;
+}
+
+.checkboxList {
+    margin-bottom: 10px;
+}
+
+li {
+    list-style: none;
+    padding: 0;
+}
+
+ul {
+    padding: 0;
+}
+
+.uppercase {
+    text-transform: uppercase;
+}
+
+#submit {
+    padding: 10px;
+    margin-top: 10px;
+}

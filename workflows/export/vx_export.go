@@ -26,11 +26,13 @@ var (
 )
 
 type VXExportParams struct {
-	VXID          string
-	WithFiles     bool
-	WithChapters  bool
-	WatermarkPath string
-	Destinations  []string
+	VXID              string
+	WithFiles         bool
+	WithChapters      bool
+	WatermarkPath     string
+	Destinations      []string
+	LanguagesToExport []string
+	AudioSource       string
 }
 
 type VXExportResult struct {
@@ -112,7 +114,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 	err = workflow.ExecuteChildWorkflow(ctx, MergeExportData, MergeExportDataParams{
 		ExportData:    data,
 		TempDir:       tempDir,
-		SubtitlesDir: vodOutputDir,
+		SubtitlesDir:  vodOutputDir,
 		MakeVideo:     !bmmOnly,
 		MakeAudio:     true,
 		MakeSubtitles: true,
