@@ -1,7 +1,9 @@
 package ingestworkflows
 
 import (
+	"fmt"
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/workflow"
 	"gopkg.in/guregu/null.v4"
 )
@@ -32,6 +34,15 @@ func VBMaster(ctx workflow.Context, params VBMasterParams) (*VBMasterResult, err
 		filename += "_" + params.ProgramQueueID.String
 	}
 	filename += "_" + params.Filename
+
+	files, err := wfutils.ListFiles(ctx, params.Directory)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(files) > 0 {
+		return nil, fmt.Errorf("too many files in directory: %s", params.Directory)
+	}
 
 	return nil, nil
 }

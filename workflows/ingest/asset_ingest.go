@@ -61,17 +61,23 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 		return nil, err
 	}
 
-	err = copyToTempDir(ctx, metadata.FileList.Files)
-	if err != nil {
-		return nil, err
-	}
-
 	tempDir, err := wfutils.GetWorkflowTempFolder(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tempDirPath, err := utils.ParsePath(tempDir)
+	fcOutputDir := filepath.Join(tempDir, "fc")
+	err = wfutils.CreateFolder(ctx, fcOutputDir)
+	if err != nil {
+		return nil, err
+	}
+
+	err = copyToDir(ctx, fcOutputDir, metadata.FileList.Files)
+	if err != nil {
+		return nil, err
+	}
+
+	fcOutputDirPath, err := utils.ParsePath(fcOutputDir)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +85,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 	switch *orderForm {
 	case OrderFormRawMaterial:
 		files := lo.Map(metadata.FileList.Files, func(file ingest.File, _ int) utils.Path {
-			return tempDirPath.Append(file.FilePath)
+			return fcOutputDirPath.Append(file.FilePath)
 		})
 		err = workflow.ExecuteChildWorkflow(ctx, RawMaterial, RawMaterialParams{
 			Job:   job,
@@ -87,7 +93,8 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 		}).Get(ctx, nil)
 	case OrderFormVBMaster:
 		err = workflow.ExecuteChildWorkflow(ctx, VBMaster, VBMasterParams{
-			Job: job,
+			Job:       job,
+			Directory: fcOutputDir,
 		}).Get(ctx, nil)
 	}
 	if err != nil {
@@ -97,7 +104,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 	return &AssetResult{}, nil
 }
 
-func copyToTempDir(ctx workflow.Context, files []ingest.File) error {
+func copyToDir(ctx workflow.Context, dest string, files []ingest.File) error {
 	var dirs []string
 	for _, file := range files {
 		if !lo.Contains(dirs, file.FilePath) {
@@ -110,11 +117,6 @@ func copyToTempDir(ctx workflow.Context, files []ingest.File) error {
 	}
 
 	dir, err := utils.ParsePath(filepath.Join("/mnt/dmzshare", "workflow", dirs[0]))
-	if err != nil {
-		return err
-	}
-
-	dest, err := wfutils.GetWorkflowTempFolder(ctx)
 	if err != nil {
 		return err
 	}
