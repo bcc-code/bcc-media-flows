@@ -93,7 +93,7 @@ func doIngest(ctx context.Context, path string) error {
 		TaskQueue: utils.GetWorkerQueue(),
 	}
 
-	_, err = c.ExecuteWorkflow(ctx, workflowOptions, ingest.Asset, ingest.AssetParams{
+	_, err = c.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.Asset, ingestworkflows.AssetParams{
 		XMLPath: path,
 	})
 	return err

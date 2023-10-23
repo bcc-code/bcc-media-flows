@@ -146,7 +146,7 @@ func triggerHandler(ctx *gin.Context) {
 			ctx.Status(http.StatusBadRequest)
 			return
 		}
-		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, ingest.Asset, ingest.AssetParams{
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.Asset, ingestworkflows.AssetParams{
 			XMLPath: xmlPath,
 		})
 	case "ImportSubtitlesFromSubtrans":

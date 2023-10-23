@@ -1,4 +1,4 @@
-package ingest
+package ingestworkflows
 
 import (
 	"fmt"
