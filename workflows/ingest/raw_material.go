@@ -68,25 +68,12 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		if !found {
 			return fmt.Errorf("file not found: %s", file)
 		}
-		var result vsactivity.CreatePlaceholderResult
-		err = workflow.ExecuteActivity(ctx, vsactivity.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
-			Title: f.FileName(),
-		}).Get(ctx, &result)
+		var result *importTagResult
+		result, err = importTag(ctx, "original", file, f.FileName())
 		if err != nil {
 			return err
 		}
-		var job vsactivity.JobResult
-		err = workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
-			AssetID:  result.AssetID,
-			FilePath: file,
-			ShapeTag: "original",
-		}).Get(ctx, &job)
-
-		if err != nil {
-			return err
-		}
-		vidispineJobIDs[result.AssetID] = job.JobID
-
+		vidispineJobIDs[result.AssetID] = result.ImportJobID
 		assetAnalyzeTasks[result.AssetID] = workflow.ExecuteActivity(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
 			FilePath: file,
 		})
