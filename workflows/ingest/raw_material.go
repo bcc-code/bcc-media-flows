@@ -43,7 +43,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 	}
 
 	for _, f := range params.Files {
-		err = workflow.ExecuteActivity(ctx, activities.RcloneMoveFileActivity, activities.RcloneMoveFileInput{
+		err = workflow.ExecuteActivity(ctx, activities.RcloneMoveFile, activities.RcloneMoveFileInput{
 			Source:      f,
 			Destination: outputPath.Append(filepath.Base(f.Path)),
 		}).Get(ctx, nil)

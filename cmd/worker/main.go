@@ -117,7 +117,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 	case common.QueueDebug:
 		w.RegisterActivity(activities.Transcribe)
 		w.RegisterActivity(activities.RcloneCopyDir)
-		w.RegisterActivity(activities.RcloneMoveFileActivity)
+		w.RegisterActivity(activities.RcloneMoveFile)
 		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {
@@ -142,7 +142,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 	case common.QueueWorker:
 		w.RegisterActivity(activities.Transcribe)
 		w.RegisterActivity(activities.RcloneCopyDir)
-		w.RegisterActivity(activities.RcloneMoveFileActivity)
+		w.RegisterActivity(activities.RcloneMoveFile)
 		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {

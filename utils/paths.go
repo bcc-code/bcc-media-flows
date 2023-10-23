@@ -58,42 +58,52 @@ type Path struct {
 	Path  string
 }
 
-// RcloneFsRemote returns (fs, remote) for rclone usage
-func (d Path) RcloneFsRemote() (string, string) {
-	switch d.Drive {
+func (p Path) WorkerPath() string {
+	switch p.Drive {
 	case IsilonDrive:
-		return "isilon:", filepath.Join("isilon", d.Path)
+		return filepath.Join("/mnt/isilon", p.Path)
 	case DMZShareDrive:
-		return "dmz:", filepath.Join("dmzshare", d.Path)
+		return filepath.Join("/mnt/dmzshare", p.Path)
+	}
+	return ""
+}
+
+// RcloneFsRemote returns (fs, remote) for rclone usage
+func (p Path) RcloneFsRemote() (string, string) {
+	switch p.Drive {
+	case IsilonDrive:
+		return "isilon:", filepath.Join("isilon", p.Path)
+	case DMZShareDrive:
+		return "dmz:", filepath.Join("dmzshare", p.Path)
 	}
 	return "", ""
 }
 
-func (d Path) RclonePath() string {
-	switch d.Drive {
+func (p Path) RclonePath() string {
+	switch p.Drive {
 	case IsilonDrive:
-		return filepath.Join("isilon:isilon", d.Path)
+		return filepath.Join("isilon:isilon", p.Path)
 	case DMZShareDrive:
-		return filepath.Join("dmz:dmzshare", d.Path)
+		return filepath.Join("dmz:dmzshare", p.Path)
 	}
 	return ""
 }
 
-func (d Path) BatonPath() string {
-	switch d.Drive {
+func (p Path) BatonPath() string {
+	switch p.Drive {
 	case IsilonDrive:
-		return filepath.Join("\\\\10.12.130.61\\isilon", strings.ReplaceAll(d.Path, "/", "\\"))
+		return filepath.Join("\\\\10.12.130.61\\isilon", strings.ReplaceAll(p.Path, "/", "\\"))
 	}
 	return ""
 }
 
-func (d Path) FileName() string {
-	return filepath.Base(d.Path)
+func (p Path) FileName() string {
+	return filepath.Base(p.Path)
 }
 
-func (d Path) Append(path string) Path {
-	d.Path = filepath.Join(d.Path, path)
-	return d
+func (p Path) Append(path string) Path {
+	p.Path = filepath.Join(p.Path, path)
+	return p
 }
 
 func ParsePath(path string) (Path, error) {
@@ -101,6 +111,11 @@ func ParsePath(path string) (Path, error) {
 	if strings.HasPrefix(path, "/mnt/isilon") {
 		p.Drive = IsilonDrive
 		p.Path = strings.TrimPrefix(path, "/mnt/isilon/")
+		return p, nil
+	}
+	if strings.HasPrefix(path, "/mnt/dmzshare") {
+		p.Drive = DMZShareDrive
+		p.Path = strings.TrimPrefix(path, "/mnt/dmzshare/")
 		return p, nil
 	}
 	return p, ErrPathNotValid

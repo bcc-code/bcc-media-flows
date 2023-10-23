@@ -2,6 +2,7 @@ package ingest
 
 import (
 	"fmt"
+	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/utils"
@@ -60,24 +61,71 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 		return nil, err
 	}
 
+	err = copyToTempDir(ctx, metadata.FileList.Files)
+	if err != nil {
+		return nil, err
+	}
+
+	tempDir, err := wfutils.GetWorkflowTempFolder(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	tempDirPath, err := utils.ParsePath(tempDir)
+	if err != nil {
+		return nil, err
+	}
+
 	switch *orderForm {
 	case OrderFormRawMaterial:
 		files := lo.Map(metadata.FileList.Files, func(file ingest.File, _ int) utils.Path {
-			return utils.Path{
-				Drive: utils.DMZShareDrive,
-				Path:  filepath.Join("workflow", file.FilePath, file.FileName),
-			}
+			return tempDirPath.Append(file.FilePath)
 		})
 		err = workflow.ExecuteChildWorkflow(ctx, RawMaterial, RawMaterialParams{
 			Job:   job,
 			Files: files,
 		}).Get(ctx, nil)
 	case OrderFormVBMaster:
-		err = workflow.ExecuteChildWorkflow(ctx, VBMaster, VBMasterParams{}).Get(ctx, nil)
+		err = workflow.ExecuteChildWorkflow(ctx, VBMaster, VBMasterParams{
+			Job: job,
+		}).Get(ctx, nil)
 	}
 	if err != nil {
 		return nil, err
 	}
 
 	return &AssetResult{}, nil
+}
+
+func copyToTempDir(ctx workflow.Context, files []ingest.File) error {
+	var dirs []string
+	for _, file := range files {
+		if !lo.Contains(dirs, file.FilePath) {
+			dirs = append(dirs, file.FilePath)
+		}
+	}
+
+	if len(dirs) > 1 {
+		return fmt.Errorf("multiple directories not supported: %s", dirs)
+	}
+
+	dir, err := utils.ParsePath(filepath.Join("/mnt/dmzshare", "workflow", dirs[0]))
+	if err != nil {
+		return err
+	}
+
+	dest, err := wfutils.GetWorkflowTempFolder(ctx)
+	if err != nil {
+		return err
+	}
+
+	destPath, err := utils.ParsePath(dest)
+	if err != nil {
+		return err
+	}
+
+	return workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
+		Source:      dir.RclonePath(),
+		Destination: destPath.RclonePath(),
+	}).Get(ctx, nil)
 }
