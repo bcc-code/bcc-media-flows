@@ -67,6 +67,7 @@ var workerWorkflows = []any{
 	workflows.ImportSubtitlesFromSubtrans,
 	ingest.Asset,
 	ingest.RawMaterial,
+	ingest.VBMaster,
 	workflows.NormalizeAudioLevelWorkflow,
 }
 

@@ -72,6 +72,8 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			Job:   job,
 			Files: files,
 		}).Get(ctx, nil)
+	case OrderFormVBMaster:
+		err = workflow.ExecuteChildWorkflow(ctx, VBMaster, VBMasterParams{}).Get(ctx, nil)
 	}
 	if err != nil {
 		return nil, err
