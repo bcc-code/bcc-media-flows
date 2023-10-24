@@ -43,6 +43,7 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 			"-pix_fmt", "yuv420p",
 			"-x264opts", "no-scenecut",
 			"-crf", "18",
+			"-write_tmcd", "0",
 		)
 	case "libx265":
 		params = append(params,
@@ -67,12 +68,12 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 
 	var filterComplex string
 
-	filterComplex += fmt.Sprintf("[0] scale=%[1]d:%[2]d:force_original_aspect_ratio=decrease,pad=%[1]d:%[2]d:(ow-iw)/2:(oh-ih)/2 [main];",
+	filterComplex += fmt.Sprintf("[0:0] scale=%[1]d:%[2]d:force_original_aspect_ratio=decrease,pad=%[1]d:%[2]d:(ow-iw)/2:(oh-ih)/2 [main];",
 		1920,
 		1080)
 
 	if input.WatermarkPath != "" {
-		filterComplex += "[main][1] overlay=main_w-overlay_w:0 [main];"
+		filterComplex += "[main][1:0] overlay=main_w-overlay_w:0 [main];"
 	}
 
 	filterComplex += fmt.Sprintf("[main] scale=%[1]d:%[2]d:force_original_aspect_ratio=decrease [out]",
