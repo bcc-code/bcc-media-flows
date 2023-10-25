@@ -31,6 +31,7 @@ type VXExportParams struct {
 	WithChapters  bool
 	WatermarkPath string
 	Destinations  []string
+	AudioSource   string
 	Languages     []string
 }
 
@@ -80,7 +81,9 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 
 	var data *vidispine.ExportData
 	err := workflow.ExecuteActivity(ctx, avidispine.GetExportDataActivity, avidispine.GetExportDataParams{
-		VXID: params.VXID,
+		VXID:        params.VXID,
+		Languages:   params.Languages,
+		AudioSource: params.AudioSource,
 	}).Get(ctx, &data)
 	if err != nil {
 		return nil, err
