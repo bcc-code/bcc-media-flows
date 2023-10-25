@@ -28,8 +28,8 @@ func getVideoQualities(videoFilePath, outputDir, watermarkPath string) map[strin
 			WatermarkPath:   watermarkPath,
 			Width:           1920,
 			Height:          1080,
-			Bitrate:         "8M",
-			BufferSize:      "5M",
+			Bitrate:         "6M",
+			BufferSize:      "2M",
 		},
 		r720p: {
 			Path:            videoFilePath,

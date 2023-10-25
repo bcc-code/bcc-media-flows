@@ -54,11 +54,15 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		)
 	}
 
-	//if input.BufferSize != "" {
-	//	params = append(params,
-	//		"-bufsize", input.BufferSize,
-	//	)
-	//}
+	params = append(params,
+		"-maxrate", input.Bitrate,
+	)
+
+	if input.BufferSize != "" {
+		params = append(params,
+			"-bufsize", input.BufferSize,
+		)
+	}
 
 	var filterComplex string
 
