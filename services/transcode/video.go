@@ -42,7 +42,7 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 			"-g", "48",
 			"-pix_fmt", "yuv420p",
 			"-x264opts", "no-scenecut",
-			"-crf", "20",
+			"-crf", "21",
 			"-write_tmcd", "0",
 		)
 	case "libx265":
