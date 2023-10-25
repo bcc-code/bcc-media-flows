@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+	
+	<form id="requestForm" method="post">
+
+		<h1 for="vxID" id="vxID" name="vxID">{{ .title }}</h1>
+
+		<div class="checkboxList">
+			<label for="Destinations">Destinations</label>
+			{{range $index, $element := .AssetExportDestinations}}
+			<li>
+				<input type=checkbox name="Destinations[]" value={{$element}}>
+				<label for={{$element}}>{{ $element }}</label>
+				
+			</li>
+			{{end}}
+		</div>
+
+
+		<div class="dropdown">
+			<label for="audioSource">Audio Source</label>
+			<select name="audioSource" id="audioSource" >
+				{{range $index, $element := .AudioSources}}
+					<option value={{$element}}>{{$element}}</option>
+				{{end}}
+			</select>
+		</div>
+
+
+		<div class="checkboxList">
+			<label for="items">Language Exports</label>
+			<ul class="items">
+				{{range $index, $element := .Languages}}
+				<li><input type="checkbox" name="Languages[]" value={{$element.ISO6391}} /><span class="uppercase">{{$element.ISO6391}}</span> - {{$element.LanguageName}} </li>
+				{{end}}
+			</ul>
+		</div>
+
+		<div  class="dropdown">
+		<label for="watermarkPath">Overlay</label>
+		<select name="watermarkPath" id="watermarkPath" >
+			{{range $index, $element := .Filenames}}
+				<option value={{$element}}>{{$element}}</option>
+			{{end}}
+		</select>
+		</div>
+
+
+		<div class="checkbox">
+			<label for="withFiles">With downloadables</label>
+			<input type="checkbox" name="withFiles" id="withFiles">
+		</div>
+
+		<div class="checkbox">
+			<label for="withChapters">With chapters</label>
+			<input type="checkbox" name="withChapters" id="withChapters">
+		</div>
+
+		<input id="submit" type="submit" value="Start export">
+	</form>
+</body>
+
+</html>

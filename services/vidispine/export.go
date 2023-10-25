@@ -50,6 +50,10 @@ type ExportAudioSource enum.Member[string]
 var (
 	ExportAudioSourceEmbedded = ExportAudioSource{"embedded"}
 	ExportAudioSourceRelated  = ExportAudioSource{"related"}
+	ExportAudioSources        = enum.New(
+		ExportAudioSourceEmbedded,
+		ExportAudioSourceRelated,
+	)
 
 	EmptyWAVFile = utils.GetIsilonPrefix() + "/system/assets/BlankAudio10h.wav"
 	EmtpySRTFile = utils.GetIsilonPrefix() + "/system/assets/empty.srt"
@@ -256,7 +260,7 @@ func (s *VidispineService) getEmbeddedAudio(clip *Clip, languagesToExport []stri
 
 // GetDataForExport returns the data needed to export the item with the given VXID
 // If exportSubclip is true, the subclip will be exported, otherwise the whole clip
-func (s *VidispineService) GetDataForExport(itemVXID string) (*ExportData, error) {
+func (s *VidispineService) GetDataForExport(itemVXID string, languagesToExport []string, audioSource *ExportAudioSource) (*ExportData, error) {
 	meta, err := s.apiClient.GetMetadata(itemVXID)
 	if err != nil {
 		return nil, err
@@ -272,9 +276,11 @@ func (s *VidispineService) GetDataForExport(itemVXID string) (*ExportData, error
 	meta = metaClips[vsapi.OriginalClip]
 
 	// Determine where to take the audio from
-	audioSource := ExportAudioSourceEmbedded
-	if meta.Get(vscommon.FieldExportAudioSource, "") == ExportAudioSourceRelated.Value {
-		audioSource = ExportAudioSourceRelated
+	if audioSource == nil {
+		audioSource = &ExportAudioSourceEmbedded
+		if meta.Get(vscommon.FieldExportAudioSource, "") == ExportAudioSourceRelated.Value {
+			audioSource = &ExportAudioSourceRelated
+		}
 	}
 
 	// Check for sequence
@@ -302,7 +308,7 @@ func (s *VidispineService) GetDataForExport(itemVXID string) (*ExportData, error
 		if err != nil {
 			return nil, err
 		}
-		out.Clips, err = s.SeqToClips(seq, audioSource)
+		out.Clips, err = s.SeqToClips(seq, *audioSource)
 		if err != nil {
 			return nil, err
 		}
@@ -318,11 +324,13 @@ func (s *VidispineService) GetDataForExport(itemVXID string) (*ExportData, error
 	for _, clip := range out.Clips {
 		clip.AudioFiles = map[string]*AudioFile{}
 
-		languagesToExport := meta.GetArray(vscommon.FieldLangsToExport)
+		if len(languagesToExport) == 0 {
+			languagesToExport = meta.GetArray(vscommon.FieldLangsToExport)
+		}
 
-		if audioSource == ExportAudioSourceRelated {
+		if audioSource == &ExportAudioSourceRelated {
 			clip, err = s.getRelatedAudios(clip, languagesToExport)
-		} else if audioSource == ExportAudioSourceEmbedded {
+		} else if audioSource == &ExportAudioSourceEmbedded {
 			clip, err = s.getEmbeddedAudio(clip, languagesToExport)
 		}
 
