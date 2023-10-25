@@ -9,12 +9,6 @@ import (
 )
 
 func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.VideoResult, error) {
-	// -hide_banner -progress pipe:1 -i /mnt/isilon/system/tmp/workflows/2c402aa0-da5e-43a1-a321-dc8d255efe90/BIST_S01_E04_SEQ.mxf -i /mnt/isilon/system/assets/BTV_LOGO_WATERMARK_BUG_GFX_1080.png
-	// -c:v libx264 -profile:v high -preset veryfast -level:v 1.3 -tune film -vsync 1 -g 48 -pix_fmt yuv420p -x264opts no-scenecut -b:v 8M -maxrate 8M -bufsize 5M -r 25
-	// -filter_complex [0] scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2 [main];[main][1] overlay=main_w-overlay_w:0 [main];[main] scale=1920:1080:force_original_aspect_ratio=decrease [out]
-	// -map [out]
-	// -y /mnt/isilon/system/tmp/workflows/2c402aa0-da5e-43a1-a321-dc8d255efe90/BIST_S01_E04_SEQ_1920x1080.mp4
-
 	h264encoder := os.Getenv("H264_ENCODER")
 	h264encoder = "libx264"
 
@@ -45,24 +39,17 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 			"-crf", "22",
 			"-write_tmcd", "0",
 		)
-	case "libx265":
-		params = append(params,
-			"-c:v", h264encoder,
-			"-profile:v", "main",
-			"-pix_fmt", "yuv420p",
-			//"-crf", "18",
-		)
 	}
 
-	params = append(params,
-		"-maxrate", input.Bitrate,
-	)
-
-	if input.BufferSize != "" {
-		params = append(params,
-			"-bufsize", input.BufferSize,
-		)
-	}
+	//params = append(params,
+	//	"-maxrate", input.Bitrate,
+	//)
+	//
+	//if input.BufferSize != "" {
+	//	params = append(params,
+	//		"-bufsize", input.BufferSize,
+	//	)
+	//}
 
 	var filterComplex string
 
