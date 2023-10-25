@@ -42,7 +42,7 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 			"-g", "48",
 			"-pix_fmt", "yuv420p",
 			"-x264opts", "no-scenecut",
-			"-crf", "18",
+			"-crf", "20",
 			"-write_tmcd", "0",
 		)
 	case "libx265":
@@ -53,12 +53,6 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 			//"-crf", "18",
 		)
 	}
-
-	params = append(params,
-		"-crf", "20",
-		//"-b:v", input.Bitrate,
-		//"-maxrate", input.Bitrate,
-	)
 
 	//if input.BufferSize != "" {
 	//	params = append(params,
