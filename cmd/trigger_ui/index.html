@@ -9,38 +9,63 @@
 	
 	<form id="requestForm" method="post">
 
-		<h1 for="vxID" id="vxID" name="vxID">{{ .title }}</h1>
+		<h1 for="vxID" id="vxID" name="vxID">{{ .Title }}</h1>
 
 		<div class="checkboxList">
 			<label for="Destinations">Destinations</label>
 			{{range $index, $element := .AssetExportDestinations}}
 			<li>
-				<input type=checkbox name="Destinations[]" value={{$element}}>
+				<input type=checkbox name="destinations[]" value={{$element}}>
 				<label for={{$element}}>{{ $element }}</label>
 				
 			</li>
 			{{end}}
 		</div>
 
-
 		<div class="dropdown">
 			<label for="audioSource">Audio Source</label>
 			<select name="audioSource" id="audioSource" >
+				{{$selectedAudio := .SelectedAudioSource}}
+
 				{{range $index, $element := .AudioSources}}
+					{{if eq $element $selectedAudio}} 
+					<option value={{$element}} selected>{{$element}}</option>
+					{{else}}
 					<option value={{$element}}>{{$element}}</option>
+					{{end}}
 				{{end}}
 			</select>
 		</div>
 
-
 		<div class="checkboxList">
 			<label for="items">Language Exports</label>
 			<ul class="items">
-				{{range $index, $element := .Languages}}
-				<li><input type="checkbox" name="Languages[]" value={{$element.ISO6391}} /><span class="uppercase">{{$element.ISO6391}}</span> - {{$element.LanguageName}} </li>
+
+				{{$Selected := .SelectedLanguages}}
+				{{$Language := .Languages}}
+
+				{{range $index, $Language := $Language}}
+					{{$isSelected := false}}
+
+					{{range $index2, $Selected := $Selected}} 
+
+						{{if eq $Selected $index}}
+							{{$isSelected = true}}
+							<li><input type="checkbox" name="languages[]" value={{$Language.ISO6391}} checked /><span class="uppercase"  >{{$Language.ISO6391}}</span> - {{$Language.LanguageName}} </li>		
+
+						{{end}}
+
+					{{end}}
+
+					{{if not $isSelected}}
+						<li><input type="checkbox" name="languages[]" value={{$Language.ISO6391}} /><span class="uppercase"  >{{$Language.ISO6391}}</span> - {{$Language.LanguageName}} </li>
+					{{end}}
+					
 				{{end}}
+
 			</ul>
 		</div>
+
 
 		<div  class="dropdown">
 		<label for="watermarkPath">Overlay</label>

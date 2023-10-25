@@ -54,7 +54,7 @@ type TriggerServer struct {
 	vsapiClient             *vsapi.Client
 	assetExportDestinations []string
 	wfClient                client.Client
-	language                map[string]bccmflows.Language
+	languages               map[string]bccmflows.Language
 	ExportAudioSources      []string
 }
 
@@ -67,6 +67,10 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 
 	title := meta.Get(vscommon.FieldTitle, "")
 
+	selectedAudiosource := meta.Get(vscommon.FieldExportAudioSource, "")
+
+	selectedLanguages := meta.GetArray(vscommon.FieldLangsToExport)
+
 	filenames, err := getOverlayFilenames()
 	if err != nil {
 		renderErrorPage(c, http.StatusInternalServerError, err)
@@ -74,15 +78,21 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "index.html", gin.H{
-		"title":                   title,
+		"Title":                   title,
 		"AssetExportDestinations": s.assetExportDestinations,
 		"Filenames":               filenames,
-		"Languages":               s.language,
+		"Languages":               s.languages,
+		"SelectedLanguages":       selectedLanguages,
+		"SelectedAudioSource":     selectedAudiosource,
 		"AudioSources":            s.ExportAudioSources,
 	})
 }
 
 func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
+
+	VXID := c.Query("id")
+	Languages := c.PostFormArray("languages[]")
+	AudioSource := c.PostForm("audioSource")
 
 	queue := getQueue()
 	workflowOptions := client.StartWorkflowOptions{
@@ -92,14 +102,31 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 
 	var res client.WorkflowRun
 
+	s.vsapiClient.SetItemMetadataField(VXID, vscommon.FieldExportAudioSource.Value, AudioSource)
+
+	for i, element := range Languages {
+		var err error
+		if i == 0 {
+			err = s.vsapiClient.SetItemMetadataField(VXID, vscommon.FieldLangsToExport.Value, element)
+		} else {
+			err = s.vsapiClient.AddToItemMetadataField(VXID, vscommon.FieldLangsToExport.Value, element)
+
+		}
+
+		if err != nil {
+			renderErrorPage(c, http.StatusInternalServerError, err)
+			return
+		}
+	}
+
 	res, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, export.VXExport, export.VXExportParams{
-		VXID:          c.Query("id"),
+		VXID:          VXID,
 		WithFiles:     c.PostForm("withFiles") == "on",
 		WithChapters:  c.PostForm("withChapters") == "on",
 		WatermarkPath: c.PostForm("watermarkPath"),
-		AudioSource:   c.PostForm("audioSource"),
-		Destinations:  c.PostFormArray("Destinations[]"),
-		Languages:     c.PostFormArray("Languages[]"),
+		AudioSource:   AudioSource,
+		Destinations:  c.PostFormArray("destinations[]"),
+		Languages:     Languages,
 	})
 
 	if err != nil {
@@ -124,7 +151,7 @@ func main() {
 	}
 	lang := bccmflows.LanguagesByISO
 
-	router.LoadHTMLGlob("index.html")
+	router.LoadHTMLGlob("*.html")
 	router.Static("/css", "../trigger_ui/css")
 
 	server := &TriggerServer{
@@ -138,5 +165,5 @@ func main() {
 	router.GET("/vx-export", server.triggerHandlerGET)
 	router.POST("/vx-export", server.triggerHandlerPOST)
 
-	router.Run(":8080")
+	router.Run(os.Getenv("PORT"))
 }
