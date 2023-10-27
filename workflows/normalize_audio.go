@@ -38,7 +38,7 @@ func NormalizeAudioLevelWorkflow(
 		StartToCloseTimeout:    time.Hour * 4,
 		ScheduleToCloseTimeout: time.Hour * 48,
 		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              utils.GetAudioQueue(),
+		TaskQueue:              utils.GetWorkerQueue(),
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
@@ -47,7 +47,7 @@ func NormalizeAudioLevelWorkflow(
 	logger.Info("Starting NormalizeAudio workflow")
 
 	r128Result := &common.AnalyzeEBUR128Result{}
-	err := workflow.ExecuteActivity(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
+	err := wfutils.ExecuteWithQueue(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
 		FilePath:       params.FilePath,
 		TargetLoudness: params.TargetLUFS,
 	}).Get(ctx, r128Result)
@@ -62,7 +62,7 @@ func NormalizeAudioLevelWorkflow(
 	}
 
 	adjustResult := &common.AudioResult{}
-	err = workflow.ExecuteActivity(ctx, activities.AdjustAudioLevelActivity, activities.AdjustAudioLevelParams{
+	err = wfutils.ExecuteWithQueue(ctx, activities.AdjustAudioLevelActivity, activities.AdjustAudioLevelParams{
 		Adjustment:  r128Result.SuggestedAdjustment,
 		InFilePath:  params.FilePath,
 		OutFilePath: outputFolder,
@@ -75,7 +75,7 @@ func NormalizeAudioLevelWorkflow(
 
 	if params.PerformOutputAnalysis {
 		r128Result := &common.AnalyzeEBUR128Result{}
-		err = workflow.ExecuteActivity(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
+		err = wfutils.ExecuteWithQueue(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
 			FilePath:       adjustResult.OutputPath,
 			TargetLoudness: params.TargetLUFS,
 		}).Get(ctx, r128Result)
