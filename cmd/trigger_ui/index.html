@@ -44,21 +44,21 @@
 				{{$Selected := .SelectedLanguages}}
 				{{$Language := .Languages}}
 
-				{{range $index, $Language := $Language}}
+				{{range $index, $language := $Language}}
 					{{$isSelected := false}}
 
-					{{range $index2, $Selected := $Selected}} 
+					{{range $Selected := $Selected}} 
 
 						{{if eq $Selected $index}}
 							{{$isSelected = true}}
-							<li><input type="checkbox" name="languages[]" value={{$Language.ISO6391}} checked /><span class="uppercase"  >{{$Language.ISO6391}}</span> - {{$Language.LanguageName}} </li>		
+							<li><input type="checkbox" name="languages[]" value={{$language.ISO6391}} checked /><span class="uppercase"  >{{$language.ISO6391}}</span> - {{$language.LanguageName}} </li>		
 
 						{{end}}
 
 					{{end}}
 
 					{{if not $isSelected}}
-						<li><input type="checkbox" name="languages[]" value={{$Language.ISO6391}} /><span class="uppercase"  >{{$Language.ISO6391}}</span> - {{$Language.LanguageName}} </li>
+						<li><input type="checkbox" name="languages[]" value={{$language.ISO6391}} /><span class="uppercase"  >{{$language.ISO6391}}</span> - {{$language.LanguageName}} </li>
 					{{end}}
 					
 				{{end}}

@@ -1,7 +1,11 @@
 package main
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
+	"time"
 
 	"os"
 
@@ -13,6 +17,8 @@ import (
 	"github.com/bcc-code/bccm-flows/workflows/export"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"go.temporal.io/api/history/v1"
+	"go.temporal.io/api/workflowservice/v1"
 	"go.temporal.io/sdk/client"
 )
 
@@ -90,9 +96,9 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 
 func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 
-	VXID := c.Query("id")
-	Languages := c.PostFormArray("languages[]")
-	AudioSource := c.PostForm("audioSource")
+	vxID := c.Query("id")
+	languages := c.PostFormArray("languages[]")
+	audioSource := c.PostForm("audioSource")
 
 	queue := getQueue()
 	workflowOptions := client.StartWorkflowOptions{
@@ -102,14 +108,14 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 
 	var res client.WorkflowRun
 
-	s.vsapiClient.SetItemMetadataField(VXID, vscommon.FieldExportAudioSource.Value, AudioSource)
+	s.vsapiClient.SetItemMetadataField(vxID, vscommon.FieldExportAudioSource.Value, audioSource)
 
-	for i, element := range Languages {
+	for i, element := range languages {
 		var err error
 		if i == 0 {
-			err = s.vsapiClient.SetItemMetadataField(VXID, vscommon.FieldLangsToExport.Value, element)
+			err = s.vsapiClient.SetItemMetadataField(vxID, vscommon.FieldLangsToExport.Value, element)
 		} else {
-			err = s.vsapiClient.AddToItemMetadataField(VXID, vscommon.FieldLangsToExport.Value, element)
+			err = s.vsapiClient.AddToItemMetadataField(vxID, vscommon.FieldLangsToExport.Value, element)
 
 		}
 
@@ -120,13 +126,13 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 	}
 
 	res, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, export.VXExport, export.VXExportParams{
-		VXID:          VXID,
+		VXID:          vxID,
 		WithFiles:     c.PostForm("withFiles") == "on",
 		WithChapters:  c.PostForm("withChapters") == "on",
 		WatermarkPath: c.PostForm("watermarkPath"),
-		AudioSource:   AudioSource,
+		AudioSource:   audioSource,
 		Destinations:  c.PostFormArray("destinations[]"),
-		Languages:     Languages,
+		Languages:     languages,
 	})
 
 	if err != nil {
@@ -134,8 +140,86 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 		return
 	}
 
+	meta, err := s.vsapiClient.GetMetadata(vxID)
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
+
 	// Render success page, with back button
-	c.JSON(http.StatusOK, res)
+
+	c.HTML(http.StatusOK, "success.html", gin.H{
+		"WorkflowID": res.GetID(),
+		"Title":      meta.Get(vscommon.FieldTitle, ""),
+	})
+
+}
+
+type workflowStruct struct {
+	VxID       string
+	Name       string
+	Status     string
+	WorkflowID string
+	Start      string
+}
+
+func (s *TriggerServer) listGET(c *gin.Context) {
+
+	workflowList := []workflowStruct{}
+
+	workflows, err := s.wfClient.ListWorkflow(c, &workflowservice.ListWorkflowExecutionsRequest{
+		Query: "WorkflowType = 'VXExport'",
+	})
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	for i := 0; i < len(workflows.Executions); i++ {
+		res, err := s.wfClient.WorkflowService().GetWorkflowExecutionHistory(c, &workflowservice.GetWorkflowExecutionHistoryRequest{
+			Execution: workflows.Executions[i].GetExecution(),
+			Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
+		})
+		print(res)
+		if err != nil {
+			renderErrorPage(c, http.StatusInternalServerError, err)
+			return
+		}
+		attributes, ok := res.History.Events[0].Attributes.(*history.HistoryEvent_WorkflowExecutionStartedEventAttributes)
+		if !ok {
+			renderErrorPage(c, 500, errors.New("unexpected attribute type on first workflow event. Was not HistoryEvent_WorkflowExecutionStartedEventAttributes"))
+			break
+		}
+		data := export.VXExportParams{}
+		err = json.Unmarshal(attributes.WorkflowExecutionStartedEventAttributes.Input.Payloads[0].Data, &data)
+
+		if err != nil {
+			renderErrorPage(c, http.StatusInternalServerError, err)
+			return
+		}
+
+		meta, err := s.vsapiClient.GetMetadata(data.VXID)
+		if err != nil {
+			renderErrorPage(c, http.StatusInternalServerError, err)
+			return
+		}
+		name := meta.Get(vscommon.FieldTitle, "")
+
+		loc, _ := time.LoadLocation("Europe/Oslo")
+		startime := workflows.Executions[i].StartTime.In(loc).Format("Mon, 02 Jan 2006 15:04:05 MST")
+		workflowList = append(workflowList, workflowStruct{
+			VxID:       data.VXID,
+			Name:       name,
+			Status:     workflows.Executions[i].GetStatus().String(),
+			WorkflowID: workflows.Executions[i].Execution.WorkflowId,
+			Start:      startime,
+		})
+
+	}
+
+	c.HTML(http.StatusOK, "list.html", gin.H{
+		"WorkflowList": workflowList,
+	})
 
 }
 
@@ -163,7 +247,12 @@ func main() {
 	}
 
 	router.GET("/vx-export", server.triggerHandlerGET)
+	router.GET("/vx-export/list", server.listGET)
 	router.POST("/vx-export", server.triggerHandlerPOST)
 
-	router.Run(os.Getenv("PORT"))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8083"
+	}
+	router.Run(fmt.Sprintf(":%s", port))
 }
