@@ -48,12 +48,12 @@ func VBMaster(ctx workflow.Context, params VBMasterParams) (*VBMasterResult, err
 		return nil, fmt.Errorf("too many files in directory: %s", params.Directory)
 	}
 
-	outputDir, err := wfutils.GetWorkflowOutputFolder(ctx)
+	outputDir, err := wfutils.GetWorkflowRawOutputFolder(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	//Production/aux/{date}/{wfID}/{filename}
+	//Production/raw/{date}/{wfID}/{filename}
 	file := filepath.Join(outputDir, filename)
 	err = wfutils.MoveFile(ctx, files[0], file)
 	if err != nil {
