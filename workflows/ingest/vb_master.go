@@ -53,6 +53,12 @@ func VBMaster(ctx workflow.Context, params VBMasterParams) (*VBMasterResult, err
 		return nil, err
 	}
 
+	sourceFile := files[0]
+
+	if filepath.Ext(sourceFile) != filepath.Ext(filename) {
+		filename += filepath.Ext(sourceFile)
+	}
+
 	//Production/raw/{date}/{wfID}/{filename}
 	file := filepath.Join(outputDir, filename)
 	err = wfutils.MoveFile(ctx, files[0], file)
