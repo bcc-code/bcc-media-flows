@@ -2,6 +2,7 @@ package main
 
 import (
 	batonactivities "github.com/bcc-code/bccm-flows/activities/baton"
+	"github.com/bcc-code/bccm-flows/workflows/ingest"
 	"log"
 	"os"
 	"strconv"
@@ -64,7 +65,9 @@ var workerWorkflows = []any{
 	export.VXExportToBMM,
 	workflows.ExecuteFFmpeg,
 	workflows.ImportSubtitlesFromSubtrans,
-	workflows.AssetIngest,
+	ingestworkflows.Asset,
+	ingestworkflows.RawMaterial,
+	ingestworkflows.VBMaster,
 	workflows.NormalizeAudioLevelWorkflow,
 }
 
@@ -114,7 +117,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 	case common.QueueDebug:
 		w.RegisterActivity(activities.Transcribe)
 		w.RegisterActivity(activities.RcloneCopyDir)
-		w.RegisterActivity(activities.RcloneMoveFileActivity)
+		w.RegisterActivity(activities.RcloneMoveFile)
 		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {
@@ -139,7 +142,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 	case common.QueueWorker:
 		w.RegisterActivity(activities.Transcribe)
 		w.RegisterActivity(activities.RcloneCopyDir)
-		w.RegisterActivity(activities.RcloneMoveFileActivity)
+		w.RegisterActivity(activities.RcloneMoveFile)
 		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {

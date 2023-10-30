@@ -3,6 +3,7 @@ package main
 import (
 	_ "embed"
 	"fmt"
+	"github.com/bcc-code/bccm-flows/workflows/ingest"
 	"net/http"
 	"os"
 	"strconv"
@@ -145,7 +146,7 @@ func triggerHandler(ctx *gin.Context) {
 			ctx.Status(http.StatusBadRequest)
 			return
 		}
-		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.AssetIngest, workflows.AssetIngestParams{
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.Asset, ingestworkflows.AssetParams{
 			XMLPath: xmlPath,
 		})
 	case "ImportSubtitlesFromSubtrans":

@@ -51,9 +51,9 @@ type RcloneMoveFileInput struct {
 	Destination utils.Path
 }
 
-func RcloneMoveFileActivity(ctx context.Context, input RcloneMoveFileInput) (bool, error) {
+func RcloneMoveFile(ctx context.Context, input RcloneMoveFileInput) (bool, error) {
 	logger := activity.GetLogger(ctx)
-	logger.Info("Starting RcloneMoveFileActivity")
+	logger.Info("Starting RcloneMoveFile")
 
 	srcFs, srcRemote := input.Source.RcloneFsRemote()
 	dstFs, dstRemote := input.Destination.RcloneFsRemote()
