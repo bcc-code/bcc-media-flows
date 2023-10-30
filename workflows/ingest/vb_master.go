@@ -2,26 +2,19 @@ package ingestworkflows
 
 import (
 	"fmt"
-	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/services/ingest"
+	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/workflow"
-	"gopkg.in/guregu/null.v4"
 	"path/filepath"
+	"strconv"
+	"strings"
 )
 
 type VBMasterParams struct {
-	Job common.IngestJob
+	Metadata *ingest.Metadata
 
 	Directory string
-
-	ProgramID      string
-	ProgramQueueID null.String
-
-	Filename string
-	Language null.String
-
-	Tags             []string
-	PersonsAppearing []string
 }
 
 type VBMasterResult struct{}
@@ -30,11 +23,18 @@ func VBMaster(ctx workflow.Context, params VBMasterParams) (*VBMasterResult, err
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting VBMaster workflow")
 
-	filename := params.ProgramID
-	if params.ProgramQueueID.Valid {
-		filename += "_" + params.ProgramQueueID.String
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+
+	programID := params.Metadata.JobProperty.ProgramID
+	if programID != "" {
+		programID = strings.Split(programID, " ")[0]
 	}
-	filename += "_" + params.Filename
+
+	filename := programID
+	if params.Metadata.JobProperty.ProgramPost != "" {
+		filename += "_" + params.Metadata.JobProperty.ProgramPost
+	}
+	filename += "_" + params.Metadata.JobProperty.ReceivedFilename
 
 	files, err := wfutils.ListFiles(ctx, params.Directory)
 	if err != nil {
@@ -60,7 +60,17 @@ func VBMaster(ctx workflow.Context, params VBMasterParams) (*VBMasterResult, err
 		return nil, err
 	}
 
-	result, err := importTag(ctx, "original", file, filename)
+	result, err := importFileAsTag(ctx, "original", file, filename)
+	if err != nil {
+		return nil, err
+	}
+
+	err = wfutils.SetVidispineMeta(ctx, result.AssetID, vscommon.FieldUploadedBy.Value, params.Metadata.JobProperty.SenderEmail)
+	if err != nil {
+		return nil, err
+	}
+
+	err = wfutils.SetVidispineMeta(ctx, result.AssetID, vscommon.FieldUploadJob.Value, strconv.Itoa(params.Metadata.JobProperty.JobID))
 	if err != nil {
 		return nil, err
 	}

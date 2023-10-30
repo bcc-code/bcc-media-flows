@@ -10,7 +10,7 @@ type importTagResult struct {
 	ImportJobID string
 }
 
-func importTag(ctx workflow.Context, tag, path, title string) (*importTagResult, error) {
+func importFileAsTag(ctx workflow.Context, tag, path, title string) (*importTagResult, error) {
 	var result vsactivity.CreatePlaceholderResult
 	err := workflow.ExecuteActivity(ctx, vsactivity.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
 		Title: title,

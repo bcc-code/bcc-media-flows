@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/activities"
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
-	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
@@ -12,12 +12,12 @@ import (
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 	"path/filepath"
-	"strings"
+	"strconv"
 )
 
 type RawMaterialParams struct {
-	Job   common.IngestJob
-	Files []utils.Path
+	Metadata *ingest.Metadata
+	Files    []utils.Path
 }
 
 func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
@@ -69,7 +69,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 			return fmt.Errorf("file not found: %s", file)
 		}
 		var result *importTagResult
-		result, err = importTag(ctx, "original", file, f.FileName())
+		result, err = importFileAsTag(ctx, "original", file, f.FileName())
 		if err != nil {
 			return err
 		}
@@ -92,12 +92,12 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 			return err
 		}
 
-		err = wfutils.SetVidispineMeta(ctx, id, vscommon.FieldUploadedBy.Value, strings.Join(params.Job.SenderEmails, ", "))
+		err = wfutils.SetVidispineMeta(ctx, id, vscommon.FieldUploadedBy.Value, params.Metadata.JobProperty.SenderEmail)
 		if err != nil {
 			return err
 		}
 
-		err = wfutils.SetVidispineMeta(ctx, id, vscommon.FieldUploadJob.Value, params.Job.JobID)
+		err = wfutils.SetVidispineMeta(ctx, id, vscommon.FieldUploadJob.Value, strconv.Itoa(params.Metadata.JobProperty.JobID))
 		if err != nil {
 			return err
 		}

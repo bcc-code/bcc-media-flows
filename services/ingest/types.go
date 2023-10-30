@@ -10,22 +10,29 @@ type Metadata struct {
 }
 
 type JobProperty struct {
-	JobID           int    `xml:"jobID"`
-	UserName        string `xml:"userName"`
-	CompanyName     string `xml:"companyName"`
-	SourceIP        string `xml:"sourceIP"`
-	UserEmail       string `xml:"userEmail"`
-	IngestStation   string `xml:"ingestStation"`
-	UploadBitRate   string `xml:"uploadBitRate"`
-	UploadTime      string `xml:"uploadTime"`
-	FtpSiteID       string `xml:"ftpSiteId"`
-	FileCount       int    `xml:"fileCount"`
-	OrderForm       string `xml:"orderForm"`
-	SubmissionDate  string `xml:"submissionDate"`
-	LastDateChanged string `xml:"lastDateChanged"`
-	Status          string `xml:"status"`
-	AssetType       string `xml:"asset_type"`
-	SenderEmail     string `xml:"sender_email"`
+	JobID            int    `xml:"jobID"`
+	UserName         string `xml:"userName"`
+	CompanyName      string `xml:"companyName"`
+	SourceIP         string `xml:"sourceIP"`
+	UserEmail        string `xml:"userEmail"`
+	IngestStation    string `xml:"ingestStation"`
+	UploadBitRate    string `xml:"uploadBitRate"`
+	UploadTime       string `xml:"uploadTime"`
+	FtpSiteID        string `xml:"ftpSiteId"`
+	FileCount        int    `xml:"fileCount"`
+	OrderForm        string `xml:"orderForm"`
+	SubmissionDate   string `xml:"submissionDate"`
+	LastDateChanged  string `xml:"lastDateChanged"`
+	Status           string `xml:"status"`
+	AssetType        string `xml:"asset_type"`
+	SenderEmail      string `xml:"sender_email"`
+	ProgramPost      string `xml:"program_post"`
+	ProgramID        string `xml:"programid"`
+	ReceivedFilename string `xml:"received_filename"`
+	PersonsAppearing string `xml:"PersonsAppearing"`
+	Tags             string `xml:"Tags"`
+	PromoType        string `xml:"promo_type"`
+	Language         string `xml:"language"`
 }
 
 type FileList struct {

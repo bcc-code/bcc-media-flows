@@ -3,7 +3,6 @@ package ingestworkflows
 import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/activities"
-	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
@@ -11,8 +10,6 @@ import (
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 	"path/filepath"
-	"strconv"
-	"strings"
 )
 
 type OrderForm enum.Member[string]
@@ -42,11 +39,6 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 	metadata, err := wfutils.UnmarshalXMLFile[ingest.Metadata](ctx, params.XMLPath)
 	if err != nil {
 		return nil, err
-	}
-
-	job := common.IngestJob{
-		JobID:        strconv.Itoa(metadata.JobProperty.JobID),
-		SenderEmails: strings.Split(metadata.JobProperty.SenderEmail, ","),
 	}
 
 	orderForm := OrderForms.Parse(metadata.JobProperty.OrderForm)
@@ -88,12 +80,12 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			return fcOutputDirPath.Append(file.FilePath)
 		})
 		err = workflow.ExecuteChildWorkflow(ctx, RawMaterial, RawMaterialParams{
-			Job:   job,
-			Files: files,
+			Metadata: metadata,
+			Files:    files,
 		}).Get(ctx, nil)
 	case OrderFormVBMaster:
 		err = workflow.ExecuteChildWorkflow(ctx, VBMaster, VBMasterParams{
-			Job:       job,
+			Metadata:  metadata,
 			Directory: fcOutputDir,
 		}).Get(ctx, nil)
 	}
