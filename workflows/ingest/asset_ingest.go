@@ -19,7 +19,7 @@ var (
 	OrderFormVBMaster    = OrderForm{Value: "VB"}
 	OrderForms           = enum.New(
 		OrderFormRawMaterial,
-		OrderFormVBMaster,
+		//OrderFormVBMaster, // commented out for supporting only raw material
 	)
 )
 
