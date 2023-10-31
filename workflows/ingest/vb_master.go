@@ -2,8 +2,11 @@ package ingestworkflows
 
 import (
 	"fmt"
+	batonactivities "github.com/bcc-code/bccm-flows/activities/baton"
+	"github.com/bcc-code/bccm-flows/services/baton"
 	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
+	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/workflow"
 	"path/filepath"
@@ -82,6 +85,19 @@ func VBMaster(ctx workflow.Context, params VBMasterParams) (*VBMasterResult, err
 	}
 
 	err = wfutils.WaitForVidispineJob(ctx, result.ImportJobID)
+	if err != nil {
+		return nil, err
+	}
+
+	path, err := utils.ParsePath(file)
+	if err != nil {
+		return nil, err
+	}
+
+	err = wfutils.ExecuteWithQueue(ctx, batonactivities.QC, batonactivities.QCParams{
+		Path: path,
+		Plan: baton.TestPlanMXF,
+	}).Get(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
