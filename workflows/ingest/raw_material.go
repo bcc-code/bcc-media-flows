@@ -40,6 +40,9 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		}
 		newPath := filepath.Join(outputFolder, filepath.Base(f))
 		err = wfutils.MoveFile(ctx, f, newPath)
+		if err != nil {
+			return err
+		}
 		files = append(files, newPath)
 	}
 
@@ -53,7 +56,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 			return err
 		}
 		vidispineJobIDs[result.AssetID] = result.ImportJobID
-		assetAnalyzeTasks[result.AssetID] = workflow.ExecuteActivity(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
+		assetAnalyzeTasks[result.AssetID] = wfutils.ExecuteWithQueue(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
 			FilePath: file,
 		})
 	}

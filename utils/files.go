@@ -19,6 +19,7 @@ var supportedExtensions = []string{
 
 func ValidRawFilename(filename string) bool {
 	extension := filepath.Ext(filename)
-	name := filename[:len(filename)-len(extension)]
+	base := filepath.Base(filename)
+	name := base[:len(base)-len(extension)]
 	return alphanumericalRegex.MatchString(name) && lo.Contains(supportedExtensions, extension)
 }
