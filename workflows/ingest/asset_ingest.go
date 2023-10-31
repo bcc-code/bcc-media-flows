@@ -69,19 +69,11 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 		return nil, err
 	}
 
-	fcOutputDirPath, err := utils.ParsePath(fcOutputDir)
-	if err != nil {
-		return nil, err
-	}
-
 	switch *orderForm {
 	case OrderFormRawMaterial:
-		files := lo.Map(metadata.FileList.Files, func(file ingest.File, _ int) utils.Path {
-			return fcOutputDirPath.Append(filepath.Join(file.FilePath, file.FileName))
-		})
 		err = workflow.ExecuteChildWorkflow(ctx, RawMaterial, RawMaterialParams{
-			Metadata: metadata,
-			Files:    files,
+			Metadata:  metadata,
+			Directory: fcOutputDir,
 		}).Get(ctx, nil)
 	case OrderFormVBMaster:
 		err = workflow.ExecuteChildWorkflow(ctx, VBMaster, VBMasterParams{

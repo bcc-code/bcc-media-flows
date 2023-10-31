@@ -9,15 +9,14 @@ import (
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"github.com/bcc-code/bccm-flows/workflows"
-	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 	"path/filepath"
 	"strconv"
 )
 
 type RawMaterialParams struct {
-	Metadata *ingest.Metadata
-	Files    []utils.Path
+	Metadata  *ingest.Metadata
+	Directory string
 }
 
 func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
@@ -28,48 +27,28 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 	if err != nil {
 		return err
 	}
-	outputPath, err := utils.ParsePath(outputFolder)
+
+	originalFiles, err := wfutils.ListFiles(ctx, params.Directory)
 	if err != nil {
 		return err
 	}
 
-	var fileByFilename = map[string]utils.Path{}
-	for _, f := range params.Files {
-		fileName := filepath.Base(f.FileName())
-		fileByFilename[fileName] = f
-		if !utils.ValidRawFilename(fileName) {
-			return fmt.Errorf("invalid filename: %s, (%s, %s)", fileName, f.Drive, f.Path)
+	var files []string
+	for _, f := range originalFiles {
+		if !utils.ValidRawFilename(f) {
+			return fmt.Errorf("invalid filename: %s", f)
 		}
-	}
-
-	for _, f := range params.Files {
-		err = workflow.ExecuteActivity(ctx, activities.RcloneMoveFile, activities.RcloneMoveFileInput{
-			Source:      f,
-			Destination: outputPath.Append(filepath.Base(f.Path)),
-		}).Get(ctx, nil)
-		if err != nil {
-			return err
-		}
-	}
-
-	files, err := wfutils.ListFiles(ctx, outputFolder)
-	if err != nil {
-		return err
+		newPath := filepath.Join(outputFolder, filepath.Base(f))
+		err = wfutils.MoveFile(ctx, f, newPath)
+		files = append(files, newPath)
 	}
 
 	var assetAnalyzeTasks = map[string]workflow.Future{}
-
 	var vidispineJobIDs = map[string]string{}
 
 	for _, file := range files {
-		f, found := lo.Find(params.Files, func(f utils.Path) bool {
-			return f.FileName() == filepath.Base(file)
-		})
-		if !found {
-			return fmt.Errorf("file not found: %s", file)
-		}
 		var result *importTagResult
-		result, err = importFileAsTag(ctx, "original", file, f.FileName())
+		result, err = importFileAsTag(ctx, "original", file, filepath.Base(file))
 		if err != nil {
 			return err
 		}
