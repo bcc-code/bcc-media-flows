@@ -77,7 +77,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 	switch *orderForm {
 	case OrderFormRawMaterial:
 		files := lo.Map(metadata.FileList.Files, func(file ingest.File, _ int) utils.Path {
-			return fcOutputDirPath.Append(file.FilePath)
+			return fcOutputDirPath.Append(filepath.Join(file.FilePath, file.FileName))
 		})
 		err = workflow.ExecuteChildWorkflow(ctx, RawMaterial, RawMaterialParams{
 			Metadata: metadata,

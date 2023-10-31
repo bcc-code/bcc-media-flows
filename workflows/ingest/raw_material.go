@@ -38,7 +38,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		fileName := filepath.Base(f.FileName())
 		fileByFilename[fileName] = f
 		if !utils.ValidRawFilename(fileName) {
-			return fmt.Errorf("invalid filename: %s, %s", f.Drive, f.Path)
+			return fmt.Errorf("invalid filename: %s, (%s, %s)", fileName, f.Drive, f.Path)
 		}
 	}
 
