@@ -118,8 +118,23 @@ func copyToDir(ctx workflow.Context, dest string, files []ingest.File) error {
 		return err
 	}
 
-	return workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
+	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
 		Source:      dir.RclonePath(),
 		Destination: destPath.RclonePath(),
 	}).Get(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		err = wfutils.DeletePath(
+			ctx,
+			filepath.Join("/mnt/dmzshare", "workflow", file.FilePath, file.FileName),
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
