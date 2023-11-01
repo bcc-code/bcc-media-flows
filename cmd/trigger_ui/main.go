@@ -217,8 +217,18 @@ func (s *TriggerServer) listGET(c *gin.Context) {
 
 	}
 
+	workflowStatuses := map[string]string{
+		"Running":    "blue",
+		"Timed out":  "yellow",
+		"Completed":  "green",
+		"Failed":     "red",
+		"Canceled":   "yellow",
+		"Terminated": "red",
+	}
+
 	c.HTML(http.StatusOK, "list.html", gin.H{
-		"WorkflowList": workflowList,
+		"WorkflowList":     workflowList,
+		"WorkflowStatuses": workflowStatuses,
 	})
 
 }
@@ -236,7 +246,6 @@ func main() {
 	lang := bccmflows.LanguagesByISO
 
 	router.LoadHTMLGlob("*.html")
-	router.Static("/css", "../trigger_ui/css")
 
 	server := &TriggerServer{
 		vsapiClient,

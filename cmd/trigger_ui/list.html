@@ -42,73 +42,55 @@
                                 </tr>
                             </thead>
 
-                            {{range $index, $element := .WorkflowList}}
                             
-                            <tbody>
-                                <tr>
-                                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                                    <p class="text-gray-900 whitespace-no-wrap">
-                                                        {{$element.VxID}}
-                                                    </p>
+                            
+                            <tbody class="divide-y">
+                                {{$WorkflowStatuses := .WorkflowStatuses}}
+
+                                {{range $index, $element := .WorkflowList}}
+                                <tr class="bg-white text-sm border-gray-200 ">
+                                    <td class="px-5 py-5">
+                                        <p class="text-gray-900 whitespace-no-wrap">
+                                             {{$element.VxID}}
+                                        </p>
                                     </td>
 
-                                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                    <td class="p-5">
                                         <p class="text-gray-900 whitespace-no-wrap">
                                             {{$element.Name}}
                                         </p>
                                     </td>
-                                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                    <td class="p-5">
                                         <p class="text-gray-900 whitespace-no-wrap">
                                             {{$element.WorkflowID}}
                                         </p>
                                     </td>
-                                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                    <td class="p-5">
                                         <p class="text-gray-900 whitespace-no-wrap">
                                             {{$element.Start}}
                                         </p>
                                     </td>
-       
-                                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                        {{if eq $element.Status "Running"}}
-                                        <span
-                                            class="relative inline-block px-3 py-1 font-semibold text-blue-900 leading-tight">
-                                            <span aria-hidden
-                                                class="absolute inset-0 bg-blue-200 opacity-50 rounded-full"></span>
-                                        {{else if eq $element.Status "Completed"}}
-                                        <span
-                                        class="relative inline-block px-3 py-1 font-semibold text-green-900 leading-tight">
-                                        <span aria-hidden
-                                            class="absolute inset-0 bg-green-200 opacity-50 rounded-full"></span>
-                                        {{else if eq $element.Status "Failed"}}
-                                        <span
-                                        class="relative inline-block px-3 py-1 font-semibold text-red-900 leading-tight">
-                                        <span aria-hidden
-                                            class="absolute inset-0 bg-red-200 opacity-50 rounded-full"></span>
-                                        {{else if eq $element.Status "Terminated"}}
-                                        <span
-                                        class="relative inline-block px-3 py-1 font-semibold text-red-800 leading-tight">
-                                        <span aria-hidden
-                                            class="absolute inset-0 bg-red-200 opacity-50 rounded-full"></span>
-                                        {{else if eq $element.Status "Timed Out"}}
-                                        <span
-                                        class="relative inline-block px-3 py-1 font-semibold text-orange-800 leading-tight">
-                                        <span aria-hidden
-                                            class="absolute inset-0 bg-orange-200 opacity-50 rounded-full"></span>
-                                        {{else if eq $element.Status "Canceled"}}
-                                            <span
-                                            class="relative inline-block px-3 py-1 font-semibold text-yellow-800 leading-tight">
-                                            <span aria-hidden
-                                                class="absolute inset-0 bg-yellow-200 opacity-50 rounded-full"></span>
-                                        {{end}}
-                                        <span class="relative">{{$element.Status}}</span>
-                                        </span>
-                                        
-                                    </td> 
 
+                                    
+       
+                                    <td class="p-5">
+
+                                        {{range $index, $status := $WorkflowStatuses}}
+
+                                            {{if eq $element.Status $index}}
+                                                <span class="relative inline-block px-3 py-1 font-semibold text-{{$status}}-900 leading-tight">
+                                                    <span aria-hiddenclass="absolute inset-0 bg-{{$status}}-200 opacity-50 rounded-full"></span>
+                                                    <span class="relative">{{$element.Status}}</span>
+                                                </span> 
+                                            {{end}}
+                                
+                                        {{end}}
+                                        
+                                              
+                                    </td> 
+                                </tr>
+                                {{end}}
                             </tbody>
-                            {{end}}
-                            
-                           
                             
                         </table>
                         
@@ -118,7 +100,7 @@
             </div>
         </div>
 
-        
+
     
 </body>
 
