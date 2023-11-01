@@ -15,3 +15,14 @@ func Test_GetSiblingFolder(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "/mnt/isilon/Transcoding/ProRes422HQ_Native/sibling", path)
 }
+
+func Test_ParsePath(t *testing.T) {
+	pathString := "/mnt/isilon/test.xml"
+
+	path, err := ParsePath(pathString)
+
+	assert.Nil(t, err)
+
+	assert.Equal(t, IsilonDrive, path.Drive)
+	assert.Equal(t, "test.xml", path.Path)
+}

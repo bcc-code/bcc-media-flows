@@ -27,8 +27,9 @@ type Drive enum.Member[string]
 
 var (
 	IsilonDrive      = Drive{Value: "isilon"}
+	TempDrive        = Drive{Value: "temp"}
 	DMZShareDrive    = Drive{Value: "dmzshare"}
-	Drives           = enum.New(IsilonDrive, DMZShareDrive)
+	Drives           = enum.New(IsilonDrive, DMZShareDrive, TempDrive)
 	ErrDriveNotFound = merry.Sentinel("drive not found")
 	ErrPathNotValid  = merry.Sentinel("path not valid")
 )
@@ -85,6 +86,8 @@ func (p Path) RclonePath() string {
 		return filepath.Join("isilon:isilon", p.Path)
 	case DMZShareDrive:
 		return filepath.Join("dmz:dmzshare", p.Path)
+	case TempDrive:
+		return filepath.Join("temp:temp", p.Path)
 	}
 	return ""
 }
@@ -106,17 +109,29 @@ func (p Path) Append(path string) Path {
 	return p
 }
 
+type prefix struct {
+	Linux  string
+	Client string
+	Rclone string
+}
+
+var drivePrefixes = map[Drive]prefix{
+	IsilonDrive:   {"/mnt/isilon/", GetIsilonPrefix(), "isilon:isilon/"},
+	DMZShareDrive: {"/mnt/dmzshare/", "/mnt/dmzshare/", "dmz:dmzshare/"},
+	TempDrive:     {"/mnt/temp/", GetTempMountPrefix(), "temp:temp/"},
+}
+
 func ParsePath(path string) (Path, error) {
-	p := Path{}
-	if strings.HasPrefix(path, "/mnt/isilon") {
-		p.Drive = IsilonDrive
-		p.Path = strings.TrimPrefix(path, "/mnt/isilon/")
-		return p, nil
+	for drive, ps := range drivePrefixes {
+		prefixes := []string{ps.Linux, ps.Client, ps.Rclone}
+		for _, p := range prefixes {
+			if strings.HasPrefix(path, p) {
+				return Path{
+					Drive: drive,
+					Path:  strings.TrimPrefix(path, p),
+				}, nil
+			}
+		}
 	}
-	if strings.HasPrefix(path, "/mnt/dmzshare") {
-		p.Drive = DMZShareDrive
-		p.Path = strings.TrimPrefix(path, "/mnt/dmzshare/")
-		return p, nil
-	}
-	return p, ErrPathNotValid
+	return Path{}, ErrPathNotValid
 }
