@@ -100,7 +100,7 @@ func GetWorkflowOutputFolder(ctx workflow.Context) (string, error) {
 func GetWorkflowTempFolder(ctx workflow.Context) (string, error) {
 	info := workflow.GetInfo(ctx)
 
-	path := fmt.Sprintf("%s/workflows/%s", utils.GetIsilonPrefix()+"/system/tmp", info.OriginalRunID)
+	path := filepath.Join(utils.GetTempMountPrefix(), "workflows", info.OriginalRunID)
 
 	return path, CreateFolder(ctx, path)
 }

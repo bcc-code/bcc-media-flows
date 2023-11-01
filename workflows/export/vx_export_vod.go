@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"path/filepath"
-	"strings"
-
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	"github.com/bcc-code/bcc-media-platform/backend/events"
 	"github.com/bcc-code/bccm-flows/activities"
@@ -15,6 +12,7 @@ import (
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/workflow"
+	"path/filepath"
 )
 
 func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*VXExportResult, error) {
@@ -119,8 +117,13 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 
 	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
 
+	outputPath, err := utils.ParsePath(params.OutputDir)
+	if err != nil {
+		return nil, err
+	}
+
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      strings.Replace(params.OutputDir, utils.GetIsilonPrefix()+"/", "isilon:isilon/", 1),
+		Source:      outputPath.RclonePath(),
 		Destination: fmt.Sprintf("s3prod:vod-asset-ingest-prod/" + ingestFolder),
 	}).Get(ctx, nil)
 	if err != nil {

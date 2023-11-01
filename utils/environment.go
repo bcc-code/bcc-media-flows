@@ -47,6 +47,16 @@ func GetIsilonPrefix() string {
 	return "/mnt/isilon"
 }
 
+var tempMountPrefix = os.Getenv("TEMP_MOUNT_PREFIX")
+
+func GetTempMountPrefix() string {
+	// For local testing
+	if tempMountPrefix != "" {
+		return tempMountPrefix
+	}
+	return "/mnt/temp"
+}
+
 func IsilonPathFix(path string) string {
 	return strings.Replace(path, "/mnt/isilon", GetIsilonPrefix(), 1)
 }
