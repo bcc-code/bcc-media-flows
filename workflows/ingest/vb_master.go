@@ -84,6 +84,32 @@ func VBMaster(ctx workflow.Context, params VBMasterParams) (*VBMasterResult, err
 		return nil, err
 	}
 
+	if params.Metadata.JobProperty.PersonsAppearing != "" {
+		for _, person := range strings.Split(params.Metadata.JobProperty.PersonsAppearing, ",") {
+			person = strings.TrimSpace(person)
+			if person == "" {
+				continue
+			}
+			err = wfutils.AddVidispineMetaValue(ctx, result.AssetID, vscommon.FieldPersonsAppearing.Value, person)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if params.Metadata.JobProperty.Tags != "" {
+		for _, tag := range strings.Split(params.Metadata.JobProperty.Tags, ",") {
+			tag = strings.TrimSpace(tag)
+			if tag == "" {
+				continue
+			}
+			err = wfutils.AddVidispineMetaValue(ctx, result.AssetID, vscommon.FieldSource.Value, tag)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	err = wfutils.WaitForVidispineJob(ctx, result.ImportJobID)
 	if err != nil {
 		return nil, err

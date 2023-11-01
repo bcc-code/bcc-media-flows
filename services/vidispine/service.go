@@ -15,6 +15,7 @@ type VSClient interface {
 	AddShapeToItem(shapeTag, itemVXID, fileVXID string) (string, error)
 	AddSidecarToItem(itemVXID, filePath, language string) (string, error)
 	SetItemMetadataField(itemVXID, field, value string) error
+	AddToItemMetadataField(itemID, key, value string) error
 	CreatePlaceholder(ingestType vsapi.PlaceholderType, title string) (string, error)
 	CreateThumbnails(assetID string) (string, error)
 	GetJob(jobID string) (*vsapi.JobDocument, error)
@@ -44,6 +45,10 @@ func (s *VidispineService) AddSidecarToItem(itemVXID, filePath, language string)
 
 func (s *VidispineService) SetItemMetadataField(itemVXID, field, value string) error {
 	return s.apiClient.SetItemMetadataField(itemVXID, field, value)
+}
+
+func (s *VidispineService) AddToItemMetadataField(itemVXID, field, value string) error {
+	return s.apiClient.AddToItemMetadataField(itemVXID, field, value)
 }
 
 func (s *VidispineService) GetItemMetadataField(vsID string, field vscommon.FieldType) (string, error) {

@@ -28,3 +28,11 @@ func SetVidispineMeta(ctx workflow.Context, assetID, key, value string) error {
 		Value: value,
 	}).Get(ctx, nil)
 }
+
+func AddVidispineMetaValue(ctx workflow.Context, assetID, key, value string) error {
+	return workflow.ExecuteActivity(ctx, vsactivity.AddVXMetadataFieldValueActivity, vsactivity.SetVXMetadataFieldParams{
+		VXID:  assetID,
+		Key:   key,
+		Value: value,
+	}).Get(ctx, nil)
+}

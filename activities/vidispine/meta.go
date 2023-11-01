@@ -62,3 +62,13 @@ func SetVXMetadataFieldActivity(ctx context.Context, params SetVXMetadataFieldPa
 	err := vsClient.SetItemMetadataField(params.VXID, params.Key, params.Value)
 	return nil, err
 }
+
+func AddVXMetadataFieldValueActivity(ctx context.Context, params SetVXMetadataFieldParams) (*SetVXMetadataFieldResult, error) {
+	log := activity.GetLogger(ctx)
+	log.Info("Starting AddVXMetadataFieldValueActivity")
+
+	vsClient := GetClient()
+
+	err := vsClient.AddToItemMetadataField(params.VXID, params.Key, params.Value)
+	return nil, err
+}
