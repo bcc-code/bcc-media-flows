@@ -10,6 +10,7 @@ import (
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/workflow"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -21,6 +22,9 @@ type VBMasterParams struct {
 }
 
 type VBMasterResult struct{}
+
+// regexp for making sure the filename does not contain non-alphanumeric characters
+var nonAlphanumeric = regexp.MustCompile("[^a-zA-Z0-9_]")
 
 func VBMaster(ctx workflow.Context, params VBMasterParams) (*VBMasterResult, error) {
 	logger := workflow.GetLogger(ctx)
@@ -38,6 +42,10 @@ func VBMaster(ctx workflow.Context, params VBMasterParams) (*VBMasterResult, err
 		filename += "_" + params.Metadata.JobProperty.ProgramPost
 	}
 	filename += "_" + params.Metadata.JobProperty.ReceivedFilename
+
+	if nonAlphanumeric.MatchString(filename) {
+		return nil, fmt.Errorf("filename contains non-alphanumeric characters: %s", filename)
+	}
 
 	files, err := wfutils.ListFiles(ctx, params.Directory)
 	if err != nil {
@@ -61,6 +69,9 @@ func VBMaster(ctx workflow.Context, params VBMasterParams) (*VBMasterResult, err
 	if filepath.Ext(sourceFile) != filepath.Ext(filename) {
 		filename += filepath.Ext(sourceFile)
 	}
+
+	// make sure the filename without extension is uppercase
+	filename = strings.ToUpper(filename[:len(filename)-len(filepath.Ext(filename))]) + filepath.Ext(filename)
 
 	//Production/masters/{date}/{wfID}/{filename}
 	file := filepath.Join(outputDir, filename)
