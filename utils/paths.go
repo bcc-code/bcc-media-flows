@@ -81,15 +81,7 @@ func (p Path) RcloneFsRemote() (string, string) {
 }
 
 func (p Path) RclonePath() string {
-	switch p.Drive {
-	case IsilonDrive:
-		return filepath.Join("isilon:isilon", p.Path)
-	case DMZShareDrive:
-		return filepath.Join("dmz:dmzshare", p.Path)
-	case TempDrive:
-		return filepath.Join("temp:temp", p.Path)
-	}
-	return ""
+	return filepath.Join(drivePrefixes[p.Drive].Rclone, p.Path)
 }
 
 func (p Path) BatonPath() string {
@@ -118,7 +110,7 @@ type prefix struct {
 var drivePrefixes = map[Drive]prefix{
 	IsilonDrive:   {"/mnt/isilon/", GetIsilonPrefix(), "isilon:isilon/"},
 	DMZShareDrive: {"/mnt/dmzshare/", "/mnt/dmzshare/", "dmz:dmzshare/"},
-	TempDrive:     {"/mnt/temp/", GetTempMountPrefix(), "temp:temp/"},
+	TempDrive:     {"/mnt/temp/", GetTempMountPrefix(), "isilon:temp/"},
 }
 
 func ParsePath(path string) (Path, error) {
