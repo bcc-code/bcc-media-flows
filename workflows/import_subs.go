@@ -51,7 +51,7 @@ func ImportSubtitlesFromSubtrans(
 		return err
 	}
 
-	outputPath, _ := wfutils.GetWorkflowOutputFolder(ctx)
+	outputPath, _ := wfutils.GetWorkflowAuxOutputFolder(ctx)
 
 	subsList := map[string]string{}
 	err = workflow.ExecuteActivity(ctx, activities.GetSubtitlesActivity, activities.GetSubtitlesInput{

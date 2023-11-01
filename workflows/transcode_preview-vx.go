@@ -52,7 +52,7 @@ func TranscodePreviewVX(
 		return err
 	}
 
-	destinationPath, err := wfutils.GetWorkflowOutputFolder(ctx)
+	destinationPath, err := wfutils.GetWorkflowAuxOutputFolder(ctx)
 	if err != nil {
 		return err
 	}

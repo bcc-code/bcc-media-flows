@@ -77,24 +77,26 @@ func DeletePath(ctx workflow.Context, path string) error {
 	}).Get(ctx, nil)
 }
 
-func GetWorkflowRawOutputFolder(ctx workflow.Context) (string, error) {
+func GetWorkflowIsilonOutputFolder(ctx workflow.Context, root string) (string, error) {
 	info := workflow.GetInfo(ctx)
 
 	date := time.Now()
 
-	path := fmt.Sprintf("%s/%04d/%02d/%02d/%s", utils.GetIsilonPrefix()+"/Production/raw", date.Year(), date.Month(), date.Day(), info.OriginalRunID)
+	path := filepath.Join(utils.GetIsilonPrefix(), "Production", root, fmt.Sprintf("%d/%d/%d", date.Year(), date.Month(), date.Day()), info.OriginalRunID)
 
 	return path, CreateFolder(ctx, path)
 }
 
-func GetWorkflowOutputFolder(ctx workflow.Context) (string, error) {
-	info := workflow.GetInfo(ctx)
+func GetWorkflowMastersOutputFolder(ctx workflow.Context) (string, error) {
+	return GetWorkflowIsilonOutputFolder(ctx, "masters")
+}
 
-	date := time.Now()
+func GetWorkflowRawOutputFolder(ctx workflow.Context) (string, error) {
+	return GetWorkflowIsilonOutputFolder(ctx, "raw")
+}
 
-	path := fmt.Sprintf("%s/%04d/%02d/%02d/%s", utils.GetIsilonPrefix()+"/Production/aux", date.Year(), date.Month(), date.Day(), info.OriginalRunID)
-
-	return path, CreateFolder(ctx, path)
+func GetWorkflowAuxOutputFolder(ctx workflow.Context) (string, error) {
+	return GetWorkflowIsilonOutputFolder(ctx, "aux")
 }
 
 func GetWorkflowTempFolder(ctx workflow.Context) (string, error) {

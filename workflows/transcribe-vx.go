@@ -81,7 +81,7 @@ func TranscribeVX(
 		DestinationPath: tempFolder,
 	}).Get(ctx, &wavFile)
 
-	destinationPath, err := wfutils.GetWorkflowOutputFolder(ctx)
+	destinationPath, err := wfutils.GetWorkflowAuxOutputFolder(ctx)
 	if err != nil {
 		return err
 	}
