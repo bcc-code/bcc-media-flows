@@ -28,7 +28,7 @@
 
 				<div class="flex flex-col">
 					<label class="font-bold" for="audioSource">Audio Source</label>
-					<select name="audioSource" id="audioSource" >
+					<select class="bg-gray-200" name="audioSource" id="audioSource" >
 						{{$selectedAudio := .SelectedAudioSource}}
 
 						{{range $index, $element := .AudioSources}}
@@ -79,7 +79,7 @@
 
 				<div class="flex flex-col">
 				<label class="font-bold" for="watermarkPath">Overlay</label>
-				<select name="watermarkPath" id="watermarkPath" >
+				<select class="bg-gray-200" name="watermarkPath" id="watermarkPath" >
 					{{range $index, $element := .Filenames}}
 						<option value={{$element}}>{{$element}}</option>
 					{{end}}
