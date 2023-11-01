@@ -107,19 +107,20 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		}))
 	}
 
-	//for _, f := range wfFutures {
-	//	err = f.Get(ctx, nil)
-	//	if err != nil {
-	//		return err
-	//	}
-	//}
-	//
-	//wfFutures = []workflow.ChildWorkflowFuture{}
-	//for _, id := range assetIDs {
-	//	wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeVX, workflows.TranscribeVXInput{
-	//		VXID: id,
-	//	}))
-	//}
+	for _, f := range wfFutures {
+		err = f.Get(ctx, nil)
+		if err != nil {
+			return err
+		}
+	}
+
+	wfFutures = []workflow.ChildWorkflowFuture{}
+	for _, id := range assetIDs {
+		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeVX, workflows.TranscribeVXInput{
+			VXID:     id,
+			Language: "no", // TODO: replace with language detected from file ??
+		}))
+	}
 
 	for _, f := range wfFutures {
 		err = f.Get(ctx, nil)
