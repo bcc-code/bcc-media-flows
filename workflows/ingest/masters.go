@@ -87,12 +87,20 @@ func VBMaster(ctx workflow.Context, params VBMasterParams) (*VBMasterResult, err
 		plan = baton.TestPlanMOV
 	}
 
+	var report baton.QCReport
 	err = wfutils.ExecuteWithQueue(ctx, batonactivities.QC, batonactivities.QCParams{
 		Path: path,
 		Plan: plan,
-	}).Get(ctx, nil)
+	}).Get(ctx, &report)
 	if err != nil {
 		return nil, err
+	}
+
+	if report.TopLevelInfo.Error == 0 {
+		err = postImportActions(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return nil, nil

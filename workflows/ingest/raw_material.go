@@ -8,7 +8,6 @@ import (
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
-	"github.com/bcc-code/bccm-flows/workflows"
 	"go.temporal.io/sdk/workflow"
 	"path/filepath"
 	"strconv"
@@ -100,33 +99,9 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		}
 	}
 
-	var wfFutures []workflow.ChildWorkflowFuture
-	for _, id := range assetIDs {
-		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
-			VXID: id,
-		}))
-	}
-
-	for _, f := range wfFutures {
-		err = f.Get(ctx, nil)
-		if err != nil {
-			return err
-		}
-	}
-
-	wfFutures = []workflow.ChildWorkflowFuture{}
-	for _, id := range assetIDs {
-		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeVX, workflows.TranscribeVXInput{
-			VXID:     id,
-			Language: "no", // TODO: replace with language detected from file ??
-		}))
-	}
-
-	for _, f := range wfFutures {
-		err = f.Get(ctx, nil)
-		if err != nil {
-			return err
-		}
+	err = postImportActions(ctx, assetIDs, params.Metadata.JobProperty.Language)
+	if err != nil {
+		return err
 	}
 
 	return nil
