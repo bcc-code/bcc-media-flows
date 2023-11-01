@@ -9,6 +9,7 @@ var (
 	FieldDescription       = FieldType{"portal_mf982016"}
 	FieldExportAudioSource = FieldType{"portal_mf452504"}
 	FieldLangsToExport     = FieldType{"portal_mf326592"}
+	FieldLanguagesRecorded = FieldType{"portal_mf189850"}
 	FieldPersonsAppearing  = FieldType{"portal_mf50574"}
 	FieldSequenceSize      = FieldType{"__sequence_size"}
 	FieldStartTC           = FieldType{"startTimeCode"}
@@ -21,7 +22,9 @@ var (
 	FieldOriginalURI       = FieldType{"originalUri"}
 	FieldUploadedBy        = FieldType{"portal_mf381829"}
 	FieldUploadJob         = FieldType{"portal_mf846642"}
+	FieldGeneralTags       = FieldType{"portal_mf957223"}
 	FieldTypes             = enum.New(FieldDurationSeconds, FieldDescription, FieldExportAudioSource, FieldLangsToExport,
 		FieldPersonsAppearing, FieldSequenceSize, FieldStartTC, FieldSubclipToExport, FieldSubclipType, FieldTitle,
-		FieldSource, FieldExportAsChapter, FieldSubtransStoryID, FieldOriginalURI, FieldUploadedBy, FieldUploadJob)
+		FieldSource, FieldExportAsChapter, FieldSubtransStoryID, FieldOriginalURI, FieldUploadedBy, FieldUploadJob,
+		FieldLanguagesRecorded, FieldGeneralTags)
 )

@@ -149,10 +149,17 @@ func addMetaTags(ctx workflow.Context, assetID string, metadata *ingest.Metadata
 			if tag == "" {
 				continue
 			}
-			err = wfutils.AddVidispineMetaValue(ctx, assetID, vscommon.FieldSource.Value, tag)
+			err = wfutils.AddVidispineMetaValue(ctx, assetID, vscommon.FieldGeneralTags.Value, tag)
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	if metadata.JobProperty.Language != "" {
+		err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldLanguagesRecorded.Value, metadata.JobProperty.Language)
+		if err != nil {
+			return err
 		}
 	}
 	return nil
