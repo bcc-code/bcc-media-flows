@@ -201,13 +201,20 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 	for index, item := range input.Items {
 		file := filepath.Join(input.WorkDir, fmt.Sprintf("%s-%d.srt", input.Title, index))
 		path := utils.IsilonPathFix(item.Path)
+
 		cmd := exec.Command("ffmpeg", "-i", path, "-ss", fmt.Sprintf("%f", item.Start), "-to", fmt.Sprintf("%f", item.End), "-y", file)
 
 		_, err := utils.ExecuteCmd(cmd, nil)
 		if err != nil {
 			return nil, err
 		}
-		files = append(files, file)
+		fileInfo, err := os.Stat(file)
+		if err != nil {
+			return nil, err
+		}
+		if fileInfo.Size() != 0 {
+			files = append(files, file)
+		}
 	}
 
 	// the files have to be present in a text file for ffmpeg to concatenate them.
