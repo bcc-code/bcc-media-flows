@@ -64,7 +64,7 @@
 									</td>
 
 									<td class="p-5">
-										{{range $index, $status := .WorkflowStatuses}}
+										{{range $index, $status := $.WorkflowStatuses}}
 											{{if eq $element.Status $index}}
 											<span class="relative inline-block px-3 py-1 font-semibold text-{{$status}}-900 leading-tight">
 												<span aria-hiddenclass="absolute inset-0 bg-{{$status}}-200 opacity-50 rounded-full"></span>
