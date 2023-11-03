@@ -1,107 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
+	<head>
+		<script src="https://cdn.tailwindcss.com"></script>
+	</head>
 
-<head>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-
-<body>
-    <div class="bg-white p-8 rounded-md w-full">
-        <div class=" flex items-center justify-between pb-6">
-            <div class="flex items-center justify-between">
-                <div class="flex bg-gray-50 items-center p-2 rounded-md">
-              </div>
-                </div>
-            </div>
-            <div>
-                <div class="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4 overflow-x-auto">
-                    <div class="inline-block min-w-full shadow rounded-lg overflow-hidden">
-                        <table class="min-w-full leading-normal">
-                            <thead>
-                                <tr>
-                                    <th
-                                        class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        VX ID
-                                    </th>
-                                    <th
-                                        class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        Title
-                                    </th>
-                                    <th
-                                        class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        Workflow ID
-                                    </th>
-                                    <th
-                                        class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        Start
-                                    </th>
-                                    <th
-                                        class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        Status
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            
-                            
-                            <tbody class="divide-y">
-                                {{$WorkflowStatuses := .WorkflowStatuses}}
-
-                                {{range $index, $element := .WorkflowList}}
-                                <tr class="bg-white text-sm border-gray-200 ">
-                                    <td class="px-5 py-5">
-                                        <p class="text-gray-900 whitespace-no-wrap">
-                                             {{$element.VxID}}
-                                        </p>
-                                    </td>
-
-                                    <td class="p-5">
-                                        <p class="text-gray-900 whitespace-no-wrap">
-                                            {{$element.Name}}
-                                        </p>
-                                    </td>
-                                    <td class="p-5">
-                                        <p class="text-gray-900 whitespace-no-wrap">
-                                            {{$element.WorkflowID}}
-                                        </p>
-                                    </td>
-                                    <td class="p-5">
-                                        <p class="text-gray-900 whitespace-no-wrap">
-                                            {{$element.Start}}
-                                        </p>
-                                    </td>
-
-                                    
-       
-                                    <td class="p-5">
-
-                                        {{range $index, $status := $WorkflowStatuses}}
-
-                                            {{if eq $element.Status $index}}
-                                                <span class="relative inline-block px-3 py-1 font-semibold text-{{$status}}-900 leading-tight">
-                                                    <span aria-hiddenclass="absolute inset-0 bg-{{$status}}-200 opacity-50 rounded-full"></span>
-                                                    <span class="relative">{{$element.Status}}</span>
-                                                </span> 
-                                            {{end}}
-                                
-                                        {{end}}
-                                        
-                                              
-                                    </td> 
-                                </tr>
-                                {{end}}
-                            </tbody>
-                            
-                        </table>
-                        
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+	<body>
+		<div class="bg-white p-8 rounded-md w-full">
+			<div class=" flex items-center justify-between pb-6">
+				<div class="flex items-center justify-between">
+					<div class="flex bg-gray-50 items-center p-2 rounded-md">
+					</div>
+				</div>
+			</div>
+			<div>
+				<div class="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4 overflow-x-auto">
+					<div class="inline-block min-w-full shadow rounded-lg overflow-hidden">
+						<table class="min-w-full leading-normal">
+							<thead>
+								<tr>
+									<th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+										VX ID
+									</th>
+									<th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+										Title
+									</th>
+									<th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+										Workflow ID
+									</th>
+									<th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+										Start
+									</th>
+									<th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+										Status
+									</th>
+								</tr>
+							</thead>
 
 
-    
-</body>
 
+							<tbody class="divide-y">
+								{{range $index, $element := .WorkflowList}}
+								<tr class="bg-white text-sm border-gray-200 ">
+									<td class="px-5 py-5">
+										<p class="text-gray-900 whitespace-no-wrap">
+										{{$element.VxID}}
+										</p>
+									</td>
+
+									<td class="p-5">
+										<p class="text-gray-900 whitespace-no-wrap">
+										{{$element.Name}}
+										</p>
+									</td>
+									<td class="p-5">
+										<p class="text-gray-900 whitespace-no-wrap">
+										{{$element.WorkflowID}}
+										</p>
+									</td>
+									<td class="p-5">
+										<p class="text-gray-900 whitespace-no-wrap">
+										{{$element.Start}}
+										</p>
+									</td>
+
+									<td class="p-5">
+										{{range $index, $status := .WorkflowStatuses}}
+											{{if eq $element.Status $index}}
+											<span class="relative inline-block px-3 py-1 font-semibold text-{{$status}}-900 leading-tight">
+												<span aria-hiddenclass="absolute inset-0 bg-{{$status}}-200 opacity-50 rounded-full"></span>
+												<span class="relative">{{$element.Status}}</span>
+											</span>
+											{{end}}
+										{{end}}
+									</td>
+								</tr>
+								{{end}}
+							</tbody>
+
+						</table>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
 </html>

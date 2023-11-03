@@ -8,7 +8,7 @@
 <body>
 	<div class="grid min-h-screen place-items-center bg-gray-100">
 		<div class="p-2 bg-white sm:w-8/12 md:w-1/4">
-	
+
 			<form id="requestForm" method="post" class="items-center flex justify-between gap-1.5 flex-col">
 
 				<h1 for="vxID" class="text-center w-full font-bold text-3xl text-gray-600 p-4" id="vxID" name="vxID">{{ .Title }}</h1>
@@ -20,7 +20,7 @@
 					<li>
 						<input type=checkbox class="form-checkbox h-4 w-4 inline-block align-middle" name="destinations[]" id="{{$element}}" value={{$element}}>
 						<label for={{$element}}>{{ $element }}</label>
-						
+
 					</li>
 					{{end}}
 					</ul>
@@ -32,7 +32,7 @@
 						{{$selectedAudio := .SelectedAudioSource}}
 
 						{{range $index, $element := .AudioSources}}
-							{{if eq $element $selectedAudio}} 
+							{{if eq $element $selectedAudio}}
 							<option value={{$element}} selected>{{$element}}</option>
 							{{else}}
 							<option value={{$element}}>{{$element}}</option>
@@ -51,14 +51,14 @@
 						{{range $index, $language := $Language}}
 							{{$isSelected := false}}
 
-							{{range $selected := $Selected}} 
+							{{range $selected := $Selected}}
 
 								{{if eq $selected $index}}
 									{{$isSelected = true}}
 									<li class="flex flex-row gap-1 ">
-										<input type="checkbox" class="form-checkbox h-4 w-4" name="languages[]" id="{{$language.ISO6391}}" value={{$language.ISO6391}} checked /> 
+										<input type="checkbox" class="form-checkbox h-4 w-4" name="languages[]" id="{{$language.ISO6391}}" value={{$language.ISO6391}} checked />
 										<label for="{{$language.ISO6391}}"> <span class="uppercase"  >{{$language.ISO6391}}</span> - {{$language.LanguageName}} </label>
-									</li>		
+									</li>
 
 								{{end}}
 
@@ -70,7 +70,7 @@
 									<label for="{{$language.ISO6391}}"><span class="uppercase"  >{{$language.ISO6391}}</span> - {{$language.LanguageName}} </label>
 								</li>
 							{{end}}
-							
+
 						{{end}}
 
 					</ul>
@@ -85,7 +85,6 @@
 					{{end}}
 				</select>
 				</div>
-
 
 				<div class="checkbox">
 					<label for="withFiles">With downloadables</label>
