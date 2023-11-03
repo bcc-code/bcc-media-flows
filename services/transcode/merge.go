@@ -3,6 +3,7 @@ package transcode
 import (
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -195,11 +196,27 @@ func MergeAudio(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 	}, err
 }
 
+func formatDuration(seconds float64) string {
+	// Calculate hours, minutes, and whole seconds
+	hours := int(seconds) / 3600
+	minutes := int(seconds) / 60 % 60
+	wholeSeconds := int(seconds) % 60
+
+	// Calculate milliseconds
+	milliseconds := int(math.Mod(seconds, 1) * 1000)
+
+	// Return the formatted string
+	return fmt.Sprintf("%02d:%02d:%02d,%03d", hours, minutes, wholeSeconds, milliseconds)
+}
+
 func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCallback) (*common.MergeResult, error) {
 	var files []string
 	// for each file, extract the specified range and save the result to a file.
+
+	startAt := 0.0
 	for index, item := range input.Items {
 		file := filepath.Join(input.WorkDir, fmt.Sprintf("%s-%d.srt", input.Title, index))
+		fileOut := filepath.Join(input.WorkDir, fmt.Sprintf("%s-%d-out.srt", input.Title, index))
 		path := utils.IsilonPathFix(item.Path)
 
 		cmd := exec.Command("ffmpeg", "-i", path, "-ss", fmt.Sprintf("%f", item.Start), "-to", fmt.Sprintf("%f", item.End), "-y", file)
@@ -212,9 +229,21 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 		if err != nil {
 			return nil, err
 		}
-		if fileInfo.Size() != 0 {
-			files = append(files, file)
+		if fileInfo.Size() == 0 {
+			err = os.WriteFile(file, []byte(fmt.Sprintf("1\n%s --> %s\n", formatDuration(item.Start), formatDuration(item.End))), os.ModePerm)
+			if err != nil {
+				return nil, err
+			}
 		}
+
+		cmd = exec.Command("ffmpeg", "-itsoffset", fmt.Sprintf("%f", startAt), "-i", file, "-y", fileOut)
+		_, err = utils.ExecuteCmd(cmd, nil)
+		if err != nil {
+			return nil, err
+		}
+		startAt += item.End - item.Start
+
+		files = append(files, fileOut)
 	}
 
 	// the files have to be present in a text file for ffmpeg to concatenate them.
@@ -233,14 +262,14 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 		return nil, err
 	}
 
-	outputPath := filepath.Join(input.OutputDir, filepath.Clean(input.Title)+".srt")
+	concatStr := fmt.Sprintf("concat:%s", strings.Join(files, "|"))
 
+	outputPath := filepath.Join(input.OutputDir, filepath.Clean(input.Title)+".srt")
 	params := []string{
 		"-progress", "pipe:1",
 		"-hide_banner",
-		"-f", "concat",
-		"-safe", "0",
-		"-i", subtitlesFile,
+		"-i", concatStr,
+		"-c", "copy",
 		"-y",
 		outputPath,
 	}
