@@ -1,14 +1,12 @@
 package export
 
 import (
-	"path/filepath"
-	"strings"
-
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/workflow"
+	"path/filepath"
 )
 
 func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams) (*VXExportResult, error) {
@@ -56,11 +54,15 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 	options.TaskQueue = utils.GetWorkerQueue()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
+	outputPath, err := utils.ParsePath(params.OutputDir)
+	if err != nil {
+		return nil, err
+	}
+
 	// Rclone to playout
-	source := strings.Replace(params.OutputDir, utils.GetIsilonPrefix()+"/", "isilon:isilon/", 1)
 	destination := "playout:/dropbox"
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      source,
+		Source:      outputPath.RclonePath(),
 		Destination: destination,
 	}).Get(ctx, nil)
 	if err != nil {
