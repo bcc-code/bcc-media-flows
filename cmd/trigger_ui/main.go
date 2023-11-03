@@ -180,7 +180,7 @@ func (s *TriggerServer) listGET(c *gin.Context) {
 			Execution: workflows.Executions[i].GetExecution(),
 			Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
 		})
-		print(res)
+
 		if err != nil {
 			renderErrorPage(c, http.StatusInternalServerError, err)
 			return
