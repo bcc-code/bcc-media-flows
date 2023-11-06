@@ -60,7 +60,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 			FilePath:              audio,
 			TargetLUFS:            targetLufs,
 			PerformOutputAnalysis: true,
-			OutputPath:            outputFolder,
+			OutputPath:            tempDir,
 		})
 		normalizedFutures[lang] = future
 	}
