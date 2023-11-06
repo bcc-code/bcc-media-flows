@@ -2,7 +2,6 @@ package activities
 
 import (
 	"context"
-
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"github.com/bcc-code/bccm-flows/services/transcode"
@@ -65,4 +64,56 @@ func AdjustAudioLevelActivity(ctx context.Context, input *AdjustAudioLevelParams
 		Path:            input.InFilePath,
 		DestinationPath: input.OutFilePath,
 	}, input.Adjustment, progressCallback)
+}
+
+type NormalizeAudioParams struct {
+	FilePath              string
+	OutputPath            string
+	TargetLUFS            float64
+	PerformOutputAnalysis bool
+}
+
+type NormalizeAudioResult struct {
+	FilePath       string
+	InputAnalysis  *common.AnalyzeEBUR128Result
+	OutputAnalysis *common.AnalyzeEBUR128Result
+}
+
+func NormalizeAudioActivity(ctx context.Context, params NormalizeAudioParams) (*NormalizeAudioResult, error) {
+	out := &NormalizeAudioResult{}
+
+	r128Result, err := AnalyzeEBUR128Activity(ctx, AnalyzeEBUR128Params{
+		FilePath:       params.FilePath,
+		TargetLoudness: params.TargetLUFS,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	out.InputAnalysis = r128Result
+
+	adjustResult, err := AdjustAudioLevelActivity(ctx, &AdjustAudioLevelParams{
+		Adjustment:  r128Result.SuggestedAdjustment,
+		InFilePath:  params.FilePath,
+		OutFilePath: params.OutputPath,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	out.FilePath = adjustResult.OutputPath
+
+	if params.PerformOutputAnalysis {
+		r128Result, err := AnalyzeEBUR128Activity(ctx, AnalyzeEBUR128Params{
+			FilePath:       out.FilePath,
+			TargetLoudness: params.TargetLUFS,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		out.OutputAnalysis = r128Result
+	}
+
+	return out, err
 }

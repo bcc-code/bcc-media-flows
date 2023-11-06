@@ -18,6 +18,7 @@ func GetAudioTranscodeActivities() []any {
 		AnalyzeEBUR128Activity,
 		AdjustAudioLevelActivity,
 		AnalyzeFile,
+		NormalizeAudioActivity,
 	}
 }
 
