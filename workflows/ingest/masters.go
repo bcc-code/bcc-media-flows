@@ -2,7 +2,9 @@ package ingestworkflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bccm-flows/activities"
 	batonactivities "github.com/bcc-code/bccm-flows/activities/baton"
+	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/services/baton"
 	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
@@ -15,24 +17,31 @@ import (
 	"strings"
 )
 
-type VBMasterParams struct {
+type MasterParams struct {
 	Metadata *ingest.Metadata
 
+	OrderForm OrderForm
 	Directory string
 }
 
-type VBMasterResult struct{}
+type MasterResult struct {
+	Report        baton.QCReport
+	AssetID       string
+	AnalyzeResult *common.AnalyzeEBUR128Result
+}
 
 // regexp for making sure the filename does not contain non-alphanumeric characters
 var nonAlphanumeric = regexp.MustCompile("[^a-zA-Z0-9_]")
 
-func VBMaster(ctx workflow.Context, params VBMasterParams) (*VBMasterResult, error) {
-	logger := workflow.GetLogger(ctx)
-	logger.Info("Starting VBMaster workflow")
-
-	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
-
-	filename, err := vbMasterFilename(params.Metadata)
+func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
+	var filename string
+	var err error
+	switch params.OrderForm {
+	case OrderFormSeriesMaster:
+		filename, err = seriesMasterFilename(params.Metadata)
+	case OrderFormVBMaster:
+		filename, err = vbMasterFilename(params.Metadata)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -53,8 +62,6 @@ func VBMaster(ctx workflow.Context, params VBMasterParams) (*VBMasterResult, err
 	if err != nil {
 		return nil, err
 	}
-
-	filename += filepath.Ext(files[0])
 
 	file := filepath.Join(outputDir, filename)
 	err = wfutils.MoveFile(ctx, files[0], file)
@@ -96,14 +103,81 @@ func VBMaster(ctx workflow.Context, params VBMasterParams) (*VBMasterResult, err
 		return nil, err
 	}
 
-	if report.TopLevelInfo.Error == 0 {
+	return &MasterResult{
+		Report:  report,
+		AssetID: result.AssetID,
+	}, nil
+}
+
+func SeriesMaster(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
+	logger := workflow.GetLogger(ctx)
+	logger.Info("Starting VBMaster workflow")
+
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+
+	result, err := uploadMaster(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	var analyzeResult common.AnalyzeEBUR128Result
+	err = workflow.ExecuteActivity(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{}).Get(ctx, &analyzeResult)
+	if err != nil {
+		return nil, err
+	}
+
+	result.AnalyzeResult = &analyzeResult
+
+	if result.Report.TopLevelInfo.Error == 0 {
 		err = postImportActions(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return nil, nil
+	return result, nil
+}
+
+func VBMaster(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
+	logger := workflow.GetLogger(ctx)
+	logger.Info("Starting VBMaster workflow")
+
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+
+	result, err := uploadMaster(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Report.TopLevelInfo.Error == 0 {
+		err = postImportActions(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return result, nil
+}
+
+func seriesMasterFilename(metadata *ingest.Metadata) (string, error) {
+	programID := metadata.JobProperty.ProgramID
+	if programID != "" {
+		programID = strings.Split(programID, " ")[0]
+	}
+
+	filename := programID
+	if metadata.JobProperty.ProgramPost != "" {
+		filename += "_" + strings.ToUpper(metadata.JobProperty.ProgramPost)
+	}
+	filename += "_" + strings.ToUpper(metadata.JobProperty.ReceivedFilename)
+
+	filename = strings.ReplaceAll(filename, " ", "_")
+
+	if nonAlphanumeric.MatchString(filename) {
+		return "", fmt.Errorf("filename contains non-alphanumeric characters: %s", filename)
+	}
+
+	return filename, nil
 }
 
 func vbMasterFilename(metadata *ingest.Metadata) (string, error) {

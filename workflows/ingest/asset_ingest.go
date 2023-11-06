@@ -15,9 +15,10 @@ import (
 type OrderForm enum.Member[string]
 
 var (
-	OrderFormRawMaterial = OrderForm{Value: "Rawmaterial"}
-	OrderFormVBMaster    = OrderForm{Value: "VB"}
-	OrderForms           = enum.New(
+	OrderFormRawMaterial  = OrderForm{Value: "Rawmaterial"}
+	OrderFormVBMaster     = OrderForm{Value: "VB"}
+	OrderFormSeriesMaster = OrderForm{Value: "Series"}
+	OrderForms            = enum.New(
 		OrderFormRawMaterial,
 		//OrderFormVBMaster, // commented out for supporting only raw material
 	)
@@ -76,8 +77,15 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			Directory: fcOutputDir,
 		}).Get(ctx, nil)
 	case OrderFormVBMaster:
-		err = workflow.ExecuteChildWorkflow(ctx, VBMaster, VBMasterParams{
+		err = workflow.ExecuteChildWorkflow(ctx, VBMaster, MasterParams{
 			Metadata:  metadata,
+			OrderForm: *orderForm,
+			Directory: fcOutputDir,
+		}).Get(ctx, nil)
+	case OrderFormSeriesMaster:
+		err = workflow.ExecuteChildWorkflow(ctx, SeriesMaster, MasterParams{
+			Metadata:  metadata,
+			OrderForm: *orderForm,
 			Directory: fcOutputDir,
 		}).Get(ctx, nil)
 	}
