@@ -41,6 +41,8 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		filename, err = seriesMasterFilename(params.Metadata)
 	case OrderFormVBMaster:
 		filename, err = vbMasterFilename(params.Metadata)
+	case OrderFormOtherMaster:
+		filename, err = otherMasterFilename(params.Metadata)
 	}
 	if err != nil {
 		return nil, err
@@ -109,7 +111,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	}, nil
 }
 
-func SeriesMaster(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
+func Masters(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting VBMaster workflow")
 
@@ -160,6 +162,26 @@ func VBMaster(ctx workflow.Context, params MasterParams) (*MasterResult, error) 
 }
 
 func seriesMasterFilename(metadata *ingest.Metadata) (string, error) {
+	programID := metadata.JobProperty.ProgramID
+	if programID != "" {
+		programID = strings.Split(programID, " ")[0]
+	}
+
+	filename := programID
+	filename += "_" + strings.ToUpper(metadata.JobProperty.ReceivedFilename)
+	filename += "_" + metadata.JobProperty.AssetType
+	filename += "_" + strings.ToUpper(metadata.JobProperty.Language)
+
+	filename = strings.ReplaceAll(filename, " ", "_")
+
+	if nonAlphanumeric.MatchString(filename) {
+		return "", fmt.Errorf("filename contains non-alphanumeric characters: %s", filename)
+	}
+
+	return filename, nil
+}
+
+func otherMasterFilename(metadata *ingest.Metadata) (string, error) {
 	programID := metadata.JobProperty.ProgramID
 	if programID != "" {
 		programID = strings.Split(programID, " ")[0]
