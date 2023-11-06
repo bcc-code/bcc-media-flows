@@ -29,6 +29,11 @@ var (
 	FieldSeason                = FieldType{"portal_mf765401"}
 	FieldProgram               = FieldType{"portal_mf426791"}
 	FieldEpisode               = FieldType{"portal_mf978874"}
+	FieldLoudnessLUFS          = FieldType{"portal_mf127446"}
+	FieldLoudnessRange         = FieldType{"portal_mf76564"}
+	FieldTruePeak              = FieldType{"portal_mf687468"}
+	FieldDialogLoudness        = FieldType{"portal_mf388644"}
+	FieldDialogPercentage      = FieldType{"portal_mf350671"}
 	FieldTypes                 = enum.New(FieldDurationSeconds, FieldDescription, FieldExportAudioSource, FieldLangsToExport,
 		FieldPersonsAppearing, FieldSequenceSize, FieldStartTC, FieldSubclipToExport, FieldSubclipType, FieldTitle,
 		FieldSource, FieldExportAsChapter, FieldSubtransStoryID, FieldOriginalURI, FieldUploadedBy, FieldUploadJob,

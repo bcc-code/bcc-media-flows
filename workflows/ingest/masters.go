@@ -28,6 +28,7 @@ type MasterResult struct {
 	Report        baton.QCReport
 	AssetID       string
 	AnalyzeResult *common.AnalyzeEBUR128Result
+	Path          utils.Path
 }
 
 // regexp for making sure the filename does not contain non-alphanumeric characters
@@ -108,6 +109,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	return &MasterResult{
 		Report:  report,
 		AssetID: result.AssetID,
+		Path:    path,
 	}, nil
 }
 
@@ -122,13 +124,7 @@ func Masters(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
 		return nil, err
 	}
 
-	var analyzeResult common.AnalyzeEBUR128Result
-	err = wfutils.ExecuteWithQueue(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{}).Get(ctx, &analyzeResult)
-	if err != nil {
-		return nil, err
-	}
-
-	result.AnalyzeResult = &analyzeResult
+	result.AnalyzeResult, err = analyzeAudioAndSetMetadata(ctx, result.AssetID, result.Path)
 
 	if result.Report.TopLevelInfo.Error == 0 {
 		err = postImportActions(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
@@ -159,6 +155,37 @@ func VBMaster(ctx workflow.Context, params MasterParams) (*MasterResult, error) 
 	}
 
 	return result, nil
+}
+
+func analyzeAudioAndSetMetadata(ctx workflow.Context, assetID string, path utils.Path) (*common.AnalyzeEBUR128Result, error) {
+	var result common.AnalyzeEBUR128Result
+	err := wfutils.ExecuteWithQueue(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
+		FilePath:       path.WorkerPath(),
+		TargetLoudness: 0.0, // TODO: Determine our target loudness
+	}).Get(ctx, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	values := map[string]float64{
+		// TODO: determine the correct values for these fields
+		vscommon.FieldLoudnessLUFS.Value:  result.IntegratedLoudness,
+		vscommon.FieldTruePeak.Value:      result.TruePeak,
+		vscommon.FieldLoudnessRange.Value: result.LoudnessRange,
+	}
+
+	keys, err := wfutils.GetMapKeysSafely(ctx, values)
+	if err != nil {
+		return nil, err
+	}
+	for _, key := range keys {
+		err = wfutils.SetVidispineMeta(ctx, assetID, key, strconv.FormatFloat(values[key], 'f', 2, 64))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &result, nil
 }
 
 func seriesMasterFilename(metadata *ingest.Metadata) (string, error) {
