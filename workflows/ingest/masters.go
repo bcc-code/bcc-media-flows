@@ -161,14 +161,13 @@ func analyzeAudioAndSetMetadata(ctx workflow.Context, assetID string, path utils
 	var result common.AnalyzeEBUR128Result
 	err := wfutils.ExecuteWithQueue(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
 		FilePath:       path.WorkerPath(),
-		TargetLoudness: 0.0, // TODO: Determine our target loudness
+		TargetLoudness: -24,
 	}).Get(ctx, &result)
 	if err != nil {
 		return nil, err
 	}
 
 	values := map[string]float64{
-		// TODO: determine the correct values for these fields
 		vscommon.FieldLoudnessLUFS.Value:  result.IntegratedLoudness,
 		vscommon.FieldTruePeak.Value:      result.TruePeak,
 		vscommon.FieldLoudnessRange.Value: result.LoudnessRange,
