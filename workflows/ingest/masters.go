@@ -121,7 +121,7 @@ func SeriesMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	}
 
 	var analyzeResult common.AnalyzeEBUR128Result
-	err = workflow.ExecuteActivity(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{}).Get(ctx, &analyzeResult)
+	err = wfutils.ExecuteWithQueue(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{}).Get(ctx, &analyzeResult)
 	if err != nil {
 		return nil, err
 	}
