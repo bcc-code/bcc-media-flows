@@ -188,10 +188,10 @@ func otherMasterFilename(metadata *ingest.Metadata) (string, error) {
 	}
 
 	filename := programID
-	if metadata.JobProperty.ProgramPost != "" {
-		filename += "_" + strings.ToUpper(metadata.JobProperty.ProgramPost)
-	}
+
 	filename += "_" + strings.ToUpper(metadata.JobProperty.ReceivedFilename)
+	filename += "_" + metadata.JobProperty.AssetType
+	filename += "_" + strings.ToUpper(metadata.JobProperty.Language)
 
 	filename = strings.ReplaceAll(filename, " ", "_")
 
@@ -266,5 +266,45 @@ func addMetaTags(ctx workflow.Context, assetID string, metadata *ingest.Metadata
 			return err
 		}
 	}
+
+	// let workflow panic if the format is invalid?
+	program := strings.Split(metadata.JobProperty.ProgramID, " - ")[1]
+	if program != "" {
+		err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldProgram.Value, program)
+		if err != nil {
+			return err
+		}
+	}
+
+	if metadata.JobProperty.Season != "" {
+		err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldSeason.Value, metadata.JobProperty.Season)
+		if err != nil {
+			return err
+		}
+	}
+
+	if metadata.JobProperty.Episode != "" {
+		err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldEpisode.Value, metadata.JobProperty.Episode)
+		if err != nil {
+			return err
+		}
+	}
+
+	if metadata.JobProperty.EpisodeTitle != "" {
+		title := program + " | " + metadata.JobProperty.EpisodeTitle
+
+		err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldTitle.Value, title)
+		if err != nil {
+			return err
+		}
+	}
+
+	if metadata.JobProperty.EpisodeDescription != "" {
+		err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldEpisodeDescription.Value, metadata.JobProperty.EpisodeDescription)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
