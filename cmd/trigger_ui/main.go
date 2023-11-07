@@ -106,6 +106,12 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 		TaskQueue: queue,
 	}
 
+	if os.Getenv("DEBUG") == "" {
+		workflowOptions.SearchAttributes = map[string]any{
+			"CustomStringField": vxID,
+		}
+	}
+
 	var res client.WorkflowRun
 
 	s.vsapiClient.SetItemMetadataField(vxID, vscommon.FieldExportAudioSource.Value, audioSource)
