@@ -288,9 +288,6 @@ func (s *VidispineService) GetDataForExport(itemVXID string, languagesToExport [
 
 	title := meta.Get(vscommon.FieldTitle, "")
 
-	// TODO: This appears to define the shape used for export. Validate how and where this is used
-	// exportFormat := meta.Get("portal_mf868653", "original")
-
 	// clean up the title
 	safeTitle := strings.ReplaceAll(title, " ", "_")
 	safeTitle = nonAlphanumeric.ReplaceAllString(safeTitle, "")
@@ -328,9 +325,9 @@ func (s *VidispineService) GetDataForExport(itemVXID string, languagesToExport [
 			languagesToExport = meta.GetArray(vscommon.FieldLangsToExport)
 		}
 
-		if audioSource == &ExportAudioSourceRelated {
+		if *audioSource == ExportAudioSourceRelated {
 			clip, err = s.getRelatedAudios(clip, languagesToExport)
-		} else if audioSource == &ExportAudioSourceEmbedded {
+		} else if *audioSource == ExportAudioSourceEmbedded {
 			clip, err = s.getEmbeddedAudio(clip, languagesToExport)
 		}
 
