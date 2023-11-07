@@ -34,16 +34,39 @@ type MasterResult struct {
 // regexp for making sure the filename does not contain non-alphanumeric characters
 var nonAlphanumeric = regexp.MustCompile("[^a-zA-Z0-9_]")
 
+func Masters(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
+	logger := workflow.GetLogger(ctx)
+	logger.Info("Starting VBMaster workflow")
+
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+
+	result, err := uploadMaster(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	// This isn't run on VB masters in old system, but see no reason to not run it here.
+	result.AnalyzeResult, err = analyzeAudioAndSetMetadata(ctx, result.AssetID, result.Path)
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Report.TopLevelInfo.Error == 0 {
+		err = postImportActions(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return result, nil
+}
+
 func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
 	var filename string
 	var err error
 	switch params.OrderForm {
-	case OrderFormSeriesMaster:
-		filename, err = seriesMasterFilename(params.Metadata)
-	case OrderFormVBMaster:
-		filename, err = vbMasterFilename(params.Metadata)
-	case OrderFormOtherMaster:
-		filename, err = otherMasterFilename(params.Metadata)
+	case OrderFormOtherMaster, OrderFormVBMaster, OrderFormSeriesMaster:
+		filename, err = masterFilename(params.Metadata.JobProperty)
 	}
 	if err != nil {
 		return nil, err
@@ -113,50 +136,6 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	}, nil
 }
 
-func Masters(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
-	logger := workflow.GetLogger(ctx)
-	logger.Info("Starting VBMaster workflow")
-
-	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
-
-	result, err := uploadMaster(ctx, params)
-	if err != nil {
-		return nil, err
-	}
-
-	result.AnalyzeResult, err = analyzeAudioAndSetMetadata(ctx, result.AssetID, result.Path)
-
-	if result.Report.TopLevelInfo.Error == 0 {
-		err = postImportActions(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return result, nil
-}
-
-func VBMaster(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
-	logger := workflow.GetLogger(ctx)
-	logger.Info("Starting VBMaster workflow")
-
-	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
-
-	result, err := uploadMaster(ctx, params)
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Report.TopLevelInfo.Error == 0 {
-		err = postImportActions(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return result, nil
-}
-
 func analyzeAudioAndSetMetadata(ctx workflow.Context, assetID string, path utils.Path) (*common.AnalyzeEBUR128Result, error) {
 	var result common.AnalyzeEBUR128Result
 	err := wfutils.ExecuteWithQueue(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
@@ -187,59 +166,23 @@ func analyzeAudioAndSetMetadata(ctx workflow.Context, assetID string, path utils
 	return &result, nil
 }
 
-func seriesMasterFilename(metadata *ingest.Metadata) (string, error) {
-	programID := metadata.JobProperty.ProgramID
-	if programID != "" {
-		programID = strings.Split(programID, " ")[0]
+func masterFilename(props ingest.JobProperty) (string, error) {
+	var parts []string
+	if props.ProgramID != "" {
+		parts = append(parts, strings.Split(props.ProgramID, " ")[0])
+	}
+	if props.ProgramPost != "" {
+		parts = append(parts, props.ProgramPost)
+	}
+	parts = append(parts, strings.ToUpper(props.ReceivedFilename))
+	if props.AssetType != "" {
+		parts = append(parts, props.AssetType)
+	}
+	if props.Language != "" {
+		parts = append(parts, strings.ToUpper(props.Language))
 	}
 
-	filename := programID
-	filename += "_" + strings.ToUpper(metadata.JobProperty.ReceivedFilename)
-	filename += "_" + metadata.JobProperty.AssetType
-	filename += "_" + strings.ToUpper(metadata.JobProperty.Language)
-
-	filename = strings.ReplaceAll(filename, " ", "_")
-
-	if nonAlphanumeric.MatchString(filename) {
-		return "", fmt.Errorf("filename contains non-alphanumeric characters: %s", filename)
-	}
-
-	return filename, nil
-}
-
-func otherMasterFilename(metadata *ingest.Metadata) (string, error) {
-	programID := metadata.JobProperty.ProgramID
-	if programID != "" {
-		programID = strings.Split(programID, " ")[0]
-	}
-
-	filename := programID
-
-	filename += "_" + strings.ToUpper(metadata.JobProperty.ReceivedFilename)
-	filename += "_" + metadata.JobProperty.AssetType
-	filename += "_" + strings.ToUpper(metadata.JobProperty.Language)
-
-	filename = strings.ReplaceAll(filename, " ", "_")
-
-	if nonAlphanumeric.MatchString(filename) {
-		return "", fmt.Errorf("filename contains non-alphanumeric characters: %s", filename)
-	}
-
-	return filename, nil
-}
-
-func vbMasterFilename(metadata *ingest.Metadata) (string, error) {
-	programID := metadata.JobProperty.ProgramID
-	if programID != "" {
-		programID = strings.Split(programID, " ")[0]
-	}
-
-	filename := programID
-	if metadata.JobProperty.ProgramPost != "" {
-		filename += "_" + strings.ToUpper(metadata.JobProperty.ProgramPost)
-	}
-	filename += "_" + strings.ToUpper(metadata.JobProperty.ReceivedFilename)
-
+	filename := strings.Join(parts, "_")
 	filename = strings.ReplaceAll(filename, " ", "_")
 
 	if nonAlphanumeric.MatchString(filename) {

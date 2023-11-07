@@ -77,13 +77,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			Metadata:  metadata,
 			Directory: fcOutputDir,
 		}).Get(ctx, nil)
-	case OrderFormVBMaster:
-		err = workflow.ExecuteChildWorkflow(ctx, VBMaster, MasterParams{
-			Metadata:  metadata,
-			OrderForm: *orderForm,
-			Directory: fcOutputDir,
-		}).Get(ctx, nil)
-	case OrderFormSeriesMaster, OrderFormOtherMaster:
+	case OrderFormSeriesMaster, OrderFormOtherMaster, OrderFormVBMaster:
 		err = workflow.ExecuteChildWorkflow(ctx, Masters, MasterParams{
 			Metadata:  metadata,
 			OrderForm: *orderForm,
