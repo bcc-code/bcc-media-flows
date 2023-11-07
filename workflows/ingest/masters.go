@@ -67,6 +67,8 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	switch params.OrderForm {
 	case OrderFormOtherMaster, OrderFormVBMaster, OrderFormSeriesMaster:
 		filename, err = masterFilename(params.Metadata.JobProperty)
+	default:
+		return nil, fmt.Errorf("unsupported order form: %s", params.OrderForm)
 	}
 	if err != nil {
 		return nil, err
