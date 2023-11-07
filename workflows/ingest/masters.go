@@ -118,7 +118,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	}
 
 	plan := baton.TestPlanMXF
-	if strings.HasSuffix(file, ".mov") {
+	if filepath.Ext(file) == ".mov" {
 		plan = baton.TestPlanMOV
 	}
 
