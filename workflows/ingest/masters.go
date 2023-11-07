@@ -2,7 +2,9 @@ package ingestworkflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bccm-flows/activities"
 	batonactivities "github.com/bcc-code/bccm-flows/activities/baton"
+	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/services/baton"
 	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
@@ -15,24 +17,59 @@ import (
 	"strings"
 )
 
-type VBMasterParams struct {
+type MasterParams struct {
 	Metadata *ingest.Metadata
 
+	OrderForm OrderForm
 	Directory string
 }
 
-type VBMasterResult struct{}
+type MasterResult struct {
+	Report        baton.QCReport
+	AssetID       string
+	AnalyzeResult *common.AnalyzeEBUR128Result
+	Path          utils.Path
+}
 
 // regexp for making sure the filename does not contain non-alphanumeric characters
 var nonAlphanumeric = regexp.MustCompile("[^a-zA-Z0-9_]")
 
-func VBMaster(ctx workflow.Context, params VBMasterParams) (*VBMasterResult, error) {
+func Masters(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting VBMaster workflow")
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	filename, err := vbMasterFilename(params.Metadata)
+	result, err := uploadMaster(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	// This isn't run on VB masters in old system, but see no reason to not run it here.
+	result.AnalyzeResult, err = analyzeAudioAndSetMetadata(ctx, result.AssetID, result.Path)
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Report.TopLevelInfo.Error == 0 {
+		err = postImportActions(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return result, nil
+}
+
+func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
+	var filename string
+	var err error
+	switch params.OrderForm {
+	case OrderFormOtherMaster, OrderFormVBMaster, OrderFormSeriesMaster:
+		filename, err = masterFilename(params.Metadata.JobProperty)
+	default:
+		return nil, fmt.Errorf("unsupported order form: %s", params.OrderForm)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -53,8 +90,6 @@ func VBMaster(ctx workflow.Context, params VBMasterParams) (*VBMasterResult, err
 	if err != nil {
 		return nil, err
 	}
-
-	filename += filepath.Ext(files[0])
 
 	file := filepath.Join(outputDir, filename)
 	err = wfutils.MoveFile(ctx, files[0], file)
@@ -83,7 +118,7 @@ func VBMaster(ctx workflow.Context, params VBMasterParams) (*VBMasterResult, err
 	}
 
 	plan := baton.TestPlanMXF
-	if strings.HasSuffix(file, ".mov") {
+	if filepath.Ext(file) == ".mov" {
 		plan = baton.TestPlanMOV
 	}
 
@@ -96,28 +131,60 @@ func VBMaster(ctx workflow.Context, params VBMasterParams) (*VBMasterResult, err
 		return nil, err
 	}
 
-	if report.TopLevelInfo.Error == 0 {
-		err = postImportActions(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
+	return &MasterResult{
+		Report:  report,
+		AssetID: result.AssetID,
+		Path:    path,
+	}, nil
+}
+
+func analyzeAudioAndSetMetadata(ctx workflow.Context, assetID string, path utils.Path) (*common.AnalyzeEBUR128Result, error) {
+	var result common.AnalyzeEBUR128Result
+	err := wfutils.ExecuteWithQueue(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
+		FilePath:       path.WorkerPath(),
+		TargetLoudness: -24,
+	}).Get(ctx, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	values := map[string]float64{
+		vscommon.FieldLoudnessLUFS.Value:  result.IntegratedLoudness,
+		vscommon.FieldTruePeak.Value:      result.TruePeak,
+		vscommon.FieldLoudnessRange.Value: result.LoudnessRange,
+	}
+
+	keys, err := wfutils.GetMapKeysSafely(ctx, values)
+	if err != nil {
+		return nil, err
+	}
+	for _, key := range keys {
+		err = wfutils.SetVidispineMeta(ctx, assetID, key, strconv.FormatFloat(values[key], 'f', 2, 64))
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return nil, nil
+	return &result, nil
 }
 
-func vbMasterFilename(metadata *ingest.Metadata) (string, error) {
-	programID := metadata.JobProperty.ProgramID
-	if programID != "" {
-		programID = strings.Split(programID, " ")[0]
+func masterFilename(props ingest.JobProperty) (string, error) {
+	var parts []string
+	if props.ProgramID != "" {
+		parts = append(parts, strings.Split(props.ProgramID, " ")[0])
+	}
+	if props.ProgramPost != "" {
+		parts = append(parts, props.ProgramPost)
+	}
+	parts = append(parts, strings.ToUpper(props.ReceivedFilename))
+	if props.AssetType != "" {
+		parts = append(parts, props.AssetType)
+	}
+	if props.Language != "" {
+		parts = append(parts, strings.ToUpper(props.Language))
 	}
 
-	filename := programID
-	if metadata.JobProperty.ProgramPost != "" {
-		filename += "_" + strings.ToUpper(metadata.JobProperty.ProgramPost)
-	}
-	filename += "_" + strings.ToUpper(metadata.JobProperty.ReceivedFilename)
-
+	filename := strings.Join(parts, "_")
 	filename = strings.ReplaceAll(filename, " ", "_")
 
 	if nonAlphanumeric.MatchString(filename) {
@@ -170,5 +237,45 @@ func addMetaTags(ctx workflow.Context, assetID string, metadata *ingest.Metadata
 			return err
 		}
 	}
+
+	// let workflow panic if the format is invalid?
+	program := strings.Split(metadata.JobProperty.ProgramID, " - ")[1]
+	if program != "" {
+		err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldProgram.Value, program)
+		if err != nil {
+			return err
+		}
+	}
+
+	if metadata.JobProperty.Season != "" {
+		err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldSeason.Value, metadata.JobProperty.Season)
+		if err != nil {
+			return err
+		}
+	}
+
+	if metadata.JobProperty.Episode != "" {
+		err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldEpisode.Value, metadata.JobProperty.Episode)
+		if err != nil {
+			return err
+		}
+	}
+
+	if metadata.JobProperty.EpisodeTitle != "" {
+		title := program + " | " + metadata.JobProperty.EpisodeTitle
+
+		err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldTitle.Value, title)
+		if err != nil {
+			return err
+		}
+	}
+
+	if metadata.JobProperty.EpisodeDescription != "" {
+		err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldEpisodeDescription.Value, metadata.JobProperty.EpisodeDescription)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
