@@ -1,20 +1,25 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
+	_ "github.com/mattn/go-sqlite3"
+
 	"os"
 
 	bccmflows "github.com/bcc-code/bccm-flows"
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/services/vidispine"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bccm-flows/workflows/export"
+	ingestworkflows "github.com/bcc-code/bccm-flows/workflows/ingest"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.temporal.io/api/history/v1"
@@ -37,8 +42,8 @@ func getQueue() string {
 	return queue
 }
 
-func getOverlayFilenames() ([]string, error) {
-	files, err := os.ReadDir(os.Getenv("OVERLAYS_DIR"))
+func getOverlayFilenames(env string) ([]string, error) {
+	files, err := os.ReadDir(os.Getenv(env))
 	filenames := []string{}
 	if err != nil {
 		return filenames, err
@@ -62,6 +67,52 @@ type TriggerServer struct {
 	wfClient                client.Client
 	languages               map[string]bccmflows.Language
 	ExportAudioSources      []string
+	database                *sql.DB
+}
+
+func (s *TriggerServer) getArrayfromDatabase(c *gin.Context, table string) []string {
+	rows, err := s.database.Query("SELECT name FROM " + table)
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return nil
+	}
+
+	array := []string{}
+	for rows.Next() {
+		var data string
+		err = rows.Scan(&data)
+		if err != nil {
+			renderErrorPage(c, http.StatusInternalServerError, err)
+			return nil
+		}
+		array = append(array, data)
+	}
+	return array
+}
+
+func (s *TriggerServer) addDatatoDatabase(c *gin.Context, array []string, table string) {
+
+	tableArray := s.getArrayfromDatabase(c, table)
+
+	for i := 0; i < len(array); i++ {
+
+		isSame := false
+
+		for j := 0; j < len(tableArray); j++ {
+			if tableArray[j] == array[i] {
+				isSame = true
+			}
+		}
+
+		if !isSame {
+			_, err := s.database.Exec("INSERT INTO " + table + " (name) VALUES ('" + array[i] + "')")
+			if err != nil {
+				renderErrorPage(c, http.StatusInternalServerError, err)
+				return
+			}
+		}
+
+	}
 }
 
 func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
@@ -77,7 +128,7 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 
 	selectedLanguages := meta.GetArray(vscommon.FieldLangsToExport)
 
-	filenames, err := getOverlayFilenames()
+	filenames, err := getOverlayFilenames("OVERLAYS_DIR")
 	if err != nil {
 		renderErrorPage(c, http.StatusInternalServerError, err)
 		return
@@ -233,6 +284,74 @@ func (s *TriggerServer) listGET(c *gin.Context) {
 
 }
 
+func (s *TriggerServer) uploadMasterGET(c *gin.Context) {
+	filenames, err := getOverlayFilenames("MASTER_TRIGGER_DIR")
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	tags := s.getArrayfromDatabase(c, "tags")
+
+	persons := s.getArrayfromDatabase(c, "persons")
+
+	programID := s.getArrayfromDatabase(c, "programID")
+
+	c.HTML(http.StatusOK, "upload-master.html", gin.H{
+		"fileDirectory":   filenames,
+		"TagsDatalist":    tags,
+		"PersonsDatalist": persons,
+		"programIDs":      programID,
+	})
+}
+
+func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
+
+	queue := getQueue()
+	workflowOptions := client.StartWorkflowOptions{
+		ID:        uuid.NewString(),
+		TaskQueue: queue,
+	}
+
+	var res client.WorkflowRun
+
+	s.addDatatoDatabase(c, c.PostFormArray("tags[]"), "tags")
+	s.addDatatoDatabase(c, c.PostFormArray("persons[]"), "persons")
+
+	/*tagsArray := c.PostFormArray("tags[]")
+	for i, tag := range tagsArray {
+
+	}*/
+
+	res, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, ingestworkflows.VBMaster, ingestworkflows.VBMasterParams{
+		Metadata: &ingest.Metadata{
+			JobProperty: ingest.JobProperty{
+				ProgramID:        c.PostForm("program_id"),
+				Tags:             "",
+				PersonsAppearing: "",
+				SenderEmail:      c.PostForm("sender_email"),
+				Language:         c.PostForm("language"),
+				ReceivedFilename: c.PostForm("filename"),
+			},
+		},
+		SourceFile: c.PostForm("path"),
+	})
+
+	res.GetID()
+
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
+
+}
+
+func (s *TriggerServer) uploadMasterAdminGET(c *gin.Context) {
+	c.HTML(http.StatusOK, "upload-master-admin.html", gin.H{
+		"test": "test",
+	})
+}
+
 func main() {
 	router := gin.Default()
 
@@ -247,21 +366,51 @@ func main() {
 
 	router.LoadHTMLGlob("*.html")
 
+	sqlite_path, exists := os.LookupEnv("TRIGGER_DB")
+	if !exists {
+		panic("No TRIGGER_DB environment variable.")
+	}
+
+	db, err := sql.Open("sqlite3", sqlite_path)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS tags (
+		name TEXT NOT NULL
+	);
+	CREATE TABLE IF NOT EXISTS persons (
+		name TEXT NOT NULL
+	);
+	CREATE TABLE IF NOT EXISTS programID (
+		name TEXT NOT NULL
+	);
+	`)
+	if err != nil {
+		panic(err.Error())
+	}
+
 	server := &TriggerServer{
 		vsapiClient,
 		assetExportDestinations,
 		wfClient,
 		lang,
 		ExportAudioSources,
+		db,
 	}
 
 	router.GET("/vx-export", server.triggerHandlerGET)
 	router.GET("/vx-export/list", server.listGET)
+	router.GET("/upload-master", server.uploadMasterGET)
+	router.GET("/upload-master/admin", server.uploadMasterAdminGET)
 	router.POST("/vx-export", server.triggerHandlerPOST)
+	router.POST("/upload-master", server.uploadMasterPOST)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8083"
 	}
+
+	fmt.Printf("Started on port %s", port)
 	router.Run(fmt.Sprintf(":%s", port))
 }

@@ -7,3 +7,5 @@ build
 Prod.bru
 
 __debug_bin*
+
+*.db

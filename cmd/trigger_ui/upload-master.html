@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+</head>
+
+<body class="">
+    <form method="POST" class="flex flex-col min-h-screen gap-2 mx-auto p-14 max-w-screen-lg">
+
+        <div class=" max-w-none">
+            <h2 class="text-2xl font-bold">Masters Upload</h2>
+            <p class="mt-2">Masters could be both audio and video and shoud be in one of the accepted formats below</p>
+
+            <h2 class="text-2xl mt-2 font-bold">Accepted video formats</h2>
+            <div class="prose">
+                <ul>
+                    <li>Codecs/Wrappers: ProRes 422 HQ(.mov), AVC Intra 100 (.mxf), XDCAM HD 422 (.mxf)</li>
+                    <li>Resolutions: HD=1920x1080, (4K only if you can a special agreement with producer)</li>
+                    <li>Framerate: 50FPS progressive or interlaced (25FPS only if special agreement is made)</li>
+                    <li>Audio format: PCM 48kHz stereo audio, 16bit</li>
+                    <li>Sound level: -23dB LUFS long term loudness, 16dB loudness range and -1 dB True Peak according to
+                        EBU
+                        R128-standard</li>
+                    <li>Audio tracks: 1 and 2 Program sound, stereo</li>
+                </ul>
+            </div>
+            <h2>Accepted audio format</h2>
+            <p>WAV 16 or 24 bit Stereo</p>
+
+            <h2>Upload Section</h2>
+            <p>NB! The filename will be renamed to what you choose and write in the following fields like this:</p>
+
+            <h4>PROGRAMID_FILENAME_TYPE_LANGUAGE</h4>
+
+            <p>Fill the following schema and start upload the file:</p>
+        </div>
+
+        <div class="flex flex-col gap-1 w-full mt-8">
+            <div class="flex">
+                <label class="inline-block w-20 flex-none" for="program_id">Program ID</label>
+                <select name="program_id" null="" class="w-full border">
+                    <option value="" selected="">Please choose one</option>
+                    {{range $element := .programIDs}}
+                    <option value="{{$element}}">{{$element}}</option>
+                    {{end}}
+                </select>
+            </div>
+
+            <div class="flex">
+                <label class="inline-block w-20 flex-none" for="filename">Filename</label>
+                <input class="w-full border" type="text" name="filename" null="" pattern="[A-Za-z0-9]+" required>
+            </div>
+
+            <div class="flex">
+                <label class="inline-block w-20 flex-none" for="Type">Type</label>
+                <select class="w-full border" name="Type" class="form-control col" null="" required>
+                    <option name="promo_type" value="MAS" selected="selected">MAS</option>
+                    <option name="promo_type" value="PRO">PRO</option>
+                </select>
+            </div>
+
+            <div class="flex">
+                <label class="inline-block w-20 flex-none" for="language">Language</label>
+                <select class="w-full border" name="language" class="form-control col" null="" required>
+                    <option name="language" value="" selected="">Please choose one</option>
+                    <option name="language" value="NOR">NOR</option>
+                    <option name="language" value="MUL">MUL</option>
+                    <option name="language" value="ENG">ENG</option>
+                    <option name="language" value="DEU">DEU</option>
+                    <option name="language" value="NLD">NLD</option>
+                </select>
+            </div>
+
+            <div class="flex">
+                <label class="inline-block w-20 flex-none" for="episode_title">Episode Title</label>
+                <input class="w-full border" type="text" name="episode_title" pattern="[A-Za-z0-9]+" required>
+            </div>
+
+            <div class="flex">
+                <label class="inline-block w-20 flex-none" for="episode_description">Episode Description</label>
+                <textarea class="w-full border" name="episode_description"></textarea>
+            </div>
+
+            <div class="flex">
+                <label class="inline-block w-20 flex-none">Tags</label>
+                <div class="flex w-full border border-[#6b7280]">
+                    <ul id="ListOfTags" class="flex flex-row gap-2">
+
+                    </ul>
+                    <div id="hiddenTags">
+
+                    </div>
+                    <input list="TagsDatalist" id="TagInput" class="w-full border border-none outline-none border-box"
+                        type="text">
+                    <datalist id="TagsDatalist">
+                        {{range $element := .TagsDatalist}}
+                        <option value="{{$element}}"></option>
+                        {{end}}
+                    </datalist>
+                </div>
+            </div>
+
+            <div class="flex">
+                <label class="inline-block w-20 flex-none" for="persons_appearing">Persons appearing</label>
+                <div class="flex w-full border border-[#6b7280]">
+                    <ul id="ListofPerson" class="flex flex-row gap-2">
+
+                    </ul>
+                    <div id="hiddenPerson">
+
+                    </div>
+                    <input list="PersonsDatalist" id="PersonInput"
+                        class="w-full border border-none outline-none border-box" type="text">
+                    <datalist id="PersonsDatalist">
+                        {{range $element := .PersonsDatalist}}
+                        <option value="{{$element}}"></option>
+                        {{end}}
+                    </datalist>
+                </div>
+            </div>
+
+
+
+            <div class="flex">
+                <label class="inline-block w-20 flex-none" for="sender_email">Email</label>
+                <textarea class="w-full border" name="sender_email" required></textarea>
+            </div>
+
+            <div class="flex">
+                <label class="inline-block w-20 flex-none" for="Direct to Playback">Direct to Playback</label>
+                <select class="w-full border" name="Directto Playback">
+                    <option value="Yes">Yes</option>
+                    <option value="No" selected="selected">No</option>
+                </select>
+            </div>
+
+            <div class="flex">
+                <label class="inline-block w-20 flex-none" for="path">
+                    path for file
+                </label>
+                <select class="w-full border" name="path" required>
+                    {{range $element := .fileDirectory}}
+                    <option value="{{$element}}">{{$element}}</option>
+                    {{end}}
+                </select>
+            </div>
+
+
+            <input id="submit"
+                class="cursor-pointer rounded-md bg-[#6A64F1] py-3 px-8 text-center text-base font-semibold text-white outline-none"
+                type="submit" value="Start export">
+        </div>
+
+        <script>
+
+            document.getElementById("TagInput").addEventListener("keypress", function (event) {
+                console.log("TagInput keypress")
+                if (event.keyCode == 13) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (document.getElementById("TagInput").value == "" || document.getElementById("TagInput").value == " ") {
+                        return
+                    }
+
+                    var ul = document.getElementById("ListOfTags");
+                    var li = document.createElement("li");
+                    var button = document.createElement("button");
+                    button.appendChild(document.createTextNode("X"));
+                    button.setAttribute("class", "bg-blue-400");
+                    button.addEventListener('click', () => {
+                        li.remove()
+                    })
+
+                    li.appendChild(document.createTextNode(document.getElementById("TagInput").value));
+                    li.appendChild(button);
+
+                    li.setAttribute("class", "bg-blue-200 p-2 m-1 border-none w-auto flex flex-row gap-1");
+                    ul.appendChild(li);
+
+                    var input = document.createElement("input");
+                    var div = document.getElementById("hiddenTags");
+                    input.setAttribute("type", "hidden");
+                    input.setAttribute("name", "tags[]");
+                    input.setAttribute("value", document.getElementById("TagInput").value);
+                    div.appendChild(input);
+                    document.getElementById("TagInput").value = ""
+                }
+            });
+
+            document.getElementById("PersonInput").addEventListener("keypress", function (event) {
+                console.log("PersonInput ")
+                if (event.keyCode == 13) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    var ul = document.getElementById("ListofPerson");
+                    var li = document.createElement("li");
+                    var button = document.createElement("button");
+                    button.appendChild(document.createTextNode("X"));
+                    button.setAttribute("class", "bg-blue-400");
+                    button.addEventListener('click', () => {
+                        li.remove()
+                    })
+
+                    li.appendChild(document.createTextNode(document.getElementById("PersonInput").value));
+                    li.appendChild(button);
+
+                    li.setAttribute("class", "bg-blue-200 p-2 m-1 border-none w-auto flex flex-row gap-1");
+                    ul.appendChild(li);
+
+                    var input = document.createElement("input");
+                    var div = document.getElementById("hiddenPerson");
+
+                    input.setAttribute("type", "hidden");
+                    input.setAttribute("name", "persons[]");
+                    input.setAttribute("value", document.getElementById("PersonInput").value);
+                    div.appendChild(input);
+                }
+            })
+        </script>
+
+    </form>
+</body>
+
+</html>
