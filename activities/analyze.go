@@ -2,12 +2,13 @@ package activities
 
 import (
 	"context"
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"go.temporal.io/sdk/activity"
 )
 
 type AnalyzeFileParams struct {
-	FilePath string
+	FilePath paths.Path
 }
 
 type AnalyzeFileResult struct {
@@ -19,7 +20,7 @@ func AnalyzeFile(ctx context.Context, input AnalyzeFileParams) (*AnalyzeFileResu
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting AnalyzeFileActivity")
 
-	info, err := ffmpeg.GetStreamInfo(input.FilePath)
+	info, err := ffmpeg.GetStreamInfo(input.FilePath.LocalPath())
 	if err != nil {
 		return nil, err
 	}

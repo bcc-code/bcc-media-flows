@@ -2,8 +2,7 @@ package export
 
 import (
 	"fmt"
-	"path/filepath"
-
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/orsinium-labs/enum"
 
 	avidispine "github.com/bcc-code/bccm-flows/activities/vidispine"
@@ -47,8 +46,8 @@ type VXExportChildWorkflowParams struct {
 	ParentParams VXExportParams       `json:"parent_params"`
 	ExportData   vidispine.ExportData `json:"export_data"`
 	MergeResult  MergeExportDataResult
-	TempDir      string
-	OutputDir    string
+	TempDir      paths.Path
+	OutputDir    paths.Path
 }
 
 func formatSecondsToTimestamp(seconds float64) string {
@@ -96,13 +95,13 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
-	outputDir := filepath.Join(tempDir, "output")
+	outputDir := tempDir.Append("output")
 	err = wfutils.CreateFolder(ctx, outputDir)
 	if err != nil {
 		return nil, err
 	}
 
-	vodOutputDir := filepath.Join(outputDir, "vod")
+	vodOutputDir := outputDir.Append("vod")
 	err = wfutils.CreateFolder(ctx, vodOutputDir)
 	if err != nil {
 		return nil, err
@@ -141,7 +140,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 			return nil, fmt.Errorf("destination not implemented: %s", dest)
 		}
 
-		p := filepath.Join(outputDir, dest.Value)
+		p := outputDir.Append(dest.Value)
 		err = wfutils.CreateFolder(ctx, p)
 		if err != nil {
 			return nil, err

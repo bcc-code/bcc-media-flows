@@ -2,13 +2,14 @@ package workflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"strings"
 	"time"
 
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
-	"github.com/bcc-code/bccm-flows/utils"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -33,7 +34,7 @@ func ImportSubtitlesFromSubtrans(
 		StartToCloseTimeout:    time.Hour * 4,
 		ScheduleToCloseTimeout: time.Hour * 48,
 		HeartbeatTimeout:       time.Minute * 5,
-		TaskQueue:              utils.GetQueue(),
+		TaskQueue:              environment.GetQueue(),
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
@@ -53,7 +54,7 @@ func ImportSubtitlesFromSubtrans(
 
 	outputPath, _ := wfutils.GetWorkflowAuxOutputFolder(ctx)
 
-	subsList := map[string]string{}
+	subsList := map[string]paths.Path{}
 	err = workflow.ExecuteActivity(ctx, activities.GetSubtitlesActivity, activities.GetSubtitlesInput{
 		SubtransID:        subtransIDResponse.SubtransID,
 		Format:            "srt",

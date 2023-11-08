@@ -1,7 +1,8 @@
-package utils
+package paths
 
 import (
 	"github.com/ansel1/merry/v2"
+	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/orsinium-labs/enum"
 	"path/filepath"
 	"strings"
@@ -59,14 +60,8 @@ type Path struct {
 	Path  string
 }
 
-func (p Path) WorkerPath() string {
-	switch p.Drive {
-	case IsilonDrive:
-		return filepath.Join("/mnt/isilon", p.Path)
-	case DMZShareDrive:
-		return filepath.Join("/mnt/dmzshare", p.Path)
-	}
-	return ""
+func (p Path) LocalPath() string {
+	return filepath.Join(drivePrefixes[p.Drive].Client, p.Path)
 }
 
 // RcloneFsRemote returns (fs, remote) for rclone usage
@@ -97,7 +92,7 @@ func (p Path) FileName() string {
 }
 
 func (p Path) Append(path string) Path {
-	p.Path = filepath.Join(p.Path, path)
+	p.Path = filepath.Clean(filepath.Join(p.Path, path))
 	return p
 }
 
@@ -108,9 +103,9 @@ type prefix struct {
 }
 
 var drivePrefixes = map[Drive]prefix{
-	IsilonDrive:   {"/mnt/isilon/", GetIsilonPrefix(), "isilon:isilon/"},
+	IsilonDrive:   {"/mnt/isilon/", environment.GetIsilonPrefix(), "isilon:isilon/"},
 	DMZShareDrive: {"/mnt/dmzshare/", "/mnt/dmzshare/", "dmz:dmzshare/"},
-	TempDrive:     {"/mnt/temp/", GetTempMountPrefix(), "isilon:temp/"},
+	TempDrive:     {"/mnt/temp/", environment.GetTempMountPrefix(), "isilon:temp/"},
 }
 
 func ParsePath(path string) (Path, error) {
@@ -126,4 +121,12 @@ func ParsePath(path string) (Path, error) {
 		}
 	}
 	return Path{}, ErrPathNotValid
+}
+
+func MustParsePath(path string) Path {
+	p, err := ParsePath(path)
+	if err != nil {
+		panic(err)
+	}
+	return p
 }

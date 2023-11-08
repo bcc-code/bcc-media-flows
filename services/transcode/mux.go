@@ -2,6 +2,7 @@ package transcode
 
 import (
 	"fmt"
+	"github.com/bcc-code/bccm-flows/paths"
 	"log"
 	"os"
 	"path/filepath"
@@ -15,12 +16,12 @@ import (
 )
 
 type languageFile struct {
-	Path     string
+	Path     paths.Path
 	Language string
 }
 
 // Order and respect the global language ordering.
-func languageFilesForPaths(paths map[string]string) []languageFile {
+func languageFilesForPaths(paths map[string]paths.Path) []languageFile {
 	languages := utils.LanguageKeysToOrderedLanguages(lo.Keys(paths))
 
 	return lo.Map(languages, func(lang bccmflows.Language, _ int) languageFile {
@@ -34,17 +35,17 @@ func languageFilesForPaths(paths map[string]string) []languageFile {
 // Mux multiplexes specified video, audio and subtitle tracks.
 func Mux(input common.MuxInput, progressCallback ffmpeg.ProgressCallback) (*common.MuxResult, error) {
 	//Use ffmpeg to mux the video
-	info, err := ffmpeg.GetStreamInfo(input.VideoFilePath)
+	info, err := ffmpeg.GetStreamInfo(input.VideoFilePath.LocalPath())
 	if err != nil {
 		return nil, err
 	}
 
-	outputPath := filepath.Join(input.DestinationPath, input.FileName+".mp4")
+	outputFilePath := filepath.Join(input.DestinationPath.LocalPath(), input.FileName+".mp4")
 
 	params := []string{
 		"-progress", "pipe:1",
 		"-hide_banner",
-		"-i", input.VideoFilePath,
+		"-i", input.VideoFilePath.LocalPath(),
 	}
 
 	audioFiles := languageFilesForPaths(input.AudioFilePaths)
@@ -52,13 +53,13 @@ func Mux(input common.MuxInput, progressCallback ffmpeg.ProgressCallback) (*comm
 
 	for _, f := range audioFiles {
 		params = append(params,
-			"-i", f.Path,
+			"-i", f.Path.LocalPath(),
 		)
 	}
 
 	for _, f := range subtitleFiles {
 		params = append(params,
-			"-i", f.Path,
+			"-i", f.Path.LocalPath(),
 		)
 	}
 
@@ -91,7 +92,7 @@ func Mux(input common.MuxInput, progressCallback ffmpeg.ProgressCallback) (*comm
 		"-c:v", "copy",
 		"-c:a", "copy",
 		"-c:s", "mov_text",
-		"-y", outputPath,
+		"-y", outputFilePath,
 	)
 
 	_, err = ffmpeg.Do(params, info, progressCallback)
@@ -100,10 +101,16 @@ func Mux(input common.MuxInput, progressCallback ffmpeg.ProgressCallback) (*comm
 		return nil, fmt.Errorf("mux failed, %s", strings.Join(params, " "))
 	}
 
-	err = os.Chmod(outputPath, os.ModePerm)
+	err = os.Chmod(outputFilePath, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
+
+	outputPath, err := paths.ParsePath(outputFilePath)
+	if err != nil {
+		return nil, err
+	}
+
 	return &common.MuxResult{
 		Path: outputPath,
 	}, nil

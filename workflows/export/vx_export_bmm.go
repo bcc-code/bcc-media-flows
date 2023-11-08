@@ -11,7 +11,6 @@ import (
 
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/workflow"
 )
@@ -46,7 +45,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	}
 
 	// We don't want to upload folders from other workflows that can be triggered at the same export.
-	outputFolder := path.Join(tempDir, "bmm")
+	outputFolder := tempDir.Append("bmm")
 	err = wfutils.CreateFolder(ctx, outputFolder)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create output folder: %w", err)
@@ -135,19 +134,14 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, fmt.Errorf("failed to marshal JSON: %w", err)
 	}
 
-	err = wfutils.WriteFile(ctx, path.Join(outputFolder, "bmm.json"), marshalled)
+	err = wfutils.WriteFile(ctx, outputFolder.Append("bmm.json"), marshalled)
 	if err != nil {
 		return nil, fmt.Errorf("failed to write JSON file: %w", err)
 	}
 
-	outputPath, err := utils.ParsePath(outputFolder)
-	if err != nil {
-		return nil, err
-	}
-
 	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      outputPath.RclonePath(),
+		Source:      outputFolder.RclonePath(),
 		Destination: fmt.Sprintf("bmms3:/int-bmm-mediabanken/" + ingestFolder),
 	}).Get(ctx, nil)
 	if err != nil {
@@ -203,8 +197,7 @@ func prepareBMMData(audioFiles map[string][]common.AudioResult, analysis map[str
 	}
 
 	for lang, variations := range audioFiles {
-
-		langFiles := []BMMAudioFile{}
+		var langFiles []BMMAudioFile
 
 		for _, file := range variations {
 
@@ -216,7 +209,7 @@ func prepareBMMData(audioFiles map[string][]common.AudioResult, analysis map[str
 				Bitrate:         bitrate,
 				VariableBitrate: true,
 				ChannelCount:    2,
-				Path:            path.Base(file.OutputPath), // This needs to be relative to the resultintg JSON file
+				Path:            path.Base(file.OutputPath.LocalPath()), // This needs to be relative to the resultintg JSON file
 				Lufs:            analysis[lang].OutputAnalysis.IntegratedLoudness,
 				DynamicRange:    analysis[lang].OutputAnalysis.LoudnessRange,
 				Language:        lang,

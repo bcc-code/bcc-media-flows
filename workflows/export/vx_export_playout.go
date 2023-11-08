@@ -3,10 +3,9 @@ package export
 import (
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/workflow"
-	"path/filepath"
 )
 
 func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams) (*VXExportResult, error) {
@@ -16,13 +15,13 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 	options := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	xdcamOutputDir := filepath.Join(params.TempDir, "xdcam_output")
+	xdcamOutputDir := params.TempDir.Append("xdcam_output")
 	err := wfutils.CreateFolder(ctx, xdcamOutputDir)
 	if err != nil {
 		return nil, err
 	}
 
-	options.TaskQueue = utils.GetTranscodeQueue()
+	options.TaskQueue = environment.GetTranscodeQueue()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	// Transcode video using playout encoding
@@ -51,18 +50,13 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 		return nil, err
 	}
 
-	options.TaskQueue = utils.GetWorkerQueue()
+	options.TaskQueue = environment.GetWorkerQueue()
 	ctx = workflow.WithActivityOptions(ctx, options)
-
-	outputPath, err := utils.ParsePath(params.OutputDir)
-	if err != nil {
-		return nil, err
-	}
 
 	// Rclone to playout
 	destination := "playout:/dropbox"
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      outputPath.RclonePath(),
+		Source:      params.OutputDir.RclonePath(),
 		Destination: destination,
 	}).Get(ctx, nil)
 	if err != nil {

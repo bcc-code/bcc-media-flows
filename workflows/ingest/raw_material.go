@@ -4,18 +4,18 @@ import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/activities"
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/workflow"
-	"path/filepath"
 	"strconv"
 )
 
 type RawMaterialParams struct {
 	Metadata  *ingest.Metadata
-	Directory string
+	Directory paths.Path
 }
 
 func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
@@ -32,12 +32,12 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		return err
 	}
 
-	var files []string
+	var files []paths.Path
 	for _, f := range originalFiles {
-		if !utils.ValidRawFilename(f) {
+		if !utils.ValidRawFilename(f.LocalPath()) {
 			return fmt.Errorf("invalid filename: %s", f)
 		}
-		newPath := filepath.Join(outputFolder, filepath.Base(f))
+		newPath := outputFolder.Append(f.FileName())
 		err = wfutils.MoveFile(ctx, f, newPath)
 		if err != nil {
 			return err
@@ -50,7 +50,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 
 	for _, file := range files {
 		var result *importTagResult
-		result, err = importFileAsTag(ctx, "original", file, filepath.Base(file))
+		result, err = importFileAsTag(ctx, "original", file, file.FileName())
 		if err != nil {
 			return err
 		}

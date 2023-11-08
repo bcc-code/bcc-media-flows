@@ -3,13 +3,14 @@ package activities
 import (
 	"context"
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"github.com/bcc-code/bccm-flows/services/transcode"
 	"go.temporal.io/sdk/activity"
 )
 
 type AnalyzeEBUR128Params struct {
-	FilePath       string
+	FilePath       paths.Path
 	TargetLoudness float64
 }
 
@@ -21,7 +22,7 @@ func AnalyzeEBUR128Activity(ctx context.Context, input AnalyzeEBUR128Params) (*c
 	stop, progressCallback := registerProgressCallback(ctx)
 	defer close(stop)
 
-	analyzeResult, err := ffmpeg.AnalyzeEBUR128(input.FilePath, progressCallback)
+	analyzeResult, err := ffmpeg.AnalyzeEBUR128(input.FilePath.LocalPath(), progressCallback)
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +48,8 @@ func AnalyzeEBUR128Activity(ctx context.Context, input AnalyzeEBUR128Params) (*c
 }
 
 type AdjustAudioLevelParams struct {
-	InFilePath  string
-	OutFilePath string
+	InFilePath  paths.Path
+	OutFilePath paths.Path
 	Adjustment  float64
 }
 
@@ -67,14 +68,14 @@ func AdjustAudioLevelActivity(ctx context.Context, input *AdjustAudioLevelParams
 }
 
 type NormalizeAudioParams struct {
-	FilePath              string
-	OutputPath            string
+	FilePath              paths.Path
+	OutputPath            paths.Path
 	TargetLUFS            float64
 	PerformOutputAnalysis bool
 }
 
 type NormalizeAudioResult struct {
-	FilePath       string
+	FilePath       paths.Path
 	InputAnalysis  *common.AnalyzeEBUR128Result
 	OutputAnalysis *common.AnalyzeEBUR128Result
 }

@@ -5,10 +5,10 @@ import (
 	"github.com/bcc-code/bccm-flows/activities"
 	batonactivities "github.com/bcc-code/bccm-flows/activities/baton"
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/baton"
 	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
-	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/workflow"
 	"path/filepath"
@@ -21,14 +21,14 @@ type MasterParams struct {
 	Metadata *ingest.Metadata
 
 	OrderForm OrderForm
-	Directory string
+	Directory paths.Path
 }
 
 type MasterResult struct {
 	Report        baton.QCReport
 	AssetID       string
 	AnalyzeResult *common.AnalyzeEBUR128Result
-	Path          utils.Path
+	Path          paths.Path
 }
 
 // regexp for making sure the filename does not contain non-alphanumeric characters
@@ -91,7 +91,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		return nil, err
 	}
 
-	file := filepath.Join(outputDir, filename)
+	file := outputDir.Append(filename)
 	err = wfutils.MoveFile(ctx, files[0], file)
 	if err != nil {
 		return nil, err
@@ -112,19 +112,14 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		return nil, err
 	}
 
-	path, err := utils.ParsePath(file)
-	if err != nil {
-		return nil, err
-	}
-
 	plan := baton.TestPlanMXF
-	if filepath.Ext(file) == ".mov" {
+	if filepath.Ext(file.FileName()) == ".mov" {
 		plan = baton.TestPlanMOV
 	}
 
 	var report baton.QCReport
 	err = wfutils.ExecuteWithQueue(ctx, batonactivities.QC, batonactivities.QCParams{
-		Path: path,
+		Path: file,
 		Plan: plan,
 	}).Get(ctx, &report)
 	if err != nil {
@@ -134,14 +129,14 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	return &MasterResult{
 		Report:  report,
 		AssetID: result.AssetID,
-		Path:    path,
+		Path:    file,
 	}, nil
 }
 
-func analyzeAudioAndSetMetadata(ctx workflow.Context, assetID string, path utils.Path) (*common.AnalyzeEBUR128Result, error) {
+func analyzeAudioAndSetMetadata(ctx workflow.Context, assetID string, path paths.Path) (*common.AnalyzeEBUR128Result, error) {
 	var result common.AnalyzeEBUR128Result
 	err := wfutils.ExecuteWithQueue(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
-		FilePath:       path.WorkerPath(),
+		FilePath:       path,
 		TargetLoudness: -24,
 	}).Get(ctx, &result)
 	if err != nil {

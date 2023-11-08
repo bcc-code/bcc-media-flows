@@ -3,7 +3,7 @@ package vidispine
 import (
 	"context"
 	"fmt"
-
+	"github.com/bcc-code/bccm-flows/paths"
 	"go.temporal.io/sdk/activity"
 )
 
@@ -13,7 +13,7 @@ type GetFileFromVXParams struct {
 }
 
 type GetFileFromVXResult struct {
-	FilePath string
+	FilePath paths.Path
 	ShapeTag string
 }
 
@@ -36,7 +36,7 @@ func GetFileFromVXActivity(ctx context.Context, params GetFileFromVXParams) (*Ge
 		}
 
 		return &GetFileFromVXResult{
-			FilePath: shape.GetPath(),
+			FilePath: paths.MustParsePath(shape.GetPath()),
 			ShapeTag: tag,
 		}, nil
 	}

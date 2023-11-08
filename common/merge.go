@@ -1,7 +1,11 @@
 package common
 
+import (
+	"github.com/bcc-code/bccm-flows/paths"
+)
+
 type MergeInputItem struct {
-	Path    string
+	Path    paths.Path
 	Start   float64
 	End     float64
 	Streams []int
@@ -10,11 +14,11 @@ type MergeInputItem struct {
 type MergeInput struct {
 	Title     string
 	Items     []MergeInputItem
-	OutputDir string
-	WorkDir   string
+	OutputDir paths.Path
+	WorkDir   paths.Path
 	Duration  float64
 }
 
 type MergeResult struct {
-	Path string
+	Path paths.Path
 }

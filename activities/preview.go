@@ -3,17 +3,18 @@ package activities
 import (
 	"context"
 	"fmt"
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/transcode"
 	"go.temporal.io/sdk/activity"
 )
 
 type TranscodePreviewParams struct {
-	FilePath           string
-	DestinationDirPath string
+	FilePath           paths.Path
+	DestinationDirPath paths.Path
 }
 
 type TranscodePreviewResponse struct {
-	PreviewFilePath string
+	PreviewFilePath paths.Path
 	AudioOnly       bool
 }
 
@@ -26,8 +27,8 @@ func TranscodePreview(ctx context.Context, input TranscodePreviewParams) (*Trans
 	defer close(stop)
 
 	result, err := transcode.Preview(transcode.PreviewInput{
-		OutputDir: input.DestinationDirPath,
-		FilePath:  input.FilePath,
+		OutputDir: input.DestinationDirPath.LocalPath(),
+		FilePath:  input.FilePath.LocalPath(),
 	}, progressCallback)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -35,7 +36,7 @@ func TranscodePreview(ctx context.Context, input TranscodePreviewParams) (*Trans
 	}
 
 	return &TranscodePreviewResponse{
-		PreviewFilePath: result.LowResolutionPath,
+		PreviewFilePath: paths.MustParsePath(result.LowResolutionPath),
 		AudioOnly:       result.AudioOnly,
 	}, nil
 }

@@ -2,14 +2,14 @@ package baton
 
 import (
 	"fmt"
-	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bccm-flows/paths"
 )
 
 type StartTaskResult struct {
 	TaskID string `json:"taskId"`
 }
 
-func StartTask(client *Client, filePath utils.Path, testPlan TestPlan) (*StartTaskResult, error) {
+func StartTask(client *Client, filePath paths.Path, testPlan TestPlan) (*StartTaskResult, error) {
 	req := client.restyClient.R()
 
 	req.SetQueryParam("mediaFilePath", filePath.BatonPath())

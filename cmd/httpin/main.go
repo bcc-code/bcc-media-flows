@@ -3,6 +3,7 @@ package main
 import (
 	_ "embed"
 	"fmt"
+	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/bcc-code/bccm-flows/workflows/ingest"
 	"net/http"
 	"os"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/bcc-code/bccm-flows/workflows/export"
 
-	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/workflows"
 
 	"github.com/gin-gonic/gin"
@@ -34,7 +34,7 @@ func getClient() (client.Client, error) {
 func getQueue() string {
 	queue := os.Getenv("QUEUE")
 	if queue == "" {
-		queue = common.QueueWorker
+		queue = environment.QueueWorker
 	}
 	return queue
 }

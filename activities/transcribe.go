@@ -2,6 +2,7 @@ package activities
 
 import (
 	"context"
+	"github.com/bcc-code/bccm-flows/paths"
 	"path/filepath"
 	"time"
 
@@ -10,15 +11,15 @@ import (
 )
 
 type TranscribeParams struct {
-	File            string
-	DestinationPath string
+	File            paths.Path
+	DestinationPath paths.Path
 	Language        string
 }
 
 type TranscribeResponse struct {
-	JSONPath string
-	SRTPath  string
-	TXTPath  string
+	JSONPath paths.Path
+	SRTPath  paths.Path
+	TXTPath  paths.Path
 }
 
 // Transcribe is the activity that transcribes a video
@@ -32,17 +33,17 @@ func Transcribe(
 
 	time.Sleep(time.Second * 10)
 
-	jobData, err := transcribe.DoTranscribe(ctx, input.File, input.DestinationPath, input.Language)
-
+	jobData, err := transcribe.DoTranscribe(ctx, input.File.LocalPath(), input.DestinationPath.LocalPath(), input.Language)
 	if err != nil {
 		return nil, err
 	}
+
 	log.Info("Finished Transcribe")
 
-	fileName := filepath.Base(input.File)
+	fileName := filepath.Base(input.File.LocalPath())
 	return &TranscribeResponse{
-		JSONPath: filepath.Join(jobData.OutputPath, fileName+".json"),
-		SRTPath:  filepath.Join(jobData.OutputPath, fileName+".srt"),
-		TXTPath:  filepath.Join(jobData.OutputPath, fileName+".txt"),
+		JSONPath: paths.MustParsePath(filepath.Join(jobData.OutputPath, fileName+".json")),
+		SRTPath:  paths.MustParsePath(filepath.Join(jobData.OutputPath, fileName+".srt")),
+		TXTPath:  paths.MustParsePath(filepath.Join(jobData.OutputPath, fileName+".txt")),
 	}, nil
 }

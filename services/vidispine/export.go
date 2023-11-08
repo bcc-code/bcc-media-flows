@@ -3,13 +3,13 @@ package vidispine
 import (
 	"errors"
 	"fmt"
+	"github.com/bcc-code/bccm-flows/environment"
 	"regexp"
 	"strings"
 
 	bccmflows "github.com/bcc-code/bccm-flows"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
-	"github.com/bcc-code/bccm-flows/utils"
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
@@ -55,8 +55,8 @@ var (
 		ExportAudioSourceRelated,
 	)
 
-	EmptyWAVFile = utils.GetIsilonPrefix() + "/system/assets/BlankAudio10h.wav"
-	EmtpySRTFile = utils.GetIsilonPrefix() + "/system/assets/empty.srt"
+	EmptyWAVFile = environment.GetIsilonPrefix() + "/system/assets/BlankAudio10h.wav"
+	EmtpySRTFile = environment.GetIsilonPrefix() + "/system/assets/empty.srt"
 )
 
 func (s *VidispineService) getClipForAssetOrSubclip(

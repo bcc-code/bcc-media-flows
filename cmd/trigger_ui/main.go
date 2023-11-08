@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/bcc-code/bccm-flows/environment"
 	"net/http"
 	"time"
 
 	"os"
 
 	bccmflows "github.com/bcc-code/bccm-flows"
-	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/services/vidispine"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
@@ -32,7 +32,7 @@ func getTemporalClient() (client.Client, error) {
 func getQueue() string {
 	queue := os.Getenv("QUEUE")
 	if queue == "" {
-		queue = common.QueueWorker
+		queue = environment.QueueWorker
 	}
 	return queue
 }

@@ -2,14 +2,14 @@ package batonactivities
 
 import (
 	"context"
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/baton"
-	"github.com/bcc-code/bccm-flows/utils"
 	"go.temporal.io/sdk/activity"
 	"time"
 )
 
 type QCParams struct {
-	Path utils.Path
+	Path paths.Path
 	Plan baton.TestPlan
 }
 

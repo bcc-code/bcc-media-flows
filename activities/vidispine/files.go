@@ -2,13 +2,14 @@ package vidispine
 
 import (
 	"context"
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
 	"go.temporal.io/sdk/activity"
 )
 
 type ImportFileAsShapeParams struct {
 	AssetID  string
-	FilePath string
+	FilePath paths.Path
 	ShapeTag string
 }
 
@@ -18,7 +19,7 @@ func ImportFileAsShapeActivity(ctx context.Context, params *ImportFileAsShapePar
 
 	vsClient := GetClient()
 
-	fileID, err := vsClient.RegisterFile(params.FilePath, vsapi.FileStateClosed)
+	fileID, err := vsClient.RegisterFile(params.FilePath.LocalPath(), vsapi.FileStateClosed)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +32,7 @@ func ImportFileAsShapeActivity(ctx context.Context, params *ImportFileAsShapePar
 
 type ImportSubtitleAsSidecarParams struct {
 	AssetID  string
-	FilePath string
+	FilePath paths.Path
 	Language string
 }
 
@@ -45,7 +46,7 @@ func ImportFileAsSidecarActivity(ctx context.Context, params *ImportSubtitleAsSi
 
 	vsClient := GetClient()
 
-	jobID, err := vsClient.AddSidecarToItem(params.AssetID, params.FilePath, params.Language)
+	jobID, err := vsClient.AddSidecarToItem(params.AssetID, params.FilePath.LocalPath(), params.Language)
 	return &ImportFileAsSidecarResult{
 		JobID: jobID,
 	}, err
