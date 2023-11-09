@@ -27,8 +27,8 @@ func TranscodePreview(ctx context.Context, input TranscodePreviewParams) (*Trans
 	defer close(stop)
 
 	result, err := transcode.Preview(transcode.PreviewInput{
-		OutputDir: input.DestinationDirPath.LocalPath(),
-		FilePath:  input.FilePath.LocalPath(),
+		OutputDir: input.DestinationDirPath.Local(),
+		FilePath:  input.FilePath.Local(),
 	}, progressCallback)
 	if err != nil {
 		fmt.Println(err.Error())

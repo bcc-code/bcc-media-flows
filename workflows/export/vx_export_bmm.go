@@ -141,7 +141,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 
 	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      outputFolder.RclonePath(),
+		Source:      outputFolder.Rclone(),
 		Destination: fmt.Sprintf("bmms3:/int-bmm-mediabanken/" + ingestFolder),
 	}).Get(ctx, nil)
 	if err != nil {
@@ -209,7 +209,7 @@ func prepareBMMData(audioFiles map[string][]common.AudioResult, analysis map[str
 				Bitrate:         bitrate,
 				VariableBitrate: true,
 				ChannelCount:    2,
-				Path:            path.Base(file.OutputPath.LocalPath()), // This needs to be relative to the resultintg JSON file
+				Path:            path.Base(file.OutputPath.Local()), // This needs to be relative to the resultintg JSON file
 				Lufs:            analysis[lang].OutputAnalysis.IntegratedLoudness,
 				DynamicRange:    analysis[lang].OutputAnalysis.LoudnessRange,
 				Language:        lang,

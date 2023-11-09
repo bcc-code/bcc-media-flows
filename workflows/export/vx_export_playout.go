@@ -56,7 +56,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 	// Rclone to playout
 	destination := "playout:/dropbox"
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      params.OutputDir.RclonePath(),
+		Source:      params.OutputDir.Rclone(),
 		Destination: destination,
 	}).Get(ctx, nil)
 	if err != nil {

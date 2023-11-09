@@ -20,7 +20,7 @@ func AnalyzeFile(ctx context.Context, input AnalyzeFileParams) (*AnalyzeFileResu
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting AnalyzeFileActivity")
 
-	info, err := ffmpeg.GetStreamInfo(input.FilePath.LocalPath())
+	info, err := ffmpeg.GetStreamInfo(input.FilePath.Local())
 	if err != nil {
 		return nil, err
 	}

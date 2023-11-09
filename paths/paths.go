@@ -60,7 +60,7 @@ type Path struct {
 	Path  string
 }
 
-func (p Path) LocalPath() string {
+func (p Path) Local() string {
 	return filepath.Join(drivePrefixes[p.Drive].Client, p.Path)
 }
 
@@ -75,11 +75,11 @@ func (p Path) RcloneFsRemote() (string, string) {
 	return "", ""
 }
 
-func (p Path) RclonePath() string {
+func (p Path) Rclone() string {
 	return filepath.Join(drivePrefixes[p.Drive].Rclone, p.Path)
 }
 
-func (p Path) BatonPath() string {
+func (p Path) Baton() string {
 	switch p.Drive {
 	case IsilonDrive:
 		return filepath.Join("\\\\10.12.130.61\\isilon", strings.ReplaceAll(p.Path, "/", "\\"))
@@ -87,7 +87,7 @@ func (p Path) BatonPath() string {
 	return ""
 }
 
-func (p Path) FileName() string {
+func (p Path) Base() string {
 	return filepath.Base(p.Path)
 }
 

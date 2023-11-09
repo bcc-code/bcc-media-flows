@@ -134,7 +134,7 @@ func TranscribeVX(
 		return err
 	}
 
-	txtValue, err := os.ReadFile(transcriptionJob.TXTPath.LocalPath())
+	txtValue, err := os.ReadFile(transcriptionJob.TXTPath.Local())
 	if err != nil {
 		return err
 	}

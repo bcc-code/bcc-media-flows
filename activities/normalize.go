@@ -22,7 +22,7 @@ func AnalyzeEBUR128Activity(ctx context.Context, input AnalyzeEBUR128Params) (*c
 	stop, progressCallback := registerProgressCallback(ctx)
 	defer close(stop)
 
-	analyzeResult, err := ffmpeg.AnalyzeEBUR128(input.FilePath.LocalPath(), progressCallback)
+	analyzeResult, err := ffmpeg.AnalyzeEBUR128(input.FilePath.Local(), progressCallback)
 	if err != nil {
 		return nil, err
 	}

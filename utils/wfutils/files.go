@@ -34,7 +34,7 @@ func MoveFile(ctx workflow.Context, source, destination paths.Path) error {
 }
 
 func MoveToFolder(ctx workflow.Context, file, folder paths.Path) (paths.Path, error) {
-	newPath := folder.Append(filepath.Base(file.LocalPath()))
+	newPath := folder.Append(filepath.Base(file.Local()))
 	err := MoveFile(ctx, file, newPath)
 	return newPath, err
 }

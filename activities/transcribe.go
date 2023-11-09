@@ -33,14 +33,14 @@ func Transcribe(
 
 	time.Sleep(time.Second * 10)
 
-	jobData, err := transcribe.DoTranscribe(ctx, input.File.LocalPath(), input.DestinationPath.LocalPath(), input.Language)
+	jobData, err := transcribe.DoTranscribe(ctx, input.File.Local(), input.DestinationPath.Local(), input.Language)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Info("Finished Transcribe")
 
-	fileName := filepath.Base(input.File.LocalPath())
+	fileName := filepath.Base(input.File.Local())
 	return &TranscribeResponse{
 		JSONPath: paths.MustParsePath(filepath.Join(jobData.OutputPath, fileName+".json")),
 		SRTPath:  paths.MustParsePath(filepath.Join(jobData.OutputPath, fileName+".srt")),

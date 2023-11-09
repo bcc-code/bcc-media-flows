@@ -31,8 +31,8 @@ func TranscodeToProResActivity(ctx context.Context, input EncodeParams) (*Encode
 	defer close(stop)
 
 	transcodeResult, err := transcode.ProRes(transcode.ProResInput{
-		FilePath:   input.FilePath.LocalPath(),
-		OutputDir:  input.OutputDir.LocalPath(),
+		FilePath:   input.FilePath.Local(),
+		OutputDir:  input.OutputDir.Local(),
 		FrameRate:  input.FrameRate,
 		Resolution: input.Resolution,
 	}, progressCallback)
@@ -55,8 +55,8 @@ func TranscodeToH264Activity(ctx context.Context, input EncodeParams) (*EncodeRe
 	defer close(stop)
 
 	transcodeResult, err := transcode.H264(transcode.EncodeInput{
-		FilePath:   input.FilePath.LocalPath(),
-		OutputDir:  input.OutputDir.LocalPath(),
+		FilePath:   input.FilePath.Local(),
+		OutputDir:  input.OutputDir.Local(),
 		FrameRate:  input.FrameRate,
 		Resolution: input.Resolution,
 		Bitrate:    input.Bitrate,
@@ -79,8 +79,8 @@ func TranscodeToXDCAMActivity(ctx context.Context, input EncodeParams) (*EncodeR
 	defer close(stop)
 
 	transcodeResult, err := transcode.XDCAM(transcode.EncodeInput{
-		FilePath:   input.FilePath.LocalPath(),
-		OutputDir:  input.OutputDir.LocalPath(),
+		FilePath:   input.FilePath.Local(),
+		OutputDir:  input.OutputDir.Local(),
 		FrameRate:  input.FrameRate,
 		Resolution: input.Resolution,
 		Bitrate:    input.Bitrate,

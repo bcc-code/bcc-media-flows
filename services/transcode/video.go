@@ -16,12 +16,12 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 	params := []string{
 		"-hide_banner",
 		"-progress", "pipe:1",
-		"-i", input.Path.LocalPath(),
+		"-i", input.Path.Local(),
 	}
 
 	if input.WatermarkPath != nil {
 		params = append(params,
-			"-i", input.WatermarkPath.LocalPath(),
+			"-i", input.WatermarkPath.Local(),
 		)
 	}
 
@@ -66,7 +66,7 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		input.Width,
 		input.Height)
 
-	info, err := ffmpeg.GetStreamInfo(input.Path.LocalPath())
+	info, err := ffmpeg.GetStreamInfo(input.Path.Local())
 	if err != nil {
 		return nil, err
 	}
@@ -86,11 +86,11 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		"-map", "[out]",
 	)
 
-	filename := filepath.Base(input.Path.LocalPath())
+	filename := filepath.Base(input.Path.Local())
 	filename = filename[:len(filename)-len(filepath.Ext(filename))] +
 		fmt.Sprintf("_%dx%d.mp4", input.Width, input.Height)
 
-	outputFilePath := filepath.Join(input.DestinationPath.LocalPath(), filename)
+	outputFilePath := filepath.Join(input.DestinationPath.Local(), filename)
 
 	params = append(params,
 		"-y", outputFilePath,

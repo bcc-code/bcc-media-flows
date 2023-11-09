@@ -35,17 +35,17 @@ func languageFilesForPaths(paths map[string]paths.Path) []languageFile {
 // Mux multiplexes specified video, audio and subtitle tracks.
 func Mux(input common.MuxInput, progressCallback ffmpeg.ProgressCallback) (*common.MuxResult, error) {
 	//Use ffmpeg to mux the video
-	info, err := ffmpeg.GetStreamInfo(input.VideoFilePath.LocalPath())
+	info, err := ffmpeg.GetStreamInfo(input.VideoFilePath.Local())
 	if err != nil {
 		return nil, err
 	}
 
-	outputFilePath := filepath.Join(input.DestinationPath.LocalPath(), input.FileName+".mp4")
+	outputFilePath := filepath.Join(input.DestinationPath.Local(), input.FileName+".mp4")
 
 	params := []string{
 		"-progress", "pipe:1",
 		"-hide_banner",
-		"-i", input.VideoFilePath.LocalPath(),
+		"-i", input.VideoFilePath.Local(),
 	}
 
 	audioFiles := languageFilesForPaths(input.AudioFilePaths)
@@ -53,13 +53,13 @@ func Mux(input common.MuxInput, progressCallback ffmpeg.ProgressCallback) (*comm
 
 	for _, f := range audioFiles {
 		params = append(params,
-			"-i", f.Path.LocalPath(),
+			"-i", f.Path.Local(),
 		)
 	}
 
 	for _, f := range subtitleFiles {
 		params = append(params,
-			"-i", f.Path.LocalPath(),
+			"-i", f.Path.Local(),
 		)
 	}
 

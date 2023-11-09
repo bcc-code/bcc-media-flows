@@ -114,8 +114,8 @@ func copyToDir(ctx workflow.Context, dest paths.Path, files []ingest.File) error
 	}
 
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      dir.RclonePath(),
-		Destination: dest.RclonePath(),
+		Source:      dir.Rclone(),
+		Destination: dest.Rclone(),
 	}).Get(ctx, nil)
 	if err != nil {
 		return err

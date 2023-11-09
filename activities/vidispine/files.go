@@ -19,7 +19,7 @@ func ImportFileAsShapeActivity(ctx context.Context, params *ImportFileAsShapePar
 
 	vsClient := GetClient()
 
-	fileID, err := vsClient.RegisterFile(params.FilePath.LocalPath(), vsapi.FileStateClosed)
+	fileID, err := vsClient.RegisterFile(params.FilePath.Local(), vsapi.FileStateClosed)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func ImportFileAsSidecarActivity(ctx context.Context, params *ImportSubtitleAsSi
 
 	vsClient := GetClient()
 
-	jobID, err := vsClient.AddSidecarToItem(params.AssetID, params.FilePath.LocalPath(), params.Language)
+	jobID, err := vsClient.AddSidecarToItem(params.AssetID, params.FilePath.Local(), params.Language)
 	return &ImportFileAsSidecarResult{
 		JobID: jobID,
 	}, err

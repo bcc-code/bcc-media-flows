@@ -77,7 +77,7 @@ func NormalizeAudioLevelWorkflow(
 		return nil, err
 	}
 
-	out.FilePath = adjustResult.OutputPath.LocalPath()
+	out.FilePath = adjustResult.OutputPath.Local()
 
 	if params.PerformOutputAnalysis {
 		r128Result := &common.AnalyzeEBUR128Result{}

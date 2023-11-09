@@ -78,7 +78,7 @@ func getSubtitlesResult(params MuxFilesParams) []smil.TextStream {
 	for _, language := range subtitleLanguages {
 		path := params.SubtitleFiles[language.ISO6391]
 		subtitles = append(subtitles, smil.TextStream{
-			Src:            filepath.Base(path.LocalPath()),
+			Src:            filepath.Base(path.Local()),
 			SystemLanguage: language.ISO6391,
 			SubtitleName:   language.LanguageNameSystem,
 		})
@@ -95,7 +95,7 @@ func startFileTasks(ctx workflow.Context, params MuxFilesParams, languages []bcc
 			key := lang.ISO6391
 			fileTasks[key] = map[string]workflow.Future{}
 			for _, q := range fileQualities {
-				base := filepath.Base(params.VideoFiles[q].LocalPath())
+				base := filepath.Base(params.VideoFiles[q].Local())
 				fileName := base[:len(base)-len(filepath.Ext(base))] + "-" + key
 				fileTasks[key][q] = wfutils.ExecuteWithQueue(ctx, activities.TranscodeMux, common.MuxInput{
 					FileName:          fileName,
@@ -130,7 +130,7 @@ func waitForFileTasks(ctx workflow.Context, params MuxFilesParams, tasks map[str
 					Resolution:    q,
 					AudioLanguage: code,
 					Mime:          "video/mp4",
-					Path:          filepath.Base(result.Path.LocalPath()),
+					Path:          filepath.Base(result.Path.Local()),
 				})
 			}
 		}
@@ -165,7 +165,7 @@ func startStreamTasks(ctx workflow.Context, params MuxFilesParams, languages map
 			audioFilePaths[key] = params.AudioFiles[key]
 		}
 
-		base := filepath.Base(path.LocalPath())
+		base := filepath.Base(path.Local())
 		fileName := base[:len(base)-len(filepath.Ext(base))]
 
 		tasks[q] = workflow.ExecuteActivity(ctx, activities.TranscodeMux, common.MuxInput{
@@ -191,7 +191,7 @@ func waitForStreamTasks(ctx workflow.Context, tasks map[string]workflow.Future, 
 		fileLanguages := languages[q]
 
 		streams = append(streams, smil.Video{
-			Src:          filepath.Base(result.Path.LocalPath()),
+			Src:          filepath.Base(result.Path.Local()),
 			IncludeAudio: fmt.Sprintf("%t", len(fileLanguages) > 0),
 			SystemLanguage: strings.Join(lo.Map(fileLanguages, func(i bccmflows.Language, _ int) string {
 				return i.ISO6391

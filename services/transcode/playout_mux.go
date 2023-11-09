@@ -106,7 +106,7 @@ func generateFFmpegParamsForPlayoutMux(input common.PlayoutMuxInput, outputPath 
 	// Inputs
 	ffmpegInputCount := 0
 	addInput := func(path paths.Path) {
-		params = append(params, "-i", path.LocalPath())
+		params = append(params, "-i", path.Local())
 		ffmpegInputCount++
 	}
 	addInput(input.VideoFilePath)
@@ -131,7 +131,7 @@ func generateFFmpegParamsForPlayoutMux(input common.PlayoutMuxInput, outputPath 
 
 		audioLanguages[i] = &PlayoutLanguageState{
 			Code:       lang,
-			FilePath:   filePath.LocalPath(),
+			FilePath:   filePath.Local(),
 			CopyFrom:   copyFrom,
 			InputIndex: inputIndex,
 			Stereo:     i < 4,
@@ -221,16 +221,16 @@ func generateFFmpegParamsForPlayoutMux(input common.PlayoutMuxInput, outputPath 
 }
 
 func PlayoutMux(input common.PlayoutMuxInput, progressCallback ffmpeg.ProgressCallback) (*common.PlayoutMuxResult, error) {
-	base := filepath.Base(input.VideoFilePath.LocalPath())
+	base := filepath.Base(input.VideoFilePath.Local())
 	fileNameWithoutExtension := base[:len(base)-len(filepath.Ext(base))]
-	outputFilePath := filepath.Join(input.OutputDir.LocalPath(), fileNameWithoutExtension+".mxf")
+	outputFilePath := filepath.Join(input.OutputDir.Local(), fileNameWithoutExtension+".mxf")
 
 	params, err := generateFFmpegParamsForPlayoutMux(input, outputFilePath)
 	if err != nil {
 		return nil, err
 	}
 
-	info, err := ffmpeg.GetStreamInfo(input.VideoFilePath.LocalPath())
+	info, err := ffmpeg.GetStreamInfo(input.VideoFilePath.Local())
 	if err != nil {
 		return nil, err
 	}

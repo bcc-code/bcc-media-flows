@@ -97,7 +97,7 @@ func GetSubtransIDActivity(ctx context.Context, input *GetSubtransIDInput) (*Get
 func GetSubtitlesActivity(ctx context.Context, params GetSubtitlesInput) (map[string]paths.Path, error) {
 	client := subtrans.NewClient(os.Getenv("SUBTRANS_BASE_URL"), os.Getenv("SUBTRANS_API_KEY"))
 
-	info, err := os.Stat(params.DestinationFolder.LocalPath())
+	info, err := os.Stat(params.DestinationFolder.Local())
 	if os.IsNotExist(err) {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func GetSubtitlesActivity(ctx context.Context, params GetSubtitlesInput) (map[st
 
 	out := map[string]paths.Path{}
 	for lang, sub := range subs {
-		path := path.Join(params.DestinationFolder.LocalPath(), params.FilePrefix+lang+"."+params.Format)
+		path := path.Join(params.DestinationFolder.Local(), params.FilePrefix+lang+"."+params.Format)
 		err := os.WriteFile(path, []byte(sub), 0644)
 		if err != nil {
 			return nil, err

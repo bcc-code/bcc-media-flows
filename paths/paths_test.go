@@ -26,5 +26,5 @@ func Test_ParsePath(t *testing.T) {
 	assert.Equal(t, IsilonDrive, path.Drive)
 	assert.Equal(t, "test.xml", path.Path)
 
-	assert.Equal(t, "isilon:isilon/test.xml", path.RclonePath())
+	assert.Equal(t, "isilon:isilon/test.xml", path.Rclone())
 }

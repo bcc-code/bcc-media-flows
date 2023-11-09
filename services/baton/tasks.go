@@ -12,7 +12,7 @@ type StartTaskResult struct {
 func StartTask(client *Client, filePath paths.Path, testPlan TestPlan) (*StartTaskResult, error) {
 	req := client.restyClient.R()
 
-	req.SetQueryParam("mediaFilePath", filePath.BatonPath())
+	req.SetQueryParam("mediaFilePath", filePath.Baton())
 	req.SetQueryParam("testPlan", testPlan.Value)
 	req.SetResult(&StartTaskResult{})
 	res, err := req.Post("tasks")

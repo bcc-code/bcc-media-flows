@@ -27,15 +27,15 @@ func MoveFile(ctx context.Context, input MoveFileInput) (*FileResult, error) {
 	activity.RecordHeartbeat(ctx, "MoveFile")
 	log.Info("Starting MoveFileActivity")
 
-	err := os.MkdirAll(filepath.Dir(input.Destination.LocalPath()), os.ModePerm)
+	err := os.MkdirAll(filepath.Dir(input.Destination.Local()), os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
-	err = os.Rename(input.Source.LocalPath(), input.Destination.LocalPath())
+	err = os.Rename(input.Source.Local(), input.Destination.Local())
 	if err != nil {
 		return nil, err
 	}
-	_ = os.Chmod(input.Destination.LocalPath(), os.ModePerm)
+	_ = os.Chmod(input.Destination.Local(), os.ModePerm)
 	return &FileResult{
 		Path: input.Destination,
 	}, nil
@@ -46,8 +46,8 @@ func StandardizeFileName(ctx context.Context, input FileInput) (*FileResult, err
 	activity.RecordHeartbeat(ctx, "StandardizeFileName")
 	log.Info("Starting StandardizeFileNameActivity")
 
-	path := paths.FixFilename(input.Path.LocalPath())
-	err := os.Rename(input.Path.LocalPath(), path)
+	path := paths.FixFilename(input.Path.Local())
+	err := os.Rename(input.Path.Local(), path)
 	if err != nil {
 		return nil, err
 	}
@@ -66,11 +66,11 @@ func CreateFolder(ctx context.Context, input CreateFolderInput) error {
 	activity.RecordHeartbeat(ctx, "CreateFolder")
 	log.Info("Starting CreateFolderActivity")
 
-	err := os.MkdirAll(input.Destination.LocalPath(), os.ModePerm)
+	err := os.MkdirAll(input.Destination.Local(), os.ModePerm)
 	if err != nil {
 		return err
 	}
-	return os.Chmod(input.Destination.LocalPath(), os.ModePerm)
+	return os.Chmod(input.Destination.Local(), os.ModePerm)
 }
 
 type WriteFileInput struct {
@@ -83,15 +83,15 @@ func WriteFile(ctx context.Context, input WriteFileInput) error {
 	activity.RecordHeartbeat(ctx, "WriteFile")
 	log.Info("Starting WriteFileActivity")
 
-	err := os.MkdirAll(filepath.Dir(input.Path.LocalPath()), os.ModePerm)
+	err := os.MkdirAll(filepath.Dir(input.Path.Local()), os.ModePerm)
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(input.Path.LocalPath(), input.Data, os.ModePerm)
+	err = os.WriteFile(input.Path.Local(), input.Data, os.ModePerm)
 	if err != nil {
 		return err
 	}
-	_ = os.Chmod(input.Path.LocalPath(), os.ModePerm)
+	_ = os.Chmod(input.Path.Local(), os.ModePerm)
 	return nil
 }
 
@@ -100,7 +100,7 @@ func ReadFile(ctx context.Context, input FileInput) ([]byte, error) {
 	activity.RecordHeartbeat(ctx, "ReadFile")
 	log.Info("Starting ReadFileActivity")
 
-	return os.ReadFile(input.Path.LocalPath())
+	return os.ReadFile(input.Path.Local())
 }
 
 func ListFiles(ctx context.Context, input FileInput) ([]paths.Path, error) {
@@ -108,7 +108,7 @@ func ListFiles(ctx context.Context, input FileInput) ([]paths.Path, error) {
 	activity.RecordHeartbeat(ctx, "ListFiles")
 	log.Info("Starting ListFilesActivity")
 
-	files, err := filepath.Glob(filepath.Join(input.Path.LocalPath(), "*"))
+	files, err := filepath.Glob(filepath.Join(input.Path.Local(), "*"))
 	if err != nil {
 		return nil, err
 	}
@@ -122,5 +122,5 @@ func DeletePath(ctx context.Context, input FileInput) error {
 	activity.RecordHeartbeat(ctx, "DeletePath")
 	log.Info("Starting DeletePathActivity")
 
-	return os.RemoveAll(input.Path.LocalPath())
+	return os.RemoveAll(input.Path.Local())
 }

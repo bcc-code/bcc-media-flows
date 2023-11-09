@@ -34,10 +34,10 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 
 	var files []paths.Path
 	for _, f := range originalFiles {
-		if !utils.ValidRawFilename(f.LocalPath()) {
+		if !utils.ValidRawFilename(f.Local()) {
 			return fmt.Errorf("invalid filename: %s", f)
 		}
-		newPath := outputFolder.Append(f.FileName())
+		newPath := outputFolder.Append(f.Base())
 		err = wfutils.MoveFile(ctx, f, newPath)
 		if err != nil {
 			return err
@@ -50,7 +50,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 
 	for _, file := range files {
 		var result *importTagResult
-		result, err = importFileAsTag(ctx, "original", file, file.FileName())
+		result, err = importFileAsTag(ctx, "original", file, file.Base())
 		if err != nil {
 			return err
 		}
