@@ -86,7 +86,7 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		"-map", "[out]",
 	)
 
-	filename := filepath.Base(input.Path.Local())
+	filename := input.Path.Base()
 	filename = filename[:len(filename)-len(filepath.Ext(filename))] +
 		fmt.Sprintf("_%dx%d.mp4", input.Width, input.Height)
 

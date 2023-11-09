@@ -13,7 +13,7 @@ import (
 // AdjustAudioLevel adjusts the audio level of the input file by the given adjustment in dB
 // without changing the dynamic range. This function does not protect against clipping!
 func AdjustAudioLevel(input common.AudioInput, adjustment float64, cb ffmpeg.ProgressCallback) (*common.AudioResult, error) {
-	outputFilePath := filepath.Join(input.DestinationPath.Local(), filepath.Base(input.Path.Local()))
+	outputFilePath := filepath.Join(input.DestinationPath.Local(), input.Path.Base())
 	outputFilePath = outputFilePath[:len(outputFilePath)-len(filepath.Ext(outputFilePath))] + "_normalized" + filepath.Ext(outputFilePath)
 
 	params := []string{

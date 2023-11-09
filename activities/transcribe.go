@@ -40,7 +40,7 @@ func Transcribe(
 
 	log.Info("Finished Transcribe")
 
-	fileName := filepath.Base(input.File.Local())
+	fileName := input.File.Base()
 	return &TranscribeResponse{
 		JSONPath: paths.MustParsePath(filepath.Join(jobData.OutputPath, fileName+".json")),
 		SRTPath:  paths.MustParsePath(filepath.Join(jobData.OutputPath, fileName+".srt")),

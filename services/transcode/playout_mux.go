@@ -221,7 +221,7 @@ func generateFFmpegParamsForPlayoutMux(input common.PlayoutMuxInput, outputPath 
 }
 
 func PlayoutMux(input common.PlayoutMuxInput, progressCallback ffmpeg.ProgressCallback) (*common.PlayoutMuxResult, error) {
-	base := filepath.Base(input.VideoFilePath.Local())
+	base := input.VideoFilePath.Base()
 	fileNameWithoutExtension := base[:len(base)-len(filepath.Ext(base))]
 	outputFilePath := filepath.Join(input.OutputDir.Local(), fileNameWithoutExtension+".mxf")
 
