@@ -19,7 +19,7 @@ func Test_GetSiblingFolder(t *testing.T) {
 func Test_ParsePath(t *testing.T) {
 	pathString := "/mnt/isilon/test.xml"
 
-	path, err := ParsePath(pathString)
+	path, err := Parse(pathString)
 
 	assert.Nil(t, err)
 

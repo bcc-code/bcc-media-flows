@@ -124,7 +124,7 @@ func GetSubtitlesActivity(ctx context.Context, params GetSubtitlesInput) (map[st
 		if err != nil {
 			return nil, err
 		}
-		out[lang] = paths.MustParsePath(path)
+		out[lang] = paths.MustParse(path)
 
 	}
 	return out, nil

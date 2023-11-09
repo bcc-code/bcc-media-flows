@@ -40,7 +40,7 @@ func TranscodePreviewFile(
 
 	logger.Info("Starting TranscodePreviewFile")
 
-	filePath, err := paths.ParsePath(params.FilePath)
+	filePath, err := paths.Parse(params.FilePath)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func TranscodePreviewFile(
 	previewResponse := &activities.TranscodePreviewResponse{}
 	err = workflow.ExecuteActivity(ctx, activities.TranscodePreview, activities.TranscodePreviewParams{
 		FilePath:           filePath,
-		DestinationDirPath: paths.MustParsePath(filepath.Dir(filePath.Local())),
+		DestinationDirPath: paths.MustParse(filepath.Dir(filePath.Local())),
 	}).Get(ctx, previewResponse)
 
 	if err != nil {

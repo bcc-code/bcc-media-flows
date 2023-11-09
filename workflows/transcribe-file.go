@@ -50,7 +50,7 @@ func TranscribeFile(
 		return err
 	}
 
-	file, err := paths.ParsePath(params.File)
+	file, err := paths.Parse(params.File)
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func TranscribeFile(
 		DestinationPath: tempFolder,
 	}).Get(ctx, &wavFile)
 
-	destination, err := paths.ParsePath(params.DestinationPath)
+	destination, err := paths.Parse(params.DestinationPath)
 	if err != nil {
 		return err
 	}

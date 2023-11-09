@@ -137,7 +137,7 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir p
 	for _, clip := range data.Clips {
 		mergeInput.Duration += clip.OutSeconds - clip.InSeconds
 		mergeInput.Items = append(mergeInput.Items, common.MergeInputItem{
-			Path:  paths.MustParsePath(clip.VideoFile),
+			Path:  paths.MustParse(clip.VideoFile),
 			Start: clip.InSeconds,
 			End:   clip.OutSeconds,
 		})
@@ -153,7 +153,7 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir p
 
 			audioMergeInputs[lan].Duration += clip.OutSeconds - clip.InSeconds
 			audioMergeInputs[lan].Items = append(audioMergeInputs[lan].Items, common.MergeInputItem{
-				Path:    paths.MustParsePath(af.File),
+				Path:    paths.MustParse(af.File),
 				Start:   clip.InSeconds,
 				End:     clip.OutSeconds,
 				Streams: af.Streams,
@@ -171,7 +171,7 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir p
 
 			subtitleMergeInputs[lan].Duration += clip.OutSeconds - clip.InSeconds
 			subtitleMergeInputs[lan].Items = append(subtitleMergeInputs[lan].Items, common.MergeInputItem{
-				Path:  paths.MustParsePath(sf),
+				Path:  paths.MustParse(sf),
 				Start: clip.InSeconds,
 				End:   clip.OutSeconds,
 			})

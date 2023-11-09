@@ -42,7 +42,7 @@ func TranscodeToProResActivity(ctx context.Context, input EncodeParams) (*Encode
 	}
 
 	return &EncodeResult{
-		OutputPath: paths.MustParsePath(transcodeResult.OutputPath),
+		OutputPath: paths.MustParse(transcodeResult.OutputPath),
 	}, nil
 }
 
@@ -66,7 +66,7 @@ func TranscodeToH264Activity(ctx context.Context, input EncodeParams) (*EncodeRe
 	}
 
 	return &EncodeResult{
-		OutputPath: paths.MustParsePath(transcodeResult.Path),
+		OutputPath: paths.MustParse(transcodeResult.Path),
 	}, nil
 }
 
@@ -90,7 +90,7 @@ func TranscodeToXDCAMActivity(ctx context.Context, input EncodeParams) (*EncodeR
 	}
 
 	return &EncodeResult{
-		OutputPath: paths.MustParsePath(transcodeResult.Path),
+		OutputPath: paths.MustParse(transcodeResult.Path),
 	}, nil
 }
 

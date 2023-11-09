@@ -96,7 +96,7 @@ func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 		return nil, err
 	}
 
-	outputPath, err := paths.ParsePath(outputFilePath)
+	outputPath, err := paths.Parse(outputFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +200,7 @@ func MergeAudio(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 		return nil, err
 	}
 
-	outputPath, err := paths.ParsePath(outputFilePath)
+	outputPath, err := paths.Parse(outputFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -293,7 +293,7 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 		return nil, err
 	}
 
-	outputPath, err := paths.ParsePath(outputFilePath)
+	outputPath, err := paths.Parse(outputFilePath)
 	if err != nil {
 		return nil, err
 	}

@@ -42,8 +42,8 @@ func Transcribe(
 
 	fileName := input.File.Base()
 	return &TranscribeResponse{
-		JSONPath: paths.MustParsePath(filepath.Join(jobData.OutputPath, fileName+".json")),
-		SRTPath:  paths.MustParsePath(filepath.Join(jobData.OutputPath, fileName+".srt")),
-		TXTPath:  paths.MustParsePath(filepath.Join(jobData.OutputPath, fileName+".txt")),
+		JSONPath: paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".json")),
+		SRTPath:  paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".srt")),
+		TXTPath:  paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".txt")),
 	}, nil
 }

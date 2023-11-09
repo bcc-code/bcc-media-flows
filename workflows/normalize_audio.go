@@ -47,7 +47,7 @@ func NormalizeAudioLevelWorkflow(
 
 	logger.Info("Starting NormalizeAudio workflow")
 
-	filePath, err := paths.ParsePath(params.FilePath)
+	filePath, err := paths.Parse(params.FilePath)
 	if err != nil {
 		return nil, err
 	}

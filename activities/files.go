@@ -53,7 +53,7 @@ func StandardizeFileName(ctx context.Context, input FileInput) (*FileResult, err
 	}
 	_ = os.Chmod(path, os.ModePerm)
 	return &FileResult{
-		Path: paths.MustParsePath(path),
+		Path: paths.MustParse(path),
 	}, nil
 }
 
@@ -113,7 +113,7 @@ func ListFiles(ctx context.Context, input FileInput) ([]paths.Path, error) {
 		return nil, err
 	}
 	return lo.Map(files, func(i string, _ int) paths.Path {
-		return paths.MustParsePath(i)
+		return paths.MustParse(i)
 	}), err
 }
 

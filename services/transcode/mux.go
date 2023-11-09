@@ -106,7 +106,7 @@ func Mux(input common.MuxInput, progressCallback ffmpeg.ProgressCallback) (*comm
 		return nil, err
 	}
 
-	outputPath, err := paths.ParsePath(outputFilePath)
+	outputPath, err := paths.Parse(outputFilePath)
 	if err != nil {
 		return nil, err
 	}

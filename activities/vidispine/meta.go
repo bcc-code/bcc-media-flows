@@ -36,7 +36,7 @@ func GetFileFromVXActivity(ctx context.Context, params GetFileFromVXParams) (*Ge
 		}
 
 		return &GetFileFromVXResult{
-			FilePath: paths.MustParsePath(shape.GetPath()),
+			FilePath: paths.MustParse(shape.GetPath()),
 			ShapeTag: tag,
 		}, nil
 	}

@@ -42,7 +42,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		var result PrepareFilesResult
 		var wm *paths.Path
 		if params.ParentParams.WatermarkPath != "" {
-			path, err := paths.ParsePath(params.ParentParams.WatermarkPath)
+			path, err := paths.Parse(params.ParentParams.WatermarkPath)
 			if err != nil {
 				return nil, err
 			}

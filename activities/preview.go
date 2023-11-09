@@ -36,7 +36,7 @@ func TranscodePreview(ctx context.Context, input TranscodePreviewParams) (*Trans
 	}
 
 	return &TranscodePreviewResponse{
-		PreviewFilePath: paths.MustParsePath(result.LowResolutionPath),
+		PreviewFilePath: paths.MustParse(result.LowResolutionPath),
 		AudioOnly:       result.AudioOnly,
 	}, nil
 }

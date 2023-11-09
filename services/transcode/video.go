@@ -106,7 +106,7 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		return nil, err
 	}
 
-	outputPath, err := paths.ParsePath(outputFilePath)
+	outputPath, err := paths.Parse(outputFilePath)
 	if err != nil {
 		return nil, err
 	}

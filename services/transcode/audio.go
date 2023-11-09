@@ -41,7 +41,7 @@ func AudioAac(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 		return nil, err
 	}
 
-	outputPath, err := paths.ParsePath(outputFilePath)
+	outputPath, err := paths.Parse(outputFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func AudioWav(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 		return nil, err
 	}
 
-	outputPath, err := paths.ParsePath(outputFilePath)
+	outputPath, err := paths.Parse(outputFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +149,7 @@ func AudioMP3(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 		return nil, err
 	}
 
-	outputPath, err := paths.ParsePath(outputFilePath)
+	outputPath, err := paths.Parse(outputFilePath)
 	if err != nil {
 		return nil, err
 	}

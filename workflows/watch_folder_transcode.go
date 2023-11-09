@@ -35,7 +35,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 
 	logger.Info("Starting WatchFolderTranscode")
 
-	path, err := paths.ParsePath(params.Path)
+	path, err := paths.Parse(params.Path)
 	if err != nil {
 		return err
 	}
