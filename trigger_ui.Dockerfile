@@ -8,7 +8,6 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /app ./cmd/trigger_ui
 FROM gcr.io/distroless/static AS prod
 WORKDIR /
 COPY --from=build /app /app
-COPY ./cmd/trigger_ui/css /css
-COPY ./cmd/trigger_ui/*.html /
+COPY ./cmd/trigger_ui /
 USER nonroot:nonroot
 ENTRYPOINT ["/app"]
