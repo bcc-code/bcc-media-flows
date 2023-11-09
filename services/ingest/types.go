@@ -44,7 +44,7 @@ type FileList struct {
 }
 
 type File struct {
-	FileName string `xml:"FileName"`
+	FileName string `xml:"Base"`
 	IsFolder bool   `xml:"isFolder"`
 	FileSize int    `xml:"fileSize"`
 	FilePath string `xml:"filePath"`

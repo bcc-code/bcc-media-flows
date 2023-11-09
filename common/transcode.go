@@ -1,41 +1,45 @@
 package common
 
+import (
+	"github.com/bcc-code/bccm-flows/paths"
+)
+
 type VideoInput struct {
-	Path            string
+	Path            paths.Path
 	Bitrate         string
 	BufferSize      string
 	Width           int
 	Height          int
 	FrameRate       int
-	WatermarkPath   string
-	DestinationPath string
+	WatermarkPath   *paths.Path
+	DestinationPath paths.Path
 }
 
 type VideoResult struct {
-	OutputPath string
+	OutputPath paths.Path
 }
 
 type AudioInput struct {
-	Path            string
+	Path            paths.Path
 	Bitrate         string
-	DestinationPath string
+	DestinationPath paths.Path
 }
 
 type AudioResult struct {
-	OutputPath string
+	OutputPath paths.Path
 	Bitrate    string
 	Format     string
 }
 
 type MuxInput struct {
 	FileName          string
-	VideoFilePath     string
-	AudioFilePaths    map[string]string
-	SubtitleFilePaths map[string]string
-	DestinationPath   string
+	VideoFilePath     paths.Path
+	AudioFilePaths    map[string]paths.Path
+	SubtitleFilePaths map[string]paths.Path
+	DestinationPath   paths.Path
 }
 type MuxResult struct {
-	Path string
+	Path paths.Path
 }
 
 type AnalyzeEBUR128Result struct {
@@ -46,13 +50,13 @@ type AnalyzeEBUR128Result struct {
 }
 
 type PlayoutMuxInput struct {
-	VideoFilePath     string
-	AudioFilePaths    map[string]string
-	SubtitleFilePaths map[string]string
-	OutputDir         string
+	VideoFilePath     paths.Path
+	AudioFilePaths    map[string]paths.Path
+	SubtitleFilePaths map[string]paths.Path
+	OutputDir         paths.Path
 	FallbackLanguage  string
 }
 
 type PlayoutMuxResult struct {
-	Path string
+	Path paths.Path
 }

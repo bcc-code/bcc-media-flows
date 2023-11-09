@@ -3,9 +3,10 @@ package activities
 import (
 	"context"
 	"fmt"
+	"github.com/bcc-code/bccm-flows/paths"
 	"net/url"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
@@ -18,7 +19,7 @@ type GetSubtitlesInput struct {
 	SubtransID        string
 	Format            string
 	ApprovedOnly      bool
-	DestinationFolder string
+	DestinationFolder paths.Path
 	FilePrefix        string
 }
 
@@ -57,7 +58,7 @@ func GetSubtransIDActivity(ctx context.Context, input *GetSubtransIDInput) (*Get
 	}
 
 	// Extract file name
-	fileName := path.Base(parsedUri.Path)
+	fileName := filepath.Base(parsedUri.Path)
 
 	// Split by dot
 	fileNameSplit := strings.Split(fileName, ".")
@@ -93,10 +94,10 @@ func GetSubtransIDActivity(ctx context.Context, input *GetSubtransIDInput) (*Get
 	return out, nil
 }
 
-func GetSubtitlesActivity(ctx context.Context, params GetSubtitlesInput) (map[string]string, error) {
+func GetSubtitlesActivity(ctx context.Context, params GetSubtitlesInput) (map[string]paths.Path, error) {
 	client := subtrans.NewClient(os.Getenv("SUBTRANS_BASE_URL"), os.Getenv("SUBTRANS_API_KEY"))
 
-	info, err := os.Stat(params.DestinationFolder)
+	info, err := os.Stat(params.DestinationFolder.Local())
 	if os.IsNotExist(err) {
 		return nil, err
 	}
@@ -116,15 +117,14 @@ func GetSubtitlesActivity(ctx context.Context, params GetSubtitlesInput) (map[st
 		params.FilePrefix = p
 	}
 
-	out := map[string]string{}
+	out := map[string]paths.Path{}
 	for lang, sub := range subs {
-		path := path.Join(params.DestinationFolder, params.FilePrefix+lang+"."+params.Format)
+		path := filepath.Join(params.DestinationFolder.Local(), params.FilePrefix+lang+"."+params.Format)
 		err := os.WriteFile(path, []byte(sub), 0644)
 		if err != nil {
 			return nil, err
 		}
-		out[lang] = path
-
+		out[lang] = paths.MustParse(path)
 	}
 	return out, nil
 }

@@ -1,10 +1,8 @@
-package utils
+package environment
 
 import (
 	"os"
 	"strings"
-
-	"github.com/bcc-code/bccm-flows/common"
 )
 
 var queue = os.Getenv("QUEUE")
@@ -13,28 +11,28 @@ func GetQueue() string {
 	if queue != "" {
 		return queue
 	}
-	return common.QueueWorker
+	return QueueWorker
 }
 
 func GetWorkerQueue() string {
-	if queue == common.QueueDebug {
-		return common.QueueDebug
+	if queue == QueueDebug {
+		return QueueDebug
 	}
-	return common.QueueWorker
+	return QueueWorker
 }
 
 func GetTranscodeQueue() string {
-	if queue == common.QueueDebug {
-		return common.QueueDebug
+	if queue == QueueDebug {
+		return QueueDebug
 	}
-	return common.QueueTranscode
+	return QueueTranscode
 }
 
 func GetAudioQueue() string {
-	if queue == common.QueueDebug {
-		return common.QueueDebug
+	if queue == QueueDebug {
+		return QueueDebug
 	}
-	return common.QueueAudio
+	return QueueAudio
 }
 
 var isilonPrefix = os.Getenv("ISILON_PREFIX")

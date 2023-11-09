@@ -1,7 +1,9 @@
-package utils
+package paths
 
 import (
+	"encoding/json"
 	"github.com/ansel1/merry/v2"
+	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/orsinium-labs/enum"
 	"path/filepath"
 	"strings"
@@ -25,6 +27,26 @@ func FixFilename(path string) string {
 
 type Drive enum.Member[string]
 
+//goland:noinspection GoMixedReceiverTypes
+func (d Drive) MarshalJSON() ([]byte, error) {
+	return json.Marshal(d.Value)
+}
+
+//goland:noinspection GoMixedReceiverTypes
+func (d *Drive) UnmarshalJSON(value []byte) error {
+	var stringValue string
+	err := json.Unmarshal(value, &stringValue)
+	if err != nil {
+		return err
+	}
+	drive := Drives.Parse(stringValue)
+	if drive == nil {
+		return ErrDriveNotFound
+	}
+	*d = *drive
+	return nil
+}
+
 var (
 	IsilonDrive      = Drive{Value: "isilon"}
 	TempDrive        = Drive{Value: "temp"}
@@ -34,6 +56,7 @@ var (
 	ErrPathNotValid  = merry.Sentinel("path not valid")
 )
 
+//goland:noinspection GoMixedReceiverTypes
 func (d Drive) RcloneName() string {
 	switch d {
 	case IsilonDrive:
@@ -44,6 +67,7 @@ func (d Drive) RcloneName() string {
 	return ""
 }
 
+//goland:noinspection GoMixedReceiverTypes
 func (d Drive) RclonePath() string {
 	switch d {
 	case IsilonDrive:
@@ -59,14 +83,15 @@ type Path struct {
 	Path  string
 }
 
-func (p Path) WorkerPath() string {
-	switch p.Drive {
-	case IsilonDrive:
-		return filepath.Join("/mnt/isilon", p.Path)
-	case DMZShareDrive:
-		return filepath.Join("/mnt/dmzshare", p.Path)
+func (p Path) Dir() Path {
+	return Path{
+		Drive: p.Drive,
+		Path:  filepath.Dir(p.Path),
 	}
-	return ""
+}
+
+func (p Path) Local() string {
+	return filepath.Join(drivePrefixes[p.Drive].Client, p.Path)
 }
 
 // RcloneFsRemote returns (fs, remote) for rclone usage
@@ -80,11 +105,11 @@ func (p Path) RcloneFsRemote() (string, string) {
 	return "", ""
 }
 
-func (p Path) RclonePath() string {
+func (p Path) Rclone() string {
 	return filepath.Join(drivePrefixes[p.Drive].Rclone, p.Path)
 }
 
-func (p Path) BatonPath() string {
+func (p Path) Baton() string {
 	switch p.Drive {
 	case IsilonDrive:
 		return filepath.Join("\\\\10.12.130.61\\isilon", strings.ReplaceAll(p.Path, "/", "\\"))
@@ -92,12 +117,12 @@ func (p Path) BatonPath() string {
 	return ""
 }
 
-func (p Path) FileName() string {
+func (p Path) Base() string {
 	return filepath.Base(p.Path)
 }
 
 func (p Path) Append(path string) Path {
-	p.Path = filepath.Join(p.Path, path)
+	p.Path = filepath.Clean(filepath.Join(p.Path, path))
 	return p
 }
 
@@ -108,12 +133,12 @@ type prefix struct {
 }
 
 var drivePrefixes = map[Drive]prefix{
-	IsilonDrive:   {"/mnt/isilon/", GetIsilonPrefix(), "isilon:isilon/"},
+	IsilonDrive:   {"/mnt/isilon/", environment.GetIsilonPrefix(), "isilon:isilon/"},
 	DMZShareDrive: {"/mnt/dmzshare/", "/mnt/dmzshare/", "dmz:dmzshare/"},
-	TempDrive:     {"/mnt/temp/", GetTempMountPrefix(), "isilon:temp/"},
+	TempDrive:     {"/mnt/temp/", environment.GetTempMountPrefix(), "isilon:temp/"},
 }
 
-func ParsePath(path string) (Path, error) {
+func Parse(path string) (Path, error) {
 	for drive, ps := range drivePrefixes {
 		prefixes := []string{ps.Linux, ps.Client, ps.Rclone}
 		for _, p := range prefixes {
@@ -126,4 +151,12 @@ func ParsePath(path string) (Path, error) {
 		}
 	}
 	return Path{}, ErrPathNotValid
+}
+
+func MustParse(path string) Path {
+	p, err := Parse(path)
+	if err != nil {
+		panic(err)
+	}
+	return p
 }

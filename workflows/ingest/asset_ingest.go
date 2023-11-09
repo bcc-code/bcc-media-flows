@@ -3,8 +3,8 @@ package ingestworkflows
 import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/activities"
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ingest"
-	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
@@ -38,7 +38,12 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 	options := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	metadata, err := wfutils.UnmarshalXMLFile[ingest.Metadata](ctx, params.XMLPath)
+	xmlPath, err := paths.Parse(params.XMLPath)
+	if err != nil {
+		return nil, err
+	}
+
+	metadata, err := wfutils.UnmarshalXMLFile[ingest.Metadata](ctx, xmlPath)
 	if err != nil {
 		return nil, err
 	}
@@ -48,8 +53,8 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 		return nil, fmt.Errorf("unsupported order form: %s", metadata.JobProperty.OrderForm)
 	}
 	_, err = wfutils.MoveToFolder(ctx,
-		params.XMLPath,
-		filepath.Join(filepath.Dir(params.XMLPath), "processed"),
+		xmlPath,
+		xmlPath.Append("processed"),
 	)
 	if err != nil {
 		return nil, err
@@ -60,7 +65,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 		return nil, err
 	}
 
-	fcOutputDir := filepath.Join(tempDir, "fc")
+	fcOutputDir := tempDir.Append("fc")
 	err = wfutils.CreateFolder(ctx, fcOutputDir)
 	if err != nil {
 		return nil, err
@@ -91,7 +96,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 	return &AssetResult{}, nil
 }
 
-func copyToDir(ctx workflow.Context, dest string, files []ingest.File) error {
+func copyToDir(ctx workflow.Context, dest paths.Path, files []ingest.File) error {
 	var dirs []string
 	for _, file := range files {
 		if !lo.Contains(dirs, file.FilePath) {
@@ -103,19 +108,14 @@ func copyToDir(ctx workflow.Context, dest string, files []ingest.File) error {
 		return fmt.Errorf("multiple directories not supported: %s", dirs)
 	}
 
-	dir, err := utils.ParsePath(filepath.Join("/mnt/dmzshare", "workflow", dirs[0]))
-	if err != nil {
-		return err
-	}
-
-	destPath, err := utils.ParsePath(dest)
+	dir, err := paths.Parse(filepath.Join("/mnt/dmzshare", "workflow", dirs[0]))
 	if err != nil {
 		return err
 	}
 
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      dir.RclonePath(),
-		Destination: destPath.RclonePath(),
+		Source:      dir.Rclone(),
+		Destination: dest.Rclone(),
 	}).Get(ctx, nil)
 	if err != nil {
 		return err
@@ -124,7 +124,7 @@ func copyToDir(ctx workflow.Context, dest string, files []ingest.File) error {
 	for _, file := range files {
 		err = wfutils.DeletePath(
 			ctx,
-			filepath.Join("/mnt/dmzshare", "workflow", file.FilePath, file.FileName),
+			paths.MustParse(filepath.Join("/mnt/dmzshare", "workflow", file.FilePath, file.FileName)),
 		)
 		if err != nil {
 			return err

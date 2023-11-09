@@ -3,23 +3,23 @@ package activities
 import (
 	"context"
 	"fmt"
-
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"github.com/bcc-code/bccm-flows/services/transcode"
 	"go.temporal.io/sdk/activity"
 )
 
 type EncodeParams struct {
-	FilePath   string
-	OutputDir  string
+	FilePath   paths.Path
+	OutputDir  paths.Path
 	Resolution string
 	FrameRate  int
 	Bitrate    string
 }
 
 type EncodeResult struct {
-	OutputPath string
+	OutputPath paths.Path
 }
 
 func TranscodeToProResActivity(ctx context.Context, input EncodeParams) (*EncodeResult, error) {
@@ -31,8 +31,8 @@ func TranscodeToProResActivity(ctx context.Context, input EncodeParams) (*Encode
 	defer close(stop)
 
 	transcodeResult, err := transcode.ProRes(transcode.ProResInput{
-		FilePath:   input.FilePath,
-		OutputDir:  input.OutputDir,
+		FilePath:   input.FilePath.Local(),
+		OutputDir:  input.OutputDir.Local(),
 		FrameRate:  input.FrameRate,
 		Resolution: input.Resolution,
 	}, progressCallback)
@@ -42,7 +42,7 @@ func TranscodeToProResActivity(ctx context.Context, input EncodeParams) (*Encode
 	}
 
 	return &EncodeResult{
-		OutputPath: transcodeResult.OutputPath,
+		OutputPath: paths.MustParse(transcodeResult.OutputPath),
 	}, nil
 }
 
@@ -55,8 +55,8 @@ func TranscodeToH264Activity(ctx context.Context, input EncodeParams) (*EncodeRe
 	defer close(stop)
 
 	transcodeResult, err := transcode.H264(transcode.EncodeInput{
-		FilePath:   input.FilePath,
-		OutputDir:  input.OutputDir,
+		FilePath:   input.FilePath.Local(),
+		OutputDir:  input.OutputDir.Local(),
 		FrameRate:  input.FrameRate,
 		Resolution: input.Resolution,
 		Bitrate:    input.Bitrate,
@@ -66,7 +66,7 @@ func TranscodeToH264Activity(ctx context.Context, input EncodeParams) (*EncodeRe
 	}
 
 	return &EncodeResult{
-		OutputPath: transcodeResult.Path,
+		OutputPath: paths.MustParse(transcodeResult.Path),
 	}, nil
 }
 
@@ -79,8 +79,8 @@ func TranscodeToXDCAMActivity(ctx context.Context, input EncodeParams) (*EncodeR
 	defer close(stop)
 
 	transcodeResult, err := transcode.XDCAM(transcode.EncodeInput{
-		FilePath:   input.FilePath,
-		OutputDir:  input.OutputDir,
+		FilePath:   input.FilePath.Local(),
+		OutputDir:  input.OutputDir.Local(),
 		FrameRate:  input.FrameRate,
 		Resolution: input.Resolution,
 		Bitrate:    input.Bitrate,
@@ -90,7 +90,7 @@ func TranscodeToXDCAMActivity(ctx context.Context, input EncodeParams) (*EncodeR
 	}
 
 	return &EncodeResult{
-		OutputPath: transcodeResult.Path,
+		OutputPath: paths.MustParse(transcodeResult.Path),
 	}, nil
 }
 

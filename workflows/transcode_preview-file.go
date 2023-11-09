@@ -2,8 +2,8 @@ package workflows
 
 import (
 	"github.com/bcc-code/bccm-flows/activities"
-	"github.com/bcc-code/bccm-flows/utils"
-	"path/filepath"
+	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bccm-flows/paths"
 	"time"
 
 	"go.temporal.io/sdk/temporal"
@@ -32,17 +32,22 @@ func TranscodePreviewFile(
 		StartToCloseTimeout:    time.Hour * 4,
 		ScheduleToCloseTimeout: time.Hour * 48,
 		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              utils.GetTranscodeQueue(),
+		TaskQueue:              environment.GetTranscodeQueue(),
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	logger.Info("Starting TranscodePreviewFile")
 
+	filePath, err := paths.Parse(params.FilePath)
+	if err != nil {
+		return err
+	}
+
 	previewResponse := &activities.TranscodePreviewResponse{}
-	err := workflow.ExecuteActivity(ctx, activities.TranscodePreview, activities.TranscodePreviewParams{
-		FilePath:           params.FilePath,
-		DestinationDirPath: filepath.Dir(params.FilePath),
+	err = workflow.ExecuteActivity(ctx, activities.TranscodePreview, activities.TranscodePreviewParams{
+		FilePath:           filePath,
+		DestinationDirPath: filePath.Dir(),
 	}).Get(ctx, previewResponse)
 
 	if err != nil {
