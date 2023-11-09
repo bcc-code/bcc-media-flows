@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"os"
@@ -37,8 +38,10 @@ func getQueue() string {
 	return queue
 }
 
+var overlaysDir = os.Getenv("OVERLAYS_DIR")
+
 func getOverlayFilenames() ([]string, error) {
-	files, err := os.ReadDir(os.Getenv("OVERLAYS_DIR"))
+	files, err := os.ReadDir(overlaysDir)
 	filenames := []string{}
 	if err != nil {
 		return filenames, err
@@ -50,8 +53,12 @@ func getOverlayFilenames() ([]string, error) {
 	return filenames, nil
 }
 
+func getOverlayFilePath(file string) string {
+	return filepath.Join(overlaysDir, file)
+}
+
 func renderErrorPage(c *gin.Context, httpStatus int, err error) {
-	c.HTML(httpStatus, "error.html", gin.H{
+	c.HTML(httpStatus, "error.gohtml", gin.H{
 		"errorMessage": err.Error(),
 	})
 }
@@ -64,6 +71,16 @@ type TriggerServer struct {
 	ExportAudioSources      []string
 }
 
+type TriggerGETParams struct {
+	Title                   string
+	AssetExportDestinations []string
+	Filenames               []string
+	Languages               map[string]bccmflows.Language
+	SelectedLanguages       []string
+	SelectedAudioSource     string
+	AudioSources            []string
+}
+
 func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 	meta, err := s.vsapiClient.GetMetadata(c.Query("id"))
 	if err != nil {
@@ -73,7 +90,7 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 
 	title := meta.Get(vscommon.FieldTitle, "")
 
-	selectedAudiosource := meta.Get(vscommon.FieldExportAudioSource, "")
+	selectedAudioSource := meta.Get(vscommon.FieldExportAudioSource, "")
 
 	selectedLanguages := meta.GetArray(vscommon.FieldLangsToExport)
 
@@ -83,19 +100,18 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "index.html", gin.H{
-		"Title":                   title,
-		"AssetExportDestinations": s.assetExportDestinations,
-		"Filenames":               filenames,
-		"Languages":               s.languages,
-		"SelectedLanguages":       selectedLanguages,
-		"SelectedAudioSource":     selectedAudiosource,
-		"AudioSources":            s.ExportAudioSources,
+	c.HTML(http.StatusOK, "index.gohtml", TriggerGETParams{
+		Title:                   title,
+		AssetExportDestinations: s.assetExportDestinations,
+		Filenames:               filenames,
+		Languages:               s.languages,
+		SelectedLanguages:       selectedLanguages,
+		SelectedAudioSource:     selectedAudioSource,
+		AudioSources:            s.ExportAudioSources,
 	})
 }
 
 func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
-
 	vxID := c.Query("id")
 	languages := c.PostFormArray("languages[]")
 	audioSource := c.PostForm("audioSource")
@@ -112,12 +128,13 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 		}
 	}
 
-	var res client.WorkflowRun
-
-	s.vsapiClient.SetItemMetadataField(vxID, vscommon.FieldExportAudioSource.Value, audioSource)
+	err := s.vsapiClient.SetItemMetadataField(vxID, vscommon.FieldExportAudioSource.Value, audioSource)
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
 
 	for i, element := range languages {
-		var err error
 		if i == 0 {
 			err = s.vsapiClient.SetItemMetadataField(vxID, vscommon.FieldLangsToExport.Value, element)
 		} else {
@@ -131,11 +148,17 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 		}
 	}
 
+	var watermarkPath string
+	watermarkFile := c.PostForm("watermarkFile")
+	if watermarkFile != "" {
+		watermarkPath = getOverlayFilePath(watermarkFile)
+	}
+
 	res, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, export.VXExport, export.VXExportParams{
 		VXID:          vxID,
 		WithFiles:     c.PostForm("withFiles") == "on",
 		WithChapters:  c.PostForm("withChapters") == "on",
-		WatermarkPath: c.PostForm("watermarkPath"),
+		WatermarkPath: watermarkPath,
 		AudioSource:   audioSource,
 		Destinations:  c.PostFormArray("destinations[]"),
 		Languages:     languages,
@@ -154,14 +177,19 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 
 	// Render success page, with back button
 
-	c.HTML(http.StatusOK, "success.html", gin.H{
+	c.HTML(http.StatusOK, "success.gohtml", gin.H{
 		"WorkflowID": res.GetID(),
 		"Title":      meta.Get(vscommon.FieldTitle, ""),
 	})
 
 }
 
-type workflowStruct struct {
+type WorkflowListParams struct {
+	WorkflowList     []WorkflowDetails
+	WorkflowStatuses map[string]string
+}
+
+type WorkflowDetails struct {
 	VxID       string
 	Name       string
 	Status     string
@@ -170,8 +198,7 @@ type workflowStruct struct {
 }
 
 func (s *TriggerServer) listGET(c *gin.Context) {
-
-	workflowList := []workflowStruct{}
+	var workflowList []WorkflowDetails
 
 	workflows, err := s.wfClient.ListWorkflow(c, &workflowservice.ListWorkflowExecutionsRequest{
 		Query: "WorkflowType = 'VXExport'",
@@ -212,13 +239,13 @@ func (s *TriggerServer) listGET(c *gin.Context) {
 		name := meta.Get(vscommon.FieldTitle, "")
 
 		loc, _ := time.LoadLocation("Europe/Oslo")
-		startime := workflows.Executions[i].StartTime.In(loc).Format("Mon, 02 Jan 2006 15:04:05 MST")
-		workflowList = append(workflowList, workflowStruct{
+		startTime := workflows.Executions[i].StartTime.In(loc).Format("Mon, 02 Jan 2006 15:04:05 MST")
+		workflowList = append(workflowList, WorkflowDetails{
 			VxID:       data.VXID,
 			Name:       name,
 			Status:     workflows.Executions[i].GetStatus().String(),
 			WorkflowID: workflows.Executions[i].Execution.WorkflowId,
-			Start:      startime,
+			Start:      startTime,
 		})
 
 	}
@@ -232,11 +259,10 @@ func (s *TriggerServer) listGET(c *gin.Context) {
 		"Terminated": "red",
 	}
 
-	c.HTML(http.StatusOK, "list.html", gin.H{
-		"WorkflowList":     workflowList,
-		"WorkflowStatuses": workflowStatuses,
+	c.HTML(http.StatusOK, "list.gohtml", WorkflowListParams{
+		WorkflowList:     workflowList,
+		WorkflowStatuses: workflowStatuses,
 	})
-
 }
 
 func main() {
@@ -251,7 +277,7 @@ func main() {
 	}
 	lang := bccmflows.LanguagesByISO
 
-	router.LoadHTMLGlob("*.html")
+	router.LoadHTMLGlob("./templates/*")
 
 	server := &TriggerServer{
 		vsapiClient,
