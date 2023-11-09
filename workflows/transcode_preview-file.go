@@ -4,7 +4,6 @@ import (
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/bcc-code/bccm-flows/paths"
-	"path/filepath"
 	"time"
 
 	"go.temporal.io/sdk/temporal"
@@ -48,7 +47,7 @@ func TranscodePreviewFile(
 	previewResponse := &activities.TranscodePreviewResponse{}
 	err = workflow.ExecuteActivity(ctx, activities.TranscodePreview, activities.TranscodePreviewParams{
 		FilePath:           filePath,
-		DestinationDirPath: paths.MustParse(filepath.Dir(filePath.Local())),
+		DestinationDirPath: filePath.Dir(),
 	}).Get(ctx, previewResponse)
 
 	if err != nil {

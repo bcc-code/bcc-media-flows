@@ -83,9 +83,9 @@ func GetWorkflowIsilonOutputFolder(ctx workflow.Context, root string) (paths.Pat
 
 	date := time.Now()
 
-	path := filepath.Join(environment.GetIsilonPrefix(), "Production", root, fmt.Sprintf("%d/%d/%d", date.Year(), date.Month(), date.Day()), info.OriginalRunID)
+	path := paths.MustParse(filepath.Join(environment.GetIsilonPrefix(), "Production", root, fmt.Sprintf("%d/%d/%d", date.Year(), date.Month(), date.Day()), info.OriginalRunID))
 
-	return paths.MustParse(path), CreateFolder(ctx, paths.MustParse(path))
+	return path, CreateFolder(ctx, path)
 }
 
 func GetWorkflowMastersOutputFolder(ctx workflow.Context) (paths.Path, error) {
@@ -103,9 +103,9 @@ func GetWorkflowAuxOutputFolder(ctx workflow.Context) (paths.Path, error) {
 func GetWorkflowTempFolder(ctx workflow.Context) (paths.Path, error) {
 	info := workflow.GetInfo(ctx)
 
-	path := filepath.Join(environment.GetTempMountPrefix(), "workflows", info.OriginalRunID)
+	path := paths.MustParse(filepath.Join(environment.GetTempMountPrefix(), "workflows", info.OriginalRunID))
 
-	return paths.MustParse(path), CreateFolder(ctx, paths.MustParse(path))
+	return path, CreateFolder(ctx, path)
 }
 
 // GetMapKeysSafely makes sure that the order of the keys returned are identical to other workflow executions.

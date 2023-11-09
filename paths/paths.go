@@ -83,6 +83,13 @@ type Path struct {
 	Path  string
 }
 
+func (p Path) Dir() Path {
+	return Path{
+		Drive: p.Drive,
+		Path:  filepath.Dir(p.Path),
+	}
+}
+
 func (p Path) Local() string {
 	return filepath.Join(drivePrefixes[p.Drive].Client, p.Path)
 }
