@@ -1,6 +1,7 @@
 package export
 
 import (
+	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -124,9 +125,8 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	// Prepare data for the JSON file
 	jsonData := prepareBMMData(audioResults, normalizedResults)
 	jsonData.Length = int(params.MergeResult.Duration)
-	jsonData.MediabankenID = params.ParentParams.VXID
+	jsonData.MediabankenID = fmt.Sprintf("%s-%s", params.ParentParams.VXID, HashTitle(params.ExportData.Title))
 
-	// TODO: Title is messy, we should have "Human readable" variant
 	jsonData.Title = params.ExportData.Title
 
 	marshalled, err := json.Marshal(jsonData)
@@ -233,4 +233,9 @@ func prepareBMMData(audioFiles map[string][]common.AudioResult, analysis map[str
 
 	return out
 
+}
+
+func HashTitle(title string) string {
+	hash := sha1.Sum([]byte(title))
+	return fmt.Sprintf("%x", hash)[0:8]
 }
