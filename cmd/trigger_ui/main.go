@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -56,7 +57,7 @@ func getOverlayFilenames(env string) ([]string, error) {
 }
 
 func renderErrorPage(c *gin.Context, httpStatus int, err error) {
-	c.HTML(httpStatus, "error.html", gin.H{
+	c.HTML(httpStatus, "error.gohtml", gin.H{
 		"errorMessage": err.Error(),
 	})
 }
@@ -70,7 +71,7 @@ type TriggerServer struct {
 	database                *sql.DB
 }
 
-func (s *TriggerServer) getArrayfromDatabase(c *gin.Context, table string) []string {
+func (s *TriggerServer) getArrayfromTable(c *gin.Context, table string) []string {
 	rows, err := s.database.Query("SELECT name FROM " + table)
 	if err != nil {
 		renderErrorPage(c, http.StatusInternalServerError, err)
@@ -90,9 +91,9 @@ func (s *TriggerServer) getArrayfromDatabase(c *gin.Context, table string) []str
 	return array
 }
 
-func (s *TriggerServer) addDatatoDatabase(c *gin.Context, array []string, table string) {
+func (s *TriggerServer) addDataToTable(c *gin.Context, array []string, table string) {
 
-	tableArray := s.getArrayfromDatabase(c, table)
+	tableArray := s.getArrayfromTable(c, table)
 
 	for i := 0; i < len(array); i++ {
 
@@ -134,7 +135,7 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "index.html", gin.H{
+	c.HTML(http.StatusOK, "index.gohtml", gin.H{
 		"Title":                   title,
 		"AssetExportDestinations": s.assetExportDestinations,
 		"Filenames":               filenames,
@@ -199,7 +200,7 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 
 	// Render success page, with back button
 
-	c.HTML(http.StatusOK, "success.html", gin.H{
+	c.HTML(http.StatusOK, "success.gohtml", gin.H{
 		"WorkflowID": res.GetID(),
 		"Title":      meta.Get(vscommon.FieldTitle, ""),
 	})
@@ -231,7 +232,7 @@ func (s *TriggerServer) listGET(c *gin.Context) {
 			Execution: workflows.Executions[i].GetExecution(),
 			Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
 		})
-		print(res)
+
 		if err != nil {
 			renderErrorPage(c, http.StatusInternalServerError, err)
 			return
@@ -241,6 +242,7 @@ func (s *TriggerServer) listGET(c *gin.Context) {
 			renderErrorPage(c, 500, errors.New("unexpected attribute type on first workflow event. Was not HistoryEvent_WorkflowExecutionStartedEventAttributes"))
 			break
 		}
+
 		data := export.VXExportParams{}
 		err = json.Unmarshal(attributes.WorkflowExecutionStartedEventAttributes.Input.Payloads[0].Data, &data)
 
@@ -258,6 +260,7 @@ func (s *TriggerServer) listGET(c *gin.Context) {
 
 		loc, _ := time.LoadLocation("Europe/Oslo")
 		startime := workflows.Executions[i].StartTime.In(loc).Format("Mon, 02 Jan 2006 15:04:05 MST")
+
 		workflowList = append(workflowList, workflowStruct{
 			VxID:       data.VXID,
 			Name:       name,
@@ -291,13 +294,13 @@ func (s *TriggerServer) uploadMasterGET(c *gin.Context) {
 		return
 	}
 
-	tags := s.getArrayfromDatabase(c, "tags")
+	tags := s.getArrayfromTable(c, "tags")
 
-	persons := s.getArrayfromDatabase(c, "persons")
+	persons := s.getArrayfromTable(c, "persons")
 
-	programID := s.getArrayfromDatabase(c, "programID")
+	programID := s.getArrayfromTable(c, "programID")
 
-	c.HTML(http.StatusOK, "upload-master.html", gin.H{
+	c.HTML(http.StatusOK, "upload-master.gohtml", gin.H{
 		"fileDirectory":   filenames,
 		"TagsDatalist":    tags,
 		"PersonsDatalist": persons,
@@ -315,26 +318,21 @@ func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
 
 	var res client.WorkflowRun
 
-	s.addDatatoDatabase(c, c.PostFormArray("tags[]"), "tags")
-	s.addDatatoDatabase(c, c.PostFormArray("persons[]"), "persons")
-
-	/*tagsArray := c.PostFormArray("tags[]")
-	for i, tag := range tagsArray {
-
-	}*/
+	s.addDataToTable(c, c.PostFormArray("tags[]"), "tags")
+	s.addDataToTable(c, c.PostFormArray("persons[]"), "persons")
 
 	res, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, ingestworkflows.VBMaster, ingestworkflows.VBMasterParams{
 		Metadata: &ingest.Metadata{
 			JobProperty: ingest.JobProperty{
 				ProgramID:        c.PostForm("program_id"),
-				Tags:             "",
-				PersonsAppearing: "",
+				Tags:             strings.Join(c.PostFormArray("tags[]"), ", "),
+				PersonsAppearing: strings.Join(c.PostFormArray("persons[]"), ", "),
 				SenderEmail:      c.PostForm("sender_email"),
 				Language:         c.PostForm("language"),
 				ReceivedFilename: c.PostForm("filename"),
 			},
 		},
-		SourceFile: c.PostForm("path"),
+		/* SourceFile: c.PostForm("path"), */
 	})
 
 	res.GetID()
@@ -347,9 +345,29 @@ func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
 }
 
 func (s *TriggerServer) uploadMasterAdminGET(c *gin.Context) {
-	c.HTML(http.StatusOK, "upload-master-admin.html", gin.H{
-		"test": "test",
+
+	programID := s.getArrayfromTable(c, "programID")
+
+	c.HTML(http.StatusOK, "upload-master-admin.gohtml", gin.H{
+		"programIDArray": programID,
 	})
+}
+
+func (s *TriggerServer) uploadMasterAdminPOST(c *gin.Context) {
+
+	programID := []string{(c.PostForm("Code") + " - " + c.PostForm("Name"))}
+
+	if programID[0] != " - " {
+		s.addDataToTable(c, programID, "programID")
+	}
+
+	_, err := s.database.Exec("DELETE FROM programID WHERE name='" + c.PostForm("") + "'")
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	s.uploadMasterAdminGET(c)
 }
 
 func main() {
@@ -364,7 +382,7 @@ func main() {
 	}
 	lang := bccmflows.LanguagesByISO
 
-	router.LoadHTMLGlob("*.html")
+	router.LoadHTMLGlob("*.gohtml")
 
 	sqlite_path, exists := os.LookupEnv("TRIGGER_DB")
 	if !exists {
@@ -403,6 +421,7 @@ func main() {
 	router.GET("/vx-export/list", server.listGET)
 	router.GET("/upload-master", server.uploadMasterGET)
 	router.GET("/upload-master/admin", server.uploadMasterAdminGET)
+	router.POST("/upload-master/admin", server.uploadMasterAdminPOST)
 	router.POST("/vx-export", server.triggerHandlerPOST)
 	router.POST("/upload-master", server.uploadMasterPOST)
 

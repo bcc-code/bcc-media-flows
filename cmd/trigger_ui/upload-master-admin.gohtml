@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+</head>
+
+<body>
+    <form method="POST" class="flex flex-col min-h-screen gap-2 mx-auto p-14 max-w-screen-lg">
+
+        <h1>In the table</h1>
+        <div class="flex flex-col gap-2 overflow-y-auto h-32 w-auto">
+            {{range $element := .programIDArray}}
+            <div class="multiselect bg-blue-400 flex flex-row">
+                {{$element}}
+                <button class="bg-indigo-500">Delete</button>
+            </div>
+            {{end}}
+        </div>
+
+        <script>
+            event.preventDefault();
+            event.stopPropagation();
+
+
+
+            function deleteProgramID(element) {
+
+            }
+        </script>
+
+        <label for="Code">Code</label>
+        <input id="code" type="text" name="Code">
+
+        <label for="Name">Name</label>
+        <input id="name" type="text" name="Name">
+
+        <input id="submit"
+            class="cursor-pointer rounded-md bg-[#6A64F1] py-3 px-8 text-center text-base font-semibold text-white outline-none"
+            type="submit" value="Add to table">
+
+        <a href="/upload-master" class="px-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3">
+            Back
+        </a>
+
+        <span type="hidden" id="deleteArrayData"></span>
+
+    </form>
+</body>
+
+</html>

@@ -25,13 +25,13 @@
                     <li>Audio tracks: 1 and 2 Program sound, stereo</li>
                 </ul>
             </div>
-            <h2>Accepted audio format</h2>
+            <h2 class="text-2xl mt-2 font-bold">Accepted audio format</h2>
             <p>WAV 16 or 24 bit Stereo</p>
 
-            <h2>Upload Section</h2>
+            <h2 class="text-2xl mt-2 font-bold">Upload Section</h2>
             <p>NB! The filename will be renamed to what you choose and write in the following fields like this:</p>
 
-            <h4>PROGRAMID_FILENAME_TYPE_LANGUAGE</h4>
+            <h4 class="text-2xl mt-2 font-bold">PROGRAMID_FILENAME_TYPE_LANGUAGE</h4>
 
             <p>Fill the following schema and start upload the file:</p>
         </div>
@@ -84,14 +84,8 @@
 
             <div class="flex">
                 <label class="inline-block w-20 flex-none">Tags</label>
-                <div class="flex w-full border border-[#6b7280]">
-                    <ul id="ListOfTags" class="flex flex-row gap-2">
-
-                    </ul>
-                    <div id="hiddenTags">
-
-                    </div>
-                    <input list="TagsDatalist" id="TagInput" class="w-full border border-none outline-none border-box"
+                <div class="multiselect flex flex-row-reverse w-full border border-[#6b7280]">
+                    <input list="TagsDatalist" name="tags" class="w-full border border-none outline-none border-box"
                         type="text">
                     <datalist id="TagsDatalist">
                         {{range $element := .TagsDatalist}}
@@ -103,14 +97,8 @@
 
             <div class="flex">
                 <label class="inline-block w-20 flex-none" for="persons_appearing">Persons appearing</label>
-                <div class="flex w-full border border-[#6b7280]">
-                    <ul id="ListofPerson" class="flex flex-row gap-2">
-
-                    </ul>
-                    <div id="hiddenPerson">
-
-                    </div>
-                    <input list="PersonsDatalist" id="PersonInput"
+                <div class="multiselect flex flex-row-reverse w-full border border-[#6b7280]">
+                    <input list="PersonsDatalist" name="persons"
                         class="w-full border border-none outline-none border-box" type="text">
                     <datalist id="PersonsDatalist">
                         {{range $element := .PersonsDatalist}}
@@ -152,74 +140,70 @@
                 type="submit" value="Start export">
         </div>
 
-        <script>
-
-            document.getElementById("TagInput").addEventListener("keypress", function (event) {
-                console.log("TagInput keypress")
-                if (event.keyCode == 13) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    if (document.getElementById("TagInput").value == "" || document.getElementById("TagInput").value == " ") {
-                        return
-                    }
-
-                    var ul = document.getElementById("ListOfTags");
-                    var li = document.createElement("li");
-                    var button = document.createElement("button");
-                    button.appendChild(document.createTextNode("X"));
-                    button.setAttribute("class", "bg-blue-400");
-                    button.addEventListener('click', () => {
-                        li.remove()
-                    })
-
-                    li.appendChild(document.createTextNode(document.getElementById("TagInput").value));
-                    li.appendChild(button);
-
-                    li.setAttribute("class", "bg-blue-200 p-2 m-1 border-none w-auto flex flex-row gap-1");
-                    ul.appendChild(li);
-
-                    var input = document.createElement("input");
-                    var div = document.getElementById("hiddenTags");
-                    input.setAttribute("type", "hidden");
-                    input.setAttribute("name", "tags[]");
-                    input.setAttribute("value", document.getElementById("TagInput").value);
-                    div.appendChild(input);
-                    document.getElementById("TagInput").value = ""
-                }
-            });
-
-            document.getElementById("PersonInput").addEventListener("keypress", function (event) {
-                console.log("PersonInput ")
-                if (event.keyCode == 13) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    var ul = document.getElementById("ListofPerson");
-                    var li = document.createElement("li");
-                    var button = document.createElement("button");
-                    button.appendChild(document.createTextNode("X"));
-                    button.setAttribute("class", "bg-blue-400");
-                    button.addEventListener('click', () => {
-                        li.remove()
-                    })
-
-                    li.appendChild(document.createTextNode(document.getElementById("PersonInput").value));
-                    li.appendChild(button);
-
-                    li.setAttribute("class", "bg-blue-200 p-2 m-1 border-none w-auto flex flex-row gap-1");
-                    ul.appendChild(li);
-
-                    var input = document.createElement("input");
-                    var div = document.getElementById("hiddenPerson");
-
-                    input.setAttribute("type", "hidden");
-                    input.setAttribute("name", "persons[]");
-                    input.setAttribute("value", document.getElementById("PersonInput").value);
-                    div.appendChild(input);
-                }
-            })
-        </script>
+        <span type="hidden" id="arrayData"></span>
 
     </form>
+
+    <script>
+
+        for (element of document.querySelectorAll(".multiselect")) {
+            setupMultiselect(element)
+        }
+
+        function setupMultiselect(element) {
+            const ul = document.createElement("ul")
+            ul.setAttribute("class", "flex flex-row")
+            element.addEventListener("keypress", function (event) {
+                if (event.keyCode == 13) {
+
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    let inputValue = element.children[0].value
+                    if (inputValue == "") {
+                        return
+                    }
+                    for (key of document.getElementById("arrayData").childNodes) {
+                        if (inputValue === key.value) {
+                            return
+                        }
+                    }
+
+                    element.appendChild(ul)
+
+                    var li = document.createElement("li");
+                    var button = document.createElement("button");
+
+                    button.appendChild(document.createTextNode("X"));
+                    button.setAttribute("class", "bg-blue-400 p-1 rounded");
+                    button.addEventListener('click', () => {
+                        li.remove()
+                        for (key of document.getElementById("arrayData").childNodes) {
+                            if ((key.value + "X") == li.textContent) {
+                                key.remove()
+                            }
+                        }
+                    })
+
+                    li.appendChild(document.createTextNode(inputValue));
+                    li.appendChild(button);
+                    li.setAttribute("class", "bg-blue-200 p-2 m-1 border-none w-auto flex flex-row gap-1 rounded-2xl");
+                    li.setAttribute("value", inputValue);
+                    ul.appendChild(li);
+
+                    var input = document.createElement("input");
+                    var hiddenarray = document.getElementById("arrayData");
+
+                    input.setAttribute("type", "hidden");
+                    input.setAttribute("name", element.children[0].getAttribute("name") + "[]");
+                    input.setAttribute("value", inputValue);
+                    hiddenarray.appendChild(input);
+                    element.children[0].value = ""
+                }
+            })
+        }
+
+    </script>
 </body>
 
 </html>
