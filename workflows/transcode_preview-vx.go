@@ -1,11 +1,13 @@
 package workflows
 
 import (
+	"path/filepath"
+	"time"
+
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
-	"time"
 
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
@@ -55,6 +57,12 @@ func TranscodePreviewVX(
 	destinationPath, err := wfutils.GetWorkflowAuxOutputFolder(ctx)
 	if err != nil {
 		return err
+	}
+
+	switch filepath.Ext(shapes.FilePath.Path) {
+	case ".mxf", ".mov", ".mp4", ".wav":
+	default:
+		return nil
 	}
 
 	previewResponse := &activities.TranscodePreviewResponse{}
