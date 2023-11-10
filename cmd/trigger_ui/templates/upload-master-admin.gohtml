@@ -12,19 +12,29 @@
         <div class="flex flex-col gap-2 overflow-y-auto h-32 w-auto">
             {{range $element := .programIDArray}}
             <div class="multiselect bg-blue-400 flex flex-row">
-                {{$element}}
+                <p>{{$element}}</p>
                 <button class="bg-indigo-500">Delete</button>
             </div>
             {{end}}
         </div>
 
         <script>
-            event.preventDefault();
-            event.stopPropagation();
 
+            for (element of document.querySelectorAll(".multiselect")) {
+                setupButton(element)
+            }
 
+            function setupButton(element) {
 
-            function deleteProgramID(element) {
+                element.children[1].onclick = function () {
+
+                    let input = document.createElement("input")
+                    document.getElementById("deleteArrayData").appendChild(input)
+                    input.setAttribute("type", "hidden")
+                    input.setAttribute("name", "deleteArrayData[]")
+                    input.setAttribute("value", element.children[0].textContent)
+
+                }
 
             }
         </script>

@@ -2,6 +2,11 @@ package ingestworkflows
 
 import (
 	"fmt"
+	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
+
 	"github.com/bcc-code/bccm-flows/activities"
 	batonactivities "github.com/bcc-code/bccm-flows/activities/baton"
 	"github.com/bcc-code/bccm-flows/common"
@@ -11,17 +16,14 @@ import (
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/workflow"
-	"path/filepath"
-	"regexp"
-	"strconv"
-	"strings"
 )
 
 type MasterParams struct {
 	Metadata *ingest.Metadata
 
-	OrderForm OrderForm
-	Directory paths.Path
+	OrderForm  OrderForm
+	Directory  paths.Path
+	SourceFile paths.Path
 }
 
 type MasterResult struct {
@@ -74,16 +76,20 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		return nil, err
 	}
 
-	files, err := wfutils.ListFiles(ctx, params.Directory)
-	if err != nil {
-		return nil, err
-	}
+	sourceFile := params.SourceFile
+	if sourceFile.Path == "" {
+		files, err := wfutils.ListFiles(ctx, params.Directory)
+		if err != nil {
+			return nil, err
+		}
 
-	if len(files) == 0 {
-		return nil, fmt.Errorf("no files in directory: %s", params.Directory)
-	}
-	if len(files) > 1 {
-		return nil, fmt.Errorf("too many files in directory: %s", params.Directory)
+		if len(files) == 0 {
+			return nil, fmt.Errorf("no files in directory: %s", params.Directory)
+		}
+		if len(files) > 1 {
+			return nil, fmt.Errorf("too many files in directory: %s", params.Directory)
+		}
+		sourceFile = files[0]
 	}
 
 	outputDir, err := wfutils.GetWorkflowMastersOutputFolder(ctx)
@@ -92,7 +98,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	}
 
 	file := outputDir.Append(filename)
-	err = wfutils.MoveFile(ctx, files[0], file)
+	err = wfutils.MoveFile(ctx, sourceFile, file)
 	if err != nil {
 		return nil, err
 	}

@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/bcc-code/bccm-flows/environment"
 	"net/http"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bccm-flows/paths"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -45,6 +47,7 @@ func getQueue() string {
 }
 
 var overlaysDir = os.Getenv("OVERLAYS_DIR")
+var masterTriggerDir = os.Getenv("MASTER_TRIGGER_DIR")
 
 func getFilenames(dir string) ([]string, error) {
 	files, err := os.ReadDir(dir)
@@ -320,7 +323,7 @@ func (s *TriggerServer) listGET(c *gin.Context) {
 }
 
 func (s *TriggerServer) uploadMasterGET(c *gin.Context) {
-	filenames, err := getFilenames(os.Getenv("MASTER_TRIGGER_DIR"))
+	filenames, err := getFilenames(masterTriggerDir)
 	if err != nil {
 		renderErrorPage(c, http.StatusInternalServerError, err)
 		return
@@ -353,6 +356,8 @@ func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
 	s.addDataToTable(c, c.PostFormArray("tags[]"), "tags")
 	s.addDataToTable(c, c.PostFormArray("persons[]"), "persons")
 
+	path := masterTriggerDir + "/" + c.PostForm("path")
+
 	res, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, ingestworkflows.Masters, ingestworkflows.MasterParams{
 		Metadata: &ingest.Metadata{
 			JobProperty: ingest.JobProperty{
@@ -364,7 +369,7 @@ func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
 				ReceivedFilename: c.PostForm("filename"),
 			},
 		},
-		/* SourceFile: c.PostForm("path"), */
+		SourceFile: paths.MustParse(path),
 	})
 
 	res.GetID()
@@ -393,10 +398,14 @@ func (s *TriggerServer) uploadMasterAdminPOST(c *gin.Context) {
 		s.addDataToTable(c, programID, "programID")
 	}
 
-	_, err := s.database.Exec("DELETE FROM programID WHERE name='" + c.PostForm("") + "'")
-	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
-		return
+	DeletionValue := c.PostFormArray("deleteArrayData[]")
+
+	if DeletionValue != nil {
+		_, err := s.database.Exec("DELETE FROM programID WHERE name='" + DeletionValue[0] + "'")
+		if err != nil {
+			renderErrorPage(c, http.StatusInternalServerError, err)
+			return
+		}
 	}
 
 	s.uploadMasterAdminGET(c)
