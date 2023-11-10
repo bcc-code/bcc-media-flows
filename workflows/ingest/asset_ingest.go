@@ -54,7 +54,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 	}
 	_, err = wfutils.MoveToFolder(ctx,
 		xmlPath,
-		xmlPath.Append("processed"),
+		xmlPath.Dir().Append("processed"),
 	)
 	if err != nil {
 		return nil, err
