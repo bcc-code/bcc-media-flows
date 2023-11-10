@@ -125,9 +125,9 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	// Prepare data for the JSON file
 	jsonData := prepareBMMData(audioResults, normalizedResults)
 	jsonData.Length = int(params.MergeResult.Duration)
-	jsonData.MediabankenID = params.ParentParams.VXID
+	jsonData.MediabankenID = fmt.Sprintf("%s-%s", params.ParentParams.VXID, HashTitle(params.ExportData.Title))
 
-	jsonData.Title = fmt.Sprintf("%s-%s", params.ExportData.Title, HashTitle(params.ExportData.Title))
+	jsonData.Title = params.ExportData.Title
 
 	marshalled, err := json.Marshal(jsonData)
 	if err != nil {
