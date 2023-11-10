@@ -2,6 +2,8 @@ package ingestworkflows
 
 import (
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
+	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bccm-flows/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -10,7 +12,7 @@ type importTagResult struct {
 	ImportJobID string
 }
 
-func importFileAsTag(ctx workflow.Context, tag, path, title string) (*importTagResult, error) {
+func importFileAsTag(ctx workflow.Context, tag string, path paths.Path, title string) (*importTagResult, error) {
 	var result vsactivity.CreatePlaceholderResult
 	err := workflow.ExecuteActivity(ctx, vsactivity.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
 		Title: title,
@@ -31,4 +33,39 @@ func importFileAsTag(ctx workflow.Context, tag, path, title string) (*importTagR
 		AssetID:     result.AssetID,
 		ImportJobID: job.JobID,
 	}, nil
+}
+
+func postImportActions(ctx workflow.Context, assetIDs []string, language string) error {
+	var wfFutures []workflow.ChildWorkflowFuture
+	for _, id := range assetIDs {
+		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
+			VXID: id,
+		}))
+	}
+
+	for _, f := range wfFutures {
+		err := f.Get(ctx, nil)
+		if err != nil {
+			return err
+		}
+	}
+
+	if language == "" {
+		language = "no"
+	}
+	wfFutures = []workflow.ChildWorkflowFuture{}
+	for _, id := range assetIDs {
+		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeVX, workflows.TranscribeVXInput{
+			VXID:     id,
+			Language: language,
+		}))
+	}
+
+	for _, f := range wfFutures {
+		err := f.Get(ctx, nil)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

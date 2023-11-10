@@ -2,7 +2,7 @@ package workflows
 
 import (
 	"github.com/bcc-code/bccm-flows/activities"
-	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bccm-flows/environment"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 	"time"
@@ -26,7 +26,7 @@ func ExecuteFFmpeg(
 		StartToCloseTimeout:    time.Hour * 4,
 		ScheduleToCloseTimeout: time.Hour * 48,
 		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              utils.GetTranscodeQueue(),
+		TaskQueue:              environment.GetTranscodeQueue(),
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)

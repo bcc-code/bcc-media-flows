@@ -1,4 +1,4 @@
-package utils
+package paths
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -19,12 +19,12 @@ func Test_GetSiblingFolder(t *testing.T) {
 func Test_ParsePath(t *testing.T) {
 	pathString := "/mnt/isilon/test.xml"
 
-	path, err := ParsePath(pathString)
+	path, err := Parse(pathString)
 
 	assert.Nil(t, err)
 
 	assert.Equal(t, IsilonDrive, path.Drive)
 	assert.Equal(t, "test.xml", path.Path)
 
-	assert.Equal(t, "isilon:isilon/test.xml", path.RclonePath())
+	assert.Equal(t, "isilon:isilon/test.xml", path.Rclone())
 }

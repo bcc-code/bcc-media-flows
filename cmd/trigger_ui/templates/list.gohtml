@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>VX Workflow List</title>
+</head>
+
+<body>
+<div class="bg-white p-8 rounded-md w-full">
+    <div class=" flex items-center justify-between pb-6">
+        <div class="flex items-center justify-between">
+            <div class="flex bg-gray-50 items-center p-2 rounded-md">
+            </div>
+        </div>
+    </div>
+    <div>
+        <div class="-mx-4 sm:-mx-8 p-4 sm:px-8 overflow-x-auto">
+            <div class="inline-block min-w-full shadow rounded-lg overflow-hidden">
+                <table class="min-w-full leading-normal">
+                    <thead>
+                    <tr class="border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <th class="px-5 py-3">
+                            VX ID
+                        </th>
+                        <th class="px-5 py-3">
+                            Title
+                        </th>
+                        <th class="px-5 py-3">
+                            Workflow ID
+                        </th>
+                        <th class="px-5 py-3">
+                            Start
+                        </th>
+                        <th class="px-5 py-3">
+                            Status
+                        </th>
+                    </tr>
+                    </thead>
+
+                    <tbody class="divide-y">
+                    {{/*gotype: github.com/bcc-code/bccm-flows/cmd/trigger_ui.WorkflowListParams*/}}
+                    {{range $index, $element := .WorkflowList}}
+                        <tr class="bg-white text-sm text-gray-900 border-gray-200 whitespace-no-wrap">
+                            <td class="p-5">
+                                {{$element.VxID}}
+                            </td>
+                            <td class="p-5">
+                                {{$element.Name}}
+                            </td>
+                            <td class="p-5">
+                                {{$element.WorkflowID}}
+                            </td>
+                            <td class="p-5">
+                                {{$element.Start}}
+                            </td>
+                            <td class="p-5">
+                                {{range $key, $status := $.WorkflowStatuses}}
+                                    {{if eq $element.Status $key}}
+                                        <span class="relative inline-block px-3 py-1 font-semibold text-{{$status}}-900 leading-tight">
+                                            <span aria-hiddenclass="absolute inset-0 bg-{{$status}}-200 opacity-50 rounded-full"></span>
+                                            <span class="relative">{{$element.Status}}</span>
+                                        </span>
+                                    {{end}}
+                                {{end}}
+                            </td>
+                        </tr>
+                    {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

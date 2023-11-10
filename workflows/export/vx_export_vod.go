@@ -9,7 +9,7 @@ import (
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/common/smil"
-	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/workflow"
 	"path/filepath"
@@ -36,16 +36,25 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		Duration: formatSecondsToTimestamp(params.MergeResult.Duration),
 	}
 
-	var videoFiles map[string]string
-	var audioFiles map[string]string
+	var videoFiles map[string]paths.Path
+	var audioFiles map[string]paths.Path
 	{
 		var result PrepareFilesResult
+		var wm *paths.Path
+		if params.ParentParams.WatermarkPath != "" {
+			path, err := paths.Parse(params.ParentParams.WatermarkPath)
+			if err != nil {
+				return nil, err
+			}
+			wm = &path
+		}
+
 		ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
 		err := workflow.ExecuteChildWorkflow(ctx, PrepareFiles, PrepareFilesParams{
 			OutputPath:    params.TempDir,
-			VideoFile:     params.MergeResult.VideoFile,
+			VideoFile:     *params.MergeResult.VideoFile,
 			AudioFiles:    params.MergeResult.AudioFiles,
-			WatermarkPath: params.ParentParams.WatermarkPath,
+			WatermarkPath: wm,
 		}).Get(ctx, &result)
 		if err != nil {
 			return nil, err
@@ -81,7 +90,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 
 	xmlData, _ := xml.MarshalIndent(smilData, "", "\t")
 	xmlData = append([]byte("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n"), xmlData...)
-	err := wfutils.WriteFile(ctx, filepath.Join(params.OutputDir, "aws.smil"), xmlData)
+	err := wfutils.WriteFile(ctx, params.OutputDir.Append("aws.smil"), xmlData)
 	if err != nil {
 
 		return nil, err
@@ -99,7 +108,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		if err != nil {
 			return nil, err
 		}
-		err = wfutils.WriteFile(ctx, filepath.Join(params.OutputDir, "chapters.json"), marshalled)
+		err = wfutils.WriteFile(ctx, params.OutputDir.Append("chapters.json"), marshalled)
 		if err != nil {
 			return nil, err
 		}
@@ -110,20 +119,17 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, err
 	}
 
-	err = wfutils.WriteFile(ctx, filepath.Join(params.OutputDir, "ingest.json"), marshalled)
+	err = wfutils.WriteFile(ctx, params.OutputDir.Append("ingest.json"), marshalled)
 	if err != nil {
 		return nil, err
 	}
 
 	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
 
-	outputPath, err := utils.ParsePath(params.OutputDir)
-	if err != nil {
-		return nil, err
-	}
+	outputPath := params.OutputDir
 
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      outputPath.RclonePath(),
+		Source:      outputPath.Rclone(),
 		Destination: fmt.Sprintf("s3prod:vod-asset-ingest-prod/" + ingestFolder),
 	}).Get(ctx, nil)
 	if err != nil {

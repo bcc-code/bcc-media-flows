@@ -1,6 +1,7 @@
 package export
 
 import (
+	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -11,9 +12,7 @@ import (
 
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
-	"github.com/bcc-code/bccm-flows/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -41,22 +40,35 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, fmt.Errorf("failed to get audio file keys: %w", err)
 	}
 
+	tempDir, err := wfutils.GetWorkflowTempFolder(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get workflow temp folder: %w", err)
+	}
+
+	// We don't want to upload folders from other workflows that can be triggered at the same export.
+	outputFolder := tempDir.Append("bmm")
+	err = wfutils.CreateFolder(ctx, outputFolder)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create output folder: %w", err)
+	}
+
 	// Normalize audio
 	for _, lang := range langs {
 		audio := params.MergeResult.AudioFiles[lang]
 		ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
-		future := workflow.ExecuteChildWorkflow(ctx, workflows.NormalizeAudioLevelWorkflow, workflows.NormalizeAudioParams{
+		future := wfutils.ExecuteWithQueue(ctx, activities.NormalizeAudioActivity, activities.NormalizeAudioParams{
 			FilePath:              audio,
 			TargetLUFS:            targetLufs,
 			PerformOutputAnalysis: true,
+			OutputPath:            tempDir,
 		})
 		normalizedFutures[lang] = future
 	}
 
-	normalizedResults := map[string]workflows.NormalizeAudioResult{}
+	normalizedResults := map[string]activities.NormalizeAudioResult{}
 	for _, lang := range langs {
 		future := normalizedFutures[lang]
-		normalizedRes := workflows.NormalizeAudioResult{}
+		normalizedRes := activities.NormalizeAudioResult{}
 		err := future.Get(ctx, &normalizedRes)
 		if err != nil {
 			return nil, fmt.Errorf("failed to normalize audio for language %s: %w", lang, err)
@@ -67,17 +79,12 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		params.MergeResult.AudioFiles[lang] = normalizedRes.FilePath
 	}
 
-	outputFolder, err := wfutils.GetWorkflowTempFolder(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get workflow temp folder: %w", err)
-	}
-
 	// Encode to AAC and MP3
 
 	encodingFutures := map[string][]workflow.Future{}
 	for _, lang := range langs {
 		audio := normalizedResults[lang]
-		encodings := []workflow.Future{}
+		var encodings []workflow.Future
 		for _, bitrate := range aacBitrates {
 			f := wfutils.ExecuteWithQueue(ctx, activities.TranscodeToAudioAac, common.AudioInput{
 				Path:            audio.FilePath,
@@ -102,7 +109,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	audioResults := map[string][]common.AudioResult{}
 	for _, lang := range langs {
 		futures := encodingFutures[lang]
-		encodings := []common.AudioResult{}
+		var encodings []common.AudioResult
 		for _, future := range futures {
 			var res common.AudioResult
 			err := future.Get(ctx, &res)
@@ -118,9 +125,8 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	// Prepare data for the JSON file
 	jsonData := prepareBMMData(audioResults, normalizedResults)
 	jsonData.Length = int(params.MergeResult.Duration)
-	jsonData.MediabankenID = params.ParentParams.VXID
+	jsonData.MediabankenID = fmt.Sprintf("%s-%s", params.ParentParams.VXID, HashTitle(params.ExportData.Title))
 
-	// TODO: Title is messy, we should have "Human readable" variant
 	jsonData.Title = params.ExportData.Title
 
 	marshalled, err := json.Marshal(jsonData)
@@ -128,14 +134,14 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, fmt.Errorf("failed to marshal JSON: %w", err)
 	}
 
-	err = wfutils.WriteFile(ctx, path.Join(outputFolder, "bmm.json"), marshalled)
+	err = wfutils.WriteFile(ctx, outputFolder.Append("bmm.json"), marshalled)
 	if err != nil {
 		return nil, fmt.Errorf("failed to write JSON file: %w", err)
 	}
 
 	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      strings.Replace(outputFolder, utils.GetIsilonPrefix()+"/", "isilon:isilon/", 1),
+		Source:      outputFolder.Rclone(),
 		Destination: fmt.Sprintf("bmms3:/int-bmm-mediabanken/" + ingestFolder),
 	}).Get(ctx, nil)
 	if err != nil {
@@ -185,14 +191,13 @@ type BMMAudioFile struct {
 	MimeType        string  `json:"mime_type"`
 }
 
-func prepareBMMData(audioFiles map[string][]common.AudioResult, analysis map[string]workflows.NormalizeAudioResult) BMMData {
+func prepareBMMData(audioFiles map[string][]common.AudioResult, analysis map[string]activities.NormalizeAudioResult) BMMData {
 	out := BMMData{
 		AudioFiles: map[string][]BMMAudioFile{},
 	}
 
 	for lang, variations := range audioFiles {
-
-		langFiles := []BMMAudioFile{}
+		var langFiles []BMMAudioFile
 
 		for _, file := range variations {
 
@@ -204,7 +209,7 @@ func prepareBMMData(audioFiles map[string][]common.AudioResult, analysis map[str
 				Bitrate:         bitrate,
 				VariableBitrate: true,
 				ChannelCount:    2,
-				Path:            path.Base(file.OutputPath), // This needs to be relative to the resultintg JSON file
+				Path:            path.Base(file.OutputPath.Local()), // This needs to be relative to the resultintg JSON file
 				Lufs:            analysis[lang].OutputAnalysis.IntegratedLoudness,
 				DynamicRange:    analysis[lang].OutputAnalysis.LoudnessRange,
 				Language:        lang,
@@ -228,4 +233,9 @@ func prepareBMMData(audioFiles map[string][]common.AudioResult, analysis map[str
 
 	return out
 
+}
+
+func HashTitle(title string) string {
+	hash := sha1.Sum([]byte(title))
+	return fmt.Sprintf("%x", hash)[0:8]
 }

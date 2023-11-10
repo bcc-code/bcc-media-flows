@@ -3,24 +3,25 @@ package export
 import (
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/workflow"
 )
 
 type PrepareFilesParams struct {
-	OutputPath    string
-	VideoFile     string
-	WatermarkPath string
-	AudioFiles    map[string]string
+	OutputPath    paths.Path
+	VideoFile     paths.Path
+	WatermarkPath *paths.Path
+	AudioFiles    map[string]paths.Path
 }
 
 type PrepareFilesResult struct {
-	VideoFiles map[string]string
-	AudioFiles map[string]string
+	VideoFiles map[string]paths.Path
+	AudioFiles map[string]paths.Path
 }
 
-func getVideoQualities(videoFilePath, outputDir, watermarkPath string) map[string]common.VideoInput {
+func getVideoQualities(videoFilePath, outputDir paths.Path, watermarkPath *paths.Path) map[string]common.VideoInput {
 	return map[string]common.VideoInput{
 		r1080p: {
 			Path:            videoFilePath,
@@ -81,7 +82,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 	options := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	ctx = workflow.WithTaskQueue(ctx, utils.GetTranscodeQueue())
+	ctx = workflow.WithTaskQueue(ctx, environment.GetTranscodeQueue())
 
 	var videoTasks = map[string]workflow.Future{}
 	{
@@ -114,7 +115,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 		}
 	}
 
-	var audioFiles = map[string]string{}
+	var audioFiles = map[string]paths.Path{}
 	{
 		keys, err := wfutils.GetMapKeysSafely(ctx, audioTasks)
 		if err != nil {
@@ -131,7 +132,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 		}
 	}
 
-	var videoFiles = map[string]string{}
+	var videoFiles = map[string]paths.Path{}
 	{
 		keys, err := wfutils.GetMapKeysSafely(ctx, videoTasks)
 		if err != nil {

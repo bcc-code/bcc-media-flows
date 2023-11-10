@@ -8,11 +8,11 @@ var (
 	TargetTypeEmail    = TargetType{Value: "email"}
 	TargetTypeTelegram = TargetType{Value: "telegram"}
 	TargetTypeSMS      = TargetType{Value: "sms"}
-	TargetTypes        = []TargetType{
+	TargetTypes        = enum.New(
 		TargetTypeEmail,
 		TargetTypeTelegram,
 		TargetTypeSMS,
-	}
+	)
 )
 
 type Target struct {

@@ -3,7 +3,7 @@ package activities
 import (
 	"context"
 	"fmt"
-	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bccm-flows/paths"
 	"time"
 
 	"github.com/bcc-code/bccm-flows/services/rclone"
@@ -47,8 +47,8 @@ func RcloneCopyDir(ctx context.Context, input RcloneCopyDirInput) (bool, error) 
 }
 
 type RcloneMoveFileInput struct {
-	Source      utils.Path
-	Destination utils.Path
+	Source      paths.Path
+	Destination paths.Path
 }
 
 func RcloneMoveFile(ctx context.Context, input RcloneMoveFileInput) (bool, error) {

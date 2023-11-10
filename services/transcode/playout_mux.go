@@ -2,6 +2,7 @@ package transcode
 
 import (
 	"fmt"
+	"github.com/bcc-code/bccm-flows/paths"
 	"log"
 	"os"
 	"path/filepath"
@@ -104,8 +105,8 @@ func generateFFmpegParamsForPlayoutMux(input common.PlayoutMuxInput, outputPath 
 
 	// Inputs
 	ffmpegInputCount := 0
-	addInput := func(path string) {
-		params = append(params, "-i", path)
+	addInput := func(path paths.Path) {
+		params = append(params, "-i", path.Local())
 		ffmpegInputCount++
 	}
 	addInput(input.VideoFilePath)
@@ -130,7 +131,7 @@ func generateFFmpegParamsForPlayoutMux(input common.PlayoutMuxInput, outputPath 
 
 		audioLanguages[i] = &PlayoutLanguageState{
 			Code:       lang,
-			FilePath:   filePath,
+			FilePath:   filePath.Local(),
 			CopyFrom:   copyFrom,
 			InputIndex: inputIndex,
 			Stereo:     i < 4,
@@ -150,7 +151,7 @@ func generateFFmpegParamsForPlayoutMux(input common.PlayoutMuxInput, outputPath 
 		return stream
 	}
 
-	filterParts := []string{}
+	var filterParts []string
 	for _, lang := range audioLanguages {
 		if lang.InputIndex == -1 {
 			continue
@@ -220,16 +221,16 @@ func generateFFmpegParamsForPlayoutMux(input common.PlayoutMuxInput, outputPath 
 }
 
 func PlayoutMux(input common.PlayoutMuxInput, progressCallback ffmpeg.ProgressCallback) (*common.PlayoutMuxResult, error) {
-	base := filepath.Base(input.VideoFilePath)
+	base := input.VideoFilePath.Base()
 	fileNameWithoutExtension := base[:len(base)-len(filepath.Ext(base))]
-	outputPath := filepath.Join(input.OutputDir, fileNameWithoutExtension+".mxf")
+	outputFilePath := filepath.Join(input.OutputDir.Local(), fileNameWithoutExtension+".mxf")
 
-	params, err := generateFFmpegParamsForPlayoutMux(input, outputPath)
+	params, err := generateFFmpegParamsForPlayoutMux(input, outputFilePath)
 	if err != nil {
 		return nil, err
 	}
 
-	info, err := ffmpeg.GetStreamInfo(input.VideoFilePath)
+	info, err := ffmpeg.GetStreamInfo(input.VideoFilePath.Local())
 	if err != nil {
 		return nil, err
 	}
@@ -238,10 +239,16 @@ func PlayoutMux(input common.PlayoutMuxInput, progressCallback ffmpeg.ProgressCa
 		log.Default().Println("mux failed", err)
 		return nil, fmt.Errorf("mux failed, %s", strings.Join(params, " "))
 	}
-	err = os.Chmod(outputPath, os.ModePerm)
+	err = os.Chmod(outputFilePath, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
+
+	outputPath, err := paths.Parse(outputFilePath)
+	if err != nil {
+		return nil, err
+	}
+
 	return &common.PlayoutMuxResult{
 		Path: outputPath,
 	}, nil

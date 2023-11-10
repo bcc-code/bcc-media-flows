@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/bcc-code/bccm-flows/workflows"
 	"github.com/bcc-code/bccm-flows/workflows/ingest"
 	"github.com/gin-gonic/gin"
@@ -72,7 +72,7 @@ func doTranscode(ctx context.Context, path string) error {
 
 	workflowOptions := client.StartWorkflowOptions{
 		ID:        uuid.NewString(),
-		TaskQueue: utils.GetWorkerQueue(),
+		TaskQueue: environment.GetWorkerQueue(),
 	}
 
 	_, err = c.ExecuteWorkflow(ctx, workflowOptions, workflows.WatchFolderTranscode, workflows.WatchFolderTranscodeInput{
@@ -90,7 +90,7 @@ func doIngest(ctx context.Context, path string) error {
 
 	workflowOptions := client.StartWorkflowOptions{
 		ID:        uuid.NewString(),
-		TaskQueue: utils.GetWorkerQueue(),
+		TaskQueue: environment.GetWorkerQueue(),
 	}
 
 	_, err = c.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.Asset, ingestworkflows.AssetParams{

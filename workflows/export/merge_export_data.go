@@ -3,8 +3,9 @@ package export
 import (
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/vidispine"
-	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
@@ -12,15 +13,15 @@ import (
 
 type MergeExportDataResult struct {
 	Duration      float64
-	VideoFile     string
-	AudioFiles    map[string]string
-	SubtitleFiles map[string]string
+	VideoFile     *paths.Path
+	AudioFiles    map[string]paths.Path
+	SubtitleFiles map[string]paths.Path
 }
 
 type MergeExportDataParams struct {
 	ExportData    *vidispine.ExportData
-	SubtitlesDir  string
-	TempDir       string
+	SubtitlesDir  paths.Path
+	TempDir       paths.Path
 	MakeVideo     bool
 	MakeSubtitles bool
 	MakeAudio     bool
@@ -35,7 +36,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 	mergeInput, audioMergeInputs, subtitleMergeInputs := exportDataToMergeInputs(data, params.TempDir, params.SubtitlesDir)
 
 	options := wfutils.GetDefaultActivityOptions()
-	options.TaskQueue = utils.GetTranscodeQueue()
+	options.TaskQueue = environment.GetTranscodeQueue()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	var audioTasks = map[string]workflow.Future{}
@@ -66,7 +67,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 
 	}
 
-	var videoFile string
+	var videoFile *paths.Path
 	if params.MakeVideo {
 		videoTask := wfutils.ExecuteWithQueue(ctx, activities.TranscodeMergeVideo, mergeInput)
 		var result common.MergeResult
@@ -74,10 +75,10 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 		if err != nil {
 			return nil, err
 		}
-		videoFile = result.Path
+		videoFile = &result.Path
 	}
 
-	var audioFiles = map[string]string{}
+	var audioFiles = map[string]paths.Path{}
 	{
 		keys, err := wfutils.GetMapKeysSafely(ctx, audioTasks)
 		if err != nil {
@@ -94,7 +95,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 		}
 	}
 
-	var subtitleFiles = map[string]string{}
+	var subtitleFiles = map[string]paths.Path{}
 	{
 		keys, err := wfutils.GetMapKeysSafely(ctx, subtitleTasks)
 		if err != nil {
@@ -119,7 +120,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 	}, nil
 }
 
-func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir string) (
+func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir paths.Path) (
 	mergeInput common.MergeInput,
 	audioMergeInputs map[string]*common.MergeInput,
 	subtitleMergeInputs map[string]*common.MergeInput,
@@ -136,7 +137,7 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir s
 	for _, clip := range data.Clips {
 		mergeInput.Duration += clip.OutSeconds - clip.InSeconds
 		mergeInput.Items = append(mergeInput.Items, common.MergeInputItem{
-			Path:  clip.VideoFile,
+			Path:  paths.MustParse(clip.VideoFile),
 			Start: clip.InSeconds,
 			End:   clip.OutSeconds,
 		})
@@ -152,7 +153,7 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir s
 
 			audioMergeInputs[lan].Duration += clip.OutSeconds - clip.InSeconds
 			audioMergeInputs[lan].Items = append(audioMergeInputs[lan].Items, common.MergeInputItem{
-				Path:    af.File,
+				Path:    paths.MustParse(af.File),
 				Start:   clip.InSeconds,
 				End:     clip.OutSeconds,
 				Streams: af.Streams,
@@ -170,7 +171,7 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir s
 
 			subtitleMergeInputs[lan].Duration += clip.OutSeconds - clip.InSeconds
 			subtitleMergeInputs[lan].Items = append(subtitleMergeInputs[lan].Items, common.MergeInputItem{
-				Path:  sf,
+				Path:  paths.MustParse(sf),
 				Start: clip.InSeconds,
 				End:   clip.OutSeconds,
 			})

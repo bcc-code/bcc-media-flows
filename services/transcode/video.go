@@ -3,6 +3,7 @@ package transcode
 import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"os"
 	"path/filepath"
@@ -15,12 +16,12 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 	params := []string{
 		"-hide_banner",
 		"-progress", "pipe:1",
-		"-i", input.Path,
+		"-i", input.Path.Local(),
 	}
 
-	if input.WatermarkPath != "" {
+	if input.WatermarkPath != nil {
 		params = append(params,
-			"-i", input.WatermarkPath,
+			"-i", input.WatermarkPath.Local(),
 		)
 	}
 
@@ -57,7 +58,7 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		1920,
 		1080)
 
-	if input.WatermarkPath != "" {
+	if input.WatermarkPath != nil {
 		filterComplex += "[main][1:0] overlay=main_w-overlay_w:0 [main];"
 	}
 
@@ -65,7 +66,7 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		input.Width,
 		input.Height)
 
-	info, err := ffmpeg.GetStreamInfo(input.Path)
+	info, err := ffmpeg.GetStreamInfo(input.Path.Local())
 	if err != nil {
 		return nil, err
 	}
@@ -85,14 +86,14 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		"-map", "[out]",
 	)
 
-	filename := filepath.Base(input.Path)
+	filename := input.Path.Base()
 	filename = filename[:len(filename)-len(filepath.Ext(filename))] +
 		fmt.Sprintf("_%dx%d.mp4", input.Width, input.Height)
 
-	outputPath := filepath.Join(input.DestinationPath, filename)
+	outputFilePath := filepath.Join(input.DestinationPath.Local(), filename)
 
 	params = append(params,
-		"-y", outputPath,
+		"-y", outputFilePath,
 	)
 
 	_, err = ffmpeg.Do(params, info, cb)
@@ -100,10 +101,16 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		return nil, err
 	}
 
-	err = os.Chmod(outputPath, os.ModePerm)
+	err = os.Chmod(outputFilePath, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
+
+	outputPath, err := paths.Parse(outputFilePath)
+	if err != nil {
+		return nil, err
+	}
+
 	return &common.VideoResult{
 		OutputPath: outputPath,
 	}, nil

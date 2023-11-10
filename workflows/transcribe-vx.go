@@ -2,12 +2,12 @@ package workflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bccm-flows/environment"
 	"os"
 	"time"
 
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
@@ -52,7 +52,7 @@ func TranscribeVX(
 		StartToCloseTimeout:    time.Hour * 4,
 		ScheduleToCloseTimeout: time.Hour * 48,
 		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              utils.GetAudioQueue(),
+		TaskQueue:              environment.GetAudioQueue(),
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
@@ -134,7 +134,7 @@ func TranscribeVX(
 		return err
 	}
 
-	txtValue, err := os.ReadFile(transcriptionJob.TXTPath)
+	txtValue, err := os.ReadFile(transcriptionJob.TXTPath.Local())
 	if err != nil {
 		return err
 	}

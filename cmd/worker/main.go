@@ -2,6 +2,7 @@ package main
 
 import (
 	batonactivities "github.com/bcc-code/bccm-flows/activities/baton"
+	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/bcc-code/bccm-flows/workflows/ingest"
 	"log"
 	"os"
@@ -11,8 +12,6 @@ import (
 	"github.com/bcc-code/bccm-flows/workflows/export"
 
 	"github.com/bcc-code/bccm-flows/activities"
-	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/workflows"
 
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
@@ -67,7 +66,7 @@ var workerWorkflows = []any{
 	workflows.ImportSubtitlesFromSubtrans,
 	ingestworkflows.Asset,
 	ingestworkflows.RawMaterial,
-	ingestworkflows.VBMaster,
+	ingestworkflows.Masters,
 	workflows.NormalizeAudioLevelWorkflow,
 }
 
@@ -107,14 +106,14 @@ func main() {
 		MaxConcurrentActivityExecutionSize: activityCount, // Doesn't make sense to have more than one activity running at a time
 	}
 
-	registerWorker(c, utils.GetQueue(), workerOptions)
+	registerWorker(c, environment.GetQueue(), workerOptions)
 }
 
 func registerWorker(c client.Client, queue string, options worker.Options) {
 	w := worker.New(c, queue, options)
 
 	switch queue {
-	case common.QueueDebug:
+	case environment.QueueDebug:
 		w.RegisterActivity(activities.Transcribe)
 		w.RegisterActivity(activities.RcloneCopyDir)
 		w.RegisterActivity(activities.RcloneMoveFile)
@@ -139,7 +138,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		for _, wf := range workerWorkflows {
 			w.RegisterWorkflow(wf)
 		}
-	case common.QueueWorker:
+	case environment.QueueWorker:
 		w.RegisterActivity(activities.Transcribe)
 		w.RegisterActivity(activities.RcloneCopyDir)
 		w.RegisterActivity(activities.RcloneMoveFile)
@@ -156,11 +155,11 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		for _, wf := range workerWorkflows {
 			w.RegisterWorkflow(wf)
 		}
-	case common.QueueTranscode:
+	case environment.QueueTranscode:
 		for _, a := range transcodeActivities {
 			w.RegisterActivity(a)
 		}
-	case common.QueueAudio:
+	case environment.QueueAudio:
 		for _, a := range audioTranscodeActivities {
 			w.RegisterActivity(a)
 		}

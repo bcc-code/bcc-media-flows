@@ -4,19 +4,18 @@ import (
 	"fmt"
 	"github.com/bcc-code/bccm-flows/activities"
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
-	"github.com/bcc-code/bccm-flows/workflows"
 	"go.temporal.io/sdk/workflow"
-	"path/filepath"
 	"strconv"
 )
 
 type RawMaterialParams struct {
 	Metadata  *ingest.Metadata
-	Directory string
+	Directory paths.Path
 }
 
 func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
@@ -33,12 +32,12 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		return err
 	}
 
-	var files []string
+	var files []paths.Path
 	for _, f := range originalFiles {
-		if !utils.ValidRawFilename(f) {
+		if !utils.ValidRawFilename(f.Local()) {
 			return fmt.Errorf("invalid filename: %s", f)
 		}
-		newPath := filepath.Join(outputFolder, filepath.Base(f))
+		newPath := outputFolder.Append(f.Base())
 		err = wfutils.MoveFile(ctx, f, newPath)
 		if err != nil {
 			return err
@@ -51,7 +50,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 
 	for _, file := range files {
 		var result *importTagResult
-		result, err = importFileAsTag(ctx, "original", file, filepath.Base(file))
+		result, err = importFileAsTag(ctx, "original", file, file.Base())
 		if err != nil {
 			return err
 		}
@@ -100,33 +99,9 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		}
 	}
 
-	var wfFutures []workflow.ChildWorkflowFuture
-	for _, id := range assetIDs {
-		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
-			VXID: id,
-		}))
-	}
-
-	for _, f := range wfFutures {
-		err = f.Get(ctx, nil)
-		if err != nil {
-			return err
-		}
-	}
-
-	wfFutures = []workflow.ChildWorkflowFuture{}
-	for _, id := range assetIDs {
-		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeVX, workflows.TranscribeVXInput{
-			VXID:     id,
-			Language: "no", // TODO: replace with language detected from file ??
-		}))
-	}
-
-	for _, f := range wfFutures {
-		err = f.Get(ctx, nil)
-		if err != nil {
-			return err
-		}
+	err = postImportActions(ctx, assetIDs, params.Metadata.JobProperty.Language)
+	if err != nil {
+		return err
 	}
 
 	return nil

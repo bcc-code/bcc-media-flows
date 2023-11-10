@@ -2,6 +2,7 @@ package transcode
 
 import (
 	"fmt"
+	"github.com/bcc-code/bccm-flows/paths"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -15,17 +16,17 @@ func AudioAac(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 	params := []string{
 		"-progress", "pipe:1",
 		"-hide_banner",
-		"-i", input.Path,
+		"-i", input.Path.Local(),
 		"-c:a", "aac",
 		"-b:a", input.Bitrate,
 	}
 
-	outputPath := filepath.Join(input.DestinationPath, filepath.Base(input.Path))
-	outputPath = fmt.Sprintf("%s-%s.aac", outputPath[:len(outputPath)-len(filepath.Ext(outputPath))], input.Bitrate)
+	outputFilePath := filepath.Join(input.DestinationPath.Local(), input.Path.Base())
+	outputFilePath = fmt.Sprintf("%s-%s.aac", outputFilePath[:len(outputFilePath)-len(filepath.Ext(outputFilePath))], input.Bitrate)
 
-	params = append(params, "-y", outputPath)
+	params = append(params, "-y", outputFilePath)
 
-	info, err := ffmpeg.GetStreamInfo(input.Path)
+	info, err := ffmpeg.GetStreamInfo(input.Path.Local())
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +36,12 @@ func AudioAac(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 		return nil, err
 	}
 
-	err = os.Chmod(outputPath, os.ModePerm)
+	err = os.Chmod(outputFilePath, os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+
+	outputPath, err := paths.Parse(outputFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -51,15 +57,15 @@ func AudioWav(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 	params := []string{
 		"-progress", "pipe:1",
 		"-hide_banner",
-		"-i", input.Path,
+		"-i", input.Path.Local(),
 	}
 
-	outputPath := filepath.Join(input.DestinationPath, filepath.Base(input.Path))
-	outputPath = fmt.Sprintf("%s-%s.wav", outputPath[:len(outputPath)-len(filepath.Ext(outputPath))], input.Bitrate)
+	outputFilePath := filepath.Join(input.DestinationPath.Local(), input.Path.Base())
+	outputFilePath = fmt.Sprintf("%s-%s.wav", outputFilePath[:len(outputFilePath)-len(filepath.Ext(outputFilePath))], input.Bitrate)
 
-	params = append(params, "-y", outputPath)
+	params = append(params, "-y", outputFilePath)
 
-	info, err := ffmpeg.GetStreamInfo(input.Path)
+	info, err := ffmpeg.GetStreamInfo(input.Path.Local())
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +75,12 @@ func AudioWav(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 		return nil, err
 	}
 
-	err = os.Chmod(outputPath, os.ModePerm)
+	err = os.Chmod(outputFilePath, os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+
+	outputPath, err := paths.Parse(outputFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -113,17 +124,17 @@ func AudioMP3(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 	params := []string{
 		"-progress", "pipe:1",
 		"-hide_banner",
-		"-i", input.Path,
+		"-i", input.Path.Local(),
 		"-c:a", "libmp3lame",
 		"-q:a", fmt.Sprint(getQfactorFromBitrate(input.Bitrate)),
 	}
 
-	outputPath := filepath.Join(input.DestinationPath, filepath.Base(input.Path))
-	outputPath = fmt.Sprintf("%s-%s.mp3", outputPath[:len(outputPath)-len(filepath.Ext(outputPath))], input.Bitrate)
+	outputFilePath := filepath.Join(input.DestinationPath.Local(), input.Path.Base())
+	outputFilePath = fmt.Sprintf("%s-%s.mp3", outputFilePath[:len(outputFilePath)-len(filepath.Ext(outputFilePath))], input.Bitrate)
 
-	params = append(params, "-y", outputPath)
+	params = append(params, "-y", outputFilePath)
 
-	info, err := ffmpeg.GetStreamInfo(input.Path)
+	info, err := ffmpeg.GetStreamInfo(input.Path.Local())
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +144,12 @@ func AudioMP3(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 		return nil, err
 	}
 
-	err = os.Chmod(outputPath, os.ModePerm)
+	err = os.Chmod(outputFilePath, os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+
+	outputPath, err := paths.Parse(outputFilePath)
 	if err != nil {
 		return nil, err
 	}
