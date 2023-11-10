@@ -2,6 +2,11 @@ package ingestworkflows
 
 import (
 	"fmt"
+	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
+
 	"github.com/bcc-code/bccm-flows/activities"
 	batonactivities "github.com/bcc-code/bccm-flows/activities/baton"
 	"github.com/bcc-code/bccm-flows/common"
@@ -11,10 +16,6 @@ import (
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/workflow"
-	"path/filepath"
-	"regexp"
-	"strconv"
-	"strings"
 )
 
 type MasterParams struct {

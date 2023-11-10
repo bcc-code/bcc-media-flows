@@ -2,11 +2,13 @@ package activities
 
 import (
 	"context"
+	"io"
+	"os"
+	"path/filepath"
+
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/activity"
-	"os"
-	"path/filepath"
 )
 
 type FileInput struct {
@@ -31,7 +33,11 @@ func MoveFile(ctx context.Context, input MoveFileInput) (*FileResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = os.Rename(input.Source.Local(), input.Destination.Local())
+	if input.Source.Drive != input.Destination.Drive {
+		err = copyFile(ctx, input.Source, input.Destination)
+	} else {
+		err = os.Rename(input.Source.Local(), input.Destination.Local())
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -39,6 +45,42 @@ func MoveFile(ctx context.Context, input MoveFileInput) (*FileResult, error) {
 	return &FileResult{
 		Path: input.Destination,
 	}, nil
+}
+
+func copyFile(ctx context.Context, source paths.Path, destination paths.Path) error {
+	log := activity.GetLogger(ctx)
+	sourcePath := source.Local()
+	inputFile, err := os.Open(sourcePath)
+	if err != nil {
+		return err
+	}
+	outputFile, err := os.Create(destination.Local())
+	if err != nil {
+		closeErr := inputFile.Close()
+		if closeErr != nil {
+			log.Error(err.Error())
+		}
+		return err
+	}
+	defer func() {
+		closeErr := outputFile.Close()
+		if closeErr != nil {
+			log.Error(err.Error())
+		}
+	}()
+	_, err = io.Copy(outputFile, inputFile)
+	closeErr := inputFile.Close()
+	if closeErr != nil {
+		log.Error(err.Error())
+	}
+	if err != nil {
+		return err
+	}
+	err = os.Remove(sourcePath)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func StandardizeFileName(ctx context.Context, input FileInput) (*FileResult, error) {
