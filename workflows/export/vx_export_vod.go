@@ -52,7 +52,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
 		err := workflow.ExecuteChildWorkflow(ctx, PrepareFiles, PrepareFilesParams{
 			OutputPath:    params.TempDir,
-			VideoFile:     params.MergeResult.VideoFile,
+			VideoFile:     *params.MergeResult.VideoFile,
 			AudioFiles:    params.MergeResult.AudioFiles,
 			WatermarkPath: wm,
 		}).Get(ctx, &result)

@@ -28,7 +28,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 	var videoResult common.VideoResult
 	err = workflow.ExecuteActivity(ctx, activities.TranscodeToXDCAMActivity, activities.EncodeParams{
 		Bitrate:    "50M",
-		FilePath:   params.MergeResult.VideoFile,
+		FilePath:   *params.MergeResult.VideoFile,
 		OutputDir:  xdcamOutputDir,
 		Resolution: r1080p,
 		FrameRate:  25,

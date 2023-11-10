@@ -13,7 +13,7 @@ import (
 
 type MergeExportDataResult struct {
 	Duration      float64
-	VideoFile     paths.Path
+	VideoFile     *paths.Path
 	AudioFiles    map[string]paths.Path
 	SubtitleFiles map[string]paths.Path
 }
@@ -67,7 +67,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 
 	}
 
-	var videoFile paths.Path
+	var videoFile *paths.Path
 	if params.MakeVideo {
 		videoTask := wfutils.ExecuteWithQueue(ctx, activities.TranscodeMergeVideo, mergeInput)
 		var result common.MergeResult
@@ -75,7 +75,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 		if err != nil {
 			return nil, err
 		}
-		videoFile = result.Path
+		videoFile = &result.Path
 	}
 
 	var audioFiles = map[string]paths.Path{}
