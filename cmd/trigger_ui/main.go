@@ -16,7 +16,6 @@ import (
 	"os"
 
 	bccmflows "github.com/bcc-code/bccm-flows"
-	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/services/vidispine"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
@@ -47,8 +46,8 @@ func getQueue() string {
 
 var overlaysDir = os.Getenv("OVERLAYS_DIR")
 
-func getOverlayFilenames() ([]string, error) {
-	files, err := os.ReadDir(overlaysDir)
+func getFilenames(dir string) ([]string, error) {
+	files, err := os.ReadDir(dir)
 	filenames := []string{}
 	if err != nil {
 		return filenames, err
@@ -147,7 +146,7 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 
 	selectedLanguages := meta.GetArray(vscommon.FieldLangsToExport)
 
-	filenames, err := getOverlayFilenames("OVERLAYS_DIR")
+	filenames, err := getFilenames(overlaysDir)
 	if err != nil {
 		renderErrorPage(c, http.StatusInternalServerError, err)
 		return
@@ -321,7 +320,7 @@ func (s *TriggerServer) listGET(c *gin.Context) {
 }
 
 func (s *TriggerServer) uploadMasterGET(c *gin.Context) {
-	filenames, err := getOverlayFilenames("MASTER_TRIGGER_DIR")
+	filenames, err := getFilenames(os.Getenv("MASTER_TRIGGER_DIR"))
 	if err != nil {
 		renderErrorPage(c, http.StatusInternalServerError, err)
 		return
@@ -354,7 +353,7 @@ func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
 	s.addDataToTable(c, c.PostFormArray("tags[]"), "tags")
 	s.addDataToTable(c, c.PostFormArray("persons[]"), "persons")
 
-	res, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, ingestworkflows.VBMaster, ingestworkflows.VBMasterParams{
+	res, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, ingestworkflows.Masters, ingestworkflows.MasterParams{
 		Metadata: &ingest.Metadata{
 			JobProperty: ingest.JobProperty{
 				ProgramID:        c.PostForm("program_id"),
