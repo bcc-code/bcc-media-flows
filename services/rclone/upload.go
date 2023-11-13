@@ -32,7 +32,7 @@ func CopyDir(source, destination string) (*JobResponse, error) {
 	return doRequest[JobResponse](req)
 }
 
-type moveRequest struct {
+type fileRequest struct {
 	Async             bool   `json:"_async"`
 	SourceRemote      string `json:"srcFs"`
 	SourcePath        string `json:"srcRemote"`
@@ -41,7 +41,7 @@ type moveRequest struct {
 }
 
 func MoveFile(sourceRemote, sourcePath, destinationRemote, destinationPath string) (*JobResponse, error) {
-	body, err := json.Marshal(moveRequest{
+	body, err := json.Marshal(fileRequest{
 		Async:             true,
 		SourceRemote:      sourceRemote,
 		SourcePath:        sourcePath,
@@ -53,6 +53,26 @@ func MoveFile(sourceRemote, sourcePath, destinationRemote, destinationPath strin
 	}
 
 	req, err := http.NewRequest("POST", baseUrl+"/operations/movefile", bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+
+	return doRequest[JobResponse](req)
+}
+
+func CopyFile(sourceRemote, sourcePath, destinationRemote, destinationPath string) (*JobResponse, error) {
+	body, err := json.Marshal(fileRequest{
+		Async:             true,
+		SourceRemote:      sourceRemote,
+		SourcePath:        sourcePath,
+		DestinationRemote: destinationRemote,
+		DestinationPath:   destinationPath,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", baseUrl+"/operations/copyfile", bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}

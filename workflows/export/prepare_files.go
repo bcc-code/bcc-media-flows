@@ -3,7 +3,6 @@ package export
 import (
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/workflow"
@@ -73,61 +72,6 @@ func getVideoQualities(videoFilePath, outputDir paths.Path, watermarkPath *paths
 			Bitrate:         "320k",
 		},
 	}
-}
-
-func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFilesResult, error) {
-	logger := workflow.GetLogger(ctx)
-	logger.Info("Starting PrepareFiles")
-
-	options := wfutils.GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, options)
-
-	ctx = workflow.WithTaskQueue(ctx, environment.GetTranscodeQueue())
-
-	selector := workflow.NewSelector(ctx)
-
-	qualities := getVideoQualities(params.VideoFile, params.OutputPath, params.WatermarkPath)
-
-	var videoFiles = map[quality]paths.Path{}
-	videoKeys, err := startVideoTasks(ctx, selector, qualities, func(f workflow.Future, q quality) {
-		var result common.VideoResult
-		err := f.Get(ctx, &result)
-		if err != nil {
-			workflow.GetLogger(ctx).Error("Failed to get video result", "error", err)
-			return
-		}
-		videoFiles[q] = result.OutputPath
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	var audioFiles = map[string]paths.Path{}
-	audioKeys, err := startAudioTasks(ctx, selector, params.AudioFiles, params.OutputPath, func(f workflow.Future, l string) {
-		var result common.AudioResult
-		err := f.Get(ctx, &result)
-		if err != nil {
-			workflow.GetLogger(ctx).Error("Failed to get video result", "error", err)
-			return
-		}
-		audioFiles[l] = result.OutputPath
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	for range audioKeys {
-		selector.Select(ctx)
-	}
-	for range videoKeys {
-		selector.Select(ctx)
-	}
-
-	return &PrepareFilesResult{
-		VideoFiles: videoFiles,
-		AudioFiles: audioFiles,
-	}, nil
 }
 
 func startVideoTasks(ctx workflow.Context, selector workflow.Selector, qualities map[quality]common.VideoInput, callback func(f workflow.Future, q quality)) ([]quality, error) {

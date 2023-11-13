@@ -5,15 +5,19 @@ import (
 	"encoding/xml"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	"github.com/bcc-code/bcc-media-platform/backend/events"
+	bccmflows "github.com/bcc-code/bccm-flows"
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/common/smil"
 	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -86,7 +90,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		prepareFilesSelector.Select(ctx)
 	}
 
-	subtitleFiles := params.MergeResult.SubtitleFiles
+	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
 
 	var smilData smil.Smil
 	smilData.XMLName.Local = "smil"
@@ -94,22 +98,78 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	smilData.Head.Meta.Name = "formats"
 	smilData.Head.Meta.Content = "mp4"
 
-	{
-		var result *MuxFilesResult
-		err := workflow.ExecuteChildWorkflow(ctx, MuxFiles, MuxFilesParams{
-			VideoFiles:    videoFiles,
-			AudioFiles:    audioFiles,
-			SubtitleFiles: subtitleFiles,
-			OutputPath:    params.OutputDir,
-			WithFiles:     params.ParentParams.WithFiles,
-		}).Get(ctx, &result)
+	muxParams := MuxFilesParams{
+		VideoFiles:    videoFiles,
+		AudioFiles:    audioFiles,
+		SubtitleFiles: params.MergeResult.SubtitleFiles,
+		OutputPath:    params.OutputDir,
+		WithFiles:     params.ParentParams.WithFiles,
+	}
+	qualitiesWithLanguages := getQualitiesWithLanguages(muxParams)
+	selector := workflow.NewSelector(ctx)
+
+	var uploadTasks []workflow.Future
+
+	var streams []smil.Video
+	startStreamTasks(ctx, muxParams, qualitiesWithLanguages, selector, func(result common.MuxResult, q quality) {
+		fileLanguages := qualitiesWithLanguages[q]
+
+		streams = append(streams, smil.Video{
+			Src:          result.Path.Base(),
+			IncludeAudio: fmt.Sprintf("%t", len(fileLanguages) > 0),
+			SystemLanguage: strings.Join(lo.Map(fileLanguages, func(i bccmflows.Language, _ int) string {
+				return i.ISO6391
+			}), ","),
+			AudioName: strings.Join(lo.Map(fileLanguages, func(i bccmflows.Language, _ int) string {
+				return i.LanguageNameSystem
+			}), ","),
+		})
+
+		uploadTasks = append(uploadTasks, wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+			Source:      result.Path,
+			Destination: paths.New(paths.AssetIngestDrive, filepath.Join(ingestFolder, result.Path.Base())),
+		}))
+	})
+
+	audioLanguages := utils.LanguageKeysToOrderedLanguages(lo.Keys(muxParams.AudioFiles))
+	var files []asset.IngestFileMeta
+	if muxParams.WithFiles {
+		startFileTasks(ctx, muxParams, audioLanguages, selector, func(result common.MuxResult, l string, q quality) {
+			code := bccmflows.LanguagesByISO[l].ISO6392TwoLetter
+			if code == "" {
+				code = l
+			}
+			files = append(files, asset.IngestFileMeta{
+				Resolution:    string(q),
+				AudioLanguage: code,
+				Mime:          "video/mp4",
+				Path:          result.Path.Base(),
+			})
+		})
+	}
+
+	for range qualitiesWithLanguages {
+		selector.Select(ctx)
+	}
+
+	if muxParams.WithFiles {
+		for range audioLanguages {
+			for range fileQualities {
+				selector.Select(ctx)
+			}
+		}
+	}
+
+	for _, task := range uploadTasks {
+		err = task.Get(ctx, nil)
 		if err != nil {
 			return nil, err
 		}
-		ingestData.Files = result.Files
-		smilData.Body.Switch.Videos = result.Streams
-		smilData.Body.Switch.TextStreams = result.Subtitles
 	}
+
+	ingestData.Files = files
+	smilData.Body.Switch.Videos = streams
+	smilData.Body.Switch.TextStreams = getSubtitlesResult(muxParams)
 
 	xmlData, _ := xml.MarshalIndent(smilData, "", "\t")
 	xmlData = append([]byte("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n"), xmlData...)
@@ -146,8 +206,6 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	if err != nil {
 		return nil, err
 	}
-
-	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
 
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
 		Source:      params.OutputDir.Rclone(),

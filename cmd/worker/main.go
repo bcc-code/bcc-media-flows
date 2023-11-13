@@ -1,13 +1,14 @@
 package main
 
 import (
-	batonactivities "github.com/bcc-code/bccm-flows/activities/baton"
-	"github.com/bcc-code/bccm-flows/environment"
-	"github.com/bcc-code/bccm-flows/workflows/ingest"
 	"log"
 	"os"
 	"strconv"
 	"time"
+
+	batonactivities "github.com/bcc-code/bccm-flows/activities/baton"
+	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bccm-flows/workflows/ingest"
 
 	"github.com/bcc-code/bccm-flows/workflows/export"
 
@@ -59,8 +60,6 @@ var workerWorkflows = []any{
 	export.VXExportToVOD,
 	export.VXExportToPlayout,
 	export.MergeExportData,
-	export.MuxFiles,
-	export.PrepareFiles,
 	export.VXExportToBMM,
 	workflows.ExecuteFFmpeg,
 	workflows.ImportSubtitlesFromSubtrans,
@@ -117,6 +116,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		w.RegisterActivity(activities.Transcribe)
 		w.RegisterActivity(activities.RcloneCopyDir)
 		w.RegisterActivity(activities.RcloneMoveFile)
+		w.RegisterActivity(activities.RcloneCopyFile)
 		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {
@@ -142,6 +142,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		w.RegisterActivity(activities.Transcribe)
 		w.RegisterActivity(activities.RcloneCopyDir)
 		w.RegisterActivity(activities.RcloneMoveFile)
+		w.RegisterActivity(activities.RcloneCopyFile)
 		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {
