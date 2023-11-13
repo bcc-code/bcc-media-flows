@@ -2,11 +2,12 @@ package export
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
+
 	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
-	"path/filepath"
-	"strings"
 
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	bccmflows "github.com/bcc-code/bccm-flows"
@@ -18,17 +19,19 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
+type quality string
+
 const (
-	r1080p = "1920x1080"
-	r720p  = "1280x720"
-	r540p  = "960x540"
-	r360p  = "640x360"
-	r270p  = "480x270"
-	r180p  = "320x180"
+	r1080p = quality("1920x1080")
+	r720p  = quality("1280x720")
+	r540p  = quality("960x540")
+	r360p  = quality("640x360")
+	r270p  = quality("480x270")
+	r180p  = quality("320x180")
 )
 
 type MuxFilesParams struct {
-	VideoFiles    map[string]paths.Path
+	VideoFiles    map[quality]paths.Path
 	AudioFiles    map[string]paths.Path
 	SubtitleFiles map[string]paths.Path
 	OutputPath    paths.Path
@@ -86,14 +89,14 @@ func getSubtitlesResult(params MuxFilesParams) []smil.TextStream {
 	return subtitles
 }
 
-var fileQualities = []string{r1080p, r540p, r180p}
+var fileQualities = []quality{r1080p, r540p, r180p}
 
-func startFileTasks(ctx workflow.Context, params MuxFilesParams, languages []bccmflows.Language) map[string]map[string]workflow.Future {
-	var fileTasks = map[string]map[string]workflow.Future{}
+func startFileTasks(ctx workflow.Context, params MuxFilesParams, languages []bccmflows.Language) map[string]map[quality]workflow.Future {
+	var fileTasks = map[string]map[quality]workflow.Future{}
 	if params.WithFiles {
 		for _, lang := range languages {
 			key := lang.ISO6391
-			fileTasks[key] = map[string]workflow.Future{}
+			fileTasks[key] = map[quality]workflow.Future{}
 			for _, q := range fileQualities {
 				base := params.VideoFiles[q].Base()
 				fileName := base[:len(base)-len(filepath.Ext(base))] + "-" + key
@@ -110,7 +113,7 @@ func startFileTasks(ctx workflow.Context, params MuxFilesParams, languages []bcc
 	return fileTasks
 }
 
-func waitForFileTasks(ctx workflow.Context, params MuxFilesParams, tasks map[string]map[string]workflow.Future, languages []bccmflows.Language) ([]asset.IngestFileMeta, error) {
+func waitForFileTasks(ctx workflow.Context, params MuxFilesParams, tasks map[string]map[quality]workflow.Future, languages []bccmflows.Language) ([]asset.IngestFileMeta, error) {
 	var files []asset.IngestFileMeta
 	if params.WithFiles {
 		for _, lang := range languages {
@@ -127,7 +130,7 @@ func waitForFileTasks(ctx workflow.Context, params MuxFilesParams, tasks map[str
 					code = lang.ISO6391
 				}
 				files = append(files, asset.IngestFileMeta{
-					Resolution:    q,
+					Resolution:    string(q),
 					AudioLanguage: code,
 					Mime:          "video/mp4",
 					Path:          result.Path.Base(),
@@ -138,12 +141,12 @@ func waitForFileTasks(ctx workflow.Context, params MuxFilesParams, tasks map[str
 	return files, nil
 }
 
-var streamQualities = []string{r180p, r270p, r360p, r540p, r720p, r1080p}
+var streamQualities = []quality{r180p, r270p, r360p, r540p, r720p, r1080p}
 
-func getLanguagesPerQuality(params MuxFilesParams) map[string][]bccmflows.Language {
+func getLanguagesPerQuality(params MuxFilesParams) map[quality][]bccmflows.Language {
 	languages := utils.LanguageKeysToOrderedLanguages(lo.Keys(params.AudioFiles))
 
-	languagesPerQuality := map[string][]bccmflows.Language{}
+	languagesPerQuality := map[quality][]bccmflows.Language{}
 	for _, q := range streamQualities {
 		languagesPerQuality[q] = []bccmflows.Language{}
 		for len(languages) > 0 && len(languagesPerQuality[q]) < 16 {
@@ -154,8 +157,8 @@ func getLanguagesPerQuality(params MuxFilesParams) map[string][]bccmflows.Langua
 	return languagesPerQuality
 }
 
-func startStreamTasks(ctx workflow.Context, params MuxFilesParams, languages map[string][]bccmflows.Language) map[string]workflow.Future {
-	tasks := map[string]workflow.Future{}
+func startStreamTasks(ctx workflow.Context, params MuxFilesParams, languages map[quality][]bccmflows.Language) map[quality]workflow.Future {
+	tasks := map[quality]workflow.Future{}
 	for _, q := range streamQualities {
 		path := params.VideoFiles[q]
 
@@ -178,7 +181,7 @@ func startStreamTasks(ctx workflow.Context, params MuxFilesParams, languages map
 	return tasks
 }
 
-func waitForStreamTasks(ctx workflow.Context, tasks map[string]workflow.Future, languages map[string][]bccmflows.Language) ([]smil.Video, error) {
+func waitForStreamTasks(ctx workflow.Context, tasks map[quality]workflow.Future, languages map[quality][]bccmflows.Language) ([]smil.Video, error) {
 	var streams []smil.Video
 	for _, q := range streamQualities {
 		task := tasks[q]

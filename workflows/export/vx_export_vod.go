@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"path/filepath"
+
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	"github.com/bcc-code/bcc-media-platform/backend/events"
 	"github.com/bcc-code/bccm-flows/activities"
@@ -12,7 +14,6 @@ import (
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/workflow"
-	"path/filepath"
 )
 
 func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*VXExportResult, error) {
@@ -36,7 +37,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		Duration: formatSecondsToTimestamp(params.MergeResult.Duration),
 	}
 
-	var videoFiles map[string]paths.Path
+	var videoFiles map[quality]paths.Path
 	var audioFiles map[string]paths.Path
 	{
 		var result PrepareFilesResult

@@ -17,12 +17,12 @@ type PrepareFilesParams struct {
 }
 
 type PrepareFilesResult struct {
-	VideoFiles map[string]paths.Path
+	VideoFiles map[quality]paths.Path
 	AudioFiles map[string]paths.Path
 }
 
-func getVideoQualities(videoFilePath, outputDir paths.Path, watermarkPath *paths.Path) map[string]common.VideoInput {
-	return map[string]common.VideoInput{
+func getVideoQualities(videoFilePath, outputDir paths.Path, watermarkPath *paths.Path) map[quality]common.VideoInput {
+	return map[quality]common.VideoInput{
 		r1080p: {
 			Path:            videoFilePath,
 			DestinationPath: outputDir,
@@ -84,7 +84,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 
 	ctx = workflow.WithTaskQueue(ctx, environment.GetTranscodeQueue())
 
-	var videoTasks = map[string]workflow.Future{}
+	var videoTasks = map[quality]workflow.Future{}
 	{
 		qualities := getVideoQualities(params.VideoFile, params.OutputPath, params.WatermarkPath)
 
@@ -132,7 +132,7 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 		}
 	}
 
-	var videoFiles = map[string]paths.Path{}
+	var videoFiles = map[quality]paths.Path{}
 	{
 		keys, err := wfutils.GetMapKeysSafely(ctx, videoTasks)
 		if err != nil {
