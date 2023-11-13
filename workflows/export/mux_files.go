@@ -52,20 +52,65 @@ func MuxFiles(ctx workflow.Context, params MuxFilesParams) (*MuxFilesResult, err
 	ctx = workflow.WithActivityOptions(ctx, options)
 	ctx = workflow.WithTaskQueue(ctx, environment.GetTranscodeQueue())
 
-	languagesPerQuality := getLanguagesPerQuality(params)
-	streamTasks := startStreamTasks(ctx, params, languagesPerQuality)
+	qualitiesWithLanguages := getQualitiesWithLanguages(params)
+	selector := workflow.NewSelector(ctx)
+
+	var streams []smil.Video
+	startStreamTasks(ctx, params, qualitiesWithLanguages, selector, func(f workflow.Future, q quality) {
+		var result common.MuxResult
+		err := f.Get(ctx, &result)
+		if err != nil {
+			workflow.GetLogger(ctx).Error("Failed to get mux result", "error", err)
+			return
+		}
+
+		fileLanguages := qualitiesWithLanguages[q]
+
+		streams = append(streams, smil.Video{
+			Src:          result.Path.Base(),
+			IncludeAudio: fmt.Sprintf("%t", len(fileLanguages) > 0),
+			SystemLanguage: strings.Join(lo.Map(fileLanguages, func(i bccmflows.Language, _ int) string {
+				return i.ISO6391
+			}), ","),
+			AudioName: strings.Join(lo.Map(fileLanguages, func(i bccmflows.Language, _ int) string {
+				return i.LanguageNameSystem
+			}), ","),
+		})
+	})
 
 	audioLanguages := utils.LanguageKeysToOrderedLanguages(lo.Keys(params.AudioFiles))
-	fileTasks := startFileTasks(ctx, params, audioLanguages)
-
-	streams, err := waitForStreamTasks(ctx, streamTasks, languagesPerQuality)
-	if err != nil {
-		return nil, err
+	var files []asset.IngestFileMeta
+	if params.WithFiles {
+		startFileTasks(ctx, params, audioLanguages, selector, func(f workflow.Future, l string, q quality) {
+			var result common.MuxResult
+			err := f.Get(ctx, &result)
+			if err != nil {
+				workflow.GetLogger(ctx).Error("Failed to get mux result", "error", err)
+				return
+			}
+			code := bccmflows.LanguagesByISO[l].ISO6392TwoLetter
+			if code == "" {
+				code = l
+			}
+			files = append(files, asset.IngestFileMeta{
+				Resolution:    string(q),
+				AudioLanguage: code,
+				Mime:          "video/mp4",
+				Path:          result.Path.Base(),
+			})
+		})
 	}
 
-	files, err := waitForFileTasks(ctx, params, fileTasks, audioLanguages)
-	if err != nil {
-		return nil, err
+	for range qualitiesWithLanguages {
+		selector.Select(ctx)
+	}
+
+	if params.WithFiles {
+		for range audioLanguages {
+			for range fileQualities {
+				selector.Select(ctx)
+			}
+		}
 	}
 
 	return &MuxFilesResult{
@@ -91,59 +136,30 @@ func getSubtitlesResult(params MuxFilesParams) []smil.TextStream {
 
 var fileQualities = []quality{r1080p, r540p, r180p}
 
-func startFileTasks(ctx workflow.Context, params MuxFilesParams, languages []bccmflows.Language) map[string]map[quality]workflow.Future {
-	var fileTasks = map[string]map[quality]workflow.Future{}
-	if params.WithFiles {
-		for _, lang := range languages {
-			key := lang.ISO6391
-			fileTasks[key] = map[quality]workflow.Future{}
-			for _, q := range fileQualities {
-				base := params.VideoFiles[q].Base()
-				fileName := base[:len(base)-len(filepath.Ext(base))] + "-" + key
-				fileTasks[key][q] = wfutils.ExecuteWithQueue(ctx, activities.TranscodeMux, common.MuxInput{
-					FileName:          fileName,
-					DestinationPath:   params.OutputPath,
-					VideoFilePath:     params.VideoFiles[q],
-					AudioFilePaths:    map[string]paths.Path{key: params.AudioFiles[key]},
-					SubtitleFilePaths: params.SubtitleFiles,
-				})
-			}
+func startFileTasks(ctx workflow.Context, params MuxFilesParams, languages []bccmflows.Language, selector workflow.Selector, callback func(f workflow.Future, l string, q quality)) {
+	for _, key := range languages {
+		lang := key.ISO6391
+		for _, key := range fileQualities {
+			q := key
+			base := params.VideoFiles[q].Base()
+			fileName := base[:len(base)-len(filepath.Ext(base))] + "-" + lang
+			selector.AddFuture(wfutils.ExecuteWithQueue(ctx, activities.TranscodeMux, common.MuxInput{
+				FileName:          fileName,
+				DestinationPath:   params.OutputPath,
+				VideoFilePath:     params.VideoFiles[q],
+				AudioFilePaths:    map[string]paths.Path{lang: params.AudioFiles[lang]},
+				SubtitleFilePaths: params.SubtitleFiles,
+			}), func(f workflow.Future) {
+				callback(f, lang, q)
+			})
 		}
 	}
-	return fileTasks
-}
 
-func waitForFileTasks(ctx workflow.Context, params MuxFilesParams, tasks map[string]map[quality]workflow.Future, languages []bccmflows.Language) ([]asset.IngestFileMeta, error) {
-	var files []asset.IngestFileMeta
-	if params.WithFiles {
-		for _, lang := range languages {
-			key := lang.ISO6391
-			for _, q := range fileQualities {
-				task := tasks[key][q]
-				var result common.MuxResult
-				err := task.Get(ctx, &result)
-				if err != nil {
-					return nil, err
-				}
-				code := lang.ISO6392TwoLetter
-				if code == "" {
-					code = lang.ISO6391
-				}
-				files = append(files, asset.IngestFileMeta{
-					Resolution:    string(q),
-					AudioLanguage: code,
-					Mime:          "video/mp4",
-					Path:          result.Path.Base(),
-				})
-			}
-		}
-	}
-	return files, nil
 }
 
 var streamQualities = []quality{r180p, r270p, r360p, r540p, r720p, r1080p}
 
-func getLanguagesPerQuality(params MuxFilesParams) map[quality][]bccmflows.Language {
+func getQualitiesWithLanguages(params MuxFilesParams) map[quality][]bccmflows.Language {
 	languages := utils.LanguageKeysToOrderedLanguages(lo.Keys(params.AudioFiles))
 
 	languagesPerQuality := map[quality][]bccmflows.Language{}
@@ -157,52 +173,26 @@ func getLanguagesPerQuality(params MuxFilesParams) map[quality][]bccmflows.Langu
 	return languagesPerQuality
 }
 
-func startStreamTasks(ctx workflow.Context, params MuxFilesParams, languages map[quality][]bccmflows.Language) map[quality]workflow.Future {
-	tasks := map[quality]workflow.Future{}
-	for _, q := range streamQualities {
+func startStreamTasks(ctx workflow.Context, params MuxFilesParams, qualities map[quality][]bccmflows.Language, selector workflow.Selector, callback func(f workflow.Future, q quality)) {
+	for _, key := range streamQualities {
+		q := key
 		path := params.VideoFiles[q]
 
 		audioFilePaths := map[string]paths.Path{}
-		for _, lang := range languages[q] {
-			key := lang.ISO6391
-			audioFilePaths[key] = params.AudioFiles[key]
+		for _, lang := range qualities[q] {
+			audioFilePaths[lang.ISO6391] = params.AudioFiles[lang.ISO6391]
 		}
 
 		base := path.Base()
 		fileName := base[:len(base)-len(filepath.Ext(base))]
 
-		tasks[q] = workflow.ExecuteActivity(ctx, activities.TranscodeMux, common.MuxInput{
+		selector.AddFuture(workflow.ExecuteActivity(ctx, activities.TranscodeMux, common.MuxInput{
 			FileName:        fileName,
 			DestinationPath: params.OutputPath,
 			AudioFilePaths:  audioFilePaths,
 			VideoFilePath:   path,
+		}), func(f workflow.Future) {
+			callback(f, q)
 		})
 	}
-	return tasks
-}
-
-func waitForStreamTasks(ctx workflow.Context, tasks map[quality]workflow.Future, languages map[quality][]bccmflows.Language) ([]smil.Video, error) {
-	var streams []smil.Video
-	for _, q := range streamQualities {
-		task := tasks[q]
-		var result common.MuxResult
-		err := task.Get(ctx, &result)
-		if err != nil {
-			return nil, err
-		}
-
-		fileLanguages := languages[q]
-
-		streams = append(streams, smil.Video{
-			Src:          result.Path.Base(),
-			IncludeAudio: fmt.Sprintf("%t", len(fileLanguages) > 0),
-			SystemLanguage: strings.Join(lo.Map(fileLanguages, func(i bccmflows.Language, _ int) string {
-				return i.ISO6391
-			}), ","),
-			AudioName: strings.Join(lo.Map(fileLanguages, func(i bccmflows.Language, _ int) string {
-				return i.LanguageNameSystem
-			}), ","),
-		})
-	}
-	return streams, nil
 }

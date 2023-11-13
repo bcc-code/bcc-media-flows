@@ -10,6 +10,7 @@ import (
 	"github.com/bcc-code/bcc-media-platform/backend/events"
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
+	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/common/smil"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
@@ -37,31 +38,52 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		Duration: formatSecondsToTimestamp(params.MergeResult.Duration),
 	}
 
-	var videoFiles map[quality]paths.Path
-	var audioFiles map[string]paths.Path
-	{
-		var result PrepareFilesResult
-		var wm *paths.Path
-		if params.ParentParams.WatermarkPath != "" {
-			path, err := paths.Parse(params.ParentParams.WatermarkPath)
-			if err != nil {
-				return nil, err
-			}
-			wm = &path
-		}
-
-		ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
-		err := workflow.ExecuteChildWorkflow(ctx, PrepareFiles, PrepareFilesParams{
-			OutputPath:    params.TempDir,
-			VideoFile:     *params.MergeResult.VideoFile,
-			AudioFiles:    params.MergeResult.AudioFiles,
-			WatermarkPath: wm,
-		}).Get(ctx, &result)
+	prepareFilesSelector := workflow.NewSelector(ctx)
+	var wm *paths.Path
+	if params.ParentParams.WatermarkPath != "" {
+		path, err := paths.Parse(params.ParentParams.WatermarkPath)
 		if err != nil {
 			return nil, err
 		}
-		videoFiles = result.VideoFiles
-		audioFiles = result.AudioFiles
+		wm = &path
+	}
+
+	qualities := getVideoQualities(*params.MergeResult.VideoFile, params.TempDir, wm)
+
+	var videoFiles = map[quality]paths.Path{}
+	videoKeys, err := startVideoTasks(ctx, prepareFilesSelector, qualities, func(f workflow.Future, q quality) {
+		var result common.VideoResult
+		err := f.Get(ctx, &result)
+		if err != nil {
+			workflow.GetLogger(ctx).Error("Failed to get video result", "error", err)
+			return
+		}
+		videoFiles[q] = result.OutputPath
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	var audioFiles = map[string]paths.Path{}
+	audioKeys, err := startAudioTasks(ctx, prepareFilesSelector, params.MergeResult.AudioFiles, params.TempDir, func(f workflow.Future, l string) {
+		var result common.AudioResult
+		err := f.Get(ctx, &result)
+		if err != nil {
+			workflow.GetLogger(ctx).Error("Failed to get video result", "error", err)
+			return
+		}
+		audioFiles[l] = result.OutputPath
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for range audioKeys {
+		prepareFilesSelector.Select(ctx)
+	}
+	for range videoKeys {
+		prepareFilesSelector.Select(ctx)
 	}
 
 	subtitleFiles := params.MergeResult.SubtitleFiles
@@ -91,7 +113,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 
 	xmlData, _ := xml.MarshalIndent(smilData, "", "\t")
 	xmlData = append([]byte("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n"), xmlData...)
-	err := wfutils.WriteFile(ctx, params.OutputDir.Append("aws.smil"), xmlData)
+	err = wfutils.WriteFile(ctx, params.OutputDir.Append("aws.smil"), xmlData)
 	if err != nil {
 
 		return nil, err
@@ -127,10 +149,8 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 
 	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
 
-	outputPath := params.OutputDir
-
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      outputPath.Rclone(),
+		Source:      params.OutputDir.Rclone(),
 		Destination: fmt.Sprintf("s3prod:vod-asset-ingest-prod/" + ingestFolder),
 	}).Get(ctx, nil)
 	if err != nil {
