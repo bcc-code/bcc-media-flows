@@ -84,73 +84,86 @@ func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFile
 
 	ctx = workflow.WithTaskQueue(ctx, environment.GetTranscodeQueue())
 
-	var videoTasks = map[quality]workflow.Future{}
-	{
-		qualities := getVideoQualities(params.VideoFile, params.OutputPath, params.WatermarkPath)
+	selector := workflow.NewSelector(ctx)
 
-		keys, err := wfutils.GetMapKeysSafely(ctx, qualities)
+	var videoFiles = map[quality]paths.Path{}
+	videoKeys, err := startVideoTasks(ctx, params, selector, func(f workflow.Future, q quality) {
+		var result common.VideoResult
+		err := f.Get(ctx, &result)
 		if err != nil {
-			return nil, err
+			workflow.GetLogger(ctx).Error("Failed to get video result", "error", err)
+			return
 		}
+		videoFiles[q] = result.OutputPath
+	})
 
-		for _, key := range keys {
-			input := qualities[key]
-			videoTasks[key] = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToVideoH264, input)
-		}
-	}
-
-	var audioTasks = map[string]workflow.Future{}
-	{
-		keys, err := wfutils.GetMapKeysSafely(ctx, params.AudioFiles)
-		if err != nil {
-			return nil, err
-		}
-		for _, lang := range keys {
-			path := params.AudioFiles[lang]
-			audioTasks[lang] = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToAudioAac, common.AudioInput{
-				Path:            path,
-				Bitrate:         "190k",
-				DestinationPath: params.OutputPath,
-			})
-		}
+	if err != nil {
+		return nil, err
 	}
 
 	var audioFiles = map[string]paths.Path{}
-	{
-		keys, err := wfutils.GetMapKeysSafely(ctx, audioTasks)
+	audioKeys, err := startAudioTasks(ctx, params, selector, func(f workflow.Future, l string) {
+		var result common.AudioResult
+		err := f.Get(ctx, &result)
 		if err != nil {
-			return nil, err
+			workflow.GetLogger(ctx).Error("Failed to get video result", "error", err)
+			return
 		}
-		for _, lang := range keys {
-			task := audioTasks[lang]
-			var result common.AudioResult
-			err = task.Get(ctx, &result)
-			if err != nil {
-				return nil, err
-			}
-			audioFiles[lang] = result.OutputPath
-		}
+		audioFiles[l] = result.OutputPath
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	var videoFiles = map[quality]paths.Path{}
-	{
-		keys, err := wfutils.GetMapKeysSafely(ctx, videoTasks)
-		if err != nil {
-			return nil, err
-		}
-		for _, key := range keys {
-			task := videoTasks[key]
-			var result common.VideoResult
-			err = task.Get(ctx, &result)
-			if err != nil {
-				return nil, err
-			}
-			videoFiles[key] = result.OutputPath
-		}
+	for range audioKeys {
+		selector.Select(ctx)
+	}
+	for range videoKeys {
+		selector.Select(ctx)
 	}
 
 	return &PrepareFilesResult{
 		VideoFiles: videoFiles,
 		AudioFiles: audioFiles,
 	}, nil
+}
+
+func startVideoTasks(ctx workflow.Context, params PrepareFilesParams, selector workflow.Selector, callback func(f workflow.Future, q quality)) ([]quality, error) {
+	qualities := getVideoQualities(params.VideoFile, params.OutputPath, params.WatermarkPath)
+
+	keys, err := wfutils.GetMapKeysSafely(ctx, qualities)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, key := range keys {
+		input := qualities[key]
+		q := key
+
+		selector.AddFuture(wfutils.ExecuteWithQueue(ctx, activities.TranscodeToVideoH264, input), func(f workflow.Future) {
+			callback(f, q)
+		})
+	}
+
+	return keys, nil
+}
+
+func startAudioTasks(ctx workflow.Context, params PrepareFilesParams, selector workflow.Selector, callback func(f workflow.Future, l string)) ([]string, error) {
+	keys, err := wfutils.GetMapKeysSafely(ctx, params.AudioFiles)
+	if err != nil {
+		return nil, err
+	}
+	for _, key := range keys {
+		path := params.AudioFiles[key]
+		lang := key
+		selector.AddFuture(wfutils.ExecuteWithQueue(ctx, activities.TranscodeToAudioAac, common.AudioInput{
+			Path:            path,
+			Bitrate:         "190k",
+			DestinationPath: params.OutputPath,
+		}), func(f workflow.Future) {
+			callback(f, lang)
+		})
+	}
+
+	return keys, nil
 }
