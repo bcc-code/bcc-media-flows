@@ -57,25 +57,6 @@ func getSubtitlesResult(subtitleFiles map[string]paths.Path) []smil.TextStream {
 
 var fileQualities = []quality{r1080p, r540p, r180p}
 
-func startFileTasks(ctx workflow.Context, params MuxFilesParams, languages []bccmflows.Language, selector workflow.Selector, callback func(f common.MuxResult, l string, q quality)) {
-	for _, key := range languages {
-		lang := key.ISO6391
-		for _, key := range fileQualities {
-			q := key
-			task := createTranslatedFile(ctx, lang, params.VideoFiles[q], params.OutputPath, params.AudioFiles[lang], params.SubtitleFiles)
-			selector.AddFuture(task, func(f workflow.Future) {
-				var result common.MuxResult
-				err := f.Get(ctx, &result)
-				if err != nil {
-					workflow.GetLogger(ctx).Error("Failed to get mux result", "error", err)
-					return
-				}
-				callback(result, lang, q)
-			})
-		}
-	}
-}
-
 func createTranslatedFile(ctx workflow.Context, language string, videoPath, outputPath, audioPath paths.Path, subtitlePaths map[string]paths.Path) workflow.Future {
 	base := videoPath.Base()
 	fileName := base[:len(base)-len(filepath.Ext(base))] + "-" + language
@@ -102,23 +83,6 @@ func getQualitiesWithLanguages(audioKeys []string) map[quality][]bccmflows.Langu
 		}
 	}
 	return languagesPerQuality
-}
-
-func startStreamTasks(ctx workflow.Context, params MuxFilesParams, qualities map[quality][]bccmflows.Language, selector workflow.Selector, callback func(r common.MuxResult, q quality)) {
-	for _, key := range streamQualities {
-		q := key
-		task := createStreamFile(ctx, q, params.VideoFiles[q], params.OutputPath, qualities, params.AudioFiles)
-
-		selector.AddFuture(task, func(f workflow.Future) {
-			var result common.MuxResult
-			err := f.Get(ctx, &result)
-			if err != nil {
-				workflow.GetLogger(ctx).Error("Failed to get mux result", "error", err)
-				return
-			}
-			callback(result, q)
-		})
-	}
 }
 
 func createStreamFile(ctx workflow.Context, q quality, videoFile, outputPath paths.Path, languageMapping map[quality][]bccmflows.Language, audioFiles map[string]paths.Path) workflow.Future {

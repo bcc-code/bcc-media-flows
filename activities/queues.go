@@ -1,10 +1,11 @@
 package activities
 
 import (
-	"github.com/bcc-code/bccm-flows/environment"
 	"reflect"
 	"runtime"
 	"strings"
+
+	"github.com/bcc-code/bccm-flows/environment"
 
 	"github.com/samber/lo"
 )
@@ -14,6 +15,7 @@ func GetAudioTranscodeActivities() []any {
 		TranscodeToAudioAac,
 		TranscodeToAudioMP3,
 		TranscodeToAudioWav,
+		TranscodeMux,
 		TranscodeMergeAudio,
 		AnalyzeEBUR128Activity,
 		AdjustAudioLevelActivity,
@@ -31,7 +33,6 @@ func GetVideoTranscodeActivities() []any {
 		TranscodeMergeVideo,
 		TranscodeMergeSubtitles,
 		TranscodeToVideoH264,
-		TranscodeMux,
 		TranscodePlayoutMux,
 		ExecuteFFmpeg,
 	}

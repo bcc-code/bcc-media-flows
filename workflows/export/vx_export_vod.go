@@ -74,7 +74,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		var result common.VideoResult
 		err := f.Get(ctx, &result)
 		if err != nil {
-			workflow.GetLogger(ctx).Error("Failed to get video result", "error", err)
+			logger.Error("Failed to get video result", "error", err)
 			return
 		}
 		videoFiles[q] = result.OutputPath
@@ -83,7 +83,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 				var result common.MuxResult
 				err := f.Get(ctx, &result)
 				if err != nil {
-					workflow.GetLogger(ctx).Error("Failed to get mux result", "error", err)
+					logger.Error("Failed to get mux result", "error", err)
 					return
 				}
 
@@ -114,7 +114,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 					var result common.MuxResult
 					err := f.Get(ctx, &result)
 					if err != nil {
-						workflow.GetLogger(ctx).Error("Failed to get mux result", "error", err)
+						logger.Error("Failed to get mux result", "error", err)
 						return
 					}
 					code := bccmflows.LanguagesByISO[lang].ISO6392TwoLetter
@@ -140,19 +140,13 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, err
 	}
 
+	// Wait for all selector tasks to complete (fills slices, etc.)
 	for range videoKeys {
 		filesSelector.Select(ctx)
 	}
 	for range qualitiesWithLanguages {
 		filesSelector.Select(ctx)
 	}
-
-	var smilData smil.Smil
-	smilData.XMLName.Local = "smil"
-	smilData.XMLName.Space = "http://www.w3.org/2001/SMIL20/Language"
-	smilData.Head.Meta.Name = "formats"
-	smilData.Head.Meta.Content = "mp4"
-
 	if params.ParentParams.WithFiles {
 		for range fileQualities {
 			for range audioKeys {
@@ -160,7 +154,6 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 			}
 		}
 	}
-
 	for _, task := range uploadTasks {
 		err = task.Get(ctx, nil)
 		if err != nil {
@@ -168,70 +161,16 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		}
 	}
 
-	ingestData.Files = files
-	smilData.Body.Switch.Videos = streams
-	smilData.Body.Switch.TextStreams = getSubtitlesResult(params.MergeResult.SubtitleFiles)
-
-	xmlData, _ := xml.MarshalIndent(smilData, "", "\t")
-	xmlData = append([]byte("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n"), xmlData...)
-	err = wfutils.WriteFile(ctx, params.OutputDir.Append("aws.smil"), xmlData)
-	if err != nil {
-
-		return nil, err
-	}
-
-	ingestData.SmilFile = "aws.smil"
-	if chapterDataWF != nil {
-		ingestData.ChaptersFile = "chapters.json"
-		var chaptersData []asset.Chapter
-		err = chapterDataWF.Get(ctx, &chaptersData)
-		if err != nil {
-			return nil, err
-		}
-		marshalled, err := json.Marshal(chaptersData)
-		if err != nil {
-			return nil, err
-		}
-		err = wfutils.WriteFile(ctx, params.OutputDir.Append("chapters.json"), marshalled)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	marshalled, err := json.Marshal(ingestData)
-	if err != nil {
-		return nil, err
-	}
-
-	err = wfutils.WriteFile(ctx, params.OutputDir.Append("ingest.json"), marshalled)
-	if err != nil {
-		return nil, err
-	}
-
-	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      params.OutputDir.Rclone(),
-		Destination: fmt.Sprintf("s3prod:vod-asset-ingest-prod/" + ingestFolder),
-	}).Get(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	err = wfutils.PublishEvent(ctx, "asset.delivered", events.AssetDelivered{
-		JSONMetaPath: filepath.Join(ingestFolder, "ingest.json"),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	//err = DeletePath(ctx, tempFolder)
-
-	return &VXExportResult{
-		ChaptersFile: ingestData.ChaptersFile,
-		SmilFile:     ingestData.SmilFile,
-		ID:           params.ParentParams.VXID,
-		Duration:     ingestData.Duration,
-		Title:        ingestData.Title,
-	}, nil
+	return setMetadataAndPublishToVOD(
+		ctx,
+		params,
+		ingestData,
+		streams,
+		files,
+		params.MergeResult.SubtitleFiles,
+		chapterDataWF,
+		ingestFolder,
+		params.OutputDir)
 }
 
 func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, tempDir paths.Path) (map[string]paths.Path, error) {
@@ -256,4 +195,86 @@ func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, 
 	}
 
 	return audioFiles, nil
+}
+
+func setMetadataAndPublishToVOD(
+	ctx workflow.Context,
+	params VXExportChildWorkflowParams,
+	ingestData asset.IngestJSONMeta,
+	streams []smil.Video,
+	files []asset.IngestFileMeta,
+	subtitles map[string]paths.Path,
+	chapterDataWF workflow.Future,
+	ingestFolder string,
+	outputDir paths.Path,
+) (*VXExportResult, error) {
+	var smilData smil.Smil
+	smilData.XMLName.Local = "smil"
+	smilData.XMLName.Space = "http://www.w3.org/2001/SMIL20/Language"
+	smilData.Head.Meta.Name = "formats"
+	smilData.Head.Meta.Content = "mp4"
+
+	smilData.Body.Switch.Videos = streams
+	smilData.Body.Switch.TextStreams = getSubtitlesResult(subtitles)
+
+	xmlData, _ := xml.MarshalIndent(smilData, "", "\t")
+	xmlData = append([]byte("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n"), xmlData...)
+	err := wfutils.WriteFile(ctx, outputDir.Append("aws.smil"), xmlData)
+	if err != nil {
+		return nil, err
+	}
+
+	ingestData.Files = files
+	ingestData.SmilFile = "aws.smil"
+	if chapterDataWF != nil {
+		ingestData.ChaptersFile = "chapters.json"
+		var chaptersData []asset.Chapter
+		err = chapterDataWF.Get(ctx, &chaptersData)
+		if err != nil {
+			return nil, err
+		}
+		marshalled, err := json.Marshal(chaptersData)
+		if err != nil {
+			return nil, err
+		}
+		err = wfutils.WriteFile(ctx, outputDir.Append("chapters.json"), marshalled)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	marshalled, err := json.Marshal(ingestData)
+	if err != nil {
+		return nil, err
+	}
+
+	err = wfutils.WriteFile(ctx, outputDir.Append("ingest.json"), marshalled)
+	if err != nil {
+		return nil, err
+	}
+
+	// Copies created files and any remaining files needed.
+	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
+		Source:      outputDir.Rclone(),
+		Destination: fmt.Sprintf("s3prod:vod-asset-ingest-prod/" + ingestFolder),
+	}).Get(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	err = wfutils.PublishEvent(ctx, "asset.delivered", events.AssetDelivered{
+		JSONMetaPath: filepath.Join(ingestFolder, "ingest.json"),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	//err = DeletePath(ctx, tempFolder)
+	return &VXExportResult{
+		ID:           params.ParentParams.VXID,
+		ChaptersFile: ingestData.ChaptersFile,
+		SmilFile:     ingestData.SmilFile,
+		Duration:     ingestData.Duration,
+		Title:        ingestData.Title,
+	}, err
 }
