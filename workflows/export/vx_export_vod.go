@@ -145,6 +145,11 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 				Mime:          "video/mp4",
 				Path:          result.Path.Base(),
 			})
+
+			uploadTasks = append(uploadTasks, wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+				Source:      result.Path,
+				Destination: paths.New(paths.AssetIngestDrive, filepath.Join(ingestFolder, result.Path.Base())),
+			}))
 		})
 	}
 

@@ -101,6 +101,8 @@ func (p Path) Local() string {
 // RcloneFsRemote returns (fs, remote) for rclone usage
 func (p Path) RcloneFsRemote() (string, string) {
 	switch p.Drive {
+	case TempDrive:
+		return "isilon:", filepath.Join("temp", p.Path)
 	case IsilonDrive:
 		return "isilon:", filepath.Join("isilon", p.Path)
 	case DMZShareDrive:
