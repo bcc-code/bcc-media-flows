@@ -3,9 +3,10 @@ package vidispine
 import (
 	"errors"
 	"fmt"
-	"github.com/bcc-code/bccm-flows/environment"
 	"regexp"
 	"strings"
+
+	"github.com/bcc-code/bccm-flows/environment"
 
 	bccmflows "github.com/bcc-code/bccm-flows"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
@@ -105,7 +106,10 @@ func (s *VidispineService) getClipForAssetOrSubclip(
 	return &clip, err
 }
 
-func (s *VidispineService) getRelatedAudios(clip *Clip, languagesToExport []string) (*Clip, error) {
+func (s *VidispineService) getRelatedAudios(clip *Clip, oLanguagesToExport []string) (*Clip, error) {
+
+	languagesToExport := make([]string, len(oLanguagesToExport))
+	copy(languagesToExport, oLanguagesToExport)
 
 	if _, i, ok := lo.FindIndexOf(languagesToExport, func(l string) bool { return l == "nor" }); ok {
 		// Move "nor" to the front if available, so we can use it as fallback
