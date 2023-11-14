@@ -15,7 +15,6 @@ import (
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/common/smil"
 	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
@@ -42,7 +41,15 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		Duration: formatSecondsToTimestamp(params.MergeResult.Duration),
 	}
 
-	prepareFilesSelector := workflow.NewSelector(ctx)
+	audioFiles, err := prepareAudioFiles(ctx, params.MergeResult, params.TempDir)
+	if err != nil {
+		return nil, err
+	}
+	audioKeys, err := wfutils.GetMapKeysSafely(ctx, audioFiles)
+	if err != nil {
+		return nil, err
+	}
+
 	var wm *paths.Path
 	if params.ParentParams.WatermarkPath != "" {
 		path, err := paths.Parse(params.ParentParams.WatermarkPath)
@@ -52,10 +59,18 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		wm = &path
 	}
 
+	filesSelector := workflow.NewSelector(ctx)
 	qualities := getVideoQualities(*params.MergeResult.VideoFile, params.TempDir, wm)
+	qualitiesWithLanguages := getQualitiesWithLanguages(audioKeys)
+
+	var uploadTasks []workflow.Future
+	var streams []smil.Video
+	var files []asset.IngestFileMeta
+
+	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
 
 	var videoFiles = map[quality]paths.Path{}
-	videoKeys, err := startVideoTasks(ctx, prepareFilesSelector, qualities, func(f workflow.Future, q quality) {
+	videoKeys, err := startVideoTasks(ctx, filesSelector, qualities, func(f workflow.Future, q quality) {
 		var result common.VideoResult
 		err := f.Get(ctx, &result)
 		if err != nil {
@@ -63,34 +78,74 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 			return
 		}
 		videoFiles[q] = result.OutputPath
-	})
+		if lo.Contains(streamQualities, q) {
+			filesSelector.AddFuture(createStreamFile(ctx, q, result.OutputPath, params.OutputDir, qualitiesWithLanguages, audioFiles), func(f workflow.Future) {
+				var result common.MuxResult
+				err := f.Get(ctx, &result)
+				if err != nil {
+					workflow.GetLogger(ctx).Error("Failed to get mux result", "error", err)
+					return
+				}
 
-	if err != nil {
-		return nil, err
-	}
+				fileLanguages := qualitiesWithLanguages[q]
 
-	var audioFiles = map[string]paths.Path{}
-	audioKeys, err := startAudioTasks(ctx, prepareFilesSelector, params.MergeResult.AudioFiles, params.TempDir, func(f workflow.Future, l string) {
-		var result common.AudioResult
-		err := f.Get(ctx, &result)
-		if err != nil {
-			workflow.GetLogger(ctx).Error("Failed to get video result", "error", err)
-			return
+				streams = append(streams, smil.Video{
+					Src:          result.Path.Base(),
+					IncludeAudio: fmt.Sprintf("%t", len(fileLanguages) > 0),
+					SystemLanguage: strings.Join(lo.Map(fileLanguages, func(i bccmflows.Language, _ int) string {
+						return i.ISO6391
+					}), ","),
+					AudioName: strings.Join(lo.Map(fileLanguages, func(i bccmflows.Language, _ int) string {
+						return i.LanguageNameSystem
+					}), ","),
+				})
+
+				uploadTasks = append(uploadTasks, wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+					Source:      result.Path,
+					Destination: paths.New(paths.AssetIngestDrive, filepath.Join(ingestFolder, result.Path.Base())),
+				}))
+			})
 		}
-		audioFiles[l] = result.OutputPath
+		if params.ParentParams.WithFiles && lo.Contains(fileQualities, q) {
+			for _, key := range audioKeys {
+				lang := key
+				audioPath := audioFiles[lang]
+				filesSelector.AddFuture(createTranslatedFile(ctx, lang, result.OutputPath, params.OutputDir, audioPath, params.MergeResult.SubtitleFiles), func(f workflow.Future) {
+					var result common.MuxResult
+					err := f.Get(ctx, &result)
+					if err != nil {
+						workflow.GetLogger(ctx).Error("Failed to get mux result", "error", err)
+						return
+					}
+					code := bccmflows.LanguagesByISO[lang].ISO6392TwoLetter
+					if code == "" {
+						code = lang
+					}
+					files = append(files, asset.IngestFileMeta{
+						Resolution:    string(q),
+						AudioLanguage: code,
+						Mime:          "video/mp4",
+						Path:          result.Path.Base(),
+					})
+
+					uploadTasks = append(uploadTasks, wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+						Source:      result.Path,
+						Destination: paths.New(paths.AssetIngestDrive, filepath.Join(ingestFolder, result.Path.Base())),
+					}))
+				})
+			}
+		}
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	for range audioKeys {
-		prepareFilesSelector.Select(ctx)
-	}
 	for range videoKeys {
-		prepareFilesSelector.Select(ctx)
+		filesSelector.Select(ctx)
 	}
-
-	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
+	for range qualitiesWithLanguages {
+		filesSelector.Select(ctx)
+	}
 
 	var smilData smil.Smil
 	smilData.XMLName.Local = "smil"
@@ -98,69 +153,10 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	smilData.Head.Meta.Name = "formats"
 	smilData.Head.Meta.Content = "mp4"
 
-	muxParams := MuxFilesParams{
-		VideoFiles:    videoFiles,
-		AudioFiles:    audioFiles,
-		SubtitleFiles: params.MergeResult.SubtitleFiles,
-		OutputPath:    params.OutputDir,
-		WithFiles:     params.ParentParams.WithFiles,
-	}
-	qualitiesWithLanguages := getQualitiesWithLanguages(muxParams)
-	muxSelector := workflow.NewSelector(ctx)
-
-	var uploadTasks []workflow.Future
-
-	var streams []smil.Video
-	startStreamTasks(ctx, muxParams, qualitiesWithLanguages, muxSelector, func(result common.MuxResult, q quality) {
-		fileLanguages := qualitiesWithLanguages[q]
-
-		streams = append(streams, smil.Video{
-			Src:          result.Path.Base(),
-			IncludeAudio: fmt.Sprintf("%t", len(fileLanguages) > 0),
-			SystemLanguage: strings.Join(lo.Map(fileLanguages, func(i bccmflows.Language, _ int) string {
-				return i.ISO6391
-			}), ","),
-			AudioName: strings.Join(lo.Map(fileLanguages, func(i bccmflows.Language, _ int) string {
-				return i.LanguageNameSystem
-			}), ","),
-		})
-
-		uploadTasks = append(uploadTasks, wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
-			Source:      result.Path,
-			Destination: paths.New(paths.AssetIngestDrive, filepath.Join(ingestFolder, result.Path.Base())),
-		}))
-	})
-
-	audioLanguages := utils.LanguageKeysToOrderedLanguages(lo.Keys(muxParams.AudioFiles))
-	var files []asset.IngestFileMeta
-	if muxParams.WithFiles {
-		startFileTasks(ctx, muxParams, audioLanguages, muxSelector, func(result common.MuxResult, l string, q quality) {
-			code := bccmflows.LanguagesByISO[l].ISO6392TwoLetter
-			if code == "" {
-				code = l
-			}
-			files = append(files, asset.IngestFileMeta{
-				Resolution:    string(q),
-				AudioLanguage: code,
-				Mime:          "video/mp4",
-				Path:          result.Path.Base(),
-			})
-
-			uploadTasks = append(uploadTasks, wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
-				Source:      result.Path,
-				Destination: paths.New(paths.AssetIngestDrive, filepath.Join(ingestFolder, result.Path.Base())),
-			}))
-		})
-	}
-
-	for range qualitiesWithLanguages {
-		muxSelector.Select(ctx)
-	}
-
-	if muxParams.WithFiles {
-		for range audioLanguages {
-			for range fileQualities {
-				muxSelector.Select(ctx)
+	if params.ParentParams.WithFiles {
+		for range fileQualities {
+			for range audioKeys {
+				filesSelector.Select(ctx)
 			}
 		}
 	}
@@ -174,7 +170,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 
 	ingestData.Files = files
 	smilData.Body.Switch.Videos = streams
-	smilData.Body.Switch.TextStreams = getSubtitlesResult(muxParams)
+	smilData.Body.Switch.TextStreams = getSubtitlesResult(params.MergeResult.SubtitleFiles)
 
 	xmlData, _ := xml.MarshalIndent(smilData, "", "\t")
 	xmlData = append([]byte("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n"), xmlData...)
@@ -236,4 +232,28 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		Duration:     ingestData.Duration,
 		Title:        ingestData.Title,
 	}, nil
+}
+
+func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, tempDir paths.Path) (map[string]paths.Path, error) {
+	prepareFilesSelector := workflow.NewSelector(ctx)
+
+	var audioFiles = map[string]paths.Path{}
+	audioKeys, err := startAudioTasks(ctx, prepareFilesSelector, mergeResult.AudioFiles, tempDir, func(f workflow.Future, l string) {
+		var result common.AudioResult
+		err := f.Get(ctx, &result)
+		if err != nil {
+			workflow.GetLogger(ctx).Error("Failed to get video result", "error", err)
+			return
+		}
+		audioFiles[l] = result.OutputPath
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for range audioKeys {
+		prepareFilesSelector.Select(ctx)
+	}
+
+	return audioFiles, nil
 }

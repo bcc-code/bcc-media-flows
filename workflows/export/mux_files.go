@@ -41,11 +41,11 @@ type MuxFilesResult struct {
 	Subtitles []smil.TextStream
 }
 
-func getSubtitlesResult(params MuxFilesParams) []smil.TextStream {
+func getSubtitlesResult(subtitleFiles map[string]paths.Path) []smil.TextStream {
 	var subtitles []smil.TextStream
-	subtitleLanguages := utils.LanguageKeysToOrderedLanguages(lo.Keys(params.SubtitleFiles))
+	subtitleLanguages := utils.LanguageKeysToOrderedLanguages(lo.Keys(subtitleFiles))
 	for _, language := range subtitleLanguages {
-		path := params.SubtitleFiles[language.ISO6391]
+		path := subtitleFiles[language.ISO6391]
 		subtitles = append(subtitles, smil.TextStream{
 			Src:            path.Base(),
 			SystemLanguage: language.ISO6391,
@@ -90,8 +90,8 @@ func createTranslatedFile(ctx workflow.Context, language string, videoPath, outp
 
 var streamQualities = []quality{r180p, r270p, r360p, r540p, r720p, r1080p}
 
-func getQualitiesWithLanguages(params MuxFilesParams) map[quality][]bccmflows.Language {
-	languages := utils.LanguageKeysToOrderedLanguages(lo.Keys(params.AudioFiles))
+func getQualitiesWithLanguages(audioKeys []string) map[quality][]bccmflows.Language {
+	languages := utils.LanguageKeysToOrderedLanguages(audioKeys)
 
 	languagesPerQuality := map[quality][]bccmflows.Language{}
 	for _, q := range streamQualities {
@@ -107,22 +107,9 @@ func getQualitiesWithLanguages(params MuxFilesParams) map[quality][]bccmflows.La
 func startStreamTasks(ctx workflow.Context, params MuxFilesParams, qualities map[quality][]bccmflows.Language, selector workflow.Selector, callback func(r common.MuxResult, q quality)) {
 	for _, key := range streamQualities {
 		q := key
-		path := params.VideoFiles[q]
+		task := createStreamFile(ctx, q, params.VideoFiles[q], params.OutputPath, qualities, params.AudioFiles)
 
-		audioFilePaths := map[string]paths.Path{}
-		for _, lang := range qualities[q] {
-			audioFilePaths[lang.ISO6391] = params.AudioFiles[lang.ISO6391]
-		}
-
-		base := path.Base()
-		fileName := base[:len(base)-len(filepath.Ext(base))]
-
-		selector.AddFuture(workflow.ExecuteActivity(ctx, activities.TranscodeMux, common.MuxInput{
-			FileName:        fileName,
-			DestinationPath: params.OutputPath,
-			AudioFilePaths:  audioFilePaths,
-			VideoFilePath:   path,
-		}), func(f workflow.Future) {
+		selector.AddFuture(task, func(f workflow.Future) {
 			var result common.MuxResult
 			err := f.Get(ctx, &result)
 			if err != nil {
@@ -132,4 +119,21 @@ func startStreamTasks(ctx workflow.Context, params MuxFilesParams, qualities map
 			callback(result, q)
 		})
 	}
+}
+
+func createStreamFile(ctx workflow.Context, q quality, videoFile, outputPath paths.Path, languageMapping map[quality][]bccmflows.Language, audioFiles map[string]paths.Path) workflow.Future {
+	audioFilePaths := map[string]paths.Path{}
+	for _, lang := range languageMapping[q] {
+		audioFilePaths[lang.ISO6391] = audioFiles[lang.ISO6391]
+	}
+
+	base := videoFile.Base()
+	fileName := base[:len(base)-len(filepath.Ext(base))]
+
+	return workflow.ExecuteActivity(ctx, activities.TranscodeMux, common.MuxInput{
+		FileName:        fileName,
+		DestinationPath: outputPath,
+		AudioFilePaths:  audioFilePaths,
+		VideoFilePath:   videoFile,
+	})
 }
