@@ -106,12 +106,12 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		WithFiles:     params.ParentParams.WithFiles,
 	}
 	qualitiesWithLanguages := getQualitiesWithLanguages(muxParams)
-	selector := workflow.NewSelector(ctx)
+	muxSelector := workflow.NewSelector(ctx)
 
 	var uploadTasks []workflow.Future
 
 	var streams []smil.Video
-	startStreamTasks(ctx, muxParams, qualitiesWithLanguages, selector, func(result common.MuxResult, q quality) {
+	startStreamTasks(ctx, muxParams, qualitiesWithLanguages, muxSelector, func(result common.MuxResult, q quality) {
 		fileLanguages := qualitiesWithLanguages[q]
 
 		streams = append(streams, smil.Video{
@@ -134,7 +134,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	audioLanguages := utils.LanguageKeysToOrderedLanguages(lo.Keys(muxParams.AudioFiles))
 	var files []asset.IngestFileMeta
 	if muxParams.WithFiles {
-		startFileTasks(ctx, muxParams, audioLanguages, selector, func(result common.MuxResult, l string, q quality) {
+		startFileTasks(ctx, muxParams, audioLanguages, muxSelector, func(result common.MuxResult, l string, q quality) {
 			code := bccmflows.LanguagesByISO[l].ISO6392TwoLetter
 			if code == "" {
 				code = l
@@ -154,13 +154,13 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	}
 
 	for range qualitiesWithLanguages {
-		selector.Select(ctx)
+		muxSelector.Select(ctx)
 	}
 
 	if muxParams.WithFiles {
 		for range audioLanguages {
 			for range fileQualities {
-				selector.Select(ctx)
+				muxSelector.Select(ctx)
 			}
 		}
 	}
