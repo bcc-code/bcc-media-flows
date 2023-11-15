@@ -2,11 +2,12 @@ package paths
 
 import (
 	"encoding/json"
+	"path/filepath"
+	"strings"
+
 	"github.com/ansel1/merry/v2"
 	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/orsinium-labs/enum"
-	"path/filepath"
-	"strings"
 )
 
 func GetSiblingFolder(path, folder string) (string, error) {
@@ -51,7 +52,8 @@ var (
 	IsilonDrive      = Drive{Value: "isilon"}
 	TempDrive        = Drive{Value: "temp"}
 	DMZShareDrive    = Drive{Value: "dmzshare"}
-	Drives           = enum.New(IsilonDrive, DMZShareDrive, TempDrive)
+	AssetIngestDrive = Drive{Value: "asset_ingest"}
+	Drives           = enum.New(IsilonDrive, DMZShareDrive, TempDrive, AssetIngestDrive)
 	ErrDriveNotFound = merry.Sentinel("drive not found")
 	ErrPathNotValid  = merry.Sentinel("path not valid")
 )
@@ -74,6 +76,8 @@ func (d Drive) RclonePath() string {
 		return "isilon:isilon"
 	case DMZShareDrive:
 		return "dmz:dmzshare"
+	case AssetIngestDrive:
+		return "s3prod:vod-asset-ingest-prod"
 	}
 	return ""
 }
@@ -97,10 +101,14 @@ func (p Path) Local() string {
 // RcloneFsRemote returns (fs, remote) for rclone usage
 func (p Path) RcloneFsRemote() (string, string) {
 	switch p.Drive {
+	case TempDrive:
+		return "isilon:", filepath.Join("temp", p.Path)
 	case IsilonDrive:
 		return "isilon:", filepath.Join("isilon", p.Path)
 	case DMZShareDrive:
 		return "dmz:", filepath.Join("dmzshare", p.Path)
+	case AssetIngestDrive:
+		return "s3prod:", filepath.Join("vod-asset-ingest-prod", p.Path)
 	}
 	return "", ""
 }
@@ -133,9 +141,10 @@ type prefix struct {
 }
 
 var drivePrefixes = map[Drive]prefix{
-	IsilonDrive:   {"/mnt/isilon/", environment.GetIsilonPrefix(), "isilon:isilon/"},
-	DMZShareDrive: {"/mnt/dmzshare/", "/mnt/dmzshare/", "dmz:dmzshare/"},
-	TempDrive:     {"/mnt/temp/", environment.GetTempMountPrefix(), "isilon:temp/"},
+	IsilonDrive:      {"/mnt/isilon/", environment.GetIsilonPrefix(), "isilon:isilon/"},
+	DMZShareDrive:    {"/mnt/dmzshare/", "/mnt/dmzshare/", "dmz:dmzshare/"},
+	TempDrive:        {"/mnt/temp/", environment.GetTempMountPrefix(), "isilon:temp/"},
+	AssetIngestDrive: {"/dev/null/", "/dev/null/", "s3prod:vod-asset-ingest-prod/"},
 }
 
 func Parse(path string) (Path, error) {
@@ -159,4 +168,11 @@ func MustParse(path string) Path {
 		panic(err)
 	}
 	return p
+}
+
+func New(drive Drive, path string) Path {
+	return Path{
+		Drive: drive,
+		Path:  path,
+	}
 }
