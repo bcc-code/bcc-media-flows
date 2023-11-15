@@ -351,14 +351,12 @@ func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
 		TaskQueue: queue,
 	}
 
-	var res client.WorkflowRun
-
 	s.addDataToTable(c, c.PostFormArray("tags[]"), "tags")
 	s.addDataToTable(c, c.PostFormArray("persons[]"), "persons")
 
 	path := masterTriggerDir + "/" + c.PostForm("path")
 
-	res, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, ingestworkflows.Masters, ingestworkflows.MasterParams{
+	_, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, ingestworkflows.Masters, ingestworkflows.MasterParams{
 		Metadata: &ingest.Metadata{
 			JobProperty: ingest.JobProperty{
 				ProgramID:        c.PostForm("program_id"),
@@ -371,8 +369,6 @@ func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
 		},
 		SourceFile: paths.MustParse(path),
 	})
-
-	res.GetID()
 
 	if err != nil {
 		renderErrorPage(c, http.StatusInternalServerError, err)
@@ -398,10 +394,10 @@ func (s *TriggerServer) uploadMasterAdminPOST(c *gin.Context) {
 		s.addDataToTable(c, programID, "programID")
 	}
 
-	DeletionValue := c.PostFormArray("deleteArrayData[]")
+	DeleteRow := c.PostFormArray("deleteArrayData[]")
 
-	if DeletionValue != nil {
-		_, err := s.database.Exec("DELETE FROM programID WHERE name='" + DeletionValue[0] + "'")
+	if DeleteRow != nil {
+		_, err := s.database.Exec("DELETE FROM programID WHERE name='" + DeleteRow[0] + "'")
 		if err != nil {
 			renderErrorPage(c, http.StatusInternalServerError, err)
 			return
