@@ -65,6 +65,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		err := f.Get(ctx, &result)
 		if err != nil {
 			logger.Error("Failed to get video result", "error", err)
+			service.errs = append(service.errs, err)
 			return
 		}
 		if lo.Contains(streamQualities, q) {
@@ -106,6 +107,9 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 			return nil, err
 		}
 	}
+	for _, err = range service.errs {
+		return nil, err
+	}
 
 	return service.setMetadataAndPublishToVOD(
 		ctx,
@@ -122,6 +126,7 @@ type vxExportVodService struct {
 	streams                []smil.Video
 	files                  []asset.IngestFileMeta
 	tasks                  []workflow.Future
+	errs                   []error
 }
 
 func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, tempDir paths.Path) (map[string]paths.Path, error) {
@@ -237,6 +242,7 @@ func (v *vxExportVodService) handleFileWorkflowFuture(ctx workflow.Context, lang
 	err := f.Get(ctx, &result)
 	if err != nil {
 		logger.Error("Failed to get mux result", "error", err)
+		v.errs = append(v.errs, err)
 		return
 	}
 	code := bccmflows.LanguagesByISO[lang].ISO6392TwoLetter
@@ -259,6 +265,7 @@ func (v *vxExportVodService) handleStreamWorkflowFuture(ctx workflow.Context, q 
 	err := f.Get(ctx, &result)
 	if err != nil {
 		logger.Error("Failed to get mux result", "error", err)
+		v.errs = append(v.errs, err)
 		return
 	}
 
