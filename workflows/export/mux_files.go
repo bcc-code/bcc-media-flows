@@ -94,7 +94,7 @@ func createStreamFile(ctx workflow.Context, q quality, videoFile, outputPath pat
 	base := videoFile.Base()
 	fileName := base[:len(base)-len(filepath.Ext(base))]
 
-	return workflow.ExecuteActivity(ctx, activities.TranscodeMux, common.MuxInput{
+	return wfutils.ExecuteWithQueue(ctx, activities.TranscodeMux, common.MuxInput{
 		FileName:        fileName,
 		DestinationPath: outputPath,
 		AudioFilePaths:  audioFilePaths,
