@@ -354,7 +354,8 @@ func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
 	s.addDataToTable(c, c.PostFormArray("tags[]"), "tags")
 	s.addDataToTable(c, c.PostFormArray("persons[]"), "persons")
 
-	path := masterTriggerDir + "/" + c.PostForm("path")
+	rawPath := masterTriggerDir + "/" + c.PostForm("path")
+	path := paths.MustParse(rawPath)
 
 	_, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, ingestworkflows.Masters, ingestworkflows.MasterParams{
 		Metadata: &ingest.Metadata{
@@ -367,7 +368,7 @@ func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
 				ReceivedFilename: c.PostForm("filename"),
 			},
 		},
-		SourceFile: paths.MustParse(path),
+		SourceFile: &path,
 	})
 
 	if err != nil {
@@ -454,13 +455,18 @@ func main() {
 		db,
 	}
 
-	router.GET("/vx-export", server.triggerHandlerGET)
-	router.GET("/vx-export/list", server.listGET)
-	router.GET("/upload-master", server.uploadMasterGET)
-	router.GET("/upload-master/admin", server.uploadMasterAdminGET)
-	router.POST("/upload-master/admin", server.uploadMasterAdminPOST)
-	router.POST("/vx-export", server.triggerHandlerPOST)
-	router.POST("/upload-master", server.uploadMasterPOST)
+	vxexport := router.Group("/vx-export")
+
+	vxexport.GET("/", server.triggerHandlerGET)
+	vxexport.GET("/list", server.listGET)
+	vxexport.POST("/", server.triggerHandlerPOST)
+
+	uploadmaster := router.Group("/upload-master")
+
+	uploadmaster.GET("/", server.uploadMasterGET)
+	uploadmaster.POST("/", server.uploadMasterPOST)
+	uploadmaster.GET("/admin", server.uploadMasterAdminGET)
+	uploadmaster.POST("/admin", server.uploadMasterAdminPOST)
 
 	port := os.Getenv("PORT")
 	if port == "" {

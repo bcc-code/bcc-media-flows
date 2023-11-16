@@ -54,7 +54,7 @@
 
             <div class="flex">
                 <label class="inline-block w-20 flex-none" for="Type">Type</label>
-                <select class="w-full border" name="Type" class="form-control col" null="" required>
+                <select class="w-full border form-control col" name="Type" null="" required>
                     <option name="promo_type" value="MAS" selected="selected">MAS</option>
                     <option name="promo_type" value="PRO">PRO</option>
                 </select>
@@ -62,7 +62,7 @@
 
             <div class="flex">
                 <label class="inline-block w-20 flex-none" for="language">Language</label>
-                <select class="w-full border" name="language" class="form-control col" null="" required>
+                <select class="w-full border form-control col" name="language" null="" required>
                     <option name="language" value="" selected="">Please choose one</option>
                     <option name="language" value="NOR">NOR</option>
                     <option name="language" value="MUL">MUL</option>
@@ -162,7 +162,7 @@
                     if (inputValue == "") {
                         return
                     }
-                    for (key of document.getElementById("arrayData").childNodes) {
+                    for (const key of document.getElementById("arrayData").childNodes) {
                         if (inputValue === key.value) {
                             return
                         }
@@ -170,14 +170,14 @@
 
                     element.appendChild(ul)
 
-                    var li = document.createElement("li");
-                    var button = document.createElement("button");
+                    let li = document.createElement("li");
+                    let button = document.createElement("button");
 
                     button.appendChild(document.createTextNode("X"));
                     button.setAttribute("class", "bg-blue-400 p-1 rounded");
                     button.addEventListener('click', () => {
                         li.remove()
-                        for (key of document.getElementById("arrayData").childNodes) {
+                        for (const key of document.getElementById("arrayData").childNodes) {
                             if ((key.value + "X") == li.textContent) {
                                 key.remove()
                             }

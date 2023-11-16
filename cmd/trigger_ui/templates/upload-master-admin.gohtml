@@ -39,7 +39,7 @@
 
     <script>
 
-        for (element of document.querySelectorAll(".multiselect")) {
+        for (const element of document.querySelectorAll(".multiselect")) {
             setupButton(element)
         }
 
@@ -47,7 +47,7 @@
 
             element.children[1].onclick = function () {
 
-                let input = document.createElement("input")
+                const input = document.createElement("input")
                 document.getElementById("deleteArrayData").appendChild(input)
                 input.setAttribute("type", "hidden")
                 input.setAttribute("name", "deleteArrayData[]")

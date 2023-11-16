@@ -23,7 +23,7 @@ type MasterParams struct {
 
 	OrderForm  OrderForm
 	Directory  paths.Path
-	SourceFile paths.Path
+	SourceFile *paths.Path
 }
 
 type MasterResult struct {
@@ -89,7 +89,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		if len(files) > 1 {
 			return nil, fmt.Errorf("too many files in directory: %s", params.Directory)
 		}
-		sourceFile = files[0]
+		*sourceFile = files[0]
 	}
 
 	outputDir, err := wfutils.GetWorkflowMastersOutputFolder(ctx)
@@ -98,7 +98,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	}
 
 	file := outputDir.Append(filename)
-	err = wfutils.MoveFile(ctx, sourceFile, file)
+	err = wfutils.MoveFile(ctx, *sourceFile, file)
 	if err != nil {
 		return nil, err
 	}
