@@ -290,7 +290,7 @@ func (s *VidispineService) GetDataForExport(itemVXID string, languagesToExport [
 	// Check for sequence
 	isSequence := meta.Get(vscommon.FieldSequenceSize, "0") != "0"
 
-	title := meta.Get(vscommon.FieldTitle, "")
+	title := meta.Get(vscommon.FieldSubclipToExport, meta.Get(vscommon.FieldTitle, ""))
 
 	// clean up the title
 	safeTitle := strings.ReplaceAll(title, " ", "_")
