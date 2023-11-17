@@ -60,15 +60,17 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 	var filterComplex string
 
 	if input.WatermarkPath != nil {
-		filterComplex += "[0:0][1:0]overlay=main_w-overlay_w:0[out]"
+		filterComplex += "[0:0][1:0]overlay=main_w-overlay_w:0[main];"
+	} else {
+		filterComplex += "[0:0]copy[main];"
 	}
 
-	if filterComplex != "" {
-		params = append(params,
-			"-filter_complex", filterComplex,
-			"-map", "[out]",
-		)
-	}
+	filterComplex += fmt.Sprintf("[main]scale=-1:%d:force_original_aspect_ratio=decrease[out]", input.Height)
+
+	params = append(params,
+		"-filter_complex", filterComplex,
+		"-map", "[out]",
+	)
 
 	params = append(params,
 		"-r", fmt.Sprintf("%d", framerate),
