@@ -9,10 +9,14 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	"github.com/bcc-code/bccm-flows/activities"
+	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -129,6 +133,28 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 
 	jsonData.Title = params.ExportData.Title
 
+	var chapters []asset.Chapter
+	err = wfutils.ExecuteWithQueue(ctx, vsactivity.GetChapterDataActivity, vsactivity.GetChapterDataParams{
+		ExportData: &params.ExportData,
+	}).Get(ctx, &chapters)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(chapters) > 0 {
+		chapter := chapters[0]
+		for _, p := range chapter.Persons {
+			if !lo.Contains(jsonData.PersonsAppearing, p) {
+				jsonData.PersonsAppearing = append(jsonData.PersonsAppearing, p)
+			}
+		}
+		jsonData.Type = chapter.ChapterType
+		if chapter.SongNumber != "" && chapter.SongCollection != "" {
+			jsonData.SongCollection = &chapter.SongCollection
+			jsonData.SongNumber = &chapter.SongNumber
+		}
+	}
+
 	marshalled, err := json.Marshal(jsonData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal JSON: %w", err)
@@ -172,11 +198,15 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 }
 
 type BMMData struct {
-	MediabankenID string                    `json:"mediabanken_id"`
-	Title         string                    `json:"title"`
-	Length        int                       `json:"length"`
-	Type          string                    `json:"type"`
-	AudioFiles    map[string][]BMMAudioFile `json:"audio_files"`
+	MediabankenID    string                    `json:"mediabanken_id"`
+	Title            string                    `json:"title"`
+	Length           int                       `json:"length"`
+	Type             string                    `json:"type"`
+	AudioFiles       map[string][]BMMAudioFile `json:"audio_files"`
+	PersonsAppearing []string                  `json:"persons_appearing"`
+	SongCollection   *string                   `json:"song_collection"`
+	SongNumber       *string                   `json:"song_number"`
+	RecordedAt       time.Time                 `json:"recorded_at"`
 }
 
 type BMMAudioFile struct {
