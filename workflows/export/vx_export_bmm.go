@@ -168,14 +168,13 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
 		Source:      outputFolder.Rclone(),
-		Destination: fmt.Sprintf("bmms3:/int-bmm-mediabanken/" + ingestFolder),
+		Destination: fmt.Sprintf("bmms3:/prod-bmm-mediabanken/" + ingestFolder),
 	}).Get(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: Trigger as activity?
-	trigger := "https://int-bmm-api.brunstad.org/events/mediabanken-export/?path="
+	trigger := "https://bmm-api.brunstad.org/events/mediabanken-export/?path="
 	jsonS3Path := path.Join(ingestFolder, "bmm.json")
 	trigger += url.QueryEscape(jsonS3Path)
 
