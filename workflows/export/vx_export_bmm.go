@@ -206,7 +206,7 @@ type BMMData struct {
 	PersonsAppearing []string                  `json:"persons_appearing"`
 	SongCollection   *string                   `json:"song_collection"`
 	SongNumber       *string                   `json:"song_number"`
-	RecordedAt       time.Time                 `json:"recorded_at"`
+	RecordedAt       *time.Time                `json:"recorded_at"`
 }
 
 type BMMAudioFile struct {
