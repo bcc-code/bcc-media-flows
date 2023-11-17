@@ -92,10 +92,16 @@ func AudioWav(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 		return nil, err
 	}
 
+	fileInfo, err := os.Stat(outputFilePath)
+	if err != nil {
+		return nil, err
+	}
+
 	return &common.AudioResult{
 		OutputPath: outputPath,
 		Bitrate:    input.Bitrate,
 		Format:     "wav",
+		FileSize:   fileInfo.Size(),
 	}, nil
 }
 
@@ -161,9 +167,15 @@ func AudioMP3(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 		return nil, err
 	}
 
+	fileInfo, err := os.Stat(outputFilePath)
+	if err != nil {
+		return nil, err
+	}
+
 	return &common.AudioResult{
 		OutputPath: outputPath,
 		Bitrate:    input.Bitrate,
 		Format:     "mp3",
+		FileSize:   fileInfo.Size(),
 	}, nil
 }

@@ -2,9 +2,10 @@ package transcode
 
 import (
 	"fmt"
-	"github.com/bcc-code/bccm-flows/paths"
 	"os"
 	"path/filepath"
+
+	"github.com/bcc-code/bccm-flows/paths"
 
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
@@ -45,7 +46,13 @@ func AdjustAudioLevel(input common.AudioInput, adjustment float64, cb ffmpeg.Pro
 		return nil, err
 	}
 
+	fileInfo, err := os.Stat(outputFilePath)
+	if err != nil {
+		return nil, err
+	}
+
 	return &common.AudioResult{
 		OutputPath: outputPath,
+		FileSize:   fileInfo.Size(),
 	}, nil
 }
