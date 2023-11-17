@@ -88,7 +88,8 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 		return
 	}
 
-	title := meta.Get(vscommon.FieldTitle, "")
+	clips := meta.SplitByClips()
+	title := clips[vsapi.OriginalClip].Get(vscommon.FieldTitle, "")
 
 	selectedAudioSource := meta.Get(vscommon.FieldExportAudioSource, "")
 
