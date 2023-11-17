@@ -130,8 +130,10 @@ func (p Path) Base() string {
 }
 
 func (p Path) Append(path string) Path {
-	p.Path = filepath.Clean(filepath.Join(p.Path, path))
-	return p
+	return Path{
+		Drive: p.Drive,
+		Path:  filepath.Clean(filepath.Join(p.Path, path)),
+	}
 }
 
 type prefix struct {
