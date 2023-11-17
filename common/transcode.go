@@ -29,6 +29,7 @@ type AudioResult struct {
 	OutputPath paths.Path
 	Bitrate    string
 	Format     string
+	FileSize   int64
 }
 
 type MuxInput struct {

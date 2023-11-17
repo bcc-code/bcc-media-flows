@@ -2,11 +2,12 @@ package transcode
 
 import (
 	"fmt"
-	"github.com/bcc-code/bccm-flows/paths"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/bcc-code/bccm-flows/paths"
 
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
@@ -46,10 +47,16 @@ func AudioAac(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 		return nil, err
 	}
 
+	fileInfo, err := os.Stat(outputFilePath)
+	if err != nil {
+		return nil, err
+	}
+
 	return &common.AudioResult{
 		OutputPath: outputPath,
 		Bitrate:    input.Bitrate,
 		Format:     "aac",
+		FileSize:   fileInfo.Size(),
 	}, nil
 }
 

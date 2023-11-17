@@ -219,6 +219,7 @@ type BMMAudioFile struct {
 	Peak            float64 `json:"peak"`
 	Language        string  `json:"language"`
 	MimeType        string  `json:"mime_type"`
+	Size            int64   `json:"size"`
 }
 
 func prepareBMMData(audioFiles map[string][]common.AudioResult, analysis map[string]activities.NormalizeAudioResult) BMMData {
@@ -243,6 +244,7 @@ func prepareBMMData(audioFiles map[string][]common.AudioResult, analysis map[str
 				Lufs:            analysis[lang].OutputAnalysis.IntegratedLoudness,
 				DynamicRange:    analysis[lang].OutputAnalysis.LoudnessRange,
 				Language:        lang,
+				Size:            file.FileSize,
 			}
 
 			switch {
