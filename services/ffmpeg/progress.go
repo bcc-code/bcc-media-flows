@@ -1,10 +1,11 @@
 package ffmpeg
 
 import (
-	"github.com/samber/lo"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/samber/lo"
 )
 
 type ProgressCallback func(Progress)
@@ -26,6 +27,8 @@ type StreamInfo struct {
 	TotalFrames  int
 	TotalSeconds float64
 	FrameRate    int
+	Height       int
+	Width        int
 }
 
 func ProbeResultToInfo(info *FFProbeResult) StreamInfo {
@@ -43,6 +46,10 @@ func ProbeResultToInfo(info *FFProbeResult) StreamInfo {
 	})
 	if !found {
 		stream = info.Streams[0]
+	}
+	if streamInfo.HasVideo {
+		streamInfo.Height = stream.Height
+		streamInfo.Width = stream.Width
 	}
 	if info != nil {
 		frames, _ := strconv.ParseInt(stream.NbFrames, 10, 64)

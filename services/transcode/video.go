@@ -65,7 +65,15 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		filterComplex += "[0:0]copy[main];"
 	}
 
-	filterComplex += fmt.Sprintf("[main]scale=-1:%d:force_original_aspect_ratio=decrease[out]", input.Height)
+	height := input.Height
+	width := -1
+	if info.Height != 0 && info.Width != 0 && info.Height > info.Width {
+		// portrait video
+		height = -1
+		width = input.Height
+	}
+
+	filterComplex += fmt.Sprintf("[main]scale=%[1]d:%[2]d:force_original_aspect_ratio=decrease[out]", width, height)
 
 	params = append(params,
 		"-filter_complex", filterComplex,
