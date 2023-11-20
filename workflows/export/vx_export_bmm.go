@@ -44,14 +44,8 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, fmt.Errorf("failed to get audio file keys: %w", err)
 	}
 
-	tempDir, err := wfutils.GetWorkflowTempFolder(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get workflow temp folder: %w", err)
-	}
-
 	// We don't want to upload folders from other workflows that can be triggered at the same export.
-	outputFolder := tempDir.Append("bmm")
-	err = wfutils.CreateFolder(ctx, outputFolder)
+	err = wfutils.CreateFolder(ctx, params.OutputDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create output folder: %w", err)
 	}
@@ -64,7 +58,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 			FilePath:              audio,
 			TargetLUFS:            targetLufs,
 			PerformOutputAnalysis: true,
-			OutputPath:            tempDir,
+			OutputPath:            params.TempDir,
 		})
 		normalizedFutures[lang] = future
 	}
@@ -92,7 +86,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		for _, bitrate := range aacBitrates {
 			f := wfutils.ExecuteWithQueue(ctx, activities.TranscodeToAudioAac, common.AudioInput{
 				Path:            audio.FilePath,
-				DestinationPath: outputFolder,
+				DestinationPath: params.OutputDir,
 				Bitrate:         bitrate,
 			})
 			encodings = append(encodings, f)
@@ -101,7 +95,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		for _, bitrate := range mp3Bitrates {
 			f := wfutils.ExecuteWithQueue(ctx, activities.TranscodeToAudioMP3, common.AudioInput{
 				Path:            audio.FilePath,
-				DestinationPath: outputFolder,
+				DestinationPath: params.OutputDir,
 				Bitrate:         bitrate,
 			})
 			encodings = append(encodings, f)
@@ -160,14 +154,14 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, fmt.Errorf("failed to marshal JSON: %w", err)
 	}
 
-	err = wfutils.WriteFile(ctx, outputFolder.Append("bmm.json"), marshalled)
+	err = wfutils.WriteFile(ctx, params.OutputDir.Append("bmm.json"), marshalled)
 	if err != nil {
 		return nil, fmt.Errorf("failed to write JSON file: %w", err)
 	}
 
 	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      outputFolder.Rclone(),
+		Source:      params.OutputDir.Rclone(),
 		Destination: fmt.Sprintf("bmms3:/prod-bmm-mediabanken/" + ingestFolder),
 	}).Get(ctx, nil)
 	if err != nil {

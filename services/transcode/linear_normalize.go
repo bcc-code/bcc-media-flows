@@ -24,8 +24,6 @@ func AdjustAudioLevel(input common.AudioInput, adjustment float64, cb ffmpeg.Pro
 		outputFilePath,
 	}
 
-	params = append(params, "-y", outputFilePath)
-
 	info, err := ffmpeg.GetStreamInfo(input.Path.Local())
 	if err != nil {
 		return nil, err
