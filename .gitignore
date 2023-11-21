@@ -7,3 +7,6 @@ build
 Prod.bru
 
 __debug_bin*
+
+cmd/scripts/output
+/output

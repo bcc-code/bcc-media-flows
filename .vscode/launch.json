@@ -27,6 +27,15 @@
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/httpin",
             "envFile": "${workspaceFolder}/.env"
+        },
+        {
+          "name": "Launch scripts",
+          "type": "go",
+          "request": "launch",
+          "mode": "auto",
+          "program": "${workspaceFolder}/cmd/scripts",
+          "envFile": "${workspaceFolder}/.env",
+          "console": "integratedTerminal"
         }
     ]
 }
