@@ -274,6 +274,11 @@ func (s *VidispineService) GetSubclipNames(itemVXID string) ([]string, error) {
 		return inA < inB
 	})
 
+	metaClips = lo.Filter(metaClips, func(i *vsapi.MetadataResult, _ int) bool {
+		_, ok := i.Terse[vscommon.FieldStlText.Value]
+		return !ok
+	})
+
 	keys := lo.Map(metaClips, func(i *vsapi.MetadataResult, _ int) string {
 		return i.ID
 	})
