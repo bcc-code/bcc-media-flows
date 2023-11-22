@@ -165,36 +165,30 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 		watermarkPath = getOverlayFilePath(watermarkFile)
 	}
 
-	wfID := ""
+	params := export.VXExportParams{
+		VXID:          vxID,
+		WithFiles:     c.PostForm("withFiles") == "on",
+		WithChapters:  c.PostForm("withChapters") == "on",
+		WatermarkPath: watermarkPath,
+		AudioSource:   audioSource,
+		Destinations:  c.PostFormArray("destinations[]"),
+		Languages:     languages,
+	}
+
+	var wfID string
 
 	subclips := c.PostFormArray("subclips[]")
 	if len(subclips) > 0 {
 		for _, subclip := range subclips {
-			_, err = s.wfClient.ExecuteWorkflow(c, workflowOptions, export.VXExport, export.VXExportParams{
-				VXID:          vxID,
-				WithFiles:     c.PostForm("withFiles") == "on",
-				WithChapters:  c.PostForm("withChapters") == "on",
-				WatermarkPath: watermarkPath,
-				AudioSource:   audioSource,
-				Destinations:  c.PostFormArray("destinations[]"),
-				Languages:     languages,
-				Subclip:       subclip,
-			})
+			params.Subclip = subclip
+			_, err = s.wfClient.ExecuteWorkflow(c, workflowOptions, export.VXExport, params)
 			if err != nil {
 				renderErrorPage(c, http.StatusInternalServerError, err)
 				return
 			}
 		}
 	} else {
-		res, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, export.VXExport, export.VXExportParams{
-			VXID:          vxID,
-			WithFiles:     c.PostForm("withFiles") == "on",
-			WithChapters:  c.PostForm("withChapters") == "on",
-			WatermarkPath: watermarkPath,
-			AudioSource:   audioSource,
-			Destinations:  c.PostFormArray("destinations[]"),
-			Languages:     languages,
-		})
+		res, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, export.VXExport, params)
 
 		if err != nil {
 			renderErrorPage(c, http.StatusInternalServerError, err)
