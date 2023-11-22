@@ -31,6 +31,10 @@ func NewVidispineService(apiClient VSClient) *VidispineService {
 	}
 }
 
+func (s *VidispineService) Api() VSClient {
+	return s.apiClient
+}
+
 func (s *VidispineService) RegisterFile(filePath string, state vsapi.FileState) (string, error) {
 	return s.apiClient.RegisterFile(filePath, state)
 }

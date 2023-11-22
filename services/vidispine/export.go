@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/bcc-code/bccm-flows/environment"
@@ -62,7 +63,7 @@ var (
 
 func (s *VidispineService) getClipForAssetOrSubclip(
 	itemVXID string,
-	isSubclip bool,
+	subclipName string,
 	meta *vsapi.MetadataResult,
 	clipsMeta map[string]*vsapi.MetadataResult,
 ) (*Clip, error) {
@@ -81,7 +82,7 @@ func (s *VidispineService) getClipForAssetOrSubclip(
 		VideoFile: shape.GetPath(),
 	}
 
-	if !isSubclip {
+	if subclipName == "" {
 		in, out, err := meta.GetInOut("")
 		if err != nil {
 			return nil, err
@@ -91,12 +92,8 @@ func (s *VidispineService) getClipForAssetOrSubclip(
 		return &clip, nil
 	}
 
-	var subclipMeta *vsapi.MetadataResult
-
-	subclipName := meta.Get(vscommon.FieldSubclipToExport, "")
-	if scMeta, ok := clipsMeta[subclipName]; ok {
-		subclipMeta = scMeta
-	} else {
+	subclipMeta, ok := clipsMeta[subclipName]
+	if !ok {
 		return nil, errors.New("Subclip " + subclipName + " does not exist")
 	}
 
@@ -262,17 +259,37 @@ func (s *VidispineService) getEmbeddedAudio(clip *Clip, languagesToExport []stri
 	return clip, nil
 }
 
-// GetDataForExport returns the data needed to export the item with the given VXID
-// If exportSubclip is true, the subclip will be exported, otherwise the whole clip
-func (s *VidispineService) GetDataForExport(itemVXID string, languagesToExport []string, audioSource *ExportAudioSource) (*ExportData, error) {
+// GetSubclipNames returns the names of all the subclips
+func (s *VidispineService) GetSubclipNames(itemVXID string) ([]string, error) {
 	meta, err := s.apiClient.GetMetadata(itemVXID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Check for subclip
-	// This check needs to happen on the original metadata, not the split one
-	isSubclip := len(meta.GetArray(vscommon.FieldTitle)) > 1
+	metaClips := lo.Values(meta.SplitByClips())
+
+	sort.Slice(metaClips, func(i, j int) bool {
+		inA, _, _ := metaClips[i].GetInOut(meta.Get(vscommon.FieldStartTC, "0@PAL"))
+		inB, _, _ := metaClips[j].GetInOut(meta.Get(vscommon.FieldStartTC, "0@PAL"))
+		return inA < inB
+	})
+
+	keys := lo.Map(metaClips, func(i *vsapi.MetadataResult, _ int) string {
+		return i.ID
+	})
+
+	return lo.Filter(keys, func(i string, _ int) bool {
+		return i != vsapi.OriginalClip
+	}), nil
+}
+
+// GetDataForExport returns the data needed to export the item with the given VXID
+// If exportSubclip is true, the subclip will be exported, otherwise the whole clip
+func (s *VidispineService) GetDataForExport(itemVXID string, languagesToExport []string, audioSource *ExportAudioSource, subclip string) (*ExportData, error) {
+	meta, err := s.apiClient.GetMetadata(itemVXID)
+	if err != nil {
+		return nil, err
+	}
 
 	metaClips := meta.SplitByClips()
 
@@ -291,9 +308,12 @@ func (s *VidispineService) GetDataForExport(itemVXID string, languagesToExport [
 	isSequence := meta.Get(vscommon.FieldSequenceSize, "0") != "0"
 
 	title := meta.Get(vscommon.FieldTitle, "")
-	subclipTitle := meta.Get(vscommon.FieldSubclipToExport, "")
-	if subclipTitle != "" {
-		title += " - " + subclipTitle
+	subclipTitle := subclip
+	if subclipTitle == "" {
+		subclipTitle = meta.Get(vscommon.FieldSubclipToExport, "")
+		if subclipTitle != "" {
+			title += " - " + subclipTitle
+		}
 	}
 
 	// clean up the title
@@ -318,7 +338,7 @@ func (s *VidispineService) GetDataForExport(itemVXID string, languagesToExport [
 			return nil, err
 		}
 	} else {
-		clip, err := s.getClipForAssetOrSubclip(itemVXID, isSubclip, meta, metaClips)
+		clip, err := s.getClipForAssetOrSubclip(itemVXID, subclipTitle, meta, metaClips)
 		if err != nil {
 			return nil, err
 		}
