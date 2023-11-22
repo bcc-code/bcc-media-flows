@@ -29,6 +29,9 @@ func MoveFile(ctx context.Context, input MoveFileInput) (*FileResult, error) {
 	activity.RecordHeartbeat(ctx, "MoveFile")
 	log.Info("Starting MoveFileActivity")
 
+	stop := simpleHeartBeater(ctx)
+	defer close(stop)
+
 	err := os.MkdirAll(filepath.Dir(input.Destination.Local()), os.ModePerm)
 	if err != nil {
 		return nil, err
@@ -124,6 +127,9 @@ func WriteFile(ctx context.Context, input WriteFileInput) error {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "WriteFile")
 	log.Info("Starting WriteFileActivity")
+
+	stop := simpleHeartBeater(ctx)
+	defer close(stop)
 
 	err := os.MkdirAll(filepath.Dir(input.Path.Local()), os.ModePerm)
 	if err != nil {
