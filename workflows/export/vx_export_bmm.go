@@ -124,6 +124,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	jsonData := prepareBMMData(audioResults, normalizedResults)
 	jsonData.Length = int(params.MergeResult.Duration)
 	jsonData.MediabankenID = fmt.Sprintf("%s-%s", params.ParentParams.VXID, HashTitle(params.ExportData.Title))
+	jsonData.ImportDate = params.ExportData.ImportDate
 
 	jsonData.Title = params.ExportData.Title
 
@@ -200,6 +201,7 @@ type BMMData struct {
 	SongCollection   *string                   `json:"song_collection"`
 	SongNumber       *string                   `json:"song_number"`
 	RecordedAt       *time.Time                `json:"recorded_at"`
+	ImportDate       *time.Time                `json:"import_date"`
 }
 
 type BMMAudioFile struct {

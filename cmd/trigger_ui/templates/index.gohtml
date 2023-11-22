@@ -99,6 +99,7 @@
         <div class="flex flex-col">
             <label class="font-bold" for="watermarkFile">Overlay</label>
             <select class="{{$selectClasses}}" name="watermarkFile" id="watermarkFile">
+                <option value="">None</option>
                 {{range $index, $element := .Filenames}}
                     <option value={{$element}}>{{$element}}</option>
                 {{end}}

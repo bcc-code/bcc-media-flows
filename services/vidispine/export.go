@@ -6,10 +6,10 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-
-	"github.com/bcc-code/bccm-flows/environment"
+	"time"
 
 	bccmflows "github.com/bcc-code/bccm-flows"
+	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	mapset "github.com/deckarep/golang-set/v2"
@@ -45,6 +45,9 @@ type ExportData struct {
 
 	// Title is the original title containing spaces and other characters
 	Title string
+
+	// ImportDate is the date the asset was imported into Vidispine
+	ImportDate *time.Time
 }
 
 type ExportAudioSource enum.Member[string]
@@ -330,6 +333,13 @@ func (s *VidispineService) GetDataForExport(itemVXID string, languagesToExport [
 		Title:     title,
 		SafeTitle: safeTitle,
 		Clips:     []*Clip{},
+	}
+
+	if ingested := meta.Get(vscommon.FieldIngested, ""); ingested != "" {
+		t, err := time.Parse(time.RFC3339, ingested)
+		if err == nil {
+			out.ImportDate = &t
+		}
 	}
 
 	// Get the video clips as a base
