@@ -194,7 +194,6 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 			AudioSource:   audioSource,
 			Destinations:  c.PostFormArray("destinations[]"),
 			Languages:     languages,
-			Subclip:       c.PostForm("subclipToExport"),
 		})
 
 		if err != nil {
