@@ -165,20 +165,44 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 		watermarkPath = getOverlayFilePath(watermarkFile)
 	}
 
-	res, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, export.VXExport, export.VXExportParams{
-		VXID:          vxID,
-		WithFiles:     c.PostForm("withFiles") == "on",
-		WithChapters:  c.PostForm("withChapters") == "on",
-		WatermarkPath: watermarkPath,
-		AudioSource:   audioSource,
-		Destinations:  c.PostFormArray("destinations[]"),
-		Languages:     languages,
-		Subclip:       c.PostForm("subclipToExport"),
-	})
+	wfID := ""
 
-	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
-		return
+	subclips := c.PostFormArray("subclips[]")
+	if len(subclips) > 0 {
+		for _, subclip := range subclips {
+			_, err = s.wfClient.ExecuteWorkflow(c, workflowOptions, export.VXExport, export.VXExportParams{
+				VXID:          vxID,
+				WithFiles:     c.PostForm("withFiles") == "on",
+				WithChapters:  c.PostForm("withChapters") == "on",
+				WatermarkPath: watermarkPath,
+				AudioSource:   audioSource,
+				Destinations:  c.PostFormArray("destinations[]"),
+				Languages:     languages,
+				Subclip:       subclip,
+			})
+			if err != nil {
+				renderErrorPage(c, http.StatusInternalServerError, err)
+				return
+			}
+		}
+	} else {
+		res, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, export.VXExport, export.VXExportParams{
+			VXID:          vxID,
+			WithFiles:     c.PostForm("withFiles") == "on",
+			WithChapters:  c.PostForm("withChapters") == "on",
+			WatermarkPath: watermarkPath,
+			AudioSource:   audioSource,
+			Destinations:  c.PostFormArray("destinations[]"),
+			Languages:     languages,
+			Subclip:       c.PostForm("subclipToExport"),
+		})
+
+		if err != nil {
+			renderErrorPage(c, http.StatusInternalServerError, err)
+			return
+		}
+
+		wfID = res.GetID()
 	}
 
 	meta, err := s.vidispine.Api().GetMetadata(vxID)
@@ -190,10 +214,9 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 	// Render success page, with back button
 
 	c.HTML(http.StatusOK, "success.gohtml", gin.H{
-		"WorkflowID": res.GetID(),
+		"WorkflowID": wfID,
 		"Title":      meta.Get(vscommon.FieldTitle, ""),
 	})
-
 }
 
 type WorkflowListParams struct {

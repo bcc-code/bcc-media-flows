@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/bcc-code/bccm-flows/environment"
@@ -265,9 +266,19 @@ func (s *VidispineService) GetSubclipNames(itemVXID string) ([]string, error) {
 		return nil, err
 	}
 
-	metaClips := meta.SplitByClips()
+	metaClips := lo.Values(meta.SplitByClips())
 
-	return lo.Filter(lo.Keys(metaClips), func(i string, _ int) bool {
+	sort.Slice(metaClips, func(i, j int) bool {
+		inA, _, _ := metaClips[i].GetInOut(meta.Get(vscommon.FieldStartTC, "0@PAL"))
+		inB, _, _ := metaClips[j].GetInOut(meta.Get(vscommon.FieldStartTC, "0@PAL"))
+		return inA < inB
+	})
+
+	keys := lo.Map(metaClips, func(i *vsapi.MetadataResult, _ int) string {
+		return i.ID
+	})
+
+	return lo.Filter(keys, func(i string, _ int) bool {
 		return i != vsapi.OriginalClip
 	}), nil
 }
