@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/bcc-code/bccm-flows/environment"
 	"net/http"
 	"path/filepath"
 	"time"
+
+	"github.com/bcc-code/bccm-flows/environment"
 
 	"os"
 
@@ -64,7 +65,7 @@ func renderErrorPage(c *gin.Context, httpStatus int, err error) {
 }
 
 type TriggerServer struct {
-	vsapiClient             *vsapi.Client
+	vidispine               *vidispine.VidispineService
 	assetExportDestinations []string
 	wfClient                client.Client
 	languages               map[string]bccmflows.Language
@@ -79,10 +80,12 @@ type TriggerGETParams struct {
 	SelectedLanguages       []string
 	SelectedAudioSource     string
 	AudioSources            []string
+	SubclipNames            []string
 }
 
 func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
-	meta, err := s.vsapiClient.GetMetadata(c.Query("id"))
+	vxID := c.Query("id")
+	meta, err := s.vidispine.Api().GetMetadata(vxID)
 	if err != nil {
 		renderErrorPage(c, http.StatusInternalServerError, err)
 		return
@@ -101,6 +104,12 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 		return
 	}
 
+	subclipNames, err := s.vidispine.GetSubclipNames(vxID)
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
+
 	c.HTML(http.StatusOK, "index.gohtml", TriggerGETParams{
 		Title:                   title,
 		AssetExportDestinations: s.assetExportDestinations,
@@ -109,6 +118,7 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 		SelectedLanguages:       selectedLanguages,
 		SelectedAudioSource:     selectedAudioSource,
 		AudioSources:            s.ExportAudioSources,
+		SubclipNames:            subclipNames,
 	})
 }
 
@@ -129,7 +139,7 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 		}
 	}
 
-	err := s.vsapiClient.SetItemMetadataField(vxID, vscommon.FieldExportAudioSource.Value, audioSource)
+	err := s.vidispine.SetItemMetadataField(vxID, vscommon.FieldExportAudioSource.Value, audioSource)
 	if err != nil {
 		renderErrorPage(c, http.StatusInternalServerError, err)
 		return
@@ -137,9 +147,9 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 
 	for i, element := range languages {
 		if i == 0 {
-			err = s.vsapiClient.SetItemMetadataField(vxID, vscommon.FieldLangsToExport.Value, element)
+			err = s.vidispine.SetItemMetadataField(vxID, vscommon.FieldLangsToExport.Value, element)
 		} else {
-			err = s.vsapiClient.AddToItemMetadataField(vxID, vscommon.FieldLangsToExport.Value, element)
+			err = s.vidispine.AddToItemMetadataField(vxID, vscommon.FieldLangsToExport.Value, element)
 
 		}
 
@@ -163,6 +173,7 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 		AudioSource:   audioSource,
 		Destinations:  c.PostFormArray("destinations[]"),
 		Languages:     languages,
+		Subclip:       c.PostForm("subclipToExport"),
 	})
 
 	if err != nil {
@@ -170,7 +181,7 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 		return
 	}
 
-	meta, err := s.vsapiClient.GetMetadata(vxID)
+	meta, err := s.vidispine.Api().GetMetadata(vxID)
 	if err != nil {
 		renderErrorPage(c, http.StatusInternalServerError, err)
 		return
@@ -232,7 +243,7 @@ func (s *TriggerServer) listGET(c *gin.Context) {
 			return
 		}
 
-		meta, err := s.vsapiClient.GetMetadata(data.VXID)
+		meta, err := s.vidispine.Api().GetMetadata(data.VXID)
 		if err != nil {
 			renderErrorPage(c, http.StatusInternalServerError, err)
 			return
@@ -281,7 +292,7 @@ func main() {
 	router.LoadHTMLGlob("./templates/*")
 
 	server := &TriggerServer{
-		vsapiClient,
+		vidispine.NewVidispineService(vsapiClient),
 		assetExportDestinations,
 		wfClient,
 		lang,

@@ -36,6 +36,7 @@ type VXExportParams struct {
 	Destinations  []string
 	AudioSource   string
 	Languages     []string
+	Subclip       string
 }
 
 type VXExportResult struct {
@@ -87,6 +88,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		VXID:        params.VXID,
 		Languages:   params.Languages,
 		AudioSource: params.AudioSource,
+		Subclip:     params.Subclip,
 	}).Get(ctx, &data)
 	if err != nil {
 		return nil, err
