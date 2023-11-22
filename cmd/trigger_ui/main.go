@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/google/uuid"
 
 	"os"
 
@@ -18,7 +19,6 @@ import (
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bccm-flows/workflows/export"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"go.temporal.io/api/history/v1"
 	"go.temporal.io/api/workflowservice/v1"
 	"go.temporal.io/sdk/client"
@@ -129,7 +129,6 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 
 	queue := getQueue()
 	workflowOptions := client.StartWorkflowOptions{
-		ID:        uuid.NewString(),
 		TaskQueue: queue,
 	}
 
@@ -181,6 +180,7 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 	if len(subclips) > 0 {
 		for _, subclip := range subclips {
 			params.Subclip = subclip
+			workflowOptions.ID = uuid.NewString()
 			_, err = s.wfClient.ExecuteWorkflow(c, workflowOptions, export.VXExport, params)
 			if err != nil {
 				renderErrorPage(c, http.StatusInternalServerError, err)
@@ -188,6 +188,7 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 			}
 		}
 	} else {
+		workflowOptions.ID = uuid.NewString()
 		res, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, export.VXExport, params)
 
 		if err != nil {
