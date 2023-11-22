@@ -2,8 +2,12 @@ package export
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/ansel1/merry/v2"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/orsinium-labs/enum"
+	"github.com/samber/lo"
 
 	avidispine "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/services/vidispine"
@@ -161,6 +165,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 	}
 
 	var results []wfutils.ResultOrError[VXExportResult]
+	var errs []error
 	for _, future := range resultFutures {
 		var result *VXExportResult
 		err = future.Get(ctx, &result)
@@ -168,7 +173,15 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 			Result: result,
 			Error:  err,
 		})
+		if err != nil {
+			errs = append(errs, err)
+		}
 	}
-
-	return results, nil
+	err = nil
+	if len(errs) > 0 {
+		err = merry.New(strings.Join(lo.Map(errs, func(err error, _ int) string {
+			return err.Error()
+		}), "\n"))
+	}
+	return results, err
 }
