@@ -6,7 +6,7 @@
 </head>
 <body class="flex bg-gray-100">
 {{ $selectClasses := "p-2 border rounded-md bg-transparent"}}
-<section class="mx-auto p-4 md:p-8 bg-white w-8/12 md:w-1/4">
+<section class="mx-auto p-4 md:p-8 bg-white">
     <form id="requestForm" method="post" class="flex flex-col gap-4 justify-between divide-y-1">
         <h1 class="text-center w-full font-bold text-3xl text-gray-600 p-4" id="vxID">{{
             .Title }}</h1>
@@ -52,7 +52,28 @@
             </ul>
         </div>
         <div class="flex flex-col">
-            <label class="font-bold" for="items">Language Exports</label>
+            <div class="flex">
+                <h3 class="font-bold">Language Exports</h3>
+                <div class="ml-auto flex gap-1">
+                    {{$buttonClasses := "bg-green-200 cursor-pointer rounded-md p-0.5 px-1 text-sm border border-gray-400 hover:bg-gray-200 transition"}}
+                    <div onclick="setAllLanguages(true)"
+                         class="{{$buttonClasses}}">
+                        All
+                    </div>
+                    <div onclick="setAllLanguages(false)"
+                         class="{{$buttonClasses}}">
+                        None
+                    </div>
+                    <div onclick="enableMU1()"
+                         class="{{$buttonClasses}}">
+                        MU1
+                    </div>
+                    <div onclick="enableMU2()"
+                         class="{{$buttonClasses}}">
+                        MU2
+                    </div>
+                </div>
+            </div>
             <ul class="flex flex-col gap-1">
                 {{$selectedLanguages := .SelectedLanguages}}
                 {{range $key, $language := .Languages}}
@@ -101,3 +122,29 @@
 </section>
 </body>
 </html>
+<script>
+    const languages = {{.Languages}};
+
+    function setAllLanguages(value) {
+        const languageKeys = Object.values(languages).map(i => i.ISO6391)
+        for (const key of languageKeys) {
+            document.getElementById(key).checked = value
+        }
+    }
+
+    function enableMU1() {
+        for (const [key, language] of Object.entries(languages)) {
+            if (language.MU1ChannelStart !== -1) {
+                document.getElementById(key).checked = true
+            }
+        }
+    }
+
+    function enableMU2() {
+        for (const [key, language] of Object.entries(languages)) {
+            if (language.MU2ChannelStart !== -1) {
+                document.getElementById(key).checked = true
+            }
+        }
+    }
+</script>
