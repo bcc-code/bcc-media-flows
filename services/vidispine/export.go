@@ -316,9 +316,9 @@ func (s *VidispineService) GetDataForExport(itemVXID string, languagesToExport [
 	subclipTitle := subclip
 	if subclipTitle == "" {
 		subclipTitle = meta.Get(vscommon.FieldSubclipToExport, "")
-		if subclipTitle != "" {
-			title += " - " + subclipTitle
-		}
+	}
+	if subclipTitle != "" {
+		title += " - " + subclipTitle
 	}
 
 	// clean up the title
