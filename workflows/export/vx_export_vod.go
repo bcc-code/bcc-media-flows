@@ -35,6 +35,13 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		})
 	}
 
+	for _, subtitle := range params.MergeResult.SubtitleFiles {
+		err := wfutils.CopyFile(ctx, subtitle, params.OutputDir.Append(subtitle.Base()))
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	audioFiles, err := prepareAudioFiles(ctx, params.MergeResult, params.TempDir)
 	if err != nil {
 		return nil, err
@@ -54,7 +61,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	}
 
 	service := &vxExportVodService{
-		ingestFolder:           params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID,
+		ingestFolder:           params.ExportData.SafeTitle + "_" + params.RunID,
 		params:                 params,
 		filesSelector:          workflow.NewSelector(ctx),
 		qualitiesWithLanguages: getQualitiesWithLanguages(audioKeys),
@@ -113,7 +120,6 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 
 	return service.setMetadataAndPublishToVOD(
 		ctx,
-		params,
 		chapterDataWF,
 		params.OutputDir)
 }
@@ -155,14 +161,13 @@ func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, 
 
 func (v *vxExportVodService) setMetadataAndPublishToVOD(
 	ctx workflow.Context,
-	params VXExportChildWorkflowParams,
 	chapterDataWF workflow.Future,
 	outputDir paths.Path,
 ) (*VXExportResult, error) {
 	ingestData := asset.IngestJSONMeta{
-		Title:    params.ExportData.SafeTitle,
-		ID:       params.ParentParams.VXID,
-		Duration: formatSecondsToTimestamp(params.MergeResult.Duration),
+		Title:    v.params.ExportData.SafeTitle,
+		ID:       v.params.ParentParams.VXID,
+		Duration: formatSecondsToTimestamp(v.params.MergeResult.Duration),
 	}
 	var smilData smil.Smil
 	smilData.XMLName.Local = "smil"
@@ -171,7 +176,7 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 	smilData.Head.Meta.Content = "mp4"
 
 	smilData.Body.Switch.Videos = v.streams
-	smilData.Body.Switch.TextStreams = getSubtitlesResult(params.MergeResult.SubtitleFiles)
+	smilData.Body.Switch.TextStreams = getSubtitlesResult(v.params.MergeResult.SubtitleFiles)
 
 	xmlData, _ := xml.MarshalIndent(smilData, "", "\t")
 	xmlData = append([]byte("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n"), xmlData...)
@@ -209,25 +214,27 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 		return nil, err
 	}
 
-	// Copies created files and any remaining files needed.
-	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      outputDir.Rclone(),
-		Destination: fmt.Sprintf("s3prod:vod-asset-ingest-prod/" + v.ingestFolder),
-	}).Get(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
+	if v.params.Upload {
+		// Copies created files and any remaining files needed.
+		err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
+			Source:      outputDir.Rclone(),
+			Destination: fmt.Sprintf("s3prod:vod-asset-ingest-prod/" + v.ingestFolder),
+		}).Get(ctx, nil)
+		if err != nil {
+			return nil, err
+		}
 
-	err = wfutils.PublishEvent(ctx, "asset.delivered", events.AssetDelivered{
-		JSONMetaPath: filepath.Join(v.ingestFolder, "ingest.json"),
-	})
-	if err != nil {
-		return nil, err
+		err = wfutils.PublishEvent(ctx, "asset.delivered", events.AssetDelivered{
+			JSONMetaPath: filepath.Join(v.ingestFolder, "ingest.json"),
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	//err = DeletePath(ctx, tempFolder)
 	return &VXExportResult{
-		ID:           params.ParentParams.VXID,
+		ID:           v.params.ParentParams.VXID,
 		ChaptersFile: ingestData.ChaptersFile,
 		SmilFile:     ingestData.SmilFile,
 		Duration:     ingestData.Duration,
@@ -286,6 +293,9 @@ func (v *vxExportVodService) handleStreamWorkflowFuture(ctx workflow.Context, q 
 }
 
 func (v *vxExportVodService) copyToIngest(ctx workflow.Context, path paths.Path) {
+	if !v.params.Upload {
+		return
+	}
 	v.tasks = append(v.tasks, wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      path,
 		Destination: paths.New(paths.AssetIngestDrive, filepath.Join(v.ingestFolder, path.Base())),
