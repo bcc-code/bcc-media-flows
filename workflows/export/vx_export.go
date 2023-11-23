@@ -3,6 +3,7 @@ package export
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/ansel1/merry/v2"
 	"github.com/bcc-code/bccm-flows/paths"
@@ -21,10 +22,12 @@ var (
 	AssetExportDestinationPlayout = AssetExportDestination{Value: "playout"}
 	AssetExportDestinationVOD     = AssetExportDestination{Value: "vod"}
 	AssetExportDestinationBMM     = AssetExportDestination{Value: "bmm"}
+	AssetExportDestinationIsilon  = AssetExportDestination{Value: "isilon"}
 	AssetExportDestinations       = enum.New(
 		AssetExportDestinationPlayout,
 		AssetExportDestinationVOD,
 		AssetExportDestinationBMM,
+		AssetExportDestinationIsilon,
 	)
 )
 
@@ -48,11 +51,13 @@ type VXExportResult struct {
 }
 
 type VXExportChildWorkflowParams struct {
+	RunID        string
 	ParentParams VXExportParams       `json:"parent_params"`
 	ExportData   vidispine.ExportData `json:"export_data"`
 	MergeResult  MergeExportDataResult
 	TempDir      paths.Path
 	OutputDir    paths.Path
+	Upload       bool
 }
 
 func formatSecondsToTimestamp(seconds float64) string {
@@ -136,7 +141,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 	for _, dest := range destinations {
 		var w interface{}
 		switch *dest {
-		case AssetExportDestinationVOD:
+		case AssetExportDestinationVOD, AssetExportDestinationIsilon:
 			w = VXExportToVOD
 		case AssetExportDestinationPlayout:
 			w = VXExportToPlayout
@@ -147,6 +152,14 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		}
 
 		p := outputDir.Append(dest.Value)
+		if *dest == AssetExportDestinationIsilon {
+			date := time.Now()
+			id := workflow.GetInfo(ctx).OriginalRunID
+			p = paths.Path{
+				Drive: paths.IsilonDrive,
+				Path:  fmt.Sprintf("Export/%s/%s", date.Format("2006-01"), data.SafeTitle+"-"+id[0:8]),
+			}
+		}
 		err = wfutils.CreateFolder(ctx, p)
 		if err != nil {
 			return nil, err
@@ -159,6 +172,8 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 			MergeResult:  mergeResult,
 			TempDir:      tempDir,
 			OutputDir:    p,
+			RunID:        workflow.GetInfo(ctx).OriginalRunID,
+			Upload:       *dest != AssetExportDestinationIsilon,
 		})
 		if err != nil {
 			return nil, err
