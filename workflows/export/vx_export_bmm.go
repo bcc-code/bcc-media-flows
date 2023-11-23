@@ -15,7 +15,7 @@ import (
 	"github.com/bcc-code/bccm-flows/activities"
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/bcc-code/bccm-flows/utils/workflows"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 )

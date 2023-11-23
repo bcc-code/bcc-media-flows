@@ -2,15 +2,16 @@ package ingestworkflows
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/bcc-code/bccm-flows/activities"
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bccm-flows/utils"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
-	"strconv"
 )
 
 type RawMaterialParams struct {
