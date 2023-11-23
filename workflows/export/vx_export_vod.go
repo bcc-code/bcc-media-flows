@@ -60,8 +60,6 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		qualitiesWithLanguages: getQualitiesWithLanguages(audioKeys),
 	}
 
-	shouldCreateFiles := params.ParentParams.WithFiles
-
 	videoKeys, err := startVideoTasks(ctx, service.filesSelector, getVideoQualities(*params.MergeResult.VideoFile, params.TempDir, wm), func(f workflow.Future, q quality) {
 		var result common.VideoResult
 		err := f.Get(ctx, &result)
@@ -75,7 +73,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 				service.handleStreamWorkflowFuture(ctx, q, f)
 			})
 		}
-		if shouldCreateFiles && lo.Contains(fileQualities, q) {
+		if params.ParentParams.WithFiles && lo.Contains(fileQualities, q) {
 			for _, key := range audioKeys {
 				lang := key
 				audioPath := audioFiles[lang]
@@ -96,7 +94,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	for range service.qualitiesWithLanguages {
 		service.filesSelector.Select(ctx)
 	}
-	if shouldCreateFiles {
+	if params.ParentParams.WithFiles {
 		for range fileQualities {
 			for range audioKeys {
 				service.filesSelector.Select(ctx)
