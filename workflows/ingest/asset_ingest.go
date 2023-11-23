@@ -19,7 +19,8 @@ var (
 	OrderFormRawMaterial  = OrderForm{Value: "Rawmaterial"}
 	OrderFormVBMaster     = OrderForm{Value: "VB"}
 	OrderFormSeriesMaster = OrderForm{Value: "Series_Masters"}
-	OrderFormOtherMaster  = OrderForm{Value: "Other_Masters"} // TODO: set correct value
+	OrderFormOtherMaster  = OrderForm{Value: "Other_Masters"}
+	OrderFormPodcast      = OrderForm{Value: "Podcast"}
 	OrderForms            = enum.New(
 		OrderFormRawMaterial,
 		//OrderFormVBMaster, // commented out for supporting only raw material
@@ -83,7 +84,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			Metadata:  metadata,
 			Directory: fcOutputDir,
 		}).Get(ctx, nil)
-	case OrderFormSeriesMaster, OrderFormOtherMaster, OrderFormVBMaster:
+	case OrderFormSeriesMaster, OrderFormOtherMaster, OrderFormVBMaster, OrderFormPodcast:
 		err = workflow.ExecuteChildWorkflow(ctx, Masters, MasterParams{
 			Metadata:  metadata,
 			OrderForm: *orderForm,
