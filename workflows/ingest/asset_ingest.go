@@ -79,18 +79,26 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 	}
 
 	switch *orderForm {
-	case OrderFormRawMaterial, OrderFormLEDMaterial:
+	case OrderFormRawMaterial:
 		err = workflow.ExecuteChildWorkflow(ctx, RawMaterial, RawMaterialParams{
 			OrderForm: *orderForm,
 			Metadata:  metadata,
 			Directory: fcOutputDir,
 		}).Get(ctx, nil)
-	case OrderFormSeriesMaster, OrderFormOtherMaster, OrderFormVBMaster:
+	case OrderFormSeriesMaster, OrderFormOtherMaster, OrderFormVBMaster, OrderFormLEDMaterial:
+		outputDir, err := wfutils.GetWorkflowMastersOutputFolder(ctx)
+		if err != nil {
+			return nil, err
+		}
 		err = workflow.ExecuteChildWorkflow(ctx, Masters, MasterParams{
 			Metadata:  metadata,
 			OrderForm: *orderForm,
 			Directory: fcOutputDir,
+			OutputDir: outputDir,
 		}).Get(ctx, nil)
+		if err != nil {
+			return nil, err
+		}
 	}
 	if err != nil {
 		return nil, err
