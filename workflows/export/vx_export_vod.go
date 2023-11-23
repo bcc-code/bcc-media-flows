@@ -35,6 +35,13 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		})
 	}
 
+	for _, subtitle := range params.MergeResult.SubtitleFiles {
+		err := wfutils.CopyFile(ctx, subtitle, params.OutputDir.Append(subtitle.Base()))
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	audioFiles, err := prepareAudioFiles(ctx, params.MergeResult, params.TempDir)
 	if err != nil {
 		return nil, err

@@ -112,8 +112,8 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
-	vodOutputDir := outputDir.Append("vod")
-	err = wfutils.CreateFolder(ctx, vodOutputDir)
+	subtitlesOutputDir := outputDir.Append("subtitles")
+	err = wfutils.CreateFolder(ctx, subtitlesOutputDir)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 	err = workflow.ExecuteChildWorkflow(ctx, MergeExportData, MergeExportDataParams{
 		ExportData:    data,
 		TempDir:       tempDir,
-		SubtitlesDir:  vodOutputDir,
+		SubtitlesDir:  subtitlesOutputDir,
 		MakeVideo:     !bmmOnly,
 		MakeAudio:     true,
 		MakeSubtitles: true,
@@ -136,13 +136,44 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
+	hasDestination := func(d AssetExportDestination) bool {
+		return lo.SomeBy(destinations, func(dest *AssetExportDestination) bool {
+			return *dest == d
+		})
+	}
+
 	// Destination branching:  VOD, playout, bmm, etc.
 	var resultFutures []workflow.Future
 	for _, dest := range destinations {
+		childParams := VXExportChildWorkflowParams{
+			ParentParams: params,
+			ExportData:   *data,
+			MergeResult:  mergeResult,
+			TempDir:      tempDir,
+			OutputDir:    outputDir.Append(dest.Value),
+			RunID:        workflow.GetInfo(ctx).OriginalRunID,
+			Upload:       true,
+		}
+
 		var w interface{}
 		switch *dest {
-		case AssetExportDestinationVOD, AssetExportDestinationIsilon:
+		case AssetExportDestinationIsilon:
+			if hasDestination(AssetExportDestinationVOD) {
+				// this is just a subflow of VOD
+				continue
+			}
+			childParams.Upload = false
+			fallthrough
+		case AssetExportDestinationVOD:
 			w = VXExportToVOD
+			if hasDestination(AssetExportDestinationIsilon) {
+				date := time.Now()
+				id := workflow.GetInfo(ctx).OriginalRunID
+				childParams.OutputDir = paths.Path{
+					Drive: paths.IsilonDrive,
+					Path:  fmt.Sprintf("Export/%s/%s", date.Format("2006-01"), data.SafeTitle+"-"+id[0:8]),
+				}
+			}
 		case AssetExportDestinationPlayout:
 			w = VXExportToPlayout
 		case AssetExportDestinationBMM:
@@ -151,30 +182,13 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 			return nil, fmt.Errorf("destination not implemented: %s", dest)
 		}
 
-		p := outputDir.Append(dest.Value)
-		if *dest == AssetExportDestinationIsilon {
-			date := time.Now()
-			id := workflow.GetInfo(ctx).OriginalRunID
-			p = paths.Path{
-				Drive: paths.IsilonDrive,
-				Path:  fmt.Sprintf("Export/%s/%s", date.Format("2006-01"), data.SafeTitle+"-"+id[0:8]),
-			}
-		}
-		err = wfutils.CreateFolder(ctx, p)
+		err = wfutils.CreateFolder(ctx, childParams.OutputDir)
 		if err != nil {
 			return nil, err
 		}
 
 		ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
-		future := workflow.ExecuteChildWorkflow(ctx, w, VXExportChildWorkflowParams{
-			ParentParams: params,
-			ExportData:   *data,
-			MergeResult:  mergeResult,
-			TempDir:      tempDir,
-			OutputDir:    p,
-			RunID:        workflow.GetInfo(ctx).OriginalRunID,
-			Upload:       *dest != AssetExportDestinationIsilon,
-		})
+		future := workflow.ExecuteChildWorkflow(ctx, w, childParams)
 		if err != nil {
 			return nil, err
 		}

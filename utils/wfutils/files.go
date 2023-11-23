@@ -34,6 +34,13 @@ func MoveFile(ctx workflow.Context, source, destination paths.Path) error {
 	}).Get(ctx, nil)
 }
 
+func CopyFile(ctx workflow.Context, source, destination paths.Path) error {
+	return workflow.ExecuteActivity(ctx, activities.CopyFile, activities.MoveFileInput{
+		Source:      source,
+		Destination: destination,
+	}).Get(ctx, nil)
+}
+
 func MoveToFolder(ctx workflow.Context, file, folder paths.Path) (paths.Path, error) {
 	newPath := folder.Append(file.Base())
 	err := MoveFile(ctx, file, newPath)
