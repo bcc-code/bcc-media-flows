@@ -2,18 +2,18 @@ package ingestworkflows
 
 import (
 	"fmt"
+
 	"github.com/bcc-code/bccm-flows/activities"
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ingest"
-	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"go.temporal.io/sdk/workflow"
-	"strconv"
 )
 
 type RawMaterialParams struct {
+	OrderForm OrderForm
 	Metadata  *ingest.Metadata
 	Directory paths.Path
 }
@@ -37,7 +37,13 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		if !utils.ValidRawFilename(f.Local()) {
 			return fmt.Errorf("invalid filename: %s", f)
 		}
-		newPath := outputFolder.Append(f.Base())
+
+		filename, err := getOrderFormFilename(params.OrderForm, f, params.Metadata.JobProperty)
+		if err != nil {
+			return err
+		}
+		newPath := outputFolder.Append(filename + f.Ext())
+
 		err = wfutils.MoveFile(ctx, f, newPath)
 		if err != nil {
 			return err
@@ -45,7 +51,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		files = append(files, newPath)
 	}
 
-	var assetAnalyzeTasks = map[string]workflow.Future{}
+	var mediaAnalyzeTasks = map[string]workflow.Future{}
 	var vidispineJobIDs = map[string]string{}
 
 	for _, file := range files {
@@ -55,30 +61,27 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 			return err
 		}
 		vidispineJobIDs[result.AssetID] = result.ImportJobID
-		assetAnalyzeTasks[result.AssetID] = wfutils.ExecuteWithQueue(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
-			FilePath: file,
-		})
+
+		err = addMetaTags(ctx, result.AssetID, params.Metadata)
+		if err != nil {
+			return err
+		}
+		if utils.IsMedia(file.Local()) {
+			mediaAnalyzeTasks[result.AssetID] = wfutils.ExecuteWithQueue(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
+				FilePath: file,
+			})
+		}
 	}
 
-	assetIDs, err := wfutils.GetMapKeysSafely(ctx, assetAnalyzeTasks)
+	mediaAssetIDs, err := wfutils.GetMapKeysSafely(ctx, mediaAnalyzeTasks)
 	if err != nil {
 		return err
 	}
 
-	for _, id := range assetIDs {
-		task := assetAnalyzeTasks[id]
+	for _, id := range mediaAssetIDs {
+		task := mediaAnalyzeTasks[id]
 		var result activities.AnalyzeFileResult
 		err = task.Get(ctx, &result)
-		if err != nil {
-			return err
-		}
-
-		err = wfutils.SetVidispineMeta(ctx, id, vscommon.FieldUploadedBy.Value, params.Metadata.JobProperty.SenderEmail)
-		if err != nil {
-			return err
-		}
-
-		err = wfutils.SetVidispineMeta(ctx, id, vscommon.FieldUploadJob.Value, strconv.Itoa(params.Metadata.JobProperty.JobID))
 		if err != nil {
 			return err
 		}
@@ -99,7 +102,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		}
 	}
 
-	err = postImportActions(ctx, assetIDs, params.Metadata.JobProperty.Language)
+	err = transcodeAndTranscribe(ctx, mediaAssetIDs, params.Metadata.JobProperty.Language)
 	if err != nil {
 		return err
 	}

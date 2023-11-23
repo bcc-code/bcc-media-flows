@@ -53,7 +53,7 @@ func Masters(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
 	}
 
 	if result.Report.TopLevelInfo.Error == 0 {
-		err = postImportActions(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
+		err = transcodeAndTranscribe(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
 		if err != nil {
 			return nil, err
 		}

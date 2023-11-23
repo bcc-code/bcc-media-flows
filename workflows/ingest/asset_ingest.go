@@ -2,6 +2,8 @@ package ingestworkflows
 
 import (
 	"fmt"
+	"path/filepath"
+
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ingest"
@@ -9,7 +11,6 @@ import (
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
-	"path/filepath"
 )
 
 type OrderForm enum.Member[string]
@@ -19,6 +20,7 @@ var (
 	OrderFormVBMaster     = OrderForm{Value: "VB"}
 	OrderFormSeriesMaster = OrderForm{Value: "Series_Masters"}
 	OrderFormOtherMaster  = OrderForm{Value: "Other_Masters"} // TODO: set correct value
+	OrderFormLEDMaterial  = OrderForm{Value: "LED-Material"}
 	OrderForms            = enum.New(
 		OrderFormRawMaterial,
 		//OrderFormVBMaster, // commented out for supporting only raw material
@@ -77,8 +79,9 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 	}
 
 	switch *orderForm {
-	case OrderFormRawMaterial:
+	case OrderFormRawMaterial, OrderFormLEDMaterial:
 		err = workflow.ExecuteChildWorkflow(ctx, RawMaterial, RawMaterialParams{
+			OrderForm: *orderForm,
 			Metadata:  metadata,
 			Directory: fcOutputDir,
 		}).Get(ctx, nil)
