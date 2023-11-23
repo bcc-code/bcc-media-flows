@@ -48,16 +48,18 @@ func Masters(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
 		return nil, err
 	}
 
-	// This isn't run on VB masters in old system, but see no reason to not run it here.
-	result.AnalyzeResult, err = analyzeAudioAndSetMetadata(ctx, result.AssetID, result.Path)
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Report.TopLevelInfo.Error == 0 {
-		err = transcodeAndTranscribe(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
+	if utils.IsMedia(result.Path.Local()) {
+		// This isn't run on VB masters in old system, but see no reason to not run it here.
+		result.AnalyzeResult, err = analyzeAudioAndSetMetadata(ctx, result.AssetID, result.Path)
 		if err != nil {
 			return nil, err
+		}
+
+		if result.Report.TopLevelInfo.Error == 0 {
+			err = transcodeAndTranscribe(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 

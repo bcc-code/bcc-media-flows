@@ -86,7 +86,8 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			Directory: fcOutputDir,
 		}).Get(ctx, nil)
 	case OrderFormSeriesMaster, OrderFormOtherMaster, OrderFormVBMaster, OrderFormLEDMaterial:
-		outputDir, err := wfutils.GetWorkflowMastersOutputFolder(ctx)
+		var outputDir paths.Path
+		outputDir, err = wfutils.GetWorkflowMastersOutputFolder(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -96,9 +97,6 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			Directory: fcOutputDir,
 			OutputDir: outputDir,
 		}).Get(ctx, nil)
-		if err != nil {
-			return nil, err
-		}
 	}
 	if err != nil {
 		return nil, err
