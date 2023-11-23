@@ -1,6 +1,11 @@
 package notifications
 
-func (c *Client) Send(targets []Target, message string) error {
+type Message struct {
+	Content string
+	Title   string
+}
+
+func (c *Client) Send(targets []Target, message Message) error {
 
 	for _, target := range targets {
 		switch target.Type {

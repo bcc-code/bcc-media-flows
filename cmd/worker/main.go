@@ -30,6 +30,7 @@ var utilActivities = []any{
 	activities.StandardizeFileName,
 	activities.GetSubtitlesActivity,
 	batonactivities.QC,
+	activities.NotifyTargets,
 }
 
 var vidispineActivities = []any{

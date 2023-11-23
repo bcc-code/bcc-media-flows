@@ -21,3 +21,10 @@ type Target struct {
 	// ID can be an email address, a phone number, a telegram chat id, etc.
 	ID string
 }
+
+func Email(email string) Target {
+	return Target{
+		Type: TargetTypeEmail,
+		ID:   email,
+	}
+}

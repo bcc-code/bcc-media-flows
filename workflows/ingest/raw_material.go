@@ -3,18 +3,22 @@ package ingestworkflows
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/bcc-code/bccm-flows/activities"
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ingest"
+	"github.com/bcc-code/bccm-flows/services/notifications"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/workflows"
+	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 )
 
 type RawMaterialParams struct {
+	Targets   []notifications.Target
 	Metadata  *ingest.Metadata
 	Directory paths.Path
 }
@@ -46,6 +50,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		files = append(files, newPath)
 	}
 
+	var fileByAssetID = map[string]paths.Path{}
 	var assetAnalyzeTasks = map[string]workflow.Future{}
 	var vidispineJobIDs = map[string]string{}
 
@@ -55,10 +60,16 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		if err != nil {
 			return err
 		}
+		fileByAssetID[result.AssetID] = file
 		vidispineJobIDs[result.AssetID] = result.ImportJobID
 		assetAnalyzeTasks[result.AssetID] = wfutils.ExecuteWithQueue(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
 			FilePath: file,
 		})
+	}
+
+	allAssetIDs, err := wfutils.GetMapKeysSafely(ctx, vidispineJobIDs)
+	if err != nil {
+		return err
 	}
 
 	assetIDs, err := wfutils.GetMapKeysSafely(ctx, assetAnalyzeTasks)
@@ -101,6 +112,20 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 	}
 
 	err = postImportActions(ctx, assetIDs, params.Metadata.JobProperty.Language)
+	if err != nil {
+		return err
+	}
+
+	err = wfutils.Notify(ctx,
+		params.Targets,
+		"Import complete",
+		"Order form: "+params.Metadata.JobProperty.OrderForm+"\n\nFiles:\n"+
+			strings.Join(
+				lo.Map(allAssetIDs, func(id string, _ int) string {
+					return fmt.Sprintf("%s - %s", id, fileByAssetID[id].Base())
+				}),
+				"\n"),
+	)
 	if err != nil {
 		return err
 	}
