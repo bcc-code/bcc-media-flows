@@ -4,7 +4,7 @@ import (
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 )
 
-func GetSubtransID(client VSClient, VXID string) (string, error) {
+func GetSubtransID(client Client, VXID string) (string, error) {
 	meta, err := client.GetMetadata(VXID)
 	if err != nil {
 		return "", err

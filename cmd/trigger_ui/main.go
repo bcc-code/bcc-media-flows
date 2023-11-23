@@ -65,7 +65,7 @@ func renderErrorPage(c *gin.Context, httpStatus int, err error) {
 }
 
 type TriggerServer struct {
-	vidispine               vidispine.VSClient
+	vidispine               vidispine.Client
 	assetExportDestinations []string
 	wfClient                client.Client
 	languages               map[string]bccmflows.Language

@@ -5,7 +5,7 @@ import (
 	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
 )
 
-type VSClient interface {
+type Client interface {
 	GetMetadata(vsID string) (*vsapi.MetadataResult, error)
 	GetChapterMeta(itemVXID string, inTc, outTc float64) (map[string]*vsapi.MetadataResult, error)
 	GetShapes(itemVXID string) (*vsapi.ShapeResult, error)

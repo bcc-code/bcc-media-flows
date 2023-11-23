@@ -7,6 +7,7 @@ import (
 	"time"
 
 	batonactivities "github.com/bcc-code/bccm-flows/activities/baton"
+	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/bcc-code/bccm-flows/workflows/ingest"
 
@@ -15,7 +16,6 @@ import (
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/workflows"
 
-	"github.com/bcc-code/bccm-flows/activities/vidispine"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 )
@@ -33,16 +33,16 @@ var utilActivities = []any{
 }
 
 var vidispineActivities = []any{
-	vidispine.GetFileFromVXActivity,
-	vidispine.ImportFileAsShapeActivity,
-	vidispine.ImportFileAsSidecarActivity,
-	vidispine.CreatePlaceholderActivity,
-	vidispine.SetVXMetadataFieldActivity,
-	vidispine.GetExportDataActivity,
-	vidispine.GetChapterDataActivity,
-	vidispine.CreateThumbnailsActivity,
-	vidispine.WaitForJobCompletion,
-	vidispine.JobCompleteOrErr,
+	vsactivity.GetFileFromVXActivity,
+	vsactivity.ImportFileAsShapeActivity,
+	vsactivity.ImportFileAsSidecarActivity,
+	vsactivity.CreatePlaceholderActivity,
+	vsactivity.SetVXMetadataFieldActivity,
+	vsactivity.GetExportDataActivity,
+	vsactivity.GetChapterDataActivity,
+	vsactivity.CreateThumbnailsActivity,
+	vsactivity.WaitForJobCompletion,
+	vsactivity.JobCompleteOrErr,
 	activities.GetSubtransIDActivity,
 }
 

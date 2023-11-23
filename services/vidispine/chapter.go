@@ -69,7 +69,7 @@ var SongCollectionMap = map[string]string{
 	"HV":  "WOTL",
 }
 
-func GetChapterData(client VSClient, exportData *ExportData) ([]asset.Chapter, error) {
+func GetChapterData(client Client, exportData *ExportData) ([]asset.Chapter, error) {
 	metaCache := map[string]*vsapi.MetadataResult{}
 
 	allChapters := map[string]*vsapi.MetadataResult{}

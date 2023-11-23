@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/paths"
-	vidispine2 "github.com/bcc-code/bccm-flows/services/vidispine"
+	"github.com/bcc-code/bccm-flows/services/vidispine"
 
-	"github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/services/subtrans"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"go.temporal.io/sdk/temporal"
@@ -37,8 +37,8 @@ type GetSubtransIDOutput struct {
 func GetSubtransIDActivity(ctx context.Context, input *GetSubtransIDInput) (*GetSubtransIDOutput, error) {
 	out := &GetSubtransIDOutput{}
 
-	vsClient := vidispine.GetClient()
-	subtransID, err := vidispine2.GetSubtransID(vsClient, input.VXID)
+	vsClient := vsactivity.GetClient()
+	subtransID, err := vidispine.GetSubtransID(vsClient, input.VXID)
 	if err != nil {
 		return out, err
 	}

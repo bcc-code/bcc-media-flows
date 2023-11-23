@@ -1,4 +1,4 @@
-package vidispine
+package vsactivity
 
 import (
 	"context"

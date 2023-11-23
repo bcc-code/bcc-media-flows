@@ -65,7 +65,7 @@ var (
 )
 
 func getClipForAssetOrSubclip(
-	client VSClient,
+	client Client,
 	itemVXID string,
 	subclipName string,
 	meta *vsapi.MetadataResult,
@@ -107,7 +107,7 @@ func getClipForAssetOrSubclip(
 	return &clip, err
 }
 
-func getRelatedAudios(client VSClient, clip *Clip, oLanguagesToExport []string) (*Clip, error) {
+func getRelatedAudios(client Client, clip *Clip, oLanguagesToExport []string) (*Clip, error) {
 
 	languagesToExport := make([]string, len(oLanguagesToExport))
 	copy(languagesToExport, oLanguagesToExport)
@@ -184,7 +184,7 @@ func getRelatedAudios(client VSClient, clip *Clip, oLanguagesToExport []string) 
 	return clip, nil
 }
 
-func getEmbeddedAudio(client VSClient, clip *Clip, languagesToExport []string) (*Clip, error) {
+func getEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) (*Clip, error) {
 	shapes, err := client.GetShapes(clip.VXID)
 	if err != nil {
 		return clip, err
@@ -264,7 +264,7 @@ func getEmbeddedAudio(client VSClient, clip *Clip, languagesToExport []string) (
 }
 
 // GetSubclipNames returns the names of all the subclips
-func GetSubclipNames(client VSClient, itemVXID string) ([]string, error) {
+func GetSubclipNames(client Client, itemVXID string) ([]string, error) {
 	meta, err := client.GetMetadata(itemVXID)
 	if err != nil {
 		return nil, err
@@ -294,7 +294,7 @@ func GetSubclipNames(client VSClient, itemVXID string) ([]string, error) {
 
 // GetDataForExport returns the data needed to export the item with the given VXID
 // If exportSubclip is true, the subclip will be exported, otherwise the whole clip
-func GetDataForExport(client VSClient, itemVXID string, languagesToExport []string, audioSource *ExportAudioSource, subclip string) (*ExportData, error) {
+func GetDataForExport(client Client, itemVXID string, languagesToExport []string, audioSource *ExportAudioSource, subclip string) (*ExportData, error) {
 	meta, err := client.GetMetadata(itemVXID)
 	if err != nil {
 		return nil, err

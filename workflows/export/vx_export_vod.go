@@ -11,7 +11,7 @@ import (
 	"github.com/bcc-code/bcc-media-platform/backend/events"
 	bccmflows "github.com/bcc-code/bccm-flows"
 	"github.com/bcc-code/bccm-flows/activities"
-	"github.com/bcc-code/bccm-flows/activities/vidispine"
+	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/common/smil"
 	"github.com/bcc-code/bccm-flows/paths"
@@ -30,7 +30,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	// We start chapter export and pick the results up later when needed
 	var chapterDataWF workflow.Future
 	if params.ParentParams.WithChapters {
-		chapterDataWF = workflow.ExecuteActivity(ctx, vidispine.GetChapterDataActivity, vidispine.GetChapterDataParams{
+		chapterDataWF = workflow.ExecuteActivity(ctx, vsactivity.GetChapterDataActivity, vsactivity.GetChapterDataParams{
 			ExportData: &params.ExportData,
 		})
 	}

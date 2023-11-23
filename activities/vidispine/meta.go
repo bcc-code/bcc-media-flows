@@ -1,8 +1,9 @@
-package vidispine
+package vsactivity
 
 import (
 	"context"
 	"fmt"
+
 	"github.com/bcc-code/bccm-flows/paths"
 	"go.temporal.io/sdk/activity"
 )
