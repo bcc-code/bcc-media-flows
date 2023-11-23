@@ -94,7 +94,7 @@ func Test_GetDataForExportSEQ(t *testing.T) {
 	expected := &vidispine.ExportData{}
 	fromJSONFile(expected, "testdata/GetDataForExport/VX-431566.json")
 
-	res, err := c.GetDataForExport("VX-431566")
+	res, err := c.GetDataForExport("VX-431566", nil, nil, "")
 	assert.NoError(t, err)
 	assert.Equal(t, expected, res)
 
@@ -117,7 +117,7 @@ func Test_GetDataForExportEmbeddedAudio(t *testing.T) {
 	expected := &vidispine.ExportData{}
 	fromJSONFile(expected, "testdata/GetDataForExport/VX-464406.json")
 
-	res, err := c.GetDataForExport("VX-464406")
+	res, err := c.GetDataForExport("VX-464406", nil, nil, "")
 	assert.NoError(t, err)
 	assert.Equal(t, expected, res)
 }
@@ -136,7 +136,7 @@ func Test_GetDataForExportAsset(t *testing.T) {
 	expected := &vidispine.ExportData{}
 	fromJSONFile(expected, "testdata/GetDataForExport/VX-464458.json")
 
-	res, err := c.GetDataForExport("VX-464458")
+	res, err := c.GetDataForExport("VX-464458", nil, nil, "")
 	assert.NoError(t, err)
 	assert.Equal(t, expected, res)
 }
@@ -154,7 +154,7 @@ func Test_GetDataForExportSubclip(t *testing.T) {
 	expected := &vidispine.ExportData{}
 	fromJSONFile(expected, "testdata/GetDataForExport/VX-460824.json")
 
-	res, err := c.GetDataForExport("VX-460824")
+	res, err := c.GetDataForExport("VX-460824", nil, nil, "")
 	assert.NoError(t, err)
 	assert.Equal(t, expected, res)
 }
@@ -190,7 +190,7 @@ func Test_GetDataForExportSubtitles(t *testing.T) {
 	expected := &vidispine.ExportData{}
 	fromJSONFile(expected, "testdata/GetDataForExport/VX-447459.json")
 
-	res, err := c.GetDataForExport("VX-447459")
+	res, err := c.GetDataForExport("VX-447459", nil, nil, "")
 	assert.NoError(t, err)
 	assert.Equal(t, expected, res)
 }
