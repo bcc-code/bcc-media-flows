@@ -31,7 +31,7 @@ func NewVidispineService(apiClient VSClient) *VidispineService {
 	}
 }
 
-func (s *VidispineService) Api() VSClient {
+func (s *VidispineService) Client() VSClient {
 	return s.apiClient
 }
 

@@ -6,7 +6,7 @@ import (
 	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
 )
 
-func (s *VidispineService) SeqToClips(seq *vsapi.SequenceDocument, audioSource ExportAudioSource) ([]*Clip, error) {
+func SeqToClips(client VSClient, seq *vsapi.SequenceDocument, audioSource ExportAudioSource) ([]*Clip, error) {
 	out := []*Clip{}
 
 	for _, track := range seq.Track {
@@ -25,7 +25,7 @@ func (s *VidispineService) SeqToClips(seq *vsapi.SequenceDocument, audioSource E
 			clip.SequenceIn = float64(segment.In.Samples) / float64(segment.In.TimeBase.Denominator)
 			clip.SequenceOut = float64(segment.Out.Samples) / float64(segment.Out.TimeBase.Denominator)
 
-			shapes, err := s.apiClient.GetShapes(segment.VXID)
+			shapes, err := client.GetShapes(segment.VXID)
 			if err != nil {
 				return nil, err
 			}

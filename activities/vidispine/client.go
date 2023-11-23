@@ -3,21 +3,19 @@ package vidispine
 import (
 	"context"
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/davecgh/go-spew/spew"
 	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/temporal"
-	"os"
-	"time"
 
 	"github.com/bcc-code/bccm-flows/services/vidispine"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
 )
 
-func GetClient() *vidispine.VidispineService {
-
-	vsapiClient := vsapi.NewClient(os.Getenv("VIDISPINE_BASE_URL"), os.Getenv("VIDISPINE_USERNAME"), os.Getenv("VIDISPINE_PASSWORD"))
-
-	return vidispine.NewVidispineService(vsapiClient)
+func GetClient() vidispine.VSClient {
+	return vsapi.NewClient(os.Getenv("VIDISPINE_BASE_URL"), os.Getenv("VIDISPINE_USERNAME"), os.Getenv("VIDISPINE_PASSWORD"))
 }
 
 type WaitForJobCompletionParams struct {

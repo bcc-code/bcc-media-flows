@@ -3,11 +3,13 @@ package activities
 import (
 	"context"
 	"fmt"
-	"github.com/bcc-code/bccm-flows/paths"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/bcc-code/bccm-flows/paths"
+	vidispine2 "github.com/bcc-code/bccm-flows/services/vidispine"
 
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/services/subtrans"
@@ -36,7 +38,7 @@ func GetSubtransIDActivity(ctx context.Context, input *GetSubtransIDInput) (*Get
 	out := &GetSubtransIDOutput{}
 
 	vsClient := vidispine.GetClient()
-	subtransID, err := vsClient.GetSubtransID(input.VXID)
+	subtransID, err := vidispine2.GetSubtransID(vsClient, input.VXID)
 	if err != nil {
 		return out, err
 	}
@@ -47,10 +49,12 @@ func GetSubtransIDActivity(ctx context.Context, input *GetSubtransIDInput) (*Get
 	}
 
 	// We do not have a story ID saved, so we try to find it using the file name
-	originalUri, err := vsClient.GetItemMetadataField(input.VXID, vscommon.FieldOriginalURI)
+	meta, err := vsClient.GetMetadata(input.VXID)
 	if err != nil {
-		return out, err
+		return nil, err
 	}
+
+	originalUri := meta.Get(vscommon.FieldOriginalURI, "")
 
 	parsedUri, err := url.Parse(originalUri)
 	if err != nil {

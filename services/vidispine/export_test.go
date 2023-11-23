@@ -88,13 +88,13 @@ func Test_GetDataForExportSEQ(t *testing.T) {
 	expectGetShape(vsClient, "VX-431562", 3)
 	expectGetShape(vsClient, "VX-431559", 3)
 
-	c := vidispine.NewVidispineService(vsClient)
+	c := vsClient
 
 	// SEQ - Chapters
 	expected := &vidispine.ExportData{}
 	fromJSONFile(expected, "testdata/GetDataForExport/VX-431566.json")
 
-	res, err := c.GetDataForExport("VX-431566", nil, nil, "")
+	res, err := vidispine.GetDataForExport(c, "VX-431566", nil, nil, "")
 	assert.NoError(t, err)
 	assert.Equal(t, expected, res)
 
@@ -104,8 +104,6 @@ func Test_GetDataForExportSEQ(t *testing.T) {
 func Test_GetDataForExportEmbeddedAudio(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	vsClient := vsmock.NewMockVSClient(ctrl)
-
-	c := vidispine.NewVidispineService(vsClient)
 
 	expectGetMetadata(vsClient, "VX-464406", 1)
 
@@ -117,7 +115,7 @@ func Test_GetDataForExportEmbeddedAudio(t *testing.T) {
 	expected := &vidispine.ExportData{}
 	fromJSONFile(expected, "testdata/GetDataForExport/VX-464406.json")
 
-	res, err := c.GetDataForExport("VX-464406", nil, nil, "")
+	res, err := vidispine.GetDataForExport(vsClient, "VX-464406", nil, nil, "")
 	assert.NoError(t, err)
 	assert.Equal(t, expected, res)
 }
@@ -125,8 +123,6 @@ func Test_GetDataForExportEmbeddedAudio(t *testing.T) {
 func Test_GetDataForExportAsset(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	vsClient := vsmock.NewMockVSClient(ctrl)
-
-	c := vidispine.NewVidispineService(vsClient)
 
 	expectGetMetadata(vsClient, "VX-464458", 1)
 
@@ -136,7 +132,7 @@ func Test_GetDataForExportAsset(t *testing.T) {
 	expected := &vidispine.ExportData{}
 	fromJSONFile(expected, "testdata/GetDataForExport/VX-464458.json")
 
-	res, err := c.GetDataForExport("VX-464458", nil, nil, "")
+	res, err := vidispine.GetDataForExport(vsClient, "VX-464458", nil, nil, "")
 	assert.NoError(t, err)
 	assert.Equal(t, expected, res)
 }
@@ -145,8 +141,6 @@ func Test_GetDataForExportSubclip(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	vsClient := vsmock.NewMockVSClient(ctrl)
 
-	c := vidispine.NewVidispineService(vsClient)
-
 	expectGetMetadata(vsClient, "VX-460824", 1)
 
 	expectGetShape(vsClient, "VX-460824", 3)
@@ -154,7 +148,7 @@ func Test_GetDataForExportSubclip(t *testing.T) {
 	expected := &vidispine.ExportData{}
 	fromJSONFile(expected, "testdata/GetDataForExport/VX-460824.json")
 
-	res, err := c.GetDataForExport("VX-460824", nil, nil, "")
+	res, err := vidispine.GetDataForExport(vsClient, "VX-460824", nil, nil, "")
 	assert.NoError(t, err)
 	assert.Equal(t, expected, res)
 }
@@ -162,8 +156,6 @@ func Test_GetDataForExportSubclip(t *testing.T) {
 func Test_GetDataForExportSubtitles(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	vsClient := vsmock.NewMockVSClient(ctrl)
-
-	c := vidispine.NewVidispineService(vsClient)
 
 	expectGetMetadata(vsClient, "VX-447459", 1)
 	expectGetMetadata(vsClient, "VX-447219", 13)
@@ -190,7 +182,7 @@ func Test_GetDataForExportSubtitles(t *testing.T) {
 	expected := &vidispine.ExportData{}
 	fromJSONFile(expected, "testdata/GetDataForExport/VX-447459.json")
 
-	res, err := c.GetDataForExport("VX-447459", nil, nil, "")
+	res, err := vidispine.GetDataForExport(vsClient, "VX-447459", nil, nil, "")
 	assert.NoError(t, err)
 	assert.Equal(t, expected, res)
 }

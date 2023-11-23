@@ -2,10 +2,11 @@ package vidispine
 
 import (
 	"fmt"
-	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	"math"
 	"regexp"
 	"strings"
+
+	"github.com/bcc-code/bcc-media-platform/backend/asset"
 
 	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
@@ -68,14 +69,14 @@ var SongCollectionMap = map[string]string{
 	"HV":  "WOTL",
 }
 
-func (s *VidispineService) GetChapterData(exportData *ExportData) ([]asset.Chapter, error) {
+func GetChapterData(client VSClient, exportData *ExportData) ([]asset.Chapter, error) {
 	metaCache := map[string]*vsapi.MetadataResult{}
 
 	allChapters := map[string]*vsapi.MetadataResult{}
 
 	for _, clip := range exportData.Clips {
 		if _, ok := metaCache[clip.VXID]; !ok {
-			meta, err := s.apiClient.GetMetadata(clip.VXID)
+			meta, err := client.GetMetadata(clip.VXID)
 			if err != nil {
 				return nil, err
 			}
@@ -87,7 +88,7 @@ func (s *VidispineService) GetChapterData(exportData *ExportData) ([]asset.Chapt
 		tcStartSeconds, _ := vscommon.TCToSeconds(startTC)
 
 		// The result here is in TC of the original MEDIA.
-		chapterMeta, err := s.apiClient.GetChapterMeta(clip.VXID, clip.InSeconds+tcStartSeconds, clip.OutSeconds+tcStartSeconds)
+		chapterMeta, err := client.GetChapterMeta(clip.VXID, clip.InSeconds+tcStartSeconds, clip.OutSeconds+tcStartSeconds)
 		if err != nil {
 			return nil, err
 		}
