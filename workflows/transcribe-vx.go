@@ -10,7 +10,7 @@ import (
 
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/bcc-code/bccm-flows/utils/workflows"
 
 	"github.com/davecgh/go-spew/spew"
 	"go.temporal.io/sdk/temporal"

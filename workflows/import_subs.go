@@ -8,7 +8,7 @@ import (
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/bcc-code/bccm-flows/utils/workflows"
 
 	"github.com/bcc-code/bccm-flows/activities"
 	"go.temporal.io/sdk/temporal"

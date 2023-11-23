@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
+	"github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/vidispine"
 

@@ -2,14 +2,15 @@ package ingestworkflows
 
 import (
 	"fmt"
+	"path/filepath"
+
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ingest"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/bcc-code/bccm-flows/utils/workflows"
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
-	"path/filepath"
 )
 
 type OrderForm enum.Member[string]

@@ -14,7 +14,7 @@ import (
 	"github.com/bcc-code/bccm-flows/services/baton"
 	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
