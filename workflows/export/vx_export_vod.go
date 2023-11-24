@@ -15,7 +15,7 @@ import (
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/common/smil"
 	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/utils/workflows"
+	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 )
@@ -42,7 +42,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		}
 	}
 
-	audioFiles, err := prepareAudioFiles(ctx, params.MergeResult, params.TempDir)
+	audioFiles, err := prepareAudioFiles(ctx, params.MergeResult, params.TempDir, true)
 	if err != nil {
 		return nil, err
 	}
@@ -135,15 +135,47 @@ type vxExportVodService struct {
 	errs                   []error
 }
 
-func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, tempDir paths.Path) (map[string]paths.Path, error) {
+func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, tempDir paths.Path, normalizeAudio bool) (map[string]paths.Path, error) {
 	prepareFilesSelector := workflow.NewSelector(ctx)
+
+	if normalizeAudio {
+		langs, err := wfutils.GetMapKeysSafely(ctx, mergeResult.AudioFiles)
+		if err != nil {
+			return nil, err
+		}
+		normalizedFutures := map[string]workflow.Future{}
+		// Normalize audio
+		for _, lang := range langs {
+			audio := mergeResult.AudioFiles[lang]
+			ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
+			future := wfutils.ExecuteWithQueue(ctx, activities.NormalizeAudioActivity, activities.NormalizeAudioParams{
+				FilePath:              audio,
+				TargetLUFS:            -24,
+				PerformOutputAnalysis: true,
+				OutputPath:            tempDir,
+			})
+			normalizedFutures[lang] = future
+		}
+
+		for _, lang := range langs {
+			future := normalizedFutures[lang]
+			normalizedRes := activities.NormalizeAudioResult{}
+			err := future.Get(ctx, &normalizedRes)
+			if err != nil {
+				workflow.GetLogger(ctx).Error("Failed to get normalized audio result", "error", err)
+				return nil, fmt.Errorf("failed to normalize audio for language %s: %w", lang, err)
+			}
+
+			mergeResult.AudioFiles[lang] = normalizedRes.FilePath
+		}
+	}
 
 	var audioFiles = map[string]paths.Path{}
 	audioKeys, err := startAudioTasks(ctx, prepareFilesSelector, mergeResult.AudioFiles, tempDir, func(f workflow.Future, l string) {
 		var result common.AudioResult
 		err := f.Get(ctx, &result)
 		if err != nil {
-			workflow.GetLogger(ctx).Error("Failed to get video result", "error", err)
+			workflow.GetLogger(ctx).Error("Failed to get audio result", "error", err)
 			return
 		}
 		audioFiles[l] = result.OutputPath

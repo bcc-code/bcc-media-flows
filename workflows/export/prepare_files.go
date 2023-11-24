@@ -4,7 +4,7 @@ import (
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/utils/workflows"
+	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -97,6 +97,7 @@ func startAudioTasks(ctx workflow.Context, selector workflow.Selector, audioFile
 	if err != nil {
 		return nil, err
 	}
+
 	for _, key := range keys {
 		path := audioFiles[key]
 		lang := key
