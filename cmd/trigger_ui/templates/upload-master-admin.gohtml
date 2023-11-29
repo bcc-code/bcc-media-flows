@@ -7,10 +7,9 @@
 
 <body>
     <form method="POST" class="flex flex-col min-h-screen gap-2 mx-auto p-14 max-w-screen-lg">
-
         <h1>List of ProgramIDs</h1>
         <div class="flex flex-col gap-2 overflow-y-auto bg-gray-100 p-2">
-            {{range $element := .programIDArray}}
+            {{range $element := .programIds}}
             <div class="multiselect bg-gray-200 flex justify-between">
                 <p class="inline-block w-40 flex-none">{{$element}}</p>
                 <button class="bg-red-500 p-2">Delete</button>
@@ -18,11 +17,11 @@
             {{end}}
         </div>
 
-        <label for="Code">Code</label>
-        <input id="code" type="text" name="Code">
+        <label for="code">Code</label>
+        <input id="code" type="text" name="code">
 
-        <label for="Name">Name</label>
-        <input id="name" type="text" name="Name">
+        <label for="name">Name</label>
+        <input id="name" type="text" name="name">
 
         <input id="submit"
             class="cursor-pointer rounded-md bg-[#6A64F1] py-3 px-8 text-center text-base font-semibold text-white outline-none"
@@ -33,30 +32,22 @@
             Back
         </a>
 
-        <span type="hidden" id="deleteArrayData"></span>
-
+        <input type="hidden" id="deleteArrayData">
     </form>
-
-    <script>
-
-        for (const element of document.querySelectorAll(".multiselect")) {
-            setupButton(element)
-        }
-
-        function setupButton(element) {
-
-            element.children[1].onclick = function () {
-
-                const input = document.createElement("input")
-                document.getElementById("deleteArrayData").appendChild(input)
-                input.setAttribute("type", "hidden")
-                input.setAttribute("name", "deleteArrayData[]")
-                input.setAttribute("value", element.children[0].textContent)
-
-            }
-
-        }
-    </script>
 </body>
+<script>
+    for (const element of document.querySelectorAll(".multiselect")) {
+        setupButton(element)
+    }
 
+    function setupButton(element) {
+        element.children[1].onclick = function () {
+            const input = document.createElement("input")
+            document.getElementById("deleteArrayData").appendChild(input)
+            input.setAttribute("type", "hidden")
+            input.setAttribute("name", "deleteIds[]")
+            input.setAttribute("value", element.children[0].textContent)
+        }
+    }
+</script>
 </html>

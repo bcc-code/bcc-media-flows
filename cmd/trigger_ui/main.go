@@ -52,7 +52,7 @@ var masterTriggerDir = os.Getenv("MASTER_TRIGGER_DIR")
 
 func getFilenames(dir string) ([]string, error) {
 	files, err := os.ReadDir(dir)
-	filenames := []string{}
+	var filenames []string
 	if err != nil {
 		return filenames, err
 	}
@@ -82,49 +82,63 @@ type TriggerServer struct {
 	database                *sql.DB
 }
 
-func (s *TriggerServer) getArrayfromTable(c *gin.Context, table string) []string {
-	rows, err := s.database.Query("SELECT name FROM " + table)
+func singleValueArrayFromRows(rows *sql.Rows, err error) ([]string, error) {
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
-		return nil
+		return nil, err
 	}
 
-	array := []string{}
+	var array []string
 	for rows.Next() {
 		var data string
 		err = rows.Scan(&data)
 		if err != nil {
-			renderErrorPage(c, http.StatusInternalServerError, err)
-			return nil
+			return nil, err
 		}
 		array = append(array, data)
 	}
-	return array
+	return array, nil
 }
 
-func (s *TriggerServer) addDataToTable(c *gin.Context, array []string, table string) {
+func (s *TriggerServer) getPersons() ([]string, error) {
+	return singleValueArrayFromRows(s.database.Query("SELECT name FROM persons"))
+}
 
-	tableArray := s.getArrayfromTable(c, table)
+func (s *TriggerServer) addPerson(id string) error {
+	_, err := s.database.Exec("INSERT INTO persons (name) VALUES (?) ON CONFLICT DO NOTHING", id)
+	return err
+}
 
-	for i := 0; i < len(array); i++ {
+func (s *TriggerServer) removePerson(id string) error {
+	_, err := s.database.Exec("DELETE FROM persons WHERE name = ?", id)
+	return err
+}
 
-		isSame := false
+func (s *TriggerServer) getTags() ([]string, error) {
+	return singleValueArrayFromRows(s.database.Query("SELECT name FROM tags"))
+}
 
-		for j := 0; j < len(tableArray); j++ {
-			if tableArray[j] == array[i] {
-				isSame = true
-			}
-		}
+func (s *TriggerServer) addTag(id string) error {
+	_, err := s.database.Exec("INSERT INTO tags (name) VALUES (?) ON CONFLICT DO NOTHING", id)
+	return err
+}
 
-		if !isSame {
-			_, err := s.database.Exec("INSERT INTO " + table + " (name) VALUES ('" + array[i] + "')")
-			if err != nil {
-				renderErrorPage(c, http.StatusInternalServerError, err)
-				return
-			}
-		}
+func (s *TriggerServer) removeTag(id string) error {
+	_, err := s.database.Exec("DELETE FROM tags WHERE name = ?", id)
+	return err
+}
 
-	}
+func (s *TriggerServer) getProgramIDs() ([]string, error) {
+	return singleValueArrayFromRows(s.database.Query("SELECT name FROM program_ids"))
+}
+
+func (s *TriggerServer) addProgramID(id string) error {
+	_, err := s.database.Exec("INSERT INTO program_ids (name) VALUES (?) ON CONFLICT DO NOTHING", id)
+	return err
+}
+
+func (s *TriggerServer) removeProgramID(id string) error {
+	_, err := s.database.Exec("DELETE FROM program_ids WHERE name = ?", id)
+	return err
 }
 
 type TriggerGETParams struct {
@@ -358,30 +372,53 @@ func (s *TriggerServer) uploadMasterGET(c *gin.Context) {
 		return
 	}
 
-	tags := s.getArrayfromTable(c, "tags")
+	tags, err := s.getTags()
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
 
-	persons := s.getArrayfromTable(c, "persons")
+	persons, err := s.getPersons()
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
 
-	programID := s.getArrayfromTable(c, "programID")
+	programIDs, err := s.getProgramIDs()
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
 
 	c.HTML(http.StatusOK, "upload-master.gohtml", gin.H{
-		"fileDirectory":   filenames,
-		"TagsDatalist":    tags,
-		"PersonsDatalist": persons,
-		"programIDs":      programID,
+		"files":      filenames,
+		"tags":       tags,
+		"persons":    persons,
+		"programIds": programIDs,
 	})
 }
 
 func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
-
 	queue := getQueue()
 	workflowOptions := client.StartWorkflowOptions{
 		ID:        uuid.NewString(),
 		TaskQueue: queue,
 	}
 
-	s.addDataToTable(c, c.PostFormArray("tags[]"), "tags")
-	s.addDataToTable(c, c.PostFormArray("persons[]"), "persons")
+	for _, tag := range c.PostFormArray("tags[]") {
+		err := s.addTag(tag)
+		if err != nil {
+			renderErrorPage(c, http.StatusInternalServerError, err)
+			return
+		}
+	}
+	for _, person := range c.PostFormArray("persons[]") {
+		err := s.addPerson(person)
+		if err != nil {
+			renderErrorPage(c, http.StatusInternalServerError, err)
+			return
+		}
+	}
 
 	rawPath := masterTriggerDir + "/" + c.PostForm("path")
 	path := paths.MustParse(rawPath)
@@ -408,29 +445,39 @@ func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
 }
 
 func (s *TriggerServer) uploadMasterAdminGET(c *gin.Context) {
-
-	programID := s.getArrayfromTable(c, "programID")
+	programIDs, err := s.getProgramIDs()
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
 
 	c.HTML(http.StatusOK, "upload-master-admin.gohtml", gin.H{
-		"programIDArray": programID,
+		"programIds": programIDs,
 	})
 }
 
 func (s *TriggerServer) uploadMasterAdminPOST(c *gin.Context) {
+	addIDs := []string{c.PostForm("code") + " - " + c.PostForm("name")}
 
-	programID := []string{(c.PostForm("Code") + " - " + c.PostForm("Name"))}
-
-	if programID[0] != " - " {
-		s.addDataToTable(c, programID, "programID")
+	if addIDs[0] != " - " {
+		for _, id := range addIDs {
+			err := s.addProgramID(id)
+			if err != nil {
+				renderErrorPage(c, http.StatusInternalServerError, err)
+				return
+			}
+		}
 	}
 
-	DeleteRow := c.PostFormArray("deleteArrayData[]")
+	removeIDs := c.PostFormArray("deleteIds[]")
 
-	if DeleteRow != nil {
-		_, err := s.database.Exec("DELETE FROM programID WHERE name='" + DeleteRow[0] + "'")
-		if err != nil {
-			renderErrorPage(c, http.StatusInternalServerError, err)
-			return
+	if removeIDs != nil {
+		for _, id := range removeIDs {
+			err := s.removeProgramID(id)
+			if err != nil {
+				renderErrorPage(c, http.StatusInternalServerError, err)
+				return
+			}
 		}
 	}
 
@@ -451,26 +498,25 @@ func main() {
 
 	router.LoadHTMLGlob("./templates/*")
 
-	sqlite_path, exists := os.LookupEnv("TRIGGER_DB")
+	sqlitePath, exists := os.LookupEnv("TRIGGER_DB")
 	if !exists {
 		panic("No TRIGGER_DB environment variable.")
 	}
 
-	db, err := sql.Open("sqlite3", sqlite_path)
+	db, err := sql.Open("sqlite3", sqlitePath)
 	if err != nil {
 		panic(err.Error())
 	}
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS tags (
-		name TEXT NOT NULL
+		name TEXT NOT NULL UNIQUE 
 	);
 	CREATE TABLE IF NOT EXISTS persons (
-		name TEXT NOT NULL
+		name TEXT NOT NULL UNIQUE
 	);
-	CREATE TABLE IF NOT EXISTS programID (
-		name TEXT NOT NULL
-	);
-	`)
+	CREATE TABLE IF NOT EXISTS program_ids (
+		name TEXT NOT NULL UNIQUE 
+	);`)
 	if err != nil {
 		panic(err.Error())
 	}
