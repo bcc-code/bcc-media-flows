@@ -9,9 +9,9 @@ import (
 func Notify(ctx workflow.Context, targets []notifications.Target, title, message string) error {
 	return workflow.ExecuteActivity(ctx, activities.NotifyTargets, activities.NotifyTargetsInput{
 		Targets: targets,
-		Message: notifications.Message{
+		Message: notifications.SimpleNotification{
 			Title:   title,
-			Content: message,
+			Message: message,
 		},
 	}).Get(ctx, nil)
 }

@@ -12,7 +12,7 @@ import (
 
 type NotifyTargetsInput struct {
 	Targets []notifications.Target
-	Message notifications.Message
+	Message notifications.Template
 }
 
 func NotifyTargets(ctx context.Context, input NotifyTargetsInput) error {
@@ -26,21 +26,30 @@ func NotifyTargets(ctx context.Context, input NotifyTargetsInput) error {
 type notificationServices struct {
 }
 
-func (ns notificationServices) SendEmail(email string, message notifications.Message) error {
+func (ns notificationServices) SendEmail(email string, message notifications.Template) error {
 	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
 	from := mail.NewEmail("Workflows", "workflows@bcc.media")
 	to := mail.NewEmail(email, email)
-	subject := message.Title
-	content := mail.NewContent("text/plain", message.Content)
-	m := mail.NewV3MailInit(from, subject, to, content)
-	_, err := client.Send(m)
+	var subject string
+	content, err := message.RenderHTML()
+	if err != nil {
+		return err
+	}
+	switch t := message.(type) {
+	case notifications.ImportCompleted:
+		subject = t.Title
+	case notifications.SimpleNotification:
+		subject = t.Title
+	}
+	m := mail.NewV3MailInit(from, subject, to, mail.NewContent("text/html", content))
+	_, err = client.Send(m)
 	return err
 }
 
-func (ns notificationServices) SendTelegramMessage(chatID string, message notifications.Message) error {
+func (ns notificationServices) SendTelegramMessage(chatID string, message notifications.Template) error {
 	return nil
 }
 
-func (ns notificationServices) SendSMS(phoneNumber string, message notifications.Message) error {
+func (ns notificationServices) SendSMS(phoneNumber string, message notifications.Template) error {
 	return nil
 }

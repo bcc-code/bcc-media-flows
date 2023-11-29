@@ -1,11 +1,11 @@
 package notifications
 
-type Message struct {
-	Content string
-	Title   string
+type Template interface {
+	IsTemplate()
+	RenderHTML() (string, error)
 }
 
-func (c *Client) Send(targets []Target, message Message) error {
+func (c *Client) Send(targets []Target, message Template) error {
 
 	for _, target := range targets {
 		switch target.Type {

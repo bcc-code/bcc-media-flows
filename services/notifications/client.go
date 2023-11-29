@@ -1,9 +1,9 @@
 package notifications
 
 type Services interface {
-	SendEmail(email string, message Message) error
-	SendTelegramMessage(chatID string, message Message) error
-	SendSMS(phoneNumber string, message Message) error
+	SendEmail(email string, message Template) error
+	SendTelegramMessage(chatID string, message Template) error
+	SendSMS(phoneNumber string, message Template) error
 }
 
 type Client struct {
