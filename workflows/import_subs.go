@@ -2,14 +2,15 @@ package workflows
 
 import (
 	"fmt"
-	"github.com/bcc-code/bccm-flows/environment"
-	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"strings"
 	"time"
 
+	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
+	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bccm-flows/utils/workflows"
+
 	"github.com/bcc-code/bccm-flows/activities"
-	"github.com/bcc-code/bccm-flows/activities/vidispine"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -70,7 +71,7 @@ func ImportSubtitlesFromSubtrans(
 	for lang, sub := range subsList {
 		lang = strings.ToLower(lang)
 
-		future := workflow.ExecuteActivity(ctx, vidispine.ImportFileAsSidecarActivity, vidispine.ImportSubtitleAsSidecarParams{
+		future := workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
 			AssetID:  params.VXID,
 			Language: lang,
 			FilePath: sub,
@@ -78,7 +79,7 @@ func ImportSubtitlesFromSubtrans(
 
 		futures = append(futures, future)
 
-		future = workflow.ExecuteActivity(ctx, vidispine.ImportFileAsShapeActivity, vidispine.ImportFileAsShapeParams{
+		future = workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.VXID,
 			FilePath: sub,
 			ShapeTag: fmt.Sprintf("sub_%s_%s", lang, "srt"),

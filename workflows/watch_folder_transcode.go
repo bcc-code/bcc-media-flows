@@ -2,14 +2,15 @@ package workflows
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
-	"time"
 )
 
 type WatchFolderTranscodeInput struct {
@@ -39,11 +40,12 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	if err != nil {
 		return err
 	}
+	dir := path.Dir()
 	path, err = wfutils.StandardizeFileName(ctx, path)
 	if err != nil {
 		return err
 	}
-	processingFolder := path.Append("../processing")
+	processingFolder := dir.Append("../processing")
 	err = wfutils.CreateFolder(ctx, processingFolder)
 	if err != nil {
 		return err
@@ -52,22 +54,22 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	if err != nil {
 		return err
 	}
-	outFolder := path.Append("../out")
+	outFolder := dir.Append("../out")
 	err = wfutils.CreateFolder(ctx, outFolder)
 	if err != nil {
 		return err
 	}
-	tmpFolder := path.Append("../tmp")
+	tmpFolder := dir.Append("../tmp")
 	err = wfutils.CreateFolder(ctx, tmpFolder)
 	if err != nil {
 		return err
 	}
-	errorFolder := path.Append("../error")
+	errorFolder := dir.Append("../error")
 	err = wfutils.CreateFolder(ctx, errorFolder)
 	if err != nil {
 		return err
 	}
-	processedFolder := path.Append("../processed")
+	processedFolder := dir.Append("../processed")
 	err = wfutils.CreateFolder(ctx, processedFolder)
 	if err != nil {
 		return err

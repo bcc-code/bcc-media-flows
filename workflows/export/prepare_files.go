@@ -3,9 +3,8 @@ package export
 import (
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -17,12 +16,12 @@ type PrepareFilesParams struct {
 }
 
 type PrepareFilesResult struct {
-	VideoFiles map[string]paths.Path
+	VideoFiles map[quality]paths.Path
 	AudioFiles map[string]paths.Path
 }
 
-func getVideoQualities(videoFilePath, outputDir paths.Path, watermarkPath *paths.Path) map[string]common.VideoInput {
-	return map[string]common.VideoInput{
+func getVideoQualities(videoFilePath, outputDir paths.Path, watermarkPath *paths.Path) map[quality]common.VideoInput {
+	return map[quality]common.VideoInput{
 		r1080p: {
 			Path:            videoFilePath,
 			DestinationPath: outputDir,
@@ -75,82 +74,41 @@ func getVideoQualities(videoFilePath, outputDir paths.Path, watermarkPath *paths
 	}
 }
 
-func PrepareFiles(ctx workflow.Context, params PrepareFilesParams) (*PrepareFilesResult, error) {
-	logger := workflow.GetLogger(ctx)
-	logger.Info("Starting PrepareFiles")
-
-	options := wfutils.GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, options)
-
-	ctx = workflow.WithTaskQueue(ctx, environment.GetTranscodeQueue())
-
-	var videoTasks = map[string]workflow.Future{}
-	{
-		qualities := getVideoQualities(params.VideoFile, params.OutputPath, params.WatermarkPath)
-
-		keys, err := wfutils.GetMapKeysSafely(ctx, qualities)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, key := range keys {
-			input := qualities[key]
-			videoTasks[key] = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToVideoH264, input)
-		}
+func startVideoTasks(ctx workflow.Context, selector workflow.Selector, qualities map[quality]common.VideoInput, callback func(f workflow.Future, q quality)) ([]quality, error) {
+	keys, err := wfutils.GetMapKeysSafely(ctx, qualities)
+	if err != nil {
+		return nil, err
 	}
 
-	var audioTasks = map[string]workflow.Future{}
-	{
-		keys, err := wfutils.GetMapKeysSafely(ctx, params.AudioFiles)
-		if err != nil {
-			return nil, err
-		}
-		for _, lang := range keys {
-			path := params.AudioFiles[lang]
-			audioTasks[lang] = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToAudioAac, common.AudioInput{
-				Path:            path,
-				Bitrate:         "190k",
-				DestinationPath: params.OutputPath,
-			})
-		}
+	for _, key := range keys {
+		input := qualities[key]
+		q := key
+
+		selector.AddFuture(wfutils.ExecuteWithQueue(ctx, activities.TranscodeToVideoH264, input), func(f workflow.Future) {
+			callback(f, q)
+		})
 	}
 
-	var audioFiles = map[string]paths.Path{}
-	{
-		keys, err := wfutils.GetMapKeysSafely(ctx, audioTasks)
-		if err != nil {
-			return nil, err
-		}
-		for _, lang := range keys {
-			task := audioTasks[lang]
-			var result common.AudioResult
-			err = task.Get(ctx, &result)
-			if err != nil {
-				return nil, err
-			}
-			audioFiles[lang] = result.OutputPath
-		}
+	return keys, nil
+}
+
+func startAudioTasks(ctx workflow.Context, selector workflow.Selector, audioFiles map[string]paths.Path, outputPath paths.Path, callback func(f workflow.Future, l string)) ([]string, error) {
+	keys, err := wfutils.GetMapKeysSafely(ctx, audioFiles)
+	if err != nil {
+		return nil, err
 	}
 
-	var videoFiles = map[string]paths.Path{}
-	{
-		keys, err := wfutils.GetMapKeysSafely(ctx, videoTasks)
-		if err != nil {
-			return nil, err
-		}
-		for _, key := range keys {
-			task := videoTasks[key]
-			var result common.VideoResult
-			err = task.Get(ctx, &result)
-			if err != nil {
-				return nil, err
-			}
-			videoFiles[key] = result.OutputPath
-		}
+	for _, key := range keys {
+		path := audioFiles[key]
+		lang := key
+		selector.AddFuture(wfutils.ExecuteWithQueue(ctx, activities.TranscodeToAudioAac, common.AudioInput{
+			Path:            path,
+			Bitrate:         "190k",
+			DestinationPath: outputPath,
+		}), func(f workflow.Future) {
+			callback(f, lang)
+		})
 	}
 
-	return &PrepareFilesResult{
-		VideoFiles: videoFiles,
-		AudioFiles: audioFiles,
-	}, nil
+	return keys, nil
 }

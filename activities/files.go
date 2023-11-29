@@ -2,11 +2,13 @@ package activities
 
 import (
 	"context"
+	"io"
+	"os"
+	"path/filepath"
+
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/activity"
-	"os"
-	"path/filepath"
 )
 
 type FileInput struct {
@@ -27,11 +29,22 @@ func MoveFile(ctx context.Context, input MoveFileInput) (*FileResult, error) {
 	activity.RecordHeartbeat(ctx, "MoveFile")
 	log.Info("Starting MoveFileActivity")
 
+	stop := simpleHeartBeater(ctx)
+	defer close(stop)
+
 	err := os.MkdirAll(filepath.Dir(input.Destination.Local()), os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
-	err = os.Rename(input.Source.Local(), input.Destination.Local())
+	if input.Source.Drive != input.Destination.Drive {
+		err = copyFile(ctx, input.Source, input.Destination)
+		if err != nil {
+			return nil, err
+		}
+		err = os.Remove(input.Source.Local())
+	} else {
+		err = os.Rename(input.Source.Local(), input.Destination.Local())
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -39,6 +52,57 @@ func MoveFile(ctx context.Context, input MoveFileInput) (*FileResult, error) {
 	return &FileResult{
 		Path: input.Destination,
 	}, nil
+}
+
+func CopyFile(ctx context.Context, input MoveFileInput) (*FileResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "CopyFile")
+	log.Info("Starting CopyFileActivity")
+
+	stop := simpleHeartBeater(ctx)
+	defer close(stop)
+
+	err := os.MkdirAll(filepath.Dir(input.Destination.Local()), os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+	err = copyFile(ctx, input.Source, input.Destination)
+	if err != nil {
+		return nil, err
+	}
+	_ = os.Chmod(input.Destination.Local(), os.ModePerm)
+	return &FileResult{
+		Path: input.Destination,
+	}, nil
+}
+
+func copyFile(ctx context.Context, source paths.Path, destination paths.Path) error {
+	log := activity.GetLogger(ctx)
+	sourcePath := source.Local()
+	inputFile, err := os.Open(sourcePath)
+	if err != nil {
+		return err
+	}
+	outputFile, err := os.Create(destination.Local())
+	if err != nil {
+		closeErr := inputFile.Close()
+		if closeErr != nil {
+			log.Error(err.Error())
+		}
+		return err
+	}
+	defer func() {
+		closeErr := outputFile.Close()
+		if closeErr != nil {
+			log.Error(err.Error())
+		}
+	}()
+	_, err = io.Copy(outputFile, inputFile)
+	closeErr := inputFile.Close()
+	if closeErr != nil {
+		log.Error(err.Error())
+	}
+	return err
 }
 
 func StandardizeFileName(ctx context.Context, input FileInput) (*FileResult, error) {
@@ -82,6 +146,9 @@ func WriteFile(ctx context.Context, input WriteFileInput) error {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "WriteFile")
 	log.Info("Starting WriteFileActivity")
+
+	stop := simpleHeartBeater(ctx)
+	defer close(stop)
 
 	err := os.MkdirAll(filepath.Dir(input.Path.Local()), os.ModePerm)
 	if err != nil {

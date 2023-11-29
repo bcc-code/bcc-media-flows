@@ -72,6 +72,7 @@ func (meta *MetadataResult) SplitByClips() map[string]*MetadataResult {
 		}
 
 		out[key] = val
+		out[key].ID = key
 	}
 
 	return out

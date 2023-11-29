@@ -17,6 +17,26 @@ type MockVSClient struct {
 	recorder *MockVSClientMockRecorder
 }
 
+func (m *MockVSClient) AddToItemMetadataField(itemID, key, value string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockVSClient) CreatePlaceholder(ingestType vsapi.PlaceholderType, title string) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockVSClient) CreateThumbnails(assetID string) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockVSClient) GetJob(jobID string) (*vsapi.JobDocument, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // MockVSClientMockRecorder is the mock recorder for MockVSClient.
 type MockVSClientMockRecorder struct {
 	mock *MockVSClient

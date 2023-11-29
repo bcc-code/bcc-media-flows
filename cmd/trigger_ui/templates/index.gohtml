@@ -4,90 +4,148 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <title>{{- /*gotype: github.com/bcc-code/bccm-flows/cmd/trigger_ui.TriggerGETParams */}}VX Export</title>
 </head>
-<body>
-<div class="grid min-h-screen place-items-center bg-gray-100">
-    <div class="p-2 bg-white sm:w-8/12 md:w-1/4">
-        <form id="requestForm" method="post" class="items-center flex justify-between gap-1.5 flex-col">
-            <h1 class="text-center w-full font-bold text-3xl text-gray-600 p-4" id="vxID">{{
-                .Title }}</h1>
-            <div class="checkboxList">
-                <label class="font-bold" for="Destinations">Destinations</label>
-                <ul>
-                    {{range $index, $element := .AssetExportDestinations}}
-                        <li>
-                            <input type=checkbox class="form-checkbox h-4 w-4 inline-block align-middle"
-                                   name="destinations[]" id="{{$element}}" value={{$element}}>
-                            <label for={{$element}}>{{ $element }}</label>
+<body class="flex bg-gray-100">
+{{ $selectClasses := "p-2 border rounded-md bg-transparent"}}
+<section class="mx-auto p-4 md:p-8 bg-white">
+    <form id="requestForm" method="post" class="flex flex-col gap-4 justify-between divide-y-1">
+        <h1 class="text-center w-full font-bold text-3xl text-gray-600 p-4" id="vxID">{{
+            .Title }}</h1>
+        <div class="flex flex-col">
+            <label class="font-bold" for="Destinations">Destinations</label>
+            <ul>
+                {{range $index, $element := .AssetExportDestinations}}
+                    <li>
+                        <input type=checkbox class="form-checkbox h-4 w-4 inline-block align-middle"
+                               name="destinations[]" id="{{$element}}" value={{$element}}>
+                        <label for="{{$element}}">{{ $element }}</label>
+                    </li>
+                {{end}}
+            </ul>
+        </div>
+        <div class="flex flex-col">
+            <label class="font-bold" for="audioSource">Audio Source</label>
+            <select class="{{$selectClasses}}" name="audioSource" id="audioSource">
+                {{$selectedAudio := .SelectedAudioSource}}
 
-                        </li>
-                    {{end}}
-                </ul>
-            </div>
-            <div class="flex flex-col">
-                <label class="font-bold" for="audioSource">Audio Source</label>
-                <select class="bg-gray-200" name="audioSource" id="audioSource">
-                    {{$selectedAudio := .SelectedAudioSource}}
-
-                    {{range $index, $element := .AudioSources}}
-                        {{if eq $element $selectedAudio}}
-                            <option value={{$element}} selected>{{$element}}</option>
-                        {{else}}
-                            <option value={{$element}}>{{$element}}</option>
-                        {{end}}
-                    {{end}}
-                </select>
-            </div>
-            <div class="text-center">
-                <label class="font-bold" for="items">Language Exports</label>
-                <ul class="flex flex-col gap-1">
-                    {{$selectedLanguages := .SelectedLanguages}}
-                    {{range $key, $language := .Languages}}
-                        {{$checked := false}}
-
-                        {{range $selected := $selectedLanguages}}
-                            {{if eq $selected $key}}
-                                {{$checked = true}}
-                            {{end}}
-                        {{end}}
-
-                        <li class="flex flex-row gap-1">
-                            <input type="checkbox" class="form-checkbox h-4 w-4" id="{{.ISO6391}}"
-                                   name="languages[]" value={{.ISO6391}} {{if $checked }} checked {{end}} />
-                            <label for="{{.ISO6391}}">
-                                <span class="uppercase">{{.ISO6391}}</span>
-                                - {{.LanguageName}}
-                            </label>
-                        </li>
-                    {{end}}
-                </ul>
-            </div>
-
-            <div class="flex flex-col">
-                <label class="font-bold" for="watermarkFile">Overlay</label>
-                <select class="bg-gray-200" name="watermarkFile" id="watermarkFile">
-                    {{range $index, $element := .Filenames}}
+                {{range $index, $element := .AudioSources}}
+                    {{if eq $element $selectedAudio}}
+                        <option value={{$element}} selected>{{$element}}</option>
+                    {{else}}
                         <option value={{$element}}>{{$element}}</option>
                     {{end}}
-                </select>
+                {{end}}
+            </select>
+        </div>
+        <div class="flex flex-col">
+            <h3 class="font-bold">Subclips to export</h3>
+            <p class="text-sm mb-2">Leave empty to export the entire asset (or use the field specified on the asset)</p>
+            <ul class="flex flex-col gap-1">
+                {{range $subclip := .SubclipNames}}
+                    <li class="flex flex-row gap-1">
+                        <input type="checkbox" class="form-checkbox h-4 w-4 my-auto" id="{{$subclip}}"
+                               name="subclips[]" value="{{$subclip}}"/>
+                        <label for="{{$subclip}}" class="my-auto">
+                            {{$subclip}}
+                        </label>
+                    </li>
+                {{end}}
+            </ul>
+        </div>
+        <div class="flex flex-col">
+            <div class="flex">
+                <h3 class="font-bold">Language Exports</h3>
+                <div class="ml-auto flex gap-1">
+                    {{$buttonClasses := "bg-green-200 cursor-pointer rounded-md p-0.5 px-1 text-sm border border-gray-400 hover:bg-gray-200 transition"}}
+                    <div onclick="setAllLanguages(true)"
+                         class="{{$buttonClasses}}">
+                        All
+                    </div>
+                    <div onclick="setAllLanguages(false)"
+                         class="{{$buttonClasses}}">
+                        None
+                    </div>
+                    <div onclick="enableMU1()"
+                         class="{{$buttonClasses}}">
+                        MU1
+                    </div>
+                    <div onclick="enableMU2()"
+                         class="{{$buttonClasses}}">
+                        MU2
+                    </div>
+                </div>
             </div>
+            <ul class="flex flex-col gap-1">
+                {{$selectedLanguages := .SelectedLanguages}}
+                {{range $key, $language := .Languages}}
+                    {{$checked := false}}
 
-            <div class="checkbox">
-                <label for="withFiles">With downloadables</label>
-                <input class="form-checkbox h-4 w-4 inline-block align-middle" type="checkbox" name="withFiles"
-                       id="withFiles">
-            </div>
+                    {{range $selected := $selectedLanguages}}
+                        {{if eq $selected $key}}
+                            {{$checked = true}}
+                        {{end}}
+                    {{end}}
 
-            <div class="checkbox">
-                <label for="withChapters">With chapters</label>
-                <input class="form-checkbox h-4 w-4 inline-block align-middle" type="checkbox" name="withChapters"
-                       id="withChapters">
-            </div>
+                    <li class="flex flex-row gap-1">
+                        <input type="checkbox" class="form-checkbox h-4 w-4 my-auto" id="{{.ISO6391}}"
+                               name="languages[]" value={{.ISO6391}} {{if $checked }} checked {{end}} />
+                        <label for="{{.ISO6391}}" class="my-auto">
+                            <span class="uppercase">{{.ISO6391}}</span>
+                            - {{.LanguageName}}
+                        </label>
+                    </li>
+                {{end}}
+            </ul>
+        </div>
+        <div class="flex flex-col">
+            <label class="font-bold" for="watermarkFile">Overlay</label>
+            <select class="{{$selectClasses}}" name="watermarkFile" id="watermarkFile">
+                <option value="">None</option>
+                {{range $index, $element := .Filenames}}
+                    <option value={{$element}}>{{$element}}</option>
+                {{end}}
+            </select>
+        </div>
+        <div class="flex">
+            <label for="withFiles" class="my-auto">With downloadables</label>
+            <input class="ml-2 h-4 w-4 my-auto" type="checkbox" name="withFiles"
+                   id="withFiles">
+        </div>
+        <div class="flex">
+            <label for="withChapters" class="my-auto">With chapters</label>
+            <input class="ml-2 h-4 w-4 my-auto" type="checkbox" name="withChapters"
+                   id="withChapters">
+        </div>
 
-            <input id="submit"
-                   class="cursor-pointer rounded-md bg-[#6A64F1] py-3 px-8 text-center text-base font-semibold text-white outline-none"
-                   type="submit" value="Start export">
-        </form>
-    </div>
-</div>
+        <input id="submit"
+               class="cursor-pointer rounded-md bg-[#6A64F1] py-3 px-8 text-center text-base font-semibold text-white outline-none"
+               type="submit" value="Start export">
+    </form>
+</section>
 </body>
 </html>
+<script>
+    const languages = {{.Languages}};
+
+    function setAllLanguages(value) {
+        const languageKeys = Object.values(languages).map(i => i.ISO6391)
+        for (const key of languageKeys) {
+            document.getElementById(key).checked = value
+        }
+    }
+
+    function enableMU1() {
+        for (const [key, language] of Object.entries(languages)) {
+            if (language.MU1ChannelStart !== -1) {
+                document.getElementById(key).checked = true
+            }
+        }
+    }
+
+    function enableMU2() {
+        for (const [key, language] of Object.entries(languages)) {
+            if (language.MU2ChannelStart !== -1) {
+                document.getElementById(key).checked = true
+            }
+        }
+    }
+</script>

@@ -9,10 +9,14 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	"github.com/bcc-code/bccm-flows/activities"
+	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/bcc-code/bccm-flows/utils/workflows"
+	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -40,14 +44,8 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, fmt.Errorf("failed to get audio file keys: %w", err)
 	}
 
-	tempDir, err := wfutils.GetWorkflowTempFolder(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get workflow temp folder: %w", err)
-	}
-
 	// We don't want to upload folders from other workflows that can be triggered at the same export.
-	outputFolder := tempDir.Append("bmm")
-	err = wfutils.CreateFolder(ctx, outputFolder)
+	err = wfutils.CreateFolder(ctx, params.OutputDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create output folder: %w", err)
 	}
@@ -60,7 +58,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 			FilePath:              audio,
 			TargetLUFS:            targetLufs,
 			PerformOutputAnalysis: true,
-			OutputPath:            tempDir,
+			OutputPath:            params.TempDir,
 		})
 		normalizedFutures[lang] = future
 	}
@@ -88,7 +86,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		for _, bitrate := range aacBitrates {
 			f := wfutils.ExecuteWithQueue(ctx, activities.TranscodeToAudioAac, common.AudioInput{
 				Path:            audio.FilePath,
-				DestinationPath: outputFolder,
+				DestinationPath: params.OutputDir,
 				Bitrate:         bitrate,
 			})
 			encodings = append(encodings, f)
@@ -97,7 +95,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		for _, bitrate := range mp3Bitrates {
 			f := wfutils.ExecuteWithQueue(ctx, activities.TranscodeToAudioMP3, common.AudioInput{
 				Path:            audio.FilePath,
-				DestinationPath: outputFolder,
+				DestinationPath: params.OutputDir,
 				Bitrate:         bitrate,
 			})
 			encodings = append(encodings, f)
@@ -126,30 +124,52 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	jsonData := prepareBMMData(audioResults, normalizedResults)
 	jsonData.Length = int(params.MergeResult.Duration)
 	jsonData.MediabankenID = fmt.Sprintf("%s-%s", params.ParentParams.VXID, HashTitle(params.ExportData.Title))
+	jsonData.ImportDate = params.ExportData.ImportDate
 
 	jsonData.Title = params.ExportData.Title
+
+	var chapters []asset.Chapter
+	err = wfutils.ExecuteWithQueue(ctx, vsactivity.GetChapterDataActivity, vsactivity.GetChapterDataParams{
+		ExportData: &params.ExportData,
+	}).Get(ctx, &chapters)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(chapters) > 0 {
+		chapter := chapters[0]
+		for _, p := range chapter.Persons {
+			if !lo.Contains(jsonData.PersonsAppearing, p) {
+				jsonData.PersonsAppearing = append(jsonData.PersonsAppearing, p)
+			}
+		}
+		jsonData.Type = chapter.ChapterType
+		if chapter.SongNumber != "" && chapter.SongCollection != "" {
+			jsonData.SongCollection = &chapter.SongCollection
+			jsonData.SongNumber = &chapter.SongNumber
+		}
+	}
 
 	marshalled, err := json.Marshal(jsonData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal JSON: %w", err)
 	}
 
-	err = wfutils.WriteFile(ctx, outputFolder.Append("bmm.json"), marshalled)
+	err = wfutils.WriteFile(ctx, params.OutputDir.Append("bmm.json"), marshalled)
 	if err != nil {
 		return nil, fmt.Errorf("failed to write JSON file: %w", err)
 	}
 
 	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      outputFolder.Rclone(),
-		Destination: fmt.Sprintf("bmms3:/int-bmm-mediabanken/" + ingestFolder),
+		Source:      params.OutputDir.Rclone(),
+		Destination: fmt.Sprintf("bmms3:/prod-bmm-mediabanken/" + ingestFolder),
 	}).Get(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: Trigger as activity?
-	trigger := "https://int-bmm-api.brunstad.org/events/mediabanken-export/?path="
+	trigger := "https://bmm-api.brunstad.org/events/mediabanken-export/?path="
 	jsonS3Path := path.Join(ingestFolder, "bmm.json")
 	trigger += url.QueryEscape(jsonS3Path)
 
@@ -172,11 +192,16 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 }
 
 type BMMData struct {
-	MediabankenID string                    `json:"mediabanken_id"`
-	Title         string                    `json:"title"`
-	Length        int                       `json:"length"`
-	Type          string                    `json:"type"`
-	AudioFiles    map[string][]BMMAudioFile `json:"audio_files"`
+	MediabankenID    string                    `json:"mediabanken_id"`
+	Title            string                    `json:"title"`
+	Length           int                       `json:"length"`
+	Type             string                    `json:"type"`
+	AudioFiles       map[string][]BMMAudioFile `json:"audio_files"`
+	PersonsAppearing []string                  `json:"persons_appearing"`
+	SongCollection   *string                   `json:"song_collection"`
+	SongNumber       *string                   `json:"song_number"`
+	RecordedAt       *time.Time                `json:"recorded_at"`
+	ImportDate       *time.Time                `json:"import_date"`
 }
 
 type BMMAudioFile struct {
@@ -189,6 +214,7 @@ type BMMAudioFile struct {
 	Peak            float64 `json:"peak"`
 	Language        string  `json:"language"`
 	MimeType        string  `json:"mime_type"`
+	Size            int64   `json:"size"`
 }
 
 func prepareBMMData(audioFiles map[string][]common.AudioResult, analysis map[string]activities.NormalizeAudioResult) BMMData {
@@ -213,6 +239,7 @@ func prepareBMMData(audioFiles map[string][]common.AudioResult, analysis map[str
 				Lufs:            analysis[lang].OutputAnalysis.IntegratedLoudness,
 				DynamicRange:    analysis[lang].OutputAnalysis.LoudnessRange,
 				Language:        lang,
+				Size:            file.FileSize,
 			}
 
 			switch {

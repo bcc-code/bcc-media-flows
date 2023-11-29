@@ -1,20 +1,21 @@
 package main
 
 import (
-	batonactivities "github.com/bcc-code/bccm-flows/activities/baton"
-	"github.com/bcc-code/bccm-flows/environment"
-	"github.com/bcc-code/bccm-flows/workflows/ingest"
 	"log"
 	"os"
 	"strconv"
 	"time"
+
+	batonactivities "github.com/bcc-code/bccm-flows/activities/baton"
+	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
+	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bccm-flows/workflows/ingest"
 
 	"github.com/bcc-code/bccm-flows/workflows/export"
 
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/workflows"
 
-	"github.com/bcc-code/bccm-flows/activities/vidispine"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 )
@@ -25,6 +26,7 @@ var utilActivities = []any{
 	activities.WriteFile,
 	activities.ReadFile,
 	activities.ListFiles,
+	activities.CopyFile,
 	activities.DeletePath,
 	activities.StandardizeFileName,
 	activities.GetSubtitlesActivity,
@@ -32,16 +34,16 @@ var utilActivities = []any{
 }
 
 var vidispineActivities = []any{
-	vidispine.GetFileFromVXActivity,
-	vidispine.ImportFileAsShapeActivity,
-	vidispine.ImportFileAsSidecarActivity,
-	vidispine.CreatePlaceholderActivity,
-	vidispine.SetVXMetadataFieldActivity,
-	vidispine.GetExportDataActivity,
-	vidispine.GetChapterDataActivity,
-	vidispine.CreateThumbnailsActivity,
-	vidispine.WaitForJobCompletion,
-	vidispine.JobCompleteOrErr,
+	vsactivity.GetFileFromVXActivity,
+	vsactivity.ImportFileAsShapeActivity,
+	vsactivity.ImportFileAsSidecarActivity,
+	vsactivity.CreatePlaceholderActivity,
+	vsactivity.SetVXMetadataFieldActivity,
+	vsactivity.GetExportDataActivity,
+	vsactivity.GetChapterDataActivity,
+	vsactivity.CreateThumbnailsActivity,
+	vsactivity.WaitForJobCompletion,
+	vsactivity.JobCompleteOrErr,
 	activities.GetSubtransIDActivity,
 }
 
@@ -59,8 +61,6 @@ var workerWorkflows = []any{
 	export.VXExportToVOD,
 	export.VXExportToPlayout,
 	export.MergeExportData,
-	export.MuxFiles,
-	export.PrepareFiles,
 	export.VXExportToBMM,
 	workflows.ExecuteFFmpeg,
 	workflows.ImportSubtitlesFromSubtrans,
@@ -117,6 +117,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		w.RegisterActivity(activities.Transcribe)
 		w.RegisterActivity(activities.RcloneCopyDir)
 		w.RegisterActivity(activities.RcloneMoveFile)
+		w.RegisterActivity(activities.RcloneCopyFile)
 		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {
@@ -142,6 +143,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		w.RegisterActivity(activities.Transcribe)
 		w.RegisterActivity(activities.RcloneCopyDir)
 		w.RegisterActivity(activities.RcloneMoveFile)
+		w.RegisterActivity(activities.RcloneCopyFile)
 		w.RegisterActivity(activities.PubsubPublish)
 
 		for _, a := range utilActivities {

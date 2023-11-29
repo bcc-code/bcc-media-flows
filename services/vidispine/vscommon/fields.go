@@ -13,9 +13,11 @@ var (
 	FieldPersonsAppearing      = FieldType{"portal_mf50574"}
 	FieldSequenceSize          = FieldType{"__sequence_size"}
 	FieldStartTC               = FieldType{"startTimeCode"}
+	FieldStlText               = FieldType{"stl_text"}
 	FieldSubclipToExport       = FieldType{"portal_mf230973"}
 	FieldSubclipType           = FieldType{"portal_mf594493"}
 	FieldTitle                 = FieldType{"title"}
+	FieldIngested              = FieldType{"portal_ingested"}
 	FieldSource                = FieldType{"portal_mf103965"}
 	FieldExportAsChapter       = FieldType{"portal_mf457300"}
 	FieldSubtransStoryID       = FieldType{"portal_mf397928"}
@@ -38,5 +40,5 @@ var (
 		FieldPersonsAppearing, FieldSequenceSize, FieldStartTC, FieldSubclipToExport, FieldSubclipType, FieldTitle,
 		FieldSource, FieldExportAsChapter, FieldSubtransStoryID, FieldOriginalURI, FieldUploadedBy, FieldUploadJob,
 		FieldLanguagesRecorded, FieldGeneralTags, FieldOriginalFileName, FieldOriginalFileNameField,
-		FieldEpisodeDescription, FieldSeason, FieldProgram, FieldEpisode)
+		FieldEpisodeDescription, FieldSeason, FieldProgram, FieldEpisode, FieldStlText, FieldIngested)
 )

@@ -1,4 +1,4 @@
-package vidispine
+package vsactivity
 
 import (
 	"context"
@@ -14,6 +14,7 @@ type GetExportDataParams struct {
 	VXID        string
 	Languages   []string
 	AudioSource string
+	Subclip     string
 }
 
 func GetExportDataActivity(ctx context.Context, params *GetExportDataParams) (*vidispine.ExportData, error) {
@@ -28,7 +29,7 @@ func GetExportDataActivity(ctx context.Context, params *GetExportDataParams) (*v
 		return nil, fmt.Errorf("invalid audioSource: %s", params.AudioSource)
 	}
 
-	data, err := client.GetDataForExport(params.VXID, params.Languages, audioSource)
+	data, err := vidispine.GetDataForExport(client, params.VXID, params.Languages, audioSource, params.Subclip)
 	if err != nil {
 		return nil, err
 	}
@@ -47,5 +48,5 @@ func GetChapterDataActivity(ctx context.Context, params *GetChapterDataParams) (
 
 	client := GetClient()
 
-	return client.GetChapterData(params.ExportData)
+	return vidispine.GetChapterData(client, params.ExportData)
 }

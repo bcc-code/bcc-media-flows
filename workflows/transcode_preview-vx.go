@@ -1,11 +1,13 @@
 package workflows
 
 import (
-	"github.com/bcc-code/bccm-flows/activities"
-	"github.com/bcc-code/bccm-flows/activities/vidispine"
-	"github.com/bcc-code/bccm-flows/environment"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"path/filepath"
 	"time"
+
+	"github.com/bcc-code/bccm-flows/activities"
+	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
+	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bccm-flows/utils/workflows"
 
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
@@ -42,8 +44,8 @@ func TranscodePreviewVX(
 
 	logger.Info("Starting TranscodePreviewVX")
 
-	shapes := &vidispine.GetFileFromVXResult{}
-	err := workflow.ExecuteActivity(ctx, vidispine.GetFileFromVXActivity, vidispine.GetFileFromVXParams{
+	shapes := &vsactivity.GetFileFromVXResult{}
+	err := workflow.ExecuteActivity(ctx, vsactivity.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		Tags: []string{"original"},
 		VXID: params.VXID,
 	}).Get(ctx, shapes)
@@ -55,6 +57,12 @@ func TranscodePreviewVX(
 	destinationPath, err := wfutils.GetWorkflowAuxOutputFolder(ctx)
 	if err != nil {
 		return err
+	}
+
+	switch filepath.Ext(shapes.FilePath.Path) {
+	case ".mxf", ".mov", ".mp4", ".wav":
+	default:
+		return nil
 	}
 
 	previewResponse := &activities.TranscodePreviewResponse{}
@@ -76,8 +84,8 @@ func TranscodePreviewVX(
 	}
 
 	ctx = workflow.WithTaskQueue(ctx, environment.GetWorkerQueue())
-	err = workflow.ExecuteActivity(ctx, vidispine.ImportFileAsShapeActivity,
-		vidispine.ImportFileAsShapeParams{
+	err = workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsShapeActivity,
+		vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.VXID,
 			FilePath: previewResponse.PreviewFilePath,
 			ShapeTag: shapeTag,

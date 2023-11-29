@@ -3,13 +3,14 @@ package wfutils
 import (
 	"encoding/xml"
 	"fmt"
+	"path/filepath"
+	"time"
+
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
-	"path/filepath"
-	"time"
 )
 
 func CreateFolder(ctx workflow.Context, destination paths.Path) error {
@@ -28,6 +29,13 @@ func StandardizeFileName(ctx workflow.Context, file paths.Path) (paths.Path, err
 
 func MoveFile(ctx workflow.Context, source, destination paths.Path) error {
 	return workflow.ExecuteActivity(ctx, activities.MoveFile, activities.MoveFileInput{
+		Source:      source,
+		Destination: destination,
+	}).Get(ctx, nil)
+}
+
+func CopyFile(ctx workflow.Context, source, destination paths.Path) error {
+	return workflow.ExecuteActivity(ctx, activities.CopyFile, activities.MoveFileInput{
 		Source:      source,
 		Destination: destination,
 	}).Get(ctx, nil)
@@ -109,8 +117,8 @@ func GetWorkflowTempFolder(ctx workflow.Context) (paths.Path, error) {
 }
 
 // GetMapKeysSafely makes sure that the order of the keys returned are identical to other workflow executions.
-func GetMapKeysSafely[T any](ctx workflow.Context, m map[string]T) ([]string, error) {
-	var keys []string
+func GetMapKeysSafely[K comparable, T any](ctx workflow.Context, m map[K]T) ([]K, error) {
+	var keys []K
 	err := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
 		return lo.Keys(m)
 	}).Get(&keys)

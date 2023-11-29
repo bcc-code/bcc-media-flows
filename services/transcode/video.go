@@ -2,11 +2,12 @@ package transcode
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
-	"os"
-	"path/filepath"
 )
 
 func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.VideoResult, error) {
@@ -42,30 +43,6 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		)
 	}
 
-	//params = append(params,
-	//	"-maxrate", input.Bitrate,
-	//)
-	//
-	//if input.BufferSize != "" {
-	//	params = append(params,
-	//		"-bufsize", input.BufferSize,
-	//	)
-	//}
-
-	var filterComplex string
-
-	filterComplex += fmt.Sprintf("[0:0] scale=%[1]d:%[2]d:force_original_aspect_ratio=decrease,pad=%[1]d:%[2]d:(ow-iw)/2:(oh-ih)/2 [main];",
-		1920,
-		1080)
-
-	if input.WatermarkPath != nil {
-		filterComplex += "[main][1:0] overlay=main_w-overlay_w:0 [main];"
-	}
-
-	filterComplex += fmt.Sprintf("[main] scale=%[1]d:%[2]d:force_original_aspect_ratio=decrease [out]",
-		input.Width,
-		input.Height)
-
 	info, err := ffmpeg.GetStreamInfo(input.Path.Local())
 	if err != nil {
 		return nil, err
@@ -80,10 +57,31 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		}
 	}
 
+	var filterComplex string
+
+	if input.WatermarkPath != nil {
+		filterComplex += "[0:0][1:0]overlay=main_w-overlay_w:0[main];"
+	} else {
+		filterComplex += "[0:0]copy[main];"
+	}
+
+	height := input.Height
+	width := -1
+	if info.Height != 0 && info.Width != 0 && info.Height > info.Width {
+		// portrait video
+		height = -1
+		width = input.Height
+	}
+
+	filterComplex += fmt.Sprintf("[main]scale=%[1]d:%[2]d:force_original_aspect_ratio=decrease[out]", width, height)
+
 	params = append(params,
-		"-r", fmt.Sprintf("%d", framerate),
 		"-filter_complex", filterComplex,
 		"-map", "[out]",
+	)
+
+	params = append(params,
+		"-r", fmt.Sprintf("%d", framerate),
 	)
 
 	filename := input.Path.Base()

@@ -15,6 +15,7 @@ require (
 	github.com/orsinium-labs/enum v1.3.0
 	github.com/samber/lo v1.38.1
 	github.com/stretchr/testify v1.8.4
+	go.temporal.io/api v1.21.0
 	go.temporal.io/sdk v1.24.0
 	go.uber.org/mock v0.2.0
 )
@@ -110,7 +111,6 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v0.39.0 // indirect
 	go.opentelemetry.io/otel/trace v1.16.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.20.0 // indirect
-	go.temporal.io/api v1.21.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
