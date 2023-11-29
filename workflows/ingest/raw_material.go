@@ -2,7 +2,6 @@ package ingestworkflows
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/bcc-code/bccm-flows/activities"
@@ -10,7 +9,6 @@ import (
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/services/notifications"
-	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/workflows"
 	"github.com/samber/lo"
