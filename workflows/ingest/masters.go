@@ -15,6 +15,7 @@ import (
 	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/services/notifications"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
+	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -25,10 +26,11 @@ type MasterParams struct {
 
 	OrderForm OrderForm
 	Directory paths.Path
+	OutputDir paths.Path
 }
 
 type MasterResult struct {
-	Report        baton.QCReport
+	Report        *baton.QCReport
 	AssetID       string
 	AnalyzeResult *common.AnalyzeEBUR128Result
 	Path          paths.Path
@@ -48,16 +50,18 @@ func Masters(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
 		return nil, err
 	}
 
-	// This isn't run on VB masters in old system, but see no reason to not run it here.
-	result.AnalyzeResult, err = analyzeAudioAndSetMetadata(ctx, result.AssetID, result.Path)
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Report.TopLevelInfo.Error == 0 {
-		err = postImportActions(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
+	if utils.IsMedia(result.Path.Local()) {
+		// This isn't run on VB masters in old system, but see no reason to not run it here.
+		result.AnalyzeResult, err = analyzeAudioAndSetMetadata(ctx, result.AssetID, result.Path)
 		if err != nil {
 			return nil, err
+		}
+
+		if result.Report.TopLevelInfo.Error == 0 {
+			err = transcodeAndTranscribe(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -68,7 +72,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	var filename string
 	var err error
 	switch params.OrderForm {
-	case OrderFormOtherMaster, OrderFormVBMaster, OrderFormSeriesMaster:
+	case OrderFormOtherMaster, OrderFormVBMaster, OrderFormSeriesMaster, OrderFormLEDMaterial, OrderFormPodcast:
 		filename, err = masterFilename(params.Metadata.JobProperty)
 	default:
 		return nil, fmt.Errorf("unsupported order form: %s", params.OrderForm)
@@ -89,12 +93,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		return nil, fmt.Errorf("too many files in directory: %s", params.Directory)
 	}
 
-	outputDir, err := wfutils.GetWorkflowMastersOutputFolder(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	file := outputDir.Append(filename)
+	file := params.OutputDir.Append(filename)
 	err = wfutils.MoveFile(ctx, files[0], file)
 	if err != nil {
 		return nil, err
@@ -115,18 +114,19 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		return nil, err
 	}
 
-	plan := baton.TestPlanMXF
-	if filepath.Ext(file.Base()) == ".mov" {
-		plan = baton.TestPlanMOV
-	}
-
-	var report baton.QCReport
-	err = wfutils.ExecuteWithQueue(ctx, batonactivities.QC, batonactivities.QCParams{
-		Path: file,
-		Plan: plan,
-	}).Get(ctx, &report)
-	if err != nil {
-		return nil, err
+	var report *baton.QCReport
+	if utils.IsMedia(file.Local()) {
+		plan := baton.TestPlanMXF
+		if filepath.Ext(file.Base()) == ".mov" {
+			plan = baton.TestPlanMOV
+		}
+		err = wfutils.ExecuteWithQueue(ctx, batonactivities.QC, batonactivities.QCParams{
+			Path: file,
+			Plan: plan,
+		}).Get(ctx, &report)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &MasterResult{
