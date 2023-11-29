@@ -1,8 +1,10 @@
 package ingestworkflows
 
 import (
+	"github.com/ansel1/merry/v2"
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -35,7 +37,7 @@ func importFileAsTag(ctx workflow.Context, tag string, path paths.Path, title st
 	}, nil
 }
 
-func postImportActions(ctx workflow.Context, assetIDs []string, language string) error {
+func transcodeAndTranscribe(ctx workflow.Context, assetIDs []string, language string) error {
 	var wfFutures []workflow.ChildWorkflowFuture
 	for _, id := range assetIDs {
 		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
@@ -68,4 +70,17 @@ func postImportActions(ctx workflow.Context, assetIDs []string, language string)
 		}
 	}
 	return nil
+}
+
+func getOrderFormFilename(orderForm OrderForm, file paths.Path, props ingest.JobProperty) (string, error) {
+	switch orderForm {
+	case OrderFormRawMaterial:
+		// return filename without extension
+		base := file.Base()
+		ext := file.Ext()
+		return base[:len(base)-len(ext)], nil
+	case OrderFormLEDMaterial, OrderFormVBMaster, OrderFormSeriesMaster, OrderFormOtherMaster:
+		return masterFilename(props)
+	}
+	return "", merry.New("Unsupported order form")
 }

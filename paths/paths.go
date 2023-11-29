@@ -98,6 +98,10 @@ func (p Path) Local() string {
 	return filepath.Join(drivePrefixes[p.Drive].Client, p.Path)
 }
 
+func (p Path) Ext() string {
+	return filepath.Ext(p.Path)
+}
+
 // RcloneFsRemote returns (fs, remote) for rclone usage
 func (p Path) RcloneFsRemote() (string, string) {
 	switch p.Drive {
