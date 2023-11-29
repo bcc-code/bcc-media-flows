@@ -7,7 +7,7 @@ import (
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ingest"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/bcc-code/bccm-flows/utils/workflows"
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
@@ -21,6 +21,7 @@ var (
 	OrderFormSeriesMaster = OrderForm{Value: "Series_Masters"}
 	OrderFormOtherMaster  = OrderForm{Value: "Other_Masters"} // TODO: set correct value
 	OrderFormLEDMaterial  = OrderForm{Value: "LED-Material"}
+	OrderFormPodcast      = OrderForm{Value: "Podcast"}
 	OrderForms            = enum.New(
 		OrderFormRawMaterial,
 		//OrderFormVBMaster, // commented out for supporting only raw material
@@ -85,7 +86,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			Metadata:  metadata,
 			Directory: fcOutputDir,
 		}).Get(ctx, nil)
-	case OrderFormSeriesMaster, OrderFormOtherMaster, OrderFormVBMaster, OrderFormLEDMaterial:
+	case OrderFormSeriesMaster, OrderFormOtherMaster, OrderFormVBMaster, OrderFormLEDMaterial, OrderFormPodcast:
 		var outputDir paths.Path
 		outputDir, err = wfutils.GetWorkflowMastersOutputFolder(ctx)
 		if err != nil {

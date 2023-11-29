@@ -64,13 +64,14 @@ var (
 	EmtpySRTFile = environment.GetIsilonPrefix() + "/system/assets/empty.srt"
 )
 
-func (s *VidispineService) getClipForAssetOrSubclip(
+func getClipForAssetOrSubclip(
+	client Client,
 	itemVXID string,
 	subclipName string,
 	meta *vsapi.MetadataResult,
 	clipsMeta map[string]*vsapi.MetadataResult,
 ) (*Clip, error) {
-	shapes, err := s.apiClient.GetShapes(itemVXID)
+	shapes, err := client.GetShapes(itemVXID)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +107,7 @@ func (s *VidispineService) getClipForAssetOrSubclip(
 	return &clip, err
 }
 
-func (s *VidispineService) getRelatedAudios(clip *Clip, oLanguagesToExport []string) (*Clip, error) {
+func getRelatedAudios(client Client, clip *Clip, oLanguagesToExport []string) (*Clip, error) {
 
 	languagesToExport := make([]string, len(oLanguagesToExport))
 	copy(languagesToExport, oLanguagesToExport)
@@ -126,7 +127,7 @@ func (s *VidispineService) getRelatedAudios(clip *Clip, oLanguagesToExport []str
 		}
 
 		// Get metadata for the video clip
-		clipMeta, err := s.apiClient.GetMetadata(clip.VXID)
+		clipMeta, err := client.GetMetadata(clip.VXID)
 		if err != nil {
 			return clip, err
 		}
@@ -148,7 +149,7 @@ func (s *VidispineService) getRelatedAudios(clip *Clip, oLanguagesToExport []str
 			continue
 		}
 
-		relatedAudioShapes, err := s.apiClient.GetShapes(relatedAudioVXID)
+		relatedAudioShapes, err := client.GetShapes(relatedAudioVXID)
 		if err != nil {
 			return clip, err
 		}
@@ -183,8 +184,8 @@ func (s *VidispineService) getRelatedAudios(clip *Clip, oLanguagesToExport []str
 	return clip, nil
 }
 
-func (s *VidispineService) getEmbeddedAudio(clip *Clip, languagesToExport []string) (*Clip, error) {
-	shapes, err := s.apiClient.GetShapes(clip.VXID)
+func getEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) (*Clip, error) {
+	shapes, err := client.GetShapes(clip.VXID)
 	if err != nil {
 		return clip, err
 	}
@@ -263,8 +264,8 @@ func (s *VidispineService) getEmbeddedAudio(clip *Clip, languagesToExport []stri
 }
 
 // GetSubclipNames returns the names of all the subclips
-func (s *VidispineService) GetSubclipNames(itemVXID string) ([]string, error) {
-	meta, err := s.apiClient.GetMetadata(itemVXID)
+func GetSubclipNames(client Client, itemVXID string) ([]string, error) {
+	meta, err := client.GetMetadata(itemVXID)
 	if err != nil {
 		return nil, err
 	}
@@ -293,8 +294,8 @@ func (s *VidispineService) GetSubclipNames(itemVXID string) ([]string, error) {
 
 // GetDataForExport returns the data needed to export the item with the given VXID
 // If exportSubclip is true, the subclip will be exported, otherwise the whole clip
-func (s *VidispineService) GetDataForExport(itemVXID string, languagesToExport []string, audioSource *ExportAudioSource, subclip string) (*ExportData, error) {
-	meta, err := s.apiClient.GetMetadata(itemVXID)
+func GetDataForExport(client Client, itemVXID string, languagesToExport []string, audioSource *ExportAudioSource, subclip string) (*ExportData, error) {
+	meta, err := client.GetMetadata(itemVXID)
 	if err != nil {
 		return nil, err
 	}
@@ -344,16 +345,16 @@ func (s *VidispineService) GetDataForExport(itemVXID string, languagesToExport [
 
 	// Get the video clips as a base
 	if isSequence {
-		seq, err := s.apiClient.GetSequence(itemVXID)
+		seq, err := client.GetSequence(itemVXID)
 		if err != nil {
 			return nil, err
 		}
-		out.Clips, err = s.SeqToClips(seq, *audioSource)
+		out.Clips, err = SeqToClips(client, seq, *audioSource)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		clip, err := s.getClipForAssetOrSubclip(itemVXID, subclipTitle, meta, metaClips)
+		clip, err := getClipForAssetOrSubclip(client, itemVXID, subclipTitle, meta, metaClips)
 		if err != nil {
 			return nil, err
 		}
@@ -369,9 +370,9 @@ func (s *VidispineService) GetDataForExport(itemVXID string, languagesToExport [
 		}
 
 		if *audioSource == ExportAudioSourceRelated {
-			clip, err = s.getRelatedAudios(clip, languagesToExport)
+			clip, err = getRelatedAudios(client, clip, languagesToExport)
 		} else if *audioSource == ExportAudioSourceEmbedded {
-			clip, err = s.getEmbeddedAudio(clip, languagesToExport)
+			clip, err = getEmbeddedAudio(client, clip, languagesToExport)
 		}
 
 		if err != nil {
@@ -386,7 +387,7 @@ func (s *VidispineService) GetDataForExport(itemVXID string, languagesToExport [
 		clip.SubtitleFiles = map[string]string{}
 
 		// This is independent of audio language export config, we include all subs available
-		clipShapes, err := s.apiClient.GetShapes(clip.VXID)
+		clipShapes, err := client.GetShapes(clip.VXID)
 		if err != nil {
 			return nil, err
 		}

@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/bcc-code/bccm-flows/utils/workflows"
 
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	bccmflows "github.com/bcc-code/bccm-flows"

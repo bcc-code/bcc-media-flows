@@ -65,7 +65,7 @@ func renderErrorPage(c *gin.Context, httpStatus int, err error) {
 }
 
 type TriggerServer struct {
-	vidispine               *vidispine.VidispineService
+	vidispine               vidispine.Client
 	assetExportDestinations []string
 	wfClient                client.Client
 	languages               map[string]bccmflows.Language
@@ -85,7 +85,7 @@ type TriggerGETParams struct {
 
 func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 	vxID := c.Query("id")
-	meta, err := s.vidispine.Api().GetMetadata(vxID)
+	meta, err := s.vidispine.GetMetadata(vxID)
 	if err != nil {
 		renderErrorPage(c, http.StatusInternalServerError, err)
 		return
@@ -104,7 +104,7 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 		return
 	}
 
-	subclipNames, err := s.vidispine.GetSubclipNames(vxID)
+	subclipNames, err := vidispine.GetSubclipNames(s.vidispine, vxID)
 	if err != nil {
 		renderErrorPage(c, http.StatusInternalServerError, err)
 		return
@@ -199,7 +199,7 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 		wfID = res.GetID()
 	}
 
-	meta, err := s.vidispine.Api().GetMetadata(vxID)
+	meta, err := s.vidispine.GetMetadata(vxID)
 	if err != nil {
 		renderErrorPage(c, http.StatusInternalServerError, err)
 		return
@@ -260,7 +260,7 @@ func (s *TriggerServer) listGET(c *gin.Context) {
 			return
 		}
 
-		meta, err := s.vidispine.Api().GetMetadata(data.VXID)
+		meta, err := s.vidispine.GetMetadata(data.VXID)
 		if err != nil {
 			renderErrorPage(c, http.StatusInternalServerError, err)
 			return
@@ -309,7 +309,7 @@ func main() {
 	router.LoadHTMLGlob("./templates/*")
 
 	server := &TriggerServer{
-		vidispine.NewVidispineService(vsapiClient),
+		vsapiClient,
 		assetExportDestinations,
 		wfClient,
 		lang,

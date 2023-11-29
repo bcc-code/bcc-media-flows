@@ -15,7 +15,7 @@ import (
 	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bccm-flows/utils"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -70,7 +70,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	var filename string
 	var err error
 	switch params.OrderForm {
-	case OrderFormOtherMaster, OrderFormVBMaster, OrderFormSeriesMaster, OrderFormLEDMaterial:
+	case OrderFormOtherMaster, OrderFormVBMaster, OrderFormSeriesMaster, OrderFormLEDMaterial, OrderFormPodcast:
 		filename, err = masterFilename(params.Metadata.JobProperty)
 	default:
 		return nil, fmt.Errorf("unsupported order form: %s", params.OrderForm)
