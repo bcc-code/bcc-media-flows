@@ -46,8 +46,8 @@ func AnalyzeEBUR128Activity(ctx context.Context, input AnalyzeEBUR128Params) (*c
 		out.SuggestedAdjustment = -0.9 - analyzeResult.TruePeak
 	}
 
-	// Don't suggest adjustments below .5 dB
-	if math.Abs(out.SuggestedAdjustment) < 0.5 {
+	// Don't suggest adjustments below .5 dB, or for peaks below -69 dBTP
+	if math.Abs(out.SuggestedAdjustment) < 0.5 || out.TruePeak <= -69 {
 		out.SuggestedAdjustment = 0.0
 	}
 
