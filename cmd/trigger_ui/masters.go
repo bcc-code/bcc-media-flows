@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"path/filepath"
 	"strings"
 
 	"github.com/bcc-code/bccm-flows/paths"
@@ -139,10 +140,14 @@ func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
 		}
 	}
 
-	rawPath := masterTriggerDir + "/" + c.PostForm("path")
-	path := paths.MustParse(rawPath)
+	rawPath := filepath.Join(masterTriggerDir, c.PostForm("path"))
+	path, err := paths.Parse(rawPath)
+	if err != nil {
+		renderErrorPage(c, http.StatusBadRequest, err)
+		return
+	}
 
-	_, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, ingestworkflows.Masters, ingestworkflows.MasterParams{
+	_, err = s.wfClient.ExecuteWorkflow(c, workflowOptions, ingestworkflows.Masters, ingestworkflows.MasterParams{
 		Metadata: &ingest.Metadata{
 			JobProperty: ingest.JobProperty{
 				ProgramID:        c.PostForm("programId"),
@@ -155,7 +160,6 @@ func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
 		},
 		SourceFile: &path,
 	})
-
 	if err != nil {
 		renderErrorPage(c, http.StatusInternalServerError, err)
 		return

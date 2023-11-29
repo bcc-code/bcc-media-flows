@@ -98,7 +98,7 @@
         <div class="flex flex-col">
             <label for="personsAppearing">Persons appearing</label>
             <div class="multiselect flex flex-row-reverse w-full border border-[#6b7280]">
-                <input id="personsAppearing" list="personsList" name="personsAppearing"
+                <input id="personsAppearing" list="personsList" name="persons"
                        class="w-full border border-none outline-none border-box" type="text">
                 <datalist id="personsList">
                     {{range $element := .persons}}
@@ -127,7 +127,7 @@
                 path for file
             </label>
             <select id="path" class="w-full border" name="path" required>
-                {{range $element := .fileDirectory}}
+                {{range $element := .files}}
                     <option value="{{$element}}">{{$element}}</option>
                 {{end}}
             </select>
@@ -170,7 +170,7 @@
                 let button = document.createElement("button");
 
                 button.appendChild(document.createTextNode("X"));
-                button.setAttribute("class", "bg-blue-400 p-1 rounded");
+                button.setAttribute("class", "bg-blue-400 px-1 rounded");
                 button.addEventListener('click', () => {
                     li.remove()
                     for (const key of document.getElementById("arrayData").childNodes) {
@@ -182,7 +182,7 @@
 
                 li.appendChild(document.createTextNode(inputValue));
                 li.appendChild(button);
-                li.setAttribute("class", "bg-blue-200 p-2 m-1 border-none w-auto flex flex-row gap-1 rounded-2xl");
+                li.setAttribute("class", "bg-blue-200 px-2 py-1 m-1 border-none w-auto flex gap-1 rounded-2xl");
                 li.setAttribute("value", inputValue);
                 ul.appendChild(li);
 
