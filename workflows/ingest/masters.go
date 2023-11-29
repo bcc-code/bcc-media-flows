@@ -77,7 +77,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	}
 
 	sourceFile := params.SourceFile
-	if sourceFile.Path == "" {
+	if sourceFile == nil {
 		files, err := wfutils.ListFiles(ctx, params.Directory)
 		if err != nil {
 			return nil, err
@@ -89,7 +89,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		if len(files) > 1 {
 			return nil, fmt.Errorf("too many files in directory: %s", params.Directory)
 		}
-		*sourceFile = files[0]
+		sourceFile = &files[0]
 	}
 
 	outputDir, err := wfutils.GetWorkflowMastersOutputFolder(ctx)
