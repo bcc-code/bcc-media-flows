@@ -1,11 +1,17 @@
 package ingestworkflows
 
 import (
+	"strconv"
+
 	"github.com/ansel1/merry/v2"
+	"github.com/bcc-code/bccm-flows/activities"
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ingest"
+	"github.com/bcc-code/bccm-flows/services/notifications"
+	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"github.com/bcc-code/bccm-flows/workflows"
+	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -83,4 +89,20 @@ func getOrderFormFilename(orderForm OrderForm, file paths.Path, props ingest.Job
 		return masterFilename(props)
 	}
 	return "", merry.New("Unsupported order form")
+}
+
+func notifyImportCompleted(ctx workflow.Context, targets []notifications.Target, jobID int, filesByAssetID map[string]paths.Path) error {
+	return wfutils.ExecuteWithQueue(ctx, activities.NotifyTargets, activities.NotifyTargetsInput{
+		Targets: targets,
+		Message: notifications.ImportCompleted{
+			Title: "Import completed",
+			JobID: strconv.Itoa(jobID),
+			Files: lo.Map(lo.Entries(filesByAssetID), func(entry lo.Entry[string, paths.Path], _ int) notifications.File {
+				return notifications.File{
+					VXID: entry.Key,
+					Name: entry.Value.Base(),
+				}
+			}),
+		},
+	}).Get(ctx, nil)
 }

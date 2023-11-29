@@ -6,6 +6,16 @@ import (
 	"html/template"
 )
 
+var (
+	//go:embed templates/import_completed.gohtml
+	importCompletedTemplateString string
+	importCompletedTemplate       = template.Must(template.New("import_completed").Parse(importCompletedTemplateString))
+
+	//go:embed templates/simple_notification.gohtml
+	simpleNotificationTemplateFS string
+	simpleNotificationTemplate   = template.Must(template.New("simple_notification").Parse(simpleNotificationTemplateFS))
+)
+
 type File struct {
 	VXID string
 	Name string
@@ -17,15 +27,10 @@ type ImportCompleted struct {
 	Files []File
 }
 
-//go:embed templates/import_completed.gohtml
-var importCompletedTemplateString string
-
-var ImportCompletedTemplate = template.Must(template.New("import_completed").Parse(importCompletedTemplateString))
-
 func (ImportCompleted) IsTemplate() {}
 
 func (t ImportCompleted) RenderHTML() (string, error) {
-	return renderHtmlTemplate(ImportCompletedTemplate, t)
+	return renderHtmlTemplate(importCompletedTemplate, t)
 }
 
 type SimpleNotification struct {
@@ -33,14 +38,9 @@ type SimpleNotification struct {
 	Message string
 }
 
-//go:embed templates/simple_notification.gohtml
-var simpleNotificationTemplateFS string
-
-var SimpleNotificationTemplate = template.Must(template.New("simple_notification").Parse(simpleNotificationTemplateFS))
-
 func (SimpleNotification) IsTemplate() {}
 func (t SimpleNotification) RenderHTML() (string, error) {
-	return renderHtmlTemplate(SimpleNotificationTemplate, t)
+	return renderHtmlTemplate(simpleNotificationTemplate, t)
 }
 
 func renderHtmlTemplate(t *template.Template, data any) (string, error) {

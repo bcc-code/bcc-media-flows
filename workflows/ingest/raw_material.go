@@ -2,7 +2,6 @@ package ingestworkflows
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/bcc-code/bccm-flows/activities"
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
@@ -11,7 +10,6 @@ import (
 	"github.com/bcc-code/bccm-flows/services/notifications"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/workflows"
-	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -79,11 +77,6 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		}
 	}
 
-	allAssetIDs, err := wfutils.GetMapKeysSafely(ctx, vidispineJobIDs)
-	if err != nil {
-		return err
-	}
-
 	mediaAssetIDs, err := wfutils.GetMapKeysSafely(ctx, mediaAnalyzeTasks)
 	if err != nil {
 		return err
@@ -118,16 +111,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		return err
 	}
 
-	err = wfutils.Notify(ctx,
-		params.Targets,
-		"Import complete",
-		"Order form: "+params.Metadata.JobProperty.OrderForm+"\n\nFiles:\n"+
-			strings.Join(
-				lo.Map(allAssetIDs, func(id string, _ int) string {
-					return fmt.Sprintf("%s - %s", id, fileByAssetID[id].Base())
-				}),
-				"\n"),
-	)
+	err = notifyImportCompleted(ctx, params.Targets, params.Metadata.JobProperty.JobID, fileByAssetID)
 	if err != nil {
 		return err
 	}

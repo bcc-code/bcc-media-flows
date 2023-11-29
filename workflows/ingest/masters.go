@@ -129,6 +129,13 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		}
 	}
 
+	err = notifyImportCompleted(ctx, params.Targets, params.Metadata.JobProperty.JobID, map[string]paths.Path{
+		result.AssetID: file,
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	return &MasterResult{
 		Report:  report,
 		AssetID: result.AssetID,
