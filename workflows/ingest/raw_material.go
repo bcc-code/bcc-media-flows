@@ -2,7 +2,6 @@ package ingestworkflows
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/bcc-code/bccm-flows/activities"
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
