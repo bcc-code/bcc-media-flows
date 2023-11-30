@@ -64,12 +64,10 @@ func renderErrorPage(c *gin.Context, httpStatus int, err error) {
 }
 
 type TriggerServer struct {
-	vidispine               vidispine.Client
-	assetExportDestinations []string
-	wfClient                client.Client
-	languages               map[string]bccmflows.Language
-	ExportAudioSources      []string
-	database                *sql.DB
+	vidispine vidispine.Client
+	wfClient  client.Client
+	languages map[string]bccmflows.Language
+	database  *sql.DB
 }
 
 func singleValueArrayFromRows(rows *sql.Rows, err error) ([]string, error) {
@@ -129,13 +127,13 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 
 	c.HTML(http.StatusOK, "index.gohtml", TriggerGETParams{
 		Title:                   title,
-		AssetExportDestinations: s.assetExportDestinations,
 		Filenames:               filenames,
 		Languages:               s.languages,
 		SelectedLanguages:       selectedLanguages,
 		SelectedAudioSource:     selectedAudioSource,
-		AudioSources:            s.ExportAudioSources,
 		SubclipNames:            subclipNames,
+		AudioSources:            vidispine.ExportAudioSources.Values(),
+		AssetExportDestinations: export.AssetExportDestinations.Values(),
 	})
 }
 
@@ -233,8 +231,6 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 func main() {
 	router := gin.Default()
 
-	assetExportDestinations := export.AssetExportDestinations.Values()
-	ExportAudioSources := vidispine.ExportAudioSources.Values()
 	vsapiClient := vsapi.NewClient(os.Getenv("VIDISPINE_BASE_URL"), os.Getenv("VIDISPINE_USERNAME"), os.Getenv("VIDISPINE_PASSWORD"))
 	wfClient, err := getTemporalClient()
 	if err != nil {
@@ -269,10 +265,8 @@ func main() {
 
 	server := &TriggerServer{
 		vsapiClient,
-		assetExportDestinations,
 		wfClient,
 		lang,
-		ExportAudioSources,
 		db,
 	}
 

@@ -9,6 +9,7 @@ import (
 	"github.com/bcc-code/bccm-flows/services/ingest"
 	ingestworkflows "github.com/bcc-code/bccm-flows/workflows/ingest"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"
 )
@@ -58,27 +59,22 @@ func (s *TriggerServer) uploadMasterAdminGET(c *gin.Context) {
 }
 
 func (s *TriggerServer) uploadMasterAdminPOST(c *gin.Context) {
-	addIDs := []string{c.PostForm("code") + " - " + c.PostForm("name")}
+	code := c.PostForm("code")
+	name := c.PostForm("name")
 
-	if addIDs[0] != " - " {
-		for _, id := range addIDs {
-			err := s.addProgramID(id)
-			if err != nil {
-				renderErrorPage(c, http.StatusInternalServerError, err)
-				return
-			}
+	if code != "" && name != "" {
+		err := s.addProgramID(strings.ToUpper(code) + " - " + name)
+		if err != nil {
+			renderErrorPage(c, http.StatusInternalServerError, err)
+			return
 		}
 	}
 
-	removeIDs := c.PostFormArray("deleteIds[]")
-
-	if removeIDs != nil {
-		for _, id := range removeIDs {
-			err := s.removeProgramID(id)
-			if err != nil {
-				renderErrorPage(c, http.StatusInternalServerError, err)
-				return
-			}
+	for _, id := range c.PostFormArray("deleteIds[]") {
+		err := s.removeProgramID(id)
+		if err != nil {
+			renderErrorPage(c, http.StatusInternalServerError, err)
+			return
 		}
 	}
 
@@ -118,21 +114,42 @@ func (s *TriggerServer) uploadMasterGET(c *gin.Context) {
 	})
 }
 
+type MasterPostParams struct {
+	ProgramID          string   `form:"programId"`
+	Tags               []string `form:"tags[]"`
+	Persons            []string `form:"persons[]"`
+	Path               string   `form:"path"`
+	SenderEmail        string   `form:"senderEmail"`
+	Language           string   `form:"language"`
+	Filename           string   `form:"filename"`
+	Episode            string   `form:"episode"`
+	EpisodeTitle       string   `form:"episodeTitle"`
+	EpisodeDescription string   `form:"episodeDescription"`
+	DirectToPlayback   bool     `form:"directToPlayback"`
+}
+
 func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
+	var params MasterPostParams
+	err := c.BindWith(&params, binding.Form)
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
+
 	queue := getQueue()
 	workflowOptions := client.StartWorkflowOptions{
 		ID:        uuid.NewString(),
 		TaskQueue: queue,
 	}
 
-	for _, tag := range c.PostFormArray("tags[]") {
+	for _, tag := range params.Tags {
 		err := s.addTag(tag)
 		if err != nil {
 			renderErrorPage(c, http.StatusInternalServerError, err)
 			return
 		}
 	}
-	for _, person := range c.PostFormArray("persons[]") {
+	for _, person := range params.Persons {
 		err := s.addPerson(person)
 		if err != nil {
 			renderErrorPage(c, http.StatusInternalServerError, err)
@@ -140,7 +157,7 @@ func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
 		}
 	}
 
-	rawPath := filepath.Join(masterTriggerDir, c.PostForm("path"))
+	rawPath := filepath.Join(masterTriggerDir, params.Path)
 	path, err := paths.Parse(rawPath)
 	if err != nil {
 		renderErrorPage(c, http.StatusBadRequest, err)
@@ -150,12 +167,15 @@ func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
 	_, err = s.wfClient.ExecuteWorkflow(c, workflowOptions, ingestworkflows.Masters, ingestworkflows.MasterParams{
 		Metadata: &ingest.Metadata{
 			JobProperty: ingest.JobProperty{
-				ProgramID:        c.PostForm("programId"),
-				Tags:             strings.Join(c.PostFormArray("tags[]"), ", "),
-				PersonsAppearing: strings.Join(c.PostFormArray("persons[]"), ", "),
-				SenderEmail:      c.PostForm("senderEmail"),
-				Language:         c.PostForm("language"),
-				ReceivedFilename: c.PostForm("filename"),
+				ProgramID:          params.ProgramID,
+				Tags:               strings.Join(params.Tags, ", "),
+				PersonsAppearing:   strings.Join(params.Persons, ", "),
+				SenderEmail:        params.SenderEmail,
+				Language:           params.Language,
+				ReceivedFilename:   params.Filename,
+				EpisodeDescription: params.EpisodeDescription,
+				EpisodeTitle:       params.EpisodeTitle,
+				Episode:            params.Episode,
 			},
 		},
 		SourceFile: &path,
