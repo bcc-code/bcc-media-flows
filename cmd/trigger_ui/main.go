@@ -1,15 +1,16 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
+	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"path/filepath"
-	"time"
 
 	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/google/uuid"
+
+	_ "github.com/glebarez/go-sqlite"
 
 	"os"
 
@@ -19,8 +20,6 @@ import (
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bccm-flows/workflows/export"
 	"github.com/gin-gonic/gin"
-	"go.temporal.io/api/history/v1"
-	"go.temporal.io/api/workflowservice/v1"
 	"go.temporal.io/sdk/client"
 )
 
@@ -40,10 +39,11 @@ func getQueue() string {
 }
 
 var overlaysDir = os.Getenv("OVERLAYS_DIR")
+var masterTriggerDir = os.Getenv("MASTER_TRIGGER_DIR")
 
-func getOverlayFilenames() ([]string, error) {
-	files, err := os.ReadDir(overlaysDir)
-	filenames := []string{}
+func getFilenames(dir string) ([]string, error) {
+	files, err := os.ReadDir(dir)
+	var filenames []string
 	if err != nil {
 		return filenames, err
 	}
@@ -65,11 +65,33 @@ func renderErrorPage(c *gin.Context, httpStatus int, err error) {
 }
 
 type TriggerServer struct {
-	vidispine               vidispine.Client
-	assetExportDestinations []string
-	wfClient                client.Client
-	languages               map[string]bccmflows.Language
-	ExportAudioSources      []string
+	vidispine vidispine.Client
+	wfClient  client.Client
+	languages map[string]bccmflows.Language
+	database  *sql.DB
+}
+
+func singleValueArrayFromRows(rows *sql.Rows, err error) ([]string, error) {
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			log.Default().Println(err)
+		}
+	}()
+
+	var array []string
+	for rows.Next() {
+		var data string
+		err = rows.Scan(&data)
+		if err != nil {
+			return nil, err
+		}
+		array = append(array, data)
+	}
+	return array, nil
 }
 
 type TriggerGETParams struct {
@@ -98,7 +120,7 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 
 	selectedLanguages := meta.GetArray(vscommon.FieldLangsToExport)
 
-	filenames, err := getOverlayFilenames()
+	filenames, err := getFilenames(overlaysDir)
 	if err != nil {
 		renderErrorPage(c, http.StatusInternalServerError, err)
 		return
@@ -112,13 +134,13 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 
 	c.HTML(http.StatusOK, "index.gohtml", TriggerGETParams{
 		Title:                   title,
-		AssetExportDestinations: s.assetExportDestinations,
 		Filenames:               filenames,
 		Languages:               s.languages,
 		SelectedLanguages:       selectedLanguages,
 		SelectedAudioSource:     selectedAudioSource,
-		AudioSources:            s.ExportAudioSources,
 		SubclipNames:            subclipNames,
+		AudioSources:            vidispine.ExportAudioSources.Values(),
+		AssetExportDestinations: export.AssetExportDestinations.Values(),
 	})
 }
 
@@ -213,92 +235,9 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 	})
 }
 
-type WorkflowListParams struct {
-	WorkflowList     []WorkflowDetails
-	WorkflowStatuses map[string]string
-}
-
-type WorkflowDetails struct {
-	VxID       string
-	Name       string
-	Status     string
-	WorkflowID string
-	Start      string
-}
-
-func (s *TriggerServer) listGET(c *gin.Context) {
-	var workflowList []WorkflowDetails
-
-	workflows, err := s.wfClient.ListWorkflow(c, &workflowservice.ListWorkflowExecutionsRequest{
-		Query: "WorkflowType = 'VXExport'",
-	})
-	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
-		return
-	}
-
-	for i := 0; i < len(workflows.Executions); i++ {
-		res, err := s.wfClient.WorkflowService().GetWorkflowExecutionHistory(c, &workflowservice.GetWorkflowExecutionHistoryRequest{
-			Execution: workflows.Executions[i].GetExecution(),
-			Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
-		})
-
-		if err != nil {
-			renderErrorPage(c, http.StatusInternalServerError, err)
-			return
-		}
-		attributes, ok := res.History.Events[0].Attributes.(*history.HistoryEvent_WorkflowExecutionStartedEventAttributes)
-		if !ok {
-			renderErrorPage(c, 500, errors.New("unexpected attribute type on first workflow event. Was not HistoryEvent_WorkflowExecutionStartedEventAttributes"))
-			break
-		}
-		data := export.VXExportParams{}
-		err = json.Unmarshal(attributes.WorkflowExecutionStartedEventAttributes.Input.Payloads[0].Data, &data)
-
-		if err != nil {
-			renderErrorPage(c, http.StatusInternalServerError, err)
-			return
-		}
-
-		meta, err := s.vidispine.GetMetadata(data.VXID)
-		if err != nil {
-			renderErrorPage(c, http.StatusInternalServerError, err)
-			return
-		}
-		name := meta.Get(vscommon.FieldTitle, "")
-
-		loc, _ := time.LoadLocation("Europe/Oslo")
-		startTime := workflows.Executions[i].StartTime.In(loc).Format("Mon, 02 Jan 2006 15:04:05 MST")
-		workflowList = append(workflowList, WorkflowDetails{
-			VxID:       data.VXID,
-			Name:       name,
-			Status:     workflows.Executions[i].GetStatus().String(),
-			WorkflowID: workflows.Executions[i].Execution.WorkflowId,
-			Start:      startTime,
-		})
-
-	}
-
-	workflowStatuses := map[string]string{
-		"Running":    "blue",
-		"Timed out":  "yellow",
-		"Completed":  "green",
-		"Failed":     "red",
-		"Canceled":   "yellow",
-		"Terminated": "red",
-	}
-
-	c.HTML(http.StatusOK, "list.gohtml", WorkflowListParams{
-		WorkflowList:     workflowList,
-		WorkflowStatuses: workflowStatuses,
-	})
-}
-
 func main() {
 	router := gin.Default()
 
-	assetExportDestinations := export.AssetExportDestinations.Values()
-	ExportAudioSources := vidispine.ExportAudioSources.Values()
 	vsapiClient := vsapi.NewClient(os.Getenv("VIDISPINE_BASE_URL"), os.Getenv("VIDISPINE_USERNAME"), os.Getenv("VIDISPINE_PASSWORD"))
 	wfClient, err := getTemporalClient()
 	if err != nil {
@@ -308,21 +247,55 @@ func main() {
 
 	router.LoadHTMLGlob("./templates/*")
 
-	server := &TriggerServer{
-		vsapiClient,
-		assetExportDestinations,
-		wfClient,
-		lang,
-		ExportAudioSources,
+	sqlitePath, ok := os.LookupEnv("TRIGGER_DB")
+	if !ok {
+		panic("No TRIGGER_DB environment variable.")
 	}
 
-	router.GET("/vx-export", server.triggerHandlerGET)
-	router.GET("/vx-export/list", server.listGET)
-	router.POST("/vx-export", server.triggerHandlerPOST)
+	db, err := sql.Open("sqlite", sqlitePath)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS tags (
+		name TEXT NOT NULL UNIQUE 
+	);
+	CREATE TABLE IF NOT EXISTS persons (
+		name TEXT NOT NULL UNIQUE
+	);
+	CREATE TABLE IF NOT EXISTS program_ids (
+		name TEXT NOT NULL UNIQUE 
+	);`)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	server := &TriggerServer{
+		vsapiClient,
+		wfClient,
+		lang,
+		db,
+	}
+
+	router.Group("/vx-export").
+		GET("/", server.triggerHandlerGET).
+		GET("/list", server.listGET).
+		POST("/", server.triggerHandlerPOST)
+
+	router.Group("/upload-master").
+		GET("/", server.uploadMasterGET).
+		POST("/", server.uploadMasterPOST).
+		GET("/admin", server.uploadMasterAdminGET).
+		POST("/admin", server.uploadMasterAdminPOST)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8083"
 	}
-	router.Run(fmt.Sprintf(":%s", port))
+
+	fmt.Printf("Started on port %s", port)
+	err = router.Run(fmt.Sprintf(":%s", port))
+	if err != nil {
+		panic(err)
+	}
 }

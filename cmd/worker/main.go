@@ -32,6 +32,7 @@ var utilActivities = []any{
 	activities.GetSubtitlesActivity,
 	activities.MergeTranscriptJSON,
 	batonactivities.QC,
+	activities.NotifyTargets,
 }
 
 var vidispineActivities = []any{
