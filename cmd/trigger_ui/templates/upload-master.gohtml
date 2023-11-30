@@ -151,51 +151,58 @@
         ul.setAttribute("class", "flex flex-row")
         element.addEventListener("keypress", function (event) {
             if (event.keyCode === 13) {
-                event.preventDefault();
-                event.stopPropagation();
-
-                let inputValue = element.children[0].value
-                if (inputValue === "") {
-                    return
-                }
-                for (const key of document.getElementById("arrayData").childNodes) {
-                    if (inputValue === key.value) {
-                        return
-                    }
-                }
-
-                element.appendChild(ul)
-
-                let li = document.createElement("li");
-                let button = document.createElement("button");
-
-                button.appendChild(document.createTextNode("X"));
-                button.setAttribute("class", "bg-blue-400 px-1 rounded");
-                button.addEventListener('click', () => {
-                    li.remove()
-                    for (const key of document.getElementById("arrayData").childNodes) {
-                        if ((key.value + "X") === li.textContent) {
-                            key.remove()
-                        }
-                    }
-                })
-
-                li.appendChild(document.createTextNode(inputValue));
-                li.appendChild(button);
-                li.setAttribute("class", "bg-blue-200 px-2 py-1 m-1 border-none w-auto flex gap-1 rounded-2xl");
-                li.setAttribute("value", inputValue);
-                ul.appendChild(li);
-
-                const input = document.createElement("input");
-                const hiddenArray = document.getElementById("arrayData");
-
-                input.setAttribute("type", "hidden");
-                input.setAttribute("name", element.children[0].getAttribute("name") + "[]");
-                input.setAttribute("value", inputValue);
-                hiddenArray.appendChild(input);
-                element.children[0].value = ""
+                triggerAddItem(ul, element, event)
             }
         })
+        element.children[0].addEventListener("blur", function (event) {
+            triggerAddItem(ul, element, event)
+        })
+    }
+
+    function triggerAddItem(ul, element, event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        let inputValue = element.children[0].value
+        if (inputValue === "") {
+            return
+        }
+        for (const key of document.getElementById("arrayData").childNodes) {
+            if (inputValue === key.value) {
+                return
+            }
+        }
+
+        element.appendChild(ul)
+
+        let li = document.createElement("li");
+        let button = document.createElement("button");
+
+        button.appendChild(document.createTextNode("X"));
+        button.setAttribute("class", "bg-blue-400 px-1 rounded");
+        button.addEventListener('click', () => {
+            li.remove()
+            for (const key of document.getElementById("arrayData").childNodes) {
+                if ((key.value + "X") === li.textContent) {
+                    key.remove()
+                }
+            }
+        })
+
+        li.appendChild(document.createTextNode(inputValue));
+        li.appendChild(button);
+        li.setAttribute("class", "bg-blue-200 px-2 py-1 m-1 border-none w-auto flex gap-1 rounded-2xl");
+        li.setAttribute("value", inputValue);
+        ul.appendChild(li);
+
+        const input = document.createElement("input");
+        const hiddenArray = document.getElementById("arrayData");
+
+        input.setAttribute("type", "hidden");
+        input.setAttribute("name", element.children[0].getAttribute("name") + "[]");
+        input.setAttribute("value", inputValue);
+        hiddenArray.appendChild(input);
+        element.children[0].value = ""
     }
 </script>
 </body>
