@@ -10,7 +10,7 @@ import (
 	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/google/uuid"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/glebarez/go-sqlite"
 
 	"os"
 
