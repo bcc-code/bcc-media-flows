@@ -24,9 +24,10 @@ type MasterParams struct {
 	Targets  []notifications.Target
 	Metadata *ingest.Metadata
 
-	OrderForm OrderForm
-	Directory paths.Path
+	OrderForm  OrderForm
+	Directory  paths.Path
 	OutputDir paths.Path
+	SourceFile *paths.Path
 }
 
 type MasterResult struct {
@@ -81,20 +82,24 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		return nil, err
 	}
 
-	files, err := wfutils.ListFiles(ctx, params.Directory)
-	if err != nil {
-		return nil, err
-	}
+	sourceFile := params.SourceFile
+	if sourceFile == nil {
+		files, err := wfutils.ListFiles(ctx, params.Directory)
+		if err != nil {
+			return nil, err
+		}
 
-	if len(files) == 0 {
-		return nil, fmt.Errorf("no files in directory: %s", params.Directory)
-	}
-	if len(files) > 1 {
-		return nil, fmt.Errorf("too many files in directory: %s", params.Directory)
+		if len(files) == 0 {
+			return nil, fmt.Errorf("no files in directory: %s", params.Directory)
+		}
+		if len(files) > 1 {
+			return nil, fmt.Errorf("too many files in directory: %s", params.Directory)
+		}
+		sourceFile = &files[0]
 	}
 
 	file := params.OutputDir.Append(filename)
-	err = wfutils.MoveFile(ctx, files[0], file)
+	err = wfutils.MoveFile(ctx, *sourceFile, file)
 	if err != nil {
 		return nil, err
 	}

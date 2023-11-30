@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+</head>
+
+<body>
+    <form method="POST" class="flex flex-col min-h-screen gap-2 mx-auto p-14 max-w-screen-lg">
+        <h1>List of ProgramIDs</h1>
+        <div class="flex flex-col gap-2 overflow-y-auto bg-gray-100 p-2">
+            {{range $element := .programIds}}
+            <div class="multiselect bg-gray-200 flex justify-between">
+                <p class="inline-block w-40 flex-none">{{$element}}</p>
+                <button class="bg-red-500 p-2">Delete</button>
+            </div>
+            {{end}}
+        </div>
+
+        <label for="code">Code</label>
+        <input id="code" type="text" name="code">
+
+        <label for="name">Name</label>
+        <input id="name" type="text" name="name">
+
+        <input id="submit"
+            class="cursor-pointer rounded-md bg-[#6A64F1] py-3 px-8 text-center text-base font-semibold text-white outline-none"
+            type="submit" value="Add to table">
+
+        <a href="/upload-master"
+            class="cursor-pointer rounded-md bg-[#6A64F1] py-3 px-8 text-center text-base font-semibold text-white outline-none">
+            Back
+        </a>
+
+        <input type="hidden" id="deleteArrayData">
+    </form>
+</body>
+<script>
+    for (const element of document.querySelectorAll(".multiselect")) {
+        setupButton(element)
+    }
+
+    function setupButton(element) {
+        element.children[1].onclick = function () {
+            const input = document.createElement("input")
+            document.getElementById("deleteArrayData").appendChild(input)
+            input.setAttribute("type", "hidden")
+            input.setAttribute("name", "deleteIds[]")
+            input.setAttribute("value", element.children[0].textContent)
+        }
+    }
+</script>
+</html>
