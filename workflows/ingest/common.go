@@ -92,7 +92,7 @@ func getOrderFormFilename(orderForm OrderForm, file paths.Path, props ingest.Job
 }
 
 func notifyImportCompleted(ctx workflow.Context, targets []notifications.Target, jobID int, filesByAssetID map[string]paths.Path) error {
-	return wfutils.ExecuteWithQueue(ctx, activities.NotifyTargets, activities.NotifyTargetsInput{
+	return wfutils.ExecuteWithQueue(ctx, activities.NotifyImportCompleted, activities.NotifyImportCompletedInput{
 		Targets: targets,
 		Message: notifications.ImportCompleted{
 			Title: "Import completed",

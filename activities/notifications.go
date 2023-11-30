@@ -10,12 +10,25 @@ import (
 	"go.temporal.io/sdk/activity"
 )
 
-type NotifyTargetsInput struct {
+type NotifySimpleInput struct {
 	Targets []notifications.Target
-	Message notifications.Template
+	Message notifications.SimpleNotification
 }
 
-func NotifyTargets(ctx context.Context, input NotifyTargetsInput) error {
+func NotifySimple(ctx context.Context, input NotifySimpleInput) error {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Sending notification")
+
+	client := notifications.NewClient(notificationServices{})
+	return client.Send(input.Targets, input.Message)
+}
+
+type NotifyImportCompletedInput struct {
+	Targets []notifications.Target
+	Message notifications.ImportCompleted
+}
+
+func NotifyImportCompleted(ctx context.Context, input NotifyImportCompletedInput) error {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Sending notification")
 

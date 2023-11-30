@@ -7,7 +7,7 @@ import (
 )
 
 func Notify(ctx workflow.Context, targets []notifications.Target, title, message string) error {
-	return ExecuteWithQueue(ctx, activities.NotifyTargets, activities.NotifyTargetsInput{
+	return ExecuteWithQueue(ctx, activities.NotifySimple, activities.NotifySimpleInput{
 		Targets: targets,
 		Message: notifications.SimpleNotification{
 			Title:   title,
