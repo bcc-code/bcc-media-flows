@@ -32,6 +32,7 @@ var utilActivities = []any{
 	activities.GetSubtitlesActivity,
 	batonactivities.QC,
 	activities.NotifySimple,
+	activities.NotifyImportCompleted,
 }
 
 var vidispineActivities = []any{
