@@ -2,6 +2,8 @@ package activities
 
 import (
 	"context"
+	"math"
+
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
@@ -42,6 +44,11 @@ func AnalyzeEBUR128Activity(ctx context.Context, input AnalyzeEBUR128Params) (*c
 
 	if analyzeResult.TruePeak+out.SuggestedAdjustment > -0.9 {
 		out.SuggestedAdjustment = -0.9 - analyzeResult.TruePeak
+	}
+
+	// Don't suggest adjustments below .5 dB, or for peaks below -69 dBTP
+	if math.Abs(out.SuggestedAdjustment) < 0.5 || out.TruePeak <= -69 {
+		out.SuggestedAdjustment = 0.0
 	}
 
 	return out, nil

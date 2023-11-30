@@ -8,7 +8,7 @@ import (
 
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils/workflows"
+	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -69,21 +69,26 @@ func NormalizeAudioLevelWorkflow(
 	}
 
 	adjustResult := &common.AudioResult{}
-	err = wfutils.ExecuteWithQueue(ctx, activities.AdjustAudioLevelActivity, activities.AdjustAudioLevelParams{
-		Adjustment:  r128Result.SuggestedAdjustment,
-		InFilePath:  filePath,
-		OutFilePath: outputFolder,
-	}).Get(ctx, adjustResult)
-	if err != nil {
-		return nil, err
+
+	// Don't adjust if the suggested adjustment is less than 0.01 Db
+	if r128Result.SuggestedAdjustment <= 0.01 {
+		err = wfutils.ExecuteWithQueue(ctx, activities.AdjustAudioLevelActivity, activities.AdjustAudioLevelParams{
+			Adjustment:  r128Result.SuggestedAdjustment,
+			InFilePath:  filePath,
+			OutFilePath: outputFolder,
+		}).Get(ctx, adjustResult)
+		if err != nil {
+			return nil, err
+		}
+		filePath = adjustResult.OutputPath
 	}
 
-	out.FilePath = adjustResult.OutputPath.Local()
+	out.FilePath = filePath.Local()
 
 	if params.PerformOutputAnalysis {
 		r128Result := &common.AnalyzeEBUR128Result{}
 		err = wfutils.ExecuteWithQueue(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
-			FilePath:       adjustResult.OutputPath,
+			FilePath:       filePath,
 			TargetLoudness: params.TargetLUFS,
 		}).Get(ctx, r128Result)
 		if err != nil {

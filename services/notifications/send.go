@@ -1,6 +1,11 @@
 package notifications
 
-func (c *Client) Send(targets []Target, message string) error {
+type Template interface {
+	IsTemplate()
+	RenderHTML() (string, error)
+}
+
+func (c *Client) Send(targets []Target, message Template) error {
 
 	for _, target := range targets {
 		switch target.Type {

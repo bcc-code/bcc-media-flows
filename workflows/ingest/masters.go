@@ -13,6 +13,7 @@ import (
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/baton"
 	"github.com/bcc-code/bccm-flows/services/ingest"
+	"github.com/bcc-code/bccm-flows/services/notifications"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/workflows"
@@ -20,6 +21,7 @@ import (
 )
 
 type MasterParams struct {
+	Targets  []notifications.Target
 	Metadata *ingest.Metadata
 
 	OrderForm  OrderForm
@@ -130,6 +132,13 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	err = notifyImportCompleted(ctx, params.Targets, params.Metadata.JobProperty.JobID, map[string]paths.Path{
+		result.AssetID: file,
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return &MasterResult{
