@@ -244,8 +244,8 @@ func main() {
 
 	router.LoadHTMLGlob("./templates/*")
 
-	sqlitePath, exists := os.LookupEnv("TRIGGER_DB")
-	if !exists {
+	sqlitePath, ok := os.LookupEnv("TRIGGER_DB")
+	if !ok {
 		panic("No TRIGGER_DB environment variable.")
 	}
 
@@ -276,18 +276,16 @@ func main() {
 		db,
 	}
 
-	vxexport := router.Group("/vx-export")
+	router.Group("/vx-export").
+		GET("/", server.triggerHandlerGET).
+		GET("/list", server.listGET).
+		POST("/", server.triggerHandlerPOST)
 
-	vxexport.GET("/", server.triggerHandlerGET)
-	vxexport.GET("/list", server.listGET)
-	vxexport.POST("/", server.triggerHandlerPOST)
-
-	uploadmaster := router.Group("/upload-master")
-
-	uploadmaster.GET("/", server.uploadMasterGET)
-	uploadmaster.POST("/", server.uploadMasterPOST)
-	uploadmaster.GET("/admin", server.uploadMasterAdminGET)
-	uploadmaster.POST("/admin", server.uploadMasterAdminPOST)
+	router.Group("/upload-master").
+		GET("/", server.uploadMasterGET).
+		POST("/", server.uploadMasterPOST).
+		GET("/admin", server.uploadMasterAdminGET).
+		POST("/admin", server.uploadMasterAdminPOST)
 
 	port := os.Getenv("PORT")
 	if port == "" {
