@@ -252,7 +252,7 @@ func main() {
 		panic("No TRIGGER_DB environment variable.")
 	}
 
-	db, err := sql.Open("sqlite3", sqlitePath)
+	db, err := sql.Open("sqlite", sqlitePath)
 	if err != nil {
 		panic(err.Error())
 	}
