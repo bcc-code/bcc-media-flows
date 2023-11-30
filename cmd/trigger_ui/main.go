@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"path/filepath"
 
@@ -74,6 +75,12 @@ func singleValueArrayFromRows(rows *sql.Rows, err error) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			log.Default().Println(err)
+		}
+	}()
 
 	var array []string
 	for rows.Next() {
