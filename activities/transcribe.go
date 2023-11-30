@@ -2,9 +2,10 @@ package activities
 
 import (
 	"context"
-	"github.com/bcc-code/bccm-flows/paths"
 	"path/filepath"
 	"time"
+
+	"github.com/bcc-code/bccm-flows/paths"
 
 	"github.com/bcc-code/bccm-flows/services/transcribe"
 	"go.temporal.io/sdk/activity"
@@ -17,9 +18,10 @@ type TranscribeParams struct {
 }
 
 type TranscribeResponse struct {
-	JSONPath paths.Path
-	SRTPath  paths.Path
-	TXTPath  paths.Path
+	JSONPath     paths.Path
+	SRTPath      paths.Path
+	WordsSRTPath paths.Path
+	TXTPath      paths.Path
 }
 
 // Transcribe is the activity that transcribes a video
@@ -42,8 +44,9 @@ func Transcribe(
 
 	fileName := input.File.Base()
 	return &TranscribeResponse{
-		JSONPath: paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".json")),
-		SRTPath:  paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".srt")),
-		TXTPath:  paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".txt")),
+		JSONPath:     paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".json")),
+		SRTPath:      paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".srt")),
+		WordsSRTPath: paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".words.srt")),
+		TXTPath:      paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".txt")),
 	}, nil
 }
