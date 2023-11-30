@@ -3,10 +3,12 @@ package ingestworkflows
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ingest"
+	"github.com/bcc-code/bccm-flows/services/notifications"
 	"github.com/bcc-code/bccm-flows/utils/workflows"
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
@@ -79,9 +81,19 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 		return nil, err
 	}
 
+	targets := lo.Map(strings.Split(metadata.JobProperty.SenderEmail, ","), func(s string, _ int) notifications.Target {
+		return notifications.Email(strings.TrimSpace(s))
+	})
+
+	err = wfutils.Notify(ctx, targets, "Import triggered", "Order form: "+metadata.JobProperty.OrderForm)
+	if err != nil {
+		return nil, err
+	}
+
 	switch *orderForm {
 	case OrderFormRawMaterial:
 		err = workflow.ExecuteChildWorkflow(ctx, RawMaterial, RawMaterialParams{
+			Targets:   targets,
 			OrderForm: *orderForm,
 			Metadata:  metadata,
 			Directory: fcOutputDir,
@@ -93,6 +105,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			return nil, err
 		}
 		err = workflow.ExecuteChildWorkflow(ctx, Masters, MasterParams{
+			Targets:   targets,
 			Metadata:  metadata,
 			OrderForm: *orderForm,
 			Directory: fcOutputDir,

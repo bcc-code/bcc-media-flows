@@ -7,6 +7,7 @@ import (
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ingest"
+	"github.com/bcc-code/bccm-flows/services/notifications"
 	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
@@ -14,6 +15,7 @@ import (
 
 type RawMaterialParams struct {
 	OrderForm OrderForm
+	Targets   []notifications.Target
 	Metadata  *ingest.Metadata
 	Directory paths.Path
 }
@@ -51,6 +53,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		files = append(files, newPath)
 	}
 
+	var fileByAssetID = map[string]paths.Path{}
 	var mediaAnalyzeTasks = map[string]workflow.Future{}
 	var vidispineJobIDs = map[string]string{}
 
@@ -60,6 +63,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		if err != nil {
 			return err
 		}
+		fileByAssetID[result.AssetID] = file
 		vidispineJobIDs[result.AssetID] = result.ImportJobID
 
 		err = addMetaTags(ctx, result.AssetID, params.Metadata)
@@ -103,6 +107,11 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 	}
 
 	err = transcodeAndTranscribe(ctx, mediaAssetIDs, params.Metadata.JobProperty.Language)
+	if err != nil {
+		return err
+	}
+
+	err = notifyImportCompleted(ctx, params.Targets, params.Metadata.JobProperty.JobID, fileByAssetID)
 	if err != nil {
 		return err
 	}

@@ -14,6 +14,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/orsinium-labs/enum v1.3.0
 	github.com/samber/lo v1.38.1
+	github.com/sendgrid/sendgrid-go v3.13.0+incompatible
 	github.com/stretchr/testify v1.8.4
 	go.temporal.io/api v1.21.0
 	go.temporal.io/sdk v1.24.0
@@ -90,6 +91,7 @@ require (
 	github.com/redis/go-redis/v9 v9.0.5 // indirect
 	github.com/robfig/cron v1.2.0 // indirect
 	github.com/rs/zerolog v1.29.1 // indirect
+	github.com/sendgrid/rest v2.6.9+incompatible // indirect
 	github.com/sony/gobreaker v0.5.0 // indirect
 	github.com/sqlc-dev/pqtype v0.2.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
