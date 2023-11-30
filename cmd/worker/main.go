@@ -9,7 +9,7 @@ import (
 	batonactivities "github.com/bcc-code/bccm-flows/activities/baton"
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/environment"
-	"github.com/bcc-code/bccm-flows/workflows/ingest"
+	ingestworkflows "github.com/bcc-code/bccm-flows/workflows/ingest"
 
 	"github.com/bcc-code/bccm-flows/workflows/export"
 
@@ -30,6 +30,7 @@ var utilActivities = []any{
 	activities.DeletePath,
 	activities.StandardizeFileName,
 	activities.GetSubtitlesActivity,
+	activities.MergeTranscriptJSON,
 	batonactivities.QC,
 }
 

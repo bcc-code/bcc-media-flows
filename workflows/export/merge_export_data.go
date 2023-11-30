@@ -6,26 +6,28 @@ import (
 	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/vidispine"
-	"github.com/bcc-code/bccm-flows/utils/workflows"
+	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 )
 
 type MergeExportDataResult struct {
-	Duration      float64
-	VideoFile     *paths.Path
-	AudioFiles    map[string]paths.Path
-	SubtitleFiles map[string]paths.Path
+	Duration       float64
+	VideoFile      *paths.Path
+	AudioFiles     map[string]paths.Path
+	SubtitleFiles  map[string]paths.Path
+	JSONTranscript *paths.Path
 }
 
 type MergeExportDataParams struct {
-	ExportData    *vidispine.ExportData
-	SubtitlesDir  paths.Path
-	TempDir       paths.Path
-	MakeVideo     bool
-	MakeSubtitles bool
-	MakeAudio     bool
-	Languages     []string
+	ExportData     *vidispine.ExportData
+	SubtitlesDir   paths.Path
+	TempDir        paths.Path
+	MakeVideo      bool
+	MakeSubtitles  bool
+	MakeAudio      bool
+	MakeTranscript bool
+	Languages      []string
 }
 
 func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*MergeExportDataResult, error) {
@@ -33,11 +35,19 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 	logger.Info("Starting MergeExportData")
 	data := params.ExportData
 
-	mergeInput, audioMergeInputs, subtitleMergeInputs := exportDataToMergeInputs(data, params.TempDir, params.SubtitlesDir)
+	mergeInput, audioMergeInputs, subtitleMergeInputs, jsonTranscriptFile := exportDataToMergeInputs(data, params.TempDir, params.SubtitlesDir)
 
 	options := wfutils.GetDefaultActivityOptions()
 	options.TaskQueue = environment.GetTranscodeQueue()
 	ctx = workflow.WithActivityOptions(ctx, options)
+
+	var transcriptTask workflow.Future
+	if params.MakeTranscript && jsonTranscriptFile != nil {
+		transcriptTask = wfutils.ExecuteWithQueue(ctx, activities.MergeTranscriptJSON, activities.MergeTranscriptJSONParams{
+			MergeInput:      *jsonTranscriptFile,
+			DestinationPath: params.TempDir,
+		})
+	}
 
 	var audioTasks = map[string]workflow.Future{}
 	if params.MakeAudio {
@@ -112,11 +122,22 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 		}
 	}
 
+	var transcriptionJSONFile paths.Path
+	if params.MakeTranscript {
+		var res activities.MergeTranscriptResult
+		err := transcriptTask.Get(ctx, &res)
+		if err != nil {
+			return nil, err
+		}
+		transcriptionJSONFile = res.Path
+	}
+
 	return &MergeExportDataResult{
-		Duration:      mergeInput.Duration,
-		VideoFile:     videoFile,
-		AudioFiles:    audioFiles,
-		SubtitleFiles: subtitleFiles,
+		Duration:       mergeInput.Duration,
+		VideoFile:      videoFile,
+		AudioFiles:     audioFiles,
+		SubtitleFiles:  subtitleFiles,
+		JSONTranscript: &transcriptionJSONFile,
 	}, nil
 }
 
@@ -124,11 +145,19 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir p
 	mergeInput common.MergeInput,
 	audioMergeInputs map[string]*common.MergeInput,
 	subtitleMergeInputs map[string]*common.MergeInput,
+	JSONTranscriptInput *common.MergeInput,
 ) {
 	mergeInput = common.MergeInput{
 		Title:     data.SafeTitle,
 		OutputDir: tempDir,
 		WorkDir:   tempDir,
+	}
+
+	transcriptInput := &common.MergeInput{
+		Title:     data.SafeTitle,
+		OutputDir: tempDir,
+		WorkDir:   tempDir,
+		Items:     []common.MergeInputItem{},
 	}
 
 	audioMergeInputs = map[string]*common.MergeInput{}
@@ -141,6 +170,15 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir p
 			Start: clip.InSeconds,
 			End:   clip.OutSeconds,
 		})
+
+		if clip.JSONTranscriptFile != "" {
+			transcriptInput.Duration += clip.OutSeconds - clip.InSeconds
+			transcriptInput.Items = append(transcriptInput.Items, common.MergeInputItem{
+				Path:  paths.MustParse(clip.JSONTranscriptFile),
+				Start: clip.InSeconds,
+				End:   clip.OutSeconds,
+			})
+		}
 
 		for lan, af := range clip.AudioFiles {
 			if _, ok := audioMergeInputs[lan]; !ok {
@@ -176,6 +214,10 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir p
 				End:   clip.OutSeconds,
 			})
 		}
+	}
+
+	if transcriptInput.Duration > 0 {
+		JSONTranscriptInput = transcriptInput
 	}
 
 	return

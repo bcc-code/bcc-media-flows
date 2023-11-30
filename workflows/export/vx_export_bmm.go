@@ -15,7 +15,7 @@ import (
 	"github.com/bcc-code/bccm-flows/activities"
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils/workflows"
+	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 )
@@ -128,6 +128,14 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 
 	jsonData.Title = params.ExportData.Title
 
+	if params.MergeResult.JSONTranscript != nil {
+		// We currently only support norwegian transcripts,
+		// but deliver it as a map so we can support more languages in the future
+		jsonData.TranscriptionFiles = map[string]string{
+			"no": params.MergeResult.JSONTranscript.Base(),
+		}
+	}
+
 	var chapters []asset.Chapter
 	err = wfutils.ExecuteWithQueue(ctx, vsactivity.GetChapterDataActivity, vsactivity.GetChapterDataParams{
 		ExportData: &params.ExportData,
@@ -192,16 +200,17 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 }
 
 type BMMData struct {
-	MediabankenID    string                    `json:"mediabanken_id"`
-	Title            string                    `json:"title"`
-	Length           int                       `json:"length"`
-	Type             string                    `json:"type"`
-	AudioFiles       map[string][]BMMAudioFile `json:"audio_files"`
-	PersonsAppearing []string                  `json:"persons_appearing"`
-	SongCollection   *string                   `json:"song_collection"`
-	SongNumber       *string                   `json:"song_number"`
-	RecordedAt       *time.Time                `json:"recorded_at"`
-	ImportDate       *time.Time                `json:"import_date"`
+	MediabankenID      string                    `json:"mediabanken_id"`
+	Title              string                    `json:"title"`
+	Length             int                       `json:"length"`
+	Type               string                    `json:"type"`
+	AudioFiles         map[string][]BMMAudioFile `json:"audio_files"`
+	TranscriptionFiles map[string]string         `json:"transcription_files"`
+	PersonsAppearing   []string                  `json:"persons_appearing"`
+	SongCollection     *string                   `json:"song_collection"`
+	SongNumber         *string                   `json:"song_number"`
+	RecordedAt         *time.Time                `json:"recorded_at"`
+	ImportDate         *time.Time                `json:"import_date"`
 }
 
 type BMMAudioFile struct {
