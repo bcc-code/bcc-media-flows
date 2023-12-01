@@ -59,10 +59,16 @@ func Masters(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
 		}
 
 		if result.Report.TopLevelInfo.Error == 0 {
-			err = transcodeAndTranscribe(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
+			err = createPreviews(ctx, []string{result.AssetID})
 			if err != nil {
 				return nil, err
 			}
+
+			err = transcribe(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
+			if err != nil {
+				return nil, err
+			}
+
 		}
 	}
 
