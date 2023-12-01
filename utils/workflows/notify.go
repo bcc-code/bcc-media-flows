@@ -1,6 +1,8 @@
 package wfutils
 
 import (
+	"os"
+
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/services/notifications"
 	"go.temporal.io/sdk/workflow"
@@ -20,7 +22,7 @@ func NotifyTelegramChannel(ctx workflow.Context, message string) error {
 	return ExecuteWithQueue(ctx, activities.NotifySimple, activities.NotifySimpleInput{
 		Targets: []notifications.Target{
 			{
-				ID:   "@bccm_temporal",
+				ID:   os.Getenv("TELEGRAM_CHAT_ID"),
 				Type: notifications.TargetTypeTelegram,
 			},
 		},

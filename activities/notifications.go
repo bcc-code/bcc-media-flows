@@ -60,7 +60,7 @@ func (ns notificationServices) SendEmail(email string, message notifications.Tem
 	return err
 }
 
-func (ns notificationServices) SendTelegramMessage(channelID string, message notifications.Template) error {
+func (ns notificationServices) SendTelegramMessage(chatID int64, message notifications.Template) error {
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
 	if err != nil {
 		return err
@@ -69,7 +69,7 @@ func (ns notificationServices) SendTelegramMessage(channelID string, message not
 	if err != nil {
 		return err
 	}
-	msg := tgbotapi.NewMessageToChannel(channelID, markdown)
+	msg := tgbotapi.NewMessage(chatID, markdown)
 	msg.ParseMode = tgbotapi.ModeMarkdown
 	_, err = bot.Send(msg)
 	if err != nil {
