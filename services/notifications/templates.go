@@ -53,7 +53,7 @@ func (t SimpleNotification) RenderMarkdown() (string, error) {
 		markdown += "#" + t.Title + "\n\n"
 	}
 	if t.Message != "" {
-		markdown += t.Message + "\n\n"
+		markdown += t.Message
 	}
 	return markdown, nil
 }
