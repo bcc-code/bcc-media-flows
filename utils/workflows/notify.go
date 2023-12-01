@@ -15,3 +15,17 @@ func Notify(ctx workflow.Context, targets []notifications.Target, title, message
 		},
 	}).Get(ctx, nil)
 }
+
+func NotifyTelegramChannel(ctx workflow.Context, message string) error {
+	return ExecuteWithQueue(ctx, activities.NotifySimple, activities.NotifySimpleInput{
+		Targets: []notifications.Target{
+			{
+				ID:   "@bccm_temporal",
+				Type: notifications.TargetTypeTelegram,
+			},
+		},
+		Message: notifications.SimpleNotification{
+			Message: message,
+		},
+	}).Get(ctx, nil)
+}

@@ -262,6 +262,15 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 		if err != nil {
 			return nil, err
 		}
+		err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Export of %s to VOD finished.", v.params.ParentParams.VXID))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Export of %s to isilon finished.", v.params.ParentParams.VXID))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	//err = DeletePath(ctx, tempFolder)
@@ -271,7 +280,7 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 		SmilFile:     ingestData.SmilFile,
 		Duration:     ingestData.Duration,
 		Title:        ingestData.Title,
-	}, err
+	}, nil
 }
 
 func (v *vxExportVodService) handleFileWorkflowFuture(ctx workflow.Context, lang string, q quality, f workflow.Future) {
