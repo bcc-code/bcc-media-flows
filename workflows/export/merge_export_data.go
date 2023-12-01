@@ -16,7 +16,7 @@ type MergeExportDataResult struct {
 	VideoFile      *paths.Path
 	AudioFiles     map[string]paths.Path
 	SubtitleFiles  map[string]paths.Path
-	JSONTranscript *paths.Path
+	JSONTranscript map[string]paths.Path
 }
 
 type MergeExportDataParams struct {
@@ -133,11 +133,13 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 	}
 
 	return &MergeExportDataResult{
-		Duration:       mergeInput.Duration,
-		VideoFile:      videoFile,
-		AudioFiles:     audioFiles,
-		SubtitleFiles:  subtitleFiles,
-		JSONTranscript: &transcriptionJSONFile,
+		Duration:      mergeInput.Duration,
+		VideoFile:     videoFile,
+		AudioFiles:    audioFiles,
+		SubtitleFiles: subtitleFiles,
+		JSONTranscript: map[string]paths.Path{
+			"no": transcriptionJSONFile,
+		},
 	}, nil
 }
 

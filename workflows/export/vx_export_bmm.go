@@ -125,15 +125,11 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	jsonData.Length = int(params.MergeResult.Duration)
 	jsonData.MediabankenID = fmt.Sprintf("%s-%s", params.ParentParams.VXID, HashTitle(params.ExportData.Title))
 	jsonData.ImportDate = params.ExportData.ImportDate
-
+	jsonData.TranscriptionFiles = map[string]string{}
 	jsonData.Title = params.ExportData.Title
 
-	if params.MergeResult.JSONTranscript != nil {
-		// We currently only support norwegian transcripts,
-		// but deliver it as a map so we can support more languages in the future
-		jsonData.TranscriptionFiles = map[string]string{
-			"no": params.MergeResult.JSONTranscript.Base(),
-		}
+	for lang, transcript := range params.MergeResult.JSONTranscript {
+		jsonData.TranscriptionFiles[lang] = transcript.Base()
 	}
 
 	var chapters []asset.Chapter
