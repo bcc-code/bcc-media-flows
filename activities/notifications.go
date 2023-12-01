@@ -65,13 +65,15 @@ func (ns notificationServices) SendTelegramMessage(channelID string, message not
 	if err != nil {
 		return err
 	}
-	switch t := message.(type) {
-	case notifications.SimpleNotification:
-		msg := tgbotapi.NewMessageToChannel(channelID, t.Message)
-		_, err = bot.Send(msg)
-		if err != nil {
-			return err
-		}
+	markdown, err := message.RenderMarkdown()
+	if err != nil {
+		return err
+	}
+	msg := tgbotapi.NewMessageToChannel(channelID, markdown)
+	msg.ParseMode = tgbotapi.ModeMarkdown
+	_, err = bot.Send(msg)
+	if err != nil {
+		return err
 	}
 	return nil
 }

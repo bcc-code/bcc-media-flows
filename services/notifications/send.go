@@ -3,6 +3,7 @@ package notifications
 type Template interface {
 	IsTemplate()
 	RenderHTML() (string, error)
+	RenderMarkdown() (string, error)
 }
 
 func (c *Client) Send(targets []Target, message Template) error {

@@ -33,6 +33,10 @@ func (t ImportCompleted) RenderHTML() (string, error) {
 	return renderHtmlTemplate(importCompletedTemplate, t)
 }
 
+func (t ImportCompleted) RenderMarkdown() (string, error) {
+	return "", nil
+}
+
 type SimpleNotification struct {
 	Title   string
 	Message string
@@ -41,6 +45,17 @@ type SimpleNotification struct {
 func (SimpleNotification) IsTemplate() {}
 func (t SimpleNotification) RenderHTML() (string, error) {
 	return renderHtmlTemplate(simpleNotificationTemplate, t)
+}
+
+func (t SimpleNotification) RenderMarkdown() (string, error) {
+	var markdown string
+	if t.Title != "" {
+		markdown += "#" + t.Title + "\n\n"
+	}
+	if t.Message != "" {
+		markdown += t.Message + "\n\n"
+	}
+	return markdown, nil
 }
 
 func renderHtmlTemplate(t *template.Template, data any) (string, error) {
