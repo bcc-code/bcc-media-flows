@@ -43,7 +43,7 @@ func importFileAsTag(ctx workflow.Context, tag string, path paths.Path, title st
 	}, nil
 }
 
-func transcodeAndTranscribe(ctx workflow.Context, assetIDs []string, language string) error {
+func createPreviews(ctx workflow.Context, assetIDs []string) error {
 	var wfFutures []workflow.ChildWorkflowFuture
 	for _, id := range assetIDs {
 		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
@@ -58,10 +58,15 @@ func transcodeAndTranscribe(ctx workflow.Context, assetIDs []string, language st
 		}
 	}
 
+	return nil
+}
+
+func transcribe(ctx workflow.Context, assetIDs []string, language string) error {
 	if language == "" {
 		language = "no"
 	}
-	wfFutures = []workflow.ChildWorkflowFuture{}
+
+	wfFutures := []workflow.ChildWorkflowFuture{}
 	for _, id := range assetIDs {
 		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeVX, workflows.TranscribeVXInput{
 			VXID:     id,
