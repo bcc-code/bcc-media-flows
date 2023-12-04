@@ -34,6 +34,7 @@ func GetVideoTranscodeActivities() []any {
 		TranscodeMergeSubtitles,
 		TranscodeToVideoH264,
 		TranscodePlayoutMux,
+		SubtitleBurnIn,
 		ExecuteFFmpeg,
 	}
 }

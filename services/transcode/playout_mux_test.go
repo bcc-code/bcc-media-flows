@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,16 +16,16 @@ func Test_GenerateFFmpegParamsForPlayoutMux(t *testing.T) {
 	const outputPath = "something/something.mxf"
 	cmd, err := generateFFmpegParamsForPlayoutMux(common.PlayoutMuxInput{
 		FallbackLanguage: "nor",
-		OutputDir:        "transcoded/",
-		VideoFilePath:    root + "BERG_TS01_ISRAEL_VOD.mxf",
-		SubtitleFilePaths: map[string]string{
-			"nor": root + "0.srt",
-			"nld": root + "1.srt",
+		OutputDir:        paths.MustParse("transcoded/"),
+		VideoFilePath:    paths.MustParse(root + "BERG_TS01_ISRAEL_VOD.mxf"),
+		SubtitleFilePaths: map[string]paths.Path{
+			"nor": paths.MustParse(root + "0.srt"),
+			"nld": paths.MustParse(root + "1.srt"),
 		},
-		AudioFilePaths: map[string]string{
-			"nor": root + "BERG_TS01_ISRAEL_VOD-nor.wav",
-			"eng": root + "BERG_TS01_ISRAEL_VOD-eng.wav",
-			"fin": root + "BERG_TS01_ISRAEL_VOD-fin.wav",
+		AudioFilePaths: map[string]paths.Path{
+			"nor": paths.MustParse(root + "BERG_TS01_ISRAEL_VOD-nor.wav"),
+			"eng": paths.MustParse(root + "BERG_TS01_ISRAEL_VOD-eng.wav"),
+			"fin": paths.MustParse(root + "BERG_TS01_ISRAEL_VOD-fin.wav"),
 		},
 	}, outputPath)
 
@@ -38,16 +39,16 @@ func Test_PlayoutMux(t *testing.T) {
 	defer close(stop)
 	_, err := PlayoutMux(common.PlayoutMuxInput{
 		FallbackLanguage: "nor",
-		OutputDir:        "/Users/andreasgangso/dev/div/520a9155-2c8f-4560-868b-53be9c6e9b96/transcoded/",
-		VideoFilePath:    root + "BERG_TS01_ISRAEL_VOD.mxf",
-		SubtitleFilePaths: map[string]string{
-			"nor": root + "0.srt",
-			"nld": root + "1.srt",
+		OutputDir:        paths.MustParse("/Users/andreasgangso/dev/div/520a9155-2c8f-4560-868b-53be9c6e9b96/transcoded/"),
+		VideoFilePath:    paths.MustParse(root + "BERG_TS01_ISRAEL_VOD.mxf"),
+		SubtitleFilePaths: map[string]paths.Path{
+			"nor": paths.MustParse(root + "0.srt"),
+			"nld": paths.MustParse(root + "1.srt"),
 		},
-		AudioFilePaths: map[string]string{
-			"nor": root + "BERG_TS01_ISRAEL_VOD-nor.wav",
-			"eng": root + "BERG_TS01_ISRAEL_VOD-eng.wav",
-			"fin": root + "BERG_TS01_ISRAEL_VOD-fin.wav",
+		AudioFilePaths: map[string]paths.Path{
+			"nor": paths.MustParse(root + "BERG_TS01_ISRAEL_VOD-nor.wav"),
+			"eng": paths.MustParse(root + "BERG_TS01_ISRAEL_VOD-eng.wav"),
+			"fin": paths.MustParse(root + "BERG_TS01_ISRAEL_VOD-fin.wav"),
 		},
 	}, printer)
 
