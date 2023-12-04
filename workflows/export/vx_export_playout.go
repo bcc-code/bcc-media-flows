@@ -1,13 +1,10 @@
 package export
 
 import (
-	"path/filepath"
-	"strings"
-
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/bcc-code/bccm-flows/environment"
+	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -18,23 +15,24 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 	options := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	xdcamOutputDir := filepath.Join(params.TempDir, "xdcam_output")
+	xdcamOutputDir := params.TempDir.Append("xdcam_output")
 	err := wfutils.CreateFolder(ctx, xdcamOutputDir)
 	if err != nil {
 		return nil, err
 	}
 
-	options.TaskQueue = utils.GetTranscodeQueue()
+	options.TaskQueue = environment.GetTranscodeQueue()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	// Transcode video using playout encoding
 	var videoResult common.VideoResult
 	err = workflow.ExecuteActivity(ctx, activities.TranscodeToXDCAMActivity, activities.EncodeParams{
 		Bitrate:    "50M",
-		FilePath:   params.MergeResult.VideoFile,
+		FilePath:   *params.MergeResult.VideoFile,
 		OutputDir:  xdcamOutputDir,
-		Resolution: r1080p,
+		Resolution: string(r1080p),
 		FrameRate:  25,
+		Interlace:  true,
 	}).Get(ctx, &videoResult)
 	if err != nil {
 		return nil, err
@@ -53,14 +51,13 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 		return nil, err
 	}
 
-	options.TaskQueue = utils.GetWorkerQueue()
+	options.TaskQueue = environment.GetWorkerQueue()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	// Rclone to playout
-	source := strings.Replace(params.OutputDir, utils.GetIsilonPrefix()+"/", "isilon:isilon/", 1)
 	destination := "playout:/tmp"
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      source,
+		Source:      params.OutputDir.Rclone(),
 		Destination: destination,
 	}).Get(ctx, nil)
 	if err != nil {

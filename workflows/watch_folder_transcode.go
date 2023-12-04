@@ -2,13 +2,15 @@ package workflows
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
-	"time"
 )
 
 type WatchFolderTranscodeInput struct {
@@ -27,19 +29,24 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 		StartToCloseTimeout:    time.Hour * 4,
 		ScheduleToCloseTimeout: time.Hour * 48,
 		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              utils.GetWorkerQueue(),
+		TaskQueue:              environment.GetWorkerQueue(),
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	logger.Info("Starting WatchFolderTranscode")
 
-	path := params.Path
-	path, err := wfutils.StandardizeFileName(ctx, path)
+	path, err := paths.Parse(params.Path)
 	if err != nil {
 		return err
 	}
-	processingFolder, err := utils.GetSiblingFolder(path, "processing")
+	dir := path.Dir()
+	path, err = wfutils.StandardizeFileName(ctx, path)
+	if err != nil {
+		return err
+	}
+	processingFolder := dir.Append("../processing")
+	err = wfutils.CreateFolder(ctx, processingFolder)
 	if err != nil {
 		return err
 	}
@@ -47,26 +54,30 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	if err != nil {
 		return err
 	}
-	outFolder, err := utils.GetSiblingFolder(path, "out")
+	outFolder := dir.Append("../out")
+	err = wfutils.CreateFolder(ctx, outFolder)
 	if err != nil {
 		return err
 	}
-	tmpFolder, err := utils.GetSiblingFolder(path, "tmp")
+	tmpFolder := dir.Append("../tmp")
+	err = wfutils.CreateFolder(ctx, tmpFolder)
 	if err != nil {
 		return err
 	}
-	errorFolder, err := utils.GetSiblingFolder(path, "error")
+	errorFolder := dir.Append("../error")
+	err = wfutils.CreateFolder(ctx, errorFolder)
 	if err != nil {
 		return err
 	}
-	processedFolder, err := utils.GetSiblingFolder(path, "processed")
+	processedFolder := dir.Append("../processed")
+	err = wfutils.CreateFolder(ctx, processedFolder)
 	if err != nil {
 		return err
 	}
 
 	var transcodeOutput *activities.EncodeResult
 	var transcribeOutput *activities.TranscribeResponse
-	ctx = workflow.WithTaskQueue(ctx, utils.GetTranscodeQueue())
+	ctx = workflow.WithTaskQueue(ctx, environment.GetTranscodeQueue())
 	switch params.FolderName {
 	case common.FolderProRes422HQHD:
 		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
@@ -110,7 +121,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 			Bitrate:    "60M",
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderTranscribe:
-		ctx = workflow.WithTaskQueue(ctx, utils.GetWorkerQueue())
+		ctx = workflow.WithTaskQueue(ctx, environment.GetWorkerQueue())
 		err = workflow.ExecuteActivity(ctx, activities.Transcribe, activities.TranscribeParams{
 			Language:        "no",
 			File:            path,
@@ -120,7 +131,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 		err = fmt.Errorf("codec not supported: %s", params.FolderName)
 	}
 
-	ctx = workflow.WithTaskQueue(ctx, utils.GetWorkerQueue())
+	ctx = workflow.WithTaskQueue(ctx, environment.GetWorkerQueue())
 
 	if err != nil {
 		path, _ = wfutils.MoveToFolder(ctx, path, errorFolder)

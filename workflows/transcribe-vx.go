@@ -5,12 +5,13 @@ import (
 	"os"
 	"time"
 
+	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
+	"github.com/bcc-code/bccm-flows/environment"
+
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/bcc-code/bccm-flows/utils/workflows"
 
-	"github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/davecgh/go-spew/spew"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
@@ -52,15 +53,15 @@ func TranscribeVX(
 		StartToCloseTimeout:    time.Hour * 4,
 		ScheduleToCloseTimeout: time.Hour * 48,
 		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              utils.GetAudioQueue(),
+		TaskQueue:              environment.GetAudioQueue(),
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	logger.Info("Starting TranscribeVX")
 
-	shapes := &vidispine.GetFileFromVXResult{}
-	err := workflow.ExecuteActivity(ctx, vidispine.GetFileFromVXActivity, vidispine.GetFileFromVXParams{
+	shapes := &vsactivity.GetFileFromVXResult{}
+	err := workflow.ExecuteActivity(ctx, vsactivity.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		Tags: []string{"lowres", "lowres_watermarked", "lowaudio", "original"},
 		VXID: params.VXID,
 	}).Get(ctx, shapes)
@@ -81,7 +82,7 @@ func TranscribeVX(
 		DestinationPath: tempFolder,
 	}).Get(ctx, &wavFile)
 
-	destinationPath, err := wfutils.GetWorkflowOutputFolder(ctx)
+	destinationPath, err := wfutils.GetWorkflowAuxOutputFolder(ctx)
 	if err != nil {
 		return err
 	}
@@ -97,15 +98,15 @@ func TranscribeVX(
 		return err
 	}
 
-	importJson := workflow.ExecuteActivity(ctx, vidispine.ImportFileAsShapeActivity,
-		vidispine.ImportFileAsShapeParams{
+	importJson := workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsShapeActivity,
+		vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.VXID,
 			FilePath: transcriptionJob.JSONPath,
 			ShapeTag: "transcription_json",
 		})
 
-	importSRT := workflow.ExecuteActivity(ctx, vidispine.ImportFileAsShapeActivity,
-		vidispine.ImportFileAsShapeParams{
+	importSRT := workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsShapeActivity,
+		vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.VXID,
 			FilePath: transcriptionJob.SRTPath,
 			ShapeTag: "Transcribed_Subtitle_SRT",
@@ -125,7 +126,7 @@ func TranscribeVX(
 		return fmt.Errorf("failed to import transcription files: %v", errs)
 	}
 
-	err = workflow.ExecuteActivity(ctx, vidispine.ImportFileAsSidecarActivity, vidispine.ImportSubtitleAsSidecarParams{
+	err = workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
 		FilePath: transcriptionJob.SRTPath,
 		Language: "no",
 		AssetID:  params.VXID,
@@ -134,12 +135,12 @@ func TranscribeVX(
 		return err
 	}
 
-	txtValue, err := os.ReadFile(transcriptionJob.TXTPath)
+	txtValue, err := os.ReadFile(transcriptionJob.TXTPath.Local())
 	if err != nil {
 		return err
 	}
 
-	err = workflow.ExecuteActivity(ctx, vidispine.SetVXMetadataFieldActivity, vidispine.SetVXMetadataFieldParams{
+	err = workflow.ExecuteActivity(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
 		VXID:  params.VXID,
 		Key:   transcriptionMetadataFieldName,
 		Value: string(txtValue),

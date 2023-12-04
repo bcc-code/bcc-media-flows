@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+	"strings"
 )
 
 // ExecuteCmd executes the cmd and returns through outputCallback line-by-line before returning the whole stdout at the end.
@@ -85,6 +86,12 @@ func ExecuteAnalysisCmd(cmd *exec.Cmd, outputCallback func(string)) (string, err
 		}
 
 	}
+
+	// replace -Inf with -99 if the audio was silent
+	result = strings.ReplaceAll(result, "\"-inf\"", "-99")
+
+	// replace inf with 0 target_offset if the audio was silent
+	result = strings.ReplaceAll(result, "\"inf\"", "0")
 
 	err = cmd.Wait()
 	if err != nil {

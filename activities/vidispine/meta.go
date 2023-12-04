@@ -1,9 +1,10 @@
-package vidispine
+package vsactivity
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/bcc-code/bccm-flows/paths"
 	"go.temporal.io/sdk/activity"
 )
 
@@ -13,7 +14,7 @@ type GetFileFromVXParams struct {
 }
 
 type GetFileFromVXResult struct {
-	FilePath string
+	FilePath paths.Path
 	ShapeTag string
 }
 
@@ -36,7 +37,7 @@ func GetFileFromVXActivity(ctx context.Context, params GetFileFromVXParams) (*Ge
 		}
 
 		return &GetFileFromVXResult{
-			FilePath: shape.GetPath(),
+			FilePath: paths.MustParse(shape.GetPath()),
 			ShapeTag: tag,
 		}, nil
 	}
@@ -60,5 +61,15 @@ func SetVXMetadataFieldActivity(ctx context.Context, params SetVXMetadataFieldPa
 	vsClient := GetClient()
 
 	err := vsClient.SetItemMetadataField(params.VXID, params.Key, params.Value)
+	return nil, err
+}
+
+func AddVXMetadataFieldValueActivity(ctx context.Context, params SetVXMetadataFieldParams) (*SetVXMetadataFieldResult, error) {
+	log := activity.GetLogger(ctx)
+	log.Info("Starting AddVXMetadataFieldValueActivity")
+
+	vsClient := GetClient()
+
+	err := vsClient.AddToItemMetadataField(params.VXID, params.Key, params.Value)
 	return nil, err
 }

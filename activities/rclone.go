@@ -3,8 +3,9 @@ package activities
 import (
 	"context"
 	"fmt"
-	"github.com/bcc-code/bccm-flows/utils"
 	"time"
+
+	"github.com/bcc-code/bccm-flows/paths"
 
 	"github.com/bcc-code/bccm-flows/services/rclone"
 	"go.temporal.io/sdk/activity"
@@ -46,19 +47,37 @@ func RcloneCopyDir(ctx context.Context, input RcloneCopyDirInput) (bool, error) 
 	return waitForJob(ctx, res.JobID)
 }
 
-type RcloneMoveFileInput struct {
-	Source      utils.Path
-	Destination utils.Path
+type RcloneFileInput struct {
+	Source      paths.Path
+	Destination paths.Path
 }
 
-func RcloneMoveFileActivity(ctx context.Context, input RcloneMoveFileInput) (bool, error) {
+func RcloneMoveFile(ctx context.Context, input RcloneFileInput) (bool, error) {
 	logger := activity.GetLogger(ctx)
-	logger.Info("Starting RcloneMoveFileActivity")
+	logger.Info("Starting RcloneMoveFile")
 
 	srcFs, srcRemote := input.Source.RcloneFsRemote()
 	dstFs, dstRemote := input.Destination.RcloneFsRemote()
 
 	res, err := rclone.MoveFile(
+		srcFs, srcRemote,
+		dstFs, dstRemote,
+	)
+	if err != nil {
+		return false, err
+	}
+
+	return waitForJob(ctx, res.JobID)
+}
+
+func RcloneCopyFile(ctx context.Context, input RcloneFileInput) (bool, error) {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Starting RcloneCopyFile")
+
+	srcFs, srcRemote := input.Source.RcloneFsRemote()
+	dstFs, dstRemote := input.Destination.RcloneFsRemote()
+
+	res, err := rclone.CopyFile(
 		srcFs, srcRemote,
 		dstFs, dstRemote,
 	)

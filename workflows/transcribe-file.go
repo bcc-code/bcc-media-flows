@@ -3,10 +3,12 @@ package workflows
 import (
 	"time"
 
+	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bccm-flows/paths"
+
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/bcc-code/bccm-flows/utils/workflows"
 
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
@@ -39,7 +41,7 @@ func TranscribeFile(
 
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	options.TaskQueue = utils.GetAudioQueue()
+	options.TaskQueue = environment.GetAudioQueue()
 	audioCtx := workflow.WithActivityOptions(ctx, options)
 
 	logger.Info("Starting TranscribeFile")
@@ -49,15 +51,25 @@ func TranscribeFile(
 		return err
 	}
 
+	file, err := paths.Parse(params.File)
+	if err != nil {
+		return err
+	}
+
 	wavFile := common.AudioResult{}
 	workflow.ExecuteActivity(audioCtx, activities.TranscodeToAudioWav, common.AudioInput{
-		Path:            params.File,
+		Path:            file,
 		DestinationPath: tempFolder,
 	}).Get(ctx, &wavFile)
+
+	destination, err := paths.Parse(params.DestinationPath)
+	if err != nil {
+		return err
+	}
 
 	return workflow.ExecuteActivity(ctx, activities.Transcribe, activities.TranscribeParams{
 		Language:        params.Language,
 		File:            wavFile.OutputPath,
-		DestinationPath: params.DestinationPath,
+		DestinationPath: destination,
 	}).Get(ctx, nil)
 }

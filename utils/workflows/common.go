@@ -1,9 +1,9 @@
 package wfutils
 
 import (
+	"github.com/bcc-code/bccm-flows/environment"
 	"time"
 
-	"github.com/bcc-code/bccm-flows/utils"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -23,7 +23,7 @@ func GetDefaultActivityOptions() workflow.ActivityOptions {
 		StartToCloseTimeout:    time.Hour * 4,
 		ScheduleToCloseTimeout: time.Hour * 48,
 		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              utils.GetWorkerQueue(),
+		TaskQueue:              environment.GetWorkerQueue(),
 	}
 }
 
@@ -34,6 +34,6 @@ func GetDefaultWorkflowOptions() workflow.ChildWorkflowOptions {
 			MaximumAttempts: 10,
 			MaximumInterval: time.Hour * 1,
 		},
-		TaskQueue: utils.GetWorkerQueue(),
+		TaskQueue: environment.GetWorkerQueue(),
 	}
 }

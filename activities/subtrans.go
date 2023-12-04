@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/bcc-code/bccm-flows/activities/vidispine"
+	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bccm-flows/services/vidispine"
+
 	"github.com/bcc-code/bccm-flows/services/subtrans"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
 	"go.temporal.io/sdk/temporal"
@@ -18,7 +21,7 @@ type GetSubtitlesInput struct {
 	SubtransID        string
 	Format            string
 	ApprovedOnly      bool
-	DestinationFolder string
+	DestinationFolder paths.Path
 	FilePrefix        string
 }
 
@@ -34,8 +37,8 @@ type GetSubtransIDOutput struct {
 func GetSubtransIDActivity(ctx context.Context, input *GetSubtransIDInput) (*GetSubtransIDOutput, error) {
 	out := &GetSubtransIDOutput{}
 
-	vsClient := vidispine.GetClient()
-	subtransID, err := vsClient.GetSubtransID(input.VXID)
+	vsClient := vsactivity.GetClient()
+	subtransID, err := vidispine.GetSubtransID(vsClient, input.VXID)
 	if err != nil {
 		return out, err
 	}
@@ -46,10 +49,12 @@ func GetSubtransIDActivity(ctx context.Context, input *GetSubtransIDInput) (*Get
 	}
 
 	// We do not have a story ID saved, so we try to find it using the file name
-	originalUri, err := vsClient.GetItemMetadataField(input.VXID, vscommon.FieldOriginalURI)
+	meta, err := vsClient.GetMetadata(input.VXID)
 	if err != nil {
-		return out, err
+		return nil, err
 	}
+
+	originalUri := meta.Get(vscommon.FieldOriginalURI, "")
 
 	parsedUri, err := url.Parse(originalUri)
 	if err != nil {
@@ -57,7 +62,7 @@ func GetSubtransIDActivity(ctx context.Context, input *GetSubtransIDInput) (*Get
 	}
 
 	// Extract file name
-	fileName := path.Base(parsedUri.Path)
+	fileName := filepath.Base(parsedUri.Path)
 
 	// Split by dot
 	fileNameSplit := strings.Split(fileName, ".")
@@ -93,10 +98,10 @@ func GetSubtransIDActivity(ctx context.Context, input *GetSubtransIDInput) (*Get
 	return out, nil
 }
 
-func GetSubtitlesActivity(ctx context.Context, params GetSubtitlesInput) (map[string]string, error) {
+func GetSubtitlesActivity(ctx context.Context, params GetSubtitlesInput) (map[string]paths.Path, error) {
 	client := subtrans.NewClient(os.Getenv("SUBTRANS_BASE_URL"), os.Getenv("SUBTRANS_API_KEY"))
 
-	info, err := os.Stat(params.DestinationFolder)
+	info, err := os.Stat(params.DestinationFolder.Local())
 	if os.IsNotExist(err) {
 		return nil, err
 	}
@@ -116,15 +121,14 @@ func GetSubtitlesActivity(ctx context.Context, params GetSubtitlesInput) (map[st
 		params.FilePrefix = p
 	}
 
-	out := map[string]string{}
+	out := map[string]paths.Path{}
 	for lang, sub := range subs {
-		path := path.Join(params.DestinationFolder, params.FilePrefix+lang+"."+params.Format)
+		path := filepath.Join(params.DestinationFolder.Local(), params.FilePrefix+lang+"."+params.Format)
 		err := os.WriteFile(path, []byte(sub), 0644)
 		if err != nil {
 			return nil, err
 		}
-		out[lang] = path
-
+		out[lang] = paths.MustParse(path)
 	}
 	return out, nil
 }

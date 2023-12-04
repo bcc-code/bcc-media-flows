@@ -3,6 +3,8 @@ package main
 import (
 	_ "embed"
 	"fmt"
+	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bccm-flows/workflows/ingest"
 	"net/http"
 	"os"
 	"strconv"
@@ -11,7 +13,6 @@ import (
 
 	"github.com/bcc-code/bccm-flows/workflows/export"
 
-	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/workflows"
 
 	"github.com/gin-gonic/gin"
@@ -33,7 +34,7 @@ func getClient() (client.Client, error) {
 func getQueue() string {
 	queue := os.Getenv("QUEUE")
 	if queue == "" {
-		queue = common.QueueWorker
+		queue = environment.QueueWorker
 	}
 	return queue
 }
@@ -145,7 +146,7 @@ func triggerHandler(ctx *gin.Context) {
 			ctx.Status(http.StatusBadRequest)
 			return
 		}
-		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.AssetIngest, workflows.AssetIngestParams{
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.Asset, ingestworkflows.AssetParams{
 			XMLPath: xmlPath,
 		})
 	case "ImportSubtitlesFromSubtrans":

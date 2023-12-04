@@ -5,7 +5,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bccm-flows/environment"
+
 	"github.com/samber/lo"
 )
 
@@ -14,9 +15,12 @@ func GetAudioTranscodeActivities() []any {
 		TranscodeToAudioAac,
 		TranscodeToAudioMP3,
 		TranscodeToAudioWav,
+		TranscodeMux,
 		TranscodeMergeAudio,
 		AnalyzeEBUR128Activity,
 		AdjustAudioLevelActivity,
+		AnalyzeFile,
+		NormalizeAudioActivity,
 	}
 }
 
@@ -29,7 +33,6 @@ func GetVideoTranscodeActivities() []any {
 		TranscodeMergeVideo,
 		TranscodeMergeSubtitles,
 		TranscodeToVideoH264,
-		TranscodeMux,
 		TranscodePlayoutMux,
 		ExecuteFFmpeg,
 	}
@@ -56,10 +59,10 @@ var videoActivities = lo.Map(GetVideoTranscodeActivities(), func(i any, _ int) s
 func GetQueueForActivity(activity any) string {
 	f := getFunctionName(activity)
 	if lo.Contains(audioActivities, f) {
-		return utils.GetAudioQueue()
+		return environment.GetAudioQueue()
 	}
 	if lo.Contains(videoActivities, f) {
-		return utils.GetTranscodeQueue()
+		return environment.GetTranscodeQueue()
 	}
-	return utils.GetWorkerQueue()
+	return environment.GetWorkerQueue()
 }

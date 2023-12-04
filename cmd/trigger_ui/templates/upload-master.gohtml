@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+</head>
+
+<body class="">
+<form method="POST" class="flex flex-col min-h-screen gap-2 mx-auto p-14 max-w-screen-lg">
+    <div class="max-w-none flex flex-col gap-2">
+        <h2 class="text-2xl font-bold">Masters Upload</h2>
+        <p>Masters could be both audio and video and shoud be in one of the accepted formats below</p>
+
+        <h2 class="text-2xl font-bold">Accepted video formats</h2>
+        <div class="prose">
+            <ul>
+                <li>Codecs/Wrappers: ProRes 422 HQ(.mov), AVC Intra 100 (.mxf), XDCAM HD 422 (.mxf)</li>
+                <li>Resolutions: HD=1920x1080, (4K only if you can a special agreement with producer)</li>
+                <li>Framerate: 50FPS progressive or interlaced (25FPS only if special agreement is made)</li>
+                <li>Audio format: PCM 48kHz stereo audio, 16bit</li>
+                <li>Sound level: -23dB LUFS long term loudness, 16dB loudness range and -1 dB True Peak according to
+                    EBU
+                    R128-standard
+                </li>
+                <li>Audio tracks: 1 and 2 Program sound, stereo</li>
+            </ul>
+        </div>
+        <h2 class="text-2xl font-bold">Accepted audio format</h2>
+        <p>WAV 16 or 24 bit Stereo</p>
+
+        <h2 class="text-2xl font-bold">Upload Section</h2>
+        <p>NB! The filename will be renamed to what you choose and write in the following fields like this:</p>
+
+        <h4 class="text-2xl font-bold">PROGRAMID_FILENAME_TYPE_LANGUAGE</h4>
+        <p>Fill the following schema and start upload the file:</p>
+    </div>
+
+    <div class="flex flex-col gap-2 w-full mt-8 w-20">
+        <div class="flex flex-col">
+            <label for="programId">Program ID</label>
+            <select id="programId" name="programId" class="w-full border">
+                <option value="" selected="">Please choose one</option>
+                {{range $element := .programIds}}
+                    <option value="{{$element}}">{{$element}}</option>
+                {{end}}
+            </select>
+        </div>
+
+        <div class="flex flex-col">
+            <label for="filename">Filename</label>
+            <input id="filename" class="border" type="text" name="filename" pattern="[A-Za-z0-9]+" required>
+        </div>
+
+        <div class="flex flex-col">
+            <label for="type">Type</label>
+            <select id="type" class="border form-control col" name="type" required>
+                <option name="promo_type" value="MAS" selected="selected">MAS</option>
+                <option name="promo_type" value="PRO">PRO</option>
+            </select>
+        </div>
+
+        <div class="flex flex-col">
+            <label for="language">Language</label>
+            <select id="language" class="w-full border form-control col" name="language" required>
+                <option name="language" value="" selected="">Please choose one</option>
+                <option name="language" value="NOR">NOR</option>
+                <option name="language" value="MUL">MUL</option>
+                <option name="language" value="ENG">ENG</option>
+                <option name="language" value="DEU">DEU</option>
+                <option name="language" value="NLD">NLD</option>
+            </select>
+        </div>
+
+        <div class="flex flex-col">
+            <label for="episodeTitle">Episode Title</label>
+            <input id="episodeTitle" class="w-full border" type="text" name="episodeTitle" pattern="[A-Za-z0-9]+"
+                   required>
+        </div>
+
+        <div class="flex flex-col">
+            <label for="episodeDescription">Episode Description</label>
+            <textarea id="episodeDescription" class="w-full border" name="episodeDescription"></textarea>
+        </div>
+
+        <div class="flex flex-col">
+            <label for="tags">Tags</label>
+            <div class="multiselect flex flex-row-reverse w-full border border-[#6b7280]">
+                <input id="tags" list="tagsList" name="tags" class="w-full border border-none outline-none border-box"
+                       type="text">
+                <datalist id="tagsList">
+                    {{range $element := .tags}}
+                        <option value="{{$element}}"></option>
+                    {{end}}
+                </datalist>
+            </div>
+        </div>
+
+        <div class="flex flex-col">
+            <label for="personsAppearing">Persons appearing</label>
+            <div class="multiselect flex flex-row-reverse w-full border border-[#6b7280]">
+                <input id="personsAppearing" list="personsList" name="persons"
+                       class="w-full border border-none outline-none border-box" type="text">
+                <datalist id="personsList">
+                    {{range $element := .persons}}
+                        <option value="{{$element}}"></option>
+                    {{end}}
+                </datalist>
+            </div>
+        </div>
+
+
+        <div class="flex flex-col">
+            <label for="senderEmail">Email</label>
+            <textarea id="senderEmail" class="w-full border" name="senderEmail" required></textarea>
+        </div>
+
+        <div class="flex flex-col">
+            <label for="directToPlayback">Direct to Playback</label>
+            <select id="directToPlayback" class="w-full border" name="directToPlayback">
+                <option value="Yes">Yes</option>
+                <option value="No" selected="selected">No</option>
+            </select>
+        </div>
+
+        <div class="flex flex-col">
+            <label for="path">
+                path for file
+            </label>
+            <select id="path" class="w-full border" name="path" required>
+                {{range $element := .files}}
+                    <option value="{{$element}}">{{$element}}</option>
+                {{end}}
+            </select>
+        </div>
+
+        <input id="submit"
+               class="cursor-pointer rounded-md bg-[#6A64F1] py-3 px-8 text-center text-base font-semibold text-white outline-none"
+               type="submit" value="Start export">
+    </div>
+
+    <input type="hidden" id="arrayData">
+</form>
+
+<script>
+    for (const element of document.querySelectorAll(".multiselect")) {
+        setupMultiselect(element)
+    }
+
+    function setupMultiselect(element) {
+        const ul = document.createElement("ul")
+        ul.setAttribute("class", "flex flex-row")
+        element.addEventListener("keypress", function (event) {
+            if (event.keyCode === 13) {
+                triggerAddItem(ul, element, event)
+            }
+        })
+        element.children[0].addEventListener("blur", function (event) {
+            triggerAddItem(ul, element, event)
+        })
+    }
+
+    function triggerAddItem(ul, element, event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        let inputValue = element.children[0].value
+        if (inputValue === "") {
+            return
+        }
+        for (const key of document.getElementById("arrayData").childNodes) {
+            if (inputValue === key.value) {
+                return
+            }
+        }
+
+        element.appendChild(ul)
+
+        let li = document.createElement("li");
+        let button = document.createElement("button");
+
+        button.appendChild(document.createTextNode("X"));
+        button.setAttribute("class", "bg-blue-400 px-1 rounded");
+        button.addEventListener('click', () => {
+            li.remove()
+            for (const key of document.getElementById("arrayData").childNodes) {
+                if ((key.value + "X") === li.textContent) {
+                    key.remove()
+                }
+            }
+        })
+
+        li.appendChild(document.createTextNode(inputValue));
+        li.appendChild(button);
+        li.setAttribute("class", "bg-blue-200 px-2 py-1 m-1 border-none w-auto flex gap-1 rounded-2xl");
+        li.setAttribute("value", inputValue);
+        ul.appendChild(li);
+
+        const input = document.createElement("input");
+        const hiddenArray = document.getElementById("arrayData");
+
+        input.setAttribute("type", "hidden");
+        input.setAttribute("name", element.children[0].getAttribute("name") + "[]");
+        input.setAttribute("value", inputValue);
+        hiddenArray.appendChild(input);
+        element.children[0].value = ""
+    }
+</script>
+</body>
+
+</html>

@@ -3,10 +3,12 @@ package workflows
 import (
 	"time"
 
+	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bccm-flows/paths"
+
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -38,7 +40,7 @@ func NormalizeAudioLevelWorkflow(
 		StartToCloseTimeout:    time.Hour * 4,
 		ScheduleToCloseTimeout: time.Hour * 48,
 		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              utils.GetAudioQueue(),
+		TaskQueue:              environment.GetWorkerQueue(),
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
@@ -46,9 +48,14 @@ func NormalizeAudioLevelWorkflow(
 
 	logger.Info("Starting NormalizeAudio workflow")
 
+	filePath, err := paths.Parse(params.FilePath)
+	if err != nil {
+		return nil, err
+	}
+
 	r128Result := &common.AnalyzeEBUR128Result{}
-	err := workflow.ExecuteActivity(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
-		FilePath:       params.FilePath,
+	err = wfutils.ExecuteWithQueue(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
+		FilePath:       filePath,
 		TargetLoudness: params.TargetLUFS,
 	}).Get(ctx, r128Result)
 	if err != nil {
@@ -62,21 +69,26 @@ func NormalizeAudioLevelWorkflow(
 	}
 
 	adjustResult := &common.AudioResult{}
-	err = workflow.ExecuteActivity(ctx, activities.AdjustAudioLevelActivity, activities.AdjustAudioLevelParams{
-		Adjustment:  r128Result.SuggestedAdjustment,
-		InFilePath:  params.FilePath,
-		OutFilePath: outputFolder,
-	}).Get(ctx, adjustResult)
-	if err != nil {
-		return nil, err
+
+	// Don't adjust if the suggested adjustment is less than 0.01 Db
+	if r128Result.SuggestedAdjustment <= 0.01 {
+		err = wfutils.ExecuteWithQueue(ctx, activities.AdjustAudioLevelActivity, activities.AdjustAudioLevelParams{
+			Adjustment:  r128Result.SuggestedAdjustment,
+			InFilePath:  filePath,
+			OutFilePath: outputFolder,
+		}).Get(ctx, adjustResult)
+		if err != nil {
+			return nil, err
+		}
+		filePath = adjustResult.OutputPath
 	}
 
-	out.FilePath = adjustResult.OutputPath
+	out.FilePath = filePath.Local()
 
 	if params.PerformOutputAnalysis {
 		r128Result := &common.AnalyzeEBUR128Result{}
-		err = workflow.ExecuteActivity(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
-			FilePath:       adjustResult.OutputPath,
+		err = wfutils.ExecuteWithQueue(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
+			FilePath:       filePath,
 			TargetLoudness: params.TargetLUFS,
 		}).Get(ctx, r128Result)
 		if err != nil {

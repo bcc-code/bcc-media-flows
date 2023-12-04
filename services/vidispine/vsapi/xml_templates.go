@@ -67,7 +67,11 @@ const (
 	<timespan start="-INF" end="+INF">
 		<field>
 			<name>{{.Key}}</name>
-			<value>{{.Value}}</value>
+			{{if .Add}}
+				<value mode="add">{{.Value}}</value>
+			{{else}}
+				<value>{{.Value}}</value>
+			{{end}}
 		</field>
 	</timespan>
 </MetadataDocument>`

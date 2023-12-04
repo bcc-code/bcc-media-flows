@@ -5,20 +5,23 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/bcc-code/bccm-flows/paths"
+
 	"github.com/bcc-code/bccm-flows/services/transcribe"
 	"go.temporal.io/sdk/activity"
 )
 
 type TranscribeParams struct {
-	File            string
-	DestinationPath string
+	File            paths.Path
+	DestinationPath paths.Path
 	Language        string
 }
 
 type TranscribeResponse struct {
-	JSONPath string
-	SRTPath  string
-	TXTPath  string
+	JSONPath     paths.Path
+	SRTPath      paths.Path
+	WordsSRTPath paths.Path
+	TXTPath      paths.Path
 }
 
 // Transcribe is the activity that transcribes a video
@@ -32,17 +35,18 @@ func Transcribe(
 
 	time.Sleep(time.Second * 10)
 
-	jobData, err := transcribe.DoTranscribe(ctx, input.File, input.DestinationPath, input.Language)
-
+	jobData, err := transcribe.DoTranscribe(ctx, input.File.Local(), input.DestinationPath.Local(), input.Language)
 	if err != nil {
 		return nil, err
 	}
+
 	log.Info("Finished Transcribe")
 
-	fileName := filepath.Base(input.File)
+	fileName := input.File.Base()
 	return &TranscribeResponse{
-		JSONPath: filepath.Join(jobData.OutputPath, fileName+".json"),
-		SRTPath:  filepath.Join(jobData.OutputPath, fileName+".srt"),
-		TXTPath:  filepath.Join(jobData.OutputPath, fileName+".txt"),
+		JSONPath:     paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".json")),
+		SRTPath:      paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".srt")),
+		WordsSRTPath: paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".words.srt")),
+		TXTPath:      paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".txt")),
 	}, nil
 }

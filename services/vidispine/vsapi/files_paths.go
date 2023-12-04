@@ -2,10 +2,9 @@ package vsapi
 
 import (
 	"fmt"
+	"github.com/bcc-code/bccm-flows/environment"
 	"net/url"
 	"strings"
-
-	"github.com/bcc-code/bccm-flows/utils"
 )
 
 const DefaultStorageID = "VX-42"
@@ -21,7 +20,7 @@ func (c *Client) GetAbsoluteStoragePath(storageID string) (string, error) {
 	for _, m := range result.Result().(*StorageResult).Methods {
 		if strings.HasPrefix(m.URI, "file://") {
 			path := strings.TrimPrefix(m.URI, "file://")
-			return utils.IsilonPathFix(path), nil
+			return environment.IsilonPathFix(path), nil
 		}
 	}
 

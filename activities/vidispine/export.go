@@ -1,7 +1,8 @@
-package vidispine
+package vsactivity
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
 
@@ -10,7 +11,10 @@ import (
 )
 
 type GetExportDataParams struct {
-	VXID string
+	VXID        string
+	Languages   []string
+	AudioSource string
+	Subclip     string
 }
 
 func GetExportDataActivity(ctx context.Context, params *GetExportDataParams) (*vidispine.ExportData, error) {
@@ -20,7 +24,12 @@ func GetExportDataActivity(ctx context.Context, params *GetExportDataParams) (*v
 
 	client := GetClient()
 
-	data, err := client.GetDataForExport(params.VXID)
+	audioSource := vidispine.ExportAudioSources.Parse(params.AudioSource)
+	if params.AudioSource != "" && audioSource == nil {
+		return nil, fmt.Errorf("invalid audioSource: %s", params.AudioSource)
+	}
+
+	data, err := vidispine.GetDataForExport(client, params.VXID, params.Languages, audioSource, params.Subclip)
 	if err != nil {
 		return nil, err
 	}
@@ -39,5 +48,5 @@ func GetChapterDataActivity(ctx context.Context, params *GetChapterDataParams) (
 
 	client := GetClient()
 
-	return client.GetChapterData(params.ExportData)
+	return vidispine.GetChapterData(client, params.ExportData)
 }

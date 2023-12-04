@@ -2,13 +2,17 @@ package export
 
 import (
 	"fmt"
-	"path/filepath"
+	"strings"
+	"time"
 
+	"github.com/ansel1/merry/v2"
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/orsinium-labs/enum"
+	"github.com/samber/lo"
 
 	avidispine "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/services/vidispine"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
+	"github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -18,10 +22,12 @@ var (
 	AssetExportDestinationPlayout = AssetExportDestination{Value: "playout"}
 	AssetExportDestinationVOD     = AssetExportDestination{Value: "vod"}
 	AssetExportDestinationBMM     = AssetExportDestination{Value: "bmm"}
+	AssetExportDestinationIsilon  = AssetExportDestination{Value: "isilon"}
 	AssetExportDestinations       = enum.New(
 		AssetExportDestinationPlayout,
 		AssetExportDestinationVOD,
 		AssetExportDestinationBMM,
+		AssetExportDestinationIsilon,
 	)
 )
 
@@ -31,7 +37,9 @@ type VXExportParams struct {
 	WithChapters  bool
 	WatermarkPath string
 	Destinations  []string
+	AudioSource   string
 	Languages     []string
+	Subclip       string
 }
 
 type VXExportResult struct {
@@ -43,11 +51,13 @@ type VXExportResult struct {
 }
 
 type VXExportChildWorkflowParams struct {
+	RunID        string
 	ParentParams VXExportParams       `json:"parent_params"`
 	ExportData   vidispine.ExportData `json:"export_data"`
 	MergeResult  MergeExportDataResult
-	TempDir      string
-	OutputDir    string
+	TempDir      paths.Path
+	OutputDir    paths.Path
+	Upload       bool
 }
 
 func formatSecondsToTimestamp(seconds float64) string {
@@ -78,9 +88,18 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		destinations = append(destinations, d)
 	}
 
+	var errs []error
+	err := wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Export of %s started.\n\nRunID: %s", params.VXID, workflow.GetInfo(ctx).OriginalRunID))
+	if err != nil {
+		errs = append(errs, err)
+	}
+
 	var data *vidispine.ExportData
-	err := workflow.ExecuteActivity(ctx, avidispine.GetExportDataActivity, avidispine.GetExportDataParams{
-		VXID: params.VXID,
+	err = workflow.ExecuteActivity(ctx, avidispine.GetExportDataActivity, avidispine.GetExportDataParams{
+		VXID:        params.VXID,
+		Languages:   params.Languages,
+		AudioSource: params.AudioSource,
+		Subclip:     params.Subclip,
 	}).Get(ctx, &data)
 	if err != nil {
 		return nil, err
@@ -93,14 +112,14 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
-	outputDir := filepath.Join(tempDir, "output")
+	outputDir := tempDir.Append("output")
 	err = wfutils.CreateFolder(ctx, outputDir)
 	if err != nil {
 		return nil, err
 	}
 
-	vodOutputDir := filepath.Join(outputDir, "vod")
-	err = wfutils.CreateFolder(ctx, vodOutputDir)
+	subtitlesOutputDir := outputDir.Append("subtitles")
+	err = wfutils.CreateFolder(ctx, subtitlesOutputDir)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +132,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 	err = workflow.ExecuteChildWorkflow(ctx, MergeExportData, MergeExportDataParams{
 		ExportData:    data,
 		TempDir:       tempDir,
-		SubtitlesDir:  vodOutputDir,
+		SubtitlesDir:  subtitlesOutputDir,
 		MakeVideo:     !bmmOnly,
 		MakeAudio:     true,
 		MakeSubtitles: true,
@@ -123,13 +142,44 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
+	hasDestination := func(d AssetExportDestination) bool {
+		return lo.SomeBy(destinations, func(dest *AssetExportDestination) bool {
+			return *dest == d
+		})
+	}
+
 	// Destination branching:  VOD, playout, bmm, etc.
 	var resultFutures []workflow.Future
 	for _, dest := range destinations {
+		childParams := VXExportChildWorkflowParams{
+			ParentParams: params,
+			ExportData:   *data,
+			MergeResult:  mergeResult,
+			TempDir:      tempDir,
+			OutputDir:    outputDir.Append(dest.Value),
+			RunID:        workflow.GetInfo(ctx).OriginalRunID,
+			Upload:       true,
+		}
+
 		var w interface{}
 		switch *dest {
+		case AssetExportDestinationIsilon:
+			if hasDestination(AssetExportDestinationVOD) {
+				// this is just a subflow of VOD
+				continue
+			}
+			childParams.Upload = false
+			fallthrough
 		case AssetExportDestinationVOD:
 			w = VXExportToVOD
+			if hasDestination(AssetExportDestinationIsilon) {
+				date := time.Now()
+				id := workflow.GetInfo(ctx).OriginalRunID
+				childParams.OutputDir = paths.Path{
+					Drive: paths.IsilonDrive,
+					Path:  fmt.Sprintf("Export/%s/%s", date.Format("2006-01"), data.SafeTitle+"-"+id[0:8]),
+				}
+			}
 		case AssetExportDestinationPlayout:
 			w = VXExportToPlayout
 		case AssetExportDestinationBMM:
@@ -138,24 +188,22 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 			return nil, fmt.Errorf("destination not implemented: %s", dest)
 		}
 
-		p := filepath.Join(outputDir, dest.Value)
-		err = wfutils.CreateFolder(ctx, p)
+		err = wfutils.CreateFolder(ctx, childParams.OutputDir)
 		if err != nil {
 			return nil, err
 		}
 
 		ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
-		future := workflow.ExecuteChildWorkflow(ctx, w, VXExportChildWorkflowParams{
-			ParentParams: params,
-			ExportData:   *data,
-			MergeResult:  mergeResult,
-			TempDir:      tempDir,
-			OutputDir:    p,
-		})
+		future := workflow.ExecuteChildWorkflow(ctx, w, childParams)
 		if err != nil {
 			return nil, err
 		}
 		resultFutures = append(resultFutures, future)
+
+		err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Exporting %s to %s", params.VXID, dest.Value))
+		if err != nil {
+			errs = append(errs, err)
+		}
 	}
 
 	var results []wfutils.ResultOrError[VXExportResult]
@@ -166,7 +214,19 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 			Result: result,
 			Error:  err,
 		})
+		if err != nil {
+			errs = append(errs, err)
+			err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Export of %s failed: %s", params.VXID, err.Error()))
+			if err != nil {
+				errs = append(errs, err)
+			}
+		}
 	}
-
-	return results, nil
+	err = nil
+	if len(errs) > 0 {
+		err = merry.New(strings.Join(lo.Map(errs, func(err error, _ int) string {
+			return err.Error()
+		}), "\n"))
+	}
+	return results, err
 }

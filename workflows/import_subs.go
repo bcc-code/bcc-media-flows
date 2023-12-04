@@ -2,13 +2,15 @@ package workflows
 
 import (
 	"fmt"
-	"github.com/bcc-code/bccm-flows/utils/wfutils"
 	"strings"
 	"time"
 
+	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
+	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bccm-flows/utils/workflows"
+
 	"github.com/bcc-code/bccm-flows/activities"
-	"github.com/bcc-code/bccm-flows/activities/vidispine"
-	"github.com/bcc-code/bccm-flows/utils"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -33,7 +35,7 @@ func ImportSubtitlesFromSubtrans(
 		StartToCloseTimeout:    time.Hour * 4,
 		ScheduleToCloseTimeout: time.Hour * 48,
 		HeartbeatTimeout:       time.Minute * 5,
-		TaskQueue:              utils.GetQueue(),
+		TaskQueue:              environment.GetQueue(),
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
@@ -51,9 +53,9 @@ func ImportSubtitlesFromSubtrans(
 		return err
 	}
 
-	outputPath, _ := wfutils.GetWorkflowOutputFolder(ctx)
+	outputPath, _ := wfutils.GetWorkflowAuxOutputFolder(ctx)
 
-	subsList := map[string]string{}
+	subsList := map[string]paths.Path{}
 	err = workflow.ExecuteActivity(ctx, activities.GetSubtitlesActivity, activities.GetSubtitlesInput{
 		SubtransID:        subtransIDResponse.SubtransID,
 		Format:            "srt",
@@ -69,7 +71,7 @@ func ImportSubtitlesFromSubtrans(
 	for lang, sub := range subsList {
 		lang = strings.ToLower(lang)
 
-		future := workflow.ExecuteActivity(ctx, vidispine.ImportFileAsSidecarActivity, vidispine.ImportSubtitleAsSidecarParams{
+		future := workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
 			AssetID:  params.VXID,
 			Language: lang,
 			FilePath: sub,
@@ -77,7 +79,7 @@ func ImportSubtitlesFromSubtrans(
 
 		futures = append(futures, future)
 
-		future = workflow.ExecuteActivity(ctx, vidispine.ImportFileAsShapeActivity, vidispine.ImportFileAsShapeParams{
+		future = workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.VXID,
 			FilePath: sub,
 			ShapeTag: fmt.Sprintf("sub_%s_%s", lang, "srt"),
