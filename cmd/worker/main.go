@@ -31,6 +31,7 @@ var utilActivities = []any{
 	activities.StandardizeFileName,
 	activities.GetSubtitlesActivity,
 	batonactivities.QC,
+	activities.FtpPlayoutRename,
 	activities.NotifySimple,
 	activities.NotifyImportCompleted,
 }
