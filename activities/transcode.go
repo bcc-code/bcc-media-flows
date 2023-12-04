@@ -3,6 +3,7 @@ package activities
 import (
 	"context"
 	"fmt"
+
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
@@ -16,6 +17,7 @@ type EncodeParams struct {
 	Resolution string
 	FrameRate  int
 	Bitrate    string
+	Interlace  bool
 }
 
 type EncodeResult struct {
@@ -84,6 +86,7 @@ func TranscodeToXDCAMActivity(ctx context.Context, input EncodeParams) (*EncodeR
 		FrameRate:  input.FrameRate,
 		Resolution: input.Resolution,
 		Bitrate:    input.Bitrate,
+		Interlace:  input.Interlace,
 	}, progressCallback)
 	if err != nil {
 		return nil, err

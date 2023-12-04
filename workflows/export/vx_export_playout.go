@@ -4,7 +4,7 @@ import (
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/environment"
-	"github.com/bcc-code/bccm-flows/utils/workflows"
+	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -32,6 +32,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 		OutputDir:  xdcamOutputDir,
 		Resolution: string(r1080p),
 		FrameRate:  25,
+		Interlace:  true,
 	}).Get(ctx, &videoResult)
 	if err != nil {
 		return nil, err
