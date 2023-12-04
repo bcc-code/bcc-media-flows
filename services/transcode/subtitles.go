@@ -26,9 +26,20 @@ func SubtitleBurnIn(videoFile, subtitleFile, outputPath paths.Path, progressCall
 		if err != nil {
 			return nil, err
 		}
-		lines := strings.Trim(strings.Split(string(subtitleContents), "[Events]")[1], "\n\r")
+		eventsTagPassed := false
+		var lines []string
+		for _, l := range strings.Split(string(subtitleContents), "\n") {
+			if strings.HasPrefix(l, "[Events]") {
+				eventsTagPassed = true
+				continue
+			}
+			if !eventsTagPassed {
+				continue
+			}
+			lines = append(lines, l)
+		}
 
-		err = os.WriteFile(out.Local(), []byte(defaultSubtitleHeader+"\n"+lines), os.ModePerm)
+		err = os.WriteFile(out.Local(), []byte(defaultSubtitleHeader+"\n"+strings.Join(lines, "\n")), os.ModePerm)
 		if err != nil {
 			return nil, err
 		}
