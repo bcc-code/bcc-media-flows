@@ -217,31 +217,3 @@ func ExecuteFFmpeg(ctx context.Context, input ExecuteFFmpegInput) error {
 	}
 	return nil
 }
-
-type SubtitleBurnInInput struct {
-	OutputPath   paths.Path
-	VideoFile    paths.Path
-	SubtitleFile paths.Path
-}
-
-type SubtitleBurnInOutput struct {
-	OutputFile paths.Path
-}
-
-func SubtitleBurnIn(ctx context.Context, input SubtitleBurnInInput) (*SubtitleBurnInOutput, error) {
-	log := activity.GetLogger(ctx)
-	activity.RecordHeartbeat(ctx, "SubtitleBurnIn")
-	log.Info("Starting SubtitleBurnIn")
-
-	stopChan, progressCallback := registerProgressCallback(ctx)
-	defer close(stopChan)
-
-	output, err := transcode.SubtitleBurnIn(input.VideoFile, input.SubtitleFile, input.OutputPath, progressCallback)
-	if err != nil {
-		return nil, err
-	}
-
-	return &SubtitleBurnInOutput{
-		OutputFile: *output,
-	}, nil
-}
