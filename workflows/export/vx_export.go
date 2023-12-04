@@ -200,7 +200,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		}
 		resultFutures = append(resultFutures, future)
 
-		err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Exporting %s to %s", params.VXID, dest.Value))
+		err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Exporting %s to %s", childParams.ExportData.Title, dest.Value))
 		if err != nil {
 			errs = append(errs, err)
 		}

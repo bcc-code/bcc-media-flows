@@ -1,6 +1,7 @@
 package export
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/bcc-code/bccm-flows/activities"
@@ -70,6 +71,11 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 		From: filepath.Join("/tmp/", muxResult.Path.Base()),
 		To:   filepath.Join("/dropbox/", muxResult.Path.Base()),
 	}).Get(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Export of %s to playout finished.", params.ExportData.Title))
 	if err != nil {
 		return nil, err
 	}
