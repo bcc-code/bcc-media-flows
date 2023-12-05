@@ -75,7 +75,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 		return nil, err
 	}
 
-	err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Export of `%s` to playout finished.", params.ExportData.Title))
+	err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟩 Export of `%s` to playout finished.", params.ExportData.Title))
 	if err != nil {
 		return nil, err
 	}
