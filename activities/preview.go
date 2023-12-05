@@ -3,6 +3,7 @@ package activities
 import (
 	"context"
 	"fmt"
+
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/transcode"
 	"go.temporal.io/sdk/activity"
@@ -39,4 +40,26 @@ func TranscodePreview(ctx context.Context, input TranscodePreviewParams) (*Trans
 		PreviewFilePath: paths.MustParse(result.LowResolutionPath),
 		AudioOnly:       result.AudioOnly,
 	}, nil
+}
+
+type (
+	TranscodeLivePreviewParams struct {
+		InFilePath  paths.Path
+		OutFilePath paths.Path
+	}
+	TranscodeLivePreviewResult struct{}
+)
+
+func TranscodeLivePreview(ctx context.Context, params TranscodeLivePreviewParams) (*TranscodeLivePreviewResult, error) {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Starting TranscodeLivePreview")
+
+	stopChan, _ := newHeartBeater[string](ctx)
+	defer close(stopChan)
+
+	err := transcode.RealtimePreview(params.InFilePath, params.OutFilePath)
+	if err != nil {
+		return nil, err
+	}
+	return &TranscodeLivePreviewResult{}, nil
 }

@@ -150,7 +150,7 @@ type prefix struct {
 
 var drivePrefixes = map[Drive]prefix{
 	IsilonDrive:      {"/mnt/isilon/", environment.GetIsilonPrefix(), "isilon:isilon/"},
-	DMZShareDrive:    {"/mnt/dmzshare/", "/mnt/dmzshare/", "dmz:dmzshare/"},
+	DMZShareDrive:    {"/mnt/dmzshare/", environment.GetDmzShareMountPrefix(), "dmz:dmzshare/"},
 	TempDrive:        {"/mnt/temp/", environment.GetTempMountPrefix(), "isilon:temp/"},
 	AssetIngestDrive: {"/dev/null/", "/dev/null/", "s3prod:vod-asset-ingest-prod/"},
 }

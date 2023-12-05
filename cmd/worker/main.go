@@ -34,6 +34,7 @@ var utilActivities = []any{
 	activities.FtpPlayoutRename,
 	activities.NotifySimple,
 	activities.NotifyImportCompleted,
+	activities.RsyncIncrementalCopy,
 }
 
 var vidispineActivities = []any{
@@ -70,6 +71,7 @@ var workerWorkflows = []any{
 	ingestworkflows.Asset,
 	ingestworkflows.RawMaterial,
 	ingestworkflows.Masters,
+	ingestworkflows.Incremental,
 	workflows.NormalizeAudioLevelWorkflow,
 }
 
