@@ -102,7 +102,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 
 	err = wfutils.NotifyTelegramChannel(ctx,
 		fmt.Sprintf(
-			"Export of `%s` started.\nTitle: `%s`\nDestinations: `%s`\n\nRunID: `%s`",
+			"🟦 Export of `%s` started.\nTitle: `%s`\nDestinations: `%s`\n\nRunID: `%s`",
 			params.VXID,
 			data.Title,
 			strings.Join(params.Destinations, ", "),
@@ -219,7 +219,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		})
 		if err != nil {
 			errs = append(errs, err)
-			err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
+			err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
 			if err != nil {
 				errs = append(errs, err)
 			}
