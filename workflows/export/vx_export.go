@@ -89,20 +89,8 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 	}
 
 	var errs []error
-	err := wfutils.NotifyTelegramChannel(ctx,
-		fmt.Sprintf(
-			"Export of `%s` started.\nDestinations: `%s`\n\nRunID: `%s`",
-			params.VXID,
-			strings.Join(params.Destinations, ", "),
-			workflow.GetInfo(ctx).OriginalRunID,
-		),
-	)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
 	var data *vidispine.ExportData
-	err = workflow.ExecuteActivity(ctx, avidispine.GetExportDataActivity, avidispine.GetExportDataParams{
+	err := workflow.ExecuteActivity(ctx, avidispine.GetExportDataActivity, avidispine.GetExportDataParams{
 		VXID:        params.VXID,
 		Languages:   params.Languages,
 		AudioSource: params.AudioSource,
@@ -110,6 +98,19 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 	}).Get(ctx, &data)
 	if err != nil {
 		return nil, err
+	}
+
+	err = wfutils.NotifyTelegramChannel(ctx,
+		fmt.Sprintf(
+			"Export of `%s` started.\nTitle: `%s`\nDestinations: `%s`\n\nRunID: `%s`",
+			params.VXID,
+			data.Title,
+			strings.Join(params.Destinations, ", "),
+			workflow.GetInfo(ctx).OriginalRunID,
+		),
+	)
+	if err != nil {
+		errs = append(errs, err)
 	}
 
 	logger.Info("Retrieved data from vidispine")
