@@ -38,14 +38,12 @@ func MuxToSimpleMXF(input common.SimpleMuxInput, progressCallback ffmpeg.Progres
 	params = append(
 		params,
 		"-map", fmt.Sprintf("%d:v", streams),
-		fmt.Sprintf("-metadata:s:%d", streams),
 	)
 	streams++
 
 	for range input.AudioFilePaths {
 		params = append(params,
 			"-map", fmt.Sprintf("%d:a", streams),
-			fmt.Sprintf("-metadata:s:%d", streams),
 		)
 		streams++
 	}

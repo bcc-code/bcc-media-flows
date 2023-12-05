@@ -12,19 +12,19 @@ import (
 var (
 	ameFlexResPerformanceWatchFolderInput = paths.Path{
 		Drive: paths.IsilonDrive,
-		Path:  "system/transcodetemp/hippo/hapqhippo/in/",
+		Path:  "system/transcodetemp/hippo/hapqhippo/in",
 	}
 	ameFlexResPerformanceWatchFolderOutput = paths.Path{
 		Drive: paths.IsilonDrive,
-		Path:  "system/transcodetemp/hippo/hapqhippo/out/",
+		Path:  "system/transcodetemp/hippo/hapqhippo/out",
 	}
 	ameFlexResQualityWatchFolderInput = paths.Path{
 		Drive: paths.IsilonDrive,
-		Path:  "system/transcodetemp/hippo/hapalphahippo/in/",
+		Path:  "system/transcodetemp/hippo/hapalphahippo/in",
 	}
 	ameFlexResQualityWatchFolderOutput = paths.Path{
 		Drive: paths.IsilonDrive,
-		Path:  "system/transcodetemp/hippo/hapalphahippo/out/",
+		Path:  "system/transcodetemp/hippo/hapalphahippo/out",
 	}
 )
 
@@ -74,9 +74,9 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 	}
 
 	// Rclone to watch-folder
-	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.EncodeParams{
-		FilePath:  currentVideoFile,
-		OutputDir: inputFolder,
+	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+		Source:      currentVideoFile,
+		Destination: inputFolder.Append(params.InputFile.Base()),
 	}).Get(ctx, &success)
 	if err != nil {
 		return nil, err
@@ -86,21 +86,20 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 	}
 
 	// Wait for Ame to finish
-	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneWaitForFile, activities.RcloneStatInput{
+	err = wfutils.ExecuteWithQueue(ctx, activities.WaitForFile, activities.FileInput{
 		Path: outputFile,
 	}).Get(ctx, &success)
+	if success == nil || !*success {
+		return nil, merry.New("WaitForFile failed")
+	}
 
-	// Rclone to playout
-	/*
-		err = wfutils.ExecuteWithQueue(ctx, activities.RcloneMoveFile, activities.RcloneFileInput{
-			Source:      ameOutputPath,
-			Destination: paths.New(
-
-			),
-		}).Get(ctx, nil)
-		if err != nil {
-			return nil, err
-		} */
+	/* err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+		Source:      outputFile,
+		Destination: paths.New(paths.BrunstadDrive, "/Delivery/FraMB/Hippo"),
+	}).Get(ctx, nil)
+	if err != nil {
+		return nil, err
+	} */
 
 	return &VBExportResult{
 		ID:    params.ParentParams.VXID,

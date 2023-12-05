@@ -177,7 +177,7 @@ func TranscodeToAudioMP3(ctx context.Context, input common.AudioInput) (*common.
 func TranscodeMuxToSimpleMXF(ctx context.Context, input common.SimpleMuxInput) (*common.MuxResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeMuxToSimpleMXF")
-	log.Info("Starting TranscodeMuxActivity")
+	log.Info("Starting TranscodeMuxToSimpleMXFActivity")
 
 	stopChan, progressCallback := registerProgressCallback(ctx)
 	defer close(stopChan)

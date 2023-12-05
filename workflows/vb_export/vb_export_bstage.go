@@ -50,26 +50,30 @@ func VBExportToBStage(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		return nil, err
 	}
 
+	audioFilePaths := []paths.Path{}
+	if params.NormalizedAudioFile != nil {
+		audioFilePaths = append(audioFilePaths, *params.NormalizedAudioFile)
+	}
+
 	// Mux normalized audio with video
 	base := videoResult.OutputPath.Base()
 	fileName := base[:len(base)-len(filepath.Ext(base))]
 	var muxResult *common.MuxResult
 	err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeMuxToSimpleMXF, common.SimpleMuxInput{
 		VideoFilePath:   videoResult.OutputPath,
-		AudioFilePaths:  []paths.Path{*params.NormalizedAudioFile},
+		AudioFilePaths:  audioFilePaths,
 		DestinationPath: params.OutputDir,
 		FileName:        fileName,
 	}).Get(ctx, &muxResult)
 
-	// Rclone to playout
-	/* 	destination := "playout:/dropbox"
-	   	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-	   		Source:      params.OutputDir.Rclone(),
-	   		Destination: destination,
-	   	}).Get(ctx, nil)
-	   	if err != nil {
-	   		return nil, err
-	   	} */
+	destination := "brunstad:/Delivery/FraMB/B-Stage"
+	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
+		Source:      muxResult.Path.Rclone(),
+		Destination: destination,
+	}).Get(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return &VBExportResult{
 		ID:    params.ParentParams.VXID,

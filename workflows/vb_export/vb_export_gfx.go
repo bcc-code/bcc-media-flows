@@ -66,15 +66,14 @@ func VBExportToGfx(ctx workflow.Context, params VBExportChildWorkflowParams) (*V
 		FileName:        fileName,
 	}).Get(ctx, &muxResult)
 
-	// Rclone to playout
-	/* 	destination := "playout:/dropbox"
-	   	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-	   		Source:      params.OutputDir.Rclone(),
-	   		Destination: destination,
-	   	}).Get(ctx, nil)
-	   	if err != nil {
-	   		return nil, err
-	   	} */
+	destination := "brunstad:/Delivery/FraMB/GFX"
+	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
+		Source:      muxResult.Path.Rclone(),
+		Destination: destination,
+	}).Get(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return &VBExportResult{
 		ID:    params.ParentParams.VXID,

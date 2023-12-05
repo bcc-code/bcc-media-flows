@@ -52,8 +52,9 @@ var (
 	IsilonDrive      = Drive{Value: "isilon"}
 	TempDrive        = Drive{Value: "temp"}
 	DMZShareDrive    = Drive{Value: "dmzshare"}
+	BrunstadDrive    = Drive{Value: "brunstad"}
 	AssetIngestDrive = Drive{Value: "asset_ingest"}
-	Drives           = enum.New(IsilonDrive, DMZShareDrive, TempDrive, AssetIngestDrive)
+	Drives           = enum.New(IsilonDrive, DMZShareDrive, TempDrive, AssetIngestDrive, BrunstadDrive)
 	ErrDriveNotFound = merry.Sentinel("drive not found")
 	ErrPathNotValid  = merry.Sentinel("path not valid")
 )
@@ -65,6 +66,8 @@ func (d Drive) RcloneName() string {
 		return "isilon"
 	case DMZShareDrive:
 		return "dmzshare"
+	case BrunstadDrive:
+		return "brunstad"
 	}
 	return ""
 }
@@ -78,6 +81,8 @@ func (d Drive) RclonePath() string {
 		return "dmz:dmzshare"
 	case AssetIngestDrive:
 		return "s3prod:vod-asset-ingest-prod"
+	case BrunstadDrive:
+		return "brunstad:"
 	}
 	return ""
 }
@@ -115,6 +120,8 @@ func (p Path) RcloneFsRemote() (string, string) {
 		return "dmz:", filepath.Join("dmzshare", p.Path)
 	case AssetIngestDrive:
 		return "s3prod:", filepath.Join("vod-asset-ingest-prod", p.Path)
+	case BrunstadDrive:
+		return "brunstad:/", p.Path
 	}
 	return "", ""
 }
@@ -153,6 +160,7 @@ var drivePrefixes = map[Drive]prefix{
 	DMZShareDrive:    {"/mnt/dmzshare/", "/mnt/dmzshare/", "dmz:dmzshare/"},
 	TempDrive:        {"/mnt/temp/", environment.GetTempMountPrefix(), "isilon:temp/"},
 	AssetIngestDrive: {"/dev/null/", "/dev/null/", "s3prod:vod-asset-ingest-prod/"},
+	BrunstadDrive:    {"/dev/null/", "/dev/null/", "brunstad:/"},
 }
 
 func Parse(path string) (Path, error) {
