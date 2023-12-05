@@ -12,7 +12,6 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/glebarez/go-sqlite v1.21.2
 	github.com/go-resty/resty/v2 v2.7.0
-	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/google/uuid v1.3.0
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/orsinium-labs/enum v1.3.0
@@ -22,6 +21,7 @@ require (
 	go.temporal.io/api v1.21.0
 	go.temporal.io/sdk v1.24.0
 	go.uber.org/mock v0.2.0
+	gopkg.in/telebot.v3 v3.2.1
 )
 
 require (

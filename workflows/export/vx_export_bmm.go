@@ -184,7 +184,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, fmt.Errorf("failed to trigger BMM: %s", resp.Status)
 	}
 
-	err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Export of %s to bmm finished.", params.ExportData.Title))
+	err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Export of `%s` to bmm finished.", params.ExportData.Title))
 	if err != nil {
 		return nil, err
 	}

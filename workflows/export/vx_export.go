@@ -89,7 +89,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 	}
 
 	var errs []error
-	err := wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Export of %s started.\n\nRunID: %s", params.VXID, workflow.GetInfo(ctx).OriginalRunID))
+	err := wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Export of `%s` started.\n\nRunID: `%s`", params.VXID, workflow.GetInfo(ctx).OriginalRunID))
 	if err != nil {
 		errs = append(errs, err)
 	}
@@ -200,7 +200,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		}
 		resultFutures = append(resultFutures, future)
 
-		err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Exporting %s to %s", childParams.ExportData.Title, dest.Value))
+		err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Exporting `%s` to `%s`", childParams.ExportData.Title, dest.Value))
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -216,7 +216,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		})
 		if err != nil {
 			errs = append(errs, err)
-			err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Export of %s failed: %s", params.VXID, err.Error()))
+			err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
 			if err != nil {
 				errs = append(errs, err)
 			}
