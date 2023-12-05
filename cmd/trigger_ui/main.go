@@ -160,25 +160,27 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 		}
 	}
 
-	err := s.vidispine.SetItemMetadataField(vxID, vscommon.FieldExportAudioSource.Value, audioSource)
-	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
-		return
-	}
-
-	for i, element := range languages {
-		if i == 0 {
-			err = s.vidispine.SetItemMetadataField(vxID, vscommon.FieldLangsToExport.Value, element)
-		} else {
-			err = s.vidispine.AddToItemMetadataField(vxID, vscommon.FieldLangsToExport.Value, element)
-
-		}
-
+	go func() {
+		err := s.vidispine.SetItemMetadataField(vxID, vscommon.FieldExportAudioSource.Value, audioSource)
 		if err != nil {
 			renderErrorPage(c, http.StatusInternalServerError, err)
 			return
 		}
-	}
+
+		for i, element := range languages {
+			if i == 0 {
+				err = s.vidispine.SetItemMetadataField(vxID, vscommon.FieldLangsToExport.Value, element)
+			} else {
+				err = s.vidispine.AddToItemMetadataField(vxID, vscommon.FieldLangsToExport.Value, element)
+
+			}
+
+			if err != nil {
+				renderErrorPage(c, http.StatusInternalServerError, err)
+				return
+			}
+		}
+	}()
 
 	var watermarkPath string
 	watermarkFile := c.PostForm("watermarkFile")
@@ -203,7 +205,7 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 		for _, subclip := range subclips {
 			params.Subclip = subclip
 			workflowOptions.ID = uuid.NewString()
-			_, err = s.wfClient.ExecuteWorkflow(c, workflowOptions, export.VXExport, params)
+			_, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, export.VXExport, params)
 			if err != nil {
 				renderErrorPage(c, http.StatusInternalServerError, err)
 				return
