@@ -270,15 +270,9 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 		if err != nil {
 			return nil, err
 		}
-		err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟩 Export of `%s` to VOD finished.", v.params.ExportData.Title))
-		if err != nil {
-			return nil, err
-		}
+		notifyExportDone(ctx, v.params, "vod")
 	} else {
-		err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟩 Export of `%s` to isilon finished.", v.params.ExportData.Title))
-		if err != nil {
-			return nil, err
-		}
+		notifyExportDone(ctx, v.params, "isilon")
 	}
 
 	//err = DeletePath(ctx, tempFolder)
