@@ -163,8 +163,7 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 	go func() {
 		err := s.vidispine.SetItemMetadataField(vxID, vscommon.FieldExportAudioSource.Value, audioSource)
 		if err != nil {
-			renderErrorPage(c, http.StatusInternalServerError, err)
-			return
+			log.Default().Println(err)
 		}
 
 		for i, element := range languages {
@@ -176,8 +175,7 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 			}
 
 			if err != nil {
-				renderErrorPage(c, http.StatusInternalServerError, err)
-				return
+				log.Default().Println(err)
 			}
 		}
 	}()
