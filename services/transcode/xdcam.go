@@ -9,7 +9,16 @@ import (
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 )
 
-func generateFfmpegParamsForXDCAM(input EncodeInput, output string) []string {
+type XDCAMEncodeInput struct {
+	FilePath   string
+	OutputDir  string
+	Resolution string
+	FrameRate  int
+	Bitrate    string
+	Interlace  bool
+}
+
+func generateFfmpegParamsForXDCAM(input XDCAMEncodeInput, output string) []string {
 	params := []string{
 		"-progress", "pipe:1",
 		"-hide_banner",
@@ -59,7 +68,7 @@ func generateFfmpegParamsForXDCAM(input EncodeInput, output string) []string {
 	return params
 }
 
-func XDCAM(input EncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeResult, error) {
+func XDCAM(input XDCAMEncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeResult, error) {
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mxf"
 	outputPath := filepath.Join(input.OutputDir, filename)
 	params := generateFfmpegParamsForXDCAM(input, outputPath)

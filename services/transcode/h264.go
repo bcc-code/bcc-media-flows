@@ -6,23 +6,25 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 )
 
-type EncodeInput struct {
-	FilePath   string
-	OutputDir  string
-	Resolution string
-	FrameRate  int
-	Bitrate    string
-	Interlace  bool
+type H264EncodeInput struct {
+	FilePath       string
+	OutputDir      string
+	Resolution     string
+	FrameRate      int
+	Bitrate        string
+	Interlace      bool
+	BurnInSubtitle *paths.Path
 }
 
 type EncodeResult struct {
 	Path string
 }
 
-func H264(input EncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeResult, error) {
+func H264(input H264EncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeResult, error) {
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mxf"
 	outputPath := filepath.Join(input.OutputDir, filename)
 
@@ -37,7 +39,6 @@ func H264(input EncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeR
 		"-hide_banner",
 		"-progress", "pipe:1",
 		"-i", input.FilePath,
-		"-vf", "yadif=0:-1:0",
 		"-c:v", h264encoder,
 	}
 	switch h264encoder {
@@ -67,6 +68,34 @@ func H264(input EncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeR
 		params = append(
 			params,
 			"-r", strconv.Itoa(input.FrameRate),
+		)
+	}
+
+	var videoFilters []string
+
+	if input.Interlace {
+		params = append(
+			params,
+			"-flags", "+ilme+ildct",
+		)
+		videoFilters = append(videoFilters, "setfield=tff", "fieldorder=tff")
+	} else {
+		videoFilters = append(videoFilters, "yadif=0:-1:0")
+	}
+
+	if input.BurnInSubtitle != nil {
+		assFile, err := CreateBurninASSFile(*input.BurnInSubtitle)
+		if err != nil {
+			return nil, err
+		}
+		//defer os.Remove(assFile.Local()) ??
+		videoFilters = append(videoFilters, "ass="+assFile.Local())
+	}
+
+	if len(videoFilters) > 0 {
+		params = append(
+			params,
+			"-vf", strings.Join(videoFilters, ","),
 		)
 	}
 

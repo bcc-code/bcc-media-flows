@@ -2,11 +2,12 @@ package transcode
 
 import (
 	"fmt"
-	"github.com/bcc-code/bccm-flows/paths"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/bcc-code/bccm-flows/paths"
 
 	bccmflows "github.com/bcc-code/bccm-flows"
 	"github.com/bcc-code/bccm-flows/common"
@@ -32,7 +33,7 @@ func languageFilesForPaths(paths map[string]paths.Path) []languageFile {
 	})
 }
 
-// Mux multiplexes specified video, audio and subtitle tracks.
+// Mux multiplexes specified video, audio and subtitle tracks based on languages.
 func Mux(input common.MuxInput, progressCallback ffmpeg.ProgressCallback) (*common.MuxResult, error) {
 	//Use ffmpeg to mux the video
 	info, err := ffmpeg.GetStreamInfo(input.VideoFilePath.Local())

@@ -1,11 +1,12 @@
 package transcode
 
 import (
-	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 )
 
 type ProResInput struct {
@@ -13,11 +14,17 @@ type ProResInput struct {
 	OutputDir  string
 	Resolution string
 	FrameRate  int
+	Use4444    bool
 }
 
 type ProResResult struct {
 	OutputPath string
 }
+
+const (
+	ProResProfileHQ   = "3"
+	ProResProfile4444 = "4"
+)
 
 func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProResResult, error) {
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mov"
@@ -26,14 +33,29 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProRe
 		"-progress", "pipe:1",
 		"-hide_banner",
 		"-i", input.FilePath,
-		"-c:v", "prores",
-		"-profile:v", "3",
+		"-c:v", "prores_ks",
 		"-vendor", "ap10",
 		"-vf", "setfield=tff",
 		"-color_primaries", "bt709",
 		"-color_trc", "bt709",
 		"-colorspace", "bt709",
 		"-bits_per_mb", "8000",
+	}
+
+	if input.Use4444 {
+		params = append(
+			params,
+			"-pix_fmt", "yuva444p10le",
+		)
+		params = append(
+			params,
+			"-profile:v", ProResProfile4444,
+		)
+	} else {
+		params = append(
+			params,
+			"-profile:v", ProResProfileHQ,
+		)
 	}
 
 	if input.Resolution != "" {

@@ -32,6 +32,14 @@ type AudioResult struct {
 	FileSize   int64
 }
 
+// Simple muxing does not use languages
+type SimpleMuxInput struct {
+	FileName        string
+	VideoFilePath   paths.Path
+	AudioFilePaths  []paths.Path
+	DestinationPath paths.Path
+}
+
 type MuxInput struct {
 	FileName          string
 	VideoFilePath     paths.Path
