@@ -89,7 +89,14 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 	}
 
 	var errs []error
-	err := wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Export of `%s` started.\n\nRunID: `%s`", params.VXID, workflow.GetInfo(ctx).OriginalRunID))
+	err := wfutils.NotifyTelegramChannel(ctx,
+		fmt.Sprintf(
+			"Export of `%s` started.\nDestinations: `%s`\n\nRunID: `%s`",
+			params.VXID,
+			strings.Join(params.Destinations, ", "),
+			workflow.GetInfo(ctx).OriginalRunID,
+		),
+	)
 	if err != nil {
 		errs = append(errs, err)
 	}
@@ -199,11 +206,6 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 			return nil, err
 		}
 		resultFutures = append(resultFutures, future)
-
-		err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Exporting `%s` to `%s`", childParams.ExportData.Title, dest.Value))
-		if err != nil {
-			errs = append(errs, err)
-		}
 	}
 
 	var results []wfutils.ResultOrError[VXExportResult]
