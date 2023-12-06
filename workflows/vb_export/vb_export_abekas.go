@@ -1,11 +1,10 @@
 package vb_export
 
 import (
-	"path/filepath"
+	"fmt"
 
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/paths"
 	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -36,12 +35,11 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 	}
 
 	var videoResult common.VideoResult
-	err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToH264Activity, activities.EncodeParams{
+	err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToAVCIntraActivity, activities.EncodeParams{
 		FilePath:       params.InputFile,
 		OutputDir:      abekasOutputDir,
 		Resolution:     "1920x1080",
 		FrameRate:      50,
-		Bitrate:        "100M",
 		Interlace:      true,
 		BurnInSubtitle: params.SubtitleFile,
 	}).Get(ctx, &videoResult)
@@ -49,33 +47,19 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		return nil, err
 	}
 
-	audioFilePaths := []paths.Path{}
-	if params.NormalizedAudioFile != nil {
-		audioFilePaths = append(audioFilePaths, *params.NormalizedAudioFile)
+	if videoResult.OutputPath.Ext() != ".mxf" {
+		return nil, fmt.Errorf("expected avc intra output to be .mxf, got %s", videoResult.OutputPath.Ext())
 	}
 
-	// Mux normalized audio with video
-	base := videoResult.OutputPath.Base()
-	fileName := base[:len(base)-len(filepath.Ext(base))]
-	var muxResult *common.MuxResult
-	err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeMuxToSimpleMXF, common.SimpleMuxInput{
-		VideoFilePath:   videoResult.OutputPath,
-		AudioFilePaths:  audioFilePaths,
-		DestinationPath: params.OutputDir,
-		FileName:        fileName,
-	}).Get(ctx, &muxResult)
-
-	destination := "brunstad:/Delivery/FraMB/Abekas-AVCI"
-	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      muxResult.Path.Rclone(),
-		Destination: destination,
+	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+		Source:      videoResult.OutputPath,
+		Destination: vbDeliveryFolder.Append("Abekas-AVCI", params.OriginalFilenameWithoutExt+videoResult.OutputPath.Ext()),
 	}).Get(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	return &VBExportResult{
-		ID:    params.ParentParams.VXID,
-		Title: params.ExportData.SafeTitle,
+		ID: params.ParentParams.VXID,
 	}, nil
 }

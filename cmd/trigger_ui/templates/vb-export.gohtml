@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>{{- /*gotype: github.com/bcc-code/bccm-flows/cmd/trigger_ui.TriggerGETParams */}}VX Export</title>
+    <title>VB Export</title>
 </head>
 <body class="flex bg-gray-100">
 {{ $selectClasses := "p-2 border rounded-md bg-transparent"}}
@@ -21,6 +21,16 @@
                     </li>
                 {{end}}
             </ul>
+        </div>
+
+        <div class="flex flex-col">
+            <label class="font-bold" for="subtitleShape">Subtitles (burn-in)</label>
+            <select class="{{$selectClasses}}" name="subtitleShape" id="subtitleShape">
+                <option value="">None</option>
+                {{range $index, $element := .SubtitleShapes}}
+                    <option value={{$element}}>{{$element}}</option>
+                {{end}}
+            </select>
         </div>
 
         <input id="submit"

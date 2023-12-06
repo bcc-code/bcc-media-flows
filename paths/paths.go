@@ -142,10 +142,12 @@ func (p Path) Base() string {
 	return filepath.Base(p.Path)
 }
 
-func (p Path) Append(path string) Path {
+func (p Path) Append(path ...string) Path {
+	paths := []string{p.Path}
+	paths = append(paths, path...)
 	return Path{
 		Drive: p.Drive,
-		Path:  filepath.Clean(filepath.Join(p.Path, path)),
+		Path:  filepath.Clean(filepath.Join(paths...)),
 	}
 }
 

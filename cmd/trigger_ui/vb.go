@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
@@ -13,8 +14,9 @@ import (
 )
 
 type VBTriggerGETParams struct {
-	Title        string
-	Destinations []string
+	Title          string
+	Destinations   []string
+	SubtitleShapes []string
 }
 
 func (s *TriggerServer) VBTriggerHandlerGET(c *gin.Context) {
@@ -24,13 +26,28 @@ func (s *TriggerServer) VBTriggerHandlerGET(c *gin.Context) {
 		renderErrorPage(c, http.StatusInternalServerError, err)
 		return
 	}
+	shapes, err := s.vidispine.GetShapes(vxID)
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	var subtitleShapes []string
+	for _, shape := range shapes.Shape {
+		for _, tag := range shape.Tag {
+			if strings.HasPrefix(tag, "sub_") && strings.HasSuffix(tag, "_srt") {
+				subtitleShapes = append(subtitleShapes, tag)
+			}
+		}
+	}
 
 	clips := meta.SplitByClips()
 	title := clips[vsapi.OriginalClip].Get(vscommon.FieldTitle, "")
 
 	c.HTML(http.StatusOK, "vb-export.gohtml", VBTriggerGETParams{
-		Title:        title,
-		Destinations: vb_export.VBExportDestinations.Values(),
+		Title:          title,
+		Destinations:   vb_export.VBExportDestinations.Values(),
+		SubtitleShapes: subtitleShapes,
 	})
 }
 
@@ -49,8 +66,9 @@ func (s *TriggerServer) VBTriggerHandlerPOST(c *gin.Context) {
 	}
 
 	params := vb_export.VBExportParams{
-		VXID:         vxID,
-		Destinations: c.PostFormArray("destinations[]"),
+		VXID:             vxID,
+		Destinations:     c.PostFormArray("destinations[]"),
+		SubtitleShapeTag: c.PostForm("subtitleShape"),
 	}
 
 	var wfID string

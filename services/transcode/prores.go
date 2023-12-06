@@ -6,15 +6,17 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 )
 
 type ProResInput struct {
-	FilePath   string
-	OutputDir  string
-	Resolution string
-	FrameRate  int
-	Use4444    bool
+	FilePath       string
+	OutputDir      string
+	Resolution     string
+	FrameRate      int
+	Use4444        bool
+	BurnInSubtitle *paths.Path
 }
 
 type ProResResult struct {
@@ -35,11 +37,22 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProRe
 		"-i", input.FilePath,
 		"-c:v", "prores_ks",
 		"-vendor", "ap10",
-		"-vf", "setfield=tff",
 		"-color_primaries", "bt709",
 		"-color_trc", "bt709",
 		"-colorspace", "bt709",
 		"-bits_per_mb", "8000",
+	}
+
+	videoFilters := []string{
+		"setfield=tff",
+	}
+
+	if input.BurnInSubtitle != nil {
+		assFile, err := CreateBurninASSFile(*input.BurnInSubtitle)
+		if err != nil {
+			return nil, err
+		}
+		videoFilters = append(videoFilters, "ass="+assFile.Local())
 	}
 
 	if input.Use4444 {
@@ -69,7 +82,12 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProRe
 		params = append(
 			params,
 			"-r", strconv.Itoa(input.FrameRate),
+			"-video_track_timescale", strconv.Itoa(input.FrameRate),
 		)
+	}
+
+	if len(videoFilters) > 0 {
+		params = append(params, "-vf", strings.Join(videoFilters, ","))
 	}
 
 	outputPath := filepath.Join(input.OutputDir, filename)

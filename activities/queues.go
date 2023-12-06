@@ -28,6 +28,7 @@ func GetVideoTranscodeActivities() []any {
 	return []any{
 		TranscodePreview,
 		TranscodeToProResActivity,
+		TranscodeToAVCIntraActivity,
 		TranscodeToH264Activity,
 		TranscodeToXDCAMActivity,
 		TranscodeMergeVideo,

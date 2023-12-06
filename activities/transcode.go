@@ -35,11 +35,12 @@ func TranscodeToProResActivity(ctx context.Context, input EncodeParams) (*Encode
 	defer close(stop)
 
 	transcodeResult, err := transcode.ProRes(transcode.ProResInput{
-		FilePath:   input.FilePath.Local(),
-		OutputDir:  input.OutputDir.Local(),
-		FrameRate:  input.FrameRate,
-		Resolution: input.Resolution,
-		Use4444:    input.Alpha,
+		FilePath:       input.FilePath.Local(),
+		OutputDir:      input.OutputDir.Local(),
+		FrameRate:      input.FrameRate,
+		Resolution:     input.Resolution,
+		Use4444:        input.Alpha,
+		BurnInSubtitle: input.BurnInSubtitle,
 	}, progressCallback)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -48,6 +49,31 @@ func TranscodeToProResActivity(ctx context.Context, input EncodeParams) (*Encode
 
 	return &EncodeResult{
 		OutputPath: paths.MustParse(transcodeResult.OutputPath),
+	}, nil
+}
+
+func TranscodeToAVCIntraActivity(ctx context.Context, input EncodeParams) (*EncodeResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeToAVCIntra")
+	log.Info("Starting TranscodeToAVCIntraActivity")
+
+	stop, progressCallback := registerProgressCallback(ctx)
+	defer close(stop)
+
+	transcodeResult, err := transcode.AvcIntra(transcode.AVCIntraEncodeInput{
+		FilePath:       input.FilePath.Local(),
+		OutputDir:      input.OutputDir.Local(),
+		FrameRate:      input.FrameRate,
+		Resolution:     input.Resolution,
+		Interlace:      input.Interlace,
+		BurnInSubtitle: input.BurnInSubtitle,
+	}, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+
+	return &EncodeResult{
+		OutputPath: paths.MustParse(transcodeResult.Path),
 	}, nil
 }
 

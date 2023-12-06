@@ -49,6 +49,7 @@ func CreateBurninASSFile(subtitleFile paths.Path) (*paths.Path, error) {
 
 	out := subtitleFile.Dir().Append(subtitleFile.Base() + ".ass")
 	_, err := ffmpeg.Do([]string{
+		"-y",
 		"-i", subtitleFile.Local(),
 		out.Local(),
 	}, ffmpeg.StreamInfo{}, nil)

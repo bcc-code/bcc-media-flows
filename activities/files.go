@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/ansel1/merry/v2"
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/activity"
@@ -15,6 +16,10 @@ import (
 
 type FileInput struct {
 	Path paths.Path
+}
+type DeletePathInput struct {
+	Path      paths.Path
+	RemoveAll bool
 }
 
 type FileResult struct {
@@ -186,12 +191,20 @@ func ListFiles(ctx context.Context, input FileInput) ([]paths.Path, error) {
 	}), err
 }
 
-func DeletePath(ctx context.Context, input FileInput) error {
+func DeletePath(ctx context.Context, input DeletePathInput) error {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "DeletePath")
 	log.Info("Starting DeletePathActivity")
 
-	return os.RemoveAll(input.Path.Local())
+	if (input.Path.Path == "/") || (input.Path.Path == "") {
+		return merry.New("cannot delete root")
+	}
+
+	if input.RemoveAll {
+		return os.RemoveAll(input.Path.Local())
+	}
+
+	return os.Remove(input.Path.Local())
 }
 
 // WaitForFile waits until a file stops growing
@@ -208,15 +221,18 @@ func WaitForFile(ctx context.Context, input FileInput) (bool, error) {
 	iterationsWhereSizeIsFreezed := 0
 
 	for {
+		fmt.Printf("Waiting for file %s to be fully uploaded\n", input.Path.Local())
 		res, err := os.Stat(input.Path.Local())
 		activity.RecordHeartbeat(ctx, res)
 		if err != nil {
+			fmt.Printf("Error: %v\n", err)
 			if time.Since(startedAt) > time.Minute*5 {
 				return false, err
 			}
 			time.Sleep(time.Second * 5)
 			continue
 		}
+		fmt.Printf("Stat res: %v\n", res)
 
 		if res.Size() < lastKnownSize {
 			return false, fmt.Errorf("file size decreased")
@@ -229,8 +245,11 @@ func WaitForFile(ctx context.Context, input FileInput) (bool, error) {
 
 		iterationsWhereSizeIsFreezed++
 
+		fmt.Printf("Iterations: %v\n", iterationsWhereSizeIsFreezed)
 		if iterationsWhereSizeIsFreezed > 12 {
+			fmt.Printf("Returning\n")
 			return true, nil
 		}
+		time.Sleep(time.Second * 5)
 	}
 }

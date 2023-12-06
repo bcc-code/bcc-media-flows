@@ -81,7 +81,7 @@ func UnmarshalXMLFile[T any](ctx workflow.Context, file paths.Path) (*T, error) 
 }
 
 func DeletePath(ctx workflow.Context, path paths.Path) error {
-	return workflow.ExecuteActivity(ctx, activities.DeletePath, activities.FileInput{
+	return workflow.ExecuteActivity(ctx, activities.DeletePath, activities.DeletePathInput{
 		Path: path,
 	}).Get(ctx, nil)
 }

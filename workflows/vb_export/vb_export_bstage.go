@@ -1,11 +1,8 @@
 package vb_export
 
 import (
-	"path/filepath"
-
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/paths"
 	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -41,7 +38,6 @@ func VBExportToBStage(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		OutputDir:      bStageOutputDir,
 		Resolution:     "1920x1080",
 		FrameRate:      50,
-		Bitrate:        "100M",
 		Interlace:      false,
 		BurnInSubtitle: params.SubtitleFile,
 		Alpha:          false,
@@ -50,33 +46,15 @@ func VBExportToBStage(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		return nil, err
 	}
 
-	audioFilePaths := []paths.Path{}
-	if params.NormalizedAudioFile != nil {
-		audioFilePaths = append(audioFilePaths, *params.NormalizedAudioFile)
-	}
-
-	// Mux normalized audio with video
-	base := videoResult.OutputPath.Base()
-	fileName := base[:len(base)-len(filepath.Ext(base))]
-	var muxResult *common.MuxResult
-	err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeMuxToSimpleMXF, common.SimpleMuxInput{
-		VideoFilePath:   videoResult.OutputPath,
-		AudioFilePaths:  audioFilePaths,
-		DestinationPath: params.OutputDir,
-		FileName:        fileName,
-	}).Get(ctx, &muxResult)
-
-	destination := "brunstad:/Delivery/FraMB/B-Stage"
-	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      muxResult.Path.Rclone(),
-		Destination: destination,
+	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+		Source:      videoResult.OutputPath,
+		Destination: vbDeliveryFolder.Append("B-Stage", params.OriginalFilenameWithoutExt+videoResult.OutputPath.Ext()),
 	}).Get(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	return &VBExportResult{
-		ID:    params.ParentParams.VXID,
-		Title: params.ExportData.SafeTitle,
+		ID: params.ParentParams.VXID,
 	}, nil
 }

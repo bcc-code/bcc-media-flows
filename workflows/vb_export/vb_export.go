@@ -12,7 +12,6 @@ import (
 
 	avidispine "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
-	"github.com/bcc-code/bccm-flows/services/vidispine"
 	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -21,7 +20,7 @@ type VBExportDestination enum.Member[string]
 
 var (
 	VBExportDestinationAbekas = VBExportDestination{Value: "abekas"}
-	VBExportDestinationBStage = VBExportDestination{Value: "bstage"}
+	VBExportDestinationBStage = VBExportDestination{Value: "b-stage"}
 	VBExportDestinationGfx    = VBExportDestination{Value: "gfx"}
 	VBExportDestinationHippo  = VBExportDestination{Value: "hippo"}
 	VBExportDestinations      = enum.New(
@@ -30,11 +29,13 @@ var (
 		VBExportDestinationGfx,
 		VBExportDestinationHippo,
 	)
+	vbDeliveryFolder = paths.New(paths.BrunstadDrive, "/Delivery/FraMB/")
 )
 
 type VBExportParams struct {
-	VXID         string
-	Destinations []string
+	VXID             string
+	Destinations     []string
+	SubtitleShapeTag string
 }
 
 type VBExportResult struct {
@@ -44,15 +45,14 @@ type VBExportResult struct {
 }
 
 type VBExportChildWorkflowParams struct {
-	RunID               string
-	ParentParams        VBExportParams       `json:"parent_params"`
-	ExportData          vidispine.ExportData `json:"export_data"`
-	InputFile           paths.Path
-	SubtitleFile        *paths.Path
-	NormalizedAudioFile *paths.Path
-	TempDir             paths.Path
-	OutputDir           paths.Path
-	AnalyzeResult       ffmpeg.StreamInfo
+	RunID                      string
+	ParentParams               VBExportParams `json:"parent_params"`
+	InputFile                  paths.Path
+	OriginalFilenameWithoutExt string
+	SubtitleFile               *paths.Path
+	TempDir                    paths.Path
+	OutputDir                  paths.Path
+	AnalyzeResult              ffmpeg.StreamInfo
 }
 
 func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrError[VBExportResult], error) {
@@ -61,6 +61,10 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 
 	options := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
+
+	if params.VXID == "" {
+		return nil, fmt.Errorf("vxid is required")
+	}
 
 	var destinations []*VBExportDestination
 	for _, dest := range params.Destinations {
@@ -77,21 +81,21 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		errs = append(errs, err)
 	}
 
-	var data *vidispine.ExportData
-	err = workflow.ExecuteActivity(ctx, avidispine.GetExportDataActivity, avidispine.GetExportDataParams{
-		VXID:        params.VXID,
-		AudioSource: vidispine.ExportAudioSourceEmbedded.Value,
-	}).Get(ctx, &data)
+	shapes, err := avidispine.GetClient().GetShapes(params.VXID)
 	if err != nil {
 		return nil, err
 	}
 
 	logger.Info("Retrieved data from vidispine")
 
-	if len(data.Clips) == 0 {
+	if len(shapes.Shape) == 0 {
 		return nil, fmt.Errorf("no clips found for VXID %s", params.VXID)
 	}
-	clip := data.Clips[0]
+
+	videoShape := shapes.GetShape("original")
+	if videoShape == nil {
+		return nil, fmt.Errorf("no original shape found for item %s", params.VXID)
+	}
 
 	tempDir, err := wfutils.GetWorkflowTempFolder(ctx)
 	if err != nil {
@@ -106,7 +110,8 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 
 	ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
 
-	videoFilePath := paths.MustParse(clip.VideoFile)
+	videoFilePath := paths.MustParse(videoShape.GetPath())
+	originalFilenameWithoutExt := videoFilePath.Base()[0 : len(videoFilePath.Base())-len(videoFilePath.Ext())]
 	var analyzeResult *ffmpeg.StreamInfo
 	err = wfutils.ExecuteWithQueue(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
 		FilePath: videoFilePath,
@@ -119,7 +124,6 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		return *dest != VBExportDestinationHippo
 	})
 
-	var normalizedAudioFile *paths.Path
 	if len(destinationsWithAudioOutput) > 0 && analyzeResult.HasAudio {
 		// Normalize audio
 		var normalizeAudioResult *activities.NormalizeAudioResult
@@ -132,23 +136,23 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		if err != nil {
 			return nil, err
 		}
+		videoFilePath = normalizeAudioResult.FilePath
 	} else {
 		logger.Info("No destinations for audio, skipping normalize")
 	}
 
 	var subtitleFile *paths.Path
-outer:
-	for _, v := range data.Clips {
-		if len(v.SubtitleFiles) > 0 {
-			for _, v := range v.SubtitleFiles {
-				path, err := paths.Parse(v)
-				if err == nil {
+	if params.SubtitleShapeTag != "" {
+	outer:
+		for _, shape := range shapes.Shape {
+			for _, tag := range shape.Tag {
+				if tag == params.SubtitleShapeTag {
+					path := paths.MustParse(shape.GetPath())
 					subtitleFile = &path
+					break outer
 				}
-				break outer
 			}
 		}
-		break
 	}
 
 	ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
@@ -156,15 +160,14 @@ outer:
 	var resultFutures []workflow.Future
 	for _, dest := range destinations {
 		childParams := VBExportChildWorkflowParams{
-			ParentParams:        params,
-			ExportData:          *data,
-			InputFile:           videoFilePath,
-			SubtitleFile:        subtitleFile,
-			NormalizedAudioFile: normalizedAudioFile,
-			TempDir:             tempDir,
-			OutputDir:           outputDir.Append(dest.Value),
-			RunID:               workflow.GetInfo(ctx).OriginalRunID,
-			AnalyzeResult:       *analyzeResult,
+			ParentParams:               params,
+			OriginalFilenameWithoutExt: originalFilenameWithoutExt,
+			InputFile:                  videoFilePath,
+			SubtitleFile:               subtitleFile,
+			TempDir:                    tempDir,
+			OutputDir:                  outputDir.Append(dest.Value),
+			RunID:                      workflow.GetInfo(ctx).OriginalRunID,
+			AnalyzeResult:              *analyzeResult,
 		}
 
 		var w interface{}

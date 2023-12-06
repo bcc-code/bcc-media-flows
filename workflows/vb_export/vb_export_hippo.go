@@ -48,6 +48,10 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		return nil, err
 	}
 
+	if params.AnalyzeResult.FrameRate != 25 && params.AnalyzeResult.FrameRate != 50 {
+		return nil, merry.New("Expected 20 or 50 fps input")
+	}
+
 	currentVideoFile := params.InputFile
 	if params.SubtitleFile != nil {
 		// Burn in subtitle
@@ -86,23 +90,33 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 	}
 
 	// Wait for Ame to finish
+	success = nil
 	err = wfutils.ExecuteWithQueue(ctx, activities.WaitForFile, activities.FileInput{
 		Path: outputFile,
 	}).Get(ctx, &success)
+	if err != nil {
+		return nil, err
+	}
 	if success == nil || !*success {
 		return nil, merry.New("WaitForFile failed")
 	}
 
-	/* err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      outputFile,
-		Destination: paths.New(paths.BrunstadDrive, "/Delivery/FraMB/Hippo"),
+		Destination: vbDeliveryFolder.Append("Hippo", params.OriginalFilenameWithoutExt+outputFile.Ext()),
 	}).Get(ctx, nil)
 	if err != nil {
 		return nil, err
-	} */
+	}
+
+	err = wfutils.ExecuteWithQueue(ctx, activities.DeletePath, activities.DeletePathInput{
+		Path: outputFile,
+	}).Get(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return &VBExportResult{
-		ID:    params.ParentParams.VXID,
-		Title: params.ExportData.SafeTitle,
+		ID: params.ParentParams.VXID,
 	}, nil
 }
