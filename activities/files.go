@@ -224,14 +224,12 @@ func WaitForFile(ctx context.Context, input FileInput) (bool, error) {
 		res, err := os.Stat(input.Path.Local())
 		activity.RecordHeartbeat(ctx, res)
 		if err != nil {
-			fmt.Printf("Error: %v\n", err)
 			if time.Since(startedAt) > time.Minute*5 {
 				return false, err
 			}
 			time.Sleep(time.Second * 5)
 			continue
 		}
-		fmt.Printf("Stat res: %v\n", res)
 
 		if res.Size() < lastKnownSize {
 			return false, fmt.Errorf("file size decreased")
@@ -243,10 +241,7 @@ func WaitForFile(ctx context.Context, input FileInput) (bool, error) {
 		}
 
 		iterationsWhereSizeIsFreezed++
-
-		fmt.Printf("Iterations: %v\n", iterationsWhereSizeIsFreezed)
 		if iterationsWhereSizeIsFreezed > 12 {
-			fmt.Printf("Returning\n")
 			return true, nil
 		}
 		time.Sleep(time.Second * 5)
