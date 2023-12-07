@@ -77,7 +77,6 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		outputFile = ameFlexResQualityWatchFolderOutput.Append(params.InputFile.Base())
 	}
 
-	// Rclone to watch-folder
 	err = wfutils.ExecuteWithQueue(ctx, activities.CopyFile, activities.MoveFileInput{
 		Source:      currentVideoFile,
 		Destination: inputFolder.Append(params.InputFile.Base()),
@@ -89,7 +88,6 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		return nil, merry.New("RcloneCopyFile failed")
 	}
 
-	// Wait for Ame to finish
 	success = false
 	err = wfutils.ExecuteWithQueue(ctx, activities.WaitForFile, activities.FileInput{
 		Path: outputFile,

@@ -125,7 +125,6 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	})
 
 	if len(destinationsWithAudioOutput) > 0 && analyzeResult.HasAudio {
-		// Normalize audio
 		var normalizeAudioResult *activities.NormalizeAudioResult
 		err = wfutils.ExecuteWithQueue(ctx, activities.NormalizeAudioActivity, activities.NormalizeAudioParams{
 			FilePath:              videoFilePath,
