@@ -8,7 +8,7 @@ import (
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/environment"
 	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/utils/workflows"
+	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )

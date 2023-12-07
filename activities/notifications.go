@@ -16,6 +16,10 @@ type NotifySimpleInput struct {
 
 func NotifySimple(ctx context.Context, input NotifySimpleInput) error {
 	logger := activity.GetLogger(ctx)
+	if os.Getenv("DEBUG") != "" && os.Getenv("TELEGRAM_CHAT_ID") == "" {
+		logger.Info("Ignoring notification for debug without TELEGRAM_CHAT_ID")
+		return nil
+	}
 	logger.Info("Sending notification")
 
 	client := notifications.NewClient(notificationServices{})

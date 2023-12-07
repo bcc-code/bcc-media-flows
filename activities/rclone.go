@@ -38,6 +38,7 @@ type RcloneCopyDirInput struct {
 
 func RcloneCopyDir(ctx context.Context, input RcloneCopyDirInput) (bool, error) {
 	activity.RecordHeartbeat(ctx, "Rclone CopyDir")
+	activity.GetLogger(ctx).Debug(fmt.Sprintf("Rclone CopyDir: %s -> %s", input.Source, input.Destination))
 
 	res, err := rclone.CopyDir(input.Source, input.Destination)
 	if err != nil {

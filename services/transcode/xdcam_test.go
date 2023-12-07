@@ -12,7 +12,7 @@ func Test_GenerateFFmpegParamsForXDCAM(t *testing.T) {
 
 	const root = "root/"
 	const outputPath = "something/something.mxf"
-	cmd := generateFfmpegParamsForXDCAM(EncodeInput{
+	cmd := generateFfmpegParamsForXDCAM(XDCAMEncodeInput{
 		FilePath:   "something.mxf",
 		OutputDir:  "out/",
 		Resolution: "1920x1080",

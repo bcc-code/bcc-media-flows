@@ -12,12 +12,14 @@ import (
 )
 
 type EncodeParams struct {
-	FilePath   paths.Path
-	OutputDir  paths.Path
-	Resolution string
-	FrameRate  int
-	Bitrate    string
-	Interlace  bool
+	FilePath       paths.Path
+	OutputDir      paths.Path
+	Resolution     string
+	FrameRate      int
+	Bitrate        string
+	Interlace      bool
+	BurnInSubtitle *paths.Path
+	Alpha          bool
 }
 
 type EncodeResult struct {
@@ -33,10 +35,12 @@ func TranscodeToProResActivity(ctx context.Context, input EncodeParams) (*Encode
 	defer close(stop)
 
 	transcodeResult, err := transcode.ProRes(transcode.ProResInput{
-		FilePath:   input.FilePath.Local(),
-		OutputDir:  input.OutputDir.Local(),
-		FrameRate:  input.FrameRate,
-		Resolution: input.Resolution,
+		FilePath:       input.FilePath.Local(),
+		OutputDir:      input.OutputDir.Local(),
+		FrameRate:      input.FrameRate,
+		Resolution:     input.Resolution,
+		Use4444:        input.Alpha,
+		BurnInSubtitle: input.BurnInSubtitle,
 	}, progressCallback)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -48,6 +52,31 @@ func TranscodeToProResActivity(ctx context.Context, input EncodeParams) (*Encode
 	}, nil
 }
 
+func TranscodeToAVCIntraActivity(ctx context.Context, input EncodeParams) (*EncodeResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeToAVCIntra")
+	log.Info("Starting TranscodeToAVCIntraActivity")
+
+	stop, progressCallback := registerProgressCallback(ctx)
+	defer close(stop)
+
+	transcodeResult, err := transcode.AvcIntra(transcode.AVCIntraEncodeInput{
+		FilePath:       input.FilePath.Local(),
+		OutputDir:      input.OutputDir.Local(),
+		FrameRate:      input.FrameRate,
+		Resolution:     input.Resolution,
+		Interlace:      input.Interlace,
+		BurnInSubtitle: input.BurnInSubtitle,
+	}, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+
+	return &EncodeResult{
+		OutputPath: paths.MustParse(transcodeResult.Path),
+	}, nil
+}
+
 func TranscodeToH264Activity(ctx context.Context, input EncodeParams) (*EncodeResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeToH264")
@@ -56,12 +85,14 @@ func TranscodeToH264Activity(ctx context.Context, input EncodeParams) (*EncodeRe
 	stop, progressCallback := registerProgressCallback(ctx)
 	defer close(stop)
 
-	transcodeResult, err := transcode.H264(transcode.EncodeInput{
-		FilePath:   input.FilePath.Local(),
-		OutputDir:  input.OutputDir.Local(),
-		FrameRate:  input.FrameRate,
-		Resolution: input.Resolution,
-		Bitrate:    input.Bitrate,
+	transcodeResult, err := transcode.H264(transcode.H264EncodeInput{
+		FilePath:       input.FilePath.Local(),
+		OutputDir:      input.OutputDir.Local(),
+		FrameRate:      input.FrameRate,
+		Resolution:     input.Resolution,
+		Bitrate:        input.Bitrate,
+		Interlace:      input.Interlace,
+		BurnInSubtitle: input.BurnInSubtitle,
 	}, progressCallback)
 	if err != nil {
 		return nil, err
@@ -80,7 +111,7 @@ func TranscodeToXDCAMActivity(ctx context.Context, input EncodeParams) (*EncodeR
 	stop, progressCallback := registerProgressCallback(ctx)
 	defer close(stop)
 
-	transcodeResult, err := transcode.XDCAM(transcode.EncodeInput{
+	transcodeResult, err := transcode.XDCAM(transcode.XDCAMEncodeInput{
 		FilePath:   input.FilePath.Local(),
 		OutputDir:  input.OutputDir.Local(),
 		FrameRate:  input.FrameRate,
@@ -167,6 +198,21 @@ func TranscodeToAudioMP3(ctx context.Context, input common.AudioInput) (*common.
 	defer close(stopChan)
 
 	return transcode.AudioMP3(input, progressCallback)
+}
+
+func TranscodeMuxToSimpleMXF(ctx context.Context, input common.SimpleMuxInput) (*common.MuxResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeMuxToSimpleMXF")
+	log.Info("Starting TranscodeMuxToSimpleMXFActivity")
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	result, err := transcode.MuxToSimpleMXF(input, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func TranscodeMux(ctx context.Context, input common.MuxInput) (*common.MuxResult, error) {

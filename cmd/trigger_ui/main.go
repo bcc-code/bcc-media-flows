@@ -132,7 +132,7 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "index.gohtml", TriggerGETParams{
+	c.HTML(http.StatusOK, "vx-export.gohtml", TriggerGETParams{
 		Title:                   title,
 		Filenames:               filenames,
 		Languages:               s.languages,
@@ -281,6 +281,10 @@ func main() {
 		GET("/", server.triggerHandlerGET).
 		GET("/list", server.listGET).
 		POST("/", server.triggerHandlerPOST)
+
+	router.Group("/vb-export").
+		GET("/", server.VBTriggerHandlerGET).
+		POST("/", server.VBTriggerHandlerPOST)
 
 	router.Group("/upload-master").
 		GET("/", server.uploadMasterGET).
