@@ -46,7 +46,7 @@ func (s *TriggerServer) VBTriggerHandlerGET(c *gin.Context) {
 
 	c.HTML(http.StatusOK, "vb-export.gohtml", VBTriggerGETParams{
 		Title:          title,
-		Destinations:   vb_export.VBExportDestinations.Values(),
+		Destinations:   vb_export.Destinations.Values(),
 		SubtitleShapes: subtitleShapes,
 	})
 }

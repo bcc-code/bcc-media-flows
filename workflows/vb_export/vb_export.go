@@ -16,20 +16,20 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-type VBExportDestination enum.Member[string]
+type Destination enum.Member[string]
 
 var (
-	VBExportDestinationAbekas = VBExportDestination{Value: "abekas"}
-	VBExportDestinationBStage = VBExportDestination{Value: "b-stage"}
-	VBExportDestinationGfx    = VBExportDestination{Value: "gfx"}
-	VBExportDestinationHippo  = VBExportDestination{Value: "hippo"}
-	VBExportDestinations      = enum.New(
-		VBExportDestinationAbekas,
-		VBExportDestinationBStage,
-		VBExportDestinationGfx,
-		VBExportDestinationHippo,
+	DestinationAbekas = Destination{Value: "abekas"}
+	DestinationBStage = Destination{Value: "b-stage"}
+	DestinationGfx    = Destination{Value: "gfx"}
+	DestinationHippo  = Destination{Value: "hippo"}
+	Destinations      = enum.New(
+		DestinationAbekas,
+		DestinationBStage,
+		DestinationGfx,
+		DestinationHippo,
 	)
-	vbDeliveryFolder = paths.New(paths.BrunstadDrive, "/Delivery/FraMB/")
+	deliveryFolder = paths.New(paths.BrunstadDrive, "/Delivery/FraMB/")
 )
 
 type VBExportParams struct {
@@ -66,9 +66,9 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		return nil, fmt.Errorf("vxid is required")
 	}
 
-	var destinations []*VBExportDestination
+	var destinations []*Destination
 	for _, dest := range params.Destinations {
-		d := VBExportDestinations.Parse(dest)
+		d := Destinations.Parse(dest)
 		if d == nil {
 			return nil, fmt.Errorf("invalid destination: %s", dest)
 		}
@@ -120,8 +120,8 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
-	destinationsWithAudioOutput := lo.Filter(destinations, func(dest *VBExportDestination, _ int) bool {
-		return *dest != VBExportDestinationHippo
+	destinationsWithAudioOutput := lo.Filter(destinations, func(dest *Destination, _ int) bool {
+		return *dest != DestinationHippo
 	})
 
 	if len(destinationsWithAudioOutput) > 0 && analyzeResult.HasAudio {
@@ -172,13 +172,13 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 
 		var w interface{}
 		switch *dest {
-		case VBExportDestinationAbekas:
+		case DestinationAbekas:
 			w = VBExportToAbekas
-		case VBExportDestinationBStage:
+		case DestinationBStage:
 			w = VBExportToBStage
-		case VBExportDestinationGfx:
+		case DestinationGfx:
 			w = VBExportToGfx
-		case VBExportDestinationHippo:
+		case DestinationHippo:
 			w = VBExportToHippo
 
 		default:

@@ -221,7 +221,6 @@ func WaitForFile(ctx context.Context, input FileInput) (bool, error) {
 	iterationsWhereSizeIsFreezed := 0
 
 	for {
-		fmt.Printf("Waiting for file %s to be fully uploaded\n", input.Path.Local())
 		res, err := os.Stat(input.Path.Local())
 		activity.RecordHeartbeat(ctx, res)
 		if err != nil {

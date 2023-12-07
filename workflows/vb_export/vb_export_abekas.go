@@ -53,7 +53,7 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 
 	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      videoResult.OutputPath,
-		Destination: vbDeliveryFolder.Append("Abekas-AVCI", params.OriginalFilenameWithoutExt+videoResult.OutputPath.Ext()),
+		Destination: deliveryFolder.Append("Abekas-AVCI", params.OriginalFilenameWithoutExt+videoResult.OutputPath.Ext()),
 	}).Get(ctx, nil)
 	if err != nil {
 		return nil, err

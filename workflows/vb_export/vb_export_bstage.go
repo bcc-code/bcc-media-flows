@@ -48,7 +48,7 @@ func VBExportToBStage(ctx workflow.Context, params VBExportChildWorkflowParams) 
 
 	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      videoResult.OutputPath,
-		Destination: vbDeliveryFolder.Append("B-Stage", params.OriginalFilenameWithoutExt+videoResult.OutputPath.Ext()),
+		Destination: deliveryFolder.Append("B-Stage", params.OriginalFilenameWithoutExt+videoResult.OutputPath.Ext()),
 	}).Get(ctx, nil)
 	if err != nil {
 		return nil, err

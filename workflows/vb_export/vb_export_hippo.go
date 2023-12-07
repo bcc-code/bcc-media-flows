@@ -49,7 +49,7 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 	}
 
 	if params.AnalyzeResult.FrameRate != 25 && params.AnalyzeResult.FrameRate != 50 {
-		return nil, merry.New("Expected 20 or 50 fps input")
+		return nil, merry.New("Expected 25 or 50 fps input")
 	}
 
 	currentVideoFile := params.InputFile
@@ -69,7 +69,7 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		currentVideoFile = videoResult.OutputPath
 	}
 
-	var success *bool
+	var success bool
 	inputFolder := ameFlexResPerformanceWatchFolderInput
 	outputFile := ameFlexResPerformanceWatchFolderOutput.Append(params.InputFile.Base())
 	if params.AnalyzeResult.HasAlpha {
@@ -78,32 +78,32 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 	}
 
 	// Rclone to watch-folder
-	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+	err = wfutils.ExecuteWithQueue(ctx, activities.CopyFile, activities.MoveFileInput{
 		Source:      currentVideoFile,
 		Destination: inputFolder.Append(params.InputFile.Base()),
 	}).Get(ctx, &success)
 	if err != nil {
 		return nil, err
 	}
-	if success == nil || !*success {
+	if !success {
 		return nil, merry.New("RcloneCopyFile failed")
 	}
 
 	// Wait for Ame to finish
-	success = nil
+	success = false
 	err = wfutils.ExecuteWithQueue(ctx, activities.WaitForFile, activities.FileInput{
 		Path: outputFile,
 	}).Get(ctx, &success)
 	if err != nil {
 		return nil, err
 	}
-	if success == nil || !*success {
+	if !success {
 		return nil, merry.New("WaitForFile failed")
 	}
 
-	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+	err = wfutils.ExecuteWithQueue(ctx, activities.CopyFile, activities.MoveFileInput{
 		Source:      outputFile,
-		Destination: vbDeliveryFolder.Append("Hippo", params.OriginalFilenameWithoutExt+outputFile.Ext()),
+		Destination: deliveryFolder.Append("Hippo", params.OriginalFilenameWithoutExt+outputFile.Ext()),
 	}).Get(ctx, nil)
 	if err != nil {
 		return nil, err

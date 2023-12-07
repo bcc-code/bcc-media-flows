@@ -9,7 +9,6 @@ import (
 
 func Do(arguments []string, info StreamInfo, progressCallback ProgressCallback) (string, error) {
 	cmd := exec.Command("ffmpeg", arguments...)
-	println("ffmpeg", strings.Join(arguments, " "))
 
 	if progressCallback != nil {
 		progressCallback(Progress{
