@@ -194,3 +194,17 @@ func New(drive Drive, path string) Path {
 		Path:  path,
 	}
 }
+
+type Files []Path
+
+func (f Files) Len() int {
+	return len(f)
+}
+
+func (f Files) Less(i, j int) bool {
+	return f[i].Drive.Value < f[j].Drive.Value || f[i].Path < f[j].Path
+}
+
+func (f Files) Swap(i, j int) {
+	f[i], f[j] = f[j], f[i]
+}

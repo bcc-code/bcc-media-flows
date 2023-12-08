@@ -179,3 +179,57 @@ func AudioMP3(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 		FileSize:   fileInfo.Size(),
 	}, nil
 }
+
+type AudioSplitFileInput struct {
+	FilePath  paths.Path
+	OutputDir paths.Path
+}
+
+type AudioSplitFileResult struct {
+	Files paths.Files
+}
+
+func AudioSplitFile(input AudioSplitFileInput, cb ffmpeg.ProgressCallback) (paths.Files, error) {
+	info, err := ffmpeg.ProbeFile(input.FilePath.Local())
+	if err != nil {
+		return nil, err
+	}
+
+	params := []string{
+		"-i", input.FilePath.Local(),
+	}
+
+	var filter string
+
+	var channels int
+	for index, stream := range info.Streams {
+		if stream.CodecType != "audio" {
+			continue
+		}
+		for i := 0; i < stream.Channels; i++ {
+			filter += fmt.Sprintf("[%d:a]pan=mono|c0=c%d[a%d];", index, i, channels)
+			channels++
+		}
+	}
+
+	var files paths.Files
+
+	params = append(params, "-filter_complex", filter)
+
+	for i := 0; i < channels; i++ {
+		base := input.FilePath.Base()
+		fileName := fmt.Sprintf("%s-%d.wav", base[:len(base)-len(filepath.Ext(base))], i)
+		file := input.OutputDir.Append(fileName)
+		files = append(files, file)
+		params = append(params,
+			"-map", fmt.Sprintf("[a%d]", i),
+			file.Local(),
+		)
+	}
+
+	_, err = ffmpeg.Do(params, ffmpeg.StreamInfo{}, cb)
+	if err != nil {
+		return nil, err
+	}
+	return files, nil
+}
