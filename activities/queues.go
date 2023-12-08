@@ -21,6 +21,7 @@ func GetAudioTranscodeActivities() []any {
 		AdjustAudioLevelActivity,
 		AnalyzeFile,
 		NormalizeAudioActivity,
+		AudioSplitFile,
 	}
 }
 
@@ -37,6 +38,7 @@ func GetVideoTranscodeActivities() []any {
 		TranscodePlayoutMux,
 		TranscodeMuxToSimpleMXF,
 		ExecuteFFmpeg,
+		MultitrackMux,
 	}
 }
 

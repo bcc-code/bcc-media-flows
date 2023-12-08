@@ -264,15 +264,20 @@ func ExecuteFFmpeg(ctx context.Context, input ExecuteFFmpegInput) error {
 	return nil
 }
 
-func AudioSplitFiles(ctx context.Context, input transcode.AudioSplitFileInput) (paths.Files, error) {
+type AudioSplitFileInput struct {
+	FilePath  paths.Path
+	OutputDir paths.Path
+}
+
+func AudioSplitFile(ctx context.Context, input AudioSplitFileInput) (paths.Files, error) {
 	log := activity.GetLogger(ctx)
-	activity.RecordHeartbeat(ctx, "AudioSplitFiles")
-	log.Info("Starting AudioSplitFiles")
+	activity.RecordHeartbeat(ctx, "AudioSplitFile")
+	log.Info("Starting AudioSplitFile")
 
 	stopChan, progressCallback := registerProgressCallback(ctx)
 	defer close(stopChan)
 
-	result, err := transcode.AudioSplitFile(input, progressCallback)
+	result, err := transcode.AudioSplitFile(input.FilePath, input.OutputDir, progressCallback)
 	if err != nil {
 		return nil, err
 	}

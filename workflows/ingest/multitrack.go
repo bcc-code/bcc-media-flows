@@ -7,7 +7,6 @@ import (
 
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/services/transcode"
 	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
@@ -54,7 +53,7 @@ func Multitrack(ctx workflow.Context, params MasterParams) (*MasterResult, error
 	var channels paths.Files
 	for _, f := range files {
 		var parts paths.Files
-		err = wfutils.ExecuteWithQueue(ctx, activities.AudioSplitFiles, transcode.AudioSplitFileInput{
+		err = wfutils.ExecuteWithQueue(ctx, activities.AudioSplitFile, activities.AudioSplitFileInput{
 			FilePath:  f,
 			OutputDir: tempDir,
 		}).Get(ctx, &parts)

@@ -180,23 +180,14 @@ func AudioMP3(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 	}, nil
 }
 
-type AudioSplitFileInput struct {
-	FilePath  paths.Path
-	OutputDir paths.Path
-}
-
-type AudioSplitFileResult struct {
-	Files paths.Files
-}
-
-func AudioSplitFile(input AudioSplitFileInput, cb ffmpeg.ProgressCallback) (paths.Files, error) {
-	info, err := ffmpeg.ProbeFile(input.FilePath.Local())
+func AudioSplitFile(filePath, outputDir paths.Path, cb ffmpeg.ProgressCallback) (paths.Files, error) {
+	info, err := ffmpeg.ProbeFile(filePath.Local())
 	if err != nil {
 		return nil, err
 	}
 
 	params := []string{
-		"-i", input.FilePath.Local(),
+		"-i", filePath.Local(),
 	}
 
 	var filter string
@@ -217,9 +208,9 @@ func AudioSplitFile(input AudioSplitFileInput, cb ffmpeg.ProgressCallback) (path
 	params = append(params, "-filter_complex", filter)
 
 	for i := 0; i < channels; i++ {
-		base := input.FilePath.Base()
+		base := filePath.Base()
 		fileName := fmt.Sprintf("%s-%d.wav", base[:len(base)-len(filepath.Ext(base))], i)
-		file := input.OutputDir.Append(fileName)
+		file := outputDir.Append(fileName)
 		files = append(files, file)
 		params = append(params,
 			"-map", fmt.Sprintf("[a%d]", i),
