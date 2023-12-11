@@ -79,10 +79,13 @@ func MergeTranscriptJSON(
 		return nil, err
 	}
 
-	WriteFile(ctx, WriteFileInput{
+	err = WriteFile(ctx, WriteFileInput{
 		Path: targetFile,
 		Data: marshalled,
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	log.Info("Finished MergeTranscriptJSON")
 
