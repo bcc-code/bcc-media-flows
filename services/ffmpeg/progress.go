@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/samber/lo"
 )
 
@@ -24,6 +25,7 @@ type Progress struct {
 type StreamInfo struct {
 	HasAudio     bool
 	HasVideo     bool
+	HasAlpha     bool
 	TotalFrames  int
 	TotalSeconds float64
 	FrameRate    int
@@ -38,6 +40,9 @@ func ProbeResultToInfo(info *FFProbeResult) StreamInfo {
 		}),
 		HasVideo: lo.SomeBy(info.Streams, func(i FFProbeStream) bool {
 			return i.CodecType == "video"
+		}),
+		HasAlpha: lo.SomeBy(info.Streams, func(i FFProbeStream) bool {
+			return utils.IsAlphaPixelFormat(i.PixFmt)
 		}),
 	}
 

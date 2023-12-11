@@ -26,7 +26,7 @@ type MasterParams struct {
 
 	OrderForm  OrderForm
 	Directory  paths.Path
-	OutputDir paths.Path
+	OutputDir  paths.Path
 	SourceFile *paths.Path
 }
 
@@ -59,10 +59,16 @@ func Masters(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
 		}
 
 		if result.Report.TopLevelInfo.Error == 0 {
-			err = transcodeAndTranscribe(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
+			err = createPreviews(ctx, []string{result.AssetID})
 			if err != nil {
 				return nil, err
 			}
+
+			err = transcribe(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
+			if err != nil {
+				return nil, err
+			}
+
 		}
 	}
 
@@ -248,12 +254,15 @@ func addMetaTags(ctx workflow.Context, assetID string, metadata *ingest.Metadata
 		}
 	}
 
-	// let workflow panic if the format is invalid?
-	program := strings.Split(metadata.JobProperty.ProgramID, " - ")[1]
-	if program != "" {
-		err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldProgram.Value, program)
-		if err != nil {
-			return err
+	program := ""
+	if metadata.JobProperty.ProgramID != "" {
+		// let workflow panic if the format is invalid?
+		program = strings.Split(metadata.JobProperty.ProgramID, " - ")[1]
+		if program != "" {
+			err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldProgram.Value, program)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -272,7 +281,11 @@ func addMetaTags(ctx workflow.Context, assetID string, metadata *ingest.Metadata
 	}
 
 	if metadata.JobProperty.EpisodeTitle != "" {
-		title := program + " | " + metadata.JobProperty.EpisodeTitle
+		title := metadata.JobProperty.EpisodeTitle
+
+		if program != "" {
+			title = fmt.Sprintf("%s | %s", program, title)
+		}
 
 		err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldTitle.Value, title)
 		if err != nil {

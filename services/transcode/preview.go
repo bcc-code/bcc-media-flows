@@ -60,7 +60,17 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 		"+level",
 		"-y",
 	}
-	if hasVideo {
+
+	if hasVideo && !hasAudio {
+		params = []string{
+			"-i", input.FilePath,
+			"-ss", "0.0",
+			"-i", previewWatermarkPath,
+			"-filter_complex", "sws_flags=bicubic;[0:v]split=1[VIDEO-main-.mp4];[VIDEO-main-.mp4]scale=-2:540,null[temp];[temp][1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4]",
+			"-map", "[VIDEO-.mp4]",
+			"-c:v", encoder,
+		}
+	} else if hasVideo {
 		params = []string{
 			"-ac", "2",
 			"-ss", "0.0",

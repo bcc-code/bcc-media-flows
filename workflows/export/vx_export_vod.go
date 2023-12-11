@@ -67,7 +67,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		qualitiesWithLanguages: getQualitiesWithLanguages(audioKeys),
 	}
 
-	videoKeys, err := startVideoTasks(ctx, service.filesSelector, getVideoQualities(*params.MergeResult.VideoFile, params.TempDir, wm), func(f workflow.Future, q quality) {
+	onVideoCreated := func(f workflow.Future, q quality) {
 		var result common.VideoResult
 		err := f.Get(ctx, &result)
 		if err != nil {
@@ -76,20 +76,28 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 			return
 		}
 		if lo.Contains(streamQualities, q) {
-			service.filesSelector.AddFuture(createStreamFile(ctx, q, result.OutputPath, params.OutputDir, service.qualitiesWithLanguages, audioFiles), func(f workflow.Future) {
+			future := createStreamFile(ctx, q, result.OutputPath, params.OutputDir, service.qualitiesWithLanguages, audioFiles)
+			onFileCreated := func(f workflow.Future) {
 				service.handleStreamWorkflowFuture(ctx, q, f)
-			})
+			}
+			service.filesSelector.AddFuture(future, onFileCreated)
 		}
 		if params.ParentParams.WithFiles && lo.Contains(fileQualities, q) {
 			for _, key := range audioKeys {
 				lang := key
 				audioPath := audioFiles[lang]
-				service.filesSelector.AddFuture(createTranslatedFile(ctx, lang, result.OutputPath, params.OutputDir, audioPath, params.MergeResult.SubtitleFiles), func(f workflow.Future) {
+
+				future := createTranslatedFile(ctx, lang, result.OutputPath, params.OutputDir, audioPath, params.MergeResult.SubtitleFiles)
+				onFileCreated := func(f workflow.Future) {
 					service.handleFileWorkflowFuture(ctx, lang, q, f)
-				})
+				}
+				service.filesSelector.AddFuture(future, onFileCreated)
 			}
 		}
-	})
+	}
+
+	videosByQuality := getVideosByQuality(*params.MergeResult.VideoFile, params.TempDir, wm)
+	videoKeys, err := doVideoTasks(ctx, service.filesSelector, videosByQuality, onVideoCreated)
 	if err != nil {
 		return nil, err
 	}
@@ -262,6 +270,9 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 		if err != nil {
 			return nil, err
 		}
+		notifyExportDone(ctx, v.params, "vod")
+	} else {
+		notifyExportDone(ctx, v.params, "isilon")
 	}
 
 	//err = DeletePath(ctx, tempFolder)
@@ -271,7 +282,7 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 		SmilFile:     ingestData.SmilFile,
 		Duration:     ingestData.Duration,
 		Title:        ingestData.Title,
-	}, err
+	}, nil
 }
 
 func (v *vxExportVodService) handleFileWorkflowFuture(ctx workflow.Context, lang string, q quality, f workflow.Future) {

@@ -1,8 +1,9 @@
 package wfutils
 
 import (
-	"github.com/bcc-code/bccm-flows/environment"
 	"time"
+
+	"github.com/bcc-code/bccm-flows/environment"
 
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
@@ -29,11 +30,6 @@ func GetDefaultActivityOptions() workflow.ActivityOptions {
 
 func GetDefaultWorkflowOptions() workflow.ChildWorkflowOptions {
 	return workflow.ChildWorkflowOptions{
-		RetryPolicy: &temporal.RetryPolicy{
-			InitialInterval: time.Minute * 1,
-			MaximumAttempts: 10,
-			MaximumInterval: time.Hour * 1,
-		},
 		TaskQueue: environment.GetWorkerQueue(),
 	}
 }

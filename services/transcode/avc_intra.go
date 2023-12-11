@@ -8,24 +8,18 @@ import (
 
 	"github.com/bcc-code/bccm-flows/paths"
 	"github.com/bcc-code/bccm-flows/services/ffmpeg"
-	"github.com/samber/lo"
 )
 
-type H264EncodeInput struct {
+type AVCIntraEncodeInput struct {
 	FilePath       string
 	OutputDir      string
 	Resolution     string
 	FrameRate      int
-	Bitrate        string
 	Interlace      bool
 	BurnInSubtitle *paths.Path
 }
 
-type EncodeResult struct {
-	Path string
-}
-
-func H264(input H264EncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeResult, error) {
+func AvcIntra(input AVCIntraEncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeResult, error) {
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mxf"
 	outputPath := filepath.Join(input.OutputDir, filename)
 
@@ -35,36 +29,18 @@ func H264(input H264EncodeInput, progressCallback ffmpeg.ProgressCallback) (*Enc
 	}
 	info := ffmpeg.ProbeResultToInfo(probe)
 
-	h264encoder := "libx264"
-	profile := "high"
-	// lo if any probe.Streams has pix_fmt starting with yuv422
-	if lo.SomeBy(probe.Streams, func(i ffmpeg.FFProbeStream) bool {
-		return strings.HasPrefix(i.PixFmt, "yuv422")
-	}) {
-		profile = "high422"
-	}
-
 	params := []string{
 		"-hide_banner",
 		"-progress", "pipe:1",
 		"-i", input.FilePath,
-		"-c:v", h264encoder,
+		"-c:v", "libx264",
 		"-ar", "48000",
-	}
-	switch h264encoder {
-	case "libx264":
-		params = append(params,
-			"-profile:v", profile,
-			"-level:v", "1.3",
-			"-crf", "18",
-		)
-	}
-
-	if input.Bitrate != "" {
-		params = append(
-			params,
-			"-b:v", input.Bitrate,
-		)
+		"-b:v", "100M",
+		"-pix_fmt", "yuv422p10le",
+		"-x264opts", "avcintra-class=100",
+		"-x264opts", "colorprim=bt709",
+		"-x264opts", "transfer=bt709",
+		"-x264opts", "colormatrix=bt709",
 	}
 
 	if input.Resolution != "" {
@@ -98,7 +74,6 @@ func H264(input H264EncodeInput, progressCallback ffmpeg.ProgressCallback) (*Enc
 		if err != nil {
 			return nil, err
 		}
-		//defer os.Remove(assFile.Local()) ??
 		videoFilters = append(videoFilters, "ass="+assFile.Local())
 	}
 

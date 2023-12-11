@@ -10,6 +10,7 @@ import (
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/environment"
 	ingestworkflows "github.com/bcc-code/bccm-flows/workflows/ingest"
+	"github.com/bcc-code/bccm-flows/workflows/vb_export"
 
 	"github.com/bcc-code/bccm-flows/workflows/export"
 
@@ -27,12 +28,15 @@ var utilActivities = []any{
 	activities.ReadFile,
 	activities.ListFiles,
 	activities.CopyFile,
+	activities.WaitForFile,
 	activities.DeletePath,
 	activities.StandardizeFileName,
 	activities.GetSubtitlesActivity,
 	activities.MergeTranscriptJSON,
 	batonactivities.QC,
-	activities.NotifyTargets,
+	activities.FtpPlayoutRename,
+	activities.NotifySimple,
+	activities.NotifyImportCompleted,
 }
 
 var vidispineActivities = []any{
@@ -70,6 +74,11 @@ var workerWorkflows = []any{
 	ingestworkflows.RawMaterial,
 	ingestworkflows.Masters,
 	workflows.NormalizeAudioLevelWorkflow,
+	vb_export.VBExport,
+	vb_export.VBExportToAbekas,
+	vb_export.VBExportToBStage,
+	vb_export.VBExportToGfx,
+	vb_export.VBExportToHippo,
 }
 
 func main() {

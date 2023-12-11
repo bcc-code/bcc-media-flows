@@ -188,6 +188,8 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, fmt.Errorf("failed to trigger BMM: %s", resp.Status)
 	}
 
+	notifyExportDone(ctx, params, "bmm")
+
 	return &VXExportResult{
 		ID:       params.ParentParams.VXID,
 		Title:    params.ExportData.Title,

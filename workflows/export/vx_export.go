@@ -88,6 +88,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		destinations = append(destinations, d)
 	}
 
+	var errs []error
 	var data *vidispine.ExportData
 	err := workflow.ExecuteActivity(ctx, avidispine.GetExportDataActivity, avidispine.GetExportDataParams{
 		VXID:        params.VXID,
@@ -97,6 +98,19 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 	}).Get(ctx, &data)
 	if err != nil {
 		return nil, err
+	}
+
+	err = wfutils.NotifyTelegramChannel(ctx,
+		fmt.Sprintf(
+			"🟦 Export of `%s` started.\nTitle: `%s`\nDestinations: `%s`\n\nRunID: `%s`",
+			params.VXID,
+			data.Title,
+			strings.Join(params.Destinations, ", "),
+			workflow.GetInfo(ctx).OriginalRunID,
+		),
+	)
+	if err != nil {
+		errs = append(errs, err)
 	}
 
 	logger.Info("Retrieved data from vidispine")
@@ -197,7 +211,6 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 	}
 
 	var results []wfutils.ResultOrError[VXExportResult]
-	var errs []error
 	for _, future := range resultFutures {
 		var result *VXExportResult
 		err = future.Get(ctx, &result)
@@ -207,6 +220,10 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		})
 		if err != nil {
 			errs = append(errs, err)
+			err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
+			if err != nil {
+				errs = append(errs, err)
+			}
 		}
 	}
 	err = nil

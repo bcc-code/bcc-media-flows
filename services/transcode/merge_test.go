@@ -2,6 +2,8 @@ package transcode
 
 import (
 	"github.com/bcc-code/bccm-flows/common"
+	"github.com/bcc-code/bccm-flows/paths"
+
 	"testing"
 )
 
@@ -10,17 +12,17 @@ const TestRoot = "/Users/fredrikvedvik/Desktop/Transcoding/test/"
 func Test_Merge(t *testing.T) {
 	_, _ = MergeVideo(common.MergeInput{
 		Title:     "Test",
-		OutputDir: "/Users/*/Desktop/Transcoding/test/",
+		OutputDir: paths.MustParse("/Users/*/Desktop/Transcoding/test/"),
 		Items: []common.MergeInputItem{
 			{
 				Start: 8,
 				End:   12,
-				Path:  "/Users/*/Desktop/Transcoding/test/*.mp4",
+				Path:  paths.MustParse("/Users/*/Desktop/Transcoding/test/*.mp4"),
 			},
 			{
 				Start: 10,
 				End:   15,
-				Path:  "/Users/*/Desktop/Transcoding/test/*.mp4",
+				Path:  paths.MustParse("/Users/*/Desktop/Transcoding/test/*.mp4"),
 			},
 		},
 	}, nil)
@@ -29,7 +31,7 @@ func Test_Merge(t *testing.T) {
 func Test_MergeAudio(t *testing.T) {
 	_, _ = MergeAudio(common.MergeInput{
 		Title:     "Test",
-		OutputDir: "/Users/*/Desktop/Transcoding/test/",
+		OutputDir: paths.MustParse("/Users/*/Desktop/Transcoding/test/"),
 		Items: []common.MergeInputItem{
 			{
 				Start: 0,
@@ -38,7 +40,7 @@ func Test_MergeAudio(t *testing.T) {
 					1,
 					2,
 				},
-				Path: "/Users/*/Desktop/Transcoding/test/vi.mxf",
+				Path: paths.MustParse("/Users/*/Desktop/Transcoding/test/vi.mxf"),
 			},
 			{
 				Start: 2,
@@ -47,7 +49,7 @@ func Test_MergeAudio(t *testing.T) {
 					2,
 					3,
 				},
-				Path: "/Users/*/Desktop/Transcoding/test/vi.mxf",
+				Path: paths.MustParse("/Users/*/Desktop/Transcoding/test/vi.mxf"),
 			},
 			{
 				Start: 2,
@@ -55,7 +57,7 @@ func Test_MergeAudio(t *testing.T) {
 				Streams: []int{
 					0,
 				},
-				Path: "/Users/*/Desktop/Transcoding/test/2.mp4",
+				Path: paths.MustParse("/Users/*/Desktop/Transcoding/test/2.mp4"),
 			},
 		},
 	}, nil)

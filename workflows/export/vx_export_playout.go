@@ -1,10 +1,12 @@
 package export
 
 import (
+	"path/filepath"
+
 	"github.com/bcc-code/bccm-flows/activities"
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/environment"
-	"github.com/bcc-code/bccm-flows/utils/workflows"
+	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -32,6 +34,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 		OutputDir:  xdcamOutputDir,
 		Resolution: string(r1080p),
 		FrameRate:  25,
+		Interlace:  true,
 	}).Get(ctx, &videoResult)
 	if err != nil {
 		return nil, err
@@ -54,7 +57,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	// Rclone to playout
-	destination := "playout:/dropbox"
+	destination := "playout:/tmp"
 	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
 		Source:      params.OutputDir.Rclone(),
 		Destination: destination,
@@ -62,6 +65,16 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 	if err != nil {
 		return nil, err
 	}
+
+	err = workflow.ExecuteActivity(ctx, activities.FtpPlayoutRename, activities.FtpPlayoutRenameParams{
+		From: filepath.Join("/tmp/", muxResult.Path.Base()),
+		To:   filepath.Join("/dropbox/", muxResult.Path.Base()),
+	}).Get(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	notifyExportDone(ctx, params, "playout")
 
 	return &VXExportResult{
 		ID:       params.ParentParams.VXID,

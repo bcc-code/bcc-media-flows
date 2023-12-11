@@ -1,0 +1,28 @@
+package activities
+
+import (
+	"context"
+	"github.com/bcc-code/bccm-flows/services/ftp"
+)
+
+type FtpPlayoutRenameParams struct {
+	From string
+	To   string
+}
+
+type FtpPlayoutRenameResult struct{}
+
+func FtpPlayoutRename(ctx context.Context, params FtpPlayoutRenameParams) (*FtpPlayoutRenameResult, error) {
+	client, err := ftp.Playout()
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	err = client.Rename(params.From, params.To)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}

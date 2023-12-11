@@ -6,10 +6,11 @@ import (
 	"github.com/bcc-code/bccm-flows/activities"
 	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bccm-flows/services/ffmpeg"
 	"github.com/bcc-code/bccm-flows/services/ingest"
 	"github.com/bcc-code/bccm-flows/services/notifications"
 	"github.com/bcc-code/bccm-flows/utils"
-	"github.com/bcc-code/bccm-flows/utils/workflows"
+	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -82,9 +83,12 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		return err
 	}
 
+	audioAssetIDs := []string{}
+	videoAssetIDs := []string{}
+
 	for _, id := range mediaAssetIDs {
 		task := mediaAnalyzeTasks[id]
-		var result activities.AnalyzeFileResult
+		var result ffmpeg.StreamInfo
 		err = task.Get(ctx, &result)
 		if err != nil {
 			return err
@@ -104,9 +108,22 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 				return err
 			}
 		}
+
+		if result.HasAudio {
+			audioAssetIDs = append(audioAssetIDs, id)
+		}
+
+		if result.HasVideo {
+			videoAssetIDs = append(videoAssetIDs, id)
+		}
 	}
 
-	err = transcodeAndTranscribe(ctx, mediaAssetIDs, params.Metadata.JobProperty.Language)
+	err = createPreviews(ctx, audioAssetIDs)
+	if err != nil {
+		return err
+	}
+
+	err = transcribe(ctx, mediaAssetIDs, params.Metadata.JobProperty.Language)
 	if err != nil {
 		return err
 	}

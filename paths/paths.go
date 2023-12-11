@@ -52,8 +52,9 @@ var (
 	IsilonDrive      = Drive{Value: "isilon"}
 	TempDrive        = Drive{Value: "temp"}
 	DMZShareDrive    = Drive{Value: "dmzshare"}
+	BrunstadDrive    = Drive{Value: "brunstad"}
 	AssetIngestDrive = Drive{Value: "asset_ingest"}
-	Drives           = enum.New(IsilonDrive, DMZShareDrive, TempDrive, AssetIngestDrive)
+	Drives           = enum.New(IsilonDrive, DMZShareDrive, TempDrive, AssetIngestDrive, BrunstadDrive)
 	ErrDriveNotFound = merry.Sentinel("drive not found")
 	ErrPathNotValid  = merry.Sentinel("path not valid")
 )
@@ -65,6 +66,8 @@ func (d Drive) RcloneName() string {
 		return "isilon"
 	case DMZShareDrive:
 		return "dmzshare"
+	case BrunstadDrive:
+		return "brunstad"
 	}
 	return ""
 }
@@ -78,6 +81,8 @@ func (d Drive) RclonePath() string {
 		return "dmz:dmzshare"
 	case AssetIngestDrive:
 		return "s3prod:vod-asset-ingest-prod"
+	case BrunstadDrive:
+		return "brunstad:"
 	}
 	return ""
 }
@@ -94,10 +99,12 @@ func (p Path) Dir() Path {
 	}
 }
 
+// Local returns the path in a local unix style path.
 func (p Path) Local() string {
 	return filepath.Join(drivePrefixes[p.Drive].Client, p.Path)
 }
 
+// Ext returns the file extension
 func (p Path) Ext() string {
 	return filepath.Ext(p.Path)
 }
@@ -113,6 +120,8 @@ func (p Path) RcloneFsRemote() (string, string) {
 		return "dmz:", filepath.Join("dmzshare", p.Path)
 	case AssetIngestDrive:
 		return "s3prod:", filepath.Join("vod-asset-ingest-prod", p.Path)
+	case BrunstadDrive:
+		return "brunstad:/", p.Path
 	}
 	return "", ""
 }
@@ -133,10 +142,12 @@ func (p Path) Base() string {
 	return filepath.Base(p.Path)
 }
 
-func (p Path) Append(path string) Path {
+func (p Path) Append(path ...string) Path {
+	paths := []string{p.Path}
+	paths = append(paths, path...)
 	return Path{
 		Drive: p.Drive,
-		Path:  filepath.Clean(filepath.Join(p.Path, path)),
+		Path:  filepath.Clean(filepath.Join(paths...)),
 	}
 }
 
@@ -151,6 +162,7 @@ var drivePrefixes = map[Drive]prefix{
 	DMZShareDrive:    {"/mnt/dmzshare/", "/mnt/dmzshare/", "dmz:dmzshare/"},
 	TempDrive:        {"/mnt/temp/", environment.GetTempMountPrefix(), "isilon:temp/"},
 	AssetIngestDrive: {"/dev/null/", "/dev/null/", "s3prod:vod-asset-ingest-prod/"},
+	BrunstadDrive:    {"/dev/null/", "/dev/null/", "brunstad:/"},
 }
 
 func Parse(path string) (Path, error) {
