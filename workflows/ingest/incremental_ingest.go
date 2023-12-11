@@ -1,9 +1,8 @@
 package ingestworkflows
 
 import (
-	"time"
-
 	"github.com/bcc-code/bccm-flows/activities"
+	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/paths"
 	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
@@ -37,29 +36,32 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 		Out: rawPath,
 	})
 
-	err = workflow.Sleep(ctx, time.Minute*2)
+	var assetResult vsactivity.CreatePlaceholderResult
+	err = wfutils.ExecuteWithQueue(ctx, vsactivity.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
+		Title: in.Base(),
+	}).Get(ctx, &assetResult)
 	if err != nil {
 		return err
 	}
 
-	auxDir, err := wfutils.GetWorkflowAuxOutputFolder(ctx)
+	var jobResult vsactivity.FileJobResult
+	err = wfutils.ExecuteWithQueue(ctx, vsactivity.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
+		AssetID:  assetResult.AssetID,
+		FilePath: rawPath,
+		Growing:  true,
+	}).Get(ctx, &jobResult)
 	if err != nil {
 		return err
 	}
 
-	rawPathBase := rawPath.Base()
-	previewPath := auxDir.Append(rawPathBase[:len(rawPathBase)-len(rawPath.Ext())] + ".mp4")
-
-	livePreviewTask := wfutils.ExecuteWithQueue(ctx, activities.TranscodeLivePreview, activities.TranscodeLivePreviewParams{
-		InFilePath:  rawPath,
-		OutFilePath: previewPath,
-	})
-
-	err = livePreviewTask.Get(ctx, nil)
-	if err != nil {
-		return err
-	}
 	err = copyTask.Get(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	err = wfutils.ExecuteWithQueue(ctx, vsactivity.CloseFile, vsactivity.CloseFileParams{
+		FileID: jobResult.FileID,
+	}).Get(ctx, nil)
 	if err != nil {
 		return err
 	}

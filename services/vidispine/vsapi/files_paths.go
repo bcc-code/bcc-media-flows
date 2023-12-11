@@ -2,9 +2,10 @@ package vsapi
 
 import (
 	"fmt"
-	"github.com/bcc-code/bccm-flows/environment"
 	"net/url"
 	"strings"
+
+	"github.com/bcc-code/bccm-flows/environment"
 )
 
 const DefaultStorageID = "VX-42"
@@ -56,6 +57,16 @@ func (c *Client) RegisterFile(filePath string, fileState FileState) (string, err
 	}
 
 	return result.Result().(*IDOnlyResult).VXID, nil
+}
+
+func (c *Client) UpdateFileState(fileID string, fileState FileState) error {
+	_, err := c.restyClient.R().
+		Put("/file/" + fileID + "/state/" + string(fileState))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 //// SUPPORTING TYPES /////

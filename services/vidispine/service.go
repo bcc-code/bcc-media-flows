@@ -11,6 +11,7 @@ type Client interface {
 	GetShapes(itemVXID string) (*vsapi.ShapeResult, error)
 	GetSequence(itemVXID string) (*vsapi.SequenceDocument, error)
 	RegisterFile(filePath string, state vsapi.FileState) (string, error)
+	UpdateFileState(fileID string, fileState vsapi.FileState) error
 	AddShapeToItem(shapeTag, itemVXID, fileVXID string) (string, error)
 	AddSidecarToItem(itemVXID, filePath, language string) (string, error)
 	SetItemMetadataField(itemVXID, field, value string) error
@@ -18,4 +19,5 @@ type Client interface {
 	CreatePlaceholder(ingestType vsapi.PlaceholderType, title string) (string, error)
 	CreateThumbnails(assetID string) (string, error)
 	GetJob(jobID string) (*vsapi.JobDocument, error)
+	AddFileToPlaceholder(itemID, fileID, tag string, fileState vsapi.FileState) (string, error)
 }

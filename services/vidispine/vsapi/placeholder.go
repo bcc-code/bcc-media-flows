@@ -52,10 +52,11 @@ func (c *Client) CreatePlaceholder(ingestType PlaceholderType, title string) (st
 	return result.Result().(*IDOnlyResult).VXID, nil
 }
 
-func (c *Client) AddFileToPlaceholder(itemID, fileID, tag string, fileState FileState) string {
-	panic("Not implemented")
-	// TODO: Unfinished, not needed ritht now
-	requestURL, _ := url.Parse(c.baseURL)
+func (c *Client) AddFileToPlaceholder(itemID, fileID, tag string, fileState FileState) (string, error) {
+	requestURL, err := url.Parse(c.baseURL)
+	if err != nil {
+		return "", err
+	}
 	requestURL.Path += "/import/placeholder/" + url.PathEscape(itemID) + "/container"
 	q := requestURL.Query()
 	q.Set("fileId", fileID)
@@ -66,7 +67,7 @@ func (c *Client) AddFileToPlaceholder(itemID, fileID, tag string, fileState File
 
 	if fileState == FileStateOpen {
 		q.Set("growing", "true")
-		q.Set("jobmetadata", "portal_groups:StringArray%3dAdmin")
+		q.Set("jobmetadata", "portal_groups:StringArray=Admin")
 		q.Set("overrideFastStart", "true")
 		q.Set("requireFastStart", "true")
 		q.Set("fastStartLength", "7200")
@@ -77,7 +78,16 @@ func (c *Client) AddFileToPlaceholder(itemID, fileID, tag string, fileState File
 
 	requestURL.RawQuery = q.Encode()
 
-	return requestURL.String()
+	result, err := c.restyClient.R().
+		SetResult(&JobDocument{}).
+		SetHeader("content-type", "application/json").
+		Post(requestURL.String())
+
+	if err != nil {
+		return "", err
+	}
+
+	return result.Result().(*JobDocument).JobID, nil
 }
 
 func (c *Client) CreateThumbnails(itemID string) (string, error) {

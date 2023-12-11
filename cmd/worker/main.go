@@ -48,6 +48,8 @@ var vidispineActivities = []any{
 	vsactivity.CreateThumbnailsActivity,
 	vsactivity.WaitForJobCompletion,
 	vsactivity.JobCompleteOrErr,
+	vsactivity.AddFileToPlaceholder,
+	vsactivity.CloseFile,
 	activities.GetSubtransIDActivity,
 }
 

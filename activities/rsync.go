@@ -19,10 +19,10 @@ func RsyncIncrementalCopy(ctx context.Context, input RsyncIncrementalCopyInput) 
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting RsyncIncrementalCopy")
 
-	stopChan, _ := newHeartBeater[string](ctx)
+	stopChan, cb := newHeartBeater[rsync.FileInfo](ctx)
 	defer close(stopChan)
 
-	err := rsync.IncrementalCopy(input.In, input.Out)
+	err := rsync.IncrementalCopy(input.In, input.Out, cb)
 	if err != nil {
 		return nil, err
 	}

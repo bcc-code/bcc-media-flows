@@ -9,7 +9,13 @@ import (
 	"github.com/bcc-code/bccm-flows/utils"
 )
 
-func IncrementalCopy(in, out paths.Path) error {
+type FileInfo struct {
+	Size    int64
+	Name    string
+	ModTime time.Time
+}
+
+func IncrementalCopy(in, out paths.Path, statCallback func(FileInfo)) error {
 	var fileSize int64
 	doCopy := func() (bool, error) {
 		params := []string{
@@ -36,6 +42,11 @@ func IncrementalCopy(in, out paths.Path) error {
 			return true, nil
 		}
 		fileSize = info.Size()
+		statCallback(FileInfo{
+			Name:    info.Name(),
+			Size:    info.Size(),
+			ModTime: info.ModTime(),
+		})
 		return false, nil
 	}
 
