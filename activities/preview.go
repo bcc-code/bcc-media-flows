@@ -41,25 +41,3 @@ func TranscodePreview(ctx context.Context, input TranscodePreviewParams) (*Trans
 		AudioOnly:       result.AudioOnly,
 	}, nil
 }
-
-type (
-	TranscodeLivePreviewParams struct {
-		InFilePath  paths.Path
-		OutFilePath paths.Path
-	}
-	TranscodeLivePreviewResult struct{}
-)
-
-func TranscodeLivePreview(ctx context.Context, params TranscodeLivePreviewParams) (*TranscodeLivePreviewResult, error) {
-	logger := activity.GetLogger(ctx)
-	logger.Info("Starting TranscodeLivePreview")
-
-	stopChan, _ := newHeartBeater[string](ctx)
-	defer close(stopChan)
-
-	err := transcode.RealtimePreview(params.InFilePath, params.OutFilePath)
-	if err != nil {
-		return nil, err
-	}
-	return &TranscodeLivePreviewResult{}, nil
-}
