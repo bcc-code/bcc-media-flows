@@ -2,11 +2,12 @@ package activities
 
 import (
 	"context"
+	"encoding/json"
 	"path/filepath"
 	"time"
 
+	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/paths"
-
 	"github.com/bcc-code/bccm-flows/services/transcribe"
 	"go.temporal.io/sdk/activity"
 )
@@ -48,5 +49,47 @@ func Transcribe(
 		SRTPath:      paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".srt")),
 		WordsSRTPath: paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".words.srt")),
 		TXTPath:      paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".txt")),
+	}, nil
+}
+
+type MergeTranscriptJSONParams struct {
+	MergeInput      common.MergeInput
+	DestinationPath paths.Path
+}
+
+type MergeTranscriptResult struct {
+	Path paths.Path
+}
+
+// MergeTranscriptJSON is the activity that merges a transcript JSON
+// Note that currently Norwegian is hardcoded
+func MergeTranscriptJSON(
+	ctx context.Context,
+	input MergeTranscriptJSONParams,
+) (*MergeTranscriptResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "MergeTranscriptJSON")
+	log.Info("Starting MergeTranscriptJSON")
+
+	targetFile := input.DestinationPath.Append("merged_transcription.no.json")
+	mergedTranscription := transcribe.MergeTranscripts(input.MergeInput)
+
+	marshalled, err := json.Marshal(mergedTranscription)
+	if err != nil {
+		return nil, err
+	}
+
+	err = WriteFile(ctx, WriteFileInput{
+		Path: targetFile,
+		Data: marshalled,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	log.Info("Finished MergeTranscriptJSON")
+
+	return &MergeTranscriptResult{
+		Path: targetFile,
 	}, nil
 }

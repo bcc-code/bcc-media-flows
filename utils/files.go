@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"encoding/json"
+	"os"
 	"path/filepath"
 	"regexp"
 
@@ -38,4 +40,12 @@ func ValidRawFilename(filename string) bool {
 func IsMedia(filename string) bool {
 	extension := filepath.Ext(filename)
 	return lo.Contains(mediaExtensions, extension)
+}
+
+func JsonFileToStruct(jsonFile string, output interface{}) error {
+	bytes, err := os.ReadFile(jsonFile)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(bytes, output)
 }

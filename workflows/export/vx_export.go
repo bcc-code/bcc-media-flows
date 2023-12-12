@@ -12,7 +12,7 @@ import (
 
 	avidispine "github.com/bcc-code/bccm-flows/activities/vidispine"
 	"github.com/bcc-code/bccm-flows/services/vidispine"
-	"github.com/bcc-code/bccm-flows/utils/workflows"
+	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -138,13 +138,14 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 
 	var mergeResult MergeExportDataResult
 	err = workflow.ExecuteChildWorkflow(ctx, MergeExportData, MergeExportDataParams{
-		ExportData:    data,
-		TempDir:       tempDir,
-		SubtitlesDir:  subtitlesOutputDir,
-		MakeVideo:     !bmmOnly,
-		MakeAudio:     true,
-		MakeSubtitles: true,
-		Languages:     params.Languages,
+		ExportData:     data,
+		TempDir:        tempDir,
+		SubtitlesDir:   subtitlesOutputDir,
+		MakeVideo:      !bmmOnly,
+		MakeAudio:      true,
+		MakeSubtitles:  true,
+		MakeTranscript: true,
+		Languages:      params.Languages,
 	}).Get(ctx, &mergeResult)
 	if err != nil {
 		return nil, err

@@ -21,14 +21,15 @@ var nonAlphanumeric = regexp.MustCompile("[^a-zA-Z0-9_]+")
 var consecutiveUnderscores = regexp.MustCompile("_+")
 
 type Clip struct {
-	VideoFile     string
-	InSeconds     float64
-	OutSeconds    float64
-	SequenceIn    float64
-	SequenceOut   float64
-	AudioFiles    map[string]*AudioFile
-	SubtitleFiles map[string]string
-	VXID          string
+	VideoFile          string
+	InSeconds          float64
+	OutSeconds         float64
+	SequenceIn         float64
+	SequenceOut        float64
+	AudioFiles         map[string]*AudioFile
+	SubtitleFiles      map[string]string
+	JSONTranscriptFile string
+	VXID               string
 }
 
 type AudioFile struct {
@@ -403,6 +404,11 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 
 			// Collect all languages that any of the clips have subs for
 			allSubLanguages.Add(langCode)
+		}
+
+		shape := clipShapes.GetShape("transcription_json")
+		if shape != nil {
+			clip.JSONTranscriptFile = shape.GetPath()
 		}
 	}
 

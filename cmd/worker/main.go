@@ -32,6 +32,7 @@ var utilActivities = []any{
 	activities.DeletePath,
 	activities.StandardizeFileName,
 	activities.GetSubtitlesActivity,
+	activities.MergeTranscriptJSON,
 	batonactivities.QC,
 	activities.FtpPlayoutRename,
 	activities.NotifySimple,
