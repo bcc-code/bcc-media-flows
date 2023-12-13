@@ -180,7 +180,7 @@ func AudioMP3(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 	}, nil
 }
 
-func AudioSplitFile(filePath, outputDir paths.Path, cb ffmpeg.ProgressCallback) (paths.Files, error) {
+func SplitAudioChannels(filePath, outputDir paths.Path, cb ffmpeg.ProgressCallback) (paths.Files, error) {
 	info, err := ffmpeg.ProbeFile(filePath.Local())
 	if err != nil {
 		return nil, err

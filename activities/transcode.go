@@ -277,7 +277,7 @@ func SplitAudioChannels(ctx context.Context, input SplitAudioChannelsInput) (pat
 	stopChan, progressCallback := registerProgressCallback(ctx)
 	defer close(stopChan)
 
-	result, err := transcode.AudioSplitFile(input.FilePath, input.OutputDir, progressCallback)
+	result, err := transcode.SplitAudioChannels(input.FilePath, input.OutputDir, progressCallback)
 	if err != nil {
 		return nil, err
 	}
