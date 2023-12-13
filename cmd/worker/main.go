@@ -37,6 +37,7 @@ var utilActivities = []any{
 	activities.FtpPlayoutRename,
 	activities.NotifySimple,
 	activities.NotifyImportCompleted,
+	activities.RsyncIncrementalCopy,
 }
 
 var vidispineActivities = []any{
@@ -50,6 +51,8 @@ var vidispineActivities = []any{
 	vsactivity.CreateThumbnailsActivity,
 	vsactivity.WaitForJobCompletion,
 	vsactivity.JobCompleteOrErr,
+	vsactivity.AddFileToPlaceholder,
+	vsactivity.CloseFile,
 	activities.GetSubtransIDActivity,
 }
 
@@ -73,6 +76,7 @@ var workerWorkflows = []any{
 	ingestworkflows.Asset,
 	ingestworkflows.RawMaterial,
 	ingestworkflows.Masters,
+	ingestworkflows.Incremental,
 	workflows.NormalizeAudioLevelWorkflow,
 	vb_export.VBExport,
 	vb_export.VBExportToAbekas,

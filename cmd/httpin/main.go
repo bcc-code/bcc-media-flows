@@ -3,11 +3,12 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	"github.com/bcc-code/bccm-flows/environment"
-	"github.com/bcc-code/bccm-flows/workflows/ingest"
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bccm-flows/workflows/ingest"
 
 	"strings"
 
@@ -168,6 +169,15 @@ func triggerHandler(ctx *gin.Context) {
 			FilePath:              getParamFromCtx(ctx, "file"),
 			TargetLUFS:            target,
 			PerformOutputAnalysis: true,
+		})
+	case "IncrementalIngest":
+		path := getParamFromCtx(ctx, "path")
+		if path == "" {
+			ctx.Status(http.StatusBadRequest)
+			return
+		}
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.Incremental, ingestworkflows.IncrementalParams{
+			Path: path,
 		})
 	}
 

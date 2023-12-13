@@ -12,6 +12,7 @@ type ImportFileAsShapeParams struct {
 	AssetID  string
 	FilePath paths.Path
 	ShapeTag string
+	Growing  bool
 }
 
 func ImportFileAsShapeActivity(ctx context.Context, params *ImportFileAsShapeParams) (*JobResult, error) {
@@ -84,6 +85,11 @@ type JobResult struct {
 	JobID string
 }
 
+type FileJobResult struct {
+	JobID  string
+	FileID string
+}
+
 func CreateThumbnailsActivity(ctx context.Context, params *CreateThumbnailsParams) (*JobResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting CreateThumbnailsActivity")
@@ -94,4 +100,53 @@ func CreateThumbnailsActivity(ctx context.Context, params *CreateThumbnailsParam
 	return &JobResult{
 		JobID: res,
 	}, err
+}
+
+type AddFileToPlaceholderParams struct {
+	AssetID  string
+	FilePath paths.Path
+	Tag      string
+	Growing  bool
+}
+
+func AddFileToPlaceholder(ctx context.Context, params AddFileToPlaceholderParams) (*FileJobResult, error) {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Starting AddFileToPlaceholder")
+
+	vsClient := GetClient()
+
+	fileID, err := vsClient.RegisterFile(params.FilePath.Local(), vsapi.FileStateOpen)
+	if err != nil {
+		return nil, err
+	}
+
+	var fileState vsapi.FileState
+	if params.Growing {
+		fileState = vsapi.FileStateOpen
+	} else {
+		fileState = vsapi.FileStateClosed
+	}
+
+	jobID, err := vsClient.AddFileToPlaceholder(params.AssetID, fileID, params.Tag, fileState)
+	if err != nil {
+		return nil, err
+	}
+
+	return &FileJobResult{
+		JobID:  jobID,
+		FileID: fileID,
+	}, nil
+}
+
+type CloseFileParams struct {
+	FileID string
+}
+
+func CloseFile(ctx context.Context, params CloseFileParams) error {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Starting CloseFile")
+
+	vsClient := GetClient()
+
+	return vsClient.UpdateFileState(params.FileID, vsapi.FileStateClosed)
 }
