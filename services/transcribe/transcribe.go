@@ -3,9 +3,10 @@ package transcribe
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/bcc-code/bccm-flows/common"
 	"github.com/bcc-code/bccm-flows/utils"
-	"time"
 
 	"github.com/go-resty/resty/v2"
 	"go.temporal.io/sdk/activity"
@@ -166,7 +167,7 @@ func MergeTranscripts(input common.MergeInput) *Transcription {
 		Segments: []Segment{},
 	}
 
-	errs := []error{}
+	var errs []error
 	startAt := 0.0
 	for _, mi := range input.Items {
 		transcription := &Transcription{}
@@ -187,14 +188,24 @@ func MergeTranscripts(input common.MergeInput) *Transcription {
 				break
 			}
 
+			segment.Start -= mi.Start
+			segment.End -= mi.Start
+
 			// Offset the start and end of the segment by duration of the previous cuts
 			segment.Start += startAt
 			segment.End += startAt
 
+			var words []Word
 			for _, word := range segment.Words {
+				word.Start -= mi.Start
+				word.End -= mi.Start
+
 				word.Start += startAt
 				word.End += startAt
+				words = append(words, word)
 			}
+
+			segment.Words = words
 
 			mergedTranscription.Segments = append(mergedTranscription.Segments, segment)
 			mergedTranscription.Text += segment.Text + " "
