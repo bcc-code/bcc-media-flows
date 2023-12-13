@@ -53,8 +53,9 @@ func Mux(input common.MuxInput, progressCallback ffmpeg.ProgressCallback) (*comm
 	subtitleFiles := languageFilesForPaths(input.SubtitleFilePaths)
 
 	for _, f := range audioFiles {
+		// -itsoffset -0.022 is there because AAC inserts a delay at the start of the audio file making it out of sync with the video
 		params = append(params,
-			"-i", f.Path.Local(),
+			"-itsoffset", "-0.022", "-i", f.Path.Local(),
 		)
 	}
 
