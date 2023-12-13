@@ -122,24 +122,23 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 		}
 	}
 
-	var transcriptionJSONFile paths.Path
+	jsonTranscriptResult := map[string]paths.Path{}
+
 	if params.MakeTranscript && transcriptTask != nil {
 		var res activities.MergeTranscriptResult
 		err := transcriptTask.Get(ctx, &res)
 		if err != nil {
 			return nil, err
 		}
-		transcriptionJSONFile = res.Path
+		jsonTranscriptResult["no"] = res.Path
 	}
 
 	return &MergeExportDataResult{
-		Duration:      mergeInput.Duration,
-		VideoFile:     videoFile,
-		AudioFiles:    audioFiles,
-		SubtitleFiles: subtitleFiles,
-		JSONTranscript: map[string]paths.Path{
-			"no": transcriptionJSONFile,
-		},
+		Duration:       mergeInput.Duration,
+		VideoFile:      videoFile,
+		AudioFiles:     audioFiles,
+		SubtitleFiles:  subtitleFiles,
+		JSONTranscript: jsonTranscriptResult,
 	}, nil
 }
 
