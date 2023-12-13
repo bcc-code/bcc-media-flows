@@ -123,7 +123,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 	}
 
 	var transcriptionJSONFile paths.Path
-	if params.MakeTranscript {
+	if params.MakeTranscript && transcriptTask != nil {
 		var res activities.MergeTranscriptResult
 		err := transcriptTask.Get(ctx, &res)
 		if err != nil {
