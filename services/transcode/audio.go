@@ -179,3 +179,48 @@ func AudioMP3(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 		FileSize:   fileInfo.Size(),
 	}, nil
 }
+
+func AudioSplitFile(filePath, outputDir paths.Path, cb ffmpeg.ProgressCallback) (paths.Files, error) {
+	info, err := ffmpeg.ProbeFile(filePath.Local())
+	if err != nil {
+		return nil, err
+	}
+
+	params := []string{
+		"-i", filePath.Local(),
+	}
+
+	var filter string
+
+	var channels int
+	for index, stream := range info.Streams {
+		if stream.CodecType != "audio" {
+			continue
+		}
+		for i := 0; i < stream.Channels; i++ {
+			filter += fmt.Sprintf("[%d:a]pan=mono|c0=c%d[a%d];", index, i, channels)
+			channels++
+		}
+	}
+
+	var files paths.Files
+
+	params = append(params, "-filter_complex", filter)
+
+	for i := 0; i < channels; i++ {
+		base := filePath.Base()
+		fileName := fmt.Sprintf("%s-%d.wav", base[:len(base)-len(filepath.Ext(base))], i)
+		file := outputDir.Append(fileName)
+		files = append(files, file)
+		params = append(params,
+			"-map", fmt.Sprintf("[a%d]", i),
+			file.Local(),
+		)
+	}
+
+	_, err = ffmpeg.Do(params, ffmpeg.StreamInfo{}, cb)
+	if err != nil {
+		return nil, err
+	}
+	return files, nil
+}

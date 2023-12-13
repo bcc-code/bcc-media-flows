@@ -177,7 +177,7 @@ func ReadFile(ctx context.Context, input FileInput) ([]byte, error) {
 	return os.ReadFile(input.Path.Local())
 }
 
-func ListFiles(ctx context.Context, input FileInput) ([]paths.Path, error) {
+func ListFiles(ctx context.Context, input FileInput) (paths.Files, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "ListFiles")
 	log.Info("Starting ListFilesActivity")

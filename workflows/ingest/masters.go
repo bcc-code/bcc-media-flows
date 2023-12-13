@@ -68,7 +68,6 @@ func Masters(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
 			if err != nil {
 				return nil, err
 			}
-
 		}
 	}
 

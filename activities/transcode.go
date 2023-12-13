@@ -263,3 +263,49 @@ func ExecuteFFmpeg(ctx context.Context, input ExecuteFFmpegInput) error {
 	}
 	return nil
 }
+
+type SplitAudioChannelsInput struct {
+	FilePath  paths.Path
+	OutputDir paths.Path
+}
+
+func SplitAudioChannels(ctx context.Context, input SplitAudioChannelsInput) (paths.Files, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "SplitAudioChannels")
+	log.Info("Starting SplitAudioChannels")
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	result, err := transcode.AudioSplitFile(input.FilePath, input.OutputDir, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+type MultitrackMuxInput struct {
+	Files     paths.Files
+	OutputDir paths.Path
+}
+
+type MultitrackMuxResult struct {
+	OutputPath paths.Path
+}
+
+func MultitrackMux(ctx context.Context, input MultitrackMuxInput) (*MultitrackMuxResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "MultitrackMux")
+	log.Info("Starting MultitrackMux")
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	result, err := transcode.MultitrackMux(input.Files, input.OutputDir, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+	return &MultitrackMuxResult{
+		OutputPath: *result,
+	}, nil
+}

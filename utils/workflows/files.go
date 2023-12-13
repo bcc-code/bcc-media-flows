@@ -62,7 +62,7 @@ func ReadFile(ctx workflow.Context, file paths.Path) ([]byte, error) {
 	return res, err
 }
 
-func ListFiles(ctx workflow.Context, path paths.Path) ([]paths.Path, error) {
+func ListFiles(ctx workflow.Context, path paths.Path) (paths.Files, error) {
 	var res []paths.Path
 	err := workflow.ExecuteActivity(ctx, activities.ListFiles, activities.FileInput{
 		Path: path,
