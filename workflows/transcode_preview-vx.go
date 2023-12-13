@@ -60,7 +60,7 @@ func TranscodePreviewVX(
 	}
 
 	switch filepath.Ext(shapes.FilePath.Path) {
-	case ".mxf", ".mov", ".mp4", ".wav":
+	case ".mxf", ".mov", ".mp4", ".wav", ".mpg":
 	default:
 		return nil
 	}
