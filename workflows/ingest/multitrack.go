@@ -50,7 +50,7 @@ func Multitrack(ctx workflow.Context, params MasterParams) (*MasterResult, error
 	var channels paths.Files
 	for _, f := range files {
 		var parts paths.Files
-		err = wfutils.ExecuteWithQueue(ctx, activities.AudioSplitFile, activities.AudioSplitFileInput{
+		err = wfutils.ExecuteWithQueue(ctx, activities.SplitAudioChannels, activities.SplitAudioChannelsInput{
 			FilePath:  f,
 			OutputDir: tempDir,
 		}).Get(ctx, &parts)

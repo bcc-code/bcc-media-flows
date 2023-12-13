@@ -21,7 +21,7 @@ func GetAudioTranscodeActivities() []any {
 		AdjustAudioLevelActivity,
 		AnalyzeFile,
 		NormalizeAudioActivity,
-		AudioSplitFile,
+		SplitAudioChannels,
 	}
 }
 

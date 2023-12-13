@@ -21,10 +21,7 @@ func Test_Audio(t *testing.T) {
 }
 
 func Test_AudioSplit(t *testing.T) {
-	files, err := AudioSplitFile(AudioSplitFileInput{
-		OutputDir: paths.MustParse("/tmp/"),
-		FilePath:  paths.MustParse("/tmp/AS23_20231202_2000_PGM_MU1_Joy_to_the_world-eng_normalized-256k.mp3"),
-	}, nil)
+	files, err := AudioSplitFile(paths.MustParse("/tmp/AS23_20231202_2000_PGM_MU1_Joy_to_the_world-eng_normalized-256k.mp3"), paths.MustParse("/tmp/"), nil)
 
 	assert.Nil(t, err)
 
