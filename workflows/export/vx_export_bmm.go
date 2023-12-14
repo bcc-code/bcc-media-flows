@@ -147,6 +147,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 				jsonData.PersonsAppearing = append(jsonData.PersonsAppearing, p)
 			}
 		}
+		jsonData.StartsAt = chapter.Timestamp
 		jsonData.Type = chapter.ChapterType
 		if chapter.SongNumber != "" && chapter.SongCollection != "" {
 			jsonData.SongCollection = &chapter.SongCollection
@@ -199,6 +200,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 
 type BMMData struct {
 	MediabankenID      string                    `json:"mediabanken_id"`
+	StartsAt           float64                   `json:"starts_at"`
 	Title              string                    `json:"title"`
 	Length             int                       `json:"length"`
 	Type               string                    `json:"type"`
