@@ -86,6 +86,13 @@ func DeletePath(ctx workflow.Context, path paths.Path) error {
 	}).Get(ctx, nil)
 }
 
+func DeletePathRecursively(ctx workflow.Context, path paths.Path) error {
+	return workflow.ExecuteActivity(ctx, activities.DeletePath, activities.DeletePathInput{
+		RemoveAll: true,
+		Path:      path,
+	}).Get(ctx, nil)
+}
+
 func GetWorkflowIsilonOutputFolder(ctx workflow.Context, root string) (paths.Path, error) {
 	info := workflow.GetInfo(ctx)
 

@@ -159,7 +159,7 @@ func copyToDir(ctx workflow.Context, dest paths.Path, files []ingest.File) error
 	}
 
 	for _, file := range files {
-		err = wfutils.DeletePath(
+		err = wfutils.DeletePathRecursively(
 			ctx,
 			paths.MustParse(filepath.Join("/mnt/dmzshare", "workflow", file.FilePath, file.FileName)),
 		)
