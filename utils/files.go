@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/samber/lo"
 )
@@ -34,6 +35,7 @@ func ValidRawFilename(filename string) bool {
 	extension := filepath.Ext(filename)
 	base := filepath.Base(filename)
 	name := base[:len(base)-len(extension)]
+	extension = strings.ToLower(extension)
 	return alphanumericalRegex.MatchString(name) && lo.Contains(supportedExtensions, extension)
 }
 
