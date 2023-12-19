@@ -1,7 +1,9 @@
 package workflows
 
 import (
+	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/bcc-code/bccm-flows/activities"
@@ -59,10 +61,10 @@ func TranscodePreviewVX(
 		return err
 	}
 
-	switch filepath.Ext(shapes.FilePath.Path) {
+	switch strings.ToLower(filepath.Ext(shapes.FilePath.Path)) {
 	case ".mxf", ".mov", ".mp4", ".wav", ".mpg":
 	default:
-		return nil
+		return fmt.Errorf("unsupported file extension: %s", filepath.Ext(shapes.FilePath.Path))
 	}
 
 	previewResponse := &activities.TranscodePreviewResponse{}
