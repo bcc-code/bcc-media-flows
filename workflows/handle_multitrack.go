@@ -14,8 +14,7 @@ import (
 )
 
 type HandleMultitrackFileInput struct {
-	Path       string
-	FolderName string
+	Path string
 }
 
 func HandleMultitrackFile(

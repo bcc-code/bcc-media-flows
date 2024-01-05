@@ -71,7 +71,16 @@ func doMultitrackCopy(ctx context.Context, path string) error {
 		return err
 	}
 
-	return nil
+	workflowOptions := client.StartWorkflowOptions{
+		ID:        uuid.NewString(),
+		TaskQueue: environment.GetWorkerQueue(),
+	}
+
+	_, err = c.ExecuteWorkflow(ctx, workflowOptions, workflows.HandleMultitrackFile, workflows.HandleMultitrackFileInput{
+		Path: path,
+	})
+
+	return err
 }
 
 var exp = regexp.MustCompile(fmt.Sprintf("(?:%s/)(?P<encoding>[\\w-]*)(?:/in/)", TranscodeRootPath))
