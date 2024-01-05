@@ -3,16 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/bcc-code/bccm-flows/environment"
-	"github.com/bcc-code/bccm-flows/workflows"
-	"github.com/bcc-code/bccm-flows/workflows/ingest"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"go.temporal.io/sdk/client"
 	"os"
 	"path/filepath"
 	"regexp"
 	"time"
+
+	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bccm-flows/workflows"
+	ingestworkflows "github.com/bcc-code/bccm-flows/workflows/ingest"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"go.temporal.io/sdk/client"
 )
 
 var TranscodeRootPath = os.Getenv("TRANSCODE_ROOT_PATH")
@@ -39,8 +40,18 @@ func watchersHandler(ctx *gin.Context) {
 		ctx.String(500, err.Error())
 		return
 	}
+
+	multitrackPath, err := filepath.Match("/mnt/isilon/system/multitrack/Ingest/tempFraBrunstad/*", result.Path)
+	if err != nil {
+		fmt.Println(err.Error())
+		ctx.String(500, err.Error())
+		return
+	}
+
 	if xmlPath {
 		err = doIngest(ctx, result.Path)
+	} else if multitrackPath {
+		err = doMultitrackCopy(ctx, result.Path)
 	} else {
 		err = doTranscode(ctx, result.Path)
 	}
@@ -52,6 +63,15 @@ func watchersHandler(ctx *gin.Context) {
 	}
 
 	ctx.Status(200)
+}
+
+func doMultitrackCopy(ctx context.Context, path string) error {
+	c, err := getClient()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 var exp = regexp.MustCompile(fmt.Sprintf("(?:%s/)(?P<encoding>[\\w-]*)(?:/in/)", TranscodeRootPath))
