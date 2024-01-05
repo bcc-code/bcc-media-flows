@@ -4,7 +4,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bcc-media-flows/utils"
 )
 
 func Do(arguments []string, info StreamInfo, progressCallback ProgressCallback) (string, error) {

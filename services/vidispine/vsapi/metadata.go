@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 )
 
 type MetadataField struct {

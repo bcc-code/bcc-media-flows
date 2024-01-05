@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bcc-media-flows/environment"
 
 	"github.com/samber/lo"
 )

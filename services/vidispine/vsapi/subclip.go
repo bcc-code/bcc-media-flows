@@ -3,7 +3,7 @@ package vsapi
 import (
 	"fmt"
 
-	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 )
 
 // Subclips are defined by using the same start and end timecode on various

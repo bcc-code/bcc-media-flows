@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bcc-code/bccm-flows/activities"
-	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
-	"github.com/bcc-code/bccm-flows/environment"
-	"github.com/bcc-code/bccm-flows/utils/workflows"
+	"github.com/bcc-code/bcc-media-flows/activities"
+	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/bcc-code/bcc-media-flows/environment"
+	"github.com/bcc-code/bcc-media-flows/utils/workflows"
 
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"

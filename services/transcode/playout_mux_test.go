@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/common"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/stretchr/testify/assert"
 )
 

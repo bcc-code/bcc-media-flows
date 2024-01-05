@@ -1,8 +1,8 @@
 package transcode
 
 import (
-	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/services/ffmpeg"
+	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 )
 
 func RealtimePreview(in paths.Path, out paths.Path) error {

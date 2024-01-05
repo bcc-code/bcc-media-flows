@@ -3,8 +3,8 @@ package activities
 import (
 	"context"
 
-	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/services/ffmpeg"
+	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 	"go.temporal.io/sdk/activity"
 )
 

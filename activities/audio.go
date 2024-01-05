@@ -3,8 +3,8 @@ package activities
 import (
 	"context"
 
-	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/services/transcode"
+	"github.com/bcc-code/bcc-media-flows/common"
+	"github.com/bcc-code/bcc-media-flows/services/transcode"
 	"go.temporal.io/sdk/activity"
 )
 

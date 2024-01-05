@@ -1,7 +1,7 @@
 package wfutils
 
 import (
-	"github.com/bcc-code/bccm-flows/activities"
+	"github.com/bcc-code/bcc-media-flows/activities"
 	"go.temporal.io/sdk/workflow"
 )
 

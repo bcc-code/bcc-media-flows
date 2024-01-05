@@ -1,4 +1,4 @@
-module github.com/bcc-code/bccm-flows
+module github.com/bcc-code/bcc-media-flows
 
 go 1.20
 

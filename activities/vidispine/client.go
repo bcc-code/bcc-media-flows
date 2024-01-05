@@ -10,8 +10,8 @@ import (
 	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/temporal"
 
-	"github.com/bcc-code/bccm-flows/services/vidispine"
-	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 )
 
 func GetClient() vidispine.Client {

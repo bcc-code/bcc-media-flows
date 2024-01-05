@@ -7,18 +7,18 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/google/uuid"
 
 	_ "github.com/glebarez/go-sqlite"
 
 	"os"
 
-	bccmflows "github.com/bcc-code/bccm-flows"
-	"github.com/bcc-code/bccm-flows/services/vidispine"
-	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
-	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
-	"github.com/bcc-code/bccm-flows/workflows/export"
+	bccmflows "github.com/bcc-code/bcc-media-flows"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
+	"github.com/bcc-code/bcc-media-flows/workflows/export"
 	"github.com/gin-gonic/gin"
 	"go.temporal.io/sdk/client"
 )

@@ -3,7 +3,7 @@ package export
 import (
 	"fmt"
 
-	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 

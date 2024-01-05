@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bcc-media-flows/environment"
 )
 
 const DefaultStorageID = "VX-42"

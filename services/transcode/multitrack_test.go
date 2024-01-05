@@ -3,7 +3,7 @@ package transcode
 import (
 	"testing"
 
-	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/paths"
 )
 
 func Test_MultitrackMux(t *testing.T) {

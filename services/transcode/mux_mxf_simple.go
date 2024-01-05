@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/paths"
 
-	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/services/ffmpeg"
+	"github.com/bcc-code/bcc-media-flows/common"
+	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 )
 
 // MuxToSimpleMXF multiplexes specified video and audio tracks. Video as-is but audio is enforced to 24bit 48kHz pcm. Ignores languages, etc.

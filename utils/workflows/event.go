@@ -1,7 +1,7 @@
 package wfutils
 
 import (
-	"github.com/bcc-code/bccm-flows/activities"
+	"github.com/bcc-code/bcc-media-flows/activities"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/workflow"

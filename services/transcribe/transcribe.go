@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bcc-media-flows/common"
+	"github.com/bcc-code/bcc-media-flows/utils"
 
 	"github.com/go-resty/resty/v2"
 	"go.temporal.io/sdk/activity"

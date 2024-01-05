@@ -3,7 +3,7 @@ package vidispine
 import (
 	"testing"
 
-	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/stretchr/testify/assert"
 )
 

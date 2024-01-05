@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bcc-media-flows/utils"
 	"github.com/samber/lo"
 )
 

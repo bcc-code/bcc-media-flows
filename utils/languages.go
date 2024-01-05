@@ -1,7 +1,7 @@
 package utils
 
 import (
-	bccmflows "github.com/bcc-code/bccm-flows"
+	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/samber/lo"
 	"sort"
 )

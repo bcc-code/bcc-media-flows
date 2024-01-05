@@ -3,7 +3,7 @@ package rsync
 import (
 	"testing"
 
-	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/stretchr/testify/assert"
 )
 

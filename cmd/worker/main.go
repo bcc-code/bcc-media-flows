@@ -6,16 +6,16 @@ import (
 	"strconv"
 	"time"
 
-	batonactivities "github.com/bcc-code/bccm-flows/activities/baton"
-	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
-	"github.com/bcc-code/bccm-flows/environment"
-	ingestworkflows "github.com/bcc-code/bccm-flows/workflows/ingest"
-	"github.com/bcc-code/bccm-flows/workflows/vb_export"
+	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
+	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/bcc-code/bcc-media-flows/environment"
+	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
+	"github.com/bcc-code/bcc-media-flows/workflows/vb_export"
 
-	"github.com/bcc-code/bccm-flows/workflows/export"
+	"github.com/bcc-code/bcc-media-flows/workflows/export"
 
-	"github.com/bcc-code/bccm-flows/activities"
-	"github.com/bcc-code/bccm-flows/workflows"
+	"github.com/bcc-code/bcc-media-flows/activities"
+	"github.com/bcc-code/bcc-media-flows/workflows"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"

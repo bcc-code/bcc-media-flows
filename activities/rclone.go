@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/paths"
 
-	"github.com/bcc-code/bccm-flows/services/rclone"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"go.temporal.io/sdk/activity"
 )
 

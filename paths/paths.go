@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/ansel1/merry/v2"
-	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/orsinium-labs/enum"
 )
 

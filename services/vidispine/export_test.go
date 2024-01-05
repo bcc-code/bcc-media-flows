@@ -13,9 +13,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bcc-code/bccm-flows/services/vidispine"
-	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
-	"github.com/bcc-code/bccm-flows/services/vidispine/vsmock"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsmock"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )

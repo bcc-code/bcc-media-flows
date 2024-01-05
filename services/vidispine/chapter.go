@@ -8,8 +8,8 @@ import (
 
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
 
-	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
-	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
 )

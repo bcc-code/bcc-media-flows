@@ -5,8 +5,8 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/utils"
 )
 
 type FileInfo struct {
