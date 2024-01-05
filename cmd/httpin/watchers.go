@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/bcc-code/bccm-flows/environment"
@@ -41,7 +42,9 @@ func watchersHandler(ctx *gin.Context) {
 		return
 	}
 
-	multitrackPath, err := filepath.Match("/mnt/isilon/system/multitrack/Ingest/tempFraBrunstad/*", result.Path)
+	// This needs to match any subfolder
+	multitrackPath := strings.HasPrefix(result.Path, "/mnt/isilon/system/multitrack/Ingest/tempFraBrunstad/")
+
 	if err != nil {
 		fmt.Println(err.Error())
 		ctx.String(500, err.Error())
