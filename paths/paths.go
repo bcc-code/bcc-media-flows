@@ -54,7 +54,8 @@ var (
 	DMZShareDrive    = Drive{Value: "dmzshare"}
 	BrunstadDrive    = Drive{Value: "brunstad"}
 	AssetIngestDrive = Drive{Value: "asset_ingest"}
-	Drives           = enum.New(IsilonDrive, DMZShareDrive, TempDrive, AssetIngestDrive, BrunstadDrive)
+	LucidLinkDrive   = Drive{Value: "lucid"}
+	Drives           = enum.New(IsilonDrive, DMZShareDrive, TempDrive, AssetIngestDrive, BrunstadDrive, LucidLinkDrive)
 	ErrDriveNotFound = merry.Sentinel("drive not found")
 	ErrPathNotValid  = merry.Sentinel("path not valid")
 )
@@ -68,6 +69,8 @@ func (d Drive) RcloneName() string {
 		return "dmzshare"
 	case BrunstadDrive:
 		return "brunstad"
+	case LucidLinkDrive:
+		return "lucid"
 	}
 	return ""
 }
@@ -83,6 +86,8 @@ func (d Drive) RclonePath() string {
 		return "s3prod:vod-asset-ingest-prod"
 	case BrunstadDrive:
 		return "brunstad:"
+	case LucidLinkDrive:
+		return "lucid:lucidlink"
 	}
 	return ""
 }
@@ -122,6 +127,8 @@ func (p Path) RcloneFsRemote() (string, string) {
 		return "s3prod:", filepath.Join("vod-asset-ingest-prod", p.Path)
 	case BrunstadDrive:
 		return "brunstad:/", p.Path
+	case LucidLinkDrive:
+		return "lucid:", filepath.Join("lucidlink", p.Path)
 	}
 	return "", ""
 }
@@ -151,6 +158,17 @@ func (p Path) Append(path ...string) Path {
 	}
 }
 
+// Prepend prepends the path with the given paths
+func (p Path) Prepend(paths ...string) Path {
+	for i, path := range paths {
+		paths[i] = strings.TrimPrefix(path, "/")
+	}
+	return Path{
+		Drive: p.Drive,
+		Path:  filepath.Clean(filepath.Join("/", filepath.Join(paths...), p.Path)),
+	}
+}
+
 type prefix struct {
 	Linux  string
 	Client string
@@ -163,6 +181,7 @@ var drivePrefixes = map[Drive]prefix{
 	TempDrive:        {"/mnt/temp/", environment.GetTempMountPrefix(), "isilon:temp/"},
 	AssetIngestDrive: {"/dev/null/", "/dev/null/", "s3prod:vod-asset-ingest-prod/"},
 	BrunstadDrive:    {"/dev/null/", "/dev/null/", "brunstad:/"},
+	LucidLinkDrive:   {"/dev/null/", "/dev/null/", "lucid:lucidlink/"},
 }
 
 func Parse(path string) (Path, error) {
