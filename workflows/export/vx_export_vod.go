@@ -17,6 +17,7 @@ import (
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	"github.com/bcc-code/bcc-media-platform/backend/events"
 	"github.com/samber/lo"
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -25,6 +26,9 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	logger.Info("Starting ExportToVOD")
 
 	options := wfutils.GetDefaultActivityOptions()
+	options.RetryPolicy = &temporal.RetryPolicy{
+		MaximumAttempts: 1,
+	}
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	// We start chapter export and pick the results up later when needed
@@ -155,7 +159,6 @@ func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, 
 		// Normalize audio
 		for _, lang := range langs {
 			audio := mergeResult.AudioFiles[lang]
-			ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
 			future := wfutils.ExecuteWithQueue(ctx, activities.NormalizeAudioActivity, activities.NormalizeAudioParams{
 				FilePath:              audio,
 				TargetLUFS:            -24,
