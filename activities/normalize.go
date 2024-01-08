@@ -4,10 +4,10 @@ import (
 	"context"
 	"math"
 
-	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/services/ffmpeg"
-	"github.com/bcc-code/bccm-flows/services/transcode"
+	"github.com/bcc-code/bcc-media-flows/common"
+	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
+	"github.com/bcc-code/bcc-media-flows/services/transcode"
 	"go.temporal.io/sdk/activity"
 )
 

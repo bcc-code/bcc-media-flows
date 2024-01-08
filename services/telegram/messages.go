@@ -4,7 +4,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/bcc-code/bccm-flows/services/notifications"
+	"github.com/bcc-code/bcc-media-flows/services/notifications"
 	"gopkg.in/telebot.v3"
 )
 

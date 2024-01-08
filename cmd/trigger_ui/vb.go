@@ -5,9 +5,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
-	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
-	"github.com/bcc-code/bccm-flows/workflows/vb_export"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
+	"github.com/bcc-code/bcc-media-flows/workflows/vb_export"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"

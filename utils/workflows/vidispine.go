@@ -1,7 +1,7 @@
 package wfutils
 
 import (
-	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
+	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )

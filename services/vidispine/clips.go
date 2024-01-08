@@ -3,7 +3,7 @@ package vidispine
 import (
 	"fmt"
 
-	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 )
 
 func SeqToClips(client Client, seq *vsapi.SequenceDocument, audioSource ExportAudioSource) ([]*Clip, error) {

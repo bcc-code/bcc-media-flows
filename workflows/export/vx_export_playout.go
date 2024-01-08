@@ -3,10 +3,10 @@ package export
 import (
 	"path/filepath"
 
-	"github.com/bcc-code/bccm-flows/activities"
-	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/environment"
-	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
+	"github.com/bcc-code/bcc-media-flows/activities"
+	"github.com/bcc-code/bcc-media-flows/common"
+	"github.com/bcc-code/bcc-media-flows/environment"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 

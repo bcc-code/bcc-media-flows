@@ -1,13 +1,15 @@
 package workflows
 
 import (
+	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
-	"github.com/bcc-code/bccm-flows/activities"
-	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
-	"github.com/bcc-code/bccm-flows/environment"
-	"github.com/bcc-code/bccm-flows/utils/workflows"
+	"github.com/bcc-code/bcc-media-flows/activities"
+	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/bcc-code/bcc-media-flows/environment"
+	"github.com/bcc-code/bcc-media-flows/utils/workflows"
 
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
@@ -59,10 +61,10 @@ func TranscodePreviewVX(
 		return err
 	}
 
-	switch filepath.Ext(shapes.FilePath.Path) {
+	switch strings.ToLower(filepath.Ext(shapes.FilePath.Path)) {
 	case ".mxf", ".mov", ".mp4", ".wav", ".mpg":
 	default:
-		return nil
+		return fmt.Errorf("unsupported file extension: %s", filepath.Ext(shapes.FilePath.Path))
 	}
 
 	previewResponse := &activities.TranscodePreviewResponse{}

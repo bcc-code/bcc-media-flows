@@ -3,7 +3,7 @@ package vsapi
 import (
 	"fmt"
 
-	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 )
 
 func (c *Client) GetChapterMeta(itemVXID string, inTc, outTc float64) (map[string]*MetadataResult, error) {

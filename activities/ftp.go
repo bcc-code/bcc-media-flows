@@ -2,7 +2,7 @@ package activities
 
 import (
 	"context"
-	"github.com/bcc-code/bccm-flows/services/ftp"
+	"github.com/bcc-code/bcc-media-flows/services/ftp"
 )
 
 type FtpPlayoutRenameParams struct {

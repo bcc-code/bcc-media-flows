@@ -7,14 +7,14 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/bcc-code/bccm-flows/environment"
-	"github.com/bcc-code/bccm-flows/workflows/ingest"
+	"github.com/bcc-code/bcc-media-flows/environment"
+	"github.com/bcc-code/bcc-media-flows/workflows/ingest"
 
 	"strings"
 
-	"github.com/bcc-code/bccm-flows/workflows/export"
+	"github.com/bcc-code/bcc-media-flows/workflows/export"
 
-	"github.com/bcc-code/bccm-flows/workflows"
+	"github.com/bcc-code/bcc-media-flows/workflows"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

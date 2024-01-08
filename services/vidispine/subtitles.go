@@ -1,7 +1,7 @@
 package vidispine
 
 import (
-	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 )
 
 func GetSubtransID(client Client, VXID string) (string, error) {

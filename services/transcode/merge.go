@@ -2,7 +2,7 @@ package transcode
 
 import (
 	"fmt"
-	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"log"
 	"math"
 	"os"
@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/services/ffmpeg"
-	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bcc-media-flows/common"
+	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
+	"github.com/bcc-code/bcc-media-flows/utils"
 	"github.com/samber/lo"
 )
 

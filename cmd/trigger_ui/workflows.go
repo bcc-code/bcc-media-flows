@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
-	"github.com/bcc-code/bccm-flows/workflows/export"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
+	"github.com/bcc-code/bcc-media-flows/workflows/export"
 	"github.com/gin-gonic/gin"
 	"go.temporal.io/api/history/v1"
 	"go.temporal.io/api/workflowservice/v1"

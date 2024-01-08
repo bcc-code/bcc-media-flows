@@ -5,12 +5,12 @@ import (
 	"os"
 	"time"
 
-	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
-	"github.com/bcc-code/bccm-flows/environment"
+	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/bcc-code/bcc-media-flows/environment"
 
-	"github.com/bcc-code/bccm-flows/activities"
-	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/utils/workflows"
+	"github.com/bcc-code/bcc-media-flows/activities"
+	"github.com/bcc-code/bcc-media-flows/common"
+	"github.com/bcc-code/bcc-media-flows/utils/workflows"
 
 	"github.com/davecgh/go-spew/spew"
 	"go.temporal.io/sdk/temporal"

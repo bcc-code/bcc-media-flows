@@ -2,10 +2,10 @@ package vb_export
 
 import (
 	"github.com/ansel1/merry/v2"
-	"github.com/bcc-code/bccm-flows/activities"
-	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/paths"
-	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
+	"github.com/bcc-code/bcc-media-flows/activities"
+	"github.com/bcc-code/bcc-media-flows/common"
+	"github.com/bcc-code/bcc-media-flows/paths"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 

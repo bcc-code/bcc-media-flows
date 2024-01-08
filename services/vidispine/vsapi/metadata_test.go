@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
-	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/stretchr/testify/assert"
 )
 

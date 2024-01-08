@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"go.temporal.io/sdk/activity"
 )
 

@@ -3,8 +3,8 @@ package vsactivity
 import (
 	"context"
 
-	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
+	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"go.temporal.io/sdk/activity"
 )
 

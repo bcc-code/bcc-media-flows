@@ -3,8 +3,8 @@ package wfutils
 import (
 	"os"
 
-	"github.com/bcc-code/bccm-flows/activities"
-	"github.com/bcc-code/bccm-flows/services/notifications"
+	"github.com/bcc-code/bcc-media-flows/activities"
+	"github.com/bcc-code/bcc-media-flows/services/notifications"
 	"go.temporal.io/sdk/workflow"
 )
 

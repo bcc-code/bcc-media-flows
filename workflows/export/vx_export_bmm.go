@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bcc-code/bcc-media-flows/activities"
+	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/bcc-code/bcc-media-flows/common"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
-	"github.com/bcc-code/bccm-flows/activities"
-	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
-	"github.com/bcc-code/bccm-flows/common"
-	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 )
@@ -149,6 +149,9 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		}
 		jsonData.StartsAt = chapter.Timestamp
 		jsonData.Type = chapter.ChapterType
+		if jsonData.Type == "sing_along" {
+			jsonData.Type = "singsong"
+		}
 		if chapter.SongNumber != "" && chapter.SongCollection != "" {
 			jsonData.SongCollection = &chapter.SongCollection
 			jsonData.SongNumber = &chapter.SongNumber

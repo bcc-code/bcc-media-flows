@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/services/ingest"
-	ingestworkflows "github.com/bcc-code/bccm-flows/workflows/ingest"
+	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/ingest"
+	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/google/uuid"

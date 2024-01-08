@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/ansel1/merry/v2"
-	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/activity"
 )

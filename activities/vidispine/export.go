@@ -6,7 +6,7 @@ import (
 
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
 
-	"github.com/bcc-code/bccm-flows/services/vidispine"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	"go.temporal.io/sdk/activity"
 )
 

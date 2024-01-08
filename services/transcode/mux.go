@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/paths"
 
-	bccmflows "github.com/bcc-code/bccm-flows"
-	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/services/ffmpeg"
-	"github.com/bcc-code/bccm-flows/utils"
+	bccmflows "github.com/bcc-code/bcc-media-flows"
+	"github.com/bcc-code/bcc-media-flows/common"
+	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
+	"github.com/bcc-code/bcc-media-flows/utils"
 	"github.com/samber/lo"
 )
 

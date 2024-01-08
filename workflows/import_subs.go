@@ -5,12 +5,12 @@ import (
 	"strings"
 	"time"
 
-	vsactivity "github.com/bcc-code/bccm-flows/activities/vidispine"
-	"github.com/bcc-code/bccm-flows/environment"
-	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/utils/workflows"
+	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/bcc-code/bcc-media-flows/environment"
+	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/utils/workflows"
 
-	"github.com/bcc-code/bccm-flows/activities"
+	"github.com/bcc-code/bcc-media-flows/activities"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )

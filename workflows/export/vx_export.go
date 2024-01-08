@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/ansel1/merry/v2"
-	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
 
-	avidispine "github.com/bcc-code/bccm-flows/activities/vidispine"
-	"github.com/bcc-code/bccm-flows/services/vidispine"
-	wfutils "github.com/bcc-code/bccm-flows/utils/workflows"
+	avidispine "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 

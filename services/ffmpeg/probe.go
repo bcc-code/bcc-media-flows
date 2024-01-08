@@ -3,8 +3,8 @@ package ffmpeg
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/bcc-code/bccm-flows/cache"
-	"github.com/bcc-code/bccm-flows/utils"
+	"github.com/bcc-code/bcc-media-flows/cache"
+	"github.com/bcc-code/bcc-media-flows/utils"
 	"os/exec"
 	"time"
 )

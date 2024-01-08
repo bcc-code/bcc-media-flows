@@ -3,15 +3,15 @@ package export
 import (
 	"path/filepath"
 
-	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/utils/workflows"
+	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/utils/workflows"
 
+	bccmflows "github.com/bcc-code/bcc-media-flows"
+	"github.com/bcc-code/bcc-media-flows/activities"
+	"github.com/bcc-code/bcc-media-flows/common"
+	"github.com/bcc-code/bcc-media-flows/common/smil"
+	"github.com/bcc-code/bcc-media-flows/utils"
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
-	bccmflows "github.com/bcc-code/bccm-flows"
-	"github.com/bcc-code/bccm-flows/activities"
-	"github.com/bcc-code/bccm-flows/common"
-	"github.com/bcc-code/bccm-flows/common/smil"
-	"github.com/bcc-code/bccm-flows/utils"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 )

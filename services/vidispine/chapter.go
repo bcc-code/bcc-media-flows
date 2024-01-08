@@ -8,8 +8,8 @@ import (
 
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
 
-	"github.com/bcc-code/bccm-flows/services/vidispine/vsapi"
-	"github.com/bcc-code/bccm-flows/services/vidispine/vscommon"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
 )
@@ -22,6 +22,7 @@ var (
 	ChapterTypeTestimony = ChapterType{"testimony"}
 	ChapterTypeOther     = ChapterType{"other"}
 	ChapterTypeCredits   = ChapterType{"credits"}
+	ChapterTypeSingAlong = ChapterType{"sing_along"}
 
 	ChapterTypeMap = map[string]ChapterType{
 		"sang":           ChapterTypeSong,
@@ -31,6 +32,7 @@ var (
 		"appelle":        ChapterTypeSpeech,
 		"vitnesbyrd":     ChapterTypeTestimony,
 		"end-credit":     ChapterTypeCredits,
+		"sing-along":     ChapterTypeSingAlong,
 		"panel":          ChapterTypeOther,
 		"intervju":       ChapterTypeOther,
 		"temafilm":       ChapterTypeOther,

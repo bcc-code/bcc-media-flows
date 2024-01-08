@@ -3,7 +3,7 @@ package emails
 import (
 	"os"
 
-	"github.com/bcc-code/bccm-flows/services/notifications"
+	"github.com/bcc-code/bcc-media-flows/services/notifications"
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )

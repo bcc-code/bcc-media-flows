@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bcc-code/bccm-flows/paths"
-	"github.com/bcc-code/bccm-flows/services/ffmpeg"
+	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 )
 
 func MultitrackMux(files paths.Files, outputPath paths.Path, cb ffmpeg.ProgressCallback) (*paths.Path, error) {

@@ -2,11 +2,11 @@ package transcode
 
 import (
 	"errors"
-	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"os"
 	"path/filepath"
 
-	"github.com/bcc-code/bccm-flows/services/ffmpeg"
+	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 )
 
 type PreviewInput struct {

@@ -4,9 +4,9 @@ import (
 	"context"
 	"os"
 
-	"github.com/bcc-code/bccm-flows/services/emails"
-	"github.com/bcc-code/bccm-flows/services/notifications"
-	"github.com/bcc-code/bccm-flows/services/telegram"
+	"github.com/bcc-code/bcc-media-flows/services/emails"
+	"github.com/bcc-code/bcc-media-flows/services/notifications"
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"go.temporal.io/sdk/activity"
 )
 

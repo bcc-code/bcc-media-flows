@@ -1,7 +1,7 @@
 package common
 
 import (
-	"github.com/bcc-code/bccm-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/paths"
 )
 
 type VideoInput struct {

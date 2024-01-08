@@ -3,7 +3,7 @@ package wfutils
 import (
 	"time"
 
-	"github.com/bcc-code/bccm-flows/environment"
+	"github.com/bcc-code/bcc-media-flows/environment"
 
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
