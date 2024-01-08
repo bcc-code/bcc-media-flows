@@ -149,6 +149,9 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		}
 		jsonData.StartsAt = chapter.Timestamp
 		jsonData.Type = chapter.ChapterType
+		if jsonData.Type == "sing_along" {
+			jsonData.Type = "singsong"
+		}
 		if chapter.SongNumber != "" && chapter.SongCollection != "" {
 			jsonData.SongCollection = &chapter.SongCollection
 			jsonData.SongNumber = &chapter.SongNumber

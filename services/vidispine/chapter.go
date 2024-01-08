@@ -22,6 +22,7 @@ var (
 	ChapterTypeTestimony = ChapterType{"testimony"}
 	ChapterTypeOther     = ChapterType{"other"}
 	ChapterTypeCredits   = ChapterType{"credits"}
+	ChapterTypeSingAlong = ChapterType{"sing_along"}
 
 	ChapterTypeMap = map[string]ChapterType{
 		"sang":           ChapterTypeSong,
@@ -31,6 +32,7 @@ var (
 		"appelle":        ChapterTypeSpeech,
 		"vitnesbyrd":     ChapterTypeTestimony,
 		"end-credit":     ChapterTypeCredits,
+		"sing-along":     ChapterTypeSingAlong,
 		"panel":          ChapterTypeOther,
 		"intervju":       ChapterTypeOther,
 		"temafilm":       ChapterTypeOther,
