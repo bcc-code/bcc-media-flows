@@ -5,7 +5,6 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
-	"github.com/bcc-code/bcc-media-flows/environment"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -14,17 +13,13 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToPlayout")
 
-	options := wfutils.GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, options)
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	xdcamOutputDir := params.TempDir.Append("xdcam_output")
 	err := wfutils.CreateFolder(ctx, xdcamOutputDir)
 	if err != nil {
 		return nil, err
 	}
-
-	options.TaskQueue = environment.GetTranscodeQueue()
-	ctx = workflow.WithActivityOptions(ctx, options)
 
 	// Transcode video using playout encoding
 	var videoResult common.VideoResult
@@ -52,9 +47,6 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 	if err != nil {
 		return nil, err
 	}
-
-	options.TaskQueue = environment.GetWorkerQueue()
-	ctx = workflow.WithActivityOptions(ctx, options)
 
 	// Rclone to playout
 	destination := "playout:/tmp"

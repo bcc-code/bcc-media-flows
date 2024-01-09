@@ -1,7 +1,6 @@
 package workflows
 
 import (
-	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/paths"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -25,14 +24,9 @@ func TranscribeFile(
 ) error {
 
 	logger := workflow.GetLogger(ctx)
-	options := wfutils.GetDefaultActivityOptions()
-
-	ctx = workflow.WithActivityOptions(ctx, options)
-
-	options.TaskQueue = environment.GetAudioQueue()
-	audioCtx := workflow.WithActivityOptions(ctx, options)
-
 	logger.Info("Starting TranscribeFile")
+
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	tempFolder, err := wfutils.GetWorkflowTempFolder(ctx)
 	if err != nil {
@@ -45,10 +39,13 @@ func TranscribeFile(
 	}
 
 	wavFile := common.AudioResult{}
-	wfutils.ExecuteWithQueue(audioCtx, activities.TranscodeToAudioWav, common.AudioInput{
+	err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToAudioWav, common.AudioInput{
 		Path:            file,
 		DestinationPath: tempFolder,
 	}).Get(ctx, &wavFile)
+	if err != nil {
+		return err
+	}
 
 	destination, err := paths.Parse(params.DestinationPath)
 	if err != nil {

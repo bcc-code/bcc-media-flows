@@ -26,10 +26,10 @@ func TranscribeVX(
 	ctx workflow.Context,
 	params TranscribeVXInput,
 ) error {
-
 	logger := workflow.GetLogger(ctx)
-
 	logger.Info("Starting TranscribeVX")
+
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	shapes := &vsactivity.GetFileFromVXResult{}
 	err := wfutils.ExecuteWithQueue(ctx, vsactivity.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{

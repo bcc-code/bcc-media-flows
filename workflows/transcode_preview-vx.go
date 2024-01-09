@@ -28,6 +28,8 @@ func TranscodePreviewVX(
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting TranscodePreviewVX")
 
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+
 	shapes := &vsactivity.GetFileFromVXResult{}
 	err := wfutils.ExecuteWithQueue(ctx, vsactivity.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		Tags: []string{"original"},

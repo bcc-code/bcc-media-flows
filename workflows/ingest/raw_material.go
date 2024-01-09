@@ -22,8 +22,10 @@ type RawMaterialParams struct {
 }
 
 func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
-	options := wfutils.GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, options)
+	logger := workflow.GetLogger(ctx)
+	logger.Info("Starting RawMaterial workflow")
+
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	outputFolder, err := wfutils.GetWorkflowRawOutputFolder(ctx)
 	if err != nil {

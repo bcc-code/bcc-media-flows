@@ -34,8 +34,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToBMM")
 
-	options := wfutils.GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, options)
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	normalizedFutures := map[string]workflow.Future{}
 

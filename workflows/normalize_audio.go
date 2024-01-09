@@ -25,14 +25,11 @@ func NormalizeAudioLevelWorkflow(
 	ctx workflow.Context,
 	params NormalizeAudioParams,
 ) (*NormalizeAudioResult, error) {
-
 	logger := workflow.GetLogger(ctx)
-	options := wfutils.GetDefaultActivityOptions()
-
-	ctx = workflow.WithActivityOptions(ctx, options)
-	out := &NormalizeAudioResult{}
-
 	logger.Info("Starting NormalizeAudio workflow")
+
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+	out := &NormalizeAudioResult{}
 
 	filePath, err := paths.Parse(params.FilePath)
 	if err != nil {

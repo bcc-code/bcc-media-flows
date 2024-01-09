@@ -76,8 +76,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting VXExport")
 
-	options := wfutils.GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, options)
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	var destinations []*AssetExportDestination
 	for _, dest := range params.Destinations {

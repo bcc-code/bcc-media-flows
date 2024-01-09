@@ -23,8 +23,7 @@ func VBExportToBStage(ctx workflow.Context, params VBExportChildWorkflowParams) 
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToBStage")
 
-	options := wfutils.GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, options)
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	bStageOutputDir := params.TempDir.Append("b-stage_output")
 	err := wfutils.CreateFolder(ctx, bStageOutputDir)

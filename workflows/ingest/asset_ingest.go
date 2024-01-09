@@ -41,8 +41,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting Asset")
 
-	options := wfutils.GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, options)
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	xmlPath, err := paths.Parse(params.XMLPath)
 	if err != nil {

@@ -18,8 +18,9 @@ type WatchFolderTranscodeInput struct {
 
 func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput) error {
 	logger := workflow.GetLogger(ctx)
-
 	logger.Info("Starting WatchFolderTranscode")
+
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	path, err := paths.Parse(params.Path)
 	if err != nil {

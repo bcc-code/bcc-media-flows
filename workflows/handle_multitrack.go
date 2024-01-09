@@ -20,8 +20,9 @@ func HandleMultitrackFile(
 	params HandleMultitrackFileInput,
 ) error {
 	logger := workflow.GetLogger(ctx)
-
 	logger.Info("Starting HandleMultitrackFile workflow")
+
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	path, err := paths.Parse(params.Path)
 	if err != nil {

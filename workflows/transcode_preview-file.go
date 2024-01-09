@@ -19,13 +19,10 @@ func TranscodePreviewFile(
 	ctx workflow.Context,
 	params TranscodePreviewFileInput,
 ) error {
-
 	logger := workflow.GetLogger(ctx)
-	options := wfutils.GetDefaultActivityOptions()
-
-	ctx = workflow.WithActivityOptions(ctx, options)
-
 	logger.Info("Starting TranscodePreviewFile")
+
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	filePath, err := paths.Parse(params.FilePath)
 	if err != nil {

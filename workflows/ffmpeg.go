@@ -17,6 +17,8 @@ func ExecuteFFmpeg(
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExecuteFFmpeg")
 
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+
 	err := wfutils.ExecuteWithQueue(ctx, activities.ExecuteFFmpeg, activities.ExecuteFFmpegInput{
 		Arguments: params.Arguments,
 	}).Get(ctx, nil)
