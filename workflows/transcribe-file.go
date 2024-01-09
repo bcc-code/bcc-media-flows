@@ -2,10 +2,10 @@ package workflows
 
 import (
 	"github.com/bcc-code/bcc-media-flows/paths"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
-	"github.com/bcc-code/bcc-media-flows/utils/workflows"
 
 	"go.temporal.io/sdk/workflow"
 )
@@ -22,7 +22,6 @@ func TranscribeFile(
 	ctx workflow.Context,
 	params TranscribeFileInput,
 ) error {
-
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting TranscribeFile")
 
@@ -55,6 +54,22 @@ func TranscribeFile(
 	return wfutils.ExecuteWithQueue(ctx, activities.Transcribe, activities.TranscribeParams{
 		Language:        params.Language,
 		File:            wavFile.OutputPath,
-		DestinationPath: destination,
-	}).Get(ctx, nil)
+		DestinationPath: tempFolder,
+	}).Get(ctx, transcribeOutput)
+
+	if err != nil || transcribeOutput == nil {
+		return err
+	}
+
+	_, err = wfutils.MoveToFolder(ctx, transcribeOutput.JSONPath, destination)
+	if err != nil {
+		return err
+	}
+	_, err = wfutils.MoveToFolder(ctx, transcribeOutput.SRTPath, destination)
+	if err != nil {
+		return err
+	}
+	_, err = wfutils.MoveToFolder(ctx, transcribeOutput.TXTPath, destination)
+	return err
+
 }

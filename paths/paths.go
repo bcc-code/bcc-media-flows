@@ -109,6 +109,11 @@ func (p Path) Local() string {
 	return filepath.Join(drivePrefixes[p.Drive].Client, p.Path)
 }
 
+// Linux returns the path in a local unix style path.
+func (p Path) Linux() string {
+	return filepath.Join(drivePrefixes[p.Drive].Linux, p.Path)
+}
+
 // Ext returns the file extension
 func (p Path) Ext() string {
 	return filepath.Ext(p.Path)

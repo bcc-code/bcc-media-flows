@@ -62,7 +62,6 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	}
 
 	var transcodeOutput *activities.EncodeResult
-	var transcribeOutput *activities.TranscribeResponse
 	switch params.FolderName {
 	case common.FolderProRes422HQHD:
 		err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
@@ -107,11 +106,11 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderTranscribe:
 		ctx = workflow.WithTaskQueue(ctx, environment.GetWorkerQueue())
-		err = wfutils.ExecuteWithQueue(ctx, activities.Transcribe, activities.TranscribeParams{
+		err = workflow.ExecuteChildWorkflow(ctx, TranscribeFile, TranscribeFileInput{
 			Language:        "no",
-			File:            path,
-			DestinationPath: tmpFolder,
-		}).Get(ctx, &transcribeOutput)
+			File:            path.Linux(),
+			DestinationPath: outFolder.Linux(),
+		}).Get(ctx, nil)
 	default:
 		err = fmt.Errorf("codec not supported: %s", params.FolderName)
 	}
@@ -126,11 +125,6 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 
 		if transcodeOutput != nil {
 			_, _ = wfutils.MoveToFolder(ctx, transcodeOutput.OutputPath, outFolder)
-		}
-		if transcribeOutput != nil {
-			_, _ = wfutils.MoveToFolder(ctx, transcribeOutput.JSONPath, outFolder)
-			_, _ = wfutils.MoveToFolder(ctx, transcribeOutput.SRTPath, outFolder)
-			_, _ = wfutils.MoveToFolder(ctx, transcribeOutput.TXTPath, outFolder)
 		}
 	}
 
