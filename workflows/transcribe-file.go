@@ -51,12 +51,12 @@ func TranscribeFile(
 		return err
 	}
 
-	return wfutils.ExecuteWithQueue(ctx, activities.Transcribe, activities.TranscribeParams{
+	transcribeOutput := &activities.TranscribeResponse{}
+	err = wfutils.ExecuteWithQueue(ctx, activities.Transcribe, activities.TranscribeParams{
 		Language:        params.Language,
 		File:            wavFile.OutputPath,
 		DestinationPath: tempFolder,
 	}).Get(ctx, transcribeOutput)
-
 	if err != nil || transcribeOutput == nil {
 		return err
 	}
