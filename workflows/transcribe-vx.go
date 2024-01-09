@@ -3,17 +3,13 @@ package workflows
 import (
 	"fmt"
 	"os"
-	"time"
-
-	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
-	"github.com/bcc-code/bcc-media-flows/environment"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
+	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/utils/workflows"
 
 	"github.com/davecgh/go-spew/spew"
-	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -33,35 +29,10 @@ func TranscribeVX(
 
 	logger := workflow.GetLogger(ctx)
 
-	options := workflow.ActivityOptions{
-		RetryPolicy: &temporal.RetryPolicy{
-			InitialInterval: time.Minute * 1,
-			MaximumAttempts: 10,
-			MaximumInterval: time.Hour * 1,
-		},
-		StartToCloseTimeout:    time.Hour * 4,
-		ScheduleToCloseTimeout: time.Hour * 48,
-		HeartbeatTimeout:       time.Minute * 1,
-	}
-
-	transcodeOptions := workflow.ActivityOptions{
-		RetryPolicy: &temporal.RetryPolicy{
-			InitialInterval: time.Minute * 1,
-			MaximumAttempts: 10,
-			MaximumInterval: time.Hour * 1,
-		},
-		StartToCloseTimeout:    time.Hour * 4,
-		ScheduleToCloseTimeout: time.Hour * 48,
-		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              environment.GetAudioQueue(),
-	}
-
-	ctx = workflow.WithActivityOptions(ctx, options)
-
 	logger.Info("Starting TranscribeVX")
 
 	shapes := &vsactivity.GetFileFromVXResult{}
-	err := workflow.ExecuteActivity(ctx, vsactivity.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
+	err := wfutils.ExecuteWithQueue(ctx, vsactivity.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		Tags: []string{"lowres", "lowres_watermarked", "lowaudio", "original"},
 		VXID: params.VXID,
 	}).Get(ctx, shapes)
@@ -75,12 +46,14 @@ func TranscribeVX(
 		return err
 	}
 
-	transcodeCtx := workflow.WithActivityOptions(ctx, transcodeOptions)
 	wavFile := common.AudioResult{}
-	workflow.ExecuteActivity(transcodeCtx, activities.TranscodeToAudioWav, common.AudioInput{
+	err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToAudioWav, common.AudioInput{
 		Path:            shapes.FilePath,
 		DestinationPath: tempFolder,
 	}).Get(ctx, &wavFile)
+	if err != nil {
+		return err
+	}
 
 	destinationPath, err := wfutils.GetWorkflowAuxOutputFolder(ctx)
 	if err != nil {
@@ -88,7 +61,7 @@ func TranscribeVX(
 	}
 
 	transcriptionJob := &activities.TranscribeResponse{}
-	err = workflow.ExecuteActivity(ctx, activities.Transcribe, activities.TranscribeParams{
+	err = wfutils.ExecuteWithQueue(ctx, activities.Transcribe, activities.TranscribeParams{
 		Language:        params.Language,
 		File:            wavFile.OutputPath,
 		DestinationPath: destinationPath,
@@ -98,14 +71,14 @@ func TranscribeVX(
 		return err
 	}
 
-	importJson := workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsShapeActivity,
+	importJson := wfutils.ExecuteWithQueue(ctx, vsactivity.ImportFileAsShapeActivity,
 		vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.VXID,
 			FilePath: transcriptionJob.JSONPath,
 			ShapeTag: "transcription_json",
 		})
 
-	importSRT := workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsShapeActivity,
+	importSRT := wfutils.ExecuteWithQueue(ctx, vsactivity.ImportFileAsShapeActivity,
 		vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.VXID,
 			FilePath: transcriptionJob.SRTPath,
@@ -126,7 +99,7 @@ func TranscribeVX(
 		return fmt.Errorf("failed to import transcription files: %v", errs)
 	}
 
-	err = workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
+	err = wfutils.ExecuteWithQueue(ctx, vsactivity.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
 		FilePath: transcriptionJob.SRTPath,
 		Language: "no",
 		AssetID:  params.VXID,
@@ -140,7 +113,7 @@ func TranscribeVX(
 		return err
 	}
 
-	err = workflow.ExecuteActivity(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
+	err = wfutils.ExecuteWithQueue(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
 		VXID:  params.VXID,
 		Key:   transcriptionMetadataFieldName,
 		Value: string(txtValue),

@@ -168,7 +168,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	}
 
 	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
-	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
+	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
 		Source:      params.OutputDir.Rclone(),
 		Destination: fmt.Sprintf("bmms3:/prod-bmm-mediabanken/" + ingestFolder),
 	}).Get(ctx, nil)

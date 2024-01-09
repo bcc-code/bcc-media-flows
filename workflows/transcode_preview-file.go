@@ -2,11 +2,9 @@ package workflows
 
 import (
 	"github.com/bcc-code/bcc-media-flows/activities"
-	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/paths"
-	"time"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 
-	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -23,17 +21,7 @@ func TranscodePreviewFile(
 ) error {
 
 	logger := workflow.GetLogger(ctx)
-	options := workflow.ActivityOptions{
-		RetryPolicy: &temporal.RetryPolicy{
-			InitialInterval: time.Minute * 1,
-			MaximumAttempts: 10,
-			MaximumInterval: time.Hour * 1,
-		},
-		StartToCloseTimeout:    time.Hour * 4,
-		ScheduleToCloseTimeout: time.Hour * 48,
-		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              environment.GetTranscodeQueue(),
-	}
+	options := wfutils.GetDefaultActivityOptions()
 
 	ctx = workflow.WithActivityOptions(ctx, options)
 
@@ -45,7 +33,7 @@ func TranscodePreviewFile(
 	}
 
 	previewResponse := &activities.TranscodePreviewResponse{}
-	err = workflow.ExecuteActivity(ctx, activities.TranscodePreview, activities.TranscodePreviewParams{
+	err = wfutils.ExecuteWithQueue(ctx, activities.TranscodePreview, activities.TranscodePreviewParams{
 		FilePath:           filePath,
 		DestinationDirPath: filePath.Dir(),
 	}).Get(ctx, previewResponse)

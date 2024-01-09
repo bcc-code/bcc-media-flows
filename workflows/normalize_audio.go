@@ -1,15 +1,11 @@
 package workflows
 
 import (
-	"time"
-
-	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/paths"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -31,17 +27,7 @@ func NormalizeAudioLevelWorkflow(
 ) (*NormalizeAudioResult, error) {
 
 	logger := workflow.GetLogger(ctx)
-	options := workflow.ActivityOptions{
-		RetryPolicy: &temporal.RetryPolicy{
-			InitialInterval: time.Minute * 1,
-			MaximumAttempts: 10,
-			MaximumInterval: time.Hour * 1,
-		},
-		StartToCloseTimeout:    time.Hour * 4,
-		ScheduleToCloseTimeout: time.Hour * 48,
-		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              environment.GetWorkerQueue(),
-	}
+	options := wfutils.GetDefaultActivityOptions()
 
 	ctx = workflow.WithActivityOptions(ctx, options)
 	out := &NormalizeAudioResult{}
