@@ -9,6 +9,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
+	"github.com/bcc-code/bcc-media-flows/workflows"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -76,7 +77,6 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	}
 
 	var transcodeOutput *activities.EncodeResult
-	var transcribeOutput *activities.TranscribeResponse
 	ctx = workflow.WithTaskQueue(ctx, environment.GetTranscodeQueue())
 	switch params.FolderName {
 	case common.FolderProRes422HQHD:
@@ -122,11 +122,11 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderTranscribe:
 		ctx = workflow.WithTaskQueue(ctx, environment.GetWorkerQueue())
-		err = workflow.ExecuteActivity(ctx, activities.Transcribe, activities.TranscribeParams{
+		err = workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeFile, workflows.TranscribeFileInput{
 			Language:        "no",
 			File:            path,
-			DestinationPath: tmpFolder,
-		}).Get(ctx, &transcribeOutput)
+			DestinationPath: outFolder,
+		}).Get(ctx, nil)
 	default:
 		err = fmt.Errorf("codec not supported: %s", params.FolderName)
 	}
@@ -141,11 +141,6 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 
 		if transcodeOutput != nil {
 			_, _ = wfutils.MoveToFolder(ctx, transcodeOutput.OutputPath, outFolder)
-		}
-		if transcribeOutput != nil {
-			_, _ = wfutils.MoveToFolder(ctx, transcribeOutput.JSONPath, outFolder)
-			_, _ = wfutils.MoveToFolder(ctx, transcribeOutput.SRTPath, outFolder)
-			_, _ = wfutils.MoveToFolder(ctx, transcribeOutput.TXTPath, outFolder)
 		}
 	}
 

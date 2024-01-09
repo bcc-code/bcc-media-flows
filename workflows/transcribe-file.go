@@ -5,10 +5,10 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
-	"github.com/bcc-code/bcc-media-flows/utils/workflows"
 
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
@@ -67,9 +67,26 @@ func TranscribeFile(
 		return err
 	}
 
-	return workflow.ExecuteActivity(ctx, activities.Transcribe, activities.TranscribeParams{
+	transcribeOutput := &activities.TranscribeResponse{}
+	err = workflow.ExecuteActivity(ctx, activities.Transcribe, activities.TranscribeParams{
 		Language:        params.Language,
 		File:            wavFile.OutputPath,
-		DestinationPath: destination,
-	}).Get(ctx, nil)
+		DestinationPath: tempFolder,
+	}).Get(ctx, transcribeOutput)
+
+	if err != nil || transcribeOutput == nil {
+		return err
+	}
+
+	_, err = wfutils.MoveToFolder(ctx, transcribeOutput.JSONPath, destination)
+	if err != nil {
+		return err
+	}
+	_, err = wfutils.MoveToFolder(ctx, transcribeOutput.SRTPath, destination)
+	if err != nil {
+		return err
+	}
+	_, err = wfutils.MoveToFolder(ctx, transcribeOutput.TXTPath, destination)
+	return err
+
 }
