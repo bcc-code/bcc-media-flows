@@ -9,7 +9,9 @@ import (
 	"strings"
 	"time"
 
-	ingestworkflows "github.com/bcc-code/bccm-flows/workflows/ingest"
+	"github.com/bcc-code/bcc-media-flows/environment"
+	"github.com/bcc-code/bcc-media-flows/workflows"
+	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"
