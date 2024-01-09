@@ -54,7 +54,7 @@ func HandleMultitrackFile(
 
 	lucidPath = lucidPath.Append(path.Base()).Prepend("01 Liveopptak fra Brunstad/01 RAW")
 
-	err = workflow.ExecuteActivity(ctx, activities.CopyFile, activities.MoveFileInput{
+	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      path,
 		Destination: lucidPath,
 	}).Get(ctx, nil)
