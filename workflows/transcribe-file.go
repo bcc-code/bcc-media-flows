@@ -26,7 +26,6 @@ func TranscribeFile(
 	ctx workflow.Context,
 	params TranscribeFileInput,
 ) error {
-
 	logger := workflow.GetLogger(ctx)
 	options := workflow.ActivityOptions{
 		RetryPolicy: &temporal.RetryPolicy{

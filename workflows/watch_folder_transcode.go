@@ -9,7 +9,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"github.com/bcc-code/bcc-media-flows/workflows"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -122,10 +121,10 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderTranscribe:
 		ctx = workflow.WithTaskQueue(ctx, environment.GetWorkerQueue())
-		err = workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeFile, workflows.TranscribeFileInput{
+		err = workflow.ExecuteChildWorkflow(ctx, TranscribeFile, TranscribeFileInput{
 			Language:        "no",
-			File:            path,
-			DestinationPath: outFolder,
+			File:            path.Linux(),
+			DestinationPath: outFolder.Linux(),
 		}).Get(ctx, nil)
 	default:
 		err = fmt.Errorf("codec not supported: %s", params.FolderName)
