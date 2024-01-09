@@ -17,8 +17,8 @@ import (
 // TranscribeFileInput is the input to the TranscribeFile
 type TranscribeFileInput struct {
 	Language        string
-	File            paths.Path
-	DestinationPath paths.Path
+	File            string
+	DestinationPath string
 }
 
 // TranscribeFile is the workflow that transcribes a video
@@ -50,11 +50,21 @@ func TranscribeFile(
 		return err
 	}
 
+	file, err := paths.Parse(params.File)
+	if err != nil {
+		return err
+	}
+
 	wavFile := common.AudioResult{}
 	workflow.ExecuteActivity(audioCtx, activities.TranscodeToAudioWav, common.AudioInput{
-		Path:            params.File,
+		Path:            file,
 		DestinationPath: tempFolder,
 	}).Get(ctx, &wavFile)
+
+	destination, err := paths.Parse(params.DestinationPath)
+	if err != nil {
+		return err
+	}
 
 	transcribeOutput := &activities.TranscribeResponse{}
 	err = workflow.ExecuteActivity(ctx, activities.Transcribe, activities.TranscribeParams{
@@ -67,15 +77,15 @@ func TranscribeFile(
 		return err
 	}
 
-	_, err = wfutils.MoveToFolder(ctx, transcribeOutput.JSONPath, params.DestinationPath)
+	_, err = wfutils.MoveToFolder(ctx, transcribeOutput.JSONPath, destination)
 	if err != nil {
 		return err
 	}
-	_, err = wfutils.MoveToFolder(ctx, transcribeOutput.SRTPath, params.DestinationPath)
+	_, err = wfutils.MoveToFolder(ctx, transcribeOutput.SRTPath, destination)
 	if err != nil {
 		return err
 	}
-	_, err = wfutils.MoveToFolder(ctx, transcribeOutput.TXTPath, params.DestinationPath)
+	_, err = wfutils.MoveToFolder(ctx, transcribeOutput.TXTPath, destination)
 	return err
 
 }
