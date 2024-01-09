@@ -108,8 +108,6 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
-	ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
-
 	videoFilePath := paths.MustParse(videoShape.GetPath())
 	originalFilenameWithoutExt := videoFilePath.Base()[0 : len(videoFilePath.Base())-len(videoFilePath.Ext())]
 	var analyzeResult *ffmpeg.StreamInfo
@@ -154,8 +152,6 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		}
 	}
 
-	ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
-
 	var resultFutures []workflow.Future
 	for _, dest := range destinations {
 		childParams := VBExportChildWorkflowParams{
@@ -189,7 +185,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 			return nil, err
 		}
 
-		ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
+		ctx = workflow.WithChildOptions(ctx, wfutils.GetVXDefaultWorkflowOptions(params.VXID))
 		future := workflow.ExecuteChildWorkflow(ctx, w, childParams)
 		if err != nil {
 			return nil, err

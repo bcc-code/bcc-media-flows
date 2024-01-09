@@ -53,7 +53,6 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	// Normalize audio
 	for _, lang := range langs {
 		audio := params.MergeResult.AudioFiles[lang]
-		ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
 		future := wfutils.ExecuteWithQueue(ctx, activities.NormalizeAudioActivity, activities.NormalizeAudioParams{
 			FilePath:              audio,
 			TargetLUFS:            targetLufs,

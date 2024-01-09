@@ -33,3 +33,12 @@ func GetDefaultWorkflowOptions() workflow.ChildWorkflowOptions {
 		TaskQueue: environment.GetWorkerQueue(),
 	}
 }
+
+func GetVXDefaultWorkflowOptions(vxID string) workflow.ChildWorkflowOptions {
+	return workflow.ChildWorkflowOptions{
+		TaskQueue: environment.GetWorkerQueue(),
+		SearchAttributes: map[string]interface{}{
+			"CustomStringField": vxID,
+		},
+	}
+}

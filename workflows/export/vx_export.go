@@ -132,7 +132,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
-	ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
+	ctx = workflow.WithChildOptions(ctx, wfutils.GetVXDefaultWorkflowOptions(params.VXID))
 
 	bmmOnly := len(params.Destinations) == 1 && params.Destinations[0] == AssetExportDestinationBMM.Value
 
@@ -202,7 +202,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 			return nil, err
 		}
 
-		ctx = workflow.WithChildOptions(ctx, wfutils.GetDefaultWorkflowOptions())
+		ctx = workflow.WithChildOptions(ctx, wfutils.GetVXDefaultWorkflowOptions(params.VXID))
 		future := workflow.ExecuteChildWorkflow(ctx, w, childParams)
 		if err != nil {
 			return nil, err
