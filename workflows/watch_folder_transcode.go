@@ -123,8 +123,8 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 		ctx = workflow.WithTaskQueue(ctx, environment.GetWorkerQueue())
 		err = workflow.ExecuteChildWorkflow(ctx, TranscribeFile, TranscribeFileInput{
 			Language:        "no",
-			File:            path,
-			DestinationPath: outFolder,
+			File:            path.Linux(),
+			DestinationPath: outFolder.Linux(),
 		}).Get(ctx, nil)
 	default:
 		err = fmt.Errorf("codec not supported: %s", params.FolderName)
