@@ -242,6 +242,10 @@ func getEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) (*C
 	}
 
 	if len(shape.AudioComponent) == 8 {
+		if len(languagesToExport) > 1 {
+			return clip, fmt.Errorf("found 8 audio components, expected 16")
+		}
+
 		var streams []int
 		for _, c := range shape.AudioComponent[:2] {
 			streams = append(streams, c.EssenceStreamID)
@@ -251,7 +255,6 @@ func getEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) (*C
 		}
 
 		for _, lang := range languagesToExport {
-
 			clip.AudioFiles[lang] = &AudioFile{
 				VXID:    clip.VXID,
 				File:    shape.GetPath(),
