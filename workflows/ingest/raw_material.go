@@ -22,8 +22,10 @@ type RawMaterialParams struct {
 }
 
 func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
-	options := wfutils.GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, options)
+	logger := workflow.GetLogger(ctx)
+	logger.Info("Starting RawMaterial workflow")
+
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	outputFolder, err := wfutils.GetWorkflowRawOutputFolder(ctx)
 	if err != nil {
@@ -101,7 +103,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		}
 		// Only create thumbnails if the file has video
 		if result.HasVideo {
-			err = workflow.ExecuteActivity(ctx, vsactivity.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
+			err = wfutils.ExecuteWithQueue(ctx, vsactivity.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
 				AssetID: id,
 			}).Get(ctx, nil)
 			if err != nil {

@@ -76,8 +76,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting VXExport")
 
-	options := wfutils.GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, options)
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	var destinations []*AssetExportDestination
 	for _, dest := range params.Destinations {
@@ -90,7 +89,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 
 	var errs []error
 	var data *vidispine.ExportData
-	err := workflow.ExecuteActivity(ctx, avidispine.GetExportDataActivity, avidispine.GetExportDataParams{
+	err := wfutils.ExecuteWithQueue(ctx, avidispine.GetExportDataActivity, avidispine.GetExportDataParams{
 		VXID:        params.VXID,
 		Languages:   params.Languages,
 		AudioSource: params.AudioSource,

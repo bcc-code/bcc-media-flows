@@ -14,28 +14,28 @@ import (
 )
 
 func CreateFolder(ctx workflow.Context, destination paths.Path) error {
-	return workflow.ExecuteActivity(ctx, activities.CreateFolder, activities.CreateFolderInput{
+	return ExecuteWithQueue(ctx, activities.CreateFolder, activities.CreateFolderInput{
 		Destination: destination,
 	}).Get(ctx, nil)
 }
 
 func StandardizeFileName(ctx workflow.Context, file paths.Path) (paths.Path, error) {
 	var result activities.FileResult
-	err := workflow.ExecuteActivity(ctx, activities.StandardizeFileName, activities.FileInput{
+	err := ExecuteWithQueue(ctx, activities.StandardizeFileName, activities.FileInput{
 		Path: file,
 	}).Get(ctx, &result)
 	return result.Path, err
 }
 
 func MoveFile(ctx workflow.Context, source, destination paths.Path) error {
-	return workflow.ExecuteActivity(ctx, activities.MoveFile, activities.MoveFileInput{
+	return ExecuteWithQueue(ctx, activities.MoveFile, activities.MoveFileInput{
 		Source:      source,
 		Destination: destination,
 	}).Get(ctx, nil)
 }
 
 func CopyFile(ctx workflow.Context, source, destination paths.Path) error {
-	return workflow.ExecuteActivity(ctx, activities.CopyFile, activities.MoveFileInput{
+	return ExecuteWithQueue(ctx, activities.CopyFile, activities.MoveFileInput{
 		Source:      source,
 		Destination: destination,
 	}).Get(ctx, nil)
@@ -48,7 +48,7 @@ func MoveToFolder(ctx workflow.Context, file, folder paths.Path) (paths.Path, er
 }
 
 func WriteFile(ctx workflow.Context, file paths.Path, data []byte) error {
-	return workflow.ExecuteActivity(ctx, activities.WriteFile, activities.WriteFileInput{
+	return ExecuteWithQueue(ctx, activities.WriteFile, activities.WriteFileInput{
 		Path: file,
 		Data: data,
 	}).Get(ctx, nil)
@@ -56,7 +56,7 @@ func WriteFile(ctx workflow.Context, file paths.Path, data []byte) error {
 
 func ReadFile(ctx workflow.Context, file paths.Path) ([]byte, error) {
 	var res []byte
-	err := workflow.ExecuteActivity(ctx, activities.ReadFile, activities.FileInput{
+	err := ExecuteWithQueue(ctx, activities.ReadFile, activities.FileInput{
 		Path: file,
 	}).Get(ctx, &res)
 	return res, err
@@ -64,7 +64,7 @@ func ReadFile(ctx workflow.Context, file paths.Path) ([]byte, error) {
 
 func ListFiles(ctx workflow.Context, path paths.Path) (paths.Files, error) {
 	var res []paths.Path
-	err := workflow.ExecuteActivity(ctx, activities.ListFiles, activities.FileInput{
+	err := ExecuteWithQueue(ctx, activities.ListFiles, activities.FileInput{
 		Path: path,
 	}).Get(ctx, &res)
 	return res, err
@@ -81,13 +81,13 @@ func UnmarshalXMLFile[T any](ctx workflow.Context, file paths.Path) (*T, error) 
 }
 
 func DeletePath(ctx workflow.Context, path paths.Path) error {
-	return workflow.ExecuteActivity(ctx, activities.DeletePath, activities.DeletePathInput{
+	return ExecuteWithQueue(ctx, activities.DeletePath, activities.DeletePathInput{
 		Path: path,
 	}).Get(ctx, nil)
 }
 
 func DeletePathRecursively(ctx workflow.Context, path paths.Path) error {
-	return workflow.ExecuteActivity(ctx, activities.DeletePath, activities.DeletePathInput{
+	return ExecuteWithQueue(ctx, activities.DeletePath, activities.DeletePathInput{
 		RemoveAll: true,
 		Path:      path,
 	}).Get(ctx, nil)

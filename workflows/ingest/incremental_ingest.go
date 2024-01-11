@@ -16,8 +16,7 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting Incremental")
 
-	options := wfutils.GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, options)
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	in, err := paths.Parse(params.Path)
 	if err != nil {

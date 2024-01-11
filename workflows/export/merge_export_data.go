@@ -3,7 +3,6 @@ package export
 import (
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
-	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
@@ -37,9 +36,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 
 	mergeInput, audioMergeInputs, subtitleMergeInputs, jsonTranscriptFile := exportDataToMergeInputs(data, params.TempDir, params.SubtitlesDir)
 
-	options := wfutils.GetDefaultActivityOptions()
-	options.TaskQueue = environment.GetTranscodeQueue()
-	ctx = workflow.WithActivityOptions(ctx, options)
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	var transcriptTask workflow.Future
 	if params.MakeTranscript && jsonTranscriptFile != nil {

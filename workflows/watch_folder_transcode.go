@@ -2,14 +2,12 @@ package workflows
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -20,21 +18,9 @@ type WatchFolderTranscodeInput struct {
 
 func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput) error {
 	logger := workflow.GetLogger(ctx)
-	options := workflow.ActivityOptions{
-		RetryPolicy: &temporal.RetryPolicy{
-			InitialInterval: time.Minute * 1,
-			MaximumAttempts: 1,
-			MaximumInterval: time.Hour * 1,
-		},
-		StartToCloseTimeout:    time.Hour * 4,
-		ScheduleToCloseTimeout: time.Hour * 48,
-		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              environment.GetWorkerQueue(),
-	}
-
-	ctx = workflow.WithActivityOptions(ctx, options)
-
 	logger.Info("Starting WatchFolderTranscode")
+
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	path, err := paths.Parse(params.Path)
 	if err != nil {
@@ -76,35 +62,34 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	}
 
 	var transcodeOutput *activities.EncodeResult
-	ctx = workflow.WithTaskQueue(ctx, environment.GetTranscodeQueue())
 	switch params.FolderName {
 	case common.FolderProRes422HQHD:
-		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
+		err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:   path,
 			OutputDir:  tmpFolder,
 			Resolution: "1920x1080",
 			FrameRate:  25,
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderProRes422HQNative:
-		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
+		err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:  path,
 			OutputDir: tmpFolder,
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderProRes422HQNative25FPS:
-		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
+		err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:  path,
 			OutputDir: tmpFolder,
 			FrameRate: 25,
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderProRes4444K25FPS:
-		err = workflow.ExecuteActivity(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
+		err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:   path,
 			OutputDir:  tmpFolder,
 			Resolution: "3840x2160",
 			FrameRate:  25,
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderAVCIntra100HD:
-		err = workflow.ExecuteActivity(ctx, activities.TranscodeToH264Activity, activities.EncodeParams{
+		err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToH264Activity, activities.EncodeParams{
 			FilePath:   path,
 			OutputDir:  tmpFolder,
 			Resolution: "1920x1080",
@@ -112,7 +97,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 			Bitrate:    "100M",
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderXDCAMHD422:
-		err = workflow.ExecuteActivity(ctx, activities.TranscodeToXDCAMActivity, activities.EncodeParams{
+		err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToXDCAMActivity, activities.EncodeParams{
 			FilePath:   path,
 			OutputDir:  tmpFolder,
 			Resolution: "1920x1080",

@@ -4,14 +4,11 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
-	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/utils/workflows"
 
-	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -28,26 +25,13 @@ func TranscodePreviewVX(
 	ctx workflow.Context,
 	params TranscodePreviewVXInput,
 ) error {
-
 	logger := workflow.GetLogger(ctx)
-	options := workflow.ActivityOptions{
-		RetryPolicy: &temporal.RetryPolicy{
-			InitialInterval: time.Minute * 1,
-			MaximumAttempts: 10,
-			MaximumInterval: time.Hour * 1,
-		},
-		StartToCloseTimeout:    time.Hour * 4,
-		ScheduleToCloseTimeout: time.Hour * 48,
-		HeartbeatTimeout:       time.Minute * 1,
-		TaskQueue:              environment.GetWorkerQueue(),
-	}
-
-	ctx = workflow.WithActivityOptions(ctx, options)
-
 	logger.Info("Starting TranscodePreviewVX")
 
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+
 	shapes := &vsactivity.GetFileFromVXResult{}
-	err := workflow.ExecuteActivity(ctx, vsactivity.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
+	err := wfutils.ExecuteWithQueue(ctx, vsactivity.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		Tags: []string{"original"},
 		VXID: params.VXID,
 	}).Get(ctx, shapes)
@@ -68,8 +52,7 @@ func TranscodePreviewVX(
 	}
 
 	previewResponse := &activities.TranscodePreviewResponse{}
-	ctx = workflow.WithTaskQueue(ctx, environment.GetTranscodeQueue())
-	err = workflow.ExecuteActivity(ctx, activities.TranscodePreview, activities.TranscodePreviewParams{
+	err = wfutils.ExecuteWithQueue(ctx, activities.TranscodePreview, activities.TranscodePreviewParams{
 		FilePath:           shapes.FilePath,
 		DestinationDirPath: destinationPath,
 	}).Get(ctx, previewResponse)
@@ -85,8 +68,7 @@ func TranscodePreviewVX(
 		shapeTag = "lowres_watermarked"
 	}
 
-	ctx = workflow.WithTaskQueue(ctx, environment.GetWorkerQueue())
-	err = workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsShapeActivity,
+	err = wfutils.ExecuteWithQueue(ctx, vsactivity.ImportFileAsShapeActivity,
 		vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.VXID,
 			FilePath: previewResponse.PreviewFilePath,

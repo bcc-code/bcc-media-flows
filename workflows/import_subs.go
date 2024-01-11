@@ -48,7 +48,7 @@ func ImportSubtitlesFromSubtrans(
 	}
 
 	subtransIDResponse := &activities.GetSubtransIDOutput{}
-	err := workflow.ExecuteActivity(ctx, activities.GetSubtransIDActivity, input).Get(ctx, subtransIDResponse)
+	err := wfutils.ExecuteWithQueue(ctx, activities.GetSubtransIDActivity, input).Get(ctx, subtransIDResponse)
 	if err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func ImportSubtitlesFromSubtrans(
 	outputPath, _ := wfutils.GetWorkflowAuxOutputFolder(ctx)
 
 	subsList := map[string]paths.Path{}
-	err = workflow.ExecuteActivity(ctx, activities.GetSubtitlesActivity, activities.GetSubtitlesInput{
+	err = wfutils.ExecuteWithQueue(ctx, activities.GetSubtitlesActivity, activities.GetSubtitlesInput{
 		SubtransID:        subtransIDResponse.SubtransID,
 		Format:            "srt",
 		ApprovedOnly:      false,
@@ -71,7 +71,7 @@ func ImportSubtitlesFromSubtrans(
 	for lang, sub := range subsList {
 		lang = strings.ToLower(lang)
 
-		future := workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
+		future := wfutils.ExecuteWithQueue(ctx, vsactivity.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
 			AssetID:  params.VXID,
 			Language: lang,
 			FilePath: sub,
@@ -79,7 +79,7 @@ func ImportSubtitlesFromSubtrans(
 
 		futures = append(futures, future)
 
-		future = workflow.ExecuteActivity(ctx, vsactivity.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
+		future = wfutils.ExecuteWithQueue(ctx, vsactivity.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.VXID,
 			FilePath: sub,
 			ShapeTag: fmt.Sprintf("sub_%s_%s", lang, "srt"),

@@ -23,8 +23,7 @@ func VBExportToGfx(ctx workflow.Context, params VBExportChildWorkflowParams) (*V
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToGFX")
 
-	options := wfutils.GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, options)
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	gfxOutputDir := params.TempDir.Append("gfx_output")
 	err := wfutils.CreateFolder(ctx, gfxOutputDir)

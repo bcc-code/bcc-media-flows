@@ -17,7 +17,6 @@ import (
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	"github.com/bcc-code/bcc-media-platform/backend/events"
 	"github.com/samber/lo"
-	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -25,16 +24,12 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToVOD")
 
-	options := wfutils.GetDefaultActivityOptions()
-	options.RetryPolicy = &temporal.RetryPolicy{
-		MaximumAttempts: 1,
-	}
-	ctx = workflow.WithActivityOptions(ctx, options)
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	// We start chapter export and pick the results up later when needed
 	var chapterDataWF workflow.Future
 	if params.ParentParams.WithChapters {
-		chapterDataWF = workflow.ExecuteActivity(ctx, vsactivity.GetChapterDataActivity, vsactivity.GetChapterDataParams{
+		chapterDataWF = wfutils.ExecuteWithQueue(ctx, vsactivity.GetChapterDataActivity, vsactivity.GetChapterDataParams{
 			ExportData: &params.ExportData,
 		})
 	}
@@ -259,7 +254,7 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 
 	if v.params.Upload {
 		// Copies created files and any remaining files needed.
-		err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
+		err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
 			Source:      outputDir.Rclone(),
 			Destination: fmt.Sprintf("s3prod:vod-asset-ingest-prod/" + v.ingestFolder),
 		}).Get(ctx, nil)

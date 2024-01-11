@@ -39,8 +39,7 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToHippo")
 
-	options := wfutils.GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, options)
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	hippoOutputDir := params.TempDir.Append("hippo_output")
 	err := wfutils.CreateFolder(ctx, hippoOutputDir)

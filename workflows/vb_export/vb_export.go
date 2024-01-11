@@ -59,8 +59,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting VBExport")
 
-	options := wfutils.GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, options)
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	if params.VXID == "" {
 		return nil, fmt.Errorf("vxid is required")

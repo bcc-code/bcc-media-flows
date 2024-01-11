@@ -25,8 +25,7 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToAbekas")
 
-	options := wfutils.GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, options)
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	abekasOutputDir := params.TempDir.Append("abekas_output")
 	err := wfutils.CreateFolder(ctx, abekasOutputDir)

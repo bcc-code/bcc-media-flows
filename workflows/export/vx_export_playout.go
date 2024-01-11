@@ -5,7 +5,6 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
-	"github.com/bcc-code/bcc-media-flows/environment"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -14,8 +13,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToPlayout")
 
-	options := wfutils.GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, options)
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	xdcamOutputDir := params.TempDir.Append("xdcam_output")
 	err := wfutils.CreateFolder(ctx, xdcamOutputDir)
@@ -23,12 +21,9 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 		return nil, err
 	}
 
-	options.TaskQueue = environment.GetTranscodeQueue()
-	ctx = workflow.WithActivityOptions(ctx, options)
-
 	// Transcode video using playout encoding
 	var videoResult common.VideoResult
-	err = workflow.ExecuteActivity(ctx, activities.TranscodeToXDCAMActivity, activities.EncodeParams{
+	err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToXDCAMActivity, activities.EncodeParams{
 		Bitrate:    "50M",
 		FilePath:   *params.MergeResult.VideoFile,
 		OutputDir:  xdcamOutputDir,
@@ -42,7 +37,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 
 	// Mux into MXF file with 16 audio channels
 	var muxResult *common.PlayoutMuxResult
-	err = workflow.ExecuteActivity(ctx, activities.TranscodePlayoutMux, common.PlayoutMuxInput{
+	err = wfutils.ExecuteWithQueue(ctx, activities.TranscodePlayoutMux, common.PlayoutMuxInput{
 		VideoFilePath:     videoResult.OutputPath,
 		AudioFilePaths:    params.MergeResult.AudioFiles,
 		SubtitleFilePaths: params.MergeResult.SubtitleFiles,
@@ -53,12 +48,9 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 		return nil, err
 	}
 
-	options.TaskQueue = environment.GetWorkerQueue()
-	ctx = workflow.WithActivityOptions(ctx, options)
-
 	// Rclone to playout
 	destination := "playout:/tmp"
-	err = workflow.ExecuteActivity(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
+	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
 		Source:      params.OutputDir.Rclone(),
 		Destination: destination,
 	}).Get(ctx, nil)
@@ -66,7 +58,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 		return nil, err
 	}
 
-	err = workflow.ExecuteActivity(ctx, activities.FtpPlayoutRename, activities.FtpPlayoutRenameParams{
+	err = wfutils.ExecuteWithQueue(ctx, activities.FtpPlayoutRename, activities.FtpPlayoutRenameParams{
 		From: filepath.Join("/tmp/", muxResult.Path.Base()),
 		To:   filepath.Join("/dropbox/", muxResult.Path.Base()),
 	}).Get(ctx, nil)
