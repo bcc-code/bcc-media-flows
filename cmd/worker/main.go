@@ -66,6 +66,7 @@ var workerWorkflows = []any{
 	workflows.TranscribeFile,
 	workflows.TranscribeVX,
 	workflows.WatchFolderTranscode,
+	workflows.HandleMultitrackFile,
 	export.VXExport,
 	export.VXExportToVOD,
 	export.VXExportToPlayout,
