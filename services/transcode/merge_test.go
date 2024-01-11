@@ -3,6 +3,8 @@ package transcode
 import (
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
+	"github.com/stretchr/testify/assert"
 
 	"testing"
 )
@@ -61,4 +63,23 @@ func Test_MergeAudio(t *testing.T) {
 			},
 		},
 	}, nil)
+}
+
+func Test_MergeSubtitles(t *testing.T) {
+	p := paths.MustParse("/mnt/temp/test/RC23_TEMA_TEMA1_MAS_NOR_nor.srt")
+
+	_, err := MergeSubtitles(common.MergeInput{
+		Title: "test",
+		Items: []common.MergeInputItem{
+			{
+				Start: 500,
+				End:   600,
+				Path:  p,
+			},
+		},
+		OutputDir: paths.MustParse("/mnt/temp/test"),
+		WorkDir:   paths.MustParse("/mnt/temp/test"),
+	}, func(pr ffmpeg.Progress) {})
+
+	assert.Nil(t, err)
 }

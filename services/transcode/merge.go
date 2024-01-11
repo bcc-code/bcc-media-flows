@@ -2,7 +2,6 @@ package transcode
 
 import (
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/paths"
 	"log"
 	"math"
 	"os"
@@ -10,6 +9,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/bcc-code/bcc-media-flows/paths"
 
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
@@ -233,7 +234,13 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 		fileOut := filepath.Join(input.WorkDir.Local(), fmt.Sprintf("%s-%d-out.srt", input.Title, index))
 		path := item.Path.Local()
 
-		cmd := exec.Command("ffmpeg", "-i", path, "-ss", fmt.Sprintf("%f", item.Start), "-to", fmt.Sprintf("%f", item.End), "-y", file)
+		cmd := exec.Command("ffmpeg",
+			"-hide_banner",
+			"-i", path,
+			"-ss", fmt.Sprintf("%f", item.Start),
+			"-to", fmt.Sprintf("%f", item.End),
+			"-y", file,
+		)
 
 		_, err := utils.ExecuteCmd(cmd, nil)
 		if err != nil {
@@ -244,13 +251,22 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 			return nil, err
 		}
 		if fileInfo.Size() == 0 {
-			err = os.WriteFile(file, []byte(fmt.Sprintf("1\n%s --> %s\n", formatDuration(item.Start), formatDuration(item.End))), os.ModePerm)
+			contents := fmt.Sprintf("1\n%s --> %s\n\n", formatDuration(item.Start), formatDuration(item.End))
+			err = os.WriteFile(file,
+				[]byte(contents),
+				os.ModePerm,
+			)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		cmd = exec.Command("ffmpeg", "-itsoffset", fmt.Sprintf("%f", startAt), "-i", file, "-y", fileOut)
+		cmd = exec.Command("ffmpeg",
+			"-hide_banner",
+			"-itsoffset", fmt.Sprintf("%f", startAt),
+			"-i", file,
+			"-y", fileOut,
+		)
 		_, err = utils.ExecuteCmd(cmd, nil)
 		if err != nil {
 			return nil, err
@@ -276,10 +292,24 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 		return nil, err
 	}
 
+	for _, f := range files {
+		info, err := os.Stat(f)
+		if err != nil {
+			return nil, err
+		}
+		if info.Size() == 0 {
+			err = os.WriteFile(f, []byte("1\n00:00:00,000 --> 00:00:00,000\n"), os.ModePerm)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	concatStr := fmt.Sprintf("concat:%s", strings.Join(files, "|"))
 
 	outputFilePath := filepath.Join(input.OutputDir.Local(), filepath.Clean(input.Title)+".srt")
 	params := []string{
+		"-hide_banner",
 		"-progress", "pipe:1",
 		"-hide_banner",
 		"-i", concatStr,
