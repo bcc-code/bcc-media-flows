@@ -1,9 +1,12 @@
 package transcode
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -12,6 +15,77 @@ import (
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 )
+
+type SilencePeriod struct {
+	Start float64 `json:"start"`
+	End   float64 `json:"end"`
+}
+
+func AudioGetSilencePeriods(path paths.Path, threshold float64) ([]SilencePeriod, error) {
+	params := []string{
+		"-loglevel", "info",
+		"-hide_banner",
+		"-i", path.Local(),
+		"-af", fmt.Sprintf("silencedetect=noise=-90dB:d=%f", threshold),
+		"-f", "null",
+		"-",
+	}
+
+	cmd := exec.Command("ffmpeg", params...)
+
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	// Run the command
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		return nil, err
+	}
+
+	result := stderr.String()
+
+	var silencePeriods []SilencePeriod
+	r := regexp.MustCompile(`silence_(start|end): ([0-9.]+)`)
+
+	var start float64
+	for _, line := range strings.Split(result, "\n") {
+		matches := r.FindStringSubmatch(line)
+		if len(matches) == 3 {
+			if matches[1] == "start" {
+				start, _ = strconv.ParseFloat(matches[2], 64)
+			} else if matches[1] == "end" {
+				end, _ := strconv.ParseFloat(matches[2], 64)
+				silencePeriods = append(silencePeriods, SilencePeriod{Start: start, End: end})
+			}
+		}
+	}
+
+	return silencePeriods, nil
+}
+
+func AudioIsSilent(path paths.Path) (bool, error) {
+	info, err := ffmpeg.GetStreamInfo(path.Local())
+	if err != nil {
+		return false, err
+	}
+
+	silencePeriods, err := AudioGetSilencePeriods(path, 10)
+	if err != nil {
+		return false, err
+	}
+
+	var dur float64
+	for _, p := range silencePeriods {
+		dur += p.End - p.Start
+	}
+
+	if int(info.TotalSeconds) == int(dur) {
+		return true, nil
+	}
+
+	return false, nil
+}
 
 func AudioAac(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.AudioResult, error) {
 	params := []string{

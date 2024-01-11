@@ -41,7 +41,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		}
 	}
 
-	audioFiles, err := prepareAudioFiles(ctx, params.MergeResult, params.TempDir, true)
+	audioFiles, err := prepareAudioFiles(ctx, params.MergeResult, params.TempDir, true, params.ParentParams.IgnoreSilence)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +142,7 @@ type vxExportVodService struct {
 	errs                   []error
 }
 
-func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, tempDir paths.Path, normalizeAudio bool) (map[string]paths.Path, error) {
+func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, tempDir paths.Path, normalizeAudio, ignoreSilence bool) (map[string]paths.Path, error) {
 	prepareFilesSelector := workflow.NewSelector(ctx)
 
 	if normalizeAudio {
@@ -172,7 +172,14 @@ func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, 
 				return nil, fmt.Errorf("failed to normalize audio for language %s: %w", lang, err)
 			}
 
-			mergeResult.AudioFiles[lang] = normalizedRes.FilePath
+			if normalizedRes.IsSilent {
+				if ignoreSilence {
+					continue
+				}
+				return nil, fmt.Errorf("audio for language %s is silent", lang)
+			} else {
+				mergeResult.AudioFiles[lang] = normalizedRes.FilePath
+			}
 		}
 	}
 
