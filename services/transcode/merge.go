@@ -293,15 +293,9 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 	}
 
 	for _, f := range files {
-		info, err := os.Stat(f)
+		err = ensureValidSrtFile(f)
 		if err != nil {
 			return nil, err
-		}
-		if info.Size() == 0 {
-			err = os.WriteFile(f, []byte("1\n00:00:00,000 --> 00:00:00,000\n"), os.ModePerm)
-			if err != nil {
-				return nil, err
-			}
 		}
 	}
 
@@ -323,6 +317,11 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 		return nil, err
 	}
 
+	err = ensureValidSrtFile(outputFilePath)
+	if err != nil {
+		return nil, err
+	}
+
 	outputPath, err := paths.Parse(outputFilePath)
 	if err != nil {
 		return nil, err
@@ -331,4 +330,19 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 	return &common.MergeResult{
 		Path: outputPath,
 	}, err
+}
+
+func ensureValidSrtFile(f string) error {
+	info, err := os.Stat(f)
+	if err != nil {
+		return err
+	}
+	if info.Size() == 0 {
+		err = os.WriteFile(f, []byte("1\n00:00:00,000 --> 00:00:00,000\n"), os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
