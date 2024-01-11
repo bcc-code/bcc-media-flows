@@ -83,12 +83,24 @@ type NormalizeAudioParams struct {
 
 type NormalizeAudioResult struct {
 	FilePath       paths.Path
+	IsSilent       bool
 	InputAnalysis  *common.AnalyzeEBUR128Result
 	OutputAnalysis *common.AnalyzeEBUR128Result
 }
 
 func NormalizeAudioActivity(ctx context.Context, params NormalizeAudioParams) (*NormalizeAudioResult, error) {
 	out := &NormalizeAudioResult{}
+
+	silent, err := transcode.AudioIsSilent(params.FilePath)
+	if err != nil {
+		return nil, err
+	}
+	if silent {
+		return &NormalizeAudioResult{
+			FilePath: params.FilePath,
+			IsSilent: true,
+		}, nil
+	}
 
 	r128Result, err := AnalyzeEBUR128Activity(ctx, AnalyzeEBUR128Params{
 		FilePath:       params.FilePath,

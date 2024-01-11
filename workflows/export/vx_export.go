@@ -40,6 +40,7 @@ type VXExportParams struct {
 	AudioSource   string
 	Languages     []string
 	Subclip       string
+	IgnoreSilence bool
 }
 
 type VXExportResult struct {
