@@ -124,7 +124,10 @@ func GetWorkflowIsilonOutputFolder(ctx workflow.Context, root string) (paths.Pat
 
 	date := time.Now()
 
-	path := paths.MustParse(filepath.Join(environment.GetIsilonPrefix(), root, fmt.Sprintf("%d/%d/%d", date.Year(), date.Month(), date.Day()), info.OriginalRunID))
+	path := paths.New(
+		paths.IsilonDrive,
+		filepath.Join(root, fmt.Sprintf("%d/%d/%d", date.Year(), date.Month(), date.Day()), info.OriginalRunID),
+	)
 
 	return path, CreateFolder(ctx, path)
 }
