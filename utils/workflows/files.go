@@ -107,7 +107,14 @@ func GetWorkflowLucidLinkOutputFolder(ctx workflow.Context, root string) paths.P
 
 	date := time.Now()
 
-	path := paths.MustParse(filepath.Join(paths.LucidLinkDrive.RclonePath(), root, fmt.Sprintf("%d/%d/%d", date.Year(), date.Month(), date.Day()), info.OriginalRunID))
+	path := paths.New(
+		paths.LucidLinkDrive,
+		filepath.Join(
+			root,
+			fmt.Sprintf("%d/%d/%d", date.Year(), date.Month(), date.Day()),
+			info.OriginalRunID,
+		),
+	)
 
 	return path
 }
