@@ -146,6 +146,7 @@ func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, 
 	prepareFilesSelector := workflow.NewSelector(ctx)
 
 	if normalizeAudio {
+		var silentAudioLanguages []string
 		langs, err := wfutils.GetMapKeysSafely(ctx, mergeResult.AudioFiles)
 		if err != nil {
 			return nil, err
@@ -173,13 +174,14 @@ func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, 
 			}
 
 			if normalizedRes.IsSilent {
-				if ignoreSilence {
-					continue
-				}
-				return nil, fmt.Errorf("audio for language %s is silent", lang)
+				silentAudioLanguages = append(silentAudioLanguages, lang)
 			} else {
 				mergeResult.AudioFiles[lang] = normalizedRes.FilePath
 			}
+		}
+
+		if len(silentAudioLanguages) > 0 && !ignoreSilence {
+			return nil, fmt.Errorf("audio for languages `%s` is silent", strings.Join(silentAudioLanguages, ", "))
 		}
 	}
 
