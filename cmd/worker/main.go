@@ -78,6 +78,7 @@ var workerWorkflows = []any{
 	ingestworkflows.RawMaterial,
 	ingestworkflows.Masters,
 	ingestworkflows.Incremental,
+	ingestworkflows.MoveUploadedFiles,
 	workflows.NormalizeAudioLevelWorkflow,
 	vb_export.VBExport,
 	vb_export.VBExportToAbekas,
