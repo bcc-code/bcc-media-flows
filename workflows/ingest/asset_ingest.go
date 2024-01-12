@@ -32,6 +32,12 @@ var (
 		OrderFormMusic,
 		OrderFormUpload,
 		//OrderFormVBMaster, // commented out for supporting only raw material
+		OrderFormVBMaster,
+		OrderFormSeriesMaster,
+		OrderFormOtherMaster,
+		OrderFormLEDMaterial,
+		OrderFormPodcast,
+		OrderFormMultitrackPB,
 	)
 )
 
