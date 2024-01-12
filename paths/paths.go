@@ -104,6 +104,14 @@ func (p Path) Dir() Path {
 	}
 }
 
+func (p Path) OnExternalDrive() bool {
+	switch p.Drive {
+	case BrunstadDrive, AssetIngestDrive, LucidLinkDrive:
+		return true
+	}
+	return false
+}
+
 // Local returns the path in a local unix style path.
 func (p Path) Local() string {
 	return filepath.Join(drivePrefixes[p.Drive].Client, p.Path)

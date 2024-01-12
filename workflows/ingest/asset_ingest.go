@@ -29,6 +29,8 @@ var (
 	OrderFormMusic        = OrderForm{Value: "Music"}
 	OrderForms            = enum.New(
 		OrderFormRawMaterial,
+		OrderFormMusic,
+		OrderFormUpload,
 		//OrderFormVBMaster, // commented out for supporting only raw material
 	)
 )

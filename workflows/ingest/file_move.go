@@ -28,7 +28,7 @@ func MoveUploadedFiles(ctx workflow.Context, params MoveUploadedFilesParams) err
 		return err
 	}
 
-	errors := []error{}
+	var errors []error
 	for _, f := range originalFiles {
 		if !utils.ValidRawFilename(f.Local()) {
 			errors = append(errors, fmt.Errorf("invalid filename: %s", f))

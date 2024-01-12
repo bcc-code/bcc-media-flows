@@ -28,10 +28,19 @@ func StandardizeFileName(ctx workflow.Context, file paths.Path) (paths.Path, err
 }
 
 func MoveFile(ctx workflow.Context, source, destination paths.Path) error {
-	return ExecuteWithQueue(ctx, activities.MoveFile, activities.MoveFileInput{
-		Source:      source,
-		Destination: destination,
-	}).Get(ctx, nil)
+	external := source.OnExternalDrive() || destination.OnExternalDrive()
+
+	if external {
+		return ExecuteWithQueue(ctx, activities.RcloneMoveFile, activities.RcloneFileInput{
+			Source:      source,
+			Destination: destination,
+		}).Get(ctx, nil)
+	} else {
+		return ExecuteWithQueue(ctx, activities.MoveFile, activities.MoveFileInput{
+			Source:      source,
+			Destination: destination,
+		}).Get(ctx, nil)
+	}
 }
 
 func CopyFile(ctx workflow.Context, source, destination paths.Path) error {
