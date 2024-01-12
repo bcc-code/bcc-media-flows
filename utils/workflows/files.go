@@ -93,6 +93,16 @@ func DeletePathRecursively(ctx workflow.Context, path paths.Path) error {
 	}).Get(ctx, nil)
 }
 
+func GetWorkflowLucidLinkOutputFolder(ctx workflow.Context, root string) paths.Path {
+	info := workflow.GetInfo(ctx)
+
+	date := time.Now()
+
+	path := paths.MustParse(filepath.Join(paths.LucidLinkDrive.RclonePath(), root, fmt.Sprintf("%d/%d/%d", date.Year(), date.Month(), date.Day()), info.OriginalRunID))
+
+	return path
+}
+
 func GetWorkflowIsilonOutputFolder(ctx workflow.Context, root string) (paths.Path, error) {
 	info := workflow.GetInfo(ctx)
 

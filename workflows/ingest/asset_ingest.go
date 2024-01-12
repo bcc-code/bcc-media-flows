@@ -140,7 +140,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 		}).Get(ctx, nil)
 	case OrderFormMusic:
 		// This is temp, we need to move it to LucidLink
-		outputDir, err := wfutils.GetWorkflowIsilonOutputFolder(ctx, "Input/Music")
+		outputDir := wfutils.GetWorkflowLucidLinkOutputFolder(ctx, "Input/Music")
 		if err != nil {
 			return nil, err
 		}

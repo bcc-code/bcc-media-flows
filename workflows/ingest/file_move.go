@@ -14,8 +14,6 @@ type MoveUploadedFilesParams struct {
 	OrderForm OrderForm
 	Metadata  *ingest.Metadata
 	Directory paths.Path
-
-	// Relative to isilon root, We can extend this if we need to have a full path
 	OutputDir paths.Path
 }
 
