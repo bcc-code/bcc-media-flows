@@ -28,10 +28,19 @@ func StandardizeFileName(ctx workflow.Context, file paths.Path) (paths.Path, err
 }
 
 func MoveFile(ctx workflow.Context, source, destination paths.Path) error {
-	return ExecuteWithQueue(ctx, activities.MoveFile, activities.MoveFileInput{
-		Source:      source,
-		Destination: destination,
-	}).Get(ctx, nil)
+	external := source.OnExternalDrive() || destination.OnExternalDrive()
+
+	if external {
+		return ExecuteWithQueue(ctx, activities.RcloneMoveFile, activities.RcloneFileInput{
+			Source:      source,
+			Destination: destination,
+		}).Get(ctx, nil)
+	} else {
+		return ExecuteWithQueue(ctx, activities.MoveFile, activities.MoveFileInput{
+			Source:      source,
+			Destination: destination,
+		}).Get(ctx, nil)
+	}
 }
 
 func CopyFile(ctx workflow.Context, source, destination paths.Path) error {
@@ -93,26 +102,46 @@ func DeletePathRecursively(ctx workflow.Context, path paths.Path) error {
 	}).Get(ctx, nil)
 }
 
+func GetWorkflowLucidLinkOutputFolder(ctx workflow.Context, root string) paths.Path {
+	info := workflow.GetInfo(ctx)
+
+	date := time.Now()
+
+	path := paths.New(
+		paths.LucidLinkDrive,
+		filepath.Join(
+			root,
+			fmt.Sprintf("%d/%d/%d", date.Year(), date.Month(), date.Day()),
+			info.OriginalRunID,
+		),
+	)
+
+	return path
+}
+
 func GetWorkflowIsilonOutputFolder(ctx workflow.Context, root string) (paths.Path, error) {
 	info := workflow.GetInfo(ctx)
 
 	date := time.Now()
 
-	path := paths.MustParse(filepath.Join(environment.GetIsilonPrefix(), "Production", root, fmt.Sprintf("%d/%d/%d", date.Year(), date.Month(), date.Day()), info.OriginalRunID))
+	path := paths.New(
+		paths.IsilonDrive,
+		filepath.Join(root, fmt.Sprintf("%d/%d/%d", date.Year(), date.Month(), date.Day()), info.OriginalRunID),
+	)
 
 	return path, CreateFolder(ctx, path)
 }
 
 func GetWorkflowMastersOutputFolder(ctx workflow.Context) (paths.Path, error) {
-	return GetWorkflowIsilonOutputFolder(ctx, "masters")
+	return GetWorkflowIsilonOutputFolder(ctx, "Production/masters")
 }
 
 func GetWorkflowRawOutputFolder(ctx workflow.Context) (paths.Path, error) {
-	return GetWorkflowIsilonOutputFolder(ctx, "raw")
+	return GetWorkflowIsilonOutputFolder(ctx, "Production/raw")
 }
 
 func GetWorkflowAuxOutputFolder(ctx workflow.Context) (paths.Path, error) {
-	return GetWorkflowIsilonOutputFolder(ctx, "aux")
+	return GetWorkflowIsilonOutputFolder(ctx, "Production/aux")
 }
 
 func GetWorkflowTempFolder(ctx workflow.Context) (paths.Path, error) {

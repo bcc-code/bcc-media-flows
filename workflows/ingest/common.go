@@ -85,7 +85,7 @@ func transcribe(ctx workflow.Context, assetIDs []string, language string) error 
 
 func getOrderFormFilename(orderForm OrderForm, file paths.Path, props ingest.JobProperty) (string, error) {
 	switch orderForm {
-	case OrderFormRawMaterial:
+	case OrderFormRawMaterial, OrderFormMusic, OrderFormUpload:
 		// return filename without extension
 		base := file.Base()
 		ext := file.Ext()
