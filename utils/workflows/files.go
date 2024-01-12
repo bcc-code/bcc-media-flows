@@ -98,21 +98,21 @@ func GetWorkflowIsilonOutputFolder(ctx workflow.Context, root string) (paths.Pat
 
 	date := time.Now()
 
-	path := paths.MustParse(filepath.Join(environment.GetIsilonPrefix(), "Production", root, fmt.Sprintf("%d/%d/%d", date.Year(), date.Month(), date.Day()), info.OriginalRunID))
+	path := paths.MustParse(filepath.Join(environment.GetIsilonPrefix(), root, fmt.Sprintf("%d/%d/%d", date.Year(), date.Month(), date.Day()), info.OriginalRunID))
 
 	return path, CreateFolder(ctx, path)
 }
 
 func GetWorkflowMastersOutputFolder(ctx workflow.Context) (paths.Path, error) {
-	return GetWorkflowIsilonOutputFolder(ctx, "masters")
+	return GetWorkflowIsilonOutputFolder(ctx, "Production/masters")
 }
 
 func GetWorkflowRawOutputFolder(ctx workflow.Context) (paths.Path, error) {
-	return GetWorkflowIsilonOutputFolder(ctx, "raw")
+	return GetWorkflowIsilonOutputFolder(ctx, "Production/raw")
 }
 
 func GetWorkflowAuxOutputFolder(ctx workflow.Context) (paths.Path, error) {
-	return GetWorkflowIsilonOutputFolder(ctx, "aux")
+	return GetWorkflowIsilonOutputFolder(ctx, "Production/aux")
 }
 
 func GetWorkflowTempFolder(ctx workflow.Context) (paths.Path, error) {

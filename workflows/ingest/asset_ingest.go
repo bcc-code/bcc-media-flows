@@ -9,7 +9,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ingest"
 	"github.com/bcc-code/bcc-media-flows/services/notifications"
-	"github.com/bcc-code/bcc-media-flows/utils/workflows"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
@@ -25,6 +25,8 @@ var (
 	OrderFormLEDMaterial  = OrderForm{Value: "LED-Material"}
 	OrderFormPodcast      = OrderForm{Value: "Podcast"}
 	OrderFormMultitrackPB = OrderForm{Value: "MultitrackPB"}
+	OrderFormUpload       = OrderForm{Value: "Upload"}
+	OrderFormMusic        = OrderForm{Value: "Music"}
 	OrderForms            = enum.New(
 		OrderFormRawMaterial,
 		//OrderFormVBMaster, // commented out for supporting only raw material
@@ -124,6 +126,31 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			Directory: fcOutputDir,
 			OutputDir: outputDir,
 		}).Get(ctx, nil)
+	case OrderFormUpload:
+		outputDir, err := wfutils.GetWorkflowIsilonOutputFolder(ctx, "Input/FromDelivery")
+		if err != nil {
+			return nil, err
+		}
+
+		err = workflow.ExecuteChildWorkflow(ctx, MoveUploadedFiles, MoveUploadedFilesParams{
+			OrderForm: *orderForm,
+			Metadata:  metadata,
+			Directory: fcOutputDir,
+			OutputDir: outputDir,
+		}).Get(ctx, nil)
+	case OrderFormMusic:
+		// This is temp, we need to move it to LucidLink
+		outputDir, err := wfutils.GetWorkflowIsilonOutputFolder(ctx, "Input/Music")
+		if err != nil {
+			return nil, err
+		}
+
+		err = workflow.ExecuteChildWorkflow(ctx, MoveUploadedFiles, MoveUploadedFilesParams{
+			OrderForm: *orderForm,
+			Metadata:  metadata,
+			Directory: fcOutputDir,
+			OutputDir: outputDir,
+		}).Get(ctx, nil)
 	}
 	if err != nil {
 		return nil, err
@@ -156,7 +183,6 @@ func copyToDir(ctx workflow.Context, dest paths.Path, files []ingest.File) error
 	if err != nil {
 		return err
 	}
-
 	for _, file := range files {
 		err = wfutils.DeletePathRecursively(
 			ctx,
