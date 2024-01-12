@@ -175,6 +175,7 @@ func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, 
 
 			if normalizedRes.IsSilent {
 				silentAudioLanguages = append(silentAudioLanguages, lang)
+				delete(mergeResult.AudioFiles, lang)
 			} else {
 				mergeResult.AudioFiles[lang] = normalizedRes.FilePath
 			}
