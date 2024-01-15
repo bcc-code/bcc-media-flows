@@ -6,13 +6,12 @@ import (
 	"time"
 
 	"github.com/ansel1/merry/v2"
-	"github.com/bcc-code/bcc-media-flows/paths"
-	"github.com/orsinium-labs/enum"
-	"github.com/samber/lo"
-
 	avidispine "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
+	"github.com/orsinium-labs/enum"
+	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -148,6 +147,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		Languages:      params.Languages,
 	}).Get(ctx, &mergeResult)
 	if err != nil {
+		_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
 		return nil, err
 	}
 
