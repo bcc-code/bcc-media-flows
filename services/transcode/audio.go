@@ -21,11 +21,15 @@ type SilencePeriod struct {
 	End   float64 `json:"end"`
 }
 
-func audioGetSilencePeriodsForRange(path paths.Path, threshold float64, from *int, length *int) ([]SilencePeriod, error) {
+func audioGetSilencePeriodsForRange(path paths.Path, threshold float64, from *int, length *int, stream *int) ([]SilencePeriod, error) {
 	params := []string{
 		"-loglevel", "info",
 		"-hide_banner",
 		"-i", path.Local(),
+	}
+
+	if stream != nil {
+		params = append(params, "-map", fmt.Sprintf("0:%d", *stream))
 	}
 
 	if length != nil && from != nil {
@@ -40,8 +44,6 @@ func audioGetSilencePeriodsForRange(path paths.Path, threshold float64, from *in
 		"-f", "null",
 		"-",
 	)
-
-	fmt.Println(strings.Join(params, " "))
 
 	cmd := exec.Command("ffmpeg", params...)
 
@@ -76,6 +78,34 @@ func audioGetSilencePeriodsForRange(path paths.Path, threshold float64, from *in
 	return silencePeriods, nil
 }
 
+func AudioStreamIsSilent(path paths.Path, stream int) (bool, error) {
+	info, err := ffmpeg.GetStreamInfo(path.Local())
+	if err != nil {
+		return false, err
+	}
+
+	length := 30
+	for i := 0; i < int(info.TotalSeconds); i += length {
+		silencePeriods, err := audioGetSilencePeriodsForRange(path, 5, &i, &length, &stream)
+		if err != nil {
+			return false, err
+		}
+
+		var dur float64
+		for _, p := range silencePeriods {
+			dur += p.End - p.Start - float64(i)
+		}
+
+		if int(dur) < length && (i+int(dur)) < int(info.TotalSeconds) {
+			return false, nil
+		}
+
+		length *= 2
+	}
+
+	return true, nil
+}
+
 func AudioIsSilent(path paths.Path) (bool, error) {
 	info, err := ffmpeg.GetStreamInfo(path.Local())
 	if err != nil {
@@ -84,7 +114,7 @@ func AudioIsSilent(path paths.Path) (bool, error) {
 
 	length := 30
 	for i := 0; i < int(info.TotalSeconds); i += length {
-		silencePeriods, err := audioGetSilencePeriodsForRange(path, 5, &i, &length)
+		silencePeriods, err := audioGetSilencePeriodsForRange(path, 5, &i, &length, nil)
 		if err != nil {
 			return false, err
 		}
