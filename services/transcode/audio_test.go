@@ -34,3 +34,9 @@ func Test_AudioSilence(t *testing.T) {
 
 	assert.True(t, isSilent)
 }
+
+func Test_AudioChannelSilence(t *testing.T) {
+	isSilent, err := AudioStreamIsSilent(paths.MustParse("/mnt/isilon/Production/raw/2021/05/21/ingest/BCCO_20210521_2000_PGM_YOU.mxf"), nil, 1)
+	assert.Nil(t, err)
+	assert.True(t, isSilent)
+}

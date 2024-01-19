@@ -45,6 +45,8 @@ func audioGetSilencePeriodsForRange(path paths.Path, threshold float64, from *in
 		"-",
 	)
 
+	fmt.Println(strings.Join(params, " "))
+
 	cmd := exec.Command("ffmpeg", params...)
 
 	var stderr bytes.Buffer
@@ -78,14 +80,19 @@ func audioGetSilencePeriodsForRange(path paths.Path, threshold float64, from *in
 	return silencePeriods, nil
 }
 
-func AudioStreamIsSilent(path paths.Path, stream int) (bool, error) {
+func AudioStreamIsSilent(path paths.Path, totalLength *int, stream int) (bool, error) {
 	info, err := ffmpeg.GetStreamInfo(path.Local())
 	if err != nil {
 		return false, err
 	}
 
+	totalSeconds := info.TotalSeconds
+	if totalLength != nil {
+		totalSeconds = float64(*totalLength)
+	}
+
 	length := 30
-	for i := 0; i < int(info.TotalSeconds); i += length {
+	for i := 0; i < int(totalSeconds); i += length {
 		silencePeriods, err := audioGetSilencePeriodsForRange(path, 5, &i, &length, &stream)
 		if err != nil {
 			return false, err
@@ -96,7 +103,7 @@ func AudioStreamIsSilent(path paths.Path, stream int) (bool, error) {
 			dur += p.End - p.Start - float64(i)
 		}
 
-		if int(dur) < length && (i+int(dur)) < int(info.TotalSeconds) {
+		if int(dur) < length && (i+int(dur)) < int(totalSeconds) {
 			return false, nil
 		}
 
