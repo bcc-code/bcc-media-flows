@@ -29,6 +29,8 @@ func Test_AudioSplit(t *testing.T) {
 }
 
 func Test_AudioSilence(t *testing.T) {
-	_, err := AudioIsSilent(paths.MustParse("/private/temp/workflows/5d2ea767-6b71-44c6-a207-005d7522326c/FKTB_20210415_2000_SEQ-slv.wav"))
+	isSilent, err := AudioIsSilent(paths.MustParse("/private/temp/workflows/5d2ea767-6b71-44c6-a207-005d7522326c/FKTB_20210415_2000_SEQ-slv.wav"))
 	assert.Nil(t, err)
+
+	assert.True(t, isSilent)
 }
