@@ -45,7 +45,7 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	if err != nil {
 		return err
 	}
-	wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Starting live ingest: https://media.bcc.no/item/%s", assetResult.AssetID))
+	wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Starting live ingest: https://vault.bcc.media/item/%s", assetResult.AssetID))
 
 	err = wfutils.ExecuteWithQueue(ctx, activities.StartReaper, nil).Get(ctx, nil)
 	if err != nil {
@@ -67,14 +67,14 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	if err != nil {
 		return err
 	}
-	wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Video ingest ended: https://media.bcc.no/item/%s", assetResult.AssetID))
+	wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Video ingest ended: https://vault.bcc.media/item/%s", assetResult.AssetID))
 
-	reaperFiles := []string{}
-	err = wfutils.ExecuteWithQueue(ctx, activities.StopReaper, nil).Get(ctx, reaperFiles)
+	reaperResult := &activities.StopReaperResult{}
+	err = wfutils.ExecuteWithQueue(ctx, activities.StopReaper, nil).Get(ctx, reaperResult)
 	if err != nil {
 		return err
 	}
-	wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Reaper recording stopped: %s", strings.Join(reaperFiles, ", ")))
+	wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Reaper recording stopped: %s", strings.Join(reaperResult.Files, ", ")))
 
 	err = wfutils.ExecuteWithQueue(ctx, vsactivity.CloseFile, vsactivity.CloseFileParams{
 		FileID: jobResult.FileID,

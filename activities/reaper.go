@@ -22,7 +22,11 @@ func StartReaper(ctx context.Context) error {
 	return nil
 }
 
-func StopReaper(ctx context.Context) ([]string, error) {
+type StopReaperResult struct {
+	Files []string
+}
+
+func StopReaper(ctx context.Context) (*StopReaperResult, error) {
 	resp, err := http.Get("http://100.123.200.12:8081/stop")
 	if err != nil {
 		return nil, err
@@ -40,5 +44,7 @@ func StopReaper(ctx context.Context) ([]string, error) {
 
 	var files []string
 	err = json.Unmarshal(bodyBytes, &files)
-	return files, err
+	return &StopReaperResult{
+		Files: files,
+	}, err
 }
