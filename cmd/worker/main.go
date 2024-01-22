@@ -38,6 +38,8 @@ var utilActivities = []any{
 	activities.NotifySimple,
 	activities.NotifyImportCompleted,
 	activities.RsyncIncrementalCopy,
+	activities.StartReaper,
+	activities.StopReaper,
 }
 
 var vidispineActivities = []any{

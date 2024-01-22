@@ -1,6 +1,9 @@
 package ingestworkflows
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -42,6 +45,13 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	if err != nil {
 		return err
 	}
+	wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Starting live ingest: https://media.bcc.no/item/%s", assetResult.AssetID))
+
+	err = wfutils.ExecuteWithQueue(ctx, activities.StartReaper, nil).Get(ctx, nil)
+	if err != nil {
+		return err
+	}
+	wfutils.NotifyTelegramChannel(ctx, "Reaper recording started")
 
 	var jobResult vsactivity.FileJobResult
 	err = wfutils.ExecuteWithQueue(ctx, vsactivity.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
@@ -57,6 +67,14 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	if err != nil {
 		return err
 	}
+	wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Video ingest ended: https://media.bcc.no/item/%s", assetResult.AssetID))
+
+	reaperFiles := []string{}
+	err = wfutils.ExecuteWithQueue(ctx, activities.StopReaper, nil).Get(ctx, reaperFiles)
+	if err != nil {
+		return err
+	}
+	wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Reaper recording stopped: %s", strings.Join(reaperFiles, ", ")))
 
 	err = wfutils.ExecuteWithQueue(ctx, vsactivity.CloseFile, vsactivity.CloseFileParams{
 		FileID: jobResult.FileID,
@@ -64,5 +82,6 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
