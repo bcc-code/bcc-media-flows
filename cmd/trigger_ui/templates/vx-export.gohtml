@@ -56,6 +56,9 @@
                 <h3 class="font-bold">Language Exports</h3>
                 <div class="ml-auto flex gap-1">
                     {{$buttonClasses := "bg-green-200 cursor-pointer rounded-md p-0.5 px-1 text-sm border border-gray-400 hover:bg-gray-200 transition"}}
+                    <div id="selected-languages-count">
+                        0 selected
+                    </div>
                     <div onclick="setAllLanguages(true)"
                          class="{{$buttonClasses}}">
                         All
@@ -86,7 +89,7 @@
                     {{end}}
 
                     <li class="flex flex-row gap-1">
-                        <input type="checkbox" class="form-checkbox h-4 w-4 my-auto" id="{{.ISO6391}}"
+                        <input type="checkbox" onchange="countSelectedLanguages()" class="language-checkbox form-checkbox h-4 w-4 my-auto" id="{{.ISO6391}}"
                                name="languages[]" value={{.ISO6391}} {{if $checked }} checked {{end}} />
                         <label for="{{.ISO6391}}" class="my-auto">
                             <span class="uppercase">{{.ISO6391}}</span>
@@ -131,11 +134,25 @@
 <script>
     const languages = {{.Languages}};
 
+    function countSelectedLanguages() {
+        const checkboxes = document.getElementsByClassName("language-checkbox")
+        const selectedLanguagesCount = document.getElementById("selected-languages-count")
+
+        let selected = 0;
+        for (const el of checkboxes) {
+            if (el.checked) {
+                selected++;
+            }
+        }
+        selectedLanguagesCount.innerText = selected + " selected";
+    }
+
     function setAllLanguages(value) {
         const languageKeys = Object.values(languages).map(i => i.ISO6391)
         for (const key of languageKeys) {
             document.getElementById(key).checked = value
         }
+        countSelectedLanguages()
     }
 
     function enableMU1() {
@@ -144,6 +161,7 @@
                 document.getElementById(key).checked = true
             }
         }
+        countSelectedLanguages()
     }
 
     function enableMU2() {
@@ -152,5 +170,7 @@
                 document.getElementById(key).checked = true
             }
         }
+        countSelectedLanguages()
     }
+    countSelectedLanguages()
 </script>
