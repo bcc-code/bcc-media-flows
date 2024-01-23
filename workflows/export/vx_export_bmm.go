@@ -118,6 +118,22 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		audioResults[lang] = encodings
 	}
 
+	{
+		// Move the transcription files to the output folder
+		keys, err := wfutils.GetMapKeysSafely(ctx, params.MergeResult.JSONTranscript)
+		if err != nil {
+			return nil, err
+		}
+		for _, lang := range keys {
+			p := params.MergeResult.JSONTranscript[lang]
+
+			err = wfutils.MoveFile(ctx, p, params.OutputDir.Append(p.Base()))
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	// Prepare data for the JSON file
 	jsonData := prepareBMMData(audioResults, normalizedResults)
 	jsonData.Length = int(params.MergeResult.Duration)
