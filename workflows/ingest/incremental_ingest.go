@@ -2,13 +2,10 @@ package ingestworkflows
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
-	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
-	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
@@ -102,103 +99,30 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 		return err
 	}
 
-	// Wait for all reaper files to be available
-	waitForFileResult := map[paths.Path]workflow.Future{}
+	baseName := strings.TrimSuffix(in.Base(), "_MU1.mxf")
+
+	// Wait for all reaper files to be imported
+	importAudioFuture := []workflow.ChildWorkflowFuture{}
 	for _, file := range reaperResult.Files {
-		path := paths.MustParse(file)
-		r := wfutils.ExecuteWithQueue(ctx, activities.WaitForFile, activities.FileInput{
-			Path: path,
+		f := workflow.ExecuteChildWorkflow(ctx, ImportAudioFileFromReaper, ImportAudioFileFromReaperParams{
+			Path:      file,
+			VideoVXID: videoVXID,
+			BaseName:  baseName,
 		})
 
-		waitForFileResult[path] = r
+		importAudioFuture = append(importAudioFuture, f)
 	}
 
-	outputFolder, err := wfutils.GetWorkflowRawOutputFolder(ctx)
-	if err != nil {
-		return err
+	errors := []error{}
+	for _, f := range importAudioFuture {
+		err = f.Get(ctx, nil)
+		if err != nil {
+			errors = append(errors, err)
+		}
 	}
 
-	addSilenceFutures := map[paths.Path]workflow.Future{}
-
-	baseFileName := strings.TrimSuffix(rawPath.Base(), "_MU1.mxf")
-
-	// As Reaper files become available, prepend silence to them
-	for len(waitForFileResult) > 0 {
-		newWaitForFileResult := map[paths.Path]workflow.Future{}
-		for path, res := range waitForFileResult {
-			if !res.IsReady() {
-				newWaitForFileResult[path] = res
-				continue
-			}
-
-			fileOK := false
-			err := res.Get(ctx, &fileOK)
-			if err != nil {
-				return err
-			}
-
-			isSilent := false
-			err = wfutils.ExecuteWithQueue(ctx, activities.DetectSilence, common.AudioInput{
-				Path: path,
-			}).Get(ctx, &isSilent)
-			if err != nil {
-				return err
-			}
-
-			if isSilent {
-				wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("File %s is silent, skipping", path.Base()))
-				continue
-			}
-
-			// ReaperTrack-DATE_TIME.wav
-			// 22-240122_1526.wav
-			reaperTrackNumber, err := strconv.Atoi(strings.Split(path.Base(), ".")[0])
-			if err != nil {
-				return err
-			}
-
-			// Generate a filename withe the language code
-			outPath := outputFolder.Append(fmt.Sprintf("%s-%s.wav", baseFileName, strings.ToUpper(bccmflows.LanguagesByReaper[reaperTrackNumber].ISO6391)))
-			addSilenceFuture := wfutils.ExecuteWithQueue(ctx, activities.PrependSilence, activities.PrependSilenceInput{
-				FilePath: path,
-				Output:   outPath,
-			})
-			addSilenceFutures[outPath] = addSilenceFuture
-		}
-		waitForFileResult = newWaitForFileResult
-	}
-
-	for k, f := range addSilenceFutures {
-		err := f.Get(ctx, nil)
-		if err != nil {
-			return err
-		}
-
-		var assetResult vsactivity.CreatePlaceholderResult
-		err = wfutils.ExecuteWithQueue(ctx, vsactivity.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
-			Title: k.Base(),
-		}).Get(ctx, &assetResult)
-		if err != nil {
-			return err
-		}
-
-		err = wfutils.ExecuteWithQueue(ctx, vsactivity.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
-			FilePath: k,
-			AssetID:  assetResult.AssetID,
-			Growing:  false,
-		}).Get(ctx, nil)
-		if err != nil {
-			return err
-		}
-
-		err = wfutils.ExecuteWithQueue(ctx, vsactivity.AddRelation, vsactivity.AddRelationParams{
-			Child:  assetResult.AssetID,
-			Parent: videoVXID,
-		}).Get(ctx, nil)
-		if err != nil {
-			return err
-		}
-
+	if len(errors) > 0 {
+		return fmt.Errorf("Failed to import one or more audio files: %v", errors)
 	}
 
 	return nil
