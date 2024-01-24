@@ -40,6 +40,9 @@ var utilActivities = []any{
 	activities.RsyncIncrementalCopy,
 	activities.StartReaper,
 	activities.StopReaper,
+	activities.PrependSilence,
+	activities.DetectSilence,
+	activities.AdjustAudioToVideoStart,
 }
 
 var vidispineActivities = []any{
@@ -55,6 +58,7 @@ var vidispineActivities = []any{
 	vsactivity.JobCompleteOrErr,
 	vsactivity.AddFileToPlaceholder,
 	vsactivity.CloseFile,
+	vsactivity.AddRelation,
 	activities.GetSubtransIDActivity,
 }
 

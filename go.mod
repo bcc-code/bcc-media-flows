@@ -13,6 +13,7 @@ require (
 	github.com/deckarep/golang-set/v2 v2.3.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/glebarez/go-sqlite v1.21.2
+	github.com/go-errors/errors v1.1.1
 	github.com/go-resty/resty/v2 v2.11.0
 	github.com/google/uuid v1.3.1
 	github.com/jlaffaye/ftp v0.2.0
