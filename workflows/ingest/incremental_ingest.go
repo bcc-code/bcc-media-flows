@@ -104,8 +104,10 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	// Wait for all reaper files to be imported
 	importAudioFuture := []workflow.ChildWorkflowFuture{}
 	for _, file := range reaperResult.Files {
+		fileSplit := strings.Split(file, "\\")
+		filePath := "/mnt/dmzshare/wavetemp/" + fileSplit[len(fileSplit)-1]
 		f := workflow.ExecuteChildWorkflow(ctx, ImportAudioFileFromReaper, ImportAudioFileFromReaperParams{
-			Path:      file,
+			Path:      filePath,
 			VideoVXID: videoVXID,
 			BaseName:  baseName,
 		})
