@@ -11,6 +11,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
+	"github.com/davecgh/go-spew/spew"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -28,6 +29,8 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 
 	inputFile := paths.MustParse(params.Path)
 
+	wfutils.NotifyTelegramChannel(ctx, "Processing file "+spew.Sdump(inputFile))
+
 	fileOK := false
 	err := wfutils.ExecuteWithQueue(ctx, activities.WaitForFile, activities.FileInput{
 		Path: inputFile,
@@ -40,9 +43,11 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 		return fmt.Errorf("File %s is reported not OK by the system", inputFile)
 	}
 
+	tempFolder, _ := wfutils.GetWorkflowTempFolder(ctx)
 	isSilent := false
 	err = wfutils.ExecuteWithQueue(ctx, activities.DetectSilence, common.AudioInput{
-		Path: inputFile,
+		Path:            inputFile,
+		DestinationPath: tempFolder,
 	}).Get(ctx, &isSilent)
 
 	if err != nil {

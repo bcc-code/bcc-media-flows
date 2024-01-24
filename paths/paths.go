@@ -42,7 +42,7 @@ func (d *Drive) UnmarshalJSON(value []byte) error {
 	}
 	drive := Drives.Parse(stringValue)
 	if drive == nil {
-		return ErrDriveNotFound
+		return merry.Wrap(ErrDriveNotFound)
 	}
 	*d = *drive
 	return nil
