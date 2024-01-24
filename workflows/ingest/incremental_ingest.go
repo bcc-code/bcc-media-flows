@@ -15,6 +15,16 @@ type IncrementalParams struct {
 	Path string
 }
 
+// Incremental is a workflow that ingests a growing file into Vidispine.
+// It also starts the Reaper recording.
+//
+// After the ingest is done, it stops the Reaper recording and adds the file to the placeholder.
+// The reaper command returns the list of files that were recorded, so we can await for them to be
+// available before padding them to the same start as the video file.
+// The length of the files will typically be longer than video but that is not an issue.
+//
+// After the files are mdified, the need to be ingested into Vidispine, and
+// linked properly to the video file
 func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting Incremental")
@@ -33,6 +43,8 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 
 	rawPath := outDir.Append(in.Base())
 
+	/// Start file copy
+
 	copyTask := wfutils.ExecuteWithQueue(ctx, activities.RsyncIncrementalCopy, activities.RsyncIncrementalCopyInput{
 		In:  in,
 		Out: rawPath,
@@ -46,7 +58,9 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 		return err
 	}
 	wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Starting live ingest: https://vault.bcc.media/item/%s", assetResult.AssetID))
+	videoVXID := assetResult.AssetID
 
+	// REAPER: Start recording
 	err = wfutils.ExecuteWithQueue(ctx, activities.StartReaper, nil).Get(ctx, nil)
 	if err != nil {
 		return err
@@ -55,7 +69,7 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 
 	var jobResult vsactivity.FileJobResult
 	err = wfutils.ExecuteWithQueue(ctx, vsactivity.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
-		AssetID:  assetResult.AssetID,
+		AssetID:  videoVXID,
 		FilePath: rawPath,
 		Growing:  true,
 	}).Get(ctx, &jobResult)
@@ -63,12 +77,14 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 		return err
 	}
 
+	// Wait for file to be copied
 	err = copyTask.Get(ctx, nil)
 	if err != nil {
 		return err
 	}
 	wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Video ingest ended: https://vault.bcc.media/item/%s", assetResult.AssetID))
 
+	// Stop Reaper recording
 	reaperResult := &activities.StopReaperResult{}
 	err = wfutils.ExecuteWithQueue(ctx, activities.StopReaper, nil).Get(ctx, reaperResult)
 	if err != nil {
@@ -81,6 +97,32 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	}).Get(ctx, nil)
 	if err != nil {
 		return err
+	}
+
+	baseName := strings.TrimSuffix(in.Base(), "_MU1.mxf")
+
+	// Wait for all reaper files to be imported
+	importAudioFuture := []workflow.ChildWorkflowFuture{}
+	for _, file := range reaperResult.Files {
+		f := workflow.ExecuteChildWorkflow(ctx, ImportAudioFileFromReaper, ImportAudioFileFromReaperParams{
+			Path:      file,
+			VideoVXID: videoVXID,
+			BaseName:  baseName,
+		})
+
+		importAudioFuture = append(importAudioFuture, f)
+	}
+
+	errors := []error{}
+	for _, f := range importAudioFuture {
+		err = f.Get(ctx, nil)
+		if err != nil {
+			errors = append(errors, err)
+		}
+	}
+
+	if len(errors) > 0 {
+		return fmt.Errorf("Failed to import one or more audio files: %v", errors)
 	}
 
 	return nil

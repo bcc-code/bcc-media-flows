@@ -3,10 +3,12 @@ package ffmpeg
 import (
 	"encoding/json"
 	"fmt"
+	"os/exec"
+	"strconv"
+	"time"
+
 	"github.com/bcc-code/bcc-media-flows/cache"
 	"github.com/bcc-code/bcc-media-flows/utils"
-	"os/exec"
-	"time"
 )
 
 type FFProbeStream struct {
@@ -134,4 +136,68 @@ func GetStreamInfo(path string) (StreamInfo, error) {
 		return StreamInfo{}, err
 	}
 	return ProbeResultToInfo(info), nil
+}
+
+// GetTimeCode returns the time code of the specified video file.
+//
+// Example:
+// ffprobe MDTEST8_240122_MU1.mxf
+// [mxf @ 0x559097e06700] index entry 2744 + TemporalOffset 1 = 2745, which is out of bounds
+// [mxf @ 0x559097e06700] Estimating duration from bitrate, this may be inaccurate
+// Input #0, mxf, from '/mnt/isilon/Production/raw/2024/1/22/4d9864f0-35a0-45cd-aaa3-ed0476887365/MDTEST8_240122_MU1.mxf':
+//
+//	Metadata:
+//	  operational_pattern_ul: 060e2b34.04010101.0d010201.01010900
+//	  uid             : adab4424-2f25-4dc7-92ff-000c00000000
+//	  generation_uid  : adab4424-2f25-4dc7-92ff-000c00000001
+//	  company_name    : FFmpeg
+//	  product_name    : OP1a Muxer
+//	  product_version_num: 60.3.100.0.0
+//	  product_version : 60.3.100
+//	  application_platform: Lavf (win32)
+//	  product_uid     : adab4424-2f25-4dc7-92ff-29bd000c0002
+//	  toolkit_version_num: 60.3.100.0.0
+//	  material_package_umid: 0x060A2B340101010501010D00139C1F1952947134ED9C1F190052947134ED9C00
+//	  timecode        : 13:50:38:05 <---------------------------------------------------------------- This is what we want
+//	Duration: 00:01:52.00, start: 0.000000, bitrate: 68430 kb/s
+func GetTimeCode(path string) (string, error) {
+	cmd := exec.Command(
+		"ffprobe",
+		"-v", "error",
+		"-show_entries", "format_tags=timecode",
+		"-of", "default=noprint_wrappers=1:nokey=1",
+		path,
+	)
+
+	return utils.ExecuteCmd(cmd, nil)
+}
+
+// GetTimeReferencce returns the time reference of the specified wav file.
+//
+// Example:
+// ffprobe 01-240122_1517.wav
+// Input #0, wav, from '01-240122_1517.wav':
+//
+//	Metadata:
+//	  encoded_by      : REAPER
+//	  date            : 2024-01-22
+//	  creation_time   : 15-17-09
+//	  time_reference  : 2641753158   <----------------- This is what we want
+//	Duration: 00:01:29.09, bitrate: 2304 kb/s
+//	Stream #0:0: Audio: pcm_s24le ([1][0][0][0] / 0x0001), 48000 Hz, 2 channels, s32 (24 bit), 2304 kb/s
+func GetTimeReferencce(path string) (int, error) {
+	cmd := exec.Command(
+		"ffprobe",
+		"-v", "quiet",
+		"-show_entries", "format_tags=time_reference",
+		"-of", "default=noprint_wrappers=1:nokey=1",
+		path,
+	)
+
+	samples, err := utils.ExecuteCmd(cmd, nil)
+	if err != nil {
+		return 0, err
+	}
+
+	return strconv.Atoi(samples)
 }

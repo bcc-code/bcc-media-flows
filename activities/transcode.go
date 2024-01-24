@@ -309,3 +309,32 @@ func MultitrackMux(ctx context.Context, input MultitrackMuxInput) (*MultitrackMu
 		OutputPath: *result,
 	}, nil
 }
+
+type PrependSilenceInput struct {
+	FilePath   paths.Path
+	Output     paths.Path
+	Samples    int
+	SampleRate int
+}
+
+type PrependSilenceOutput struct {
+	OutputPath paths.Path
+}
+
+func PrependSilence(ctx context.Context, input PrependSilenceInput) (*PrependSilenceOutput, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "PrependSilence")
+	log.Info("Starting PrependSilence")
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	length := float64(input.Samples) / float64(input.SampleRate)
+	result, err := transcode.PrependSilence(input.FilePath, input.Output, length, input.SampleRate, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+	return &PrependSilenceOutput{
+		OutputPath: *result,
+	}, nil
+}
