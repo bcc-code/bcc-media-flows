@@ -161,8 +161,13 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 				jsonData.PersonsAppearing = append(jsonData.PersonsAppearing, p)
 			}
 		}
+
+		chaperRecordedAt := params.ExportData.ImportDate.Add(time.Duration(chapter.Timestamp * float64(time.Second)))
+		jsonData.RecordedAt = &chaperRecordedAt
+
 		jsonData.StartsAt = chapter.Timestamp
 		jsonData.Type = chapter.ChapterType
+
 		if jsonData.Type == "sing_along" {
 			jsonData.Type = "singsong"
 		}
