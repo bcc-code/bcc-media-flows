@@ -40,9 +40,6 @@ var utilActivities = []any{
 	activities.RsyncIncrementalCopy,
 	activities.StartReaper,
 	activities.StopReaper,
-	activities.PrependSilence,
-	activities.DetectSilence,
-	activities.AdjustAudioToVideoStart,
 }
 
 var vidispineActivities = []any{

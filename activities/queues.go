@@ -22,6 +22,9 @@ func GetAudioTranscodeActivities() []any {
 		AnalyzeFile,
 		NormalizeAudioActivity,
 		SplitAudioChannels,
+		PrependSilence,
+		DetectSilence,
+		AdjustAudioToVideoStart,
 	}
 }
 
