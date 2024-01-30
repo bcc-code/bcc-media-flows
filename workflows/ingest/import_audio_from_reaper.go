@@ -11,7 +11,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"github.com/davecgh/go-spew/spew"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -29,7 +28,7 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 
 	inputFile := paths.MustParse(params.Path)
 
-	wfutils.NotifyTelegramChannel(ctx, "Processing file "+spew.Sdump(inputFile))
+	wfutils.NotifyTelegramChannel(ctx, "Processing file "+inputFile.Linux())
 
 	fileOK := false
 	err := wfutils.ExecuteWithQueue(ctx, activities.WaitForFile, activities.FileInput{
