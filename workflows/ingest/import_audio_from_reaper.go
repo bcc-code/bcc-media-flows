@@ -41,9 +41,15 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 	}
 
 	tempFolder, _ := wfutils.GetWorkflowTempFolder(ctx)
+	tempFile := tempFolder.Append(inputFile.Base())
+	err = wfutils.CopyFile(ctx, inputFile, tempFile)
+	if err != nil {
+		return err
+	}
+
 	isSilent := false
 	err = wfutils.ExecuteWithQueue(ctx, activities.DetectSilence, common.AudioInput{
-		Path:            inputFile,
+		Path:            tempFile,
 		DestinationPath: tempFolder,
 	}).Get(ctx, &isSilent)
 
@@ -52,13 +58,13 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 	}
 
 	if isSilent {
-		wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("File %s is silent, skipping", inputFile.Base()))
-		return fmt.Errorf("File %s is silent, skipping", inputFile.Base())
+		wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("File %s is silent, skipping", tempFile.Base()))
+		return fmt.Errorf("File %s is silent, skipping", tempFile.Base())
 	}
 
 	// ReaperTrack-DATE_TIME.wav
 	// 22-240122_1526.wav
-	reaperTrackNumber, err := strconv.Atoi(strings.Split(inputFile.Base(), ".")[0])
+	reaperTrackNumber, err := strconv.Atoi(strings.Split(tempFile.Base(), ".")[0])
 	if err != nil {
 		return err
 	}
@@ -71,7 +77,7 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 	// Generate a filename withe the language code
 	outPath := outputFolder.Append(fmt.Sprintf("%s-%s.wav", params.BaseName, strings.ToUpper(bccmflows.LanguagesByReaper[reaperTrackNumber].ISO6391)))
 	err = wfutils.ExecuteWithQueue(ctx, activities.PrependSilence, activities.PrependSilenceInput{
-		FilePath: inputFile,
+		FilePath: tempFile,
 		Output:   outPath,
 	}).Get(ctx, nil)
 
