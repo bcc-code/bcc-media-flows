@@ -28,8 +28,6 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 
 	inputFile := paths.MustParse(params.Path)
 
-	wfutils.NotifyTelegramChannel(ctx, "Processing file "+inputFile.Linux())
-
 	fileOK := false
 	err := wfutils.ExecuteWithQueue(ctx, activities.WaitForFile, activities.FileInput{
 		Path: inputFile,
