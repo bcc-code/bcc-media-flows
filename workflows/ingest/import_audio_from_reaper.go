@@ -64,7 +64,7 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 
 	// ReaperTrack-DATE_TIME.wav
 	// 22-240122_1526.wav
-	reaperTrackNumber, err := strconv.Atoi(strings.Split(tempFile.Base(), ".")[0])
+	reaperTrackNumber, err := strconv.Atoi(strings.Split(tempFile.Base(), "-")[0])
 	if err != nil {
 		return err
 	}
