@@ -74,13 +74,22 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 		return err
 	}
 
+	getFileResult := vsactivity.GetFileFromVXResult{}
+	err = wfutils.ExecuteWithQueue(ctx, vsactivity.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
+		VXID: params.VideoVXID,
+		Tags: []string{"original"},
+	}).Get(ctx, &getFileResult)
+	if err != nil {
+		return err
+	}
+
 	// Generate a filename withe the language code
 	outPath := outputFolder.Append(fmt.Sprintf("%s-%s.wav", params.BaseName, strings.ToUpper(bccmflows.LanguagesByReaper[reaperTrackNumber].ISO6391)))
-	err = wfutils.ExecuteWithQueue(ctx, activities.PrependSilence, activities.PrependSilenceInput{
-		FilePath: tempFile,
-		Output:   outPath,
+	err = wfutils.ExecuteWithQueue(ctx, activities.AdjustAudioToVideoStart, activities.AdjustAudioToVideoStartInput{
+		AudioFile:  tempFile,
+		VideoFile:  getFileResult.FilePath,
+		OutputFile: outPath,
 	}).Get(ctx, nil)
-
 	if err != nil {
 		return err
 	}
