@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/cache"
@@ -169,7 +170,12 @@ func GetTimeCode(path string) (string, error) {
 		path,
 	)
 
-	return utils.ExecuteCmd(cmd, nil)
+	res, err := utils.ExecuteCmd(cmd, nil)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(res), nil
 }
 
 // GetTimeReferencce returns the time reference of the specified wav file.
@@ -199,5 +205,5 @@ func GetTimeReferencce(path string) (int, error) {
 		return 0, err
 	}
 
-	return strconv.Atoi(samples)
+	return strconv.Atoi(strings.TrimSpace(samples))
 }
