@@ -21,10 +21,15 @@ func AddRelation(ctx context.Context, params AddRelationParams) error {
 	token := os.Getenv("CANTEMO_TOKEN")
 
 	client := resty.New()
+	client.SetBaseURL(urlBase)
 	client.SetHeader("Auth-Token", token)
 	client.SetHeader("Accept", "application/json")
 	client.SetDisableWarn(true)
 
-	_, err := client.GetClient().Post(urlBase+"/API/v2/items/"+params.Parent+"/relation/"+params.Child+"?type=portal_metadata_cascade&direction=D", "application/json", nil)
+	req := client.R()
+	res, err := req.Post(urlBase + "/API/v2/items/" + params.Parent + "/relation/" + params.Child + "?type=portal_metadata_cascade&direction=D")
+
+	log.Debug("Response: ", res)
+
 	return err
 }
