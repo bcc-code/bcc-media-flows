@@ -7,6 +7,7 @@ import (
 	"time"
 
 	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
+	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
@@ -55,8 +56,8 @@ var vidispineActivities = []any{
 	vsactivity.JobCompleteOrErr,
 	vsactivity.AddFileToPlaceholder,
 	vsactivity.CloseFile,
-	vsactivity.AddRelation,
 	activities.GetSubtransIDActivity,
+	cantemo.AddRelation,
 }
 
 var transcodeActivities = activities.GetVideoTranscodeActivities()

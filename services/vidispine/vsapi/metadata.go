@@ -135,12 +135,3 @@ func (m *MetadataResult) GetInOut(beginTC string) (float64, float64, error) {
 
 	return inTCseconds - beginTCseconds, outTCseconds - beginTCseconds, nil
 }
-
-func (c *Client) AddRelation(parentVXID, childVXID string) error {
-	requestURL, _ := url.Parse(c.baseURL)
-	requestURL.Path += fmt.Sprintf("/item/%s/relation/%s", url.PathEscape(parentVXID), url.PathEscape(childVXID))
-	requestURL.RawQuery = "type=portal_metadata_cascade&direction=S"
-
-	_, err := c.restyClient.R().Post(requestURL.String())
-	return err
-}

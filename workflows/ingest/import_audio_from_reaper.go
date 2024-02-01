@@ -7,10 +7,12 @@ import (
 
 	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/activities"
+	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
+	"github.com/bcc-code/bcc-media-flows/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -57,16 +59,16 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 		return err
 	}
 
-	if isSilent {
-		wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("File %s is silent, skipping", tempFile.Base()))
-		return fmt.Errorf("File %s is silent, skipping", tempFile.Base())
-	}
-
 	// ReaperTrack-DATE_TIME.wav
 	// 22-240122_1526.wav
 	reaperTrackNumber, err := strconv.Atoi(strings.Split(tempFile.Base(), "-")[0])
 	if err != nil {
 		return err
+	}
+
+	if isSilent {
+		wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("File %s is silent, skipping", bccmflows.LanguagesByReaper[reaperTrackNumber].LanguageName))
+		return fmt.Errorf("File %s is silent, skipping", tempFile.Base())
 	}
 
 	outputFolder, err := wfutils.GetWorkflowRawOutputFolder(ctx)
@@ -114,9 +116,17 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 	}
 
 	// Add relation
-	err = wfutils.ExecuteWithQueue(ctx, vsactivity.AddRelation, vsactivity.AddRelationParams{
+	err = wfutils.ExecuteWithQueue(ctx, cantemo.AddRelation, cantemo.AddRelationParams{
 		Child:  assetResult.AssetID,
 		Parent: params.VideoVXID,
+	}).Get(ctx, nil)
+
+	if err != nil {
+		return err
+	}
+
+	err = workflow.ExecuteChildWorkflow(ctx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
+		VXID: assetResult.AssetID,
 	}).Get(ctx, nil)
 
 	return err

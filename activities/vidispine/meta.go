@@ -73,17 +73,3 @@ func AddVXMetadataFieldValueActivity(ctx context.Context, params SetVXMetadataFi
 	err := vsClient.AddToItemMetadataField(params.VXID, params.Key, params.Value)
 	return nil, err
 }
-
-type AddRelationParams struct {
-	Parent string
-	Child  string
-}
-
-func AddRelation(ctx context.Context, params AddRelationParams) error {
-	log := activity.GetLogger(ctx)
-	log.Info("Starting AddRelationActivity")
-
-	vsClient := GetClient()
-
-	return vsClient.AddRelation(params.Parent, params.Child)
-}

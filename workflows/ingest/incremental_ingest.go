@@ -8,6 +8,7 @@ import (
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
+	"github.com/bcc-code/bcc-media-flows/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -90,7 +91,7 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	if err != nil {
 		return err
 	}
-	wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Reaper recording stopped: %s", strings.Join(reaperResult.Files, ", ")))
+	wfutils.NotifyTelegramChannel(ctx, "Reaper recording stopped")
 
 	err = wfutils.ExecuteWithQueue(ctx, vsactivity.CloseFile, vsactivity.CloseFileParams{
 		FileID: jobResult.FileID,
@@ -115,12 +116,24 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 		importAudioFuture = append(importAudioFuture, f)
 	}
 
+	// Transcribe the video
+	transcribeFuture := workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeVX, workflows.TranscribeVXInput{
+		VXID:     videoVXID,
+		Language: "no",
+	})
+
 	errors := []error{}
 	for _, f := range importAudioFuture {
 		err = f.Get(ctx, nil)
 		if err != nil {
 			errors = append(errors, err)
 		}
+	}
+	wfutils.NotifyTelegramChannel(ctx, "Audio import finished")
+
+	err = transcribeFuture.Get(ctx, nil)
+	if err != nil {
+		errors = append(errors, err)
 	}
 
 	if len(errors) > 0 {
