@@ -145,7 +145,7 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 	err = wfutils.ExecuteWithQueue(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
 		VXID:  assetResult.AssetID,
 		Key:   vscommon.FieldLanguagesRecorded.Value,
-		Value: strings.ToUpper(lang.ISO6391),
+		Value: lang.ISO6391,
 	}).Get(ctx, nil)
 	if err != nil {
 		logger.Error(fmt.Sprintf("SetVXMetadataFieldActivity: %s", err.Error()))
