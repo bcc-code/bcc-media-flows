@@ -161,16 +161,16 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 	}
 
 	go func() {
-		err := s.vidispine.SetItemMetadataField(vxID, vscommon.FieldExportAudioSource.Value, audioSource)
+		err := s.vidispine.SetItemMetadataField(vxID, "", vscommon.FieldExportAudioSource.Value, audioSource)
 		if err != nil {
 			log.Default().Println(err)
 		}
 
 		for i, element := range languages {
 			if i == 0 {
-				err = s.vidispine.SetItemMetadataField(vxID, vscommon.FieldLangsToExport.Value, element)
+				err = s.vidispine.SetItemMetadataField(vxID, "", vscommon.FieldLangsToExport.Value, element)
 			} else {
-				err = s.vidispine.AddToItemMetadataField(vxID, vscommon.FieldLangsToExport.Value, element)
+				err = s.vidispine.AddToItemMetadataField(vxID, "", vscommon.FieldLangsToExport.Value, element)
 
 			}
 
@@ -259,13 +259,13 @@ func main() {
 	}
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS tags (
-		name TEXT NOT NULL UNIQUE 
+		name TEXT NOT NULL UNIQUE
 	);
 	CREATE TABLE IF NOT EXISTS persons (
 		name TEXT NOT NULL UNIQUE
 	);
 	CREATE TABLE IF NOT EXISTS program_ids (
-		name TEXT NOT NULL UNIQUE 
+		name TEXT NOT NULL UNIQUE
 	);`)
 	if err != nil {
 		panic(err.Error())
