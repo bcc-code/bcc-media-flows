@@ -66,7 +66,7 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 		return err
 	}
 
-	if isSilent {
+	if isSilent && false { /// Temp disabled
 		wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("File %s is silent, skipping", bccmflows.LanguagesByReaper[reaperTrackNumber].LanguageName))
 
 		// This is not a fail, so we should not send an error
