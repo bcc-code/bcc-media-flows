@@ -60,7 +60,7 @@ func (c *Client) GetMetadata(vsID string) (*MetadataResult, error) {
 	return resp.Result().(*MetadataResult), nil
 }
 
-func (c *Client) setItemMetadataField(itemID, key, value string, add bool) error {
+func (c *Client) setItemMetadataField(itemID, group, key, value string, add bool) error {
 	requestURL, _ := url.Parse(c.baseURL)
 	requestURL.Path += fmt.Sprintf("/item/%s/metadata", url.PathEscape(itemID))
 	q := requestURL.Query()
@@ -68,10 +68,12 @@ func (c *Client) setItemMetadataField(itemID, key, value string, add bool) error
 
 	var body bytes.Buffer
 	err := xmlSetMetadataPlaceholderTmpl.Execute(&body, struct {
+		Group string
 		Key   string
 		Value string
 		Add   bool
 	}{
+		group,
 		key,
 		value,
 		add,
@@ -87,12 +89,12 @@ func (c *Client) setItemMetadataField(itemID, key, value string, add bool) error
 
 	return nil
 }
-func (c *Client) SetItemMetadataField(itemID, key, value string) error {
-	return c.setItemMetadataField(itemID, key, value, false)
+func (c *Client) SetItemMetadataField(itemID, group, key, value string) error {
+	return c.setItemMetadataField(itemID, group, key, value, false)
 }
 
-func (c *Client) AddToItemMetadataField(itemID, key, value string) error {
-	return c.setItemMetadataField(itemID, key, value, true)
+func (c *Client) AddToItemMetadataField(itemID, group, key, value string) error {
+	return c.setItemMetadataField(itemID, group, key, value, true)
 }
 
 // GetInOut returns the in and out point of the clip in seconds, suitable

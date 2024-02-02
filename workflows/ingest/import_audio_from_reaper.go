@@ -133,6 +133,7 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 
 	err = wfutils.ExecuteWithQueue(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
 		VXID:  params.VideoVXID,
+		Group: "System",
 		Key:   lang.RelatedMBFieldID,
 		Value: assetResult.AssetID,
 	}).Get(ctx, nil)

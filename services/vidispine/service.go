@@ -14,8 +14,8 @@ type Client interface {
 	UpdateFileState(fileID string, fileState vsapi.FileState) error
 	AddShapeToItem(shapeTag, itemVXID, fileVXID string) (string, error)
 	AddSidecarToItem(itemVXID, filePath, language string) (string, error)
-	SetItemMetadataField(itemVXID, field, value string) error
-	AddToItemMetadataField(itemID, key, value string) error
+	SetItemMetadataField(itemVXID, group, field, value string) error
+	AddToItemMetadataField(itemID, group, key, value string) error
 	CreatePlaceholder(ingestType vsapi.PlaceholderType, title string) (string, error)
 	CreateThumbnails(assetID string) (string, error)
 	GetJob(jobID string) (*vsapi.JobDocument, error)

@@ -65,6 +65,11 @@ const (
 	xmlSetMetadataPlaceholder = `<?xml version="1.0"?>
 <MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine">
 	<timespan start="-INF" end="+INF">
+		{{ if .Group }}
+		<group>
+			<name>{{.Group}}</name>
+		</group>
+		{{end}}
 		<field>
 			<name>{{.Key}}</name>
 			{{if .Add}}

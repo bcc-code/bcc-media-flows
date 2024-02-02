@@ -49,6 +49,7 @@ type SetVXMetadataFieldParams struct {
 	VXID  string
 	Key   string
 	Value string
+	Group string
 }
 
 type SetVXMetadataFieldResult struct {
@@ -60,7 +61,7 @@ func SetVXMetadataFieldActivity(ctx context.Context, params SetVXMetadataFieldPa
 
 	vsClient := GetClient()
 
-	err := vsClient.SetItemMetadataField(params.VXID, params.Key, params.Value)
+	err := vsClient.SetItemMetadataField(params.VXID, params.Group, params.Key, params.Value)
 	return nil, err
 }
 
@@ -70,6 +71,6 @@ func AddVXMetadataFieldValueActivity(ctx context.Context, params SetVXMetadataFi
 
 	vsClient := GetClient()
 
-	err := vsClient.AddToItemMetadataField(params.VXID, params.Key, params.Value)
+	err := vsClient.AddToItemMetadataField(params.VXID, params.Group, params.Key, params.Value)
 	return nil, err
 }
