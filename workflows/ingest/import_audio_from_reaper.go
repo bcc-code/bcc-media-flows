@@ -136,7 +136,10 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 		Key:   lang.RelatedMBFieldID,
 		Value: assetResult.AssetID,
 	}).Get(ctx, nil)
-	logger.Error(fmt.Sprintf("SetVXMetadataFieldActivity: %s", err.Error()))
+
+	if err != nil {
+		logger.Error(fmt.Sprintf("SetVXMetadataFieldActivity: %s", err.Error()))
+	}
 
 	return previewFuture.Get(ctx, nil)
 }
