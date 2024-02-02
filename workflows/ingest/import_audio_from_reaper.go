@@ -68,7 +68,9 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 
 	if isSilent {
 		wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("File %s is silent, skipping", bccmflows.LanguagesByReaper[reaperTrackNumber].LanguageName))
-		return fmt.Errorf("File %s is silent, skipping", tempFile.Base())
+
+		// This is not a fail, so we should not send an error
+		return nil
 	}
 
 	outputFolder, err := wfutils.GetWorkflowRawOutputFolder(ctx)
@@ -85,8 +87,10 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 		return err
 	}
 
+	lang := bccmflows.LanguagesByReaper[reaperTrackNumber]
+
 	// Generate a filename withe the language code
-	outPath := outputFolder.Append(fmt.Sprintf("%s-%s.wav", params.BaseName, strings.ToUpper(bccmflows.LanguagesByReaper[reaperTrackNumber].ISO6391)))
+	outPath := outputFolder.Append(fmt.Sprintf("%s-%s.wav", params.BaseName, strings.ToUpper(lang.ISO6391)))
 	err = wfutils.ExecuteWithQueue(ctx, activities.AdjustAudioToVideoStart, activities.AdjustAudioToVideoStartInput{
 		AudioFile:  tempFile,
 		VideoFile:  getFileResult.FilePath,
@@ -115,19 +119,24 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 		return err
 	}
 
+	previewFuture := workflow.ExecuteChildWorkflow(ctx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
+		VXID: assetResult.AssetID,
+	})
 	// Add relation
 	err = wfutils.ExecuteWithQueue(ctx, cantemo.AddRelation, cantemo.AddRelationParams{
 		Child:  assetResult.AssetID,
 		Parent: params.VideoVXID,
 	}).Get(ctx, nil)
-
 	if err != nil {
 		return err
 	}
 
-	err = workflow.ExecuteChildWorkflow(ctx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
-		VXID: assetResult.AssetID,
+	err = wfutils.ExecuteWithQueue(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
+		VXID:  params.VideoVXID,
+		Key:   lang.RelatedMBFieldID,
+		Value: assetResult.AssetID,
 	}).Get(ctx, nil)
+	logger.Error(fmt.Sprintf("SetVXMetadataFieldActivity: %s", err.Error()))
 
-	return err
+	return previewFuture.Get(ctx, nil)
 }
