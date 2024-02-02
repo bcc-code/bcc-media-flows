@@ -11,6 +11,7 @@ import (
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/bcc-code/bcc-media-flows/workflows"
 	"go.temporal.io/sdk/workflow"
@@ -137,7 +138,15 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 		Key:   lang.RelatedMBFieldID,
 		Value: assetResult.AssetID,
 	}).Get(ctx, nil)
+	if err != nil {
+		logger.Error(fmt.Sprintf("SetVXMetadataFieldActivity: %s", err.Error()))
+	}
 
+	err = wfutils.ExecuteWithQueue(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
+		VXID:  assetResult.AssetID,
+		Key:   vscommon.FieldLanguagesRecorded.Value,
+		Value: strings.ToUpper(lang.ISO6391),
+	}).Get(ctx, nil)
 	if err != nil {
 		logger.Error(fmt.Sprintf("SetVXMetadataFieldActivity: %s", err.Error()))
 	}
