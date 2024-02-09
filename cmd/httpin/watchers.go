@@ -45,6 +45,8 @@ func watchersHandler(ctx *gin.Context) {
 	// This needs to match any subfolder
 	multitrackPath := strings.HasPrefix(result.Path, "/mnt/isilon/system/multitrack/Ingest/tempFraBrunstad/")
 
+	growingPath := strings.HasPrefix(result.Path, "/mnt/dmzshare/ingestgrow/")
+
 	if err != nil {
 		fmt.Println(err.Error())
 		ctx.String(500, err.Error())
@@ -55,6 +57,8 @@ func watchersHandler(ctx *gin.Context) {
 		err = doIngest(ctx, result.Path)
 	} else if multitrackPath {
 		err = doMultitrackCopy(ctx, result.Path)
+	} else if growingPath {
+		err = doGrowingFile(ctx, result.Path)
 	} else {
 		err = doTranscode(ctx, result.Path)
 	}
@@ -80,6 +84,24 @@ func doMultitrackCopy(ctx context.Context, path string) error {
 	}
 
 	_, err = c.ExecuteWorkflow(ctx, workflowOptions, workflows.HandleMultitrackFile, workflows.HandleMultitrackFileInput{
+		Path: path,
+	})
+
+	return err
+}
+
+func doGrowingFile(ctx context.Context, path string) error {
+	c, err := getClient()
+	if err != nil {
+		return err
+	}
+
+	workflowOptions := client.StartWorkflowOptions{
+		ID:        uuid.NewString(),
+		TaskQueue: environment.GetWorkerQueue(),
+	}
+
+	_, err = c.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.Incremental, ingestworkflows.IncrementalParams{
 		Path: path,
 	})
 
