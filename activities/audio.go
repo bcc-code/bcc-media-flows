@@ -59,8 +59,9 @@ func AdjustAudioToVideoStart(ctx context.Context, input AdjustAudioToVideoStartI
 	if err != nil {
 		return nil, err
 	}
-
-	samplesToAdd := audioSamples - videoSamples
+	// 2400 is the number of samples in 50ms of audio at 48000Hz
+	// This seems to be a "standard" offset between youplay and reaper
+	samplesToAdd := audioSamples - videoSamples + 2400
 
 	if samplesToAdd < 0 {
 		return nil, errors.New("Audio starts before video. This is currently not supported")
