@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -67,7 +68,7 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 		return err
 	}
 
-	if isSilent && false { /// Temp disabled
+	if isSilent {
 		wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("File %s is silent, skipping", bccmflows.LanguagesByReaper[reaperTrackNumber].LanguageName))
 
 		// This is not a fail, so we should not send an error
@@ -120,9 +121,12 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 		return err
 	}
 
-	previewFuture := workflow.ExecuteChildWorkflow(ctx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
-		VXID: assetResult.AssetID,
+	// We dow *not* wait for preview to be ready
+	workflow.ExecuteChildWorkflow(ctx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
+		VXID:  assetResult.AssetID,
+		Delay: 2 * time.Hour,
 	})
+
 	// Add relation
 	err = wfutils.ExecuteWithQueue(ctx, cantemo.AddRelation, cantemo.AddRelationParams{
 		Child:  assetResult.AssetID,
@@ -147,9 +151,6 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 		Key:   vscommon.FieldLanguagesRecorded.Value,
 		Value: lang.ISO6391,
 	}).Get(ctx, nil)
-	if err != nil {
-		logger.Error(fmt.Sprintf("SetVXMetadataFieldActivity: %s", err.Error()))
-	}
 
-	return previewFuture.Get(ctx, nil)
+	return err
 }

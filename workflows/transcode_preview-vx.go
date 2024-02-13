@@ -4,17 +4,19 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
-	"github.com/bcc-code/bcc-media-flows/utils/workflows"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 
 	"go.temporal.io/sdk/workflow"
 )
 
 // TranscodePreviewVXInput is the input to the TranscodePreviewVX workflow
 type TranscodePreviewVXInput struct {
-	VXID string
+	VXID  string
+	Delay time.Duration
 }
 
 // TranscodePreviewVX is the workflow definition of transcoding a video to preview.
@@ -25,6 +27,12 @@ func TranscodePreviewVX(
 	ctx workflow.Context,
 	params TranscodePreviewVXInput,
 ) error {
+	if params.Delay > 0 {
+		logger := workflow.GetLogger(ctx)
+		logger.Info("Delaying workflow execution", "duration", params.Delay)
+		workflow.Sleep(ctx, params.Delay)
+	}
+
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting TranscodePreviewVX")
 
