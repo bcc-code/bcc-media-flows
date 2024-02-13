@@ -60,7 +60,7 @@ var fileQualities = []quality{r1080p, r540p, r180p}
 func createTranslatedFile(ctx workflow.Context, language string, videoPath, outputPath, audioPath paths.Path, subtitlePaths map[string]paths.Path) workflow.Future {
 	base := videoPath.Base()
 	fileName := base[:len(base)-len(filepath.Ext(base))] + "-" + language
-	return wfutils.ExecuteWithQueue(ctx, activities.TranscodeMux, common.MuxInput{
+	return wfutils.Execute(ctx, activities.TranscodeMux, common.MuxInput{
 		FileName:          fileName,
 		DestinationPath:   outputPath,
 		VideoFilePath:     videoPath,
@@ -94,7 +94,7 @@ func createStreamFile(ctx workflow.Context, q quality, videoFile, outputPath pat
 	base := videoFile.Base()
 	fileName := base[:len(base)-len(filepath.Ext(base))]
 
-	return wfutils.ExecuteWithQueue(ctx, activities.TranscodeMux, common.MuxInput{
+	return wfutils.Execute(ctx, activities.TranscodeMux, common.MuxInput{
 		FileName:        fileName,
 		DestinationPath: outputPath,
 		AudioFilePaths:  audioFilePaths,

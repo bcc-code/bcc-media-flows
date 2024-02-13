@@ -22,7 +22,8 @@ func HandleMultitrackFile(
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting HandleMultitrackFile workflow")
 
-	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+	options := wfutils.GetDefaultActivityOptions()
+	ctx = workflow.WithActivityOptions(ctx, options)
 
 	path, err := paths.Parse(params.Path)
 	if err != nil {
@@ -34,14 +35,15 @@ func HandleMultitrackFile(
 		return err
 	}
 
+	date := time.Now().Format("2006-01-02")
 	lucidPath := paths.Path{
 		Drive: paths.LucidLinkDrive,
-		Path:  strings.Replace(path.Dir().Path, "system/multitrack/Ingest/tempFraBrunstad", "", 1),
+		Path:  strings.Replace(path.Dir().Path, "system/multitrack/Ingest/tempFraBrunstad/"+date, "", 1),
 	}
 
 	lucidPath = lucidPath.Append(path.Base()).Prepend("01 Liveopptak fra Brunstad/01 RAW")
 
-	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+	err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      path,
 		Destination: lucidPath,
 	}).Get(ctx, nil)
@@ -54,7 +56,7 @@ func HandleMultitrackFile(
 		Path:  strings.Replace(path.Dir().Path, "system/multitrack/Ingest/tempFraBrunstad", "", 1),
 	}.Prepend(fmt.Sprintf("AudioArchive/%d/%d", time.Now().Year(), time.Now().Month())).Append(path.Base())
 
-	err = wfutils.ExecuteWithQueue(ctx, activities.MoveFile, activities.MoveFileInput{
+	err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.MoveFile, activities.MoveFileInput{
 		Source:      path,
 		Destination: isilonArchivePath,
 	}).Get(ctx, nil)

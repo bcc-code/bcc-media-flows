@@ -110,7 +110,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	videoFilePath := paths.MustParse(videoShape.GetPath())
 	originalFilenameWithoutExt := videoFilePath.Base()[0 : len(videoFilePath.Base())-len(videoFilePath.Ext())]
 	var analyzeResult *ffmpeg.StreamInfo
-	err = wfutils.ExecuteWithQueue(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
+	err = wfutils.Execute(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
 		FilePath: videoFilePath,
 	}).Get(ctx, &analyzeResult)
 	if err != nil {
@@ -123,7 +123,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 
 	if len(destinationsWithAudioOutput) > 0 && analyzeResult.HasAudio {
 		var normalizeAudioResult *activities.NormalizeAudioResult
-		err = wfutils.ExecuteWithQueue(ctx, activities.NormalizeAudioActivity, activities.NormalizeAudioParams{
+		err = wfutils.Execute(ctx, activities.NormalizeAudioActivity, activities.NormalizeAudioParams{
 			FilePath:              videoFilePath,
 			TargetLUFS:            -23,
 			PerformOutputAnalysis: true,

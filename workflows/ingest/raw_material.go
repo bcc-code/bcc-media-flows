@@ -74,7 +74,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 			return err
 		}
 		if utils.IsMedia(file.Local()) {
-			mediaAnalyzeTasks[result.AssetID] = wfutils.ExecuteWithQueue(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
+			mediaAnalyzeTasks[result.AssetID] = wfutils.Execute(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
 				FilePath: file,
 			})
 		}
@@ -103,7 +103,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		}
 		// Only create thumbnails if the file has video
 		if result.HasVideo {
-			err = wfutils.ExecuteWithQueue(ctx, vsactivity.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
+			err = wfutils.Execute(ctx, vsactivity.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
 				AssetID: id,
 			}).Get(ctx, nil)
 			if err != nil {

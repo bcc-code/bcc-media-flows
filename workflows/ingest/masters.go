@@ -130,7 +130,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		if filepath.Ext(file.Base()) == ".mov" {
 			plan = baton.TestPlanMOV
 		}
-		err = wfutils.ExecuteWithQueue(ctx, batonactivities.QC, batonactivities.QCParams{
+		err = wfutils.Execute(ctx, batonactivities.QC, batonactivities.QCParams{
 			Path: file,
 			Plan: plan,
 		}).Get(ctx, &report)
@@ -155,7 +155,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 
 func analyzeAudioAndSetMetadata(ctx workflow.Context, assetID string, path paths.Path) (*common.AnalyzeEBUR128Result, error) {
 	var result common.AnalyzeEBUR128Result
-	err := wfutils.ExecuteWithQueue(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
+	err := wfutils.Execute(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
 		FilePath:       path,
 		TargetLoudness: -24,
 	}).Get(ctx, &result)

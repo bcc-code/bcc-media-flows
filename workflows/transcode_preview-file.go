@@ -30,7 +30,7 @@ func TranscodePreviewFile(
 	}
 
 	previewResponse := &activities.TranscodePreviewResponse{}
-	err = wfutils.ExecuteWithQueue(ctx, activities.TranscodePreview, activities.TranscodePreviewParams{
+	err = wfutils.Execute(ctx, activities.TranscodePreview, activities.TranscodePreviewParams{
 		FilePath:           filePath,
 		DestinationDirPath: filePath.Dir(),
 	}).Get(ctx, previewResponse)

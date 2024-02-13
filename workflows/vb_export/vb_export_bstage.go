@@ -32,7 +32,7 @@ func VBExportToBStage(ctx workflow.Context, params VBExportChildWorkflowParams) 
 	}
 
 	var videoResult common.VideoResult
-	err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
+	err = wfutils.Execute(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
 		FilePath:       params.InputFile,
 		OutputDir:      bStageOutputDir,
 		Resolution:     "1920x1080",
@@ -45,7 +45,7 @@ func VBExportToBStage(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		return nil, err
 	}
 
-	err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+	err = wfutils.Execute(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      videoResult.OutputPath,
 		Destination: deliveryFolder.Append("B-Stage", params.OriginalFilenameWithoutExt+videoResult.OutputPath.Ext()),
 	}).Get(ctx, nil)

@@ -39,7 +39,7 @@ func TranscodePreviewVX(
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	shapes := &vsactivity.GetFileFromVXResult{}
-	err := wfutils.ExecuteWithQueue(ctx, vsactivity.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
+	err := wfutils.Execute(ctx, vsactivity.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		Tags: []string{"original"},
 		VXID: params.VXID,
 	}).Get(ctx, shapes)
@@ -60,7 +60,7 @@ func TranscodePreviewVX(
 	}
 
 	previewResponse := &activities.TranscodePreviewResponse{}
-	err = wfutils.ExecuteWithQueue(ctx, activities.TranscodePreview, activities.TranscodePreviewParams{
+	err = wfutils.Execute(ctx, activities.TranscodePreview, activities.TranscodePreviewParams{
 		FilePath:           shapes.FilePath,
 		DestinationDirPath: destinationPath,
 	}).Get(ctx, previewResponse)
@@ -76,7 +76,7 @@ func TranscodePreviewVX(
 		shapeTag = "lowres_watermarked"
 	}
 
-	err = wfutils.ExecuteWithQueue(ctx, vsactivity.ImportFileAsShapeActivity,
+	err = wfutils.Execute(ctx, vsactivity.ImportFileAsShapeActivity,
 		vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.VXID,
 			FilePath: previewResponse.PreviewFilePath,
