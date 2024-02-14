@@ -68,7 +68,6 @@ const (
 		{{ if .Group }}
 		<group>
 			<name>{{.Group}}</name>
-		</group>
 		{{end}}
 		<field>
 			<name>{{.Key}}</name>
@@ -78,6 +77,9 @@ const (
 				<value>{{.Value}}</value>
 			{{end}}
 		</field>
+		{{ if .Group }}
+		</group>
+		{{end}}
 	</timespan>
 </MetadataDocument>`
 )
