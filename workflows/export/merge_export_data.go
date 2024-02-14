@@ -40,7 +40,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 
 	var transcriptTask workflow.Future
 	if params.MakeTranscript && jsonTranscriptFile != nil {
-		transcriptTask = wfutils.ExecuteWithQueue(ctx, activities.MergeTranscriptJSON, activities.MergeTranscriptJSONParams{
+		transcriptTask = wfutils.Execute(ctx, activities.MergeTranscriptJSON, activities.MergeTranscriptJSONParams{
 			MergeInput:      *jsonTranscriptFile,
 			DestinationPath: params.TempDir,
 		})
@@ -57,7 +57,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 				continue
 			}
 			mi := audioMergeInputs[lang]
-			audioTasks[lang] = wfutils.ExecuteWithQueue(ctx, activities.TranscodeMergeAudio, *mi)
+			audioTasks[lang] = wfutils.Execute(ctx, activities.TranscodeMergeAudio, *mi)
 		}
 	}
 
@@ -69,14 +69,14 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 		}
 		for _, lang := range keys {
 			mi := subtitleMergeInputs[lang]
-			subtitleTasks[lang] = wfutils.ExecuteWithQueue(ctx, activities.TranscodeMergeSubtitles, *mi)
+			subtitleTasks[lang] = wfutils.Execute(ctx, activities.TranscodeMergeSubtitles, *mi)
 		}
 
 	}
 
 	var videoFile *paths.Path
 	if params.MakeVideo {
-		videoTask := wfutils.ExecuteWithQueue(ctx, activities.TranscodeMergeVideo, mergeInput)
+		videoTask := wfutils.Execute(ctx, activities.TranscodeMergeVideo, mergeInput)
 		var result common.MergeResult
 		err := videoTask.Get(ctx, &result)
 		if err != nil {

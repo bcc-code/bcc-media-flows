@@ -89,7 +89,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 
 	var errs []error
 	var data *vidispine.ExportData
-	err := wfutils.ExecuteWithQueue(ctx, avidispine.GetExportDataActivity, avidispine.GetExportDataParams{
+	err := wfutils.Execute(ctx, avidispine.GetExportDataActivity, avidispine.GetExportDataParams{
 		VXID:        params.VXID,
 		Languages:   params.Languages,
 		AudioSource: params.AudioSource,

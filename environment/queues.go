@@ -1,8 +1,9 @@
 package environment
 
 const (
-	QueueWorker    = "worker"
-	QueueTranscode = "transcode"
-	QueueAudio     = "audio"
-	QueueDebug     = "debug"
+	QueueWorker      = "worker"
+	QueueLowPriority = "low-priority"
+	QueueTranscode   = "transcode"
+	QueueAudio       = "audio"
+	QueueDebug       = "debug"
 )

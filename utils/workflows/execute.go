@@ -21,10 +21,35 @@ var StrictRetryPolicy = temporal.RetryPolicy{
 	MaximumInterval: 30 * time.Second,
 }
 
-// ExecuteWithQueue executes the specified activity with the correct task queue
-func ExecuteWithQueue(ctx workflow.Context, activity any, params ...any) workflow.Future {
+// Execute executes the specified activity with the correct task queue
+func Execute(ctx workflow.Context, activity any, params ...any) workflow.Future {
 	options := workflow.GetActivityOptions(ctx)
 	options.TaskQueue = activities.GetQueueForActivity(activity)
+
+	switch options.TaskQueue {
+	case environment.GetWorkerQueue():
+		if options.RetryPolicy == nil {
+			options.RetryPolicy = &LooseRetryPolicy
+		}
+	// usual reason for this failing is invalid files or tweaks to ffmpeg commands
+	case environment.GetTranscodeQueue(), environment.GetAudioQueue():
+		if options.RetryPolicy == nil {
+			options.RetryPolicy = &StrictRetryPolicy
+		}
+	}
+
+	ctx = workflow.WithActivityOptions(ctx, options)
+	return workflow.ExecuteActivity(ctx, activity, params...)
+}
+
+// ExecuteWithLowPrioQueue executes the utility activities with the low priority queue
+func ExecuteWithLowPrioQueue(ctx workflow.Context, activity any, params ...any) workflow.Future {
+	options := workflow.GetActivityOptions(ctx)
+
+	options.TaskQueue = activities.GetQueueForActivity(activity)
+	if options.TaskQueue == environment.QueueWorker {
+		options.TaskQueue = environment.QueueLowPriority
+	}
 
 	switch options.TaskQueue {
 	case environment.GetWorkerQueue():

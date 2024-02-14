@@ -161,6 +161,8 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		for _, wf := range workerWorkflows {
 			w.RegisterWorkflow(wf)
 		}
+	case environment.QueueLowPriority:
+		fallthrough
 	case environment.QueueWorker:
 		w.RegisterActivity(activities.Transcribe)
 		w.RegisterActivity(activities.RcloneCopyDir)

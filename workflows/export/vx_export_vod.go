@@ -29,7 +29,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	// We start chapter export and pick the results up later when needed
 	var chapterDataWF workflow.Future
 	if params.ParentParams.WithChapters {
-		chapterDataWF = wfutils.ExecuteWithQueue(ctx, vsactivity.GetChapterDataActivity, vsactivity.GetChapterDataParams{
+		chapterDataWF = wfutils.Execute(ctx, vsactivity.GetChapterDataActivity, vsactivity.GetChapterDataParams{
 			ExportData: &params.ExportData,
 		})
 	}
@@ -155,7 +155,7 @@ func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, 
 		// Normalize audio
 		for _, lang := range langs {
 			audio := mergeResult.AudioFiles[lang]
-			future := wfutils.ExecuteWithQueue(ctx, activities.NormalizeAudioActivity, activities.NormalizeAudioParams{
+			future := wfutils.Execute(ctx, activities.NormalizeAudioActivity, activities.NormalizeAudioParams{
 				FilePath:              audio,
 				TargetLUFS:            -24,
 				PerformOutputAnalysis: true,
@@ -264,7 +264,7 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 
 	if v.params.Upload {
 		// Copies created files and any remaining files needed.
-		err = wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
+		err = wfutils.Execute(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
 			Source:      outputDir.Rclone(),
 			Destination: fmt.Sprintf("s3prod:vod-asset-ingest-prod/" + v.ingestFolder),
 		}).Get(ctx, nil)
@@ -347,7 +347,7 @@ func (v *vxExportVodService) copyToIngest(ctx workflow.Context, path paths.Path)
 	if !v.params.Upload {
 		return
 	}
-	v.tasks = append(v.tasks, wfutils.ExecuteWithQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+	v.tasks = append(v.tasks, wfutils.Execute(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      path,
 		Destination: paths.New(paths.AssetIngestDrive, filepath.Join(v.ingestFolder, path.Base())),
 	}))

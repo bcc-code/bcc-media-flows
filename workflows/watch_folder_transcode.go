@@ -64,32 +64,32 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	var transcodeOutput *activities.EncodeResult
 	switch params.FolderName {
 	case common.FolderProRes422HQHD:
-		err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
+		err = wfutils.Execute(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:   path,
 			OutputDir:  tmpFolder,
 			Resolution: "1920x1080",
 			FrameRate:  25,
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderProRes422HQNative:
-		err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
+		err = wfutils.Execute(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:  path,
 			OutputDir: tmpFolder,
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderProRes422HQNative25FPS:
-		err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
+		err = wfutils.Execute(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:  path,
 			OutputDir: tmpFolder,
 			FrameRate: 25,
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderProRes4444K25FPS:
-		err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
+		err = wfutils.Execute(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:   path,
 			OutputDir:  tmpFolder,
 			Resolution: "3840x2160",
 			FrameRate:  25,
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderAVCIntra100HD:
-		err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToH264Activity, activities.EncodeParams{
+		err = wfutils.Execute(ctx, activities.TranscodeToH264Activity, activities.EncodeParams{
 			FilePath:   path,
 			OutputDir:  tmpFolder,
 			Resolution: "1920x1080",
@@ -97,7 +97,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 			Bitrate:    "100M",
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderXDCAMHD422:
-		err = wfutils.ExecuteWithQueue(ctx, activities.TranscodeToXDCAMActivity, activities.EncodeParams{
+		err = wfutils.Execute(ctx, activities.TranscodeToXDCAMActivity, activities.EncodeParams{
 			FilePath:   path,
 			OutputDir:  tmpFolder,
 			Resolution: "1920x1080",

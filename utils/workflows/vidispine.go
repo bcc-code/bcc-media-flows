@@ -16,13 +16,13 @@ func WaitForVidispineJob(ctx workflow.Context, jobID string) error {
 		NonRetryableErrorTypes: []string{"JOB_FAILED"},
 	}
 	ctx = workflow.WithActivityOptions(ctx, options)
-	return ExecuteWithQueue(ctx, vsactivity.JobCompleteOrErr, vsactivity.WaitForJobCompletionParams{
+	return Execute(ctx, vsactivity.JobCompleteOrErr, vsactivity.WaitForJobCompletionParams{
 		JobID: jobID,
 	}).Get(ctx, nil)
 }
 
 func SetVidispineMeta(ctx workflow.Context, assetID, key, value string) error {
-	return ExecuteWithQueue(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
+	return Execute(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
 		VXID:  assetID,
 		Key:   key,
 		Value: value,
@@ -30,7 +30,7 @@ func SetVidispineMeta(ctx workflow.Context, assetID, key, value string) error {
 }
 
 func AddVidispineMetaValue(ctx workflow.Context, assetID, key, value string) error {
-	return ExecuteWithQueue(ctx, vsactivity.AddVXMetadataFieldValueActivity, vsactivity.SetVXMetadataFieldParams{
+	return Execute(ctx, vsactivity.AddVXMetadataFieldValueActivity, vsactivity.SetVXMetadataFieldParams{
 		VXID:  assetID,
 		Key:   key,
 		Value: value,

@@ -46,13 +46,13 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 
 	/// Start file copy
 
-	copyTask := wfutils.ExecuteWithQueue(ctx, activities.RsyncIncrementalCopy, activities.RsyncIncrementalCopyInput{
+	copyTask := wfutils.Execute(ctx, activities.RsyncIncrementalCopy, activities.RsyncIncrementalCopyInput{
 		In:  in,
 		Out: rawPath,
 	})
 
 	var assetResult vsactivity.CreatePlaceholderResult
-	err = wfutils.ExecuteWithQueue(ctx, vsactivity.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
+	err = wfutils.Execute(ctx, vsactivity.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
 		Title: in.Base(),
 	}).Get(ctx, &assetResult)
 	if err != nil {
@@ -62,14 +62,14 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	videoVXID := assetResult.AssetID
 
 	// REAPER: Start recording
-	err = wfutils.ExecuteWithQueue(ctx, activities.StartReaper, nil).Get(ctx, nil)
+	err = wfutils.Execute(ctx, activities.StartReaper, nil).Get(ctx, nil)
 	if err != nil {
 		return err
 	}
 	wfutils.NotifyTelegramChannel(ctx, "Reaper recording started")
 
 	var jobResult vsactivity.FileJobResult
-	err = wfutils.ExecuteWithQueue(ctx, vsactivity.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
+	err = wfutils.Execute(ctx, vsactivity.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
 		AssetID:  videoVXID,
 		FilePath: rawPath,
 		Growing:  true,
@@ -87,13 +87,13 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 
 	// Stop Reaper recording
 	reaperResult := &activities.StopReaperResult{}
-	err = wfutils.ExecuteWithQueue(ctx, activities.StopReaper, nil).Get(ctx, reaperResult)
+	err = wfutils.Execute(ctx, activities.StopReaper, nil).Get(ctx, reaperResult)
 	if err != nil {
 		return err
 	}
 	wfutils.NotifyTelegramChannel(ctx, "Reaper recording stopped")
 
-	err = wfutils.ExecuteWithQueue(ctx, vsactivity.CloseFile, vsactivity.CloseFileParams{
+	err = wfutils.Execute(ctx, vsactivity.CloseFile, vsactivity.CloseFileParams{
 		FileID: jobResult.FileID,
 	}).Get(ctx, nil)
 	if err != nil {
