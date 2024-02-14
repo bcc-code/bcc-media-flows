@@ -25,9 +25,9 @@ func audioGetSilencePeriodsForRange(path paths.Path, threshold float64, from flo
 	params := []string{
 		"-loglevel", "info",
 		"-hide_banner",
+		"-ss", fmt.Sprintf("%f", from),
 		"-i", path.Local(),
 		"-map", fmt.Sprintf("0:%d", stream),
-		"-ss", fmt.Sprintf("%f", from),
 		"-t", fmt.Sprintf("%f", length),
 		"-af", fmt.Sprintf("silencedetect=noise=-70dB:d=%f", threshold),
 		"-f", "null",
