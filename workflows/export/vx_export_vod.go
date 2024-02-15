@@ -34,10 +34,17 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		})
 	}
 
-	for _, subtitle := range params.MergeResult.SubtitleFiles {
-		err := wfutils.CopyFile(ctx, subtitle, params.OutputDir.Append(subtitle.Base()))
+	{
+		keys, err := wfutils.GetMapKeysSafely(ctx, params.MergeResult.SubtitleFiles)
 		if err != nil {
 			return nil, err
+		}
+		for _, key := range keys {
+			subtitle := params.MergeResult.SubtitleFiles[key]
+			err = wfutils.CopyFile(ctx, subtitle, params.OutputDir.Append(subtitle.Base()))
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
