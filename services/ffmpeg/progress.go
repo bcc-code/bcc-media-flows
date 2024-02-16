@@ -26,6 +26,7 @@ type StreamInfo struct {
 	HasAudio     bool
 	HasVideo     bool
 	HasAlpha     bool
+	Progressive  bool
 	TotalFrames  int
 	TotalSeconds float64
 	FrameRate    int
@@ -72,6 +73,9 @@ func ProbeResultToInfo(info *FFProbeResult) StreamInfo {
 			if floatSeconds != 0 {
 				streamInfo.TotalSeconds = floatSeconds
 			}
+		}
+		if stream.FieldOrder == "progressive" {
+			streamInfo.Progressive = true
 		}
 	}
 

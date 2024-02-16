@@ -1,10 +1,14 @@
 package transcode
 
 import (
+	"encoding/json"
+	"testing"
+
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func Test_Video(t *testing.T) {
@@ -22,4 +26,18 @@ func Test_Video(t *testing.T) {
 		WatermarkPath:   &wm,
 	}, p)
 	assert.Nil(t, err)
+}
+
+var testjson = `{"Title":"ROMR_GANI_E01_HIRO_SEQ","Items":[{"Path":{"Drive":"isilon","Path":"Production/raw/2024/02/12/ROMR_GANI_E01_HIRO_MAS_NOR.mov"},"Start":0,"End":30,"Streams":null}],"OutputDir":{"Drive":"temp","Path":"workflows/1fbe4b81-552a-4339-b9a9-778f34c7f65a"},"WorkDir":{"Drive":"temp","Path":"workflows/1fbe4b81-552a-4339-b9a9-778f34c7f65a"},"Duration":30}`
+
+func Test_MergeVideo(t *testing.T) {
+	var mergeInput common.MergeInput
+
+	_ = json.Unmarshal([]byte(testjson), &mergeInput)
+
+	mergeInput.OutputDir = paths.MustParse("/mnt/temp/test")
+
+	_, _ = MergeVideo(mergeInput, func(progress ffmpeg.Progress) {
+		spew.Dump(progress)
+	})
 }
