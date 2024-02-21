@@ -9,6 +9,8 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
+// VXExportToPlayout is a workflow that exports a VX to the playout system
+// It transcodes the video to XDCAM HD 50Mbit/s and muxes it with the audio and subtitle files
 func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams) (*VXExportResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToPlayout")

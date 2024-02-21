@@ -30,6 +30,8 @@ var mp3Bitrates = []string{"256k"}
 // This is based on what Spotify uses
 const targetLufs = -14.0
 
+// VXExportToBMM exports the specified vx params to BMM
+// It normalizes the audio, encodes it to AAC and MP3, and uploads it to BMM
 func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*VXExportResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToBMM")

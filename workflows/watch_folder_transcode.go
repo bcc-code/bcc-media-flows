@@ -16,6 +16,7 @@ type WatchFolderTranscodeInput struct {
 	FolderName string
 }
 
+// WatchFolderTranscode is a flow triggered by a file watcher watching for changes at the configured paths.
 func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput) error {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting WatchFolderTranscode")

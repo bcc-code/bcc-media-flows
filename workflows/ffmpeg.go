@@ -10,6 +10,8 @@ type ExecuteFFmpegInput struct {
 	Arguments []string
 }
 
+// ExecuteFFmpeg executes the ffmpeg command with the given arguments
+// Provides a live progress report of the ffmpeg command
 func ExecuteFFmpeg(
 	ctx workflow.Context,
 	params ExecuteFFmpegInput,

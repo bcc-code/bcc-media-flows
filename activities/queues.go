@@ -10,6 +10,8 @@ import (
 	"github.com/samber/lo"
 )
 
+// GetAudioTranscodeActivities returns all activities that should be executed in the Audio queue.
+// The workers here have multiple threads and can parallelize audio transcoding tasks (ffmpeg).
 func GetAudioTranscodeActivities() []any {
 	return []any{
 		TranscodeToAudioAac,
@@ -28,6 +30,8 @@ func GetAudioTranscodeActivities() []any {
 	}
 }
 
+// GetVideoTranscodeActivities returns all activities that should be executed in the transcode queue.
+// The workers here have multiple threads but only runs one ffmpeg process at a time.
 func GetVideoTranscodeActivities() []any {
 	return []any{
 		TranscodePreview,
@@ -63,6 +67,9 @@ var videoActivities = lo.Map(GetVideoTranscodeActivities(), func(i any, _ int) s
 	return getFunctionName(i)
 })
 
+// GetQueueForActivity detects which queue the activity belongs in, else returns the worker queue.
+// Used to execute the activity where the required dependencies are available.
+// For example ffmpeg activities has to be executed in either the Transcode queue or Audio queue where we know ffmpeg is installed on the workers.
 func GetQueueForActivity(activity any) string {
 	f := getFunctionName(activity)
 	if lo.Contains(audioActivities, f) {

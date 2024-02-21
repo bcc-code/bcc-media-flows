@@ -20,6 +20,9 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
+// VXExportToVOD exports the specified vx item to VOD / app.bcc.media
+// It will normalize audio, create video files mux them together and upload them to S3
+// After this flow, a job will be triggered in the BCC Media Platform to ingest the files
 func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*VXExportResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToVOD")
