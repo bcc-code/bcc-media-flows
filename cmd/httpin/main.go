@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/workflows/ingest"
+	"github.com/bcc-code/bcc-media-flows/workflows/webhooks"
+	"github.com/gin-gonic/gin/binding"
 
 	"strings"
 
@@ -161,7 +164,7 @@ func triggerHandler(ctx *gin.Context) {
 	case "NormalizeAudio":
 		target, err := strconv.ParseFloat(getParamFromCtx(ctx, "targetLUFS"), 64)
 		if err != nil {
-			ctx.AbortWithError(http.StatusBadRequest, err)
+			_ = ctx.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
 
@@ -178,6 +181,16 @@ func triggerHandler(ctx *gin.Context) {
 		}
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.Incremental, ingestworkflows.IncrementalParams{
 			Path: path,
+		})
+	case "WebHook":
+		var rawMessage json.RawMessage
+		if err = ctx.ShouldBindBodyWith(&rawMessage, binding.JSON); err != nil {
+			ctx.Status(http.StatusBadRequest)
+			return
+		}
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, webhooks.WebHook, webhooks.WebHookInput{
+			Type:       getParamFromCtx(ctx, "type"),
+			Parameters: rawMessage,
 		})
 	}
 
