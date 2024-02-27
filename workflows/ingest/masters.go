@@ -59,7 +59,7 @@ func Masters(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
 		}
 
 		if result.Report.TopLevelInfo.Error == 0 {
-			err = createPreviews(ctx, []string{result.AssetID})
+			err = CreatePreviews(ctx, []string{result.AssetID})
 			if err != nil {
 				return nil, err
 			}
@@ -109,7 +109,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		return nil, err
 	}
 
-	result, err := importFileAsTag(ctx, "original", file, filename)
+	result, err := ImportFileAsTag(ctx, "original", file, filename)
 	if err != nil {
 		return nil, err
 	}
@@ -209,13 +209,21 @@ func masterFilename(props ingest.JobProperty) (string, error) {
 	return filename, nil
 }
 
+func SetUploadedBy(ctx workflow.Context, assetID string, uploadedBy string) error {
+	return wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldUploadedBy.Value, uploadedBy)
+}
+
+func SetUploadJobID(ctx workflow.Context, assetID string, jobID string) error {
+	return wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldUploadJob.Value, jobID)
+}
+
 func addMetaTags(ctx workflow.Context, assetID string, metadata *ingest.Metadata) error {
-	err := wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldUploadedBy.Value, metadata.JobProperty.SenderEmail)
+	err := SetUploadedBy(ctx, assetID, metadata.JobProperty.SenderEmail)
 	if err != nil {
 		return err
 	}
 
-	err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldUploadJob.Value, strconv.Itoa(metadata.JobProperty.JobID))
+	err = SetUploadJobID(ctx, assetID, strconv.Itoa(metadata.JobProperty.JobID))
 	if err != nil {
 		return err
 	}

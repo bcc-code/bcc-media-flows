@@ -15,12 +15,12 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-type importTagResult struct {
+type ImportTagResult struct {
 	AssetID     string
 	ImportJobID string
 }
 
-func importFileAsTag(ctx workflow.Context, tag string, path paths.Path, title string) (*importTagResult, error) {
+func ImportFileAsTag(ctx workflow.Context, tag string, path paths.Path, title string) (*ImportTagResult, error) {
 	var result vsactivity.CreatePlaceholderResult
 	err := wfutils.Execute(ctx, vsactivity.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
 		Title: title,
@@ -37,13 +37,13 @@ func importFileAsTag(ctx workflow.Context, tag string, path paths.Path, title st
 	if err != nil {
 		return nil, err
 	}
-	return &importTagResult{
+	return &ImportTagResult{
 		AssetID:     result.AssetID,
 		ImportJobID: job.JobID,
 	}, nil
 }
 
-func createPreviews(ctx workflow.Context, assetIDs []string) error {
+func CreatePreviews(ctx workflow.Context, assetIDs []string) error {
 	var wfFutures []workflow.ChildWorkflowFuture
 	for _, id := range assetIDs {
 		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
@@ -66,7 +66,7 @@ func transcribe(ctx workflow.Context, assetIDs []string, language string) error 
 		language = "no"
 	}
 
-	wfFutures := []workflow.ChildWorkflowFuture{}
+	var wfFutures []workflow.ChildWorkflowFuture
 	for _, id := range assetIDs {
 		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeVX, workflows.TranscribeVXInput{
 			VXID:     id,

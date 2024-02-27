@@ -75,7 +75,7 @@ func Multitrack(ctx workflow.Context, params MasterParams) (*MasterResult, error
 	base := files[0].Base()
 	fileName := base[:len(base)-len(muxResult.OutputPath.Ext())]
 
-	result, err := importFileAsTag(ctx, "original", muxResult.OutputPath, fileName)
+	result, err := ImportFileAsTag(ctx, "original", muxResult.OutputPath, fileName)
 	if err != nil {
 		return nil, err
 	}

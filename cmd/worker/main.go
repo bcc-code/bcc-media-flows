@@ -73,6 +73,7 @@ var workerWorkflows = []any{
 	workflows.WatchFolderTranscode,
 	workflows.HandleMultitrackFile,
 	webhooks.WebHook,
+	webhooks.BmmSimpleUpload,
 	export.VXExport,
 	export.VXExportToVOD,
 	export.VXExportToPlayout,
