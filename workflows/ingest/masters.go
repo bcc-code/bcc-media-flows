@@ -16,7 +16,8 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/notifications"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bcc-media-flows/utils"
-	"github.com/bcc-code/bcc-media-flows/utils/workflows"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
+	"github.com/bcc-code/bcc-media-flows/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -138,6 +139,14 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 			return nil, err
 		}
 	}
+
+	// Trigger transcribe and create previews but don't wait for them to finish
+	workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeVX, workflows.TranscribeVXInput{
+		VXID:     result.AssetID,
+		Language: "no",
+	})
+
+	createPreviewsAsync(ctx, []string{result.AssetID})
 
 	err = notifyImportCompleted(ctx, params.Targets, params.Metadata.JobProperty.JobID, map[string]paths.Path{
 		result.AssetID: file,
