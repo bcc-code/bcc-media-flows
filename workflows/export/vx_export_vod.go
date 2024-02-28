@@ -62,6 +62,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	}
 
 	var resolutions []vsapi.Resolution
+	// Get resolutions from the first clip
 	err = wfutils.Execute(ctx, vsactivity.GetResolutions, vsactivity.GetResolutionsParams{
 		VXID: params.ExportData.Clips[0].VXID,
 	}).Get(ctx, &resolutions)
@@ -90,7 +91,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		ingestFolder:           params.ExportData.SafeTitle + "_" + params.RunID,
 		params:                 params,
 		filesSelector:          workflow.NewSelector(ctx),
-		qualitiesWithLanguages: getQualitiesWithLanguages(audioKeys),
+		qualitiesWithLanguages: getQualitiesWithLanguages(audioKeys, resolutions),
 	}
 
 	onVideoCreated := func(f workflow.Future, q string) {
