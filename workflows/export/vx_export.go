@@ -40,6 +40,7 @@ type VXExportParams struct {
 	Languages     []string
 	Subclip       string
 	IgnoreSilence bool
+	Resolutions   []int
 }
 
 type VXExportResult struct {

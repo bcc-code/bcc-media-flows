@@ -8,7 +8,9 @@ import (
 	"path/filepath"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
+	"github.com/bcc-code/bcc-media-platform/backend/utils"
 	"github.com/google/uuid"
+	"github.com/samber/lo"
 
 	_ "github.com/glebarez/go-sqlite"
 
@@ -103,11 +105,18 @@ type TriggerGETParams struct {
 	SelectedAudioSource     string
 	AudioSources            []string
 	SubclipNames            []string
+	Resolutions             []vsapi.Resolution
 }
 
 func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 	vxID := c.Query("id")
 	meta, err := s.vidispine.GetMetadata(vxID)
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	resolutions, err := s.vidispine.GetResolutions(vxID)
 	if err != nil {
 		renderErrorPage(c, http.StatusInternalServerError, err)
 		return
@@ -141,6 +150,7 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 		SubclipNames:            subclipNames,
 		AudioSources:            vidispine.ExportAudioSources.Values(),
 		AssetExportDestinations: export.AssetExportDestinations.Values(),
+		Resolutions:             resolutions,
 	})
 }
 
@@ -195,6 +205,9 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 		AudioSource:   audioSource,
 		Destinations:  c.PostFormArray("destinations[]"),
 		Languages:     languages,
+		Resolutions: lo.Map(c.PostFormArray("resolutions[]"), func(i string, _ int) int {
+			return utils.AsInt(i)
+		}),
 	}
 
 	var wfID string

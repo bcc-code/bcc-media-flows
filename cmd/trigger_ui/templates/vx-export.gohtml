@@ -100,6 +100,20 @@
             </ul>
         </div>
         <div class="flex flex-col">
+            <label class="font-bold" for="resolutions">Resolutions</label>
+            <ul>
+                {{range $index, $element := .Resolutions}}
+                    {{$w := $element.Width}}
+                    {{$h := $element.Height}}
+                    <li>
+                        <input type=checkbox class="form-checkbox h-4 w-4 inline-block align-middle"
+                               name="resolutions[]" id="{{$index}}" value={{$index}} checked>
+                        <label for="{{$index}}">{{ $w }}x{{ $h }}</label>
+                    </li>
+                {{end}}
+            </ul>
+        </div>
+        <div class="flex flex-col">
             <label class="font-bold" for="watermarkFile">Overlay</label>
             <select class="{{$selectClasses}}" name="watermarkFile" id="watermarkFile">
                 <option value="">None</option>

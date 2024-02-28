@@ -1,8 +1,10 @@
 package vsapi
 
 import (
-	"github.com/samber/lo"
+	"fmt"
 	"net/url"
+
+	"github.com/samber/lo"
 )
 
 func (c *Client) GetShapes(vsID string) (*ShapeResult, error) {
@@ -60,6 +62,50 @@ func (c *Client) AddSidecarToItem(itemID, filePath, language string) (string, er
 	}
 
 	return result.Result().(*JobDocument).JobID, nil
+}
+
+func (c *Client) GetResolutions(itemVXID string) ([]Resolution, error) {
+	shapes, err := c.GetShapes(itemVXID)
+	if err != nil {
+		return nil, err
+	}
+
+	shape := shapes.GetShape("original")
+	if shape == nil {
+		return nil, fmt.Errorf("no original shape found")
+	}
+	var qualities []Resolution
+	for _, v := range shape.VideoComponent {
+		qualities = append(qualities, v.Resolution)
+	}
+
+	r := qualities[len(qualities)-1]
+	if r.Width/r.Height == 16/9 {
+		switch r.Height {
+		case 2160:
+			qualities = append(qualities, Resolution{Width: 1920, Height: 1080})
+			fallthrough
+		case 1080:
+			qualities = append(qualities, Resolution{Width: 1280, Height: 720})
+			fallthrough
+		case 720:
+			qualities = append(qualities, Resolution{Width: 960, Height: 540})
+			fallthrough
+		case 560:
+			qualities = append(qualities, Resolution{Width: 640, Height: 360})
+			qualities = append(qualities, Resolution{Width: 480, Height: 270})
+			qualities = append(qualities, Resolution{Width: 320, Height: 180})
+		}
+	} else {
+		for r.Width%2 == 0 && r.Height%2 == 0 {
+			r = Resolution{Width: r.Width / 2, Height: r.Height / 2}
+			qualities = append(qualities, r)
+			if r.Height < 200 {
+				break
+			}
+		}
+	}
+	return qualities, nil
 }
 
 func (sr ShapeResult) GetShape(tag string) *Shape {

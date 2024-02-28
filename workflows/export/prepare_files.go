@@ -20,8 +20,8 @@ type PrepareFilesResult struct {
 	AudioFiles map[string]paths.Path
 }
 
-func getVideosByQuality(videoFilePath, outputDir paths.Path, watermarkPath *paths.Path) map[quality]common.VideoInput {
-	return map[quality]common.VideoInput{
+func getVideosByQuality(videoFilePath, outputDir paths.Path, watermarkPath *paths.Path) map[string]common.VideoInput {
+	return map[string]common.VideoInput{
 		r1080p: {
 			Path:            videoFilePath,
 			DestinationPath: outputDir,
@@ -74,7 +74,7 @@ func getVideosByQuality(videoFilePath, outputDir paths.Path, watermarkPath *path
 	}
 }
 
-func doVideoTasks(ctx workflow.Context, selector workflow.Selector, qualities map[quality]common.VideoInput, callback func(f workflow.Future, q quality)) ([]quality, error) {
+func doVideoTasks(ctx workflow.Context, selector workflow.Selector, qualities map[string]common.VideoInput, callback func(f workflow.Future, q string)) ([]string, error) {
 	keys, err := wfutils.GetMapKeysSafely(ctx, qualities)
 	if err != nil {
 		return nil, err
