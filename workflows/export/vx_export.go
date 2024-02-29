@@ -32,7 +32,6 @@ var (
 
 type VXExportParams struct {
 	VXID          string
-	WithFiles     bool
 	WithChapters  bool
 	WatermarkPath string
 	Destinations  []string

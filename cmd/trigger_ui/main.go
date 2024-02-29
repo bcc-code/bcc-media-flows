@@ -242,7 +242,6 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 
 	params := export.VXExportParams{
 		VXID:          vxID,
-		WithFiles:     c.PostForm("withFiles") == "on",
 		WithChapters:  c.PostForm("withChapters") == "on",
 		IgnoreSilence: c.PostForm("ignoreSilence") == "on",
 		WatermarkPath: watermarkPath,
