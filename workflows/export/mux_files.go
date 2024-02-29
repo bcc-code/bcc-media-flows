@@ -1,11 +1,9 @@
 package export
 
 import (
-	"fmt"
 	"path/filepath"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
-	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bcc-media-flows/utils/workflows"
 
 	bccmflows "github.com/bcc-code/bcc-media-flows"
@@ -19,15 +17,6 @@ import (
 )
 
 type quality string
-
-const (
-	r1080p = "1920x1080"
-	r720p  = "1280x720"
-	r540p  = "960x540"
-	r360p  = "640x360"
-	r270p  = "480x270"
-	r180p  = "320x180"
-)
 
 type MuxFilesParams struct {
 	VideoFiles    map[quality]paths.Path
@@ -57,7 +46,7 @@ func getSubtitlesResult(subtitleFiles map[string]paths.Path) []smil.TextStream {
 	return subtitles
 }
 
-var fileQualities = []string{r1080p, r540p, r180p}
+var fileQualities = []int{1080, 540, 180}
 
 func createTranslatedFile(ctx workflow.Context, language string, videoPath, outputPath, audioPath paths.Path, subtitlePaths map[string]paths.Path) workflow.Future {
 	base := videoPath.Base()
@@ -71,12 +60,12 @@ func createTranslatedFile(ctx workflow.Context, language string, videoPath, outp
 	})
 }
 
-func getQualitiesWithLanguages(audioKeys []string, resolutions []vsapi.Resolution) map[string][]bccmflows.Language {
+func getQualitiesWithLanguages(audioKeys []string, resolutions []Resolution) map[resolutionString][]bccmflows.Language {
 	languages := utils.LanguageKeysToOrderedLanguages(audioKeys)
 
-	languagesPerQuality := map[string][]bccmflows.Language{}
+	languagesPerQuality := map[resolutionString][]bccmflows.Language{}
 
-	var sortedByHeightAsc []vsapi.Resolution
+	var sortedByHeightAsc []Resolution
 	for _, r := range resolutions {
 		if len(sortedByHeightAsc) == 0 {
 			sortedByHeightAsc = append(sortedByHeightAsc, r)
@@ -87,7 +76,7 @@ func getQualitiesWithLanguages(audioKeys []string, resolutions []vsapi.Resolutio
 		} else {
 			for i, s := range sortedByHeightAsc {
 				if s.Height > r.Height {
-					sortedByHeightAsc = append(sortedByHeightAsc[:i], append([]vsapi.Resolution{r}, sortedByHeightAsc[i:]...)...)
+					sortedByHeightAsc = append(sortedByHeightAsc[:i], append([]Resolution{r}, sortedByHeightAsc[i:]...)...)
 					break
 				}
 			}
@@ -95,7 +84,7 @@ func getQualitiesWithLanguages(audioKeys []string, resolutions []vsapi.Resolutio
 	}
 
 	for _, r := range sortedByHeightAsc {
-		q := fmt.Sprintf("%dx%d", r.Width, r.Height)
+		q := resolutionToString(r)
 		languagesPerQuality[q] = []bccmflows.Language{}
 		for len(languages) > 0 && len(languagesPerQuality[q]) < 16 {
 			languagesPerQuality[q] = append(languagesPerQuality[q], languages[0])
@@ -106,9 +95,9 @@ func getQualitiesWithLanguages(audioKeys []string, resolutions []vsapi.Resolutio
 	return languagesPerQuality
 }
 
-func createStreamFile(ctx workflow.Context, q string, videoFile, outputPath paths.Path, languageMapping map[string][]bccmflows.Language, audioFiles map[string]paths.Path) workflow.Future {
+func createStreamFile(ctx workflow.Context, resolution Resolution, videoFile, outputPath paths.Path, languageMapping map[resolutionString][]bccmflows.Language, audioFiles map[string]paths.Path) workflow.Future {
 	audioFilePaths := map[string]paths.Path{}
-	for _, lang := range languageMapping[q] {
+	for _, lang := range languageMapping[resolutionToString(resolution)] {
 		audioFilePaths[lang.ISO6391] = audioFiles[lang.ISO6391]
 	}
 

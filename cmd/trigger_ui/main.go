@@ -196,6 +196,29 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 		watermarkPath = getOverlayFilePath(watermarkFile)
 	}
 
+	resolutionIndexes := lo.Map(c.PostFormArray("resolutions[]"), func(i string, _ int) int {
+		return utils.AsInt(i)
+	})
+	fileIndexes := lo.Map(c.PostFormArray("files[]"), func(i string, _ int) int {
+		return utils.AsInt(i)
+	})
+
+	vsresolutions, err := s.vidispine.GetResolutions(vxID)
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	var selectedResolutions []export.Resolution
+	for _, i := range resolutionIndexes {
+		r := vsresolutions[i]
+		selectedResolutions = append(selectedResolutions, export.Resolution{
+			Width:  r.Width,
+			Height: r.Height,
+			File:   lo.Contains(fileIndexes, i),
+		})
+	}
+
 	params := export.VXExportParams{
 		VXID:          vxID,
 		WithFiles:     c.PostForm("withFiles") == "on",
@@ -205,9 +228,7 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 		AudioSource:   audioSource,
 		Destinations:  c.PostFormArray("destinations[]"),
 		Languages:     languages,
-		Resolutions: lo.Map(c.PostFormArray("resolutions[]"), func(i string, _ int) int {
-			return utils.AsInt(i)
-		}),
+		Resolutions:   selectedResolutions,
 	}
 
 	var wfID string

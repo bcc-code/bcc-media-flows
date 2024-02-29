@@ -105,10 +105,17 @@
                 {{range $index, $element := .Resolutions}}
                     {{$w := $element.Width}}
                     {{$h := $element.Height}}
-                    <li>
-                        <input type=checkbox class="form-checkbox h-4 w-4 inline-block align-middle"
-                               name="resolutions[]" id="{{$index}}" value={{$index}} checked>
-                        <label for="{{$index}}">{{ $w }}x{{ $h }}</label>
+                    <li class="flex gap-2">
+                        <div>
+                            <input type=checkbox class="form-checkbox h-4 w-4 inline-block align-middle"
+                                   name="resolutions[]" id="{{$index}}" value={{$index}} checked>
+                            <label for="{{$index}}">{{ $w }}x{{ $h }}</label>
+                        </div>
+                        <div>
+                            <input type=checkbox class="form-checkbox h-4 w-4 inline-block align-middle"
+                                   name="files[]" id="{{$index}}" value={{$index}}>
+                            <label for="{{$index}}">downloadable</label>
+                        </div>
                     </li>
                 {{end}}
             </ul>
