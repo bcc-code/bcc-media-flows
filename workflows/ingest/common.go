@@ -44,12 +44,7 @@ func ImportFileAsTag(ctx workflow.Context, tag string, path paths.Path, title st
 }
 
 func CreatePreviews(ctx workflow.Context, assetIDs []string) error {
-	var wfFutures []workflow.ChildWorkflowFuture
-	for _, id := range assetIDs {
-		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
-			VXID: id,
-		}))
-	}
+	wfFutures := createPreviewsAsync(ctx, assetIDs)
 
 	for _, f := range wfFutures {
 		err := f.Get(ctx, nil)
@@ -59,6 +54,17 @@ func CreatePreviews(ctx workflow.Context, assetIDs []string) error {
 	}
 
 	return nil
+}
+
+func createPreviewsAsync(ctx workflow.Context, assetIDs []string) []workflow.ChildWorkflowFuture {
+	var wfFutures []workflow.ChildWorkflowFuture
+	for _, id := range assetIDs {
+		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
+			VXID: id,
+		}))
+	}
+
+	return wfFutures
 }
 
 func transcribe(ctx workflow.Context, assetIDs []string, language string) error {

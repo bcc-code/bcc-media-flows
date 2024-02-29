@@ -273,10 +273,14 @@ func prepareBMMData(audioFiles map[string][]common.AudioResult, analysis map[str
 				VariableBitrate: true,
 				ChannelCount:    2,
 				Path:            path.Base(file.OutputPath.Local()), // This needs to be relative to the resultintg JSON file
-				Lufs:            analysis[lang].OutputAnalysis.IntegratedLoudness,
-				DynamicRange:    analysis[lang].OutputAnalysis.LoudnessRange,
 				Language:        lang,
 				Size:            file.FileSize,
+			}
+
+			outputAnalysis := analysis[lang].OutputAnalysis
+			if outputAnalysis != nil {
+				f.Lufs = outputAnalysis.IntegratedLoudness
+				f.DynamicRange = outputAnalysis.LoudnessRange
 			}
 
 			switch {
