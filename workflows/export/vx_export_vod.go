@@ -73,10 +73,10 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		ingestFolder:           params.ExportData.SafeTitle + "_" + params.RunID,
 		params:                 params,
 		filesSelector:          workflow.NewSelector(ctx),
-		qualitiesWithLanguages: getQualitiesWithLanguages(audioKeys),
+		qualitiesWithLanguages: getQualitiesWithLanguages(audioKeys, params.ParentParams.Resolutions),
 	}
 
-	onVideoCreated := func(f workflow.Future, q quality) {
+	onVideoCreated := func(f workflow.Future, resolution Resolution) {
 		var result common.VideoResult
 		err := f.Get(ctx, &result)
 		if err != nil {
@@ -84,28 +84,27 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 			service.errs = append(service.errs, err)
 			return
 		}
-		if lo.Contains(streamQualities, q) {
-			future := createStreamFile(ctx, q, result.OutputPath, params.OutputDir, service.qualitiesWithLanguages, audioFiles)
-			onFileCreated := func(f workflow.Future) {
-				service.handleStreamWorkflowFuture(ctx, q, f)
-			}
-			service.filesSelector.AddFuture(future, onFileCreated)
+
+		future := createStreamFile(ctx, resolution, result.OutputPath, params.OutputDir, service.qualitiesWithLanguages, audioFiles)
+		onFileCreated := func(f workflow.Future) {
+			service.handleStreamWorkflowFuture(ctx, resolution, f)
 		}
-		if params.ParentParams.WithFiles && lo.Contains(fileQualities, q) {
+		service.filesSelector.AddFuture(future, onFileCreated)
+		if resolution.File {
 			for _, key := range audioKeys {
 				lang := key
 				audioPath := audioFiles[lang]
 
 				future := createTranslatedFile(ctx, lang, result.OutputPath, params.OutputDir, audioPath, params.MergeResult.SubtitleFiles)
 				onFileCreated := func(f workflow.Future) {
-					service.handleFileWorkflowFuture(ctx, lang, q, f)
+					service.handleFileWorkflowFuture(ctx, lang, resolution, f)
 				}
 				service.filesSelector.AddFuture(future, onFileCreated)
 			}
 		}
 	}
 
-	videosByQuality := getVideosByQuality(*params.MergeResult.VideoFile, params.TempDir, wm)
+	videosByQuality := getVideosByQuality(*params.MergeResult.VideoFile, params.TempDir, wm, params.ParentParams.Resolutions)
 	videoKeys, err := doVideoTasks(ctx, service.filesSelector, videosByQuality, onVideoCreated)
 	if err != nil {
 		return nil, err
@@ -118,11 +117,12 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	for range service.qualitiesWithLanguages {
 		service.filesSelector.Select(ctx)
 	}
-	if params.ParentParams.WithFiles {
-		for range fileQualities {
-			for range audioKeys {
-				service.filesSelector.Select(ctx)
-			}
+
+	for range lo.Filter(params.ParentParams.Resolutions, func(item Resolution, _ int) bool {
+		return item.File
+	}) {
+		for range audioKeys {
+			service.filesSelector.Select(ctx)
 		}
 	}
 	for _, task := range service.tasks {
@@ -144,7 +144,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 type vxExportVodService struct {
 	params                 VXExportChildWorkflowParams
 	ingestFolder           string
-	qualitiesWithLanguages map[quality][]bccmflows.Language
+	qualitiesWithLanguages map[resolutionString][]bccmflows.Language
 	filesSelector          workflow.Selector
 	streams                []smil.Video
 	files                  []asset.IngestFileMeta
@@ -303,7 +303,7 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 	}, nil
 }
 
-func (v *vxExportVodService) handleFileWorkflowFuture(ctx workflow.Context, lang string, q quality, f workflow.Future) {
+func (v *vxExportVodService) handleFileWorkflowFuture(ctx workflow.Context, lang string, resolution Resolution, f workflow.Future) {
 	logger := workflow.GetLogger(ctx)
 
 	var result common.MuxResult
@@ -318,7 +318,7 @@ func (v *vxExportVodService) handleFileWorkflowFuture(ctx workflow.Context, lang
 		code = lang
 	}
 	v.files = append(v.files, asset.IngestFileMeta{
-		Resolution:    string(q),
+		Resolution:    fmt.Sprintf("%dx%d", resolution.Width, resolution.Height),
 		AudioLanguage: code,
 		Mime:          "video/mp4",
 		Path:          result.Path.Base(),
@@ -327,7 +327,7 @@ func (v *vxExportVodService) handleFileWorkflowFuture(ctx workflow.Context, lang
 	v.copyToIngest(ctx, result.Path)
 }
 
-func (v *vxExportVodService) handleStreamWorkflowFuture(ctx workflow.Context, q quality, f workflow.Future) {
+func (v *vxExportVodService) handleStreamWorkflowFuture(ctx workflow.Context, r Resolution, f workflow.Future) {
 	logger := workflow.GetLogger(ctx)
 	var result common.MuxResult
 	err := f.Get(ctx, &result)
@@ -337,7 +337,7 @@ func (v *vxExportVodService) handleStreamWorkflowFuture(ctx workflow.Context, q 
 		return
 	}
 
-	fileLanguages := v.qualitiesWithLanguages[q]
+	fileLanguages := v.qualitiesWithLanguages[resolutionToString(r)]
 
 	v.streams = append(v.streams, smil.Video{
 		Src:          result.Path.Base(),

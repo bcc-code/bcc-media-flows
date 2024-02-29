@@ -100,6 +100,27 @@
             </ul>
         </div>
         <div class="flex flex-col">
+            <label class="font-bold" for="resolutions">Resolutions - {{.Ratio}}</label>
+            <ul>
+                {{range $index, $element := .Resolutions}}
+                    {{$w := $element.Width}}
+                    {{$h := $element.Height}}
+                    <li class="flex gap-2">
+                        <div>
+                            <input type=checkbox class="form-checkbox h-4 w-4 inline-block align-middle"
+                                   name="resolutions[]" id="{{$index}}" value={{$index}} checked>
+                            <label for="{{$index}}">{{ $w }}x{{ $h }}</label>
+                        </div>
+                        <div>
+                            <input type=checkbox class="form-checkbox h-4 w-4 inline-block align-middle"
+                                   name="files[]" id="{{$index}}" value={{$index}}>
+                            <label for="{{$index}}">downloadable</label>
+                        </div>
+                    </li>
+                {{end}}
+            </ul>
+        </div>
+        <div class="flex flex-col">
             <label class="font-bold" for="watermarkFile">Overlay</label>
             <select class="{{$selectClasses}}" name="watermarkFile" id="watermarkFile">
                 <option value="">None</option>
@@ -107,11 +128,6 @@
                     <option value={{$element}}>{{$element}}</option>
                 {{end}}
             </select>
-        </div>
-        <div class="flex">
-            <label for="withFiles" class="my-auto">With downloadables</label>
-            <input class="ml-2 h-4 w-4 my-auto" type="checkbox" name="withFiles"
-                   id="withFiles">
         </div>
         <div class="flex">
             <label for="withChapters" class="my-auto">With chapters</label>

@@ -127,7 +127,6 @@ func triggerHandler(ctx *gin.Context) {
 
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, export.VXExport, export.VXExportParams{
 			VXID:          vxID,
-			WithFiles:     getParamFromCtx(ctx, "withFiles") == "true",
 			WithChapters:  getParamFromCtx(ctx, "withChapters") == "true",
 			WatermarkPath: getParamFromCtx(ctx, "watermarkPath"),
 			Destinations:  strings.Split(getParamFromCtx(ctx, "destinations"), ","),
