@@ -71,7 +71,7 @@ func getQualitiesWithLanguages(audioKeys []string, resolutions []Resolution) map
 			sortedByHeightAsc = append(sortedByHeightAsc, r)
 			continue
 		}
-		if sortedByHeightAsc[len(sortedByHeightAsc)-1].Height > r.Height {
+		if sortedByHeightAsc[len(sortedByHeightAsc)-1].Height < r.Height {
 			sortedByHeightAsc = append(sortedByHeightAsc, r)
 		} else {
 			for i, s := range sortedByHeightAsc {

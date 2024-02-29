@@ -106,6 +106,20 @@ type TriggerGETParams struct {
 	AudioSources            []string
 	SubclipNames            []string
 	Resolutions             []vsapi.Resolution
+	Ratio                   string
+}
+
+func ratio(w, h int) string {
+	a := w
+	b := h
+
+	for b != 0 {
+		t := b
+		b = a % b
+		a = t
+	}
+
+	return fmt.Sprintf("%d:%d", w/a, h/a)
 }
 
 func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
@@ -141,6 +155,12 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 		return
 	}
 
+	var ratioString string
+
+	if len(resolutions) > 0 {
+		ratioString = ratio(resolutions[0].Width, resolutions[0].Height)
+	}
+
 	c.HTML(http.StatusOK, "vx-export.gohtml", TriggerGETParams{
 		Title:                   title,
 		Filenames:               filenames,
@@ -151,6 +171,7 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 		AudioSources:            vidispine.ExportAudioSources.Values(),
 		AssetExportDestinations: export.AssetExportDestinations.Values(),
 		Resolutions:             resolutions,
+		Ratio:                   ratioString,
 	})
 }
 

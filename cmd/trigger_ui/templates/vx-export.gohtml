@@ -100,7 +100,7 @@
             </ul>
         </div>
         <div class="flex flex-col">
-            <label class="font-bold" for="resolutions">Resolutions</label>
+            <label class="font-bold" for="resolutions">Resolutions - {{.Ratio}}</label>
             <ul>
                 {{range $index, $element := .Resolutions}}
                     {{$w := $element.Width}}

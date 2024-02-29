@@ -117,11 +117,12 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	for range service.qualitiesWithLanguages {
 		service.filesSelector.Select(ctx)
 	}
-	if params.ParentParams.WithFiles {
-		for range fileQualities {
-			for range audioKeys {
-				service.filesSelector.Select(ctx)
-			}
+
+	for range lo.Filter(params.ParentParams.Resolutions, func(item Resolution, _ int) bool {
+		return item.File
+	}) {
+		for range audioKeys {
+			service.filesSelector.Select(ctx)
 		}
 	}
 	for _, task := range service.tasks {
