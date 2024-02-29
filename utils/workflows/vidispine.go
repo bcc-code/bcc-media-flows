@@ -29,6 +29,15 @@ func SetVidispineMeta(ctx workflow.Context, assetID, key, value string) error {
 	}).Get(ctx, nil)
 }
 
+func SetVidispineMetaInGroup(ctx workflow.Context, assetID, key, value, group string) error {
+	return Execute(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
+		VXID:  assetID,
+		Key:   key,
+		Value: value,
+		Group: group,
+	}).Get(ctx, nil)
+}
+
 func AddVidispineMetaValue(ctx workflow.Context, assetID, key, value string) error {
 	return Execute(ctx, vsactivity.AddVXMetadataFieldValueActivity, vsactivity.SetVXMetadataFieldParams{
 		VXID:  assetID,

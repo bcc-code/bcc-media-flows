@@ -7,6 +7,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
+	"github.com/bcc-code/bcc-media-flows/workflows/export"
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
 	"go.temporal.io/sdk/workflow"
 )
@@ -30,6 +31,8 @@ func BmmSimpleUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 		return nil, err
 	}
 
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+
 	workflow.GetLogger(ctx).Info("Uploading file to BMM", "path", path)
 
 	outputDir, err := wfutils.GetWorkflowRawOutputFolder(ctx)
@@ -37,7 +40,7 @@ func BmmSimpleUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 		return nil, err
 	}
 
-	newPath := outputDir.Append(fmt.Sprintf("BMM-%d-%s", params.TrackID, params.Language), path.Ext())
+	newPath := outputDir.Append(fmt.Sprintf("BMM-%d-%s%s", params.TrackID, params.Language, path.Ext()))
 
 	err = wfutils.MoveFile(ctx, path, newPath)
 	if err != nil {
@@ -64,10 +67,33 @@ func BmmSimpleUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 		return nil, err
 	}
 
-	err = ingestworkflows.CreatePreviews(ctx, []string{res.AssetID})
+	err = wfutils.SetVidispineMetaInGroup(ctx, res.AssetID, vscommon.FieldBmmTrackID.Value, strconv.Itoa(params.TrackID), "BMM Metadata")
 	if err != nil {
 		return nil, err
 	}
 
-	return nil, nil
+	err = wfutils.SetVidispineMetaInGroup(ctx, res.AssetID, vscommon.FieldBmmTitle.Value, params.Title, "BMM Metadata")
+	if err != nil {
+		return nil, err
+	}
+
+	err = wfutils.WaitForVidispineJob(ctx, res.ImportJobID)
+	if err != nil {
+		return nil, err
+	}
+
+	future := workflow.ExecuteChildWorkflow(ctx, export.VXExport, export.VXExportParams{
+		VXID:         res.AssetID,
+		Destinations: []string{"bmm"},
+		Languages:    []string{params.Language},
+	})
+
+	_ = ingestworkflows.CreatePreviews(ctx, []string{res.AssetID})
+
+	err = future.Get(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &BmmSimpleUploadResult{}, nil
 }

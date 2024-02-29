@@ -78,7 +78,6 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	}
 
 	// Encode to AAC and MP3
-
 	encodingFutures := map[string][]workflow.Future{}
 	for _, lang := range langs {
 		audio := normalizedResults[lang]
@@ -143,6 +142,10 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	jsonData.ImportDate = params.ExportData.ImportDate
 	jsonData.TranscriptionFiles = map[string]string{}
 	jsonData.Title = params.ExportData.Title
+	if params.ExportData.BmmTitle != nil {
+		jsonData.Title = *params.ExportData.BmmTitle
+	}
+	jsonData.TrackID = params.ExportData.BmmTrackID
 
 	for lang, transcript := range params.MergeResult.JSONTranscript {
 		jsonData.TranscriptionFiles[lang] = transcript.Base()
@@ -228,6 +231,7 @@ type BMMData struct {
 	Title              string                    `json:"title"`
 	Length             int                       `json:"length"`
 	Type               string                    `json:"type"`
+	TrackID            *int                      `json:"track_id"`
 	AudioFiles         map[string][]BMMAudioFile `json:"audio_files"`
 	TranscriptionFiles map[string]string         `json:"transcription_files"`
 	PersonsAppearing   []string                  `json:"persons_appearing"`
