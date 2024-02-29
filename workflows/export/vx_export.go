@@ -32,7 +32,6 @@ var (
 
 type VXExportParams struct {
 	VXID          string
-	WithFiles     bool
 	WithChapters  bool
 	WatermarkPath string
 	Destinations  []string
@@ -40,6 +39,7 @@ type VXExportParams struct {
 	Languages     []string
 	Subclip       string
 	IgnoreSilence bool
+	Resolutions   []Resolution
 }
 
 type VXExportResult struct {
@@ -48,6 +48,12 @@ type VXExportResult struct {
 	Duration     string `json:"duration"`
 	SmilFile     string `json:"smil_file"`
 	ChaptersFile string `json:"chapters_file"`
+}
+
+type Resolution struct {
+	Width  int
+	Height int
+	File   bool
 }
 
 type VXExportChildWorkflowParams struct {

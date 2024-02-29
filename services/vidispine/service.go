@@ -20,4 +20,5 @@ type Client interface {
 	CreateThumbnails(assetID string) (string, error)
 	GetJob(jobID string) (*vsapi.JobDocument, error)
 	AddFileToPlaceholder(itemID, fileID, tag string, fileState vsapi.FileState) (string, error)
+	GetResolutions(itemVXID string) ([]vsapi.Resolution, error)
 }

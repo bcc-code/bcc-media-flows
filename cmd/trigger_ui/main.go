@@ -8,7 +8,9 @@ import (
 	"path/filepath"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
+	"github.com/bcc-code/bcc-media-platform/backend/utils"
 	"github.com/google/uuid"
+	"github.com/samber/lo"
 
 	_ "github.com/glebarez/go-sqlite"
 
@@ -103,11 +105,32 @@ type TriggerGETParams struct {
 	SelectedAudioSource     string
 	AudioSources            []string
 	SubclipNames            []string
+	Resolutions             []vsapi.Resolution
+	Ratio                   string
+}
+
+func ratio(w, h int) string {
+	a := w
+	b := h
+
+	for b != 0 {
+		t := b
+		b = a % b
+		a = t
+	}
+
+	return fmt.Sprintf("%d:%d", w/a, h/a)
 }
 
 func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 	vxID := c.Query("id")
 	meta, err := s.vidispine.GetMetadata(vxID)
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	resolutions, err := s.vidispine.GetResolutions(vxID)
 	if err != nil {
 		renderErrorPage(c, http.StatusInternalServerError, err)
 		return
@@ -132,6 +155,12 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 		return
 	}
 
+	var ratioString string
+
+	if len(resolutions) > 0 {
+		ratioString = ratio(resolutions[0].Width, resolutions[0].Height)
+	}
+
 	c.HTML(http.StatusOK, "vx-export.gohtml", TriggerGETParams{
 		Title:                   title,
 		Filenames:               filenames,
@@ -141,6 +170,8 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 		SubclipNames:            subclipNames,
 		AudioSources:            vidispine.ExportAudioSources.Values(),
 		AssetExportDestinations: export.AssetExportDestinations.Values(),
+		Resolutions:             resolutions,
+		Ratio:                   ratioString,
 	})
 }
 
@@ -186,15 +217,38 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 		watermarkPath = getOverlayFilePath(watermarkFile)
 	}
 
+	resolutionIndexes := lo.Map(c.PostFormArray("resolutions[]"), func(i string, _ int) int {
+		return utils.AsInt(i)
+	})
+	fileIndexes := lo.Map(c.PostFormArray("files[]"), func(i string, _ int) int {
+		return utils.AsInt(i)
+	})
+
+	vsresolutions, err := s.vidispine.GetResolutions(vxID)
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	var selectedResolutions []export.Resolution
+	for _, i := range resolutionIndexes {
+		r := vsresolutions[i]
+		selectedResolutions = append(selectedResolutions, export.Resolution{
+			Width:  r.Width,
+			Height: r.Height,
+			File:   lo.Contains(fileIndexes, i),
+		})
+	}
+
 	params := export.VXExportParams{
 		VXID:          vxID,
-		WithFiles:     c.PostForm("withFiles") == "on",
 		WithChapters:  c.PostForm("withChapters") == "on",
 		IgnoreSilence: c.PostForm("ignoreSilence") == "on",
 		WatermarkPath: watermarkPath,
 		AudioSource:   audioSource,
 		Destinations:  c.PostFormArray("destinations[]"),
 		Languages:     languages,
+		Resolutions:   selectedResolutions,
 	}
 
 	var wfID string

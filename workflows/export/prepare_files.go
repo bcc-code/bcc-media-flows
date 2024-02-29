@@ -1,10 +1,13 @@
 package export
 
 import (
+	"fmt"
+
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
+	"github.com/bcc-code/mediabank-bridge/log"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -20,61 +23,56 @@ type PrepareFilesResult struct {
 	AudioFiles map[string]paths.Path
 }
 
-func getVideosByQuality(videoFilePath, outputDir paths.Path, watermarkPath *paths.Path) map[quality]common.VideoInput {
-	return map[quality]common.VideoInput{
-		r1080p: {
+func getVideosByQuality(videoFilePath, outputDir paths.Path, watermarkPath *paths.Path, resolutions []Resolution) map[resolutionString]common.VideoInput {
+	var qualities = map[resolutionString]common.VideoInput{}
+
+	for _, r := range resolutions {
+		input := common.VideoInput{
 			Path:            videoFilePath,
 			DestinationPath: outputDir,
 			WatermarkPath:   watermarkPath,
-			Width:           1920,
-			Height:          1080,
-			Bitrate:         "6M",
-			BufferSize:      "2M",
-		},
-		r720p: {
-			Path:            videoFilePath,
-			DestinationPath: outputDir,
-			WatermarkPath:   watermarkPath,
-			Width:           1280,
-			Height:          720,
-			Bitrate:         "3M",
-		},
-		r540p: {
-			Path:            videoFilePath,
-			DestinationPath: outputDir,
-			WatermarkPath:   watermarkPath,
-			Width:           960,
-			Height:          540,
-			Bitrate:         "1900k",
-		},
-		r360p: {
-			Path:            videoFilePath,
-			DestinationPath: outputDir,
-			WatermarkPath:   watermarkPath,
-			Width:           640,
-			Height:          360,
-			Bitrate:         "980k",
-		},
-		r270p: {
-			Path:            videoFilePath,
-			DestinationPath: outputDir,
-			WatermarkPath:   watermarkPath,
-			Width:           480,
-			Height:          270,
-			Bitrate:         "610k",
-		},
-		r180p: {
-			Path:            videoFilePath,
-			DestinationPath: outputDir,
-			WatermarkPath:   watermarkPath,
-			Width:           320,
-			Height:          180,
-			Bitrate:         "320k",
-		},
+			Width:           r.Width,
+			Height:          r.Height,
+		}
+		if r.Height > 2000 {
+			input.Bitrate = "10M"
+			input.BufferSize = "2M"
+		} else if r.Height > 1000 {
+			input.Bitrate = "6M"
+			input.BufferSize = "2M"
+		} else if r.Height > 700 {
+			input.Bitrate = "3M"
+		} else if r.Height > 500 {
+			input.Bitrate = "1900k"
+		} else if r.Height > 300 {
+			input.Bitrate = "980k"
+		} else if r.Height > 200 {
+			input.Bitrate = "610k"
+		} else {
+			input.Bitrate = "320k"
+		}
+		qualities[resolutionToString(r)] = input
 	}
+
+	return qualities
 }
 
-func doVideoTasks(ctx workflow.Context, selector workflow.Selector, qualities map[quality]common.VideoInput, callback func(f workflow.Future, q quality)) ([]quality, error) {
+type resolutionString string
+
+func resolutionToString(r Resolution) resolutionString {
+	return resolutionString(fmt.Sprintf("%dx%d-%t", r.Width, r.Height, r.File))
+}
+
+func resolutionFromString(str resolutionString) Resolution {
+	var r Resolution
+	_, err := fmt.Sscanf(string(str), "%dx%d-%t", &r.Width, &r.Height, &r.File)
+	if err != nil {
+		log.L.Error().Err(err).Send()
+	}
+	return r
+}
+
+func doVideoTasks(ctx workflow.Context, selector workflow.Selector, qualities map[resolutionString]common.VideoInput, callback func(f workflow.Future, q Resolution)) ([]resolutionString, error) {
 	keys, err := wfutils.GetMapKeysSafely(ctx, qualities)
 	if err != nil {
 		return nil, err
@@ -85,7 +83,7 @@ func doVideoTasks(ctx workflow.Context, selector workflow.Selector, qualities ma
 		q := key
 
 		selector.AddFuture(wfutils.Execute(ctx, activities.TranscodeToVideoH264, input), func(f workflow.Future) {
-			callback(f, q)
+			callback(f, resolutionFromString(q))
 		})
 	}
 

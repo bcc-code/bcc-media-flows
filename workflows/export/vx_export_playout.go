@@ -29,7 +29,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 		Bitrate:    "50M",
 		FilePath:   *params.MergeResult.VideoFile,
 		OutputDir:  xdcamOutputDir,
-		Resolution: string(r1080p),
+		Resolution: "1920x1080",
 		FrameRate:  25,
 		Interlace:  true,
 	}).Get(ctx, &videoResult)

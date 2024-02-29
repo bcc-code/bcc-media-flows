@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"go.temporal.io/sdk/activity"
 )
 
@@ -73,4 +74,17 @@ func AddVXMetadataFieldValueActivity(ctx context.Context, params SetVXMetadataFi
 
 	err := vsClient.AddToItemMetadataField(params.VXID, params.Group, params.Key, params.Value)
 	return nil, err
+}
+
+type GetResolutionsParams struct {
+	VXID string
+}
+
+func GetResolutions(ctx context.Context, params GetResolutionsParams) ([]vsapi.Resolution, error) {
+	log := activity.GetLogger(ctx)
+	log.Info("Starting GetResolutions")
+
+	vsClient := GetClient()
+
+	return vsClient.GetResolutions(params.VXID)
 }
