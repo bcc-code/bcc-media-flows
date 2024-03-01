@@ -69,7 +69,8 @@ func ImportSubtitlesFromSubtrans(
 		// Unfortunatelly, we need to wait for the job to complete before importing the file as a shape
 		// as vidipine goes crazy otherwise
 		wfutils.ExecuteWithLowPrioQueue(ctx, vsactivity.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
-			JobID: jobRes.JobID,
+			JobID:     jobRes.JobID,
+			SleepTime: 10,
 		}).Get(ctx, nil)
 
 		err = wfutils.Execute(ctx, vsactivity.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
@@ -79,7 +80,8 @@ func ImportSubtitlesFromSubtrans(
 		}).Get(ctx, jobRes)
 
 		wfutils.ExecuteWithLowPrioQueue(ctx, vsactivity.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
-			JobID: jobRes.JobID,
+			JobID:     jobRes.JobID,
+			SleepTime: 5,
 		}).Get(ctx, nil)
 	}
 
