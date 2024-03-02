@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-const baseUrl = "http://10.12.140.77:5572"
+const baseUrl = "http://rclone.lan.bcc.media"
 
 type copyRequest struct {
 	Async       bool   `json:"_async"`
