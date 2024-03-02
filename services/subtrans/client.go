@@ -60,7 +60,6 @@ func stripBOM(fileBytes []byte) []byte {
 }
 
 func (c *Client) GetSubtitles(id string, format string, approvedOnly bool) (map[string]string, error) {
-	// The 0 is a timecode offset
 
 	subs, err := c.SearchByID(id)
 	if err != nil {
@@ -70,7 +69,9 @@ func (c *Client) GetSubtitles(id string, format string, approvedOnly bool) (map[
 	out := map[string]string{}
 
 	for _, l := range subs.Languages {
-		if !l.Approved {
+
+		// Norwegian is always approved, even if the system says it's not
+		if !l.Approved && l.IsoName != "NOR" {
 			continue
 		}
 
@@ -81,6 +82,7 @@ func (c *Client) GetSubtitles(id string, format string, approvedOnly bool) (map[
 			onlyApproved += "false"
 		}
 
+		// The 0 is a timecode offset
 		url := fmt.Sprintf("/api/external/export/story/storyid/%s/%s/%s/0?key=%s&%s", id, l.IsoName, format, c.apiKey, onlyApproved)
 		res, err := c.restyClient.R().Get(url)
 		if err != nil {

@@ -19,7 +19,8 @@ func GetClient() vidispine.Client {
 }
 
 type WaitForJobCompletionParams struct {
-	JobID string
+	JobID     string
+	SleepTime int
 }
 
 func WaitForJobCompletion(ctx context.Context, params WaitForJobCompletionParams) error {
@@ -27,6 +28,11 @@ func WaitForJobCompletion(ctx context.Context, params WaitForJobCompletionParams
 	logger.Info("Starting WaitForJobCompletionActivity")
 
 	vsClient := GetClient()
+
+	sleepTime := time.Second * 30
+	if params.SleepTime > 0 {
+		sleepTime = time.Second * time.Duration(params.SleepTime)
+	}
 
 	for {
 		job, err := vsClient.GetJob(params.JobID)
@@ -44,7 +50,7 @@ func WaitForJobCompletion(ctx context.Context, params WaitForJobCompletionParams
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
-		time.Sleep(time.Second * 30)
+		time.Sleep(sleepTime)
 	}
 }
 

@@ -3,15 +3,12 @@ package workflows
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
-	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/paths"
-	"github.com/bcc-code/bcc-media-flows/utils/workflows"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
-	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -25,19 +22,7 @@ func ImportSubtitlesFromSubtrans(
 ) error {
 	logger := workflow.GetLogger(ctx)
 
-	options := workflow.ActivityOptions{
-		RetryPolicy: &temporal.RetryPolicy{
-			InitialInterval:        time.Minute * 3,
-			MaximumAttempts:        10,
-			MaximumInterval:        time.Hour * 1,
-			NonRetryableErrorTypes: []string{},
-		},
-		StartToCloseTimeout:    time.Hour * 4,
-		ScheduleToCloseTimeout: time.Hour * 48,
-		HeartbeatTimeout:       time.Minute * 5,
-		TaskQueue:              environment.GetQueue(),
-	}
-
+	options := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	logger.Info("Starting sub import flow")
@@ -67,32 +52,37 @@ func ImportSubtitlesFromSubtrans(
 		return err
 	}
 
-	var futures []workflow.Future
 	for lang, sub := range subsList {
 		lang = strings.ToLower(lang)
 
-		future := wfutils.Execute(ctx, vsactivity.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
+		jobRes := &vsactivity.JobResult{}
+		err := wfutils.Execute(ctx, vsactivity.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
 			AssetID:  params.VXID,
 			Language: lang,
 			FilePath: sub,
-		})
+		}).Get(ctx, jobRes)
 
-		futures = append(futures, future)
-
-		future = wfutils.Execute(ctx, vsactivity.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
-			AssetID:  params.VXID,
-			FilePath: sub,
-			ShapeTag: fmt.Sprintf("sub_%s_%s", lang, "srt"),
-		})
-
-		futures = append(futures, future)
-	}
-
-	for _, future := range futures {
-		err = future.Get(ctx, nil)
 		if err != nil {
 			return err
 		}
+
+		// Unfortunatelly, we need to wait for the job to complete before importing the file as a shape
+		// as vidipine goes crazy otherwise
+		wfutils.ExecuteWithLowPrioQueue(ctx, vsactivity.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
+			JobID:     jobRes.JobID,
+			SleepTime: 10,
+		}).Get(ctx, nil)
+
+		err = wfutils.Execute(ctx, vsactivity.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
+			AssetID:  params.VXID,
+			FilePath: sub,
+			ShapeTag: fmt.Sprintf("sub_%s_%s", lang, "srt"),
+		}).Get(ctx, jobRes)
+
+		wfutils.ExecuteWithLowPrioQueue(ctx, vsactivity.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
+			JobID:     jobRes.JobID,
+			SleepTime: 5,
+		}).Get(ctx, nil)
 	}
 
 	return nil
