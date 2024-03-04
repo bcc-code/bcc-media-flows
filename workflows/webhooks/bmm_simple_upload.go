@@ -7,6 +7,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
+	"github.com/bcc-code/bcc-media-flows/workflows"
 	"github.com/bcc-code/bcc-media-flows/workflows/export"
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
 	"go.temporal.io/sdk/workflow"
@@ -78,6 +79,14 @@ func BmmSimpleUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 	}
 
 	err = wfutils.WaitForVidispineJob(ctx, res.ImportJobID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeVX, workflows.TranscribeVXInput{
+		VXID:     res.AssetID,
+		Language: params.Language,
+	}).Get(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
