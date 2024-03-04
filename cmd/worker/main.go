@@ -12,6 +12,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/environment"
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
 	"github.com/bcc-code/bcc-media-flows/workflows/vb_export"
+	"github.com/bcc-code/bcc-media-flows/workflows/webhooks"
 
 	"github.com/bcc-code/bcc-media-flows/workflows/export"
 
@@ -71,6 +72,8 @@ var workerWorkflows = []any{
 	workflows.TranscribeVX,
 	workflows.WatchFolderTranscode,
 	workflows.HandleMultitrackFile,
+	webhooks.WebHook,
+	webhooks.BmmSimpleUpload,
 	export.VXExport,
 	export.VXExportToVOD,
 	export.VXExportToPlayout,

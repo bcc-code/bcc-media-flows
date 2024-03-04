@@ -61,8 +61,8 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 	var vidispineJobIDs = map[string]string{}
 
 	for _, file := range files {
-		var result *importTagResult
-		result, err = importFileAsTag(ctx, "original", file, file.Base())
+		var result *ImportTagResult
+		result, err = ImportFileAsTag(ctx, "original", file, file.Base())
 		if err != nil {
 			return err
 		}
@@ -120,7 +120,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		}
 	}
 
-	err = createPreviews(ctx, audioAssetIDs)
+	err = CreatePreviews(ctx, audioAssetIDs)
 	if err != nil {
 		return err
 	}

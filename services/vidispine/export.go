@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -49,6 +50,12 @@ type ExportData struct {
 
 	// ImportDate is the date the asset was imported into Vidispine
 	ImportDate *time.Time
+
+	// BmmTitle is the title to use in BMM
+	BmmTitle *string
+
+	// BmmTrackID is the track ID in BMM
+	BmmTrackID *int
 }
 
 type ExportAudioSource enum.Member[string]
@@ -353,10 +360,26 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 	safeTitle = nonAlphanumeric.ReplaceAllString(safeTitle, "")
 	safeTitle = consecutiveUnderscores.ReplaceAllString(safeTitle, "_")
 
+	var bmmTrackID *int
+	if id := meta.Get(vscommon.FieldBmmTrackID, ""); id != "" {
+		intID64, err := strconv.ParseInt(id, 10, 64)
+		if err == nil {
+			intID := int(intID64)
+			bmmTrackID = &intID
+		}
+	}
+
+	var bmmTitle *string
+	if str := meta.Get(vscommon.FieldBmmTitle, ""); strings.TrimSpace(title) != "" {
+		bmmTitle = &str
+	}
+
 	out := ExportData{
-		Title:     title,
-		SafeTitle: safeTitle,
-		Clips:     []*Clip{},
+		Title:      title,
+		SafeTitle:  safeTitle,
+		Clips:      []*Clip{},
+		BmmTrackID: bmmTrackID,
+		BmmTitle:   bmmTitle,
 	}
 
 	if ingested := meta.Get(vscommon.FieldIngested, ""); ingested != "" {
