@@ -26,6 +26,7 @@ func ImportSubtitlesFromSubtrans(
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	logger.Info("Starting sub import flow")
+	wfutils.NotifyTelegramChannel(ctx, "Starting sub import for VXID: "+params.VXID)
 
 	input := activities.GetSubtransIDInput{
 		VXID:     params.VXID,
@@ -52,6 +53,30 @@ func ImportSubtitlesFromSubtrans(
 		return err
 	}
 
+	langs := []string{}
+	for lang, sub := range subsList {
+		lang = strings.ToLower(lang)
+
+		jobRes := &vsactivity.JobResult{}
+		err = wfutils.Execute(ctx, vsactivity.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
+			AssetID:  params.VXID,
+			FilePath: sub,
+			ShapeTag: fmt.Sprintf("sub_%s_%s", lang, "srt"),
+		}).Get(ctx, jobRes)
+
+		if jobRes.JobID == "" {
+			logger.Info("No job created for importing subtitle shape", "lang", lang, "file", sub)
+			continue
+		}
+
+		langs = append(langs, lang)
+	}
+
+	wfutils.NotifyTelegramChannel(
+		ctx,
+		fmt.Sprintf("Sub import for VXID: %s finished (%s). Starting preview import.", params.VXID, strings.Join(langs, ", ")),
+	)
+
 	for lang, sub := range subsList {
 		lang = strings.ToLower(lang)
 
@@ -71,29 +96,13 @@ func ImportSubtitlesFromSubtrans(
 			continue
 		}
 
-		// Unfortunatelly, we need to wait for the job to complete before importing the file as a shape
-		// as vidipine goes crazy otherwise
-		wfutils.ExecuteWithLowPrioQueue(ctx, vsactivity.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
+		wfutils.Execute(ctx, vsactivity.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
 			JobID:     jobRes.JobID,
 			SleepTime: 10,
 		}).Get(ctx, nil)
-
-		err = wfutils.Execute(ctx, vsactivity.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
-			AssetID:  params.VXID,
-			FilePath: sub,
-			ShapeTag: fmt.Sprintf("sub_%s_%s", lang, "srt"),
-		}).Get(ctx, jobRes)
-
-		if jobRes.JobID == "" {
-			logger.Info("No job created for importing subtitle shape", "lang", lang, "file", sub)
-			continue
-		}
-
-		wfutils.ExecuteWithLowPrioQueue(ctx, vsactivity.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
-			JobID:     jobRes.JobID,
-			SleepTime: 5,
-		}).Get(ctx, nil)
 	}
+
+	wfutils.NotifyTelegramChannel(ctx, "Sub import for VXID: "+params.VXID+" finished")
 
 	return nil
 }
