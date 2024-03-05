@@ -70,6 +70,11 @@ func ImportSubtitlesFromSubtrans(
 		}
 
 		langs = append(langs, lang)
+
+		wfutils.Execute(ctx, vsactivity.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
+			JobID:     jobRes.JobID,
+			SleepTime: 10,
+		}).Get(ctx, nil)
 	}
 
 	wfutils.NotifyTelegramChannel(
