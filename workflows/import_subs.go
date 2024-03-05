@@ -66,6 +66,11 @@ func ImportSubtitlesFromSubtrans(
 			return err
 		}
 
+		if jobRes.JobID == "" {
+			logger.Info("No job created for importing subtitle", "lang", lang, "file", sub)
+			continue
+		}
+
 		// Unfortunatelly, we need to wait for the job to complete before importing the file as a shape
 		// as vidipine goes crazy otherwise
 		wfutils.ExecuteWithLowPrioQueue(ctx, vsactivity.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
@@ -78,6 +83,11 @@ func ImportSubtitlesFromSubtrans(
 			FilePath: sub,
 			ShapeTag: fmt.Sprintf("sub_%s_%s", lang, "srt"),
 		}).Get(ctx, jobRes)
+
+		if jobRes.JobID == "" {
+			logger.Info("No job created for importing subtitle shape", "lang", lang, "file", sub)
+			continue
+		}
 
 		wfutils.ExecuteWithLowPrioQueue(ctx, vsactivity.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
 			JobID:     jobRes.JobID,
