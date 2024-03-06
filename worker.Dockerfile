@@ -10,5 +10,4 @@ WORKDIR /
 RUN apk update
 RUN apk add rsync
 COPY --from=build /app /app
-USER nonroot:nonroot
 ENTRYPOINT ["/app"]
