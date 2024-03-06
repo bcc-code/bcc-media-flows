@@ -15,6 +15,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/bcc-code/bcc-media-flows/workflows"
+	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -121,8 +122,12 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 		return err
 	}
 
+	previewOpts := workflow.GetChildWorkflowOptions(ctx)
+	previewOpts.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
+	previewCtx := workflow.WithChildOptions(ctx, previewOpts)
+
 	// We dow *not* wait for preview to be ready
-	workflow.ExecuteChildWorkflow(ctx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
+	workflow.ExecuteChildWorkflow(previewCtx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
 		VXID:  assetResult.AssetID,
 		Delay: 2 * time.Hour,
 	})
