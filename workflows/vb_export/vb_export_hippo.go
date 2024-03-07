@@ -95,7 +95,7 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		return nil, merry.New("WaitForFile failed")
 	}
 
-	err = wfutils.Execute(ctx, activities.CopyFile, activities.MoveFileInput{
+	err = wfutils.Execute(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      outputFile,
 		Destination: deliveryFolder.Append("Hippo", params.OriginalFilenameWithoutExt+outputFile.Ext()),
 	}).Get(ctx, nil)
