@@ -67,8 +67,9 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 
 	height := input.Height
 	width := -1
-	if info.Height != 0 && info.Width != 0 && info.Height > info.Width {
-		// portrait video
+	videoIsPortrait := info.Height > info.Width
+	paramsIsPortrait := input.Height > input.Width
+	if info.Height != 0 && info.Width != 0 && videoIsPortrait && !paramsIsPortrait {
 		height = -1
 		width = input.Height
 	}
