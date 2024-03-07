@@ -47,7 +47,7 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		return nil, err
 	}
 
-	if params.AnalyzeResult.FrameRate != 25 && params.AnalyzeResult.FrameRate != 50 {
+	if params.AnalyzeResult.FrameRate != 25 && params.AnalyzeResult.FrameRate != 50 && params.AnalyzeResult.FrameRate != 60 {
 		return nil, merry.New("Expected 25 or 50 fps input")
 	}
 
