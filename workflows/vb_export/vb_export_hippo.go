@@ -79,12 +79,9 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 	err = wfutils.Execute(ctx, activities.CopyFile, activities.MoveFileInput{
 		Source:      currentVideoFile,
 		Destination: inputFolder.Append(params.InputFile.Base()),
-	}).Get(ctx, &success)
+	}).Get(ctx, nil)
 	if err != nil {
 		return nil, err
-	}
-	if !success {
-		return nil, merry.New("RcloneCopyFile failed")
 	}
 
 	success = false
