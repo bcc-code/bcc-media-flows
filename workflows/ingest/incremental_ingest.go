@@ -3,12 +3,15 @@ package ingestworkflows
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/bcc-code/bcc-media-flows/workflows"
+	"github.com/bcc-code/mediabank-bridge/log"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -58,6 +61,11 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	if err != nil {
 		return err
 	}
+	err = wfutils.SetVidispineMeta(ctx, assetResult.AssetID, vscommon.FieldIngested.Value, time.Now().Format(time.RFC3339))
+	if err != nil {
+		log.L.Error().Err(err).Send()
+	}
+
 	wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Starting live ingest: https://vault.bcc.media/item/%s", assetResult.AssetID))
 	videoVXID := assetResult.AssetID
 
