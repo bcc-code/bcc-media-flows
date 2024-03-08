@@ -85,9 +85,9 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	}
 	wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Video ingest ended: https://vault.bcc.media/item/%s", assetResult.AssetID))
 
-	// Stop Reaper recording
-	reaperResult := &activities.StopReaperResult{}
-	err = wfutils.Execute(ctx, activities.StopReaper, nil).Get(ctx, reaperResult)
+	// List Reaper files
+	reaperResult := &activities.ReaperResult{}
+	err = wfutils.Execute(ctx, activities.ListReaperFiles, nil).Get(ctx, reaperResult)
 	if err != nil {
 		return err
 	}

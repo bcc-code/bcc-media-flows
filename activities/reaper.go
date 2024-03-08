@@ -8,8 +8,10 @@ import (
 	"net/http"
 )
 
+const reaperBaseUrl = "http://100.123.200.12:8081"
+
 func StartReaper(ctx context.Context) error {
-	resp, err := http.Get("http://100.123.200.12:8081/start")
+	resp, err := http.Get(reaperBaseUrl + "/start")
 	if err != nil {
 		return err
 	}
@@ -22,12 +24,12 @@ func StartReaper(ctx context.Context) error {
 	return nil
 }
 
-type StopReaperResult struct {
+type ReaperResult struct {
 	Files []string
 }
 
-func StopReaper(ctx context.Context) (*StopReaperResult, error) {
-	resp, err := http.Get("http://100.123.200.12:8081/stop")
+func StopReaper(ctx context.Context) (*ReaperResult, error) {
+	resp, err := http.Get(reaperBaseUrl + "/stop")
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +46,30 @@ func StopReaper(ctx context.Context) (*StopReaperResult, error) {
 
 	var files []string
 	err = json.Unmarshal(bodyBytes, &files)
-	return &StopReaperResult{
+	return &ReaperResult{
+		Files: files,
+	}, err
+}
+
+func ListReaperFiles(ctx context.Context) (*ReaperResult, error) {
+	resp, err := http.Get(reaperBaseUrl + "/files")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New("Received non-200 response status: " + resp.Status)
+	}
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var files []string
+	err = json.Unmarshal(bodyBytes, &files)
+	return &ReaperResult{
 		Files: files,
 	}, err
 }

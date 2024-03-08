@@ -224,7 +224,7 @@ func WaitForFile(ctx context.Context, input FileInput) (bool, error) {
 		res, err := os.Stat(input.Path.Local())
 		activity.RecordHeartbeat(ctx, res)
 		if err != nil {
-			if time.Since(startedAt) > time.Minute*5 {
+			if time.Since(startedAt) > time.Minute*30 {
 				return false, err
 			}
 			time.Sleep(time.Second * 5)
