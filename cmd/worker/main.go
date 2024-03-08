@@ -42,6 +42,7 @@ var utilActivities = []any{
 	activities.RsyncIncrementalCopy,
 	activities.StartReaper,
 	activities.StopReaper,
+	activities.ListReaperFiles,
 }
 
 var vidispineActivities = []any{
