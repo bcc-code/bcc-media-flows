@@ -46,6 +46,7 @@ func watchersHandler(ctx *gin.Context) {
 	multitrackPath := strings.HasPrefix(result.Path, "/mnt/isilon/system/multitrack/Ingest/tempFraBrunstad/")
 
 	growingPath := strings.HasPrefix(result.Path, "/mnt/dmzshare/ingestgrow/")
+	//rawImportIsilon := strings.HasPrefix(result.Path, "/mnt/isilon/Input/Rawmaterial/")
 
 	if err != nil {
 		fmt.Println(err.Error())

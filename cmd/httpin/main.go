@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
-	"github.com/bcc-code/bcc-media-flows/workflows/ingest"
+	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
 	"github.com/bcc-code/bcc-media-flows/workflows/webhooks"
 	"github.com/gin-gonic/gin/binding"
 
@@ -125,12 +125,31 @@ func triggerHandler(ctx *gin.Context) {
 			languages = strings.Split(languagesString, ",")
 		}
 
+		resolutionsString := getParamFromCtx(ctx, "resolutions")
+		var resolutions []export.Resolution
+		if resolutionsString != "" {
+			for _, r := range strings.Split(resolutionsString, ",") {
+				var width, height int
+				_, err := fmt.Sscanf(r, "%dx%d", &width, &height)
+				if err != nil {
+					ctx.Status(http.StatusBadRequest)
+					return
+				}
+				resolutions = append(resolutions, export.Resolution{
+					Width:  width,
+					Height: height,
+					File:   false,
+				})
+			}
+		}
+
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, export.VXExport, export.VXExportParams{
 			VXID:          vxID,
 			WithChapters:  getParamFromCtx(ctx, "withChapters") == "true",
 			WatermarkPath: getParamFromCtx(ctx, "watermarkPath"),
 			Destinations:  strings.Split(getParamFromCtx(ctx, "destinations"), ","),
 			Languages:     languages,
+			Resolutions:   resolutions,
 		})
 	case "ExecuteFFmpeg":
 		var input struct {

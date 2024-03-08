@@ -183,6 +183,7 @@ type File struct {
 	RefreshFlag int      `json:"refreshFlag"`
 	Storage     string   `json:"storage"`
 	Metadata    KV       `json:"metadata"`
+	Items       []Item   `json:"item,omitempty"`
 }
 
 type Resolution struct {
