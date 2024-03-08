@@ -91,7 +91,7 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	if err != nil {
 		return err
 	}
-	wfutils.NotifyTelegramChannel(ctx, "Reaper recording stopped")
+	wfutils.NotifyTelegramChannel(ctx, "Starting to import reaper files")
 
 	err = wfutils.Execute(ctx, vsactivity.CloseFile, vsactivity.CloseFileParams{
 		FileID: jobResult.FileID,
