@@ -167,7 +167,11 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 			}
 		}
 
-		chaperRecordedAt := params.ExportData.ImportDate.Add(time.Duration(chapter.Timestamp * float64(time.Second)))
+		d := time.Now().Truncate(time.Hour * 6)
+		if params.ExportData.ImportDate != nil {
+			d = *params.ExportData.ImportDate
+		}
+		chaperRecordedAt := d.Add(time.Duration(chapter.Timestamp * float64(time.Second)))
 		jsonData.RecordedAt = &chaperRecordedAt
 
 		jsonData.StartsAt = chapter.Timestamp
