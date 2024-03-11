@@ -34,7 +34,7 @@ type GetSubtransIDOutput struct {
 	SubtransID string
 }
 
-func GetSubtransIDActivity(ctx context.Context, input *GetSubtransIDInput) (*GetSubtransIDOutput, error) {
+func GetSubtransIDActivity(ctx context.Context, input GetSubtransIDInput) (*GetSubtransIDOutput, error) {
 	out := &GetSubtransIDOutput{}
 
 	vsClient := vsactivity.GetClient()
