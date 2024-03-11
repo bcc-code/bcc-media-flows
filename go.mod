@@ -8,7 +8,8 @@ require (
 	cloud.google.com/go/pubsub v1.33.0
 	github.com/ansel1/merry/v2 v2.1.2
 	github.com/bcc-code/bcc-media-platform v0.0.0-20240108115653-54c62eb6d615
-	github.com/cloudevents/sdk-go/v2 v2.14.0
+	github.com/bcc-code/mediabank-bridge v1.1.1
+	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/deckarep/golang-set/v2 v2.3.1
 	github.com/gin-gonic/gin v1.9.1
@@ -62,7 +63,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.24.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.40.2 // indirect
 	github.com/aws/smithy-go v1.15.0 // indirect
-	github.com/bcc-code/mediabank-bridge v1.1.1 // indirect
 	github.com/bytedance/sonic v1.10.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
