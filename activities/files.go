@@ -10,6 +10,7 @@ import (
 
 	"github.com/ansel1/merry/v2"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/utils"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/activity"
 )
@@ -246,4 +247,53 @@ func WaitForFile(ctx context.Context, input FileInput) (bool, error) {
 		}
 		time.Sleep(time.Second * 5)
 	}
+}
+
+type CleanupInput struct {
+	Root      paths.Path
+	OlderThan time.Time
+}
+
+func DeleteEmptyDirectories(ctx context.Context, input CleanupInput) ([]string, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "DeleteEmptyDirectories")
+	log.Info("Starting DeleteEmptyDirectoriesActivity")
+
+	empty, err := utils.GetEmptyDirs(input.Root.Local())
+	if err != nil {
+		return nil, err
+	}
+
+	deleted := []string{}
+	for _, dir := range empty {
+		err := os.Remove(dir)
+		if err != nil {
+			return deleted, err
+		}
+		deleted = append(deleted, dir)
+	}
+
+	return deleted, nil
+}
+
+func DeleteOldFiles(ctx context.Context, input CleanupInput) ([]string, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "DeleteOldFiles")
+	log.Info("Starting DeleteOldFilesActivity")
+
+	deleted := []string{}
+	files, err := utils.GetOldFile(input.Root.Local(), input.OlderThan)
+	if err != nil {
+		return deleted, err
+	}
+
+	for _, file := range files {
+		err := os.Remove(file)
+		if err != nil {
+			return deleted, err
+		}
+		deleted = append(deleted, file)
+	}
+
+	return deleted, err
 }

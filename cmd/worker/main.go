@@ -11,6 +11,7 @@ import (
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
+	"github.com/bcc-code/bcc-media-flows/workflows/scheduled"
 	"github.com/bcc-code/bcc-media-flows/workflows/vb_export"
 	"github.com/bcc-code/bcc-media-flows/workflows/webhooks"
 
@@ -43,6 +44,8 @@ var utilActivities = []any{
 	activities.StartReaper,
 	activities.StopReaper,
 	activities.ListReaperFiles,
+	activities.DeleteEmptyDirectories,
+	activities.DeleteOldFiles,
 }
 
 var vidispineActivities = []any{
@@ -94,6 +97,7 @@ var workerWorkflows = []any{
 	vb_export.VBExportToBStage,
 	vb_export.VBExportToGfx,
 	vb_export.VBExportToHippo,
+	scheduled.CleanupTemp,
 }
 
 func main() {
