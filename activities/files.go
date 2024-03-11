@@ -45,7 +45,7 @@ func MoveFile(ctx context.Context, input MoveFileInput) (*FileResult, error) {
 		return nil, err
 	}
 	if input.Source.Drive != input.Destination.Drive {
-		err = copyFile(ctx, input.Source, input.Destination)
+		_, err = copyFile(ctx, input.Source, input.Destination)
 		if err != nil {
 			return nil, err
 		}
@@ -74,7 +74,7 @@ func CopyFile(ctx context.Context, input MoveFileInput) (*FileResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = copyFile(ctx, input.Source, input.Destination)
+	_, err = copyFile(ctx, input.Source, input.Destination)
 	if err != nil {
 		return nil, err
 	}
@@ -84,12 +84,12 @@ func CopyFile(ctx context.Context, input MoveFileInput) (*FileResult, error) {
 	}, nil
 }
 
-func copyFile(ctx context.Context, source paths.Path, destination paths.Path) error {
+func copyFile(ctx context.Context, source paths.Path, destination paths.Path) (any, error) {
 	log := activity.GetLogger(ctx)
 	sourcePath := source.Local()
 	inputFile, err := os.Open(sourcePath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	outputFile, err := os.Create(destination.Local())
 	if err != nil {
@@ -97,7 +97,7 @@ func copyFile(ctx context.Context, source paths.Path, destination paths.Path) er
 		if closeErr != nil {
 			log.Error(err.Error())
 		}
-		return err
+		return nil, err
 	}
 	defer func() {
 		closeErr := outputFile.Close()
@@ -110,7 +110,7 @@ func copyFile(ctx context.Context, source paths.Path, destination paths.Path) er
 	if closeErr != nil {
 		log.Error(err.Error())
 	}
-	return err
+	return nil, err
 }
 
 func StandardizeFileName(ctx context.Context, input FileInput) (*FileResult, error) {
@@ -133,16 +133,16 @@ type CreateFolderInput struct {
 	Destination paths.Path
 }
 
-func CreateFolder(ctx context.Context, input CreateFolderInput) error {
+func CreateFolder(ctx context.Context, input CreateFolderInput) (any, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "CreateFolder")
 	log.Info("Starting CreateFolderActivity")
 
 	err := os.MkdirAll(input.Destination.Local(), os.ModePerm)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return os.Chmod(input.Destination.Local(), os.ModePerm)
+	return nil, os.Chmod(input.Destination.Local(), os.ModePerm)
 }
 
 type WriteFileInput struct {
@@ -150,7 +150,7 @@ type WriteFileInput struct {
 	Data []byte
 }
 
-func WriteFile(ctx context.Context, input WriteFileInput) error {
+func WriteFile(ctx context.Context, input WriteFileInput) (any, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "WriteFile")
 	log.Info("Starting WriteFileActivity")
@@ -160,14 +160,14 @@ func WriteFile(ctx context.Context, input WriteFileInput) error {
 
 	err := os.MkdirAll(filepath.Dir(input.Path.Local()), os.ModePerm)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err = os.WriteFile(input.Path.Local(), input.Data, os.ModePerm)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	_ = os.Chmod(input.Path.Local(), os.ModePerm)
-	return nil
+	return nil, nil
 }
 
 func ReadFile(ctx context.Context, input FileInput) ([]byte, error) {
@@ -192,20 +192,20 @@ func ListFiles(ctx context.Context, input FileInput) (paths.Files, error) {
 	}), err
 }
 
-func DeletePath(ctx context.Context, input DeletePathInput) error {
+func DeletePath(ctx context.Context, input DeletePathInput) (any, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "DeletePath")
 	log.Info("Starting DeletePathActivity")
 
 	if (input.Path.Path == "/") || (input.Path.Path == "") {
-		return merry.New("cannot delete root")
+		return nil, merry.New("cannot delete root")
 	}
 
 	if input.RemoveAll {
-		return os.RemoveAll(input.Path.Local())
+		return nil, os.RemoveAll(input.Path.Local())
 	}
 
-	return os.Remove(input.Path.Local())
+	return nil, os.Remove(input.Path.Local())
 }
 
 // WaitForFile waits until a file stops growing
@@ -225,7 +225,7 @@ func WaitForFile(ctx context.Context, input FileInput) (bool, error) {
 		res, err := os.Stat(input.Path.Local())
 		activity.RecordHeartbeat(ctx, res)
 		if err != nil {
-			if time.Since(startedAt) > time.Minute*5 {
+			if time.Since(startedAt) > time.Minute*30 {
 				return false, err
 			}
 			time.Sleep(time.Second * 5)

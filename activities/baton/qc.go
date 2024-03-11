@@ -2,10 +2,11 @@ package batonactivities
 
 import (
 	"context"
+	"time"
+
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/baton"
 	"go.temporal.io/sdk/activity"
-	"time"
 )
 
 type QCParams struct {
@@ -13,7 +14,7 @@ type QCParams struct {
 	Plan baton.TestPlan
 }
 
-func QC(ctx context.Context, input *QCParams) (*baton.QCReport, error) {
+func QC(ctx context.Context, input QCParams) (*baton.QCReport, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting BatonQCActivity")
 

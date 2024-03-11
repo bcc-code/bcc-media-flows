@@ -58,6 +58,6 @@ func IncrementalCopy(in, out paths.Path, statCallback func(FileInfo)) error {
 		if done {
 			return nil
 		}
-		time.Sleep(time.Second * 10)
+		time.Sleep(time.Second * 15)
 	}
 }

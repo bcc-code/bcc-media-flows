@@ -3,12 +3,15 @@ package ingestworkflows
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/bcc-code/bcc-media-flows/workflows"
+	"github.com/bcc-code/mediabank-bridge/log"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -58,15 +61,23 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	if err != nil {
 		return err
 	}
-	wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Starting live ingest: https://vault.bcc.media/item/%s", assetResult.AssetID))
+
+	// TODO: this value vas empty? Manually set?
+	err = wfutils.SetVidispineMeta(ctx, assetResult.AssetID, vscommon.FieldIngested.Value, time.Now().Format(time.RFC3339))
+	if err != nil {
+		log.L.Error().Err(err).Send()
+	}
+
+	_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Starting live ingest: https://vault.bcc.media/item/%s", assetResult.AssetID))
 	videoVXID := assetResult.AssetID
 
+	var p any
 	// REAPER: Start recording
-	err = wfutils.Execute(ctx, activities.StartReaper, nil).Get(ctx, nil)
+	err = wfutils.Execute(ctx, activities.StartReaper, p).Get(ctx, nil)
 	if err != nil {
 		return err
 	}
-	wfutils.NotifyTelegramChannel(ctx, "Reaper recording started")
+	_ = wfutils.NotifyTelegramChannel(ctx, "Reaper recording started")
 
 	var jobResult vsactivity.FileJobResult
 	err = wfutils.Execute(ctx, vsactivity.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
@@ -83,15 +94,15 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	if err != nil {
 		return err
 	}
-	wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Video ingest ended: https://vault.bcc.media/item/%s", assetResult.AssetID))
+	_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Video ingest ended: https://vault.bcc.media/item/%s", assetResult.AssetID))
 
-	// Stop Reaper recording
-	reaperResult := &activities.StopReaperResult{}
-	err = wfutils.Execute(ctx, activities.StopReaper, nil).Get(ctx, reaperResult)
+	// List Reaper files
+	reaperResult := &activities.ReaperResult{}
+	err = wfutils.Execute(ctx, activities.ListReaperFiles, nil).Get(ctx, reaperResult)
 	if err != nil {
 		return err
 	}
-	wfutils.NotifyTelegramChannel(ctx, "Reaper recording stopped")
+	_ = wfutils.NotifyTelegramChannel(ctx, "Starting to import reaper files")
 
 	err = wfutils.Execute(ctx, vsactivity.CloseFile, vsactivity.CloseFileParams{
 		FileID: jobResult.FileID,
@@ -103,7 +114,7 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	baseName := strings.TrimSuffix(in.Base(), "_MU1.mxf")
 
 	// Wait for all reaper files to be imported
-	importAudioFuture := []workflow.ChildWorkflowFuture{}
+	var importAudioFuture []workflow.ChildWorkflowFuture
 	for _, file := range reaperResult.Files {
 		fileSplit := strings.Split(file, "\\")
 		filePath := "/mnt/dmzshare/wavetemp/" + fileSplit[len(fileSplit)-1]

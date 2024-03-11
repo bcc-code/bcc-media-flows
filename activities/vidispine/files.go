@@ -15,7 +15,7 @@ type ImportFileAsShapeParams struct {
 	Growing  bool
 }
 
-func ImportFileAsShapeActivity(ctx context.Context, params *ImportFileAsShapeParams) (*JobResult, error) {
+func ImportFileAsShapeActivity(ctx context.Context, params ImportFileAsShapeParams) (*JobResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting ImportFileAsShapeActivity")
 
@@ -42,7 +42,7 @@ type ImportFileAsSidecarResult struct {
 	JobID string
 }
 
-func ImportFileAsSidecarActivity(ctx context.Context, params *ImportSubtitleAsSidecarParams) (*ImportFileAsSidecarResult, error) {
+func ImportFileAsSidecarActivity(ctx context.Context, params ImportSubtitleAsSidecarParams) (*ImportFileAsSidecarResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting ImportSubtitleAsSidecarParams")
 
@@ -62,7 +62,7 @@ type CreatePlaceholderResult struct {
 	AssetID string
 }
 
-func CreatePlaceholderActivity(ctx context.Context, params *CreatePlaceholderParams) (*CreatePlaceholderResult, error) {
+func CreatePlaceholderActivity(ctx context.Context, params CreatePlaceholderParams) (*CreatePlaceholderResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting CreatePlaceholderActivity")
 
@@ -90,7 +90,7 @@ type FileJobResult struct {
 	FileID string
 }
 
-func CreateThumbnailsActivity(ctx context.Context, params *CreateThumbnailsParams) (*JobResult, error) {
+func CreateThumbnailsActivity(ctx context.Context, params CreateThumbnailsParams) (*JobResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting CreateThumbnailsActivity")
 
@@ -142,11 +142,11 @@ type CloseFileParams struct {
 	FileID string
 }
 
-func CloseFile(ctx context.Context, params CloseFileParams) error {
+func CloseFile(ctx context.Context, params CloseFileParams) (any, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting CloseFile")
 
 	vsClient := GetClient()
 
-	return vsClient.UpdateFileState(params.FileID, vsapi.FileStateClosed)
+	return nil, vsClient.UpdateFileState(params.FileID, vsapi.FileStateClosed)
 }

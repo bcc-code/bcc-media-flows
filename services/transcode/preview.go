@@ -2,9 +2,10 @@ package transcode
 
 import (
 	"errors"
-	"github.com/bcc-code/bcc-media-flows/environment"
 	"os"
 	"path/filepath"
+
+	"github.com/bcc-code/bcc-media-flows/environment"
 
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 )
@@ -62,16 +63,16 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 	}
 
 	if hasVideo && !hasAudio {
-		params = []string{
+		params = append(params,
 			"-i", input.FilePath,
 			"-ss", "0.0",
 			"-i", previewWatermarkPath,
 			"-filter_complex", "sws_flags=bicubic;[0:v]split=1[VIDEO-main-.mp4];[VIDEO-main-.mp4]scale=-2:540,null[temp];[temp][1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4]",
 			"-map", "[VIDEO-.mp4]",
 			"-c:v", encoder,
-		}
+		)
 	} else if hasVideo {
-		params = []string{
+		params = append(params,
 			"-ac", "2",
 			"-ss", "0.0",
 			"-i", input.FilePath,
@@ -81,15 +82,15 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 			"-map", "[VIDEO-.mp4]",
 			"-map", "[AUDIO-.mp4-0]",
 			"-c:v", encoder,
-		}
+		)
 	} else if hasAudio {
-		params = []string{
+		params = append(params,
 			"-ss", "0.0",
 			"-i", input.FilePath,
 			"-filter_complex", "sws_flags=bicubic;[0:a:0]asplit=1[AUDIO-main-.mp4-0];[AUDIO-main-.mp4-0]aformat=channel_layouts=stereo[AUDIO-.mp4-0]",
 			"-map", "[AUDIO-.mp4-0]",
 			"-vn",
-		}
+		)
 	}
 
 	params = append(params,

@@ -47,7 +47,7 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		return nil, err
 	}
 
-	if params.AnalyzeResult.FrameRate != 25 && params.AnalyzeResult.FrameRate != 50 {
+	if params.AnalyzeResult.FrameRate != 25 && params.AnalyzeResult.FrameRate != 50 && params.AnalyzeResult.FrameRate != 60 {
 		return nil, merry.New("Expected 25 or 50 fps input")
 	}
 
@@ -79,12 +79,9 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 	err = wfutils.Execute(ctx, activities.CopyFile, activities.MoveFileInput{
 		Source:      currentVideoFile,
 		Destination: inputFolder.Append(params.InputFile.Base()),
-	}).Get(ctx, &success)
+	}).Get(ctx, nil)
 	if err != nil {
 		return nil, err
-	}
-	if !success {
-		return nil, merry.New("RcloneCopyFile failed")
 	}
 
 	success = false
@@ -98,7 +95,7 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		return nil, merry.New("WaitForFile failed")
 	}
 
-	err = wfutils.Execute(ctx, activities.CopyFile, activities.MoveFileInput{
+	err = wfutils.Execute(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      outputFile,
 		Destination: deliveryFolder.Append("Hippo", params.OriginalFilenameWithoutExt+outputFile.Ext()),
 	}).Get(ctx, nil)

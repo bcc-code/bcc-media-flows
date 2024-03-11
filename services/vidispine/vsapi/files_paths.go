@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
+	"github.com/samber/lo"
 )
 
 const DefaultStorageID = "VX-42"
@@ -69,6 +70,76 @@ func (c *Client) UpdateFileState(fileID string, fileState FileState) error {
 	return nil
 }
 
+type ListFilesFilter string
+
+const (
+	AllFiles          ListFilesFilter = "files"
+	AssociatedFiles   ListFilesFilter = "item"
+	UnassociatedFiles ListFilesFilter = "noitem"
+)
+
+func (c *Client) ListFilesForStorage(
+	storageID string,
+	rootPath string,
+	recursive bool,
+	count int,
+	offset int,
+	filter []ListFilesFilter,
+) (*FileSearchResult, error) {
+	requestURL, _ := url.Parse(c.baseURL)
+	requestURL.Path += "/storage/" + url.PathEscape(storageID) + "/file"
+	q := requestURL.Query()
+	q.Set("path", rootPath)
+	q.Set("recursive", fmt.Sprintf("%t", recursive))
+	q.Set("includeItem", "true")
+	q.Set("first", fmt.Sprintf("%d", offset))
+	q.Set("number", fmt.Sprintf("%d", count))
+
+	if len(filter) > 0 {
+		qFilter := lo.Reduce(filter, func(agg string, f ListFilesFilter, _ int) string {
+			return agg + string(f) + ","
+		}, "")
+		q.Set("filter", strings.TrimRight(qFilter, ","))
+	}
+
+	requestURL.RawQuery = q.Encode()
+	result, err := c.restyClient.R().
+		SetResult(&FileSearchResult{}).
+		Get(requestURL.String())
+
+	//spew.Dump(string(result.Body()))
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Result().(*FileSearchResult), nil
+}
+
+func (c *Client) MoveFile(fileID string, newStorageID string, newName string) (*JobDocument, error) {
+	fileID = url.PathEscape(fileID)
+	newStorageID = url.PathEscape(newStorageID)
+
+	requestURL, _ := url.Parse(c.baseURL)
+	requestURL.Path += fmt.Sprintf("/file/%s/storage/%s", fileID, newStorageID)
+	q := requestURL.Query()
+	q.Set("useOriginalFilename", "false")
+	q.Set("move", "true")
+	q.Set("filename", newName)
+
+	requestURL.RawQuery = q.Encode()
+
+	job := &JobDocument{}
+	res, err := c.restyClient.R().
+		SetResult(job).
+		Post(requestURL.String())
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Result().(*JobDocument), nil
+}
+
 //// SUPPORTING TYPES /////
 
 type StorageResult struct {
@@ -85,4 +156,27 @@ type StorageMethod struct {
 	LastFailure    string `json:"lastFailure"`
 	FailureMessage string `json:"failureMessage"`
 	Type           string `json:"type"`
+}
+
+type FileSearchResult struct {
+	Hits  int    `json:"hits,omitempty"`
+	Files []File `json:"file,omitempty"`
+}
+
+type Component struct {
+	ID string `json:"id,omitempty"`
+}
+
+type Item struct {
+	ID    string  `json:"id,omitempty"`
+	Shape []Shape `json:"shape,omitempty"`
+}
+
+type Field struct {
+	Key   string `json:"key,omitempty"`
+	Value string `json:"value,omitempty"`
+}
+
+type Metadata struct {
+	Field []Field `json:"field,omitempty"`
 }

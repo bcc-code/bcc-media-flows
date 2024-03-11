@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/samber/lo"
 )
 
@@ -65,6 +66,28 @@ func (c *Client) AddSidecarToItem(itemID, filePath, language string) (string, er
 }
 
 func (c *Client) GetResolutions(itemVXID string) ([]Resolution, error) {
+	meta, err := c.GetMetadata(itemVXID)
+	if err != nil {
+		return nil, err
+	}
+
+	isSequence := meta.Get(vscommon.FieldSequenceSize, "0") != "0"
+	if isSequence {
+		seq, err := c.GetSequence(itemVXID)
+		if err != nil {
+			return nil, err
+		}
+		for _, t := range seq.Track {
+			if t.Audio {
+				continue
+			}
+			if id := t.Segments[0].VXID; id != "" {
+				itemVXID = id
+				break
+			}
+		}
+	}
+
 	shapes, err := c.GetShapes(itemVXID)
 	if err != nil {
 		return nil, err
@@ -160,6 +183,7 @@ type File struct {
 	RefreshFlag int      `json:"refreshFlag"`
 	Storage     string   `json:"storage"`
 	Metadata    KV       `json:"metadata"`
+	Items       []Item   `json:"item,omitempty"`
 }
 
 type Resolution struct {

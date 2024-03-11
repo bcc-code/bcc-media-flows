@@ -1,6 +1,7 @@
 package wfutils
 
 import (
+	"context"
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -21,8 +22,24 @@ var StrictRetryPolicy = temporal.RetryPolicy{
 	MaximumInterval: 30 * time.Second,
 }
 
+type Future[TR any] struct {
+	workflow.Future
+}
+
+// Result returns the result of the future
+func (f Future[TR]) Result(ctx workflow.Context) (TR, error) {
+	var result TR
+	err := f.Get(ctx, &result)
+	return result, err
+}
+
+// Wait waits until the task is done
+func (f Future[TR]) Wait(ctx workflow.Context) error {
+	return f.Get(ctx, nil)
+}
+
 // Execute executes the specified activity with the correct task queue
-func Execute(ctx workflow.Context, activity any, params ...any) workflow.Future {
+func Execute[T any, TR any](ctx workflow.Context, activity func(context.Context, T) (TR, error), params T) Future[TR] {
 	options := workflow.GetActivityOptions(ctx)
 	options.TaskQueue = activities.GetQueueForActivity(activity)
 
@@ -39,11 +56,13 @@ func Execute(ctx workflow.Context, activity any, params ...any) workflow.Future 
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
-	return workflow.ExecuteActivity(ctx, activity, params...)
+	return Future[TR]{
+		workflow.ExecuteActivity(ctx, activity, params),
+	}
 }
 
 // ExecuteWithLowPrioQueue executes the utility activities with the low priority queue
-func ExecuteWithLowPrioQueue(ctx workflow.Context, activity any, params ...any) workflow.Future {
+func ExecuteWithLowPrioQueue[T any, TR any](ctx workflow.Context, activity func(context.Context, T) (TR, error), params T) Future[TR] {
 	options := workflow.GetActivityOptions(ctx)
 
 	options.TaskQueue = activities.GetQueueForActivity(activity)
@@ -64,5 +83,7 @@ func ExecuteWithLowPrioQueue(ctx workflow.Context, activity any, params ...any) 
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
-	return workflow.ExecuteActivity(ctx, activity, params...)
+	return Future[TR]{
+		workflow.ExecuteActivity(ctx, activity, params),
+	}
 }
