@@ -17,7 +17,7 @@ type GetExportDataParams struct {
 	Subclip     string
 }
 
-func GetExportDataActivity(ctx context.Context, params *GetExportDataParams) (*vidispine.ExportData, error) {
+func GetExportDataActivity(ctx context.Context, params GetExportDataParams) (*vidispine.ExportData, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "GetExportDataActivity")
 	log.Info("Starting GetExportDataActivity")
@@ -41,7 +41,7 @@ type GetChapterDataParams struct {
 	ExportData *vidispine.ExportData
 }
 
-func GetChapterDataActivity(ctx context.Context, params *GetChapterDataParams) ([]asset.Chapter, error) {
+func GetChapterDataActivity(ctx context.Context, params GetChapterDataParams) ([]asset.Chapter, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "GetChapterDataActivity")
 	log.Info("Starting GetChapterDataActivity")

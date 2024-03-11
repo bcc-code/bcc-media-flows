@@ -15,16 +15,16 @@ type NotifySimpleInput struct {
 	Message notifications.SimpleNotification
 }
 
-func NotifySimple(ctx context.Context, input NotifySimpleInput) error {
+func NotifySimple(ctx context.Context, input NotifySimpleInput) (any, error) {
 	logger := activity.GetLogger(ctx)
 	if os.Getenv("DEBUG") != "" && os.Getenv("TELEGRAM_CHAT_ID") == "" {
 		logger.Info("Ignoring notification for debug without TELEGRAM_CHAT_ID")
-		return nil
+		return nil, nil
 	}
 	logger.Info("Sending notification")
 
 	client := notifications.NewClient(notificationServices{})
-	return client.Send(input.Targets, input.Message)
+	return nil, client.Send(input.Targets, input.Message)
 }
 
 type NotifyImportCompletedInput struct {
@@ -32,12 +32,12 @@ type NotifyImportCompletedInput struct {
 	Message notifications.ImportCompleted
 }
 
-func NotifyImportCompleted(ctx context.Context, input NotifyImportCompletedInput) error {
+func NotifyImportCompleted(ctx context.Context, input NotifyImportCompletedInput) (any, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Sending notification")
 
 	client := notifications.NewClient(notificationServices{})
-	return client.Send(input.Targets, input.Message)
+	return nil, client.Send(input.Targets, input.Message)
 }
 
 type notificationServices struct {

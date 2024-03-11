@@ -10,25 +10,25 @@ import (
 
 const reaperBaseUrl = "http://100.123.200.12:8081"
 
-func StartReaper(ctx context.Context) error {
+func StartReaper(ctx context.Context, _ any) (any, error) {
 	resp, err := http.Get(reaperBaseUrl + "/start")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return errors.New("Received non-200 response status: " + resp.Status)
+		return nil, errors.New("Received non-200 response status: " + resp.Status)
 	}
 
-	return nil
+	return nil, nil
 }
 
 type ReaperResult struct {
 	Files []string
 }
 
-func StopReaper(ctx context.Context) (*ReaperResult, error) {
+func StopReaper(ctx context.Context, _ any) (*ReaperResult, error) {
 	resp, err := http.Get(reaperBaseUrl + "/stop")
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func StopReaper(ctx context.Context) (*ReaperResult, error) {
 	}, err
 }
 
-func ListReaperFiles(ctx context.Context) (*ReaperResult, error) {
+func ListReaperFiles(ctx context.Context, _ any) (*ReaperResult, error) {
 	resp, err := http.Get(reaperBaseUrl + "/files")
 	if err != nil {
 		return nil, err

@@ -13,7 +13,7 @@ type AddRelationParams struct {
 	Child  string
 }
 
-func AddRelation(ctx context.Context, params AddRelationParams) error {
+func AddRelation(ctx context.Context, params AddRelationParams) (any, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting AddRelationActivity")
 
@@ -31,5 +31,5 @@ func AddRelation(ctx context.Context, params AddRelationParams) error {
 
 	log.Debug("Response: ", res)
 
-	return err
+	return nil, err
 }

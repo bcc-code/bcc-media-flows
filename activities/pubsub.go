@@ -1,15 +1,16 @@
 package activities
 
 import (
-	"cloud.google.com/go/pubsub"
 	"context"
 	"encoding/json"
+
+	"cloud.google.com/go/pubsub"
 )
 
-func PubsubPublish(ctx context.Context, data any) error {
+func PubsubPublish(ctx context.Context, data any) (any, error) {
 	client, err := pubsub.NewClient(ctx, "btv-platform-prod-2")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	topic := client.Topic("background_worker")
@@ -17,11 +18,11 @@ func PubsubPublish(ctx context.Context, data any) error {
 
 	msg, err := json.Marshal(data)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	_, err = topic.Publish(ctx, &pubsub.Message{
 		Data: msg,
 	}).Get(ctx)
-	return err
+	return nil, err
 }

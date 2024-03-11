@@ -68,15 +68,16 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 		log.L.Error().Err(err).Send()
 	}
 
-	wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Starting live ingest: https://vault.bcc.media/item/%s", assetResult.AssetID))
+	_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Starting live ingest: https://vault.bcc.media/item/%s", assetResult.AssetID))
 	videoVXID := assetResult.AssetID
 
+	var p any
 	// REAPER: Start recording
-	err = wfutils.Execute(ctx, activities.StartReaper, nil).Get(ctx, nil)
+	err = wfutils.Execute(ctx, activities.StartReaper, p).Get(ctx, nil)
 	if err != nil {
 		return err
 	}
-	wfutils.NotifyTelegramChannel(ctx, "Reaper recording started")
+	_ = wfutils.NotifyTelegramChannel(ctx, "Reaper recording started")
 
 	var jobResult vsactivity.FileJobResult
 	err = wfutils.Execute(ctx, vsactivity.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
@@ -93,7 +94,7 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	if err != nil {
 		return err
 	}
-	wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Video ingest ended: https://vault.bcc.media/item/%s", assetResult.AssetID))
+	_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Video ingest ended: https://vault.bcc.media/item/%s", assetResult.AssetID))
 
 	// List Reaper files
 	reaperResult := &activities.ReaperResult{}
@@ -101,7 +102,7 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	if err != nil {
 		return err
 	}
-	wfutils.NotifyTelegramChannel(ctx, "Starting to import reaper files")
+	_ = wfutils.NotifyTelegramChannel(ctx, "Starting to import reaper files")
 
 	err = wfutils.Execute(ctx, vsactivity.CloseFile, vsactivity.CloseFileParams{
 		FileID: jobResult.FileID,
@@ -113,7 +114,7 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	baseName := strings.TrimSuffix(in.Base(), "_MU1.mxf")
 
 	// Wait for all reaper files to be imported
-	importAudioFuture := []workflow.ChildWorkflowFuture{}
+	var importAudioFuture []workflow.ChildWorkflowFuture
 	for _, file := range reaperResult.Files {
 		fileSplit := strings.Split(file, "\\")
 		filePath := "/mnt/dmzshare/wavetemp/" + fileSplit[len(fileSplit)-1]
