@@ -26,6 +26,10 @@ type StreamInfo struct {
 	HasAudio     bool
 	HasVideo     bool
 	HasAlpha     bool
+	VideoStreams []FFProbeStream
+	AudioStreams []FFProbeStream
+	SubSteams    []FFProbeStream
+	OtherStreams []FFProbeStream
 	Progressive  bool
 	TotalFrames  int
 	TotalSeconds float64
@@ -45,6 +49,20 @@ func ProbeResultToInfo(info *FFProbeResult) StreamInfo {
 		HasAlpha: lo.SomeBy(info.Streams, func(i FFProbeStream) bool {
 			return utils.IsAlphaPixelFormat(i.PixFmt)
 		}),
+	}
+
+	for _, stream := range info.Streams {
+		switch stream.CodecType {
+		case "audio":
+			streamInfo.AudioStreams = append(streamInfo.AudioStreams, stream)
+		case "video":
+			streamInfo.VideoStreams = append(streamInfo.VideoStreams, stream)
+		case "subtitle":
+			streamInfo.SubSteams = append(streamInfo.SubSteams, stream)
+		default:
+			streamInfo.OtherStreams = append(streamInfo.OtherStreams, stream)
+		}
+
 	}
 
 	stream, found := lo.Find(info.Streams, func(i FFProbeStream) bool {

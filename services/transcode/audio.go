@@ -312,3 +312,25 @@ func SplitAudioChannels(filePath, outputDir paths.Path, cb ffmpeg.ProgressCallba
 	}
 	return files, nil
 }
+
+func ExtractAudioChannels(filePath paths.Path, output map[int]paths.Path, cb ffmpeg.ProgressCallback) (map[int]paths.Path, error) {
+	if len(output) == 0 {
+		return nil, fmt.Errorf("no output channels specified")
+	}
+
+	params := []string{
+		"-i", filePath.Local(),
+	}
+
+	out := make(map[int]paths.Path)
+	for channel, file := range output {
+		params = append(params, "-map", fmt.Sprintf("0:%d", channel), "-c", "copy", file.Local())
+	}
+
+	_, err := ffmpeg.Do(params, ffmpeg.StreamInfo{}, cb)
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}

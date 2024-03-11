@@ -2,6 +2,7 @@ package activities
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -9,6 +10,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/transcode"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	"github.com/go-errors/errors"
+	"github.com/samber/lo"
 	"go.temporal.io/sdk/activity"
 )
 
@@ -127,7 +129,7 @@ type ExtractAudioInput struct {
 }
 
 type ExtractAudioOutput struct {
-	AudioFiles []paths.Path
+	AudioFiles map[int]paths.Path
 }
 
 // ExtractAudio extracts audio from a video file.
@@ -140,7 +142,41 @@ func ExtractAudio(ctx context.Context, input ExtractAudioInput) (*ExtractAudioOu
 	activity.RecordHeartbeat(ctx, "ExtractAudio")
 	log.Info("Starting ExtractAudioActivity")
 
-	panic("Not implemented")
+	availableChannels := map[int]ffmpeg.FFProbeStream{}
 
-	return nil, nil
+	analyzed, err := AnalyzeFile(ctx, AnalyzeFileParams{
+		FilePath: input.VideoPath,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, stream := range analyzed.AudioStreams {
+		availableChannels[stream.Index] = stream
+	}
+
+	if len(input.Channels) == 0 {
+		input.Channels = lo.Keys(availableChannels)
+	}
+
+	extractedChannels := map[int]paths.Path{}
+
+	for _, channel := range input.Channels {
+		if _, ok := availableChannels[channel]; !ok {
+			return nil, errors.Errorf("Channel %d not found in video", channel)
+		}
+
+		extractedChannels[channel] = input.OutputFolder.Append(fmt.Sprintf(input.FileNamePattern, channel))
+	}
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	_, err = transcode.ExtractAudioChannels(input.VideoPath, extractedChannels, progressCallback)
+
+	return &ExtractAudioOutput{
+		AudioFiles: extractedChannels,
+	}, err
+
 }

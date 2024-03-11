@@ -1,6 +1,8 @@
 package ingestworkflows
 
 import (
+	"time"
+
 	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
@@ -137,6 +139,11 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 	}
 
 	// Import to MB
+	err = RelateAudioToVideo(ctx, RelateAudioToVideoParams{
+		VideoVXID:    input.MU1ID,
+		AudioList:    filesToImport,
+		PreviewDelay: 1 * time.Second,
+	})
 
-	return nil
+	return err
 }
