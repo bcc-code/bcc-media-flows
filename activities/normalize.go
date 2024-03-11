@@ -60,7 +60,7 @@ type AdjustAudioLevelParams struct {
 	Adjustment  float64
 }
 
-func AdjustAudioLevelActivity(ctx context.Context, input *AdjustAudioLevelParams) (*common.AudioResult, error) {
+func AdjustAudioLevelActivity(ctx context.Context, input AdjustAudioLevelParams) (*common.AudioResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "LinearAdjustAudio")
 	log.Info("Starting LinearAdjustAudioActivity")
@@ -112,7 +112,7 @@ func NormalizeAudioActivity(ctx context.Context, params NormalizeAudioParams) (*
 
 	out.InputAnalysis = r128Result
 
-	adjustResult, err := AdjustAudioLevelActivity(ctx, &AdjustAudioLevelParams{
+	adjustResult, err := AdjustAudioLevelActivity(ctx, AdjustAudioLevelParams{
 		Adjustment:  r128Result.SuggestedAdjustment,
 		InFilePath:  params.FilePath,
 		OutFilePath: params.OutputPath,

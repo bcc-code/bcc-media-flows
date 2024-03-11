@@ -249,7 +249,7 @@ type ExecuteFFmpegInput struct {
 	Arguments []string
 }
 
-func ExecuteFFmpeg(ctx context.Context, input ExecuteFFmpegInput) error {
+func ExecuteFFmpeg(ctx context.Context, input ExecuteFFmpegInput) (any, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "ExecuteFFmpeg")
 	log.Info("Starting ExecuteFFmpeg")
@@ -258,10 +258,7 @@ func ExecuteFFmpeg(ctx context.Context, input ExecuteFFmpegInput) error {
 	defer close(stopChan)
 
 	_, err := ffmpeg.Do(input.Arguments, ffmpeg.StreamInfo{}, progressCallback)
-	if err != nil {
-		return err
-	}
-	return nil
+	return nil, err
 }
 
 type SplitAudioChannelsInput struct {

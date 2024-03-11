@@ -79,7 +79,7 @@ func MergeTranscriptJSON(
 		return nil, err
 	}
 
-	err = WriteFile(ctx, WriteFileInput{
+	_, err = WriteFile(ctx, WriteFileInput{
 		Path: targetFile,
 		Data: marshalled,
 	})
