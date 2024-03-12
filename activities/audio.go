@@ -2,6 +2,7 @@ package activities
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -9,6 +10,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/transcode"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	"github.com/go-errors/errors"
+	"github.com/samber/lo"
 	"go.temporal.io/sdk/activity"
 )
 
@@ -83,4 +85,64 @@ func DetectSilence(ctx context.Context, input common.AudioInput) (bool, error) {
 	log.Info("Starting DetectSilenceActivity")
 
 	return transcode.AudioIsSilent(input.Path)
+}
+
+type ExtractAudioInput struct {
+	VideoPath       paths.Path
+	OutputFolder    paths.Path
+	FileNamePattern string
+	Channels        []int
+}
+
+type ExtractAudioOutput struct {
+	AudioFiles map[int]paths.Path
+}
+
+// ExtractAudio extracts audio from a video file.
+//   - VideoPath: the path to the video file
+//   - OutputFolder: the folder where the audio files will be saved
+//   - FileNamePattern: the pattern for the audio files. The pattern should contain one %d which will be replaced by the channel number
+//   - Channels: the channels to extract. If empty, all channels will be extracted
+func ExtractAudio(ctx context.Context, input ExtractAudioInput) (*ExtractAudioOutput, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "ExtractAudio")
+	log.Info("Starting ExtractAudioActivity")
+
+	availableChannels := map[int]ffmpeg.FFProbeStream{}
+
+	analyzed, err := AnalyzeFile(ctx, AnalyzeFileParams{
+		FilePath: input.VideoPath,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, stream := range analyzed.AudioStreams {
+		availableChannels[stream.Index] = stream
+	}
+
+	if len(input.Channels) == 0 {
+		input.Channels = lo.Keys(availableChannels)
+	}
+
+	extractedChannels := map[int]paths.Path{}
+
+	for _, channel := range input.Channels {
+		if _, ok := availableChannels[channel]; !ok {
+			return nil, errors.Errorf("Channel %d not found in video", channel)
+		}
+
+		extractedChannels[channel] = input.OutputFolder.Append(fmt.Sprintf(input.FileNamePattern, channel))
+	}
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	_, err = transcode.ExtractAudioChannels(input.VideoPath, extractedChannels, progressCallback)
+
+	return &ExtractAudioOutput{
+		AudioFiles: extractedChannels,
+	}, err
+
 }

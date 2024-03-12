@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+</head>
+
+<body class="">
+<form method="POST" action="/ingest-fix/ingest-fix/mu1mu2extract" class="flex flex-col min-h-screen gap-2 mx-auto p-14 max-w-screen-lg">
+    <div class="max-w-none flex flex-col gap-2">
+        <h2 class="text-2xl font-bold">Extract Audio from MU1 and MU2</h2>
+    </div>
+
+    <div class="flex flex-col gap-2 w-full mt-8 w-20">
+        <div class="flex flex-col">
+            <label for="filename">MU1 VX-ID:</label>
+            <input id="filename" class="border" type="text" name="vx1" pattern="VX-[0-9]+" required>
+        </div>
+
+        <div class="flex flex-col">
+            <label for="filename">MU2 VX-ID:</label>
+            <input id="filename" class="border" type="text" name="vx2" pattern="VX-[0-9]+" required>
+        </div>
+
+        <input id="submit"
+               class="cursor-pointer rounded-md bg-[#6A64F1] py-3 px-8 text-center text-base font-semibold text-white outline-none"
+               type="submit" value="Start">
+    </div>
+</form>
+
+<script></script>
+</body>
+
+</html>

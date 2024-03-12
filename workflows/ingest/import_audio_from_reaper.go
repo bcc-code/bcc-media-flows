@@ -19,6 +19,86 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
+type RelateAudioToVideoParams struct {
+	VideoVXID    string
+	AudioList    map[string]paths.Path
+	PreviewDelay time.Duration
+}
+
+func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) error {
+	logger := workflow.GetLogger(ctx)
+	logger.Info("Starting RelateAudioToVideo activity")
+
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+	previewOpts := workflow.GetChildWorkflowOptions(ctx)
+	previewOpts.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
+	previewCtx := workflow.WithChildOptions(ctx, previewOpts)
+
+	langs, err := wfutils.GetMapKeysSafely(ctx, params.AudioList)
+	if err != nil {
+		return err
+	}
+
+	for _, lang := range langs {
+		path := params.AudioList[lang]
+		// Create placeholder
+		var assetResult vsactivity.CreatePlaceholderResult
+		err := wfutils.Execute(ctx, vsactivity.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
+			Title: path.Base(),
+		}).Get(ctx, &assetResult)
+		if err != nil {
+			return err
+		}
+
+		// Ingest to placeholder
+		err = wfutils.Execute(ctx, vsactivity.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
+			FilePath: path,
+			AssetID:  assetResult.AssetID,
+			Growing:  false,
+		}).Get(ctx, nil)
+		if err != nil {
+			return err
+		}
+
+		// We dow *not* wait for preview to be ready
+		workflow.ExecuteChildWorkflow(previewCtx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
+			VXID:  assetResult.AssetID,
+			Delay: params.PreviewDelay,
+		})
+
+		// Add relation
+		err = wfutils.Execute(ctx, cantemo.AddRelation, cantemo.AddRelationParams{
+			Child:  assetResult.AssetID,
+			Parent: params.VideoVXID,
+		}).Get(ctx, nil)
+		if err != nil {
+			return err
+		}
+
+		err = wfutils.Execute(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
+			VXID:  params.VideoVXID,
+			Group: "System",
+			Key:   bccmflows.LanguagesByISO[lang].RelatedMBFieldID,
+			Value: assetResult.AssetID,
+		}).Get(ctx, nil)
+		if err != nil {
+			logger.Error(fmt.Sprintf("SetVXMetadataFieldActivity: %s", err.Error()))
+		}
+
+		err = wfutils.Execute(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
+			VXID:  assetResult.AssetID,
+			Key:   vscommon.FieldLanguagesRecorded.Value,
+			Value: lang,
+		}).Get(ctx, nil)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type ImportAudioFileFromReaperParams struct {
 	Path      string
 	VideoVXID string
@@ -103,59 +183,13 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 		return err
 	}
 
-	// Create placeholder
-	var assetResult vsactivity.CreatePlaceholderResult
-	err = wfutils.Execute(ctx, vsactivity.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
-		Title: outPath.Base(),
-	}).Get(ctx, &assetResult)
-	if err != nil {
-		return err
-	}
-
-	// Ingest to placeholder
-	err = wfutils.Execute(ctx, vsactivity.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
-		FilePath: outPath,
-		AssetID:  assetResult.AssetID,
-		Growing:  false,
-	}).Get(ctx, nil)
-	if err != nil {
-		return err
-	}
-
-	previewOpts := workflow.GetChildWorkflowOptions(ctx)
-	previewOpts.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
-	previewCtx := workflow.WithChildOptions(ctx, previewOpts)
-
-	// We dow *not* wait for preview to be ready
-	workflow.ExecuteChildWorkflow(previewCtx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
-		VXID:  assetResult.AssetID,
-		Delay: 2 * time.Hour,
+	err = RelateAudioToVideo(ctx, RelateAudioToVideoParams{
+		AudioList: map[string]paths.Path{
+			lang.ISO6391: outPath,
+		},
+		PreviewDelay: 2 * time.Hour,
+		VideoVXID:    params.VideoVXID,
 	})
-
-	// Add relation
-	err = wfutils.Execute(ctx, cantemo.AddRelation, cantemo.AddRelationParams{
-		Child:  assetResult.AssetID,
-		Parent: params.VideoVXID,
-	}).Get(ctx, nil)
-	if err != nil {
-		return err
-	}
-
-	err = wfutils.Execute(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
-		VXID:  params.VideoVXID,
-		Group: "System",
-		Key:   lang.RelatedMBFieldID,
-		Value: assetResult.AssetID,
-	}).Get(ctx, nil)
-	if err != nil {
-		logger.Error(fmt.Sprintf("SetVXMetadataFieldActivity: %s", err.Error()))
-	}
-
-	err = wfutils.Execute(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
-		VXID:  assetResult.AssetID,
-		Key:   vscommon.FieldLanguagesRecorded.Value,
-		Value: lang.ISO6391,
-	}).Get(ctx, nil)
 
 	return err
 }

@@ -347,6 +347,10 @@ func main() {
 		GET("/admin", server.uploadMasterAdminGET).
 		POST("/admin", server.uploadMasterAdminPOST)
 
+	router.Group("/ingest-fix").
+		GET("/", server.ingestFixGET).
+		POST("/ingest-fix/mu1mu2extract", server.mu1mu2ExtractPOST)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8083"

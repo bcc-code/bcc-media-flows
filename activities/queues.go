@@ -27,6 +27,7 @@ func GetAudioTranscodeActivities() []any {
 		PrependSilence,
 		DetectSilence,
 		AdjustAudioToVideoStart,
+		ExtractAudio,
 	}
 }
 
@@ -46,6 +47,7 @@ func GetVideoTranscodeActivities() []any {
 		TranscodeMuxToSimpleMXF,
 		ExecuteFFmpeg,
 		MultitrackMux,
+		GetVideoOffset,
 	}
 }
 
