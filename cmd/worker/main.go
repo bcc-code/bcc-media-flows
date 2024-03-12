@@ -88,6 +88,7 @@ var workerWorkflows = []any{
 	ingestworkflows.Incremental,
 	ingestworkflows.MoveUploadedFiles,
 	ingestworkflows.ImportAudioFileFromReaper,
+	ingestworkflows.ExtractAudioFromMU1MU2,
 	workflows.NormalizeAudioLevelWorkflow,
 	vb_export.VBExport,
 	vb_export.VBExportToAbekas,

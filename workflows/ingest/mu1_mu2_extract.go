@@ -1,14 +1,13 @@
 package ingestworkflows
 
 import (
-	"time"
-
 	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
+	"time"
 )
 
 type ExtractAudioFromMU1MU2Input struct {
@@ -29,7 +28,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 	})
 
 	MU2FileFuture := wfutils.Execute(ctx, vsactivity.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
-		VXID: input.MU1ID,
+		VXID: input.MU2ID,
 		Tags: []string{"original"},
 	})
 
@@ -92,17 +91,22 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 	}
 
 	filesToImport := map[string]paths.Path{}
-	aligmnetFutures := []workflow.Future{}
+	futures := []workflow.Future{}
 
 	// Align audio from MU1 and MU2
 
 	// MU1 is ahead of MU2, so we need to append silence to MU2 audio files
 	if sampleOffset > 0 {
 		for i, file := range Mu2Files.AudioFiles {
-			filesToImport[bccmflows.LanguagesByMU2[i].ISO6391] = file
+			destinationFile := destinationPath.Append(file.Base())
+			wfutils.Execute(ctx, activities.CopyFile, activities.MoveFileInput{
+				Source:      file,
+				Destination: destinationFile,
+			})
+			filesToImport[bccmflows.LanguagesByMU2[i].ISO6391] = destinationFile
 		}
 
-		for i, file := range Mu2Files.AudioFiles {
+		for i, file := range Mu1Files.AudioFiles {
 			outputFile := destinationPath.Append(file.Base())
 			f := wfutils.Execute(ctx, activities.PrependSilence, activities.PrependSilenceInput{
 				FilePath:   file,
@@ -111,7 +115,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 				Samples:    sampleOffset,
 			})
 
-			aligmnetFutures = append(aligmnetFutures, f)
+			futures = append(futures, f)
 			filesToImport[bccmflows.LanguagesByMU1[i].ISO6391] = outputFile
 		}
 	}
@@ -129,13 +133,23 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 				Samples: -sampleOffset,
 			})
 
-			aligmnetFutures = append(aligmnetFutures, f)
+			futures = append(futures, f)
 			filesToImport[bccmflows.LanguagesByMU2[i].ISO6391] = outputFile
 		}
 
-		for i, file := range Mu2Files.AudioFiles {
-			filesToImport[bccmflows.LanguagesByMU1[i].ISO6391] = file
+		for i, file := range Mu1Files.AudioFiles {
+			destinationFile := destinationPath.Append(file.Base())
+			wfutils.Execute(ctx, activities.CopyFile, activities.MoveFileInput{
+				Source:      file,
+				Destination: destinationFile,
+			})
+			filesToImport[bccmflows.LanguagesByMU2[i].ISO6391] = destinationFile
 		}
+	}
+
+	for _, f := range futures {
+		err = f.Get(ctx, nil)
+		logger.Error("Error in alignment future", err)
 	}
 
 	// Import to MB
