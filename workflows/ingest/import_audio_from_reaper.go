@@ -34,7 +34,13 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 	previewOpts.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
 	previewCtx := workflow.WithChildOptions(ctx, previewOpts)
 
-	for lang, path := range params.AudioList {
+	langs, err := wfutils.GetMapKeysSafely(ctx, params.AudioList)
+	if err != nil {
+		return err
+	}
+
+	for _, lang := range langs {
+		path := params.AudioList[lang]
 		// Create placeholder
 		var assetResult vsactivity.CreatePlaceholderResult
 		err := wfutils.Execute(ctx, vsactivity.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
