@@ -54,7 +54,7 @@ func TranscodePreviewVX(
 	}
 
 	switch strings.ToLower(filepath.Ext(shapes.FilePath.Path)) {
-	case ".mxf", ".mov", ".mp4", ".wav", ".mpg":
+	case ".mxf", ".mov", ".mp4", ".wav", ".mpg", ".aif":
 	default:
 		return fmt.Errorf("unsupported file extension: %s", filepath.Ext(shapes.FilePath.Path))
 	}
