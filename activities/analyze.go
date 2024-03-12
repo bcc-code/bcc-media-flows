@@ -25,8 +25,10 @@ func AnalyzeFile(ctx context.Context, input AnalyzeFileParams) (*ffmpeg.StreamIn
 }
 
 type GetVideoOffsetInput struct {
-	VideoPath1 paths.Path
-	VideoPath2 paths.Path
+	VideoPath1      paths.Path
+	VideoPath2      paths.Path
+	VideoFPS        int
+	AudioSampleRate int
 }
 
 func GetVideoOffset(ctx context.Context, input GetVideoOffsetInput) (int, error) {
@@ -45,12 +47,12 @@ func GetVideoOffset(ctx context.Context, input GetVideoOffsetInput) (int, error)
 	}
 
 	// Video from YouPlay is always 25fps and 48000Hz
-	videoSamples1, err := utils.TCToSamples(video1TC, 25, 48000)
+	videoSamples1, err := utils.TCToSamples(video1TC, input.VideoFPS, input.AudioSampleRate)
 	if err != nil {
 		return 0, err
 	}
 
-	videoSamples2, err := utils.TCToSamples(video2TC, 25, 48000)
+	videoSamples2, err := utils.TCToSamples(video2TC, input.VideoFPS, input.AudioSampleRate)
 	if err != nil {
 		return 0, err
 	}

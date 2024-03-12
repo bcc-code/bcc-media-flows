@@ -1,6 +1,7 @@
 package ingestworkflows
 
 import (
+	"fmt"
 	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
@@ -46,8 +47,10 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 	// Calculte TC difference between MU1 and MU2
 	sampleOffset := int(0)
 	wfutils.Execute(ctx, activities.GetVideoOffset, activities.GetVideoOffsetInput{
-		VideoPath1: Mu1Result.FilePath,
-		VideoPath2: Mu2Result.FilePath,
+		VideoPath1:      Mu1Result.FilePath,
+		VideoPath2:      Mu2Result.FilePath,
+		VideoFPS:        25,
+		AudioSampleRate: 48000,
 	}).Get(ctx, &sampleOffset)
 
 	if err != nil {
@@ -74,13 +77,12 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 	})
 
 	// Wait for both audio extractions to finish
-	Mu1Files := &activities.ExtractAudioOutput{}
-	Mu2Files := &activities.ExtractAudioOutput{}
-	err = extract1Future.Get(ctx, Mu1Files)
+	mu1Files, err := extract1Future.Result(ctx)
 	if err != nil {
 		return err
 	}
-	err = extract2Future.Get(ctx, Mu2Files)
+
+	mu2Files, err := extract2Future.Result(ctx)
 	if err != nil {
 		return err
 	}
@@ -91,13 +93,13 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 	}
 
 	filesToImport := map[string]paths.Path{}
-	futures := []workflow.Future{}
+	var futures []workflow.Future
 
 	// Align audio from MU1 and MU2
 
 	// MU1 is ahead of MU2, so we need to append silence to MU2 audio files
 	if sampleOffset > 0 {
-		for i, file := range Mu2Files.AudioFiles {
+		for i, file := range mu2Files.AudioFiles {
 			destinationFile := destinationPath.Append(file.Base())
 			wfutils.Execute(ctx, activities.CopyFile, activities.MoveFileInput{
 				Source:      file,
@@ -106,7 +108,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 			filesToImport[bccmflows.LanguagesByMU2[i].ISO6391] = destinationFile
 		}
 
-		for i, file := range Mu1Files.AudioFiles {
+		for i, file := range mu1Files.AudioFiles {
 			outputFile := destinationPath.Append(file.Base())
 			f := wfutils.Execute(ctx, activities.PrependSilence, activities.PrependSilenceInput{
 				FilePath:   file,
@@ -122,7 +124,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 
 	// MU2 is ahead of MU1, so we need to append silence to MU1 audio files
 	if sampleOffset < 0 {
-		for i, file := range Mu2Files.AudioFiles {
+		for i, file := range mu2Files.AudioFiles {
 			outputFile := destinationPath.Append(file.Base())
 			f := wfutils.Execute(ctx, activities.PrependSilence, activities.PrependSilenceInput{
 				FilePath:   file,
@@ -137,7 +139,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 			filesToImport[bccmflows.LanguagesByMU2[i].ISO6391] = outputFile
 		}
 
-		for i, file := range Mu1Files.AudioFiles {
+		for i, file := range mu1Files.AudioFiles {
 			destinationFile := destinationPath.Append(file.Base())
 			wfutils.Execute(ctx, activities.CopyFile, activities.MoveFileInput{
 				Source:      file,
@@ -147,9 +149,16 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 		}
 	}
 
+	errors := ""
 	for _, f := range futures {
 		err = f.Get(ctx, nil)
-		logger.Error("Error in alignment future", err)
+		if err != nil {
+			errors += err.Error() + "\n"
+		}
+	}
+
+	if errors != "" {
+		return fmt.Errorf("errors while aligning audio: %s", errors)
 	}
 
 	// Import to MB
