@@ -76,7 +76,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 	extract2Future := wfutils.Execute(ctx, activities.ExtractAudio, activities.ExtractAudioInput{
 		VideoPath:       Mu2Result.FilePath,
 		OutputFolder:    outputPath,
-		FileNamePattern: "_MU2CH_%d.wav",
+		FileNamePattern: baseFileName + "_MU2CH_%d.wav",
 	})
 
 	// Wait for both audio extractions to finish
