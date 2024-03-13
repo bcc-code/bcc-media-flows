@@ -28,6 +28,7 @@ func GetAudioTranscodeActivities() []any {
 		DetectSilence,
 		AdjustAudioToVideoStart,
 		ExtractAudio,
+		TrimFile,
 	}
 }
 
