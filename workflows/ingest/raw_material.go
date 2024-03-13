@@ -57,7 +57,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 	}
 
 	var fileByAssetID = map[string]paths.Path{}
-	var mediaAnalyzeTasks = map[string]workflow.Future{}
+	var mediaAnalyzeTasks = map[string]wfutils.Task[*ffmpeg.StreamInfo]{}
 	var vidispineJobIDs = map[string]string{}
 
 	for _, file := range files {

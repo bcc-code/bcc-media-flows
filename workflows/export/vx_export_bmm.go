@@ -60,7 +60,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 			PerformOutputAnalysis: true,
 			OutputPath:            params.TempDir,
 		})
-		normalizedFutures[lang] = future
+		normalizedFutures[lang] = future.Future
 	}
 
 	normalizedResults := map[string]activities.NormalizeAudioResult{}
@@ -88,7 +88,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 				DestinationPath: params.OutputDir,
 				Bitrate:         bitrate,
 			})
-			encodings = append(encodings, f)
+			encodings = append(encodings, f.Future)
 		}
 
 		for _, bitrate := range mp3Bitrates {
@@ -97,7 +97,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 				DestinationPath: params.OutputDir,
 				Bitrate:         bitrate,
 			})
-			encodings = append(encodings, f)
+			encodings = append(encodings, f.Future)
 		}
 
 		encodingFutures[lang] = encodings

@@ -2,13 +2,14 @@ package ingestworkflows
 
 import (
 	"fmt"
+	"time"
+
 	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
-	"time"
 )
 
 type ExtractAudioFromMU1MU2Input struct {
@@ -117,7 +118,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 				Samples:    sampleOffset,
 			})
 
-			futures = append(futures, f)
+			futures = append(futures, f.Future)
 			filesToImport[bccmflows.LanguagesByMU1[i].ISO6391] = outputFile
 		}
 	}
@@ -135,7 +136,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 				Samples: -sampleOffset,
 			})
 
-			futures = append(futures, f)
+			futures = append(futures, f.Future)
 			filesToImport[bccmflows.LanguagesByMU2[i].ISO6391] = outputFile
 		}
 

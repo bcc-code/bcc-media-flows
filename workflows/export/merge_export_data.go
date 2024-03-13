@@ -43,7 +43,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 		transcriptTask = wfutils.Execute(ctx, activities.MergeTranscriptJSON, activities.MergeTranscriptJSONParams{
 			MergeInput:      *jsonTranscriptFile,
 			DestinationPath: params.TempDir,
-		})
+		}).Future
 	}
 
 	var audioTasks = map[string]workflow.Future{}
@@ -57,7 +57,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 				continue
 			}
 			mi := audioMergeInputs[lang]
-			audioTasks[lang] = wfutils.Execute(ctx, activities.TranscodeMergeAudio, *mi)
+			audioTasks[lang] = wfutils.Execute(ctx, activities.TranscodeMergeAudio, *mi).Future
 		}
 	}
 
@@ -69,7 +69,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 		}
 		for _, lang := range keys {
 			mi := subtitleMergeInputs[lang]
-			subtitleTasks[lang] = wfutils.Execute(ctx, activities.TranscodeMergeSubtitles, *mi)
+			subtitleTasks[lang] = wfutils.Execute(ctx, activities.TranscodeMergeSubtitles, *mi).Future
 		}
 
 	}

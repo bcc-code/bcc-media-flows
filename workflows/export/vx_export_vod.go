@@ -34,7 +34,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	if params.ParentParams.WithChapters {
 		chapterDataWF = wfutils.Execute(ctx, vsactivity.GetChapterDataActivity, vsactivity.GetChapterDataParams{
 			ExportData: &params.ExportData,
-		})
+		}).Future
 	}
 
 	{
@@ -171,7 +171,7 @@ func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, 
 				PerformOutputAnalysis: true,
 				OutputPath:            tempDir,
 			})
-			normalizedFutures[lang] = future
+			normalizedFutures[lang] = future.Future
 		}
 
 		for _, lang := range langs {
@@ -360,5 +360,5 @@ func (v *vxExportVodService) copyToIngest(ctx workflow.Context, path paths.Path)
 	v.tasks = append(v.tasks, wfutils.Execute(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      path,
 		Destination: paths.New(paths.AssetIngestDrive, filepath.Join(v.ingestFolder, path.Base())),
-	}))
+	}).Future)
 }

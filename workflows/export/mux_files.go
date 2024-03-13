@@ -57,7 +57,7 @@ func createTranslatedFile(ctx workflow.Context, language string, videoPath, outp
 		VideoFilePath:     videoPath,
 		AudioFilePaths:    map[string]paths.Path{language: audioPath},
 		SubtitleFilePaths: subtitlePaths,
-	})
+	}).Future
 }
 
 func getQualitiesWithLanguages(audioKeys []string, resolutions []Resolution) map[resolutionString][]bccmflows.Language {
@@ -109,5 +109,5 @@ func createStreamFile(ctx workflow.Context, resolution Resolution, videoFile, ou
 		DestinationPath: outputPath,
 		AudioFilePaths:  audioFilePaths,
 		VideoFilePath:   videoFile,
-	})
+	}).Future
 }
