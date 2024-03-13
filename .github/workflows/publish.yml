@@ -25,6 +25,8 @@ jobs:
         run: |
           echo $(awk -F. '{OFS="."; $NF++; print}' VERSION) > VERSION
           VERSION=$(cat VERSION)
+          git add VERSION
+          git commit -m "Bump version to $VERSION"
           git tag $VERSION
           echo "TAG_NAME=$VERSION" >> $GITHUB_ENV
           git push --follow-tags
