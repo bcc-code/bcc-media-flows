@@ -335,3 +335,44 @@ func PrependSilence(ctx context.Context, input PrependSilenceInput) (*PrependSil
 		OutputPath: *result,
 	}, nil
 }
+
+type TrimInput struct {
+	Input    paths.Path
+	Output   paths.Path
+	Start    float64
+	End      float64
+	Duration float64
+}
+
+type TrimResult struct {
+	OutputPath paths.Path
+}
+
+func TrimFile(ctx context.Context, input TrimInput) (*TrimResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TrimFile")
+	log.Info("Starting TrimFile")
+
+	if input.Duration != 0 {
+		input.End = input.Start + input.Duration
+	}
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	err := transcode.TrimFile(
+		input.Input,
+		input.Output,
+		input.Start,
+		input.End,
+		progressCallback,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &TrimResult{
+		OutputPath: input.Output,
+	}, nil
+}

@@ -97,56 +97,44 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 
 	// Align audio from MU1 and MU2
 
-	// MU1 is ahead of MU2, so we need to append silence to MU2 audio files
-	if sampleOffset > 0 {
-		for i, file := range mu2Files.AudioFiles {
-			destinationFile := destinationPath.Append(file.Base())
-			wfutils.Execute(ctx, activities.CopyFile, activities.MoveFileInput{
-				Source:      file,
-				Destination: destinationFile,
-			})
-			filesToImport[bccmflows.LanguagesByMU2[i].ISO6391] = destinationFile
-		}
-
-		for i, file := range mu1Files.AudioFiles {
-			outputFile := destinationPath.Append(file.Base())
-			f := wfutils.Execute(ctx, activities.PrependSilence, activities.PrependSilenceInput{
-				FilePath:   file,
-				Output:     outputFile,
-				SampleRate: 48000,
-				Samples:    sampleOffset,
-			})
-
-			futures = append(futures, f.Future)
-			filesToImport[bccmflows.LanguagesByMU1[i].ISO6391] = outputFile
-		}
+	// We do not touch MU1 audio files
+	for i, file := range mu1Files.AudioFiles {
+		destinationFile := destinationPath.Append(file.Base())
+		wfutils.Execute(ctx, activities.CopyFile, activities.MoveFileInput{
+			Source:      file,
+			Destination: destinationFile,
+		})
+		filesToImport[bccmflows.LanguagesByMU2[i].ISO6391] = destinationFile
 	}
 
-	// MU2 is ahead of MU1, so we need to append silence to MU1 audio files
 	if sampleOffset < 0 {
 		for i, file := range mu2Files.AudioFiles {
 			outputFile := destinationPath.Append(file.Base())
-			f := wfutils.Execute(ctx, activities.PrependSilence, activities.PrependSilenceInput{
-				FilePath:   file,
-				Output:     outputFile,
-				SampleRate: 48000,
-
-				// Sample offset is relative to MU1, so we need to flip the sign
-				Samples: -sampleOffset,
+			f := wfutils.Execute(ctx, activities.TrimFile, activities.TrimInput{
+				Input:  file,
+				Output: outputFile,
+				Start:  float64(sampleOffset) / float64(48000),
 			})
 
 			futures = append(futures, f.Future)
 			filesToImport[bccmflows.LanguagesByMU2[i].ISO6391] = outputFile
 		}
+	} else if sampleOffset > 0 {
+		for i, file := range mu2Files.AudioFiles {
+			outputFile := destinationPath.Append(file.Base())
+			f := wfutils.Execute(ctx, activities.PrependSilence, activities.PrependSilenceInput{
+				FilePath:   file,
+				Output:     outputFile,
+				SampleRate: 48000,
 
-		for i, file := range mu1Files.AudioFiles {
-			destinationFile := destinationPath.Append(file.Base())
-			wfutils.Execute(ctx, activities.CopyFile, activities.MoveFileInput{
-				Source:      file,
-				Destination: destinationFile,
+				Samples: sampleOffset,
 			})
-			filesToImport[bccmflows.LanguagesByMU2[i].ISO6391] = destinationFile
+
+			futures = append(futures, f.Future)
+			filesToImport[bccmflows.LanguagesByMU2[i].ISO6391] = outputFile
 		}
+	} else {
+		return fmt.Errorf("no offset - this is extremely unlikely to happen, please check the input files - STOPPING WORKFLOW")
 	}
 
 	errors := ""
