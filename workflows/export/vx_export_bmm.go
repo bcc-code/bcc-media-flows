@@ -30,6 +30,27 @@ var mp3Bitrates = []string{"256k"}
 // This is based on what Spotify uses
 const targetLufs = -14.0
 
+type bmmConfig struct {
+	Bucket  string
+	BaseURL string
+}
+
+func getBMMDestinationConfig(dst AssetExportDestination) bmmConfig {
+	if dst == AssetExportDestinationBMM {
+		return bmmConfig{
+			Bucket:  "bmms3:/prod-bmm-mediabanken/",
+			BaseURL: "https://bmm-api.brunstad.org",
+		}
+	} else if dst == AssetExportDestinationBMMIntegration {
+		return bmmConfig{
+			Bucket:  "bmms3:/int-bmm-mediabanken/",
+			BaseURL: "https://int-bmm-api.brunstad.org",
+		}
+	}
+
+	panic(fmt.Errorf("unsupported destination: %s", dst))
+}
+
 // VXExportToBMM exports the specified vx params to BMM
 // It normalizes the audio, encodes it to AAC and MP3, and uploads it to BMM
 func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*VXExportResult, error) {
@@ -196,16 +217,18 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, fmt.Errorf("failed to write JSON file: %w", err)
 	}
 
+	config := getBMMDestinationConfig(params.ExportDestination)
+
 	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
 	err = wfutils.Execute(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
 		Source:      params.OutputDir.Rclone(),
-		Destination: fmt.Sprintf("bmms3:/prod-bmm-mediabanken/" + ingestFolder),
+		Destination: fmt.Sprintf(config.Bucket + ingestFolder),
 	}).Get(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	trigger := "https://bmm-api.brunstad.org/events/mediabanken-export/?path="
+	trigger := config.BaseURL + "/events/mediabanken-export/?path="
 	jsonS3Path := path.Join(ingestFolder, "bmm.json")
 	trigger += url.QueryEscape(jsonS3Path)
 
