@@ -9,12 +9,12 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-type ClenupResult struct {
+type CleanupResult struct {
 	DeletedFiles []string
 	DeletedCount int
 }
 
-func CleanupTemp(ctx workflow.Context) (ClenupResult, error) {
+func CleanupTemp(ctx workflow.Context) (CleanupResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting temp files cleanup")
 
@@ -28,7 +28,7 @@ func CleanupTemp(ctx workflow.Context) (ClenupResult, error) {
 
 	logger.Info("Deleted files", "count", len(deletedFiles))
 
-	res := ClenupResult{
+	res := CleanupResult{
 		DeletedFiles: deletedFiles,
 		DeletedCount: len(deletedFiles),
 	}

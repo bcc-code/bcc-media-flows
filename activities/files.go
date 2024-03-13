@@ -282,7 +282,7 @@ func DeleteOldFiles(ctx context.Context, input CleanupInput) ([]string, error) {
 	log.Info("Starting DeleteOldFilesActivity")
 
 	deleted := []string{}
-	files, err := utils.GetOldFile(input.Root.Local(), input.OlderThan)
+	files, err := utils.GetOldFiles(input.Root.Local(), input.OlderThan)
 	if err != nil {
 		return deleted, err
 	}

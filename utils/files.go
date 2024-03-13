@@ -54,7 +54,7 @@ func JsonFileToStruct(jsonFile string, output interface{}) error {
 	return json.Unmarshal(bytes, output)
 }
 
-func GetOldFile(rootDir string, olderThan time.Time) ([]string, error) {
+func GetOldFiles(rootDir string, olderThan time.Time) ([]string, error) {
 	//olderThan := time.Now().AddDate(0, 0, -14)
 	older := []string{}
 
