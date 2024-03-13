@@ -4,6 +4,11 @@ on:
   workflow_dispatch:
 
 jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
   publish:
     runs-on: ubuntu-latest
     permissions:
@@ -16,6 +21,14 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: 1.21
+      - name: Bump version
+        run: |
+          echo $(awk -F. '{OFS="."; $NF++; print}' VERSION) > VERSION
+          VERSION=$(cat VERSION)
+          git tag $VERSION
+          echo "TAG_NAME=$VERSION" >> $GITHUB_ENV
+          git push --follow-tags
+          git push --tags
       - name: Get OS and arch info
         run: |
           GOOSARCH=${{matrix.goosarch}}
@@ -27,11 +40,12 @@ jobs:
           echo "GOARCH=$GOARCH" >> $GITHUB_ENV
       - name: Build
         run: |
-          go build -o "$BINARY_NAME" -v ./cmd/worker
+          go build -o "$BINARY_NAME" -ldflags="-X 'main.Version=$TAG_NAME'" -v ./cmd/worker
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          draft: true
+          draft: false
           files: ${{env.BINARY_NAME}}
+          tag_name: ${{env.TAG_NAME}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
