@@ -100,16 +100,6 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 
 	// Align audio from MU1 and MU2
 
-	// We do not touch MU1 audio files
-	for i, file := range mu1Files.AudioFiles {
-		destinationFile := destinationPath.Append(file.Base())
-		wfutils.Execute(ctx, activities.CopyFile, activities.MoveFileInput{
-			Source:      file,
-			Destination: destinationFile,
-		})
-		filesToImport[bccmflows.LanguagesByMU2[i].ISO6391] = destinationFile
-	}
-
 	if sampleOffset < 0 {
 		for i, file := range mu2Files.AudioFiles {
 			outputFile := destinationPath.Append(file.Base())
@@ -138,6 +128,17 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 		}
 	} else {
 		return fmt.Errorf("no offset - this is extremely unlikely to happen, please check the input files - STOPPING WORKFLOW")
+	}
+
+	// We do not touch MU1 audio files
+	for i, file := range mu1Files.AudioFiles {
+		destinationFile := destinationPath.Append(file.Base())
+		f := wfutils.Execute(ctx, activities.CopyFile, activities.MoveFileInput{
+			Source:      file,
+			Destination: destinationFile,
+		})
+		futures = append(futures, f.Future)
+		filesToImport[bccmflows.LanguagesByMU1[i].ISO6391] = destinationFile
 	}
 
 	errors := ""
