@@ -2,6 +2,7 @@ package ingestworkflows
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	bccmflows "github.com/bcc-code/bcc-media-flows"
@@ -62,18 +63,20 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 		return err
 	}
 
+	baseFileName := strings.TrimSuffix(Mu1Result.FilePath.Base(), "_MU1.mxf")
+
 	// Extract audio from MU1
 	extract1Future := wfutils.Execute(ctx, activities.ExtractAudio, activities.ExtractAudioInput{
 		VideoPath:       Mu1Result.FilePath,
 		OutputFolder:    outputPath,
-		FileNamePattern: "MU1_CH_%d.wav",
+		FileNamePattern: baseFileName + "_MU1CH_%d.wav",
 	})
 
 	// Extract audio from MU2
 	extract2Future := wfutils.Execute(ctx, activities.ExtractAudio, activities.ExtractAudioInput{
 		VideoPath:       Mu2Result.FilePath,
 		OutputFolder:    outputPath,
-		FileNamePattern: "MU2_CH_%d.wav",
+		FileNamePattern: "_MU2CH_%d.wav",
 	})
 
 	// Wait for both audio extractions to finish
