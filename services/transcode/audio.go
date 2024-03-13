@@ -341,6 +341,7 @@ func TrimFile(inFile, outFile paths.Path, start, end float64, cb ffmpeg.Progress
 	params := []string{
 		"-progress", "pipe:1",
 		"-hide_banner",
+		"-y",
 		"-i", inFile.Local(),
 		"-ss", fmt.Sprintf("%f", start),
 		"-to", fmt.Sprintf("%f", end),
