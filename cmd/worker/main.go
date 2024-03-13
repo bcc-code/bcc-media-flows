@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"github.com/teamwork/reload"
 	"log"
 	"os"
+	"runtime"
 	"strconv"
 	"time"
 
@@ -22,6 +26,8 @@ import (
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
+
+	selfupdate "github.com/creativeprojects/go-selfupdate"
 )
 
 var utilActivities = []any{
@@ -100,7 +106,14 @@ var workerWorkflows = []any{
 	scheduled.CleanupTemp,
 }
 
+var Version = "development"
+
 func main() {
+	err := update(Version)
+	if err != nil {
+		panic(err)
+	}
+
 	c, err := client.Dial(client.Options{
 		HostPort:  os.Getenv("TEMPORAL_HOST_PORT"),
 		Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
@@ -198,8 +211,41 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 			w.RegisterActivity(a)
 		}
 	}
-
+	fmt.Println("STARTING")
 	err := w.Run(worker.InterruptCh())
 
 	log.Printf("Worker finished: %v", err)
+
+}
+
+func update(version string) error {
+	if version == "development" {
+		return nil
+	}
+
+	ctx := context.Background()
+
+	latest, found, err := selfupdate.DetectLatest(ctx, selfupdate.ParseSlug("bcc-code/bcc-media-flows"))
+	if err != nil {
+		return fmt.Errorf("error occurred while detecting version: %w", err)
+	}
+	if !found {
+		return fmt.Errorf("latest version for %s/%s could not be found from github repository", runtime.GOOS, runtime.GOARCH)
+	}
+
+	if latest.LessOrEqual(version) {
+		log.Printf("Current version (%s) is the latest", version)
+		return nil
+	}
+
+	exe, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("could not locate executable path")
+	}
+	if err := selfupdate.UpdateTo(ctx, latest.AssetURL, latest.AssetName, exe); err != nil {
+		return fmt.Errorf("error occurred while updating binary: %w", err)
+	}
+	log.Printf("Successfully updated to version %s", latest.Version())
+	reload.Exec()
+	return nil
 }
