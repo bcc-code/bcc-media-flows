@@ -206,7 +206,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		})
 		if err != nil {
 			errs = append(errs, err)
-			err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("VB Export of %s failed: %s", params.VXID, err.Error()))
+			err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("VB Export of %s failed: ```%s```", params.VXID, err.Error()))
 			if err != nil {
 				errs = append(errs, err)
 			}
