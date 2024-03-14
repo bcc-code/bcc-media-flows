@@ -122,13 +122,12 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	})
 
 	if len(destinationsWithAudioOutput) > 0 && analyzeResult.HasAudio {
-		var normalizeAudioResult *activities.NormalizeAudioResult
-		err = wfutils.Execute(ctx, activities.NormalizeAudioActivity, activities.NormalizeAudioParams{
+		normalizeAudioResult, err := wfutils.Execute(ctx, activities.NormalizeAudioActivity, activities.NormalizeAudioParams{
 			FilePath:              videoFilePath,
 			TargetLUFS:            -23,
 			PerformOutputAnalysis: true,
 			OutputPath:            tempDir,
-		}).Get(ctx, &normalizeAudioResult)
+		}).Result(ctx)
 		if err != nil {
 			return nil, err
 		}
