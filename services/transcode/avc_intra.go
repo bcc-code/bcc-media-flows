@@ -37,7 +37,7 @@ func AvcIntra(input AVCIntraEncodeInput, progressCallback ffmpeg.ProgressCallbac
 		"-ar", "48000",
 		"-b:v", "100M",
 		"-pix_fmt", "yuv422p10le",
-		"-x264opts", "avcintra-class=100",
+		"-x264-params", "avcintra-class=100:interlaced=0",
 		"-x264opts", "colorprim=bt709",
 		"-x264opts", "transfer=bt709",
 		"-x264opts", "colormatrix=bt709",
