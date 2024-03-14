@@ -133,6 +133,10 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 		Language: "no",
 	})
 
+	_ = wfutils.Execute(ctx, vsactivity.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
+		AssetID: videoVXID,
+	}).Get(ctx, nil)
+
 	errors := []error{}
 	for _, f := range importAudioFuture {
 		err = f.Get(ctx, nil)

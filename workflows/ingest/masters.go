@@ -9,6 +9,7 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
+	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/baton"
@@ -145,6 +146,10 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		VXID:     result.AssetID,
 		Language: "no",
 	})
+
+	_ = wfutils.Execute(ctx, vsactivity.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
+		AssetID: result.AssetID,
+	}).Get(ctx, nil)
 
 	createPreviewsAsync(ctx, []string{result.AssetID})
 
