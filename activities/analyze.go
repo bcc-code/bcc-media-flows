@@ -2,6 +2,9 @@ package activities
 
 import (
 	"context"
+	"os/exec"
+	"strings"
+
 	"github.com/bcc-code/bcc-media-flows/utils"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -11,6 +14,20 @@ import (
 
 type AnalyzeFileParams struct {
 	FilePath paths.Path
+}
+
+func GetMimeType(ctx context.Context, input AnalyzeFileParams) (*string, error) {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Starting GetMimeTypeActivity")
+
+	result, err := utils.ExecuteCmd(exec.Command("file", "-bI", input.FilePath.Local()), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	mimeType := strings.Split(result, ";")[0]
+
+	return &mimeType, nil
 }
 
 func AnalyzeFile(ctx context.Context, input AnalyzeFileParams) (*ffmpeg.StreamInfo, error) {

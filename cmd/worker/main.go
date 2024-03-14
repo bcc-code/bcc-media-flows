@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/teamwork/reload"
 	"log"
 	"os"
 	"runtime"
 	"strconv"
 	"time"
+
+	"github.com/teamwork/reload"
 
 	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
 	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
@@ -52,6 +53,7 @@ var utilActivities = []any{
 	activities.ListReaperFiles,
 	activities.DeleteEmptyDirectories,
 	activities.DeleteOldFiles,
+	activities.GetMimeType,
 }
 
 var vidispineActivities = []any{
