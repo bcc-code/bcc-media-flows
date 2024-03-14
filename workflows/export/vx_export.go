@@ -18,14 +18,16 @@ import (
 type AssetExportDestination enum.Member[string]
 
 var (
-	AssetExportDestinationPlayout = AssetExportDestination{Value: "playout"}
-	AssetExportDestinationVOD     = AssetExportDestination{Value: "vod"}
-	AssetExportDestinationBMM     = AssetExportDestination{Value: "bmm"}
-	AssetExportDestinationIsilon  = AssetExportDestination{Value: "isilon"}
-	AssetExportDestinations       = enum.New(
+	AssetExportDestinationPlayout        = AssetExportDestination{Value: "playout"}
+	AssetExportDestinationVOD            = AssetExportDestination{Value: "vod"}
+	AssetExportDestinationBMM            = AssetExportDestination{Value: "bmm"}
+	AssetExportDestinationBMMIntegration = AssetExportDestination{Value: "bmm-integration"}
+	AssetExportDestinationIsilon         = AssetExportDestination{Value: "isilon"}
+	AssetExportDestinations              = enum.New(
 		AssetExportDestinationPlayout,
 		AssetExportDestinationVOD,
 		AssetExportDestinationBMM,
+		AssetExportDestinationBMMIntegration,
 		AssetExportDestinationIsilon,
 	)
 )
@@ -57,13 +59,14 @@ type Resolution struct {
 }
 
 type VXExportChildWorkflowParams struct {
-	RunID        string
-	ParentParams VXExportParams       `json:"parent_params"`
-	ExportData   vidispine.ExportData `json:"export_data"`
-	MergeResult  MergeExportDataResult
-	TempDir      paths.Path
-	OutputDir    paths.Path
-	Upload       bool
+	RunID             string
+	ParentParams      VXExportParams       `json:"parent_params"`
+	ExportData        vidispine.ExportData `json:"export_data"`
+	MergeResult       MergeExportDataResult
+	TempDir           paths.Path
+	OutputDir         paths.Path
+	Upload            bool
+	ExportDestination AssetExportDestination
 }
 
 // VXExport is the main workflow for exporting assets from vidispine
@@ -157,13 +160,14 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 	var resultFutures []workflow.Future
 	for _, dest := range destinations {
 		childParams := VXExportChildWorkflowParams{
-			ParentParams: params,
-			ExportData:   *data,
-			MergeResult:  mergeResult,
-			TempDir:      tempDir,
-			OutputDir:    outputDir.Append(dest.Value),
-			RunID:        workflow.GetInfo(ctx).OriginalRunID,
-			Upload:       true,
+			ParentParams:      params,
+			ExportData:        *data,
+			MergeResult:       mergeResult,
+			TempDir:           tempDir,
+			OutputDir:         outputDir.Append(dest.Value),
+			RunID:             workflow.GetInfo(ctx).OriginalRunID,
+			Upload:            true,
+			ExportDestination: *dest,
 		}
 
 		var w interface{}
@@ -187,7 +191,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 			}
 		case AssetExportDestinationPlayout:
 			w = VXExportToPlayout
-		case AssetExportDestinationBMM:
+		case AssetExportDestinationBMM, AssetExportDestinationBMMIntegration:
 			w = VXExportToBMM
 		default:
 			return nil, fmt.Errorf("destination not implemented: %s", dest)

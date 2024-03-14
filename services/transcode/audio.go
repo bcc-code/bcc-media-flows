@@ -319,6 +319,8 @@ func ExtractAudioChannels(filePath paths.Path, output map[int]paths.Path, cb ffm
 	}
 
 	params := []string{
+		"-progress", "pipe:1",
+		"-hide_banner",
 		"-i", filePath.Local(),
 	}
 
@@ -333,4 +335,20 @@ func ExtractAudioChannels(filePath paths.Path, output map[int]paths.Path, cb ffm
 	}
 
 	return out, nil
+}
+
+func TrimFile(inFile, outFile paths.Path, start, end float64, cb ffmpeg.ProgressCallback) error {
+	params := []string{
+		"-progress", "pipe:1",
+		"-hide_banner",
+		"-y",
+		"-i", inFile.Local(),
+		"-ss", fmt.Sprintf("%f", start),
+		"-to", fmt.Sprintf("%f", end),
+		"-c", "copy",
+		outFile.Local(),
+	}
+
+	_, err := ffmpeg.Do(params, ffmpeg.StreamInfo{}, cb)
+	return err
 }

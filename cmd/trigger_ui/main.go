@@ -332,9 +332,10 @@ func main() {
 		db,
 	}
 
+	router.GET("/list", server.listGET)
+
 	router.Group("/vx-export").
 		GET("/", server.triggerHandlerGET).
-		GET("/list", server.listGET).
 		POST("/", server.triggerHandlerPOST)
 
 	router.Group("/vb-export").
@@ -349,7 +350,7 @@ func main() {
 
 	router.Group("/ingest-fix").
 		GET("/", server.ingestFixGET).
-		POST("/ingest-fix/mu1mu2extract", server.mu1mu2ExtractPOST)
+		POST("/mu1mu2extract", server.mu1mu2ExtractPOST)
 
 	port := os.Getenv("PORT")
 	if port == "" {

@@ -1,12 +1,13 @@
 package main
 
 import (
+	"net/http"
+
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"
-	"net/http"
 )
 
 func (s *TriggerServer) ingestFixGET(c *gin.Context) {
@@ -32,8 +33,20 @@ func (s *TriggerServer) mu1mu2ExtractPOST(c *gin.Context) {
 		TaskQueue: queue,
 	}
 
+	var wfID string
+	workflowOptions.ID = uuid.NewString()
 	_, err = s.wfClient.ExecuteWorkflow(c, workflowOptions, ingestworkflows.ExtractAudioFromMU1MU2, ingestworkflows.ExtractAudioFromMU1MU2Input{
 		MU1ID: form.VX1ID,
 		MU2ID: form.VX2ID,
+	})
+
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.HTML(http.StatusOK, "success.gohtml", gin.H{
+		"WorkflowID": wfID,
+		"Title":      "Extract audio from MU1 and MU2",
 	})
 }

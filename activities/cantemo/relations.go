@@ -17,6 +17,7 @@ func AddRelation(ctx context.Context, params AddRelationParams) (any, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting AddRelationActivity")
 
+	// Warning: this can not have a trailing slash
 	urlBase := os.Getenv("CANTEMO_URL")
 	token := os.Getenv("CANTEMO_TOKEN")
 
