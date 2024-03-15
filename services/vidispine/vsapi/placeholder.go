@@ -90,7 +90,7 @@ func (c *Client) AddFileToPlaceholder(itemID, fileID, tag string, fileState File
 	return result.Result().(*JobDocument).JobID, nil
 }
 
-func (c *Client) CreateThumbnails(itemID string) (string, error) {
+func (c *Client) CreateThumbnails(itemID string, width, height int) (string, error) {
 	result, err := c.restyClient.R().
 		SetHeader("content-type", "application/xml").
 		SetHeader("accept", "application/json").

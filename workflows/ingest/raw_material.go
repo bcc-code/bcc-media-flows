@@ -36,6 +36,9 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 	if err != nil {
 		return err
 	}
+	if err != nil {
+		return err
+	}
 
 	var files []paths.Path
 	for _, f := range originalFiles {
