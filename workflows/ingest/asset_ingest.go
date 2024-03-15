@@ -102,7 +102,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 
 	switch *orderForm {
 	case OrderFormRawMaterial:
-		err = workflow.ExecuteChildWorkflow(ctx, RawMaterial, RawMaterialParams{
+		err = workflow.ExecuteChildWorkflow(ctx, RawMaterialForm, RawMaterialFormParams{
 			Targets:   targets,
 			OrderForm: *orderForm,
 			Metadata:  metadata,
