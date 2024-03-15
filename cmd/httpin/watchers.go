@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/workflows"
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
 	"github.com/gin-gonic/gin"
@@ -44,9 +45,8 @@ func watchersHandler(ctx *gin.Context) {
 
 	// This needs to match any subfolder
 	multitrackPath := strings.HasPrefix(result.Path, "/mnt/isilon/system/multitrack/Ingest/tempFraBrunstad/")
-
 	growingPath := strings.HasPrefix(result.Path, "/mnt/dmzshare/ingestgrow/")
-	//rawImportIsilon := strings.HasPrefix(result.Path, "/mnt/isilon/Input/Rawmaterial/")
+	rawImportIsilon := strings.HasPrefix(result.Path, "/mnt/isilon/Input/Rawmaterial/")
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -60,6 +60,8 @@ func watchersHandler(ctx *gin.Context) {
 		err = doMultitrackCopy(ctx, result.Path)
 	} else if growingPath {
 		err = doGrowingFile(ctx, result.Path)
+	} else if rawImportIsilon {
+		err = doRawImport(ctx, result.Path)
 	} else {
 		err = doTranscode(ctx, result.Path)
 	}
@@ -134,6 +136,29 @@ func doTranscode(ctx context.Context, path string) error {
 		Path:       path,
 		FolderName: t,
 	})
+	return err
+}
+
+func doRawImport(ctx context.Context, path string) error {
+	c, err := getClient()
+	if err != nil {
+		return err
+	}
+
+	workflowOptions := client.StartWorkflowOptions{
+		ID:        "RAWIMPORT-" + uuid.NewString(),
+		TaskQueue: environment.GetWorkerQueue(),
+	}
+
+	parsedPath, err := paths.Parse(path)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.RawMaterial, ingestworkflows.RawMaterialParams{
+		FilesToIngest: paths.Files{parsedPath},
+	})
+
 	return err
 }
 
