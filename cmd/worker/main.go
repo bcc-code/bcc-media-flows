@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/teamwork/reload"
 	"log"
 	"os"
 	"runtime"
 	"strconv"
 	"time"
+
+	"github.com/teamwork/reload"
 
 	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
 	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
@@ -67,6 +68,7 @@ var vidispineActivities = []any{
 	vsactivity.JobCompleteOrErr,
 	vsactivity.AddFileToPlaceholder,
 	vsactivity.CloseFile,
+	vsactivity.GetRelatedAudioFiles,
 	activities.GetSubtransIDActivity,
 	cantemo.AddRelation,
 }
@@ -98,6 +100,7 @@ var workerWorkflows = []any{
 	ingestworkflows.MoveUploadedFiles,
 	ingestworkflows.ImportAudioFileFromReaper,
 	ingestworkflows.ExtractAudioFromMU1MU2,
+	ingestworkflows.IngestSyncFix,
 	workflows.NormalizeAudioLevelWorkflow,
 	vb_export.VBExport,
 	vb_export.VBExportToAbekas,

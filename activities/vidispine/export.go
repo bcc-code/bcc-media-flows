@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
 
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
@@ -49,4 +50,27 @@ func GetChapterDataActivity(ctx context.Context, params GetChapterDataParams) ([
 	client := GetClient()
 
 	return vidispine.GetChapterData(client, params.ExportData)
+}
+
+func GetRelatedAudioFiles(ctx context.Context, vxID string) (map[string]paths.Path, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "GetRelatedAudioFiles")
+	log.Info("Starting GetRelatedAudioFiles")
+
+	client := GetClient()
+
+	audios, err := vidispine.GetRelatedAudioPaths(client, vxID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var result = map[string]paths.Path{}
+	for lang, p := range audios {
+		result[lang], err = paths.Parse(p)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return result, nil
 }

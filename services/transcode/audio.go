@@ -344,10 +344,16 @@ func TrimFile(inFile, outFile paths.Path, start, end float64, cb ffmpeg.Progress
 		"-y",
 		"-i", inFile.Local(),
 		"-ss", fmt.Sprintf("%f", start),
-		"-to", fmt.Sprintf("%f", end),
-		"-c", "copy",
-		outFile.Local(),
 	}
+
+	if end != 0 {
+		params = append(params,
+			"-to", fmt.Sprintf("%f", end))
+	}
+
+	params = append(params,
+		"-c", "copy",
+		outFile.Local())
 
 	_, err := ffmpeg.Do(params, ffmpeg.StreamInfo{}, cb)
 	return err
