@@ -60,6 +60,7 @@ type RawMaterialParams struct {
 }
 
 func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]paths.Path, error) {
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	outputDir, err := wfutils.GetWorkflowRawOutputFolder(ctx)
 	if err != nil {
