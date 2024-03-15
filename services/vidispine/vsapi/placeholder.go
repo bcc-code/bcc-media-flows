@@ -2,6 +2,7 @@ package vsapi
 
 import (
 	"bytes"
+	"fmt"
 	"net/url"
 )
 
@@ -95,7 +96,7 @@ func (c *Client) CreateThumbnails(itemID string, width, height int) (string, err
 		SetHeader("content-type", "application/xml").
 		SetHeader("accept", "application/json").
 		SetResult(&JobDocument{}).
-		Post("/item/" + url.PathEscape(itemID) + "/thumbnail?createThumbnails=true")
+		Post(fmt.Sprintf("/item/%s/thumbnail?createThumbnails=true&thumbnailWidth=%d&thumbnailHeight=%d", url.PathEscape(itemID), width, height))
 
 	if err != nil {
 		return "", err
