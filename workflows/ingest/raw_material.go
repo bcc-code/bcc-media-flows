@@ -41,6 +41,9 @@ func RawMaterialForm(ctx workflow.Context, params RawMaterialFormParams) error {
 		DeliveryMetadata: params.Metadata,
 		Language:         params.Metadata.JobProperty.Language,
 	})
+	if err != nil {
+		return err
+	}
 
 	err = notifyImportCompleted(ctx, params.Targets, params.Metadata.JobProperty.JobID, fileByAssetID)
 	if err != nil {
@@ -57,11 +60,10 @@ type RawMaterialParams struct {
 }
 
 func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]paths.Path, error) {
-	imported := map[string]paths.Path{}
 
 	outputDir, err := wfutils.GetWorkflowRawOutputFolder(ctx)
 	if err != nil {
-		return imported, err
+		return nil, err
 	}
 
 	if params.Language == "" {
@@ -71,13 +73,13 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 	files := []paths.Path{}
 	for _, f := range params.FilesToIngest {
 		if !utils.ValidRawFilename(f.Local()) {
-			return imported, fmt.Errorf("invalid filename: %s", f)
+			return nil, fmt.Errorf("invalid filename: %s", f)
 		}
 
 		newPath := outputDir.Append(f.Base())
 		err = wfutils.MoveFile(ctx, f, newPath)
 		if err != nil {
-			return imported, err
+			return nil, err
 		}
 
 		files = append(files, newPath)
@@ -87,6 +89,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 	var mediaAnalyzeTasks = map[string]wfutils.Task[*ffmpeg.StreamInfo]{}
 	var vidispineJobIDs = map[string]string{}
 
+	imported := map[string]paths.Path{}
 	for _, file := range files {
 		var result *ImportTagResult
 		result, err = ImportFileAsTag(ctx, "original", file, file.Base())
