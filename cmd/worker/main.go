@@ -95,6 +95,7 @@ var workerWorkflows = []any{
 	workflows.ImportSubtitlesFromSubtrans,
 	ingestworkflows.Asset,
 	ingestworkflows.RawMaterial,
+	ingestworkflows.RawMaterialForm,
 	ingestworkflows.Masters,
 	ingestworkflows.Incremental,
 	ingestworkflows.MoveUploadedFiles,
