@@ -2,9 +2,11 @@ package vb_export
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
+	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -33,9 +35,30 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		return nil, err
 	}
 
+	var analyzeResult *ffmpeg.StreamInfo
+	err = wfutils.Execute(ctx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
+		FilePath: params.InputFile,
+	}).Get(ctx, analyzeResult)
+	if err != nil {
+		return nil, err
+	}
+
+	fileToTranscode := params.InputFile
+
+	// Check for 5.1 audio
+	// Used prefix to catch 5.1, 5.1(side), and any other variations
+	if len(analyzeResult.AudioStreams) == 1 && strings.HasPrefix(analyzeResult.AudioStreams[0].ChannelLayout, "5.1") {
+		// Convert a one stream 5.1 to 4 mono streams (L, R, Lb, Rb)
+		fileToTranscode = params.TempDir.Append("4mono_" + params.InputFile.Base())
+		err = wfutils.Execute(ctx, activities.Audio.Convert51to4Mono, common.AudioInput{
+			Path:            params.InputFile,
+			DestinationPath: fileToTranscode,
+		}).Get(ctx, nil)
+	}
+
 	var videoResult common.VideoResult
 	err = wfutils.Execute(ctx, activities.Video.TranscodeToAVCIntraActivity, activities.EncodeParams{
-		FilePath:       params.InputFile,
+		FilePath:       fileToTranscode,
 		OutputDir:      abekasOutputDir,
 		Resolution:     "1920x1080",
 		FrameRate:      50,
