@@ -416,7 +416,13 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 		BmmTitle:   bmmTitle,
 	}
 
-	if ingested := meta.Get(vscommon.FieldIngested, ""); ingested != "" {
+	ingested := meta.Get(vscommon.FieldIngested, "")
+
+	if ingested == "" {
+		ingested = meta.Get(vscommon.FieldType{Value: "created"}, "")
+	}
+
+	if ingested != "" {
 		t, err := time.Parse(time.RFC3339, ingested)
 		if err == nil {
 			out.ImportDate = &t
