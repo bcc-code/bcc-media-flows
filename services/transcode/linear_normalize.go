@@ -20,6 +20,7 @@ func AdjustAudioLevel(input common.AudioInput, adjustment float64, cb ffmpeg.Pro
 	params := []string{
 		"-i", input.Path.Local(),
 		"-c:v", "copy",
+		"-c:a", "copy",
 		"-af", fmt.Sprintf("volume=%.2fdB", adjustment),
 		outputFilePath,
 	}

@@ -36,6 +36,12 @@ func (aa AudioActivities) AnalyzeEBUR128Activity(ctx context.Context, input Anal
 		SuggestedAdjustment: 0.0,
 	}
 
+	probe, err := ffmpeg.GetStreamInfo(input.FilePath.Local())
+	if probe.AudioStreams[0].Channels > 2 {
+		log.Warn("More than 2 audio streams detected, skipping normalization")
+		return out, nil
+	}
+
 	// The suggested adjustmnet attempts to hit the target loudness
 	// but never suggests above -0.9 dBTP. This means it may suggest a
 	// negative adjustment if the input according to TP mesaurements is already too loud,
@@ -95,6 +101,7 @@ func (aa AudioActivities) NormalizeAudioActivity(ctx context.Context, params Nor
 	if err != nil {
 		return nil, err
 	}
+
 	if silent {
 		return &NormalizeAudioResult{
 			FilePath: params.FilePath,
