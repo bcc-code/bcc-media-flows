@@ -34,7 +34,7 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 	}
 
 	var videoResult common.VideoResult
-	err = wfutils.Execute(ctx, activities.TranscodeToAVCIntraActivity, activities.EncodeParams{
+	err = wfutils.Execute(ctx, activities.Video.TranscodeToAVCIntraActivity, activities.EncodeParams{
 		FilePath:       params.InputFile,
 		OutputDir:      abekasOutputDir,
 		Resolution:     "1920x1080",

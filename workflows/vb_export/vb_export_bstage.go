@@ -32,7 +32,7 @@ func VBExportToBStage(ctx workflow.Context, params VBExportChildWorkflowParams) 
 	}
 
 	var videoResult common.VideoResult
-	err = wfutils.Execute(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
+	err = wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
 		FilePath:       params.InputFile,
 		OutputDir:      bStageOutputDir,
 		Resolution:     "1920x1080",

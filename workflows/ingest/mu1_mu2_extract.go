@@ -48,7 +48,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 
 	// Calculte TC difference between MU1 and MU2
 	sampleOffset := int(0)
-	err = wfutils.Execute(ctx, activities.GetVideoOffset, activities.GetVideoOffsetInput{
+	err = wfutils.Execute(ctx, activities.Video.GetVideoOffset, activities.GetVideoOffsetInput{
 		VideoPath1:      Mu1Result.FilePath,
 		VideoPath2:      Mu2Result.FilePath,
 		VideoFPS:        25,
@@ -66,14 +66,14 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 	baseFileName := strings.TrimSuffix(Mu1Result.FilePath.Base(), "_MU1.mxf")
 
 	// Extract audio from MU1
-	extract1Future := wfutils.Execute(ctx, activities.ExtractAudio, activities.ExtractAudioInput{
+	extract1Future := wfutils.Execute(ctx, activities.Audio.ExtractAudio, activities.ExtractAudioInput{
 		VideoPath:       Mu1Result.FilePath,
 		OutputFolder:    outputPath,
 		FileNamePattern: baseFileName + "_MU1CH_%d.wav",
 	})
 
 	// Extract audio from MU2
-	extract2Future := wfutils.Execute(ctx, activities.ExtractAudio, activities.ExtractAudioInput{
+	extract2Future := wfutils.Execute(ctx, activities.Audio.ExtractAudio, activities.ExtractAudioInput{
 		VideoPath:       Mu2Result.FilePath,
 		OutputFolder:    outputPath,
 		FileNamePattern: baseFileName + "_MU2CH_%d.wav",
@@ -109,7 +109,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 		for _, key := range keys {
 			file := mu2Files.AudioFiles[key]
 			outputFile := destinationPath.Append(file.Base())
-			f := wfutils.Execute(ctx, activities.TrimFile, activities.TrimInput{
+			f := wfutils.Execute(ctx, activities.Audio.TrimFile, activities.TrimInput{
 				Input:  file,
 				Output: outputFile,
 				Start:  float64(-sampleOffset) / float64(48000),
@@ -122,7 +122,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 		for _, key := range keys {
 			file := mu2Files.AudioFiles[key]
 			outputFile := destinationPath.Append(file.Base())
-			f := wfutils.Execute(ctx, activities.PrependSilence, activities.PrependSilenceInput{
+			f := wfutils.Execute(ctx, activities.Audio.PrependSilence, activities.PrependSilenceInput{
 				FilePath:   file,
 				Output:     outputFile,
 				SampleRate: 48000,

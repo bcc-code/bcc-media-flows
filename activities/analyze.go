@@ -2,6 +2,7 @@ package activities
 
 import (
 	"context"
+
 	"github.com/bcc-code/bcc-media-flows/utils"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -13,7 +14,7 @@ type AnalyzeFileParams struct {
 	FilePath paths.Path
 }
 
-func AnalyzeFile(ctx context.Context, input AnalyzeFileParams) (*ffmpeg.StreamInfo, error) {
+func (ta AudioActivities) AnalyzeFile(ctx context.Context, input AnalyzeFileParams) (*ffmpeg.StreamInfo, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting AnalyzeFileActivity")
 
@@ -31,7 +32,7 @@ type GetVideoOffsetInput struct {
 	AudioSampleRate int
 }
 
-func GetVideoOffset(ctx context.Context, input GetVideoOffsetInput) (int, error) {
+func (va VideoActivities) GetVideoOffset(ctx context.Context, input GetVideoOffsetInput) (int, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "GetVideoOffset")
 	log.Info("Starting GetVideoOffsetActivity")

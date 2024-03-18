@@ -60,7 +60,7 @@ func TranscodePreviewVX(
 	}
 
 	previewResponse := &activities.TranscodePreviewResponse{}
-	err = wfutils.Execute(ctx, activities.TranscodePreview, activities.TranscodePreviewParams{
+	err = wfutils.Execute(ctx, activities.Video.TranscodePreview, activities.TranscodePreviewParams{
 		FilePath:           shapes.FilePath,
 		DestinationDirPath: destinationPath,
 	}).Get(ctx, previewResponse)

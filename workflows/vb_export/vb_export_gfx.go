@@ -32,7 +32,7 @@ func VBExportToGfx(ctx workflow.Context, params VBExportChildWorkflowParams) (*V
 	}
 
 	var videoResult common.VideoResult
-	err = wfutils.Execute(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
+	err = wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
 		FilePath:       params.InputFile,
 		OutputDir:      gfxOutputDir,
 		Resolution:     "1920x1080",

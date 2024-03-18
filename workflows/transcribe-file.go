@@ -38,7 +38,7 @@ func TranscribeFile(
 	}
 
 	wavFile := common.AudioResult{}
-	err = wfutils.Execute(ctx, activities.TranscodeToAudioWav, common.AudioInput{
+	err = wfutils.Execute(ctx, activities.Audio.TranscodeToAudioWav, common.AudioInput{
 		Path:            file,
 		DestinationPath: tempFolder,
 	}).Get(ctx, &wavFile)

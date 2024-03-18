@@ -133,7 +133,7 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 	}
 
 	isSilent := false
-	err = wfutils.Execute(ctx, activities.DetectSilence, common.AudioInput{
+	err = wfutils.Execute(ctx, activities.Audio.DetectSilence, common.AudioInput{
 		Path:            tempFile,
 		DestinationPath: tempFolder,
 	}).Get(ctx, &isSilent)
@@ -174,7 +174,7 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 
 	// Generate a filename withe the language code
 	outPath := outputFolder.Append(fmt.Sprintf("%s-%s.wav", params.BaseName, strings.ToUpper(lang.ISO6391)))
-	err = wfutils.Execute(ctx, activities.AdjustAudioToVideoStart, activities.AdjustAudioToVideoStartInput{
+	err = wfutils.Execute(ctx, activities.Audio.AdjustAudioToVideoStart, activities.AdjustAudioToVideoStartInput{
 		AudioFile:  tempFile,
 		VideoFile:  getFileResult.FilePath,
 		OutputFile: outPath,

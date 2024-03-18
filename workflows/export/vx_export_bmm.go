@@ -75,7 +75,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	// Normalize audio
 	for _, lang := range langs {
 		audio := params.MergeResult.AudioFiles[lang]
-		future := wfutils.Execute(ctx, activities.NormalizeAudioActivity, activities.NormalizeAudioParams{
+		future := wfutils.Execute(ctx, activities.Audio.NormalizeAudioActivity, activities.NormalizeAudioParams{
 			FilePath:              audio,
 			TargetLUFS:            targetLufs,
 			PerformOutputAnalysis: true,
@@ -104,7 +104,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		audio := normalizedResults[lang]
 		var encodings []workflow.Future
 		for _, bitrate := range aacBitrates {
-			f := wfutils.Execute(ctx, activities.TranscodeToAudioAac, common.AudioInput{
+			f := wfutils.Execute(ctx, activities.Audio.TranscodeToAudioAac, common.AudioInput{
 				Path:            audio.FilePath,
 				DestinationPath: params.OutputDir,
 				Bitrate:         bitrate,
@@ -113,7 +113,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		}
 
 		for _, bitrate := range mp3Bitrates {
-			f := wfutils.Execute(ctx, activities.TranscodeToAudioMP3, common.AudioInput{
+			f := wfutils.Execute(ctx, activities.Audio.TranscodeToAudioMP3, common.AudioInput{
 				Path:            audio.FilePath,
 				DestinationPath: params.OutputDir,
 				Bitrate:         bitrate,

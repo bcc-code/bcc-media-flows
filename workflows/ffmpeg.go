@@ -21,7 +21,7 @@ func ExecuteFFmpeg(
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	err := wfutils.Execute(ctx, activities.ExecuteFFmpeg, activities.ExecuteFFmpegInput{
+	err := wfutils.Execute(ctx, activities.Video.ExecuteFFmpeg, activities.ExecuteFFmpegInput{
 		Arguments: params.Arguments,
 	}).Get(ctx, nil)
 

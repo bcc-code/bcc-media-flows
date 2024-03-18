@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"runtime"
 	"strconv"
 	"time"
-
-	"github.com/teamwork/reload"
 
 	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
 	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
@@ -19,6 +18,8 @@ import (
 	"github.com/bcc-code/bcc-media-flows/workflows/scheduled"
 	"github.com/bcc-code/bcc-media-flows/workflows/vb_export"
 	"github.com/bcc-code/bcc-media-flows/workflows/webhooks"
+	"github.com/teamwork/reload"
+	"go.temporal.io/sdk/activity"
 
 	"github.com/bcc-code/bcc-media-flows/workflows/export"
 
@@ -73,10 +74,6 @@ var vidispineActivities = []any{
 	cantemo.AddRelation,
 }
 
-var transcodeActivities = activities.GetVideoTranscodeActivities()
-
-var audioTranscodeActivities = activities.GetAudioTranscodeActivities()
-
 var workerWorkflows = []any{
 	workflows.TranscodePreviewVX,
 	workflows.TranscodePreviewFile,
@@ -108,6 +105,20 @@ var workerWorkflows = []any{
 	vb_export.VBExportToGfx,
 	vb_export.VBExportToHippo,
 	scheduled.CleanupTemp,
+}
+
+// registerActivitiesInStruct registers all methods in a struct as activities
+func registerActivitiesInStruct(w worker.Worker, activityStruct any) {
+	v := reflect.ValueOf(activityStruct)
+	t := reflect.TypeOf(activityStruct)
+	for i := 0; i < t.NumMethod(); i++ {
+		method := t.Method(i)
+		f := v.MethodByName(method.Name)
+		opts := activity.RegisterOptions{
+			Name: method.Name,
+		}
+		w.RegisterActivityWithOptions(f.Interface(), opts)
+	}
 }
 
 var Version = "development"
@@ -175,13 +186,9 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 			w.RegisterActivity(a)
 		}
 
-		for _, a := range transcodeActivities {
-			w.RegisterActivity(a)
-		}
+		registerActivitiesInStruct(w, activities.Video)
 
-		for _, a := range audioTranscodeActivities {
-			w.RegisterActivity(a)
-		}
+		registerActivitiesInStruct(w, activities.Audio)
 
 		for _, wf := range workerWorkflows {
 			w.RegisterWorkflow(wf)
@@ -207,13 +214,9 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 			w.RegisterWorkflow(wf)
 		}
 	case environment.QueueTranscode:
-		for _, a := range transcodeActivities {
-			w.RegisterActivity(a)
-		}
+		registerActivitiesInStruct(w, activities.Video)
 	case environment.QueueAudio:
-		for _, a := range audioTranscodeActivities {
-			w.RegisterActivity(a)
-		}
+		registerActivitiesInStruct(w, activities.Audio)
 	}
 	fmt.Println("STARTING")
 	err := w.Run(worker.InterruptCh())

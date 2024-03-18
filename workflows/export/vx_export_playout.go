@@ -25,7 +25,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 
 	// Transcode video using playout encoding
 	var videoResult common.VideoResult
-	err = wfutils.Execute(ctx, activities.TranscodeToXDCAMActivity, activities.EncodeParams{
+	err = wfutils.Execute(ctx, activities.Video.TranscodeToXDCAMActivity, activities.EncodeParams{
 		Bitrate:    "50M",
 		FilePath:   *params.MergeResult.VideoFile,
 		OutputDir:  xdcamOutputDir,
@@ -39,7 +39,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 
 	// Mux into MXF file with 16 audio channels
 	var muxResult *common.PlayoutMuxResult
-	err = wfutils.Execute(ctx, activities.TranscodePlayoutMux, common.PlayoutMuxInput{
+	err = wfutils.Execute(ctx, activities.Video.TranscodePlayoutMux, common.PlayoutMuxInput{
 		VideoFilePath:     videoResult.OutputPath,
 		AudioFilePaths:    params.MergeResult.AudioFiles,
 		SubtitleFilePaths: params.MergeResult.SubtitleFiles,

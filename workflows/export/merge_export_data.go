@@ -57,7 +57,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 				continue
 			}
 			mi := audioMergeInputs[lang]
-			audioTasks[lang] = wfutils.Execute(ctx, activities.TranscodeMergeAudio, *mi).Future
+			audioTasks[lang] = wfutils.Execute(ctx, activities.Audio.TranscodeMergeAudio, *mi).Future
 		}
 	}
 
@@ -69,14 +69,14 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 		}
 		for _, lang := range keys {
 			mi := subtitleMergeInputs[lang]
-			subtitleTasks[lang] = wfutils.Execute(ctx, activities.TranscodeMergeSubtitles, *mi).Future
+			subtitleTasks[lang] = wfutils.Execute(ctx, activities.Video.TranscodeMergeSubtitles, *mi).Future
 		}
 
 	}
 
 	var videoFile *paths.Path
 	if params.MakeVideo {
-		videoTask := wfutils.Execute(ctx, activities.TranscodeMergeVideo, mergeInput)
+		videoTask := wfutils.Execute(ctx, activities.Video.TranscodeMergeVideo, mergeInput)
 		var result common.MergeResult
 		err := videoTask.Get(ctx, &result)
 		if err != nil {

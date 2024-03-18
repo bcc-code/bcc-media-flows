@@ -74,7 +74,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 			return err
 		}
 		if utils.IsMedia(file.Local()) {
-			mediaAnalyzeTasks[result.AssetID] = wfutils.Execute(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
+			mediaAnalyzeTasks[result.AssetID] = wfutils.Execute(ctx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
 				FilePath: file,
 			})
 		}

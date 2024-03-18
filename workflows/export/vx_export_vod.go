@@ -165,7 +165,7 @@ func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, 
 		// Normalize audio
 		for _, lang := range langs {
 			audio := mergeResult.AudioFiles[lang]
-			future := wfutils.Execute(ctx, activities.NormalizeAudioActivity, activities.NormalizeAudioParams{
+			future := wfutils.Execute(ctx, activities.Audio.NormalizeAudioActivity, activities.NormalizeAudioParams{
 				FilePath:              audio,
 				TargetLUFS:            -24,
 				PerformOutputAnalysis: true,

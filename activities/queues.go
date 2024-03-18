@@ -6,51 +6,25 @@ import (
 	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
-
 	"github.com/samber/lo"
 )
 
-// GetAudioTranscodeActivities returns all activities that should be executed in the Audio queue.
-// The workers here have multiple threads and can parallelize audio transcoding tasks (ffmpeg).
-func GetAudioTranscodeActivities() []any {
-	return []any{
-		TranscodeToAudioAac,
-		TranscodeToAudioMP3,
-		TranscodeToAudioWav,
-		TranscodeMux,
-		TranscodeMergeAudio,
-		AnalyzeEBUR128Activity,
-		AdjustAudioLevelActivity,
-		AnalyzeFile,
-		NormalizeAudioActivity,
-		SplitAudioChannels,
-		PrependSilence,
-		DetectSilence,
-		AdjustAudioToVideoStart,
-		ExtractAudio,
-		TrimFile,
+func GetMethodNames(of any) []string {
+	v := reflect.TypeOf(of)
+	var activities []string
+	for i := 0; i < v.NumMethod(); i++ {
+		activities = append(activities, v.Method(i).Name)
 	}
+	return activities
 }
 
-// GetVideoTranscodeActivities returns all activities that should be executed in the transcode queue.
-// The workers here have multiple threads but only runs one ffmpeg process at a time.
-func GetVideoTranscodeActivities() []any {
-	return []any{
-		TranscodePreview,
-		TranscodeToProResActivity,
-		TranscodeToAVCIntraActivity,
-		TranscodeToH264Activity,
-		TranscodeToXDCAMActivity,
-		TranscodeMergeVideo,
-		TranscodeMergeSubtitles,
-		TranscodeToVideoH264,
-		TranscodePlayoutMux,
-		TranscodeMuxToSimpleMXF,
-		ExecuteFFmpeg,
-		MultitrackMux,
-		GetVideoOffset,
-	}
-}
+type AudioActivities struct{}
+
+var Audio = AudioActivities{}
+
+type VideoActivities struct{}
+
+var Video = VideoActivities{}
 
 func getFunctionName(i any) string {
 	if fullName, ok := i.(string); ok {
@@ -62,13 +36,9 @@ func getFunctionName(i any) string {
 	return strings.TrimSuffix(shortName, "-fm")
 }
 
-var audioActivities = lo.Map(GetAudioTranscodeActivities(), func(i any, _ int) string {
-	return getFunctionName(i)
-})
+var audioActivities = GetMethodNames(Audio)
 
-var videoActivities = lo.Map(GetVideoTranscodeActivities(), func(i any, _ int) string {
-	return getFunctionName(i)
-})
+var videoActivities = GetMethodNames(Video)
 
 // GetQueueForActivity detects which queue the activity belongs in, else returns the worker queue.
 // Used to execute the activity where the required dependencies are available.

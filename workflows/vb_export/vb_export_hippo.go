@@ -55,7 +55,7 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 	if params.SubtitleFile != nil {
 		// Burn in subtitle
 		var videoResult common.VideoResult
-		err = wfutils.Execute(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
+		err = wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:       currentVideoFile,
 			OutputDir:      hippoOutputDir,
 			Interlace:      false,

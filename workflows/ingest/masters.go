@@ -169,7 +169,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 
 func analyzeAudioAndSetMetadata(ctx workflow.Context, assetID string, path paths.Path) (*common.AnalyzeEBUR128Result, error) {
 	var result common.AnalyzeEBUR128Result
-	err := wfutils.Execute(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
+	err := wfutils.Execute(ctx, activities.Audio.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
 		FilePath:       path,
 		TargetLoudness: -24,
 	}).Get(ctx, &result)
