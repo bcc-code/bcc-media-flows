@@ -87,6 +87,8 @@ func AvcIntra(input AVCIntraEncodeInput, progressCallback ffmpeg.ProgressCallbac
 
 	params = append(
 		params,
+		"-map", "v",
+		"-map", "a",
 		"-y",
 		outputPath,
 	)

@@ -93,6 +93,8 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProRe
 	outputPath := filepath.Join(input.OutputDir, filename)
 	params = append(
 		params,
+		"-map", "v",
+		"-map", "a",
 		"-y",
 		outputPath,
 	)
