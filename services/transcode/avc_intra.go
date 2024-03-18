@@ -33,6 +33,7 @@ func AvcIntra(input AVCIntraEncodeInput, progressCallback ffmpeg.ProgressCallbac
 		"-hide_banner",
 		"-progress", "pipe:1",
 		"-i", input.FilePath,
+		"-c:a", "pcm_s24le",
 		"-c:v", "libx264",
 		"-ar", "48000",
 		"-b:v", "100M",

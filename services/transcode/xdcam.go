@@ -23,6 +23,7 @@ func generateFfmpegParamsForXDCAM(input XDCAMEncodeInput, output string) []strin
 		"-progress", "pipe:1",
 		"-hide_banner",
 		"-i", input.FilePath,
+		"-c:a", "copy",
 		"-c:v", "mpeg2video",
 		"-pix_fmt", "yuv422p",
 		"-color_primaries", "bt709",
