@@ -13,6 +13,7 @@ type ImportFileAsShapeParams struct {
 	FilePath paths.Path
 	ShapeTag string
 	Growing  bool
+	Replace  bool
 }
 
 func (a Activities) ImportFileAsShapeActivity(ctx context.Context, params ImportFileAsShapeParams) (*JobResult, error) {
@@ -24,6 +25,21 @@ func (a Activities) ImportFileAsShapeActivity(ctx context.Context, params Import
 	fileID, err := vsClient.RegisterFile(params.FilePath.Local(), vsapi.FileStateClosed)
 	if err != nil {
 		return nil, err
+	}
+
+	if params.Replace {
+		s, err := vsClient.GetShapes(params.AssetID)
+		if err != nil {
+			return nil, err
+		}
+
+		if shape := s.GetShape(params.ShapeTag); shape != nil {
+			err = vsClient.DeleteShape(params.AssetID, shape.ID)
+			if err != nil {
+				return nil, err
+			}
+
+		}
 	}
 
 	res, err := vsClient.AddShapeToItem(params.ShapeTag, params.AssetID, fileID)
