@@ -365,7 +365,8 @@ func Convert51to4Mono(inFile, outFile paths.Path, cb ffmpeg.ProgressCallback) er
 		"-hide_banner",
 		"-y",
 		"-i", inFile.Local(),
-		"-map 0:v", "-c:v", "copy", // Copy video unchanged
+		"-map", "0:v",
+		"-c:v", "copy", // Copy video unchanged
 		"-filter_complex", // Process audio
 		"[0:a:0]channelsplit=channel_layout=5.1[FL][FR][FC][LFE][BL][BR];" + // Split the 5.1 stream into 6 mono streams
 			"[LFE]anullsink;" + // Discard the LFE channel
