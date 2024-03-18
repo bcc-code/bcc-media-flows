@@ -149,7 +149,7 @@ func (aa AudioActivities) ExtractAudio(ctx context.Context, input ExtractAudioIn
 
 // Convert51to4Mono is a special type of conversion that is used to convert a 5.1 audio stream to 4 mono streams (L, R, Lb, Rb) in a video file.
 // It is used for the Abekas export workflow, and is not intended to be used in other contexts.
-func Convert51to4Mono(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
+func (aa AudioActivities) Convert51to4Mono(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "Convert51to4Mono")
 	log.Info("Starting Convert51to4MonoActivity")

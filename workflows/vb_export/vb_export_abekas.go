@@ -36,7 +36,7 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 	}
 
 	var analyzeResult *ffmpeg.StreamInfo
-	err = wfutils.Execute(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
+	err = wfutils.Execute(ctx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
 		FilePath: params.InputFile,
 	}).Get(ctx, analyzeResult)
 	if err != nil {
@@ -50,7 +50,7 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 	if len(analyzeResult.AudioStreams) == 1 && strings.HasPrefix(analyzeResult.AudioStreams[0].ChannelLayout, "5.1") {
 		// Convert a one stream 5.1 to 4 mono streams (L, R, Lb, Rb)
 		fileToTranscode = params.TempDir.Append("4mono_" + params.InputFile.Base())
-		err = wfutils.Execute(ctx, activities.Convert51to4Mono, common.AudioInput{
+		err = wfutils.Execute(ctx, activities.Audio.Convert51to4Mono, common.AudioInput{
 			Path:            params.InputFile,
 			DestinationPath: fileToTranscode,
 		}).Get(ctx, nil)
