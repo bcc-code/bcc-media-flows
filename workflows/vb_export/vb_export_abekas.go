@@ -6,7 +6,6 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
-	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -35,10 +34,9 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		return nil, err
 	}
 
-	var analyzeResult *ffmpeg.StreamInfo
-	err = wfutils.Execute(ctx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
+	analyzeResult, err := wfutils.Execute(ctx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
 		FilePath: params.InputFile,
-	}).Get(ctx, analyzeResult)
+	}).Result(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -54,17 +52,19 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 			Path:            params.InputFile,
 			DestinationPath: fileToTranscode,
 		}).Get(ctx, nil)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	var videoResult common.VideoResult
-	err = wfutils.Execute(ctx, activities.Video.TranscodeToAVCIntraActivity, activities.EncodeParams{
+	videoResult, err := wfutils.Execute(ctx, activities.Video.TranscodeToAVCIntraActivity, activities.EncodeParams{
 		FilePath:       fileToTranscode,
 		OutputDir:      abekasOutputDir,
 		Resolution:     "1920x1080",
 		FrameRate:      50,
 		Interlace:      true,
 		BurnInSubtitle: params.SubtitleFile,
-	}).Get(ctx, &videoResult)
+	}).Result(ctx)
 	if err != nil {
 		return nil, err
 	}
