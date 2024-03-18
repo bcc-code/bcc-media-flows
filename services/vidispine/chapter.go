@@ -76,6 +76,8 @@ func GetChapterData(client Client, exportData *ExportData) ([]asset.Chapter, err
 
 	allChapters := map[string]*vsapi.MetadataResult{}
 
+	originalStart := map[string]float64{}
+
 	for _, clip := range exportData.Clips {
 		if _, ok := metaCache[clip.VXID]; !ok {
 			meta, err := client.GetMetadata(clip.VXID)
@@ -102,6 +104,7 @@ func GetChapterData(client Client, exportData *ExportData) ([]asset.Chapter, err
 			// We don't have this chapter yet
 			if _, ok := allChapters[title]; !ok {
 				allChapters[title] = data
+				originalStart[title] = clip.InSeconds
 				continue
 			}
 
@@ -120,6 +123,7 @@ func GetChapterData(client Client, exportData *ExportData) ([]asset.Chapter, err
 
 			for name := range allChapters[title].Terse {
 				for i := range allChapters[title].Terse[name] {
+					originalStart[title] = tcIn1
 					allChapters[title].Terse[name][i].Start = fmt.Sprintf("%.0f@PAL", newIn*25)
 					allChapters[title].Terse[name][i].End = fmt.Sprintf("%.0f@PAL", newOut*25)
 				}
@@ -129,7 +133,11 @@ func GetChapterData(client Client, exportData *ExportData) ([]asset.Chapter, err
 
 	var chapters []asset.Chapter
 	for _, data := range allChapters {
-		chapters = append(chapters, metaToChapter(data))
+		chapter := metaToChapter(data)
+		if chapter.Timestamp == 0 {
+			chapter.Timestamp = originalStart[data.Get(vscommon.FieldTitle, "")]
+		}
+		chapters = append(chapters, chapter)
 	}
 
 	return chapters, nil
