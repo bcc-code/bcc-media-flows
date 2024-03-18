@@ -69,6 +69,7 @@ var vidispineActivities = []any{
 	vsactivity.JobCompleteOrErr,
 	vsactivity.AddFileToPlaceholder,
 	vsactivity.CloseFile,
+	vsactivity.GetRelatedAudioFiles,
 	activities.GetSubtransIDActivity,
 	cantemo.AddRelation,
 }
@@ -101,6 +102,7 @@ var workerWorkflows = []any{
 	ingestworkflows.MoveUploadedFiles,
 	ingestworkflows.ImportAudioFileFromReaper,
 	ingestworkflows.ExtractAudioFromMU1MU2,
+	ingestworkflows.IngestSyncFix,
 	workflows.NormalizeAudioLevelWorkflow,
 	vb_export.VBExport,
 	vb_export.VBExportToAbekas,

@@ -115,6 +115,40 @@ func getClipForAssetOrSubclip(
 	return &clip, err
 }
 
+// GetRelatedAudioPaths returns all related audio paths for a given VXID
+// Must be separate files.
+func GetRelatedAudioPaths(client Client, vxID string) (map[string]string, error) {
+	clipMeta, err := client.GetMetadata(vxID)
+	if err != nil {
+		return nil, err
+	}
+
+	var result = map[string]string{}
+	for _, lang := range bccmflows.LanguagesByISO {
+		relatedField := lang.RelatedMBFieldID
+		if relatedField == "" {
+			continue
+		}
+
+		relatedAudioVXID := clipMeta.Get(vscommon.FieldType{Value: relatedField}, "")
+		if relatedAudioVXID == "" {
+			continue
+		}
+
+		shapes, err := client.GetShapes(relatedAudioVXID)
+		if err != nil {
+			return nil, err
+		}
+
+		shape := shapes.GetShape("original")
+		if shape == nil {
+			continue
+		}
+		result[lang.ISO6391] = shape.GetPath()
+	}
+	return result, nil
+}
+
 func getRelatedAudios(client Client, clip *Clip, oLanguagesToExport []string) (*Clip, error) {
 
 	languagesToExport := make([]string, len(oLanguagesToExport))

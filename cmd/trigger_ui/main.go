@@ -350,7 +350,9 @@ func main() {
 
 	router.Group("/ingest-fix").
 		GET("/", server.ingestFixGET).
-		POST("/mu1mu2extract", server.mu1mu2ExtractPOST)
+		POST("/mu1mu2extract", server.mu1mu2ExtractPOST).
+		GET("/sync", server.ingestSyncFixGET).
+		POST("/sync", server.ingestSyncFixPOST)
 
 	port := os.Getenv("PORT")
 	if port == "" {
