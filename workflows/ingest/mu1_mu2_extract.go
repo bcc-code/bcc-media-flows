@@ -139,7 +139,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 	// We do not touch MU1 audio files
 	for i, file := range mu1Files.AudioFiles {
 		destinationFile := destinationPath.Append(file.Base())
-		f := wfutils.Execute(ctx, activities.CopyFile, activities.MoveFileInput{
+		f := wfutils.Execute(ctx, activities.Util.CopyFile, activities.MoveFileInput{
 			Source:      file,
 			Destination: destinationFile,
 		})

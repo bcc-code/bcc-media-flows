@@ -50,7 +50,7 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		return nil, fmt.Errorf("expected avc intra output to be .mxf, got %s", videoResult.OutputPath.Ext())
 	}
 
-	err = wfutils.Execute(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+	err = wfutils.Execute(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      videoResult.OutputPath,
 		Destination: deliveryFolder.Append("Abekas-AVCI", params.OriginalFilenameWithoutExt+videoResult.OutputPath.Ext()),
 	}).Get(ctx, nil)

@@ -32,29 +32,7 @@ import (
 )
 
 var utilActivities = []any{
-	activities.MoveFile,
-	activities.CreateFolder,
-	activities.WriteFile,
-	activities.ReadFile,
-	activities.ListFiles,
-	activities.CopyFile,
-	activities.WaitForFile,
-	activities.DeletePath,
-	activities.StandardizeFileName,
-	activities.GetSubtitlesActivity,
-	activities.MergeTranscriptJSON,
 	batonactivities.QC,
-	activities.FtpPlayoutRename,
-	activities.NotifySimple,
-	activities.NotifyImportCompleted,
-	activities.RsyncIncrementalCopy,
-	activities.StartReaper,
-	activities.StopReaper,
-	activities.ListReaperFiles,
-	activities.DeleteEmptyDirectories,
-	activities.DeleteOldFiles,
-	activities.GetMimeType,
-	activities.GetSubtransIDActivity,
 	cantemo.AddRelation,
 }
 
@@ -157,11 +135,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 
 	switch queue {
 	case environment.QueueDebug:
-		w.RegisterActivity(activities.Transcribe)
-		w.RegisterActivity(activities.RcloneCopyDir)
-		w.RegisterActivity(activities.RcloneMoveFile)
-		w.RegisterActivity(activities.RcloneCopyFile)
-		w.RegisterActivity(activities.PubsubPublish)
+		registerActivitiesInStruct(w, activities.Util)
 
 		for _, a := range utilActivities {
 			w.RegisterActivity(a)
@@ -179,11 +153,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 	case environment.QueueLowPriority:
 		fallthrough
 	case environment.QueueWorker:
-		w.RegisterActivity(activities.Transcribe)
-		w.RegisterActivity(activities.RcloneCopyDir)
-		w.RegisterActivity(activities.RcloneMoveFile)
-		w.RegisterActivity(activities.RcloneCopyFile)
-		w.RegisterActivity(activities.PubsubPublish)
+		registerActivitiesInStruct(w, activities.Util)
 
 		for _, a := range utilActivities {
 			w.RegisterActivity(a)

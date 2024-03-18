@@ -52,7 +52,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 
 	// Rclone to playout
 	destination := "playout:/tmp"
-	err = wfutils.Execute(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
+	err = wfutils.Execute(ctx, activities.Util.RcloneCopyDir, activities.RcloneCopyDirInput{
 		Source:      params.OutputDir.Rclone(),
 		Destination: destination,
 	}).Get(ctx, nil)
@@ -60,7 +60,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 		return nil, err
 	}
 
-	err = wfutils.Execute(ctx, activities.FtpPlayoutRename, activities.FtpPlayoutRenameParams{
+	err = wfutils.Execute(ctx, activities.Util.FtpPlayoutRename, activities.FtpPlayoutRenameParams{
 		From: filepath.Join("/tmp/", muxResult.Path.Base()),
 		To:   filepath.Join("/dropbox/", muxResult.Path.Base()),
 	}).Get(ctx, nil)

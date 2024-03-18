@@ -76,7 +76,7 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		outputFile = ameFlexResQualityWatchFolderOutput.Append(params.InputFile.Base())
 	}
 
-	err = wfutils.Execute(ctx, activities.CopyFile, activities.MoveFileInput{
+	err = wfutils.Execute(ctx, activities.Util.CopyFile, activities.MoveFileInput{
 		Source:      currentVideoFile,
 		Destination: inputFolder.Append(params.InputFile.Base()),
 	}).Get(ctx, nil)
@@ -85,7 +85,7 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 	}
 
 	success = false
-	err = wfutils.Execute(ctx, activities.WaitForFile, activities.FileInput{
+	err = wfutils.Execute(ctx, activities.Util.WaitForFile, activities.FileInput{
 		Path: outputFile,
 	}).Get(ctx, &success)
 	if err != nil {
@@ -95,7 +95,7 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		return nil, merry.New("WaitForFile failed")
 	}
 
-	err = wfutils.Execute(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+	err = wfutils.Execute(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      outputFile,
 		Destination: deliveryFolder.Append("Hippo", params.OriginalFilenameWithoutExt+outputFile.Ext()),
 	}).Get(ctx, nil)
@@ -103,7 +103,7 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		return nil, err
 	}
 
-	err = wfutils.Execute(ctx, activities.DeletePath, activities.DeletePathInput{
+	err = wfutils.Execute(ctx, activities.Util.DeletePath, activities.DeletePathInput{
 		Path: outputFile,
 	}).Get(ctx, nil)
 	if err != nil {

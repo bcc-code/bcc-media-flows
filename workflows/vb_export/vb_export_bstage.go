@@ -52,7 +52,7 @@ func VBExportToBStage(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		filePath = videoResult.OutputPath
 	}
 
-	err = wfutils.Execute(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+	err = wfutils.Execute(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      filePath,
 		Destination: deliveryFolder.Append("B-Stage", params.OriginalFilenameWithoutExt+filePath.Ext()),
 	}).Get(ctx, nil)

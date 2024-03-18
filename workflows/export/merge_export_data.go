@@ -40,7 +40,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 
 	var transcriptTask workflow.Future
 	if params.MakeTranscript && jsonTranscriptFile != nil {
-		transcriptTask = wfutils.Execute(ctx, activities.MergeTranscriptJSON, activities.MergeTranscriptJSONParams{
+		transcriptTask = wfutils.Execute(ctx, activities.Util.MergeTranscriptJSON, activities.MergeTranscriptJSONParams{
 			MergeInput:      *jsonTranscriptFile,
 			DestinationPath: params.TempDir,
 		}).Future

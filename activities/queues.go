@@ -27,6 +27,10 @@ type VideoActivities struct{}
 
 var Video = VideoActivities{}
 
+type UtilActivities struct{}
+
+var Util = UtilActivities{}
+
 var Vidispine = vsactivity.Vidispine
 
 func getFunctionName(i any) string {

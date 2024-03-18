@@ -34,7 +34,7 @@ func ImportSubtitlesFromSubtrans(
 	}
 
 	subtransIDResponse := &activities.GetSubtransIDOutput{}
-	err := wfutils.Execute(ctx, activities.GetSubtransIDActivity, input).Get(ctx, subtransIDResponse)
+	err := wfutils.Execute(ctx, activities.Util.GetSubtransIDActivity, input).Get(ctx, subtransIDResponse)
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func ImportSubtitlesFromSubtrans(
 	outputPath, _ := wfutils.GetWorkflowAuxOutputFolder(ctx)
 
 	subsList := map[string]paths.Path{}
-	err = wfutils.Execute(ctx, activities.GetSubtitlesActivity, activities.GetSubtitlesInput{
+	err = wfutils.Execute(ctx, activities.Util.GetSubtitlesActivity, activities.GetSubtitlesInput{
 		SubtransID:        subtransIDResponse.SubtransID,
 		Format:            "srt",
 		ApprovedOnly:      false,

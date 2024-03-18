@@ -52,7 +52,7 @@ func TranscribeFile(
 	}
 
 	transcribeOutput := &activities.TranscribeResponse{}
-	err = wfutils.Execute(ctx, activities.Transcribe, activities.TranscribeParams{
+	err = wfutils.Execute(ctx, activities.Util.Transcribe, activities.TranscribeParams{
 		Language:        params.Language,
 		File:            wavFile.OutputPath,
 		DestinationPath: tempFolder,

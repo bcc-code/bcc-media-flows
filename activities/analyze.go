@@ -16,7 +16,7 @@ type AnalyzeFileParams struct {
 	FilePath paths.Path
 }
 
-func GetMimeType(ctx context.Context, input AnalyzeFileParams) (*string, error) {
+func (ua UtilActivities) GetMimeType(ctx context.Context, input AnalyzeFileParams) (*string, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting GetMimeTypeActivity")
 
