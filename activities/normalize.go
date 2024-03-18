@@ -117,6 +117,14 @@ func (aa AudioActivities) NormalizeAudioActivity(ctx context.Context, params Nor
 		return nil, err
 	}
 
+	// Bail if the input is already within the target range
+	if r128Result.SuggestedAdjustment < 0.8 {
+		return &NormalizeAudioResult{
+			FilePath: params.FilePath,
+			IsSilent: false,
+		}, nil
+	}
+
 	out.InputAnalysis = r128Result
 
 	adjustResult, err := aa.AdjustAudioLevelActivity(ctx, AdjustAudioLevelParams{
