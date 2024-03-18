@@ -352,3 +352,30 @@ func TrimFile(inFile, outFile paths.Path, start, end float64, cb ffmpeg.Progress
 	_, err := ffmpeg.Do(params, ffmpeg.StreamInfo{}, cb)
 	return err
 }
+
+func Convert51to4Mono(inFile, outFile paths.Path, cb ffmpeg.ProgressCallback) error {
+	params := []string{
+		"-progress", "pipe:1",
+		"-hide_banner",
+		"-y",
+		"-i", inFile.Local(),
+		"-map 0:v", "-c:v", "copy", // Copy video unchanged
+		"-filter_complex", // Process audio
+		"[0:a:0]channelsplit=channel_layout=5.1[FL][FR][FC][LFE][BL][BR];" + // Split the 5.1 stream into 6 mono streams
+			"[LFE]anullsink;" + // Discard the LFE channel
+			"[FC]anullsink;" + // Discard the FC channel
+			"[FL]aformat=channel_layouts=mono[FL2];" + // Convert the channels to mono layout. Otherwise ffmpeg will complain about the channel layout
+			"[FR]aformat=channel_layouts=mono[FR2];" +
+			"[BL]aformat=channel_layouts=mono[BL2];" +
+			"[BR]aformat=channel_layouts=mono[BR2];",
+		"-map", "[FL2]", // Map the mono streams to the output
+		"-map", "[FR2]",
+		"-map", "[BL2]",
+		"-map", "[BR2]",
+		"-c:a", "pcm_s24le", // We can not use -c copy here, because the channel layout is changed, but this should be the default codec in any case
+		outFile.Local(),
+	}
+
+	_, err := ffmpeg.Do(params, ffmpeg.StreamInfo{}, cb)
+	return err
+}
