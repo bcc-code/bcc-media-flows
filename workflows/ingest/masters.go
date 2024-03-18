@@ -147,7 +147,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		Language: "no",
 	})
 
-	_ = wfutils.Execute(ctx, vsactivity.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
+	_ = wfutils.Execute(ctx, activities.Vidispine.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
 		AssetID: result.AssetID,
 	}).Get(ctx, nil)
 

@@ -173,7 +173,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	}
 
 	var chapters []asset.Chapter
-	err = wfutils.Execute(ctx, vsactivity.GetChapterDataActivity, vsactivity.GetChapterDataParams{
+	err = wfutils.Execute(ctx, activities.Vidispine.GetChapterDataActivity, vsactivity.GetChapterDataParams{
 		ExportData: &params.ExportData,
 	}).Get(ctx, &chapters)
 	if err != nil {

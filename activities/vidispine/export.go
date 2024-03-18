@@ -18,7 +18,7 @@ type GetExportDataParams struct {
 	Subclip     string
 }
 
-func GetExportDataActivity(ctx context.Context, params GetExportDataParams) (*vidispine.ExportData, error) {
+func (va VidispineActivities) GetExportDataActivity(ctx context.Context, params GetExportDataParams) (*vidispine.ExportData, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "GetExportDataActivity")
 	log.Info("Starting GetExportDataActivity")
@@ -42,7 +42,7 @@ type GetChapterDataParams struct {
 	ExportData *vidispine.ExportData
 }
 
-func GetChapterDataActivity(ctx context.Context, params GetChapterDataParams) ([]asset.Chapter, error) {
+func (va VidispineActivities) GetChapterDataActivity(ctx context.Context, params GetChapterDataParams) ([]asset.Chapter, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "GetChapterDataActivity")
 	log.Info("Starting GetChapterDataActivity")
@@ -52,7 +52,7 @@ func GetChapterDataActivity(ctx context.Context, params GetChapterDataParams) ([
 	return vidispine.GetChapterData(client, params.ExportData)
 }
 
-func GetRelatedAudioFiles(ctx context.Context, vxID string) (map[string]paths.Path, error) {
+func (va VidispineActivities) GetRelatedAudioFiles(ctx context.Context, vxID string) (map[string]paths.Path, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "GetRelatedAudioFiles")
 	log.Info("Starting GetRelatedAudioFiles")

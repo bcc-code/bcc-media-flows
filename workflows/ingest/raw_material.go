@@ -103,7 +103,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) error {
 		}
 		// Only create thumbnails if the file has video
 		if result.HasVideo {
-			err = wfutils.Execute(ctx, vsactivity.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
+			err = wfutils.Execute(ctx, activities.Vidispine.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
 				AssetID: id,
 			}).Get(ctx, nil)
 			if err != nil {

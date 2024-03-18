@@ -15,7 +15,7 @@ type ImportFileAsShapeParams struct {
 	Growing  bool
 }
 
-func ImportFileAsShapeActivity(ctx context.Context, params ImportFileAsShapeParams) (*JobResult, error) {
+func (va VidispineActivities) ImportFileAsShapeActivity(ctx context.Context, params ImportFileAsShapeParams) (*JobResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting ImportFileAsShapeActivity")
 
@@ -42,7 +42,7 @@ type ImportFileAsSidecarResult struct {
 	JobID string
 }
 
-func ImportFileAsSidecarActivity(ctx context.Context, params ImportSubtitleAsSidecarParams) (*ImportFileAsSidecarResult, error) {
+func (va VidispineActivities) ImportFileAsSidecarActivity(ctx context.Context, params ImportSubtitleAsSidecarParams) (*ImportFileAsSidecarResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting ImportSubtitleAsSidecarParams")
 
@@ -62,7 +62,7 @@ type CreatePlaceholderResult struct {
 	AssetID string
 }
 
-func CreatePlaceholderActivity(ctx context.Context, params CreatePlaceholderParams) (*CreatePlaceholderResult, error) {
+func (va VidispineActivities) CreatePlaceholderActivity(ctx context.Context, params CreatePlaceholderParams) (*CreatePlaceholderResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting CreatePlaceholderActivity")
 
@@ -90,7 +90,7 @@ type FileJobResult struct {
 	FileID string
 }
 
-func CreateThumbnailsActivity(ctx context.Context, params CreateThumbnailsParams) (*JobResult, error) {
+func (va VidispineActivities) CreateThumbnailsActivity(ctx context.Context, params CreateThumbnailsParams) (*JobResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting CreateThumbnailsActivity")
 
@@ -109,7 +109,7 @@ type AddFileToPlaceholderParams struct {
 	Growing  bool
 }
 
-func AddFileToPlaceholder(ctx context.Context, params AddFileToPlaceholderParams) (*FileJobResult, error) {
+func (va VidispineActivities) AddFileToPlaceholder(ctx context.Context, params AddFileToPlaceholderParams) (*FileJobResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting AddFileToPlaceholder")
 
@@ -142,7 +142,7 @@ type CloseFileParams struct {
 	FileID string
 }
 
-func CloseFile(ctx context.Context, params CloseFileParams) (any, error) {
+func (va VidispineActivities) CloseFile(ctx context.Context, params CloseFileParams) (any, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting CloseFile")
 

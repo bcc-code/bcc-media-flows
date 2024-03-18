@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
-	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -22,7 +21,7 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 
 	_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("`%s`\n\nApplying adjustments to audio files.\n%dms", params.VXID, params.Adjustment))
 
-	audioPaths, err := wfutils.Execute(ctx, vsactivity.GetRelatedAudioFiles, params.VXID).Result(ctx)
+	audioPaths, err := wfutils.Execute(ctx, activities.Vidispine.GetRelatedAudioFiles, params.VXID).Result(ctx)
 	if err != nil {
 		return err
 	}

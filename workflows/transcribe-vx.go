@@ -32,7 +32,7 @@ func TranscribeVX(
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	shapes := &vsactivity.GetFileFromVXResult{}
-	err := wfutils.Execute(ctx, vsactivity.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
+	err := wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		Tags: []string{"lowres", "lowres_watermarked", "lowaudio", "original"},
 		VXID: params.VXID,
 	}).Get(ctx, shapes)
@@ -71,14 +71,14 @@ func TranscribeVX(
 		return err
 	}
 
-	importJson := wfutils.Execute(ctx, vsactivity.ImportFileAsShapeActivity,
+	importJson := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity,
 		vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.VXID,
 			FilePath: transcriptionJob.JSONPath,
 			ShapeTag: "transcription_json",
 		})
 
-	importSRT := wfutils.Execute(ctx, vsactivity.ImportFileAsShapeActivity,
+	importSRT := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity,
 		vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.VXID,
 			FilePath: transcriptionJob.SRTPath,
@@ -99,7 +99,7 @@ func TranscribeVX(
 		return fmt.Errorf("failed to import transcription files: %v", errs)
 	}
 
-	err = wfutils.Execute(ctx, vsactivity.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
+	err = wfutils.Execute(ctx, activities.Vidispine.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
 		FilePath: transcriptionJob.SRTPath,
 		Language: "no",
 		AssetID:  params.VXID,
@@ -113,7 +113,7 @@ func TranscribeVX(
 		return err
 	}
 
-	err = wfutils.Execute(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
+	err = wfutils.Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
 		VXID:  params.VXID,
 		Key:   transcriptionMetadataFieldName,
 		Value: string(txtValue),

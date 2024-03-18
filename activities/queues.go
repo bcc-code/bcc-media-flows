@@ -5,6 +5,7 @@ import (
 	"runtime"
 	"strings"
 
+	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/samber/lo"
 )
@@ -25,6 +26,8 @@ var Audio = AudioActivities{}
 type VideoActivities struct{}
 
 var Video = VideoActivities{}
+
+var Vidispine = vsactivity.Vidispine
 
 func getFunctionName(i any) string {
 	if fullName, ok := i.(string); ok {

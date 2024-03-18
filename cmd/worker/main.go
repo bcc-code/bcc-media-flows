@@ -12,7 +12,6 @@ import (
 
 	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
 	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
-	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
 	"github.com/bcc-code/bcc-media-flows/workflows/scheduled"
@@ -54,22 +53,6 @@ var utilActivities = []any{
 	activities.ListReaperFiles,
 	activities.DeleteEmptyDirectories,
 	activities.DeleteOldFiles,
-}
-
-var vidispineActivities = []any{
-	vsactivity.GetFileFromVXActivity,
-	vsactivity.ImportFileAsShapeActivity,
-	vsactivity.ImportFileAsSidecarActivity,
-	vsactivity.CreatePlaceholderActivity,
-	vsactivity.SetVXMetadataFieldActivity,
-	vsactivity.GetExportDataActivity,
-	vsactivity.GetChapterDataActivity,
-	vsactivity.CreateThumbnailsActivity,
-	vsactivity.WaitForJobCompletion,
-	vsactivity.JobCompleteOrErr,
-	vsactivity.AddFileToPlaceholder,
-	vsactivity.CloseFile,
-	vsactivity.GetRelatedAudioFiles,
 	activities.GetSubtransIDActivity,
 	cantemo.AddRelation,
 }
@@ -182,9 +165,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 			w.RegisterActivity(a)
 		}
 
-		for _, a := range vidispineActivities {
-			w.RegisterActivity(a)
-		}
+		registerActivitiesInStruct(w, activities.Vidispine)
 
 		registerActivitiesInStruct(w, activities.Video)
 
@@ -206,9 +187,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 			w.RegisterActivity(a)
 		}
 
-		for _, a := range vidispineActivities {
-			w.RegisterActivity(a)
-		}
+		registerActivitiesInStruct(w, activities.Vidispine)
 
 		for _, wf := range workerWorkflows {
 			w.RegisterWorkflow(wf)

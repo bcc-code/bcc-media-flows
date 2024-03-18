@@ -58,7 +58,7 @@ func ImportSubtitlesFromSubtrans(
 		lang = strings.ToLower(lang)
 
 		jobRes := &vsactivity.JobResult{}
-		err = wfutils.Execute(ctx, vsactivity.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
+		err = wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.VXID,
 			FilePath: sub,
 			ShapeTag: fmt.Sprintf("sub_%s_%s", lang, "srt"),
@@ -71,7 +71,7 @@ func ImportSubtitlesFromSubtrans(
 
 		langs = append(langs, lang)
 
-		wfutils.Execute(ctx, vsactivity.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
+		wfutils.Execute(ctx, activities.Vidispine.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
 			JobID:     jobRes.JobID,
 			SleepTime: 10,
 		}).Get(ctx, nil)
@@ -86,7 +86,7 @@ func ImportSubtitlesFromSubtrans(
 		lang = strings.ToLower(lang)
 
 		jobRes := &vsactivity.JobResult{}
-		err := wfutils.Execute(ctx, vsactivity.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
+		err := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
 			AssetID:  params.VXID,
 			Language: lang,
 			FilePath: sub,
@@ -101,7 +101,7 @@ func ImportSubtitlesFromSubtrans(
 			continue
 		}
 
-		wfutils.Execute(ctx, vsactivity.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
+		wfutils.Execute(ctx, activities.Vidispine.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
 			JobID:     jobRes.JobID,
 			SleepTime: 10,
 		}).Get(ctx, nil)
