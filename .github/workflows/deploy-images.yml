@@ -3,6 +3,8 @@ name: Deploy Images
 on:
   workflow_dispatch:
   push:
+    paths-ignore:
+      - 'VERSION'
     branches: [ "master" ]
 
 jobs:
