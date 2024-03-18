@@ -14,9 +14,9 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 )
 
-type VidispineActivities struct{}
+type Activities struct{}
 
-var Vidispine = VidispineActivities{}
+var Vidispine = Activities{}
 
 func GetClient() vidispine.Client {
 	return vsapi.NewClient(os.Getenv("VIDISPINE_BASE_URL"), os.Getenv("VIDISPINE_USERNAME"), os.Getenv("VIDISPINE_PASSWORD"))
@@ -27,7 +27,7 @@ type WaitForJobCompletionParams struct {
 	SleepTime int
 }
 
-func (va VidispineActivities) WaitForJobCompletion(ctx context.Context, params WaitForJobCompletionParams) (any, error) {
+func (a Activities) WaitForJobCompletion(ctx context.Context, params WaitForJobCompletionParams) (any, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting WaitForJobCompletionActivity")
 
@@ -58,7 +58,7 @@ func (va VidispineActivities) WaitForJobCompletion(ctx context.Context, params W
 	}
 }
 
-func (va VidispineActivities) JobCompleteOrErr(ctx context.Context, params WaitForJobCompletionParams) (bool, error) {
+func (a Activities) JobCompleteOrErr(ctx context.Context, params WaitForJobCompletionParams) (bool, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting WaitForJobCompletionActivity")
 

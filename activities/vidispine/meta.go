@@ -19,7 +19,7 @@ type GetFileFromVXResult struct {
 	ShapeTag string
 }
 
-func (va VidispineActivities) GetFileFromVXActivity(ctx context.Context, params GetFileFromVXParams) (*GetFileFromVXResult, error) {
+func (a Activities) GetFileFromVXActivity(ctx context.Context, params GetFileFromVXParams) (*GetFileFromVXResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting GetFileFromVXActivity")
 
@@ -56,7 +56,7 @@ type SetVXMetadataFieldParams struct {
 type SetVXMetadataFieldResult struct {
 }
 
-func (va VidispineActivities) SetVXMetadataFieldActivity(ctx context.Context, params SetVXMetadataFieldParams) (*SetVXMetadataFieldResult, error) {
+func (a Activities) SetVXMetadataFieldActivity(ctx context.Context, params SetVXMetadataFieldParams) (*SetVXMetadataFieldResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting SetVXMetadataFieldActivity")
 
