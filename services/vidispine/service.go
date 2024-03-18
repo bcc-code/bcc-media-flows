@@ -17,7 +17,7 @@ type Client interface {
 	SetItemMetadataField(itemVXID, group, field, value string) error
 	AddToItemMetadataField(itemID, group, key, value string) error
 	CreatePlaceholder(ingestType vsapi.PlaceholderType, title string) (string, error)
-	CreateThumbnails(assetID string) (string, error)
+	CreateThumbnails(assetID string, width, height int) (string, error)
 	GetJob(jobID string) (*vsapi.JobDocument, error)
 	AddFileToPlaceholder(itemID, fileID, tag string, fileState vsapi.FileState) (string, error)
 	GetResolutions(itemVXID string) ([]vsapi.Resolution, error)

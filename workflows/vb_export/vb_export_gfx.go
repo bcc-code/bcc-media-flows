@@ -2,7 +2,6 @@ package vb_export
 
 import (
 	"github.com/bcc-code/bcc-media-flows/activities"
-	"github.com/bcc-code/bcc-media-flows/common"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -31,23 +30,31 @@ func VBExportToGfx(ctx workflow.Context, params VBExportChildWorkflowParams) (*V
 		return nil, err
 	}
 
-	var videoResult common.VideoResult
-	err = wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
-		FilePath:       params.InputFile,
-		OutputDir:      gfxOutputDir,
-		Resolution:     "1920x1080",
-		FrameRate:      50,
-		Interlace:      true,
-		BurnInSubtitle: params.SubtitleFile,
-		Alpha:          true,
-	}).Get(ctx, &videoResult)
+	filePath := params.InputFile
+
+	isImage, err := wfutils.IsImage(ctx, params.InputFile)
 	if err != nil {
 		return nil, err
 	}
+	if !isImage {
+		videoResult, err := wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
+			FilePath:       params.InputFile,
+			OutputDir:      gfxOutputDir,
+			Resolution:     "1920x1080",
+			FrameRate:      50,
+			Interlace:      true,
+			BurnInSubtitle: params.SubtitleFile,
+			Alpha:          true,
+		}).Result(ctx)
+		if err != nil {
+			return nil, err
+		}
+		filePath = videoResult.OutputPath
+	}
 
 	err = wfutils.Execute(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
-		Source:      videoResult.OutputPath,
-		Destination: deliveryFolder.Append("GFX", params.OriginalFilenameWithoutExt+videoResult.OutputPath.Ext()),
+		Source:      filePath,
+		Destination: deliveryFolder.Append("GFX", params.OriginalFilenameWithoutExt+filePath.Ext()),
 	}).Get(ctx, nil)
 	if err != nil {
 		return nil, err

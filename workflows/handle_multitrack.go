@@ -38,10 +38,10 @@ func HandleMultitrackFile(
 	date := time.Now().Format("2006-01-02")
 	lucidPath := paths.Path{
 		Drive: paths.LucidLinkDrive,
-		Path:  strings.Replace(path.Dir().Path, "system/multitrack/Ingest/tempFraBrunstad/"+date, "", 1),
+		Path:  strings.Replace(path.Dir().Path, "system/multitrack/Ingest/tempFraBrunstad", "", 1),
 	}
 
-	lucidPath = lucidPath.Append(path.Base()).Prepend("01 Liveopptak fra Brunstad/01 RAW")
+	lucidPath = lucidPath.Append(path.Base()).Prepend("01 Liveopptak fra Brunstad/01 RAW/" + date)
 
 	err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      path,

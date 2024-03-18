@@ -79,6 +79,8 @@ func (va VidispineActivities) CreatePlaceholderActivity(ctx context.Context, par
 
 type CreateThumbnailsParams struct {
 	AssetID string
+	Width   int
+	Height  int
 }
 
 type JobResult struct {
@@ -96,7 +98,12 @@ func (va VidispineActivities) CreateThumbnailsActivity(ctx context.Context, para
 
 	vsClient := GetClient()
 
-	res, err := vsClient.CreateThumbnails(params.AssetID)
+	if params.Width == 0 {
+		params.Width = 320
+		params.Height = 180
+	}
+
+	res, err := vsClient.CreateThumbnails(params.AssetID, params.Width, params.Height)
 	return &JobResult{
 		JobID: res,
 	}, err

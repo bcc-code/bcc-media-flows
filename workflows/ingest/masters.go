@@ -19,6 +19,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/utils"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/bcc-code/bcc-media-flows/workflows"
+	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -141,21 +142,27 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		}
 	}
 
+	parentAbandonOptions := workflow.GetChildWorkflowOptions(ctx)
+	parentAbandonOptions.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
+	asyncCtx := workflow.WithChildOptions(ctx, parentAbandonOptions)
+
 	// Trigger transcribe and create previews but don't wait for them to finish
-	workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeVX, workflows.TranscribeVXInput{
+	workflow.ExecuteChildWorkflow(asyncCtx, workflows.TranscribeVX, workflows.TranscribeVXInput{
 		VXID:     result.AssetID,
 		Language: "no",
 	})
 
+	// This just triggers the task, the actual work is done in the background by Vidispine
 	_ = wfutils.Execute(ctx, activities.Vidispine.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
 		AssetID: result.AssetID,
 	}).Get(ctx, nil)
 
 	createPreviewsAsync(ctx, []string{result.AssetID})
 
-	err = notifyImportCompleted(ctx, params.Targets, params.Metadata.JobProperty.JobID, map[string]paths.Path{
+	err = notifyImportCompleted(asyncCtx, params.Targets, params.Metadata.JobProperty.JobID, map[string]paths.Path{
 		result.AssetID: file,
 	})
+
 	if err != nil {
 		return nil, err
 	}

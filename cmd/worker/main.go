@@ -53,6 +53,7 @@ var utilActivities = []any{
 	activities.ListReaperFiles,
 	activities.DeleteEmptyDirectories,
 	activities.DeleteOldFiles,
+	activities.GetMimeType,
 	activities.GetSubtransIDActivity,
 	cantemo.AddRelation,
 }
@@ -75,6 +76,7 @@ var workerWorkflows = []any{
 	workflows.ImportSubtitlesFromSubtrans,
 	ingestworkflows.Asset,
 	ingestworkflows.RawMaterial,
+	ingestworkflows.RawMaterialForm,
 	ingestworkflows.Masters,
 	ingestworkflows.Incremental,
 	ingestworkflows.MoveUploadedFiles,

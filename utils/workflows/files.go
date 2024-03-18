@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -159,4 +160,14 @@ func GetMapKeysSafely[K comparable, T any](ctx workflow.Context, m map[K]T) ([]K
 		return lo.Keys(m)
 	}).Get(&keys)
 	return keys, err
+}
+
+func IsImage(ctx workflow.Context, file paths.Path) (bool, error) {
+	mimeType, err := Execute(ctx, activities.GetMimeType, activities.AnalyzeFileParams{
+		FilePath: file,
+	}).Result(ctx)
+	if err != nil {
+		return false, err
+	}
+	return strings.HasPrefix(*mimeType, "image"), nil
 }
