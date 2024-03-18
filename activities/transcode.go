@@ -143,7 +143,7 @@ func (va VideoActivities) TranscodeMergeVideo(ctx context.Context, params common
 	return result, nil
 }
 
-func (ta AudioActivities) TranscodeMergeAudio(ctx context.Context, params common.MergeInput) (*common.MergeResult, error) {
+func (aa AudioActivities) TranscodeMergeAudio(ctx context.Context, params common.MergeInput) (*common.MergeResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeMergeAudio")
 	log.Info("Starting TranscodeMergeAudioActivity")
@@ -189,7 +189,7 @@ func (va VideoActivities) TranscodeToVideoH264(ctx context.Context, input common
 	return result, nil
 }
 
-func (ta AudioActivities) TranscodeToAudioMP3(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
+func (aa AudioActivities) TranscodeToAudioMP3(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeToAudioMP3")
 	log.Info("Starting TranscodeToAudioMP3Activity")
@@ -215,7 +215,7 @@ func (va VideoActivities) TranscodeMuxToSimpleMXF(ctx context.Context, input com
 	return result, nil
 }
 
-func (ta AudioActivities) TranscodeMux(ctx context.Context, input common.MuxInput) (*common.MuxResult, error) {
+func (aa AudioActivities) TranscodeMux(ctx context.Context, input common.MuxInput) (*common.MuxResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeMux")
 	log.Info("Starting TranscodeMuxActivity")
@@ -266,7 +266,7 @@ type SplitAudioChannelsInput struct {
 	OutputDir paths.Path
 }
 
-func (ta AudioActivities) SplitAudioChannels(ctx context.Context, input SplitAudioChannelsInput) (paths.Files, error) {
+func (aa AudioActivities) SplitAudioChannels(ctx context.Context, input SplitAudioChannelsInput) (paths.Files, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "SplitAudioChannels")
 	log.Info("Starting SplitAudioChannels")
@@ -318,7 +318,7 @@ type PrependSilenceOutput struct {
 	OutputPath paths.Path
 }
 
-func (ta AudioActivities) PrependSilence(ctx context.Context, input PrependSilenceInput) (*PrependSilenceOutput, error) {
+func (aa AudioActivities) PrependSilence(ctx context.Context, input PrependSilenceInput) (*PrependSilenceOutput, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "PrependSilence")
 	log.Info("Starting PrependSilence")
@@ -348,7 +348,7 @@ type TrimResult struct {
 	OutputPath paths.Path
 }
 
-func (ta AudioActivities) TrimFile(ctx context.Context, input TrimInput) (*TrimResult, error) {
+func (aa AudioActivities) TrimFile(ctx context.Context, input TrimInput) (*TrimResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TrimFile")
 	log.Info("Starting TrimFile")

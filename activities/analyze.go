@@ -30,7 +30,7 @@ func GetMimeType(ctx context.Context, input AnalyzeFileParams) (*string, error) 
 	return &mimeType, nil
 }
 
-func (ta AudioActivities) AnalyzeFile(ctx context.Context, input AnalyzeFileParams) (*ffmpeg.StreamInfo, error) {
+func (aa AudioActivities) AnalyzeFile(ctx context.Context, input AnalyzeFileParams) (*ffmpeg.StreamInfo, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting AnalyzeFileActivity")
 

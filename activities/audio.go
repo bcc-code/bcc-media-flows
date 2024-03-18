@@ -14,7 +14,7 @@ import (
 	"go.temporal.io/sdk/activity"
 )
 
-func (ta AudioActivities) TranscodeToAudioAac(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
+func (aa AudioActivities) TranscodeToAudioAac(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeToAudioAac")
 	log.Info("Starting TranscodeToAudioAacActivity")
@@ -25,7 +25,7 @@ func (ta AudioActivities) TranscodeToAudioAac(ctx context.Context, input common.
 	return transcode.AudioAac(input, progressCallback)
 }
 
-func (ta AudioActivities) TranscodeToAudioWav(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
+func (aa AudioActivities) TranscodeToAudioWav(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeToAudioWav")
 	log.Info("Starting TranscodeToAudioAacActivity")
@@ -42,7 +42,7 @@ type AdjustAudioToVideoStartInput struct {
 	OutputFile paths.Path
 }
 
-func (ta AudioActivities) AdjustAudioToVideoStart(ctx context.Context, input AdjustAudioToVideoStartInput) (*common.AudioResult, error) {
+func (aa AudioActivities) AdjustAudioToVideoStart(ctx context.Context, input AdjustAudioToVideoStartInput) (*common.AudioResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "AdjustAudioToVideoStart")
 	log.Info("Starting AdjustAudioToVideoStartActivity")
@@ -69,7 +69,7 @@ func (ta AudioActivities) AdjustAudioToVideoStart(ctx context.Context, input Adj
 		return nil, errors.New("Audio starts before video. This is currently not supported")
 	}
 
-	_, err = ta.PrependSilence(ctx, PrependSilenceInput{
+	_, err = aa.PrependSilence(ctx, PrependSilenceInput{
 		FilePath:   input.AudioFile,
 		Output:     input.OutputFile,
 		SampleRate: 48000,
@@ -79,7 +79,7 @@ func (ta AudioActivities) AdjustAudioToVideoStart(ctx context.Context, input Adj
 	return &common.AudioResult{}, nil
 }
 
-func (ta AudioActivities) DetectSilence(ctx context.Context, input common.AudioInput) (bool, error) {
+func (aa AudioActivities) DetectSilence(ctx context.Context, input common.AudioInput) (bool, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "DetectSilence")
 	log.Info("Starting DetectSilenceActivity")
@@ -103,14 +103,14 @@ type ExtractAudioOutput struct {
 //   - OutputFolder: the folder where the audio files will be saved
 //   - FileNamePattern: the pattern for the audio files. The pattern should contain one %d which will be replaced by the channel number
 //   - Channels: the channels to extract. If empty, all channels will be extracted
-func (ta AudioActivities) ExtractAudio(ctx context.Context, input ExtractAudioInput) (*ExtractAudioOutput, error) {
+func (aa AudioActivities) ExtractAudio(ctx context.Context, input ExtractAudioInput) (*ExtractAudioOutput, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "ExtractAudio")
 	log.Info("Starting ExtractAudioActivity")
 
 	availableChannels := map[int]ffmpeg.FFProbeStream{}
 
-	analyzed, err := ta.AnalyzeFile(ctx, AnalyzeFileParams{
+	analyzed, err := aa.AnalyzeFile(ctx, AnalyzeFileParams{
 		FilePath: input.VideoPath,
 	})
 

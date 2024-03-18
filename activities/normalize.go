@@ -16,7 +16,7 @@ type AnalyzeEBUR128Params struct {
 	TargetLoudness float64
 }
 
-func (ta AudioActivities) AnalyzeEBUR128Activity(ctx context.Context, input AnalyzeEBUR128Params) (*common.AnalyzeEBUR128Result, error) {
+func (aa AudioActivities) AnalyzeEBUR128Activity(ctx context.Context, input AnalyzeEBUR128Params) (*common.AnalyzeEBUR128Result, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "AnalyzeEBUR128")
 	log.Info("Starting AnalyzeEBUR128Activity")
@@ -60,7 +60,7 @@ type AdjustAudioLevelParams struct {
 	Adjustment  float64
 }
 
-func (ta AudioActivities) AdjustAudioLevelActivity(ctx context.Context, input AdjustAudioLevelParams) (*common.AudioResult, error) {
+func (aa AudioActivities) AdjustAudioLevelActivity(ctx context.Context, input AdjustAudioLevelParams) (*common.AudioResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "LinearAdjustAudio")
 	log.Info("Starting LinearAdjustAudioActivity")
@@ -88,7 +88,7 @@ type NormalizeAudioResult struct {
 	OutputAnalysis *common.AnalyzeEBUR128Result
 }
 
-func (ta AudioActivities) NormalizeAudioActivity(ctx context.Context, params NormalizeAudioParams) (*NormalizeAudioResult, error) {
+func (aa AudioActivities) NormalizeAudioActivity(ctx context.Context, params NormalizeAudioParams) (*NormalizeAudioResult, error) {
 	out := &NormalizeAudioResult{}
 
 	silent, err := transcode.AudioIsSilent(params.FilePath)
@@ -102,7 +102,7 @@ func (ta AudioActivities) NormalizeAudioActivity(ctx context.Context, params Nor
 		}, nil
 	}
 
-	r128Result, err := ta.AnalyzeEBUR128Activity(ctx, AnalyzeEBUR128Params{
+	r128Result, err := aa.AnalyzeEBUR128Activity(ctx, AnalyzeEBUR128Params{
 		FilePath:       params.FilePath,
 		TargetLoudness: params.TargetLUFS,
 	})
@@ -112,7 +112,7 @@ func (ta AudioActivities) NormalizeAudioActivity(ctx context.Context, params Nor
 
 	out.InputAnalysis = r128Result
 
-	adjustResult, err := ta.AdjustAudioLevelActivity(ctx, AdjustAudioLevelParams{
+	adjustResult, err := aa.AdjustAudioLevelActivity(ctx, AdjustAudioLevelParams{
 		Adjustment:  r128Result.SuggestedAdjustment,
 		InFilePath:  params.FilePath,
 		OutFilePath: params.OutputPath,
@@ -124,7 +124,7 @@ func (ta AudioActivities) NormalizeAudioActivity(ctx context.Context, params Nor
 	out.FilePath = adjustResult.OutputPath
 
 	if params.PerformOutputAnalysis {
-		r128Result, err := ta.AnalyzeEBUR128Activity(ctx, AnalyzeEBUR128Params{
+		r128Result, err := aa.AnalyzeEBUR128Activity(ctx, AnalyzeEBUR128Params{
 			FilePath:       out.FilePath,
 			TargetLoudness: params.TargetLUFS,
 		})
