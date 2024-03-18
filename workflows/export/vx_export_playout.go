@@ -25,7 +25,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 
 	// Transcode video using playout encoding
 	var videoResult common.VideoResult
-	err = wfutils.Execute(ctx, activities.TranscodeToXDCAMActivity, activities.EncodeParams{
+	err = wfutils.Execute(ctx, activities.Video.TranscodeToXDCAMActivity, activities.EncodeParams{
 		Bitrate:    "50M",
 		FilePath:   *params.MergeResult.VideoFile,
 		OutputDir:  xdcamOutputDir,
@@ -39,7 +39,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 
 	// Mux into MXF file with 16 audio channels
 	var muxResult *common.PlayoutMuxResult
-	err = wfutils.Execute(ctx, activities.TranscodePlayoutMux, common.PlayoutMuxInput{
+	err = wfutils.Execute(ctx, activities.Video.TranscodePlayoutMux, common.PlayoutMuxInput{
 		VideoFilePath:     videoResult.OutputPath,
 		AudioFilePaths:    params.MergeResult.AudioFiles,
 		SubtitleFilePaths: params.MergeResult.SubtitleFiles,
@@ -52,7 +52,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 
 	// Rclone to playout
 	destination := "playout:/tmp"
-	err = wfutils.Execute(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
+	err = wfutils.Execute(ctx, activities.Util.RcloneCopyDir, activities.RcloneCopyDirInput{
 		Source:      params.OutputDir.Rclone(),
 		Destination: destination,
 	}).Get(ctx, nil)
@@ -60,7 +60,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 		return nil, err
 	}
 
-	err = wfutils.Execute(ctx, activities.FtpPlayoutRename, activities.FtpPlayoutRenameParams{
+	err = wfutils.Execute(ctx, activities.Util.FtpPlayoutRename, activities.FtpPlayoutRenameParams{
 		From: filepath.Join("/tmp/", muxResult.Path.Base()),
 		To:   filepath.Join("/dropbox/", muxResult.Path.Base()),
 	}).Get(ctx, nil)

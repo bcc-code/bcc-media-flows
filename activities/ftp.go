@@ -2,6 +2,7 @@ package activities
 
 import (
 	"context"
+
 	"github.com/bcc-code/bcc-media-flows/services/ftp"
 )
 
@@ -12,7 +13,7 @@ type FtpPlayoutRenameParams struct {
 
 type FtpPlayoutRenameResult struct{}
 
-func FtpPlayoutRename(ctx context.Context, params FtpPlayoutRenameParams) (*FtpPlayoutRenameResult, error) {
+func (ua UtilActivities) FtpPlayoutRename(ctx context.Context, params FtpPlayoutRenameParams) (*FtpPlayoutRenameResult, error) {
 	client, err := ftp.Playout()
 	if err != nil {
 		return nil, err

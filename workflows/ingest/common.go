@@ -22,14 +22,14 @@ type ImportTagResult struct {
 
 func ImportFileAsTag(ctx workflow.Context, tag string, path paths.Path, title string) (*ImportTagResult, error) {
 	var result vsactivity.CreatePlaceholderResult
-	err := wfutils.Execute(ctx, vsactivity.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
+	err := wfutils.Execute(ctx, activities.Vidispine.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
 		Title: title,
 	}).Get(ctx, &result)
 	if err != nil {
 		return nil, err
 	}
 	var job vsactivity.JobResult
-	err = wfutils.Execute(ctx, vsactivity.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
+	err = wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
 		AssetID:  result.AssetID,
 		FilePath: path,
 		ShapeTag: tag,
@@ -103,7 +103,7 @@ func getOrderFormFilename(orderForm OrderForm, file paths.Path, props ingest.Job
 }
 
 func notifyImportCompleted(ctx workflow.Context, targets []notifications.Target, jobID int, filesByAssetID map[string]paths.Path) error {
-	return wfutils.Execute(ctx, activities.NotifyImportCompleted, activities.NotifyImportCompletedInput{
+	return wfutils.Execute(ctx, activities.Util.NotifyImportCompleted, activities.NotifyImportCompletedInput{
 		Targets: targets,
 		Message: notifications.ImportCompleted{
 			Title: "Import completed",

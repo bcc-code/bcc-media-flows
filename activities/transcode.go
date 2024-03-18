@@ -26,7 +26,7 @@ type EncodeResult struct {
 	OutputPath paths.Path
 }
 
-func TranscodeToProResActivity(ctx context.Context, input EncodeParams) (*EncodeResult, error) {
+func (va VideoActivities) TranscodeToProResActivity(ctx context.Context, input EncodeParams) (*EncodeResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeToProRes")
 	log.Info("Starting TranscodeToProResActivity")
@@ -52,7 +52,7 @@ func TranscodeToProResActivity(ctx context.Context, input EncodeParams) (*Encode
 	}, nil
 }
 
-func TranscodeToAVCIntraActivity(ctx context.Context, input EncodeParams) (*EncodeResult, error) {
+func (va VideoActivities) TranscodeToAVCIntraActivity(ctx context.Context, input EncodeParams) (*EncodeResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeToAVCIntra")
 	log.Info("Starting TranscodeToAVCIntraActivity")
@@ -77,7 +77,7 @@ func TranscodeToAVCIntraActivity(ctx context.Context, input EncodeParams) (*Enco
 	}, nil
 }
 
-func TranscodeToH264Activity(ctx context.Context, input EncodeParams) (*EncodeResult, error) {
+func (va VideoActivities) TranscodeToH264Activity(ctx context.Context, input EncodeParams) (*EncodeResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeToH264")
 	log.Info("Starting TranscodeToH264Activity")
@@ -103,7 +103,7 @@ func TranscodeToH264Activity(ctx context.Context, input EncodeParams) (*EncodeRe
 	}, nil
 }
 
-func TranscodeToXDCAMActivity(ctx context.Context, input EncodeParams) (*EncodeResult, error) {
+func (va VideoActivities) TranscodeToXDCAMActivity(ctx context.Context, input EncodeParams) (*EncodeResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeToXDCAM")
 	log.Info("Starting TranscodeToXDCAMActivity")
@@ -128,7 +128,7 @@ func TranscodeToXDCAMActivity(ctx context.Context, input EncodeParams) (*EncodeR
 	}, nil
 }
 
-func TranscodeMergeVideo(ctx context.Context, params common.MergeInput) (*common.MergeResult, error) {
+func (va VideoActivities) TranscodeMergeVideo(ctx context.Context, params common.MergeInput) (*common.MergeResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeMergeVideo")
 	log.Info("Starting TranscodeMergeVideoActivity")
@@ -143,7 +143,7 @@ func TranscodeMergeVideo(ctx context.Context, params common.MergeInput) (*common
 	return result, nil
 }
 
-func TranscodeMergeAudio(ctx context.Context, params common.MergeInput) (*common.MergeResult, error) {
+func (aa AudioActivities) TranscodeMergeAudio(ctx context.Context, params common.MergeInput) (*common.MergeResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeMergeAudio")
 	log.Info("Starting TranscodeMergeAudioActivity")
@@ -158,7 +158,7 @@ func TranscodeMergeAudio(ctx context.Context, params common.MergeInput) (*common
 	return result, nil
 }
 
-func TranscodeMergeSubtitles(ctx context.Context, params common.MergeInput) (*common.MergeResult, error) {
+func (va VideoActivities) TranscodeMergeSubtitles(ctx context.Context, params common.MergeInput) (*common.MergeResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeMergeSubtitles")
 	log.Info("Starting TranscodeMergeSubtitlesActivity")
@@ -174,7 +174,7 @@ func TranscodeMergeSubtitles(ctx context.Context, params common.MergeInput) (*co
 	return result, nil
 }
 
-func TranscodeToVideoH264(ctx context.Context, input common.VideoInput) (*common.VideoResult, error) {
+func (va VideoActivities) TranscodeToVideoH264(ctx context.Context, input common.VideoInput) (*common.VideoResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeToVideoH264")
 	log.Info("Starting TranscodeToVideoH264Activity")
@@ -189,7 +189,7 @@ func TranscodeToVideoH264(ctx context.Context, input common.VideoInput) (*common
 	return result, nil
 }
 
-func TranscodeToAudioMP3(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
+func (aa AudioActivities) TranscodeToAudioMP3(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeToAudioMP3")
 	log.Info("Starting TranscodeToAudioMP3Activity")
@@ -200,7 +200,7 @@ func TranscodeToAudioMP3(ctx context.Context, input common.AudioInput) (*common.
 	return transcode.AudioMP3(input, progressCallback)
 }
 
-func TranscodeMuxToSimpleMXF(ctx context.Context, input common.SimpleMuxInput) (*common.MuxResult, error) {
+func (va VideoActivities) TranscodeMuxToSimpleMXF(ctx context.Context, input common.SimpleMuxInput) (*common.MuxResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeMuxToSimpleMXF")
 	log.Info("Starting TranscodeMuxToSimpleMXFActivity")
@@ -215,7 +215,7 @@ func TranscodeMuxToSimpleMXF(ctx context.Context, input common.SimpleMuxInput) (
 	return result, nil
 }
 
-func TranscodeMux(ctx context.Context, input common.MuxInput) (*common.MuxResult, error) {
+func (aa AudioActivities) TranscodeMux(ctx context.Context, input common.MuxInput) (*common.MuxResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeMux")
 	log.Info("Starting TranscodeMuxActivity")
@@ -230,7 +230,7 @@ func TranscodeMux(ctx context.Context, input common.MuxInput) (*common.MuxResult
 	return result, nil
 }
 
-func TranscodePlayoutMux(ctx context.Context, input common.PlayoutMuxInput) (*common.PlayoutMuxResult, error) {
+func (va VideoActivities) TranscodePlayoutMux(ctx context.Context, input common.PlayoutMuxInput) (*common.PlayoutMuxResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodePlayoutMux")
 	log.Info("Starting TranscodePlayoutMux")
@@ -249,7 +249,7 @@ type ExecuteFFmpegInput struct {
 	Arguments []string
 }
 
-func ExecuteFFmpeg(ctx context.Context, input ExecuteFFmpegInput) (any, error) {
+func (va VideoActivities) ExecuteFFmpeg(ctx context.Context, input ExecuteFFmpegInput) (any, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "ExecuteFFmpeg")
 	log.Info("Starting ExecuteFFmpeg")
@@ -266,7 +266,7 @@ type SplitAudioChannelsInput struct {
 	OutputDir paths.Path
 }
 
-func SplitAudioChannels(ctx context.Context, input SplitAudioChannelsInput) (paths.Files, error) {
+func (aa AudioActivities) SplitAudioChannels(ctx context.Context, input SplitAudioChannelsInput) (paths.Files, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "SplitAudioChannels")
 	log.Info("Starting SplitAudioChannels")
@@ -290,7 +290,7 @@ type MultitrackMuxResult struct {
 	OutputPath paths.Path
 }
 
-func MultitrackMux(ctx context.Context, input MultitrackMuxInput) (*MultitrackMuxResult, error) {
+func (va VideoActivities) MultitrackMux(ctx context.Context, input MultitrackMuxInput) (*MultitrackMuxResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "MultitrackMux")
 	log.Info("Starting MultitrackMux")
@@ -318,7 +318,7 @@ type PrependSilenceOutput struct {
 	OutputPath paths.Path
 }
 
-func PrependSilence(ctx context.Context, input PrependSilenceInput) (*PrependSilenceOutput, error) {
+func (aa AudioActivities) PrependSilence(ctx context.Context, input PrependSilenceInput) (*PrependSilenceOutput, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "PrependSilence")
 	log.Info("Starting PrependSilence")
@@ -348,7 +348,7 @@ type TrimResult struct {
 	OutputPath paths.Path
 }
 
-func TrimFile(ctx context.Context, input TrimInput) (*TrimResult, error) {
+func (aa AudioActivities) TrimFile(ctx context.Context, input TrimInput) (*TrimResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TrimFile")
 	log.Info("Starting TrimFile")

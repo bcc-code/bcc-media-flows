@@ -37,7 +37,7 @@ func VBExportToGfx(ctx workflow.Context, params VBExportChildWorkflowParams) (*V
 		return nil, err
 	}
 	if !isImage {
-		videoResult, err := wfutils.Execute(ctx, activities.TranscodeToProResActivity, activities.EncodeParams{
+		videoResult, err := wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:       params.InputFile,
 			OutputDir:      gfxOutputDir,
 			Resolution:     "1920x1080",
@@ -52,7 +52,7 @@ func VBExportToGfx(ctx workflow.Context, params VBExportChildWorkflowParams) (*V
 		filePath = videoResult.OutputPath
 	}
 
-	err = wfutils.Execute(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+	err = wfutils.Execute(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      filePath,
 		Destination: deliveryFolder.Append("GFX", params.OriginalFilenameWithoutExt+filePath.Ext()),
 	}).Get(ctx, nil)

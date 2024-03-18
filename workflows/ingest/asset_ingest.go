@@ -183,7 +183,7 @@ func copyToDir(ctx workflow.Context, dest paths.Path, files []ingest.File) error
 		return err
 	}
 
-	err = wfutils.Execute(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
+	err = wfutils.Execute(ctx, activities.Util.RcloneCopyDir, activities.RcloneCopyDirInput{
 		Source:      dir.Rclone(),
 		Destination: dest.Rclone(),
 	}).Get(ctx, nil)

@@ -34,7 +34,7 @@ type GetSubtransIDOutput struct {
 	SubtransID string
 }
 
-func GetSubtransIDActivity(ctx context.Context, input GetSubtransIDInput) (*GetSubtransIDOutput, error) {
+func (ua UtilActivities) GetSubtransIDActivity(ctx context.Context, input GetSubtransIDInput) (*GetSubtransIDOutput, error) {
 	out := &GetSubtransIDOutput{}
 
 	vsClient := vsactivity.GetClient()
@@ -98,7 +98,7 @@ func GetSubtransIDActivity(ctx context.Context, input GetSubtransIDInput) (*GetS
 	return out, nil
 }
 
-func GetSubtitlesActivity(ctx context.Context, params GetSubtitlesInput) (map[string]paths.Path, error) {
+func (ua UtilActivities) GetSubtitlesActivity(ctx context.Context, params GetSubtitlesInput) (map[string]paths.Path, error) {
 	client := subtrans.NewClient(os.Getenv("SUBTRANS_BASE_URL"), os.Getenv("SUBTRANS_API_KEY"))
 
 	info, err := os.Stat(params.DestinationFolder.Local())

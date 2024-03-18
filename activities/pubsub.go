@@ -7,7 +7,7 @@ import (
 	"cloud.google.com/go/pubsub"
 )
 
-func PubsubPublish(ctx context.Context, data any) (any, error) {
+func (ua UtilActivities) PubsubPublish(ctx context.Context, data any) (any, error) {
 	client, err := pubsub.NewClient(ctx, "btv-platform-prod-2")
 	if err != nil {
 		return nil, err

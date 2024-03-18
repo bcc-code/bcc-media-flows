@@ -25,12 +25,12 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	// Get paths to the original files
-	MU1FileFuture := wfutils.Execute(ctx, vsactivity.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
+	MU1FileFuture := wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		VXID: input.MU1ID,
 		Tags: []string{"original"},
 	})
 
-	MU2FileFuture := wfutils.Execute(ctx, vsactivity.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
+	MU2FileFuture := wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		VXID: input.MU2ID,
 		Tags: []string{"original"},
 	})
@@ -48,7 +48,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 
 	// Calculte TC difference between MU1 and MU2
 	sampleOffset := int(0)
-	err = wfutils.Execute(ctx, activities.GetVideoOffset, activities.GetVideoOffsetInput{
+	err = wfutils.Execute(ctx, activities.Video.GetVideoOffset, activities.GetVideoOffsetInput{
 		VideoPath1:      Mu1Result.FilePath,
 		VideoPath2:      Mu2Result.FilePath,
 		VideoFPS:        25,
@@ -66,14 +66,14 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 	baseFileName := strings.TrimSuffix(Mu1Result.FilePath.Base(), "_MU1.mxf")
 
 	// Extract audio from MU1
-	extract1Future := wfutils.Execute(ctx, activities.ExtractAudio, activities.ExtractAudioInput{
+	extract1Future := wfutils.Execute(ctx, activities.Audio.ExtractAudio, activities.ExtractAudioInput{
 		VideoPath:       Mu1Result.FilePath,
 		OutputFolder:    outputPath,
 		FileNamePattern: baseFileName + "_MU1CH_%d.wav",
 	})
 
 	// Extract audio from MU2
-	extract2Future := wfutils.Execute(ctx, activities.ExtractAudio, activities.ExtractAudioInput{
+	extract2Future := wfutils.Execute(ctx, activities.Audio.ExtractAudio, activities.ExtractAudioInput{
 		VideoPath:       Mu2Result.FilePath,
 		OutputFolder:    outputPath,
 		FileNamePattern: baseFileName + "_MU2CH_%d.wav",
@@ -100,31 +100,37 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 
 	// Align audio from MU1 and MU2
 
+	keys, err := wfutils.GetMapKeysSafely(ctx, mu2Files.AudioFiles)
+	if err != nil {
+		return err
+	}
+
 	if sampleOffset < 0 {
-		for i, file := range mu2Files.AudioFiles {
+		for _, key := range keys {
+			file := mu2Files.AudioFiles[key]
 			outputFile := destinationPath.Append(file.Base())
-			f := wfutils.Execute(ctx, activities.TrimFile, activities.TrimInput{
+			f := wfutils.Execute(ctx, activities.Audio.TrimFile, activities.TrimInput{
 				Input:  file,
 				Output: outputFile,
-				Start:  float64(sampleOffset) / float64(48000),
+				Start:  float64(-sampleOffset) / float64(48000),
 			})
 
 			futures = append(futures, f.Future)
-			filesToImport[bccmflows.LanguagesByMU2[i].ISO6391] = outputFile
+			filesToImport[bccmflows.LanguagesByMU2[key].ISO6391] = outputFile
 		}
 	} else if sampleOffset > 0 {
-		for i, file := range mu2Files.AudioFiles {
+		for _, key := range keys {
+			file := mu2Files.AudioFiles[key]
 			outputFile := destinationPath.Append(file.Base())
-			f := wfutils.Execute(ctx, activities.PrependSilence, activities.PrependSilenceInput{
+			f := wfutils.Execute(ctx, activities.Audio.PrependSilence, activities.PrependSilenceInput{
 				FilePath:   file,
 				Output:     outputFile,
 				SampleRate: 48000,
-
-				Samples: sampleOffset,
+				Samples:    sampleOffset,
 			})
 
 			futures = append(futures, f.Future)
-			filesToImport[bccmflows.LanguagesByMU2[i].ISO6391] = outputFile
+			filesToImport[bccmflows.LanguagesByMU2[key].ISO6391] = outputFile
 		}
 	} else {
 		return fmt.Errorf("no offset - this is extremely unlikely to happen, please check the input files - STOPPING WORKFLOW")
@@ -133,7 +139,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 	// We do not touch MU1 audio files
 	for i, file := range mu1Files.AudioFiles {
 		destinationFile := destinationPath.Append(file.Base())
-		f := wfutils.Execute(ctx, activities.CopyFile, activities.MoveFileInput{
+		f := wfutils.Execute(ctx, activities.Util.CopyFile, activities.MoveFileInput{
 			Source:      file,
 			Destination: destinationFile,
 		})

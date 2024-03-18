@@ -82,7 +82,7 @@ func doVideoTasks(ctx workflow.Context, selector workflow.Selector, qualities ma
 		input := qualities[key]
 		q := key
 
-		selector.AddFuture(wfutils.Execute(ctx, activities.TranscodeToVideoH264, input).Future, func(f workflow.Future) {
+		selector.AddFuture(wfutils.Execute(ctx, activities.Video.TranscodeToVideoH264, input).Future, func(f workflow.Future) {
 			callback(f, resolutionFromString(q))
 		})
 	}
@@ -99,7 +99,7 @@ func startAudioTasks(ctx workflow.Context, selector workflow.Selector, audioFile
 	for _, key := range keys {
 		path := audioFiles[key]
 		lang := key
-		selector.AddFuture(wfutils.Execute(ctx, activities.TranscodeToAudioAac, common.AudioInput{
+		selector.AddFuture(wfutils.Execute(ctx, activities.Audio.TranscodeToAudioAac, common.AudioInput{
 			Path:            path,
 			Bitrate:         "190k",
 			DestinationPath: outputPath,

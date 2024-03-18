@@ -5,20 +5,20 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"runtime"
 	"strconv"
 	"time"
 
-	"github.com/teamwork/reload"
-
 	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
 	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
-	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
 	"github.com/bcc-code/bcc-media-flows/workflows/scheduled"
 	"github.com/bcc-code/bcc-media-flows/workflows/vb_export"
 	"github.com/bcc-code/bcc-media-flows/workflows/webhooks"
+	"github.com/teamwork/reload"
+	"go.temporal.io/sdk/activity"
 
 	"github.com/bcc-code/bcc-media-flows/workflows/export"
 
@@ -32,50 +32,9 @@ import (
 )
 
 var utilActivities = []any{
-	activities.MoveFile,
-	activities.CreateFolder,
-	activities.WriteFile,
-	activities.ReadFile,
-	activities.ListFiles,
-	activities.CopyFile,
-	activities.WaitForFile,
-	activities.DeletePath,
-	activities.StandardizeFileName,
-	activities.GetSubtitlesActivity,
-	activities.MergeTranscriptJSON,
 	batonactivities.QC,
-	activities.FtpPlayoutRename,
-	activities.NotifySimple,
-	activities.NotifyImportCompleted,
-	activities.RsyncIncrementalCopy,
-	activities.StartReaper,
-	activities.StopReaper,
-	activities.ListReaperFiles,
-	activities.DeleteEmptyDirectories,
-	activities.DeleteOldFiles,
-	activities.GetMimeType,
-}
-
-var vidispineActivities = []any{
-	vsactivity.GetFileFromVXActivity,
-	vsactivity.ImportFileAsShapeActivity,
-	vsactivity.ImportFileAsSidecarActivity,
-	vsactivity.CreatePlaceholderActivity,
-	vsactivity.SetVXMetadataFieldActivity,
-	vsactivity.GetExportDataActivity,
-	vsactivity.GetChapterDataActivity,
-	vsactivity.CreateThumbnailsActivity,
-	vsactivity.WaitForJobCompletion,
-	vsactivity.JobCompleteOrErr,
-	vsactivity.AddFileToPlaceholder,
-	vsactivity.CloseFile,
-	activities.GetSubtransIDActivity,
 	cantemo.AddRelation,
 }
-
-var transcodeActivities = activities.GetVideoTranscodeActivities()
-
-var audioTranscodeActivities = activities.GetAudioTranscodeActivities()
 
 var workerWorkflows = []any{
 	workflows.TranscodePreviewVX,
@@ -101,6 +60,7 @@ var workerWorkflows = []any{
 	ingestworkflows.MoveUploadedFiles,
 	ingestworkflows.ImportAudioFileFromReaper,
 	ingestworkflows.ExtractAudioFromMU1MU2,
+	ingestworkflows.IngestSyncFix,
 	workflows.NormalizeAudioLevelWorkflow,
 	vb_export.VBExport,
 	vb_export.VBExportToAbekas,
@@ -108,6 +68,20 @@ var workerWorkflows = []any{
 	vb_export.VBExportToGfx,
 	vb_export.VBExportToHippo,
 	scheduled.CleanupTemp,
+}
+
+// registerActivitiesInStruct registers all methods in a struct as activities
+func registerActivitiesInStruct(w worker.Worker, activityStruct any) {
+	v := reflect.ValueOf(activityStruct)
+	t := reflect.TypeOf(activityStruct)
+	for i := 0; i < t.NumMethod(); i++ {
+		method := t.Method(i)
+		f := v.MethodByName(method.Name)
+		opts := activity.RegisterOptions{
+			Name: method.Name,
+		}
+		w.RegisterActivityWithOptions(f.Interface(), opts)
+	}
 }
 
 var Version = "development"
@@ -161,27 +135,17 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 
 	switch queue {
 	case environment.QueueDebug:
-		w.RegisterActivity(activities.Transcribe)
-		w.RegisterActivity(activities.RcloneCopyDir)
-		w.RegisterActivity(activities.RcloneMoveFile)
-		w.RegisterActivity(activities.RcloneCopyFile)
-		w.RegisterActivity(activities.PubsubPublish)
+		registerActivitiesInStruct(w, activities.Util)
 
 		for _, a := range utilActivities {
 			w.RegisterActivity(a)
 		}
 
-		for _, a := range vidispineActivities {
-			w.RegisterActivity(a)
-		}
+		registerActivitiesInStruct(w, activities.Vidispine)
 
-		for _, a := range transcodeActivities {
-			w.RegisterActivity(a)
-		}
+		registerActivitiesInStruct(w, activities.Video)
 
-		for _, a := range audioTranscodeActivities {
-			w.RegisterActivity(a)
-		}
+		registerActivitiesInStruct(w, activities.Audio)
 
 		for _, wf := range workerWorkflows {
 			w.RegisterWorkflow(wf)
@@ -189,31 +153,21 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 	case environment.QueueLowPriority:
 		fallthrough
 	case environment.QueueWorker:
-		w.RegisterActivity(activities.Transcribe)
-		w.RegisterActivity(activities.RcloneCopyDir)
-		w.RegisterActivity(activities.RcloneMoveFile)
-		w.RegisterActivity(activities.RcloneCopyFile)
-		w.RegisterActivity(activities.PubsubPublish)
+		registerActivitiesInStruct(w, activities.Util)
 
 		for _, a := range utilActivities {
 			w.RegisterActivity(a)
 		}
 
-		for _, a := range vidispineActivities {
-			w.RegisterActivity(a)
-		}
+		registerActivitiesInStruct(w, activities.Vidispine)
 
 		for _, wf := range workerWorkflows {
 			w.RegisterWorkflow(wf)
 		}
 	case environment.QueueTranscode:
-		for _, a := range transcodeActivities {
-			w.RegisterActivity(a)
-		}
+		registerActivitiesInStruct(w, activities.Video)
 	case environment.QueueAudio:
-		for _, a := range audioTranscodeActivities {
-			w.RegisterActivity(a)
-		}
+		registerActivitiesInStruct(w, activities.Audio)
 	}
 	fmt.Println("STARTING")
 	err := w.Run(worker.InterruptCh())

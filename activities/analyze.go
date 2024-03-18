@@ -16,7 +16,7 @@ type AnalyzeFileParams struct {
 	FilePath paths.Path
 }
 
-func GetMimeType(ctx context.Context, input AnalyzeFileParams) (*string, error) {
+func (ua UtilActivities) GetMimeType(ctx context.Context, input AnalyzeFileParams) (*string, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting GetMimeTypeActivity")
 
@@ -30,7 +30,7 @@ func GetMimeType(ctx context.Context, input AnalyzeFileParams) (*string, error) 
 	return &mimeType, nil
 }
 
-func AnalyzeFile(ctx context.Context, input AnalyzeFileParams) (*ffmpeg.StreamInfo, error) {
+func (aa AudioActivities) AnalyzeFile(ctx context.Context, input AnalyzeFileParams) (*ffmpeg.StreamInfo, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting AnalyzeFileActivity")
 
@@ -48,7 +48,7 @@ type GetVideoOffsetInput struct {
 	AudioSampleRate int
 }
 
-func GetVideoOffset(ctx context.Context, input GetVideoOffsetInput) (int, error) {
+func (va VideoActivities) GetVideoOffset(ctx context.Context, input GetVideoOffsetInput) (int, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "GetVideoOffset")
 	log.Info("Starting GetVideoOffsetActivity")

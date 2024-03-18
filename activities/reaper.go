@@ -10,7 +10,7 @@ import (
 
 const reaperBaseUrl = "http://100.123.200.12:8081"
 
-func StartReaper(ctx context.Context, _ any) (any, error) {
+func (ua UtilActivities) StartReaper(ctx context.Context, _ any) (any, error) {
 	resp, err := http.Get(reaperBaseUrl + "/start")
 	if err != nil {
 		return nil, err
@@ -28,7 +28,7 @@ type ReaperResult struct {
 	Files []string
 }
 
-func StopReaper(ctx context.Context, _ any) (*ReaperResult, error) {
+func (ua UtilActivities) StopReaper(ctx context.Context, _ any) (*ReaperResult, error) {
 	resp, err := http.Get(reaperBaseUrl + "/stop")
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func StopReaper(ctx context.Context, _ any) (*ReaperResult, error) {
 	}, err
 }
 
-func ListReaperFiles(ctx context.Context, _ any) (*ReaperResult, error) {
+func (ua UtilActivities) ListReaperFiles(ctx context.Context, _ any) (*ReaperResult, error) {
 	resp, err := http.Get(reaperBaseUrl + "/files")
 	if err != nil {
 		return nil, err
