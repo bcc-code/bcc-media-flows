@@ -37,7 +37,7 @@ func NormalizeAudioLevelWorkflow(
 	}
 
 	r128Result := &common.AnalyzeEBUR128Result{}
-	err = wfutils.Execute(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
+	err = wfutils.Execute(ctx, activities.Audio.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
 		FilePath:       filePath,
 		TargetLoudness: params.TargetLUFS,
 	}).Get(ctx, r128Result)
@@ -55,7 +55,7 @@ func NormalizeAudioLevelWorkflow(
 
 	// Don't adjust if the suggested adjustment is less than 0.01 Db
 	if r128Result.SuggestedAdjustment <= 0.01 {
-		err = wfutils.Execute(ctx, activities.AdjustAudioLevelActivity, activities.AdjustAudioLevelParams{
+		err = wfutils.Execute(ctx, activities.Audio.AdjustAudioLevelActivity, activities.AdjustAudioLevelParams{
 			Adjustment:  r128Result.SuggestedAdjustment,
 			InFilePath:  filePath,
 			OutFilePath: outputFolder,
@@ -70,7 +70,7 @@ func NormalizeAudioLevelWorkflow(
 
 	if params.PerformOutputAnalysis {
 		r128Result := &common.AnalyzeEBUR128Result{}
-		err = wfutils.Execute(ctx, activities.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
+		err = wfutils.Execute(ctx, activities.Audio.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
 			FilePath:       filePath,
 			TargetLoudness: params.TargetLUFS,
 		}).Get(ctx, r128Result)

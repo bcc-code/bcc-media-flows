@@ -9,7 +9,7 @@ import (
 )
 
 func Notify(ctx workflow.Context, targets []notifications.Target, title, message string) error {
-	return Execute(ctx, activities.NotifySimple, activities.NotifySimpleInput{
+	return Execute(ctx, activities.Util.NotifySimple, activities.NotifySimpleInput{
 		Targets: targets,
 		Message: notifications.SimpleNotification{
 			Title:   title,
@@ -19,7 +19,7 @@ func Notify(ctx workflow.Context, targets []notifications.Target, title, message
 }
 
 func NotifyTelegramChannel(ctx workflow.Context, message string) error {
-	return Execute(ctx, activities.NotifySimple, activities.NotifySimpleInput{
+	return Execute(ctx, activities.Util.NotifySimple, activities.NotifySimpleInput{
 		Targets: []notifications.Target{
 			{
 				ID:   os.Getenv("TELEGRAM_CHAT_ID"),

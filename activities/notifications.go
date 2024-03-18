@@ -15,7 +15,7 @@ type NotifySimpleInput struct {
 	Message notifications.SimpleNotification
 }
 
-func NotifySimple(ctx context.Context, input NotifySimpleInput) (any, error) {
+func (ua UtilActivities) NotifySimple(ctx context.Context, input NotifySimpleInput) (any, error) {
 	logger := activity.GetLogger(ctx)
 	if os.Getenv("DEBUG") != "" && os.Getenv("TELEGRAM_CHAT_ID") == "" {
 		logger.Info("Ignoring notification for debug without TELEGRAM_CHAT_ID")
@@ -32,7 +32,7 @@ type NotifyImportCompletedInput struct {
 	Message notifications.ImportCompleted
 }
 
-func NotifyImportCompleted(ctx context.Context, input NotifyImportCompletedInput) (any, error) {
+func (ua UtilActivities) NotifyImportCompleted(ctx context.Context, input NotifyImportCompletedInput) (any, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Sending notification")
 

@@ -1,6 +1,7 @@
 package wfutils
 
 import (
+	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
@@ -16,13 +17,13 @@ func WaitForVidispineJob(ctx workflow.Context, jobID string) error {
 		NonRetryableErrorTypes: []string{"JOB_FAILED"},
 	}
 	ctx = workflow.WithActivityOptions(ctx, options)
-	return Execute(ctx, vsactivity.JobCompleteOrErr, vsactivity.WaitForJobCompletionParams{
+	return Execute(ctx, activities.Vidispine.JobCompleteOrErr, vsactivity.WaitForJobCompletionParams{
 		JobID: jobID,
 	}).Get(ctx, nil)
 }
 
 func SetVidispineMeta(ctx workflow.Context, assetID, key, value string) error {
-	return Execute(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
+	return Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
 		VXID:  assetID,
 		Key:   key,
 		Value: value,
@@ -30,7 +31,7 @@ func SetVidispineMeta(ctx workflow.Context, assetID, key, value string) error {
 }
 
 func SetVidispineMetaInGroup(ctx workflow.Context, assetID, key, value, group string) error {
-	return Execute(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
+	return Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
 		VXID:  assetID,
 		Key:   key,
 		Value: value,

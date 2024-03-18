@@ -111,7 +111,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 		vidispineJobIDs[result.AssetID] = result.ImportJobID
 
 		if utils.IsMedia(file.Local()) {
-			mediaAnalyzeTasks[result.AssetID] = wfutils.Execute(ctx, activities.AnalyzeFile, activities.AnalyzeFileParams{
+			mediaAnalyzeTasks[result.AssetID] = wfutils.Execute(ctx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
 				FilePath: file,
 			})
 		}
@@ -142,7 +142,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 		if result.HasVideo {
 			videoAssetIDs = append(videoAssetIDs, id)
 
-			err = wfutils.Execute(ctx, vsactivity.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
+			err = wfutils.Execute(ctx, activities.Vidispine.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
 				AssetID: id,
 			}).Get(ctx, nil)
 			if err != nil {

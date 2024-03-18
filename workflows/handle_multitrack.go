@@ -43,7 +43,7 @@ func HandleMultitrackFile(
 
 	lucidPath = lucidPath.Append(path.Base()).Prepend("01 Liveopptak fra Brunstad/01 RAW/" + date)
 
-	err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.RcloneCopyFile, activities.RcloneFileInput{
+	err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      path,
 		Destination: lucidPath,
 	}).Get(ctx, nil)
@@ -56,7 +56,7 @@ func HandleMultitrackFile(
 		Path:  strings.Replace(path.Dir().Path, "system/multitrack/Ingest/tempFraBrunstad", "", 1),
 	}.Prepend(fmt.Sprintf("AudioArchive/%d/%d", time.Now().Year(), time.Now().Month())).Append(path.Base())
 
-	err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.MoveFile, activities.MoveFileInput{
+	err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.MoveFile, activities.MoveFileInput{
 		Source:      path,
 		Destination: isilonArchivePath,
 	}).Get(ctx, nil)

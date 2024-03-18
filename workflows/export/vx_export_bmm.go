@@ -75,7 +75,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	// Normalize audio
 	for _, lang := range langs {
 		audio := params.MergeResult.AudioFiles[lang]
-		future := wfutils.Execute(ctx, activities.NormalizeAudioActivity, activities.NormalizeAudioParams{
+		future := wfutils.Execute(ctx, activities.Audio.NormalizeAudioActivity, activities.NormalizeAudioParams{
 			FilePath:              audio,
 			TargetLUFS:            targetLufs,
 			PerformOutputAnalysis: true,
@@ -104,7 +104,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		audio := normalizedResults[lang]
 		var encodings []workflow.Future
 		for _, bitrate := range aacBitrates {
-			f := wfutils.Execute(ctx, activities.TranscodeToAudioAac, common.AudioInput{
+			f := wfutils.Execute(ctx, activities.Audio.TranscodeToAudioAac, common.AudioInput{
 				Path:            audio.FilePath,
 				DestinationPath: params.OutputDir,
 				Bitrate:         bitrate,
@@ -113,7 +113,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		}
 
 		for _, bitrate := range mp3Bitrates {
-			f := wfutils.Execute(ctx, activities.TranscodeToAudioMP3, common.AudioInput{
+			f := wfutils.Execute(ctx, activities.Audio.TranscodeToAudioMP3, common.AudioInput{
 				Path:            audio.FilePath,
 				DestinationPath: params.OutputDir,
 				Bitrate:         bitrate,
@@ -173,7 +173,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	}
 
 	var chapters []asset.Chapter
-	err = wfutils.Execute(ctx, vsactivity.GetChapterDataActivity, vsactivity.GetChapterDataParams{
+	err = wfutils.Execute(ctx, activities.Vidispine.GetChapterDataActivity, vsactivity.GetChapterDataParams{
 		ExportData: &params.ExportData,
 	}).Get(ctx, &chapters)
 	if err != nil {
@@ -220,7 +220,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	config := getBMMDestinationConfig(params.ExportDestination)
 
 	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
-	err = wfutils.Execute(ctx, activities.RcloneCopyDir, activities.RcloneCopyDirInput{
+	err = wfutils.Execute(ctx, activities.Util.RcloneCopyDir, activities.RcloneCopyDirInput{
 		Source:      params.OutputDir.Rclone(),
 		Destination: fmt.Sprintf(config.Bucket + ingestFolder),
 	}).Get(ctx, nil)

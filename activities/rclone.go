@@ -36,7 +36,7 @@ type RcloneCopyDirInput struct {
 	Destination string
 }
 
-func RcloneCopyDir(ctx context.Context, input RcloneCopyDirInput) (bool, error) {
+func (ua UtilActivities) RcloneCopyDir(ctx context.Context, input RcloneCopyDirInput) (bool, error) {
 	activity.RecordHeartbeat(ctx, "Rclone CopyDir")
 	activity.GetLogger(ctx).Debug(fmt.Sprintf("Rclone CopyDir: %s -> %s", input.Source, input.Destination))
 
@@ -53,7 +53,7 @@ type RcloneFileInput struct {
 	Destination paths.Path
 }
 
-func RcloneMoveFile(ctx context.Context, input RcloneFileInput) (bool, error) {
+func (ua UtilActivities) RcloneMoveFile(ctx context.Context, input RcloneFileInput) (bool, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting RcloneMoveFile")
 
@@ -71,7 +71,7 @@ func RcloneMoveFile(ctx context.Context, input RcloneFileInput) (bool, error) {
 	return waitForJob(ctx, res.JobID)
 }
 
-func RcloneCopyFile(ctx context.Context, input RcloneFileInput) (bool, error) {
+func (ua UtilActivities) RcloneCopyFile(ctx context.Context, input RcloneFileInput) (bool, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting RcloneCopyFile")
 

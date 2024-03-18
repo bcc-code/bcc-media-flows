@@ -32,7 +32,7 @@ type MoveFileInput struct {
 	Destination paths.Path
 }
 
-func MoveFile(ctx context.Context, input MoveFileInput) (*FileResult, error) {
+func (ua UtilActivities) MoveFile(ctx context.Context, input MoveFileInput) (*FileResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "MoveFile")
 	log.Info("Starting MoveFileActivity")
@@ -62,7 +62,7 @@ func MoveFile(ctx context.Context, input MoveFileInput) (*FileResult, error) {
 	}, nil
 }
 
-func CopyFile(ctx context.Context, input MoveFileInput) (*FileResult, error) {
+func (ua UtilActivities) CopyFile(ctx context.Context, input MoveFileInput) (*FileResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "CopyFile")
 	log.Info("Starting CopyFileActivity")
@@ -113,7 +113,7 @@ func copyFile(ctx context.Context, source paths.Path, destination paths.Path) (a
 	return nil, err
 }
 
-func StandardizeFileName(ctx context.Context, input FileInput) (*FileResult, error) {
+func (ua UtilActivities) StandardizeFileName(ctx context.Context, input FileInput) (*FileResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "StandardizeFileName")
 	log.Info("Starting StandardizeFileNameActivity")
@@ -133,7 +133,7 @@ type CreateFolderInput struct {
 	Destination paths.Path
 }
 
-func CreateFolder(ctx context.Context, input CreateFolderInput) (any, error) {
+func (ua UtilActivities) CreateFolder(ctx context.Context, input CreateFolderInput) (any, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "CreateFolder")
 	log.Info("Starting CreateFolderActivity")
@@ -150,7 +150,7 @@ type WriteFileInput struct {
 	Data []byte
 }
 
-func WriteFile(ctx context.Context, input WriteFileInput) (any, error) {
+func (ua UtilActivities) WriteFile(ctx context.Context, input WriteFileInput) (any, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "WriteFile")
 	log.Info("Starting WriteFileActivity")
@@ -170,7 +170,7 @@ func WriteFile(ctx context.Context, input WriteFileInput) (any, error) {
 	return nil, nil
 }
 
-func ReadFile(ctx context.Context, input FileInput) ([]byte, error) {
+func (ua UtilActivities) ReadFile(ctx context.Context, input FileInput) ([]byte, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "ReadFile")
 	log.Info("Starting ReadFileActivity")
@@ -178,7 +178,7 @@ func ReadFile(ctx context.Context, input FileInput) ([]byte, error) {
 	return os.ReadFile(input.Path.Local())
 }
 
-func ListFiles(ctx context.Context, input FileInput) (paths.Files, error) {
+func (ua UtilActivities) ListFiles(ctx context.Context, input FileInput) (paths.Files, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "ListFiles")
 	log.Info("Starting ListFilesActivity")
@@ -192,7 +192,7 @@ func ListFiles(ctx context.Context, input FileInput) (paths.Files, error) {
 	}), err
 }
 
-func DeletePath(ctx context.Context, input DeletePathInput) (any, error) {
+func (ua UtilActivities) DeletePath(ctx context.Context, input DeletePathInput) (any, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "DeletePath")
 	log.Info("Starting DeletePathActivity")
@@ -211,7 +211,7 @@ func DeletePath(ctx context.Context, input DeletePathInput) (any, error) {
 // WaitForFile waits until a file stops growing
 // Useful for waiting for a file to be fully uploaded, e.g. watch folders
 // Returns true if file is fully uploaded, false if failed, e.g. file doesnt exist after 5 minutes.
-func WaitForFile(ctx context.Context, input FileInput) (bool, error) {
+func (ua UtilActivities) WaitForFile(ctx context.Context, input FileInput) (bool, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting WaitForFile")
 
@@ -254,7 +254,7 @@ type CleanupInput struct {
 	OlderThan time.Time
 }
 
-func DeleteEmptyDirectories(ctx context.Context, input CleanupInput) ([]string, error) {
+func (ua UtilActivities) DeleteEmptyDirectories(ctx context.Context, input CleanupInput) ([]string, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "DeleteEmptyDirectories")
 	log.Info("Starting DeleteEmptyDirectoriesActivity")
@@ -276,7 +276,7 @@ func DeleteEmptyDirectories(ctx context.Context, input CleanupInput) ([]string, 
 	return deleted, nil
 }
 
-func DeleteOldFiles(ctx context.Context, input CleanupInput) ([]string, error) {
+func (ua UtilActivities) DeleteOldFiles(ctx context.Context, input CleanupInput) ([]string, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "DeleteOldFiles")
 	log.Info("Starting DeleteOldFilesActivity")

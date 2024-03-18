@@ -26,7 +26,7 @@ type TranscribeResponse struct {
 }
 
 // Transcribe is the activity that transcribes a video
-func Transcribe(
+func (ua UtilActivities) Transcribe(
 	ctx context.Context,
 	input TranscribeParams,
 ) (*TranscribeResponse, error) {
@@ -63,7 +63,7 @@ type MergeTranscriptResult struct {
 
 // MergeTranscriptJSON is the activity that merges a transcript JSON
 // Note that currently Norwegian is hardcoded
-func MergeTranscriptJSON(
+func (ua UtilActivities) MergeTranscriptJSON(
 	ctx context.Context,
 	input MergeTranscriptJSONParams,
 ) (*MergeTranscriptResult, error) {
@@ -79,7 +79,7 @@ func MergeTranscriptJSON(
 		return nil, err
 	}
 
-	_, err = WriteFile(ctx, WriteFileInput{
+	_, err = ua.WriteFile(ctx, WriteFileInput{
 		Path: targetFile,
 		Data: marshalled,
 	})

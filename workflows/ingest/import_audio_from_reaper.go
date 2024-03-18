@@ -43,7 +43,7 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 		path := params.AudioList[lang]
 		// Create placeholder
 		var assetResult vsactivity.CreatePlaceholderResult
-		err := wfutils.Execute(ctx, vsactivity.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
+		err := wfutils.Execute(ctx, activities.Vidispine.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
 			Title: path.Base(),
 		}).Get(ctx, &assetResult)
 		if err != nil {
@@ -51,7 +51,7 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 		}
 
 		// Ingest to placeholder
-		err = wfutils.Execute(ctx, vsactivity.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
+		err = wfutils.Execute(ctx, activities.Vidispine.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
 			FilePath: path,
 			AssetID:  assetResult.AssetID,
 			Growing:  false,
@@ -75,7 +75,7 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 			return err
 		}
 
-		err = wfutils.Execute(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
+		err = wfutils.Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
 			VXID:  params.VideoVXID,
 			Group: "System",
 			Key:   bccmflows.LanguagesByISO[lang].RelatedMBFieldID,
@@ -85,7 +85,7 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 			logger.Error(fmt.Sprintf("SetVXMetadataFieldActivity: %s", err.Error()))
 		}
 
-		err = wfutils.Execute(ctx, vsactivity.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
+		err = wfutils.Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
 			VXID:  assetResult.AssetID,
 			Key:   vscommon.FieldLanguagesRecorded.Value,
 			Value: lang,
@@ -114,7 +114,7 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 	inputFile := paths.MustParse(params.Path)
 
 	fileOK := false
-	err := wfutils.Execute(ctx, activities.WaitForFile, activities.FileInput{
+	err := wfutils.Execute(ctx, activities.Util.WaitForFile, activities.FileInput{
 		Path: inputFile,
 	}).Get(ctx, &fileOK)
 	if err != nil {
@@ -133,7 +133,7 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 	}
 
 	isSilent := false
-	err = wfutils.Execute(ctx, activities.DetectSilence, common.AudioInput{
+	err = wfutils.Execute(ctx, activities.Audio.DetectSilence, common.AudioInput{
 		Path:            tempFile,
 		DestinationPath: tempFolder,
 	}).Get(ctx, &isSilent)
@@ -162,7 +162,7 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 	}
 
 	getFileResult := vsactivity.GetFileFromVXResult{}
-	err = wfutils.Execute(ctx, vsactivity.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
+	err = wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		VXID: params.VideoVXID,
 		Tags: []string{"original"},
 	}).Get(ctx, &getFileResult)
@@ -174,7 +174,7 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 
 	// Generate a filename withe the language code
 	outPath := outputFolder.Append(fmt.Sprintf("%s-%s.wav", params.BaseName, strings.ToUpper(lang.ISO6391)))
-	err = wfutils.Execute(ctx, activities.AdjustAudioToVideoStart, activities.AdjustAudioToVideoStartInput{
+	err = wfutils.Execute(ctx, activities.Audio.AdjustAudioToVideoStart, activities.AdjustAudioToVideoStartInput{
 		AudioFile:  tempFile,
 		VideoFile:  getFileResult.FilePath,
 		OutputFile: outPath,

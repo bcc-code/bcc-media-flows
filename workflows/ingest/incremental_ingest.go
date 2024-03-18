@@ -49,13 +49,13 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 
 	/// Start file copy
 
-	copyTask := wfutils.Execute(ctx, activities.RsyncIncrementalCopy, activities.RsyncIncrementalCopyInput{
+	copyTask := wfutils.Execute(ctx, activities.Util.RsyncIncrementalCopy, activities.RsyncIncrementalCopyInput{
 		In:  in,
 		Out: rawPath,
 	})
 
 	var assetResult vsactivity.CreatePlaceholderResult
-	err = wfutils.Execute(ctx, vsactivity.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
+	err = wfutils.Execute(ctx, activities.Vidispine.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
 		Title: in.Base(),
 	}).Get(ctx, &assetResult)
 	if err != nil {
@@ -73,14 +73,14 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 
 	var p any
 	// REAPER: Start recording
-	err = wfutils.Execute(ctx, activities.StartReaper, p).Get(ctx, nil)
+	err = wfutils.Execute(ctx, activities.Util.StartReaper, p).Get(ctx, nil)
 	if err != nil {
 		return err
 	}
 	_ = wfutils.NotifyTelegramChannel(ctx, "Reaper recording started")
 
 	var jobResult vsactivity.FileJobResult
-	err = wfutils.Execute(ctx, vsactivity.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
+	err = wfutils.Execute(ctx, activities.Vidispine.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
 		AssetID:  videoVXID,
 		FilePath: rawPath,
 		Growing:  true,
@@ -98,13 +98,13 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 
 	// List Reaper files
 	reaperResult := &activities.ReaperResult{}
-	err = wfutils.Execute(ctx, activities.ListReaperFiles, nil).Get(ctx, reaperResult)
+	err = wfutils.Execute(ctx, activities.Util.ListReaperFiles, nil).Get(ctx, reaperResult)
 	if err != nil {
 		return err
 	}
 	_ = wfutils.NotifyTelegramChannel(ctx, "Starting to import reaper files")
 
-	err = wfutils.Execute(ctx, vsactivity.CloseFile, vsactivity.CloseFileParams{
+	err = wfutils.Execute(ctx, activities.Vidispine.CloseFile, vsactivity.CloseFileParams{
 		FileID: jobResult.FileID,
 	}).Get(ctx, nil)
 	if err != nil {
@@ -133,7 +133,7 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 		Language: "no",
 	})
 
-	_ = wfutils.Execute(ctx, vsactivity.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
+	_ = wfutils.Execute(ctx, activities.Vidispine.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
 		AssetID: videoVXID,
 	}).Get(ctx, nil)
 
