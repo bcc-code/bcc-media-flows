@@ -25,9 +25,9 @@ func audioGetSilencePeriodsForRange(path paths.Path, threshold float64, from flo
 	params := []string{
 		"-loglevel", "info",
 		"-hide_banner",
-		"-ss", fmt.Sprintf("%f", from),
 		"-i", path.Local(),
 		"-map", fmt.Sprintf("0:%d", stream),
+		"-ss", fmt.Sprintf("%f", from),
 		"-t", fmt.Sprintf("%f", length),
 		"-af", fmt.Sprintf("silencedetect=noise=-70dB:d=%f", threshold),
 		"-f", "null",
@@ -71,18 +71,18 @@ func audioGetSilencePeriodsForRange(path paths.Path, threshold float64, from flo
 
 func AudioStreamIsSilent(path paths.Path, stream int, from float64, to float64) (bool, error) {
 	length := 30.0
-	for i := from; i < to; i += length {
+	for i := from; i < to; i += length - i {
 		silencePeriods, err := audioGetSilencePeriodsForRange(path, 5, i, length, stream)
 		if err != nil {
 			return false, err
 		}
 
-		var dur float64
+		var dur int
 		for _, p := range silencePeriods {
-			dur += p.End - p.Start - i
+			dur += int(p.End - p.Start - i)
 		}
 
-		if int(dur) < int(length) && int(i+dur) < int(to) {
+		if dur < int(length) && int(i)+dur < int(to) {
 			return false, nil
 		}
 
