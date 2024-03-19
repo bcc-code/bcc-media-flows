@@ -68,10 +68,6 @@ func createPreviewsAsync(ctx workflow.Context, assetIDs []string) []workflow.Chi
 }
 
 func transcribe(ctx workflow.Context, assetIDs []string, language string) error {
-	if language == "" {
-		language = "no"
-	}
-
 	var wfFutures []workflow.ChildWorkflowFuture
 	for _, id := range assetIDs {
 		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeVX, workflows.TranscribeVXInput{

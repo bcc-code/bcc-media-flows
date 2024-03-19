@@ -67,10 +67,6 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 		return nil, err
 	}
 
-	if params.Language == "" {
-		params.Language = "auto"
-	}
-
 	files := []paths.Path{}
 	for _, f := range params.FilesToIngest {
 		if !utils.ValidRawFilename(f.Local()) {
