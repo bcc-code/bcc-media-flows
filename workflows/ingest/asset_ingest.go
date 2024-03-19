@@ -31,7 +31,6 @@ var (
 		OrderFormRawMaterial,
 		OrderFormMusic,
 		OrderFormUpload,
-		//OrderFormVBMaster, // commented out for supporting only raw material
 		OrderFormVBMaster,
 		OrderFormSeriesMaster,
 		OrderFormOtherMaster,
@@ -47,6 +46,19 @@ type AssetParams struct {
 
 type AssetResult struct{}
 
+// sanitizeDuplicatdPath removes duplicated path from the string
+func sanitizeDuplicatdPath(s string) string {
+	if len(s)%2 != 0 {
+		return s // Return string if length is odd
+	}
+
+	mid := len(s) / 2
+	if s[:mid] == s[mid:] {
+		return s[:mid] // Return one part if halves are equal
+	}
+	return s // Return original string if halves are not equal
+}
+
 func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting Asset")
@@ -61,6 +73,15 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 	metadata, err := wfutils.UnmarshalXMLFile[ingest.Metadata](ctx, xmlPath)
 	if err != nil {
 		return nil, err
+	}
+
+	fixedFiles := []string{}
+
+	// For some reason sometimes the paths in the XML are duplicated
+	// (e.g. "abc/def/abc/def" instead of "abc/def") so we need to fix that
+	for i, file := range metadata.FileList.Files {
+		fixedFiles = append(fixedFiles, sanitizeDuplicatdPath(file.FilePath))
+		metadata.FileList.Files[i].FilePath = sanitizeDuplicatdPath(file.FilePath)
 	}
 
 	orderForm := OrderForms.Parse(metadata.JobProperty.OrderForm)
