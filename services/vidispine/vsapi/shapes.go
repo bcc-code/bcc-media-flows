@@ -44,6 +44,23 @@ func (c *Client) AddShapeToItem(tag, itemID, fileID string) (string, error) {
 	return result.Result().(*JobDocument).JobID, nil
 }
 
+func (c *Client) DeleteShape(assetID, shapeID string) error {
+	if shapeID == "" {
+		return fmt.Errorf("shapeID is empty - would delete all shapes")
+	}
+
+	requestURL, _ := url.Parse(c.baseURL)
+	q := requestURL.Query()
+	q.Add("keepFiles", "true")
+	requestURL.RawQuery = q.Encode()
+	requestURL.Path += fmt.Sprintf("/item/%s/shape/%s", url.PathEscape(assetID), url.PathEscape(shapeID))
+
+	_, err := c.restyClient.R().
+		Delete(requestURL.String())
+
+	return err
+}
+
 // AddSidecarToItem creates a job for adding the sidecar to the item. Returns the job ID.
 func (c *Client) AddSidecarToItem(itemID, filePath, language string) (string, error) {
 	requestURL, _ := url.Parse(c.baseURL)
