@@ -62,6 +62,7 @@ func ImportSubtitlesFromSubtrans(
 			AssetID:  params.VXID,
 			FilePath: sub,
 			ShapeTag: fmt.Sprintf("sub_%s_%s", lang, "srt"),
+			Replace:  true,
 		}).Get(ctx, jobRes)
 
 		if jobRes.JobID == "" {

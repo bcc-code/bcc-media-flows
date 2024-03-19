@@ -88,10 +88,10 @@ func ExecuteAnalysisCmd(cmd *exec.Cmd, outputCallback func(string)) (string, err
 	}
 
 	// replace -Inf with -99 if the audio was silent
-	result = strings.ReplaceAll(result, "\"-inf\"", "-99")
+	result = strings.ReplaceAll(result, "\"-inf\"", "\"-99\"")
 
 	// replace inf with 0 target_offset if the audio was silent
-	result = strings.ReplaceAll(result, "\"inf\"", "0")
+	result = strings.ReplaceAll(result, "\"inf\"", "\"0\"")
 
 	err = cmd.Wait()
 	if err != nil {

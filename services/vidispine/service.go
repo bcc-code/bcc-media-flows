@@ -13,6 +13,7 @@ type Client interface {
 	RegisterFile(filePath string, state vsapi.FileState) (string, error)
 	UpdateFileState(fileID string, fileState vsapi.FileState) error
 	AddShapeToItem(shapeTag, itemVXID, fileVXID string) (string, error)
+	DeleteShape(assetID, shapeID string) error
 	AddSidecarToItem(itemVXID, filePath, language string) (string, error)
 	SetItemMetadataField(itemVXID, group, field, value string) error
 	AddToItemMetadataField(itemID, group, key, value string) error
