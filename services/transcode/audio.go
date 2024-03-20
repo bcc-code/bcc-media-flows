@@ -159,7 +159,7 @@ func PrepareForTranscriptoion(input common.AudioInput, cb ffmpeg.ProgressCallbac
 		"-y",
 		"-i", input.Path.Local(),
 		"-map", "0:a:0",
-		"-ac 1",
+		"-ac", "1",
 		outputFilePath,
 	}
 
