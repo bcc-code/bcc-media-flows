@@ -85,10 +85,6 @@ func DoTranscribe(
 		return nil, errNoOutput
 	}
 
-	if language == "" {
-		return nil, errNoLanguage
-	}
-
 	restyClient := resty.New()
 	restyClient.Debug = true
 	restyClient.RetryCount = 3
