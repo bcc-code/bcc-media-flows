@@ -148,6 +148,54 @@ func AudioAac(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 	}, nil
 }
 
+// PrepareForTranscriptoion prepares the audio file for transcription by converting it to a mono wav file
+func PrepareForTranscriptoion(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.AudioResult, error) {
+	outputFilePath := filepath.Join(input.DestinationPath.Local(), input.Path.Base())
+	outputFilePath = fmt.Sprintf("%s-%s.wav", outputFilePath[:len(outputFilePath)-len(filepath.Ext(outputFilePath))], input.Bitrate)
+
+	params := []string{
+		"-progress", "pipe:1",
+		"-hide_banner",
+		"-y",
+		"-i", input.Path.Local(),
+		"-map", "0:a:0",
+		"-ac 1",
+		outputFilePath,
+	}
+
+	info, err := ffmpeg.GetStreamInfo(input.Path.Local())
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = ffmpeg.Do(params, info, cb)
+	if err != nil {
+		return nil, err
+	}
+
+	err = os.Chmod(outputFilePath, os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+
+	outputPath, err := paths.Parse(outputFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	fileInfo, err := os.Stat(outputFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	return &common.AudioResult{
+		OutputPath: outputPath,
+		Bitrate:    input.Bitrate,
+		Format:     "wav",
+		FileSize:   fileInfo.Size(),
+	}, nil
+}
+
 func AudioWav(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.AudioResult, error) {
 	params := []string{
 		"-progress", "pipe:1",

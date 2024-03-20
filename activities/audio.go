@@ -36,6 +36,17 @@ func (aa AudioActivities) TranscodeToAudioWav(ctx context.Context, input common.
 	return transcode.AudioWav(input, progressCallback)
 }
 
+func (aa AudioActivities) PrepareForTranscriptoion(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeToAudioWav")
+	log.Info("Starting TranscodeToAudioAacActivity")
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	return transcode.PrepareForTranscriptoion(input, progressCallback)
+}
+
 type AdjustAudioToVideoStartInput struct {
 	VideoFile  paths.Path
 	AudioFile  paths.Path

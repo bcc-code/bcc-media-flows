@@ -7,7 +7,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/common"
-	"github.com/bcc-code/bcc-media-flows/utils/workflows"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 
 	"github.com/davecgh/go-spew/spew"
 	"go.temporal.io/sdk/workflow"
@@ -47,7 +47,7 @@ func TranscribeVX(
 	}
 
 	wavFile := common.AudioResult{}
-	err = wfutils.Execute(ctx, activities.Audio.TranscodeToAudioWav, common.AudioInput{
+	err = wfutils.Execute(ctx, activities.Audio.PrepareForTranscriptoion, common.AudioInput{
 		Path:            shapes.FilePath,
 		DestinationPath: tempFolder,
 	}).Get(ctx, &wavFile)
