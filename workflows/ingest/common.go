@@ -58,6 +58,7 @@ func CreatePreviews(ctx workflow.Context, assetIDs []string) error {
 
 func createPreviewsAsync(ctx workflow.Context, assetIDs []string) []workflow.ChildWorkflowFuture {
 	var wfFutures []workflow.ChildWorkflowFuture
+
 	for _, id := range assetIDs {
 		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
 			VXID: id,
