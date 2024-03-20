@@ -78,7 +78,7 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 
 		var success bool
 		inputFolder := ameFlexResPerformanceWatchFolderInput
-		outputFile := ameFlexResPerformanceWatchFolderOutput.Append(params.InputFile.Base())
+		outputFile = ameFlexResPerformanceWatchFolderOutput.Append(params.InputFile.Base())
 		if params.AnalyzeResult.HasAlpha {
 			inputFolder = ameFlexResQualityWatchFolderInput
 			outputFile = ameFlexResQualityWatchFolderOutput.Append(params.InputFile.Base())
@@ -102,6 +102,8 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		if !success {
 			return nil, merry.New("WaitForFile failed")
 		}
+	} else {
+		wfutils.CopyFile(ctx, params.InputFile, outputFile)
 	}
 
 	err = wfutils.Execute(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
