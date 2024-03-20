@@ -9,5 +9,6 @@ FROM alpine:latest AS prod
 WORKDIR /
 RUN apk update
 RUN apk add rsync
+RUN apk add file
 COPY --from=build /app /app
 ENTRYPOINT ["/app"]
