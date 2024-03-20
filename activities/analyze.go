@@ -20,12 +20,12 @@ func (ua UtilActivities) GetMimeType(ctx context.Context, input AnalyzeFileParam
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting GetMimeTypeActivity")
 
-	result, err := utils.ExecuteCmd(exec.Command("file", "-bI", input.FilePath.Local()), nil)
+	result, err := utils.ExecuteCmd(exec.Command("file", "--mime-type", input.FilePath.Local()), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	mimeType := strings.Split(result, ";")[0]
+	mimeType := strings.Split(result, ": ")[1]
 
 	return &mimeType, nil
 }
