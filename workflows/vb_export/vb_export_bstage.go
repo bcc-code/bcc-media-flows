@@ -60,6 +60,8 @@ func VBExportToBStage(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		return nil, err
 	}
 
+	notifyExportDone(ctx, params, "bstage")
+
 	return &VBExportResult{
 		ID: params.ParentParams.VXID,
 	}, nil

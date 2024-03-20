@@ -81,6 +81,8 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		return nil, err
 	}
 
+	notifyExportDone(ctx, params, "abekas")
+
 	return &VBExportResult{
 		ID: params.ParentParams.VXID,
 	}, nil

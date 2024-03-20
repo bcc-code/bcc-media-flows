@@ -220,3 +220,16 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	}
 	return results, err
 }
+
+func notifyExportDone(ctx workflow.Context, params VBExportChildWorkflowParams, flow string) {
+	_ = notifyTelegramChannel(ctx, fmt.Sprintf("🟩 Export of `%s` finished.\nDestination: `%s`", params.ParentParams.VXID, flow))
+}
+
+func notifyTelegramChannel(ctx workflow.Context, message string) error {
+	err := wfutils.NotifyTelegramChannel(ctx, message)
+	logger := workflow.GetLogger(ctx)
+	if err != nil {
+		logger.Error("Failed to notify telegram channel", "error", err)
+	}
+	return err
+}
