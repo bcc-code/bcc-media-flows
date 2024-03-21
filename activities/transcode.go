@@ -19,6 +19,7 @@ type EncodeParams struct {
 	Bitrate        string
 	Interlace      bool
 	BurnInSubtitle *paths.Path
+	SubtitleStyle  *paths.Path
 	Alpha          bool
 }
 
@@ -67,6 +68,7 @@ func (va VideoActivities) TranscodeToAVCIntraActivity(ctx context.Context, input
 		Resolution:     input.Resolution,
 		Interlace:      input.Interlace,
 		BurnInSubtitle: input.BurnInSubtitle,
+		SubtitleStyle:  input.SubtitleStyle,
 	}, progressCallback)
 	if err != nil {
 		return nil, err

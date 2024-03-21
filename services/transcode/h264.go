@@ -19,6 +19,7 @@ type H264EncodeInput struct {
 	Bitrate        string
 	Interlace      bool
 	BurnInSubtitle *paths.Path
+	SubtitleStyle  *paths.Path
 }
 
 type EncodeResult struct {
@@ -94,7 +95,7 @@ func H264(input H264EncodeInput, progressCallback ffmpeg.ProgressCallback) (*Enc
 	}
 
 	if input.BurnInSubtitle != nil {
-		assFile, err := CreateBurninASSFile(*input.BurnInSubtitle)
+		assFile, err := CreateBurninASSFile(*input.SubtitleStyle, *input.BurnInSubtitle)
 		if err != nil {
 			return nil, err
 		}

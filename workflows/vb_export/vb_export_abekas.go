@@ -64,6 +64,7 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		FrameRate:      50,
 		Interlace:      true,
 		BurnInSubtitle: params.SubtitleFile,
+		SubtitleStyle:  params.SubtitleStyle,
 	}).Result(ctx)
 	if err != nil {
 		return nil, err

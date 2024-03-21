@@ -68,6 +68,7 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 				OutputDir:      hippoOutputDir,
 				Interlace:      false,
 				BurnInSubtitle: params.SubtitleFile,
+				SubtitleStyle:  params.SubtitleStyle,
 				Alpha:          params.AnalyzeResult.HasAlpha,
 			}).Get(ctx, &videoResult)
 			if err != nil {

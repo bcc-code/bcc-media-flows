@@ -12,9 +12,9 @@ import (
 //go:embed subtitles.header.ass
 var defaultSubtitleHeader string
 
-func SubtitleBurnIn(videoFile, subtitleFile, outputPath paths.Path, progressCallback ffmpeg.ProgressCallback) (*paths.Path, error) {
+func SubtitleBurnIn(videoFile, subtitleFile, subtitleHeader, outputPath paths.Path, progressCallback ffmpeg.ProgressCallback) (*paths.Path, error) {
 	assFile := &subtitleFile
-	assFile, err := CreateBurninASSFile(subtitleFile)
+	assFile, err := CreateBurninASSFile(subtitleHeader, subtitleFile)
 
 	params := []string{
 		"-i", videoFile.Local(),
@@ -42,7 +42,7 @@ func SubtitleBurnIn(videoFile, subtitleFile, outputPath paths.Path, progressCall
 	return &output, nil
 }
 
-func CreateBurninASSFile(subtitleFile paths.Path) (*paths.Path, error) {
+func CreateBurninASSFile(subtitleHeader, subtitleFile paths.Path) (*paths.Path, error) {
 	if subtitleFile.Ext() == ".ass" {
 		return &subtitleFile, nil
 	}
@@ -73,7 +73,12 @@ func CreateBurninASSFile(subtitleFile paths.Path) (*paths.Path, error) {
 		lines = append(lines, l)
 	}
 
-	err = os.WriteFile(out.Local(), []byte(defaultSubtitleHeader+"\n"+strings.Join(lines, "\n")), os.ModePerm)
+	headerData, err := os.ReadFile(subtitleHeader.Local())
+	if err != nil {
+		return nil, err
+	}
+
+	err = os.WriteFile(out.Local(), []byte(string(headerData)+"\n"+strings.Join(lines, "\n")), os.ModePerm)
 	if err != nil {
 		return nil, err
 	}

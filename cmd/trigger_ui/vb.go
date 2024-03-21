@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -17,7 +18,10 @@ type VBTriggerGETParams struct {
 	Title          string
 	Destinations   []string
 	SubtitleShapes []string
+	SubtitleStyles []string
 }
+
+var subtitleStylesDir = os.Getenv("SUBTITLE_STYLES_DIR")
 
 func (s *TriggerServer) VBTriggerHandlerGET(c *gin.Context) {
 	vxID := c.Query("id")
@@ -44,10 +48,18 @@ func (s *TriggerServer) VBTriggerHandlerGET(c *gin.Context) {
 	clips := meta.SplitByClips()
 	title := clips[vsapi.OriginalClip].Get(vscommon.FieldTitle, "")
 
+	subStyles, err := getFilenames(subtitleStylesDir)
+	if err != nil {
+		log.Print(err)
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
+
 	c.HTML(http.StatusOK, "vb-export.gohtml", VBTriggerGETParams{
 		Title:          title,
 		Destinations:   vb_export.Destinations.Values(),
 		SubtitleShapes: subtitleShapes,
+		SubtitleStyles: subStyles,
 	})
 }
 
@@ -69,6 +81,7 @@ func (s *TriggerServer) VBTriggerHandlerPOST(c *gin.Context) {
 		VXID:             vxID,
 		Destinations:     c.PostFormArray("destinations[]"),
 		SubtitleShapeTag: c.PostForm("subtitleShape"),
+		SubtitleStyle:    c.PostForm("subtitleStyle"),
 	}
 
 	var wfID string
