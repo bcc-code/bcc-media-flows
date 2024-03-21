@@ -3,11 +3,18 @@ package vsactivity
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"go.temporal.io/sdk/activity"
 )
+
+type VXOnlyParam struct {
+	VXID string
+}
 
 type GetFileFromVXParams struct {
 	VXID string
@@ -87,4 +94,71 @@ func GetResolutions(ctx context.Context, params GetResolutionsParams) ([]vsapi.R
 	vsClient := GetClient()
 
 	return vsClient.GetResolutions(params.VXID)
+}
+
+func (a Activities) GetRelations(ctx context.Context, assetID string) ([]vsapi.Relation, error) {
+	log := activity.GetLogger(ctx)
+	log.Info("Starting GetRelations")
+
+	vsClient := GetClient()
+
+	return vsClient.GetRelations(assetID)
+}
+
+// UpdateAssetRelations attempts to find languages of related audio files and update the metadata
+// of this asset with the link
+func (a Activities) UpdateAssetRelations(ctx context.Context, params VXOnlyParam) ([]string, error) {
+	vxID := params.VXID
+	log := activity.GetLogger(ctx)
+	log.Info("Starting UpdateAssetRelations")
+
+	vsClient := GetClient()
+
+	relations, err := vsClient.GetRelations(vxID)
+	if err != nil {
+		return nil, err
+	}
+
+	updatedLanguages := []string{}
+	for _, relation := range relations {
+		other := relation.Direction.Source
+		if other == vxID {
+			other = relation.Direction.Target
+		}
+
+		meta, err := vsClient.GetMetadata(other)
+		if err != nil {
+			return nil, err
+		}
+
+		if meta.Get(vscommon.FieldOriginalAudioCodec, "None") == "None" {
+			continue
+		}
+
+		// Drop the extension, if it exists
+		title := meta.Get(vscommon.FieldTitle, "No title found")
+		titleSplit := strings.Split(title, ".")
+		if len(titleSplit) == 1 {
+			titleSplit = titleSplit[:len(titleSplit)-1]
+		}
+		title = strings.Join(titleSplit, ".")
+
+		if title[len(title)-4] != '_' {
+			// If the foruth to last character is not an underscore, it is not a language code
+			continue
+		}
+
+		// Get the last three characters of the title, as it should be a language code
+		title = title[len(title)-3:]
+
+		if l, ok := bccmflows.LanguagesByISO[strings.ToLower(title)]; ok {
+			err := vsClient.SetItemMetadataField(vxID, "System", l.RelatedMBFieldID, other)
+			if err != nil {
+				return nil, err
+			}
+			updatedLanguages = append(updatedLanguages, l.ISO6391)
+		}
+	}
+
+	return updatedLanguages, nil
 }
