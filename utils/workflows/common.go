@@ -1,6 +1,7 @@
 package wfutils
 
 import (
+	"os"
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
@@ -21,11 +22,16 @@ func GetDefaultActivityOptions() workflow.ActivityOptions {
 }
 
 func GetVXDefaultWorkflowOptions(vxID string) workflow.ChildWorkflowOptions {
-	return workflow.ChildWorkflowOptions{
+	opts := workflow.ChildWorkflowOptions{
 		RetryPolicy: &StrictRetryPolicy,
 		TaskQueue:   environment.GetWorkerQueue(),
-		SearchAttributes: map[string]interface{}{
-			"CustomStringField": vxID,
-		},
 	}
+
+	if os.Getenv("DEBUG") == "" {
+		opts.SearchAttributes = map[string]interface{}{
+			"CustomStringField": vxID,
+		}
+	}
+
+	return opts
 }

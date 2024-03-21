@@ -2,6 +2,7 @@ package vb_export
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/ansel1/merry/v2"
@@ -36,6 +37,7 @@ type VBExportParams struct {
 	VXID             string
 	Destinations     []string
 	SubtitleShapeTag string
+	SubtitleStyle    string
 }
 
 type VBExportResult struct {
@@ -50,10 +52,13 @@ type VBExportChildWorkflowParams struct {
 	InputFile                  paths.Path
 	OriginalFilenameWithoutExt string
 	SubtitleFile               *paths.Path
+	SubtitleStyle              *paths.Path
 	TempDir                    paths.Path
 	OutputDir                  paths.Path
 	AnalyzeResult              ffmpeg.StreamInfo
 }
+
+var subtitleStyleBase = os.Getenv("SUBTITLE_STYLES_DIR")
 
 func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrError[VBExportResult], error) {
 	logger := workflow.GetLogger(ctx)
@@ -137,7 +142,14 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	}
 
 	var subtitleFile *paths.Path
+	var subtitleStyle *paths.Path
 	if params.SubtitleShapeTag != "" {
+		subtitleStylePath, err := paths.Parse(subtitleStyleBase + params.SubtitleStyle)
+		if err != nil {
+			return nil, err
+		}
+		subtitleStyle = &subtitleStylePath
+
 	outer:
 		for _, shape := range shapes.Shape {
 			for _, tag := range shape.Tag {
@@ -157,6 +169,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 			OriginalFilenameWithoutExt: originalFilenameWithoutExt,
 			InputFile:                  videoFilePath,
 			SubtitleFile:               subtitleFile,
+			SubtitleStyle:              subtitleStyle,
 			TempDir:                    tempDir,
 			OutputDir:                  outputDir.Append(dest.Value),
 			RunID:                      workflow.GetInfo(ctx).OriginalRunID,

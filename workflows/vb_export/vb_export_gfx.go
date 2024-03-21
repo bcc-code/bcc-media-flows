@@ -44,6 +44,7 @@ func VBExportToGfx(ctx workflow.Context, params VBExportChildWorkflowParams) (*V
 			FrameRate:      50,
 			Interlace:      true,
 			BurnInSubtitle: params.SubtitleFile,
+			SubtitleStyle:  params.SubtitleStyle,
 			Alpha:          true,
 		}).Result(ctx)
 		if err != nil {

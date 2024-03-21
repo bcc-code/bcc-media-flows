@@ -32,6 +32,15 @@
                 {{end}}
             </select>
         </div>
+        <div class="flex flex-col">
+            <label class="font-bold" for="subtitleShape">Subtitles burn in Style</label>
+            <select class="{{$selectClasses}}" name="subtitleStyle" id="subtitleStyle">
+                {{range $index, $element := .SubtitleStyles}}
+                    <option value={{$element}}>{{$element}}</option>
+                {{end}}
+            </select>
+        </div>
+
 
         <input id="submit"
                class="cursor-pointer rounded-md bg-[#6A64F1] py-3 px-8 text-center text-base font-semibold text-white outline-none"
