@@ -42,6 +42,7 @@ func (va VideoActivities) TranscodeToProResActivity(ctx context.Context, input E
 		Resolution:     input.Resolution,
 		Use4444:        input.Alpha,
 		BurnInSubtitle: input.BurnInSubtitle,
+		SubtitleStyle:  input.SubtitleStyle,
 	}, progressCallback)
 	if err != nil {
 		fmt.Println(err.Error())
