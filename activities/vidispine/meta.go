@@ -73,7 +73,7 @@ func (a Activities) SetVXMetadataFieldActivity(ctx context.Context, params SetVX
 	return nil, err
 }
 
-func AddVXMetadataFieldValueActivity(ctx context.Context, params SetVXMetadataFieldParams) (*SetVXMetadataFieldResult, error) {
+func (a Activities) AddVXMetadataFieldValueActivity(ctx context.Context, params SetVXMetadataFieldParams) (*SetVXMetadataFieldResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting AddVXMetadataFieldValueActivity")
 

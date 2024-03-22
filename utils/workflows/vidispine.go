@@ -40,7 +40,7 @@ func SetVidispineMetaInGroup(ctx workflow.Context, assetID, key, value, group st
 }
 
 func AddVidispineMetaValue(ctx workflow.Context, assetID, key, value string) error {
-	return Execute(ctx, vsactivity.AddVXMetadataFieldValueActivity, vsactivity.SetVXMetadataFieldParams{
+	return Execute(ctx, activities.Vidispine.AddVXMetadataFieldValueActivity, vsactivity.SetVXMetadataFieldParams{
 		VXID:  assetID,
 		Key:   key,
 		Value: value,
