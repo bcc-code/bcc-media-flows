@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ingest"
 	"github.com/bcc-code/bcc-media-flows/services/notifications"
@@ -204,13 +203,11 @@ func copyToDir(ctx workflow.Context, dest paths.Path, files []ingest.File) error
 		return err
 	}
 
-	err = wfutils.Execute(ctx, activities.Util.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      dir.Rclone(),
-		Destination: dest.Rclone(),
-	}).Get(ctx, nil)
+	err = wfutils.RcloneCopyDir(ctx, dir.Rclone(), dest.Rclone())
 	if err != nil {
 		return err
 	}
+
 	for _, file := range files {
 		err = wfutils.DeletePathRecursively(
 			ctx,

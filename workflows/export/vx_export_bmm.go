@@ -220,10 +220,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	config := getBMMDestinationConfig(params.ExportDestination)
 
 	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
-	err = wfutils.Execute(ctx, activities.Util.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      params.OutputDir.Rclone(),
-		Destination: fmt.Sprintf(config.Bucket + ingestFolder),
-	}).Get(ctx, nil)
+	err = wfutils.RcloneCopyDir(ctx, params.OutputDir.Rclone(), config.Bucket+ingestFolder)
 	if err != nil {
 		return nil, err
 	}

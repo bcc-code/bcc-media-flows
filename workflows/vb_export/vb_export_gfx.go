@@ -54,10 +54,7 @@ func VBExportToGfx(ctx workflow.Context, params VBExportChildWorkflowParams) (*V
 		filePath = videoResult.OutputPath
 	}
 
-	err = wfutils.Execute(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
-		Source:      filePath,
-		Destination: deliveryFolder.Append("GFX", params.OriginalFilenameWithoutExt+filePath.Ext()),
-	}).Get(ctx, nil)
+	err = wfutils.RcloneCopyFile(ctx, filePath, deliveryFolder.Append("GFX", params.OriginalFilenameWithoutExt+filePath.Ext()))
 	if err != nil {
 		return nil, err
 	}

@@ -52,10 +52,10 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 
 	// Rclone to playout
 	destination := "playout:/tmp"
-	err = wfutils.Execute(ctx, activities.Util.RcloneCopyDir, activities.RcloneCopyDirInput{
-		Source:      params.OutputDir.Rclone(),
-		Destination: destination,
-	}).Get(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	err = wfutils.RcloneCopyDir(ctx, params.OutputDir.Rclone(), destination)
 	if err != nil {
 		return nil, err
 	}
