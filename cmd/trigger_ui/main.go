@@ -6,8 +6,10 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"sort"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
+	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	"github.com/bcc-code/bcc-media-platform/backend/utils"
 	"github.com/google/uuid"
 	"github.com/samber/lo"
@@ -149,11 +151,22 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 		return
 	}
 
-	subclipNames, err := vidispine.GetSubclipNames(s.vidispine, vxID)
+	exportData, err := vidispine.GetDataForExport(s.vidispine, vxID, nil, nil, "")
 	if err != nil {
 		renderErrorPage(c, http.StatusInternalServerError, err)
 		return
 	}
+	chapters, err := vidispine.GetChapterData(s.vidispine, exportData)
+	if err != nil {
+		renderErrorPage(c, http.StatusInternalServerError, err)
+		return
+	}
+	sort.Slice(chapters, func(i, j int) bool {
+		return chapters[i].Timestamp < chapters[j].Timestamp
+	})
+	subclipNames := lo.Map(chapters, func(c asset.Chapter, _ int) string {
+		return c.Title
+	})
 
 	var ratioString string
 
