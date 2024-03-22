@@ -22,4 +22,5 @@ type Client interface {
 	GetJob(jobID string) (*vsapi.JobDocument, error)
 	AddFileToPlaceholder(itemID, fileID, tag string, fileState vsapi.FileState) (string, error)
 	GetResolutions(itemVXID string) ([]vsapi.Resolution, error)
+	GetRelations(assetID string) ([]vsapi.Relation, error)
 }

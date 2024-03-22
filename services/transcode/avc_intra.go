@@ -17,6 +17,7 @@ type AVCIntraEncodeInput struct {
 	FrameRate      int
 	Interlace      bool
 	BurnInSubtitle *paths.Path
+	SubtitleStyle  *paths.Path
 }
 
 func AvcIntra(input AVCIntraEncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeResult, error) {
@@ -71,7 +72,9 @@ func AvcIntra(input AVCIntraEncodeInput, progressCallback ffmpeg.ProgressCallbac
 	}
 
 	if input.BurnInSubtitle != nil {
-		assFile, err := CreateBurninASSFile(*input.BurnInSubtitle)
+		// TODO: Define the subtitle style
+
+		assFile, err := CreateBurninASSFile(*input.SubtitleStyle, *input.BurnInSubtitle)
 		if err != nil {
 			return nil, err
 		}

@@ -52,6 +52,7 @@ var workerWorkflows = []any{
 	export.VXExportToBMM,
 	workflows.ExecuteFFmpeg,
 	workflows.ImportSubtitlesFromSubtrans,
+	workflows.UpdateAssetRelations,
 	ingestworkflows.Asset,
 	ingestworkflows.RawMaterial,
 	ingestworkflows.RawMaterialForm,

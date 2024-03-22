@@ -45,6 +45,7 @@ func VBExportToBStage(ctx workflow.Context, params VBExportChildWorkflowParams) 
 			FrameRate:      50,
 			Interlace:      false,
 			BurnInSubtitle: params.SubtitleFile,
+			SubtitleStyle:  params.SubtitleStyle,
 			Alpha:          false,
 		}).Result(ctx)
 		if err != nil {

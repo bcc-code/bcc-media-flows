@@ -179,6 +179,14 @@ func triggerHandler(ctx *gin.Context) {
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.ImportSubtitlesFromSubtrans, workflows.ImportSubtitlesFromSubtransInput{
 			VXID: vxID,
 		})
+	case "UpdateAssetRelations":
+		if vxID == "" {
+			ctx.Status(http.StatusBadRequest)
+			return
+		}
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.UpdateAssetRelations, workflows.UpdateAssetRelationsParams{
+			AssetID: vxID,
+		})
 	case "NormalizeAudio":
 		target, err := strconv.ParseFloat(getParamFromCtx(ctx, "targetLUFS"), 64)
 		if err != nil {

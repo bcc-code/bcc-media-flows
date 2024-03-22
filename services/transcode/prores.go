@@ -17,6 +17,7 @@ type ProResInput struct {
 	FrameRate      int
 	Use4444        bool
 	BurnInSubtitle *paths.Path
+	SubtitleStyle  *paths.Path
 }
 
 type ProResResult struct {
@@ -48,7 +49,7 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProRe
 	}
 
 	if input.BurnInSubtitle != nil {
-		assFile, err := CreateBurninASSFile(*input.BurnInSubtitle)
+		assFile, err := CreateBurninASSFile(*input.SubtitleStyle, *input.BurnInSubtitle)
 		if err != nil {
 			return nil, err
 		}

@@ -54,8 +54,14 @@ func ImportSubtitlesFromSubtrans(
 	}
 
 	langs := []string{}
-	for lang, sub := range subsList {
-		lang = strings.ToLower(lang)
+	subsKeys, err := wfutils.GetMapKeysSafely(ctx, subsList)
+	if err != nil {
+		return err
+	}
+
+	for _, lang := range subsKeys {
+		sub := subsList[lang]
+		lang := strings.ToLower(lang)
 
 		jobRes := &vsactivity.JobResult{}
 		err = wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
@@ -83,8 +89,9 @@ func ImportSubtitlesFromSubtrans(
 		fmt.Sprintf("Sub import for VXID: %s finished (%s). Starting preview import.", params.VXID, strings.Join(langs, ", ")),
 	)
 
-	for lang, sub := range subsList {
-		lang = strings.ToLower(lang)
+	for _, lang := range subsKeys {
+		sub := subsList[lang]
+		lang := strings.ToLower(lang)
 
 		jobRes := &vsactivity.JobResult{}
 		err := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
