@@ -53,7 +53,7 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		return nil, err
 	}
 
-	outputFile := hippoOutputDir.Append(params.InputFile.Base())
+	outputFile := hippoOutputDir.Append(params.InputFile.SetExt("mov").Base())
 
 	if !isImage {
 		if params.AnalyzeResult.FrameRate != 25 && params.AnalyzeResult.FrameRate != 50 && params.AnalyzeResult.FrameRate != 60 {
@@ -80,10 +80,10 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 
 		var success bool
 		inputFolder := ameFlexResPerformanceWatchFolderInput
-		outputFile = ameFlexResPerformanceWatchFolderOutput.Append(params.InputFile.Base())
+		outputFile = ameFlexResPerformanceWatchFolderOutput.Append(outputFile.Base())
 		if params.AnalyzeResult.HasAlpha {
 			inputFolder = ameFlexResQualityWatchFolderInput
-			outputFile = ameFlexResQualityWatchFolderOutput.Append(params.InputFile.Base())
+			outputFile = ameFlexResQualityWatchFolderOutput.Append(outputFile.Base())
 		}
 
 		err = wfutils.Execute(ctx, activities.Util.CopyFile, activities.MoveFileInput{

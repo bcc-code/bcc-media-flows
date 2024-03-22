@@ -182,6 +182,12 @@ func (p Path) Prepend(paths ...string) Path {
 	}
 }
 
+func (p Path) SetExt(newExt string) Path {
+	newExt = "." + strings.TrimPrefix(newExt, ".")
+	p.Path = strings.TrimSuffix(p.Path, filepath.Ext(p.Path)) + newExt
+	return p
+}
+
 type prefix struct {
 	Linux  string
 	Client string
