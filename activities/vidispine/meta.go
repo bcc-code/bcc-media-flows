@@ -138,7 +138,7 @@ func (a Activities) UpdateAssetRelations(ctx context.Context, params VXOnlyParam
 		// Drop the extension, if it exists
 		title := meta.Get(vscommon.FieldTitle, "No title found")
 		titleSplit := strings.Split(title, ".")
-		if len(titleSplit) == 1 {
+		if len(titleSplit) > 1 {
 			titleSplit = titleSplit[:len(titleSplit)-1]
 		}
 		title = strings.Join(titleSplit, ".")
