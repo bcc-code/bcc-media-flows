@@ -127,9 +127,10 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 		fileSplit := strings.Split(file, "\\")
 		filePath := "/mnt/dmzshare/wavetemp/" + fileSplit[len(fileSplit)-1]
 		f := workflow.ExecuteChildWorkflow(ctx, ImportAudioFileFromReaper, ImportAudioFileFromReaperParams{
-			Path:      filePath,
-			VideoVXID: videoVXID,
-			BaseName:  baseName,
+			Path:       filePath,
+			VideoVXID:  videoVXID,
+			BaseName:   baseName,
+			OutputPath: outDir,
 		})
 
 		importAudioFuture = append(importAudioFuture, f)

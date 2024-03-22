@@ -100,9 +100,10 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 }
 
 type ImportAudioFileFromReaperParams struct {
-	Path      string
-	VideoVXID string
-	BaseName  string
+	Path       string
+	VideoVXID  string
+	BaseName   string
+	OutputPath paths.Path
 }
 
 func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromReaperParams) error {
@@ -166,10 +167,7 @@ func doImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFro
 		return nil
 	}
 
-	outputFolder, err := wfutils.GetWorkflowRawOutputFolder(ctx)
-	if err != nil {
-		return err
-	}
+	outputFolder := params.OutputPath
 
 	getFileResult := vsactivity.GetFileFromVXResult{}
 	err = wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
