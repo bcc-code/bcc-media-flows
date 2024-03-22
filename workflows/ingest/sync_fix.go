@@ -19,7 +19,7 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("`%s`\n\nApplying adjustments to audio files.\n%dms", params.VXID, params.Adjustment))
+	_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟦 `%s`\n\nApplying adjustments to audio files.\n%dms", params.VXID, params.Adjustment))
 
 	audioPaths, err := wfutils.Execute(ctx, activities.Vidispine.GetRelatedAudioFiles, params.VXID).Result(ctx)
 	if err != nil {
@@ -86,7 +86,7 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 		selector.Select(ctx)
 	}
 
-	_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("`%s`\n\nAdjustments applied to audio files.", params.VXID))
+	_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟩 `%s`\n\nAdjustments applied to audio files.", params.VXID))
 
 	return nil
 }

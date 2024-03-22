@@ -111,6 +111,16 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
+	err := doImportAudioFileFromReaper(ctx, params)
+
+	if err != nil {
+		_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟥 Import of audio file from Reaper failed: ```%s```", err.Error()))
+		return err
+	}
+	return nil
+}
+
+func doImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromReaperParams) error {
 	inputFile := paths.MustParse(params.Path)
 
 	fileOK := false
@@ -122,7 +132,7 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 	}
 
 	if !fileOK {
-		return fmt.Errorf("File %s is reported not OK by the system", inputFile)
+		return fmt.Errorf("file %s is reported not OK by the system", inputFile)
 	}
 
 	tempFolder, _ := wfutils.GetWorkflowTempFolder(ctx)
@@ -150,7 +160,7 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 	}
 
 	if isSilent {
-		wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("File %s is silent, skipping", bccmflows.LanguagesByReaper[reaperTrackNumber].LanguageName))
+		_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟧 File %s is silent, skipping", bccmflows.LanguagesByReaper[reaperTrackNumber].LanguageName))
 
 		// This is not a fail, so we should not send an error
 		return nil
@@ -183,13 +193,11 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 		return err
 	}
 
-	err = RelateAudioToVideo(ctx, RelateAudioToVideoParams{
+	return RelateAudioToVideo(ctx, RelateAudioToVideoParams{
 		AudioList: map[string]paths.Path{
 			lang.ISO6391: outPath,
 		},
 		PreviewDelay: 2 * time.Hour,
 		VideoVXID:    params.VideoVXID,
 	})
-
-	return err
 }
