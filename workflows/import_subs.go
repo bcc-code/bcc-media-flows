@@ -26,7 +26,19 @@ func ImportSubtitlesFromSubtrans(
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	logger.Info("Starting sub import flow")
-	wfutils.NotifyTelegramChannel(ctx, "Starting sub import for VXID: "+params.VXID)
+	_ = wfutils.NotifyTelegramChannel(ctx, "🟦 Starting sub import for VXID: "+params.VXID)
+
+	err := doImportSubtitlesFromSubtrans(ctx, params)
+	if err != nil {
+		_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟥 Sub import for VXID: %s failed\n\n```%s```", params.VXID, err.Error()))
+		return err
+	}
+	_ = wfutils.NotifyTelegramChannel(ctx, "🟩 Sub import for VXID: "+params.VXID+" finished")
+	return nil
+}
+
+func doImportSubtitlesFromSubtrans(ctx workflow.Context, params ImportSubtitlesFromSubtransInput) error {
+	logger := workflow.GetLogger(ctx)
 
 	input := activities.GetSubtransIDInput{
 		VXID:     params.VXID,
@@ -53,7 +65,7 @@ func ImportSubtitlesFromSubtrans(
 		return err
 	}
 
-	langs := []string{}
+	var langs []string
 	subsKeys, err := wfutils.GetMapKeysSafely(ctx, subsList)
 	if err != nil {
 		return err
@@ -78,13 +90,13 @@ func ImportSubtitlesFromSubtrans(
 
 		langs = append(langs, lang)
 
-		wfutils.Execute(ctx, activities.Vidispine.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
+		_ = wfutils.Execute(ctx, activities.Vidispine.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
 			JobID:     jobRes.JobID,
 			SleepTime: 10,
 		}).Get(ctx, nil)
 	}
 
-	wfutils.NotifyTelegramChannel(
+	_ = wfutils.NotifyTelegramChannel(
 		ctx,
 		fmt.Sprintf("Sub import for VXID: %s finished (%s). Starting preview import.", params.VXID, strings.Join(langs, ", ")),
 	)
@@ -109,13 +121,11 @@ func ImportSubtitlesFromSubtrans(
 			continue
 		}
 
-		wfutils.Execute(ctx, activities.Vidispine.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
+		_ = wfutils.Execute(ctx, activities.Vidispine.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
 			JobID:     jobRes.JobID,
 			SleepTime: 10,
 		}).Get(ctx, nil)
 	}
-
-	wfutils.NotifyTelegramChannel(ctx, "Sub import for VXID: "+params.VXID+" finished")
 
 	return nil
 }

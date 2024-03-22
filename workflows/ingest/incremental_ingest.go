@@ -35,6 +35,15 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
+	err := doIncremental(ctx, params)
+	if err != nil {
+		_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟥 Incremental ingest failed\n\n```%s```", err.Error()))
+		return err
+	}
+	return nil
+}
+
+func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	in, err := paths.Parse(params.Path)
 	if err != nil {
 		return err
@@ -68,7 +77,6 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 		log.L.Error().Err(err).Send()
 	}
 
-	_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Starting live ingest: https://vault.bcc.media/item/%s", assetResult.AssetID))
 	videoVXID := assetResult.AssetID
 
 	var p any
@@ -77,7 +85,8 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	if err != nil {
 		return err
 	}
-	_ = wfutils.NotifyTelegramChannel(ctx, "Reaper recording started")
+
+	_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟦 Starting live ingest: https://vault.bcc.media/item/%s", assetResult.AssetID))
 
 	var jobResult vsactivity.FileJobResult
 	err = wfutils.Execute(ctx, activities.Vidispine.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
@@ -94,7 +103,7 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	if err != nil {
 		return err
 	}
-	_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Video ingest ended: https://vault.bcc.media/item/%s", assetResult.AssetID))
+	_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟦 Video ingest ended: https://vault.bcc.media/item/%s\n\nImporting reaper files.", assetResult.AssetID))
 
 	// List Reaper files
 	reaperResult := &activities.ReaperResult{}
@@ -102,7 +111,6 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	if err != nil {
 		return err
 	}
-	_ = wfutils.NotifyTelegramChannel(ctx, "Starting to import reaper files")
 
 	err = wfutils.Execute(ctx, activities.Vidispine.CloseFile, vsactivity.CloseFileParams{
 		FileID: jobResult.FileID,
@@ -119,9 +127,10 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 		fileSplit := strings.Split(file, "\\")
 		filePath := "/mnt/dmzshare/wavetemp/" + fileSplit[len(fileSplit)-1]
 		f := workflow.ExecuteChildWorkflow(ctx, ImportAudioFileFromReaper, ImportAudioFileFromReaperParams{
-			Path:      filePath,
-			VideoVXID: videoVXID,
-			BaseName:  baseName,
+			Path:       filePath,
+			VideoVXID:  videoVXID,
+			BaseName:   baseName,
+			OutputPath: outDir,
 		})
 
 		importAudioFuture = append(importAudioFuture, f)
@@ -137,14 +146,14 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 		AssetID: videoVXID,
 	}).Get(ctx, nil)
 
-	errors := []error{}
+	var errors []error
 	for _, f := range importAudioFuture {
 		err = f.Get(ctx, nil)
 		if err != nil {
 			errors = append(errors, err)
 		}
 	}
-	wfutils.NotifyTelegramChannel(ctx, "Audio import finished")
+	_ = wfutils.NotifyTelegramChannel(ctx, "🟩 Audio import finished")
 
 	err = transcribeFuture.Get(ctx, nil)
 	if err != nil {
@@ -152,7 +161,7 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	}
 
 	if len(errors) > 0 {
-		return fmt.Errorf("Failed to import one or more audio files: %v", errors)
+		return fmt.Errorf("failed to import one or more audio files: %v", errors)
 	}
 
 	return nil
