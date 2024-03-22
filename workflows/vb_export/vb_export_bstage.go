@@ -7,6 +7,7 @@ import (
 )
 
 /*
+VBExportToBStage
 # Requirements
 
 Container: MOV/MXF

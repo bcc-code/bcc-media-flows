@@ -7,6 +7,7 @@ import (
 )
 
 /*
+VBExportToGfx
 # Requirements
 
 Container: MOV/MXF

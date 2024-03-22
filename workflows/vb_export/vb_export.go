@@ -75,7 +75,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	}
 
 	var errs []error
-	err := wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("VB Export of %s started.\n\nRunID: %s", params.VXID, workflow.GetInfo(ctx).OriginalRunID))
+	err := wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟦 VB Export of %s started.\nDestination(s): %s\n\nRunID: %s", params.VXID, strings.Join(params.Destinations, ", "), workflow.GetInfo(ctx).OriginalRunID))
 	if err != nil {
 		errs = append(errs, err)
 	}
@@ -189,11 +189,6 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 			return nil, err
 		}
 		resultFutures = append(resultFutures, future)
-
-		err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("Exporting VB %s to %s", params.VXID, dest.Value))
-		if err != nil {
-			errs = append(errs, err)
-		}
 	}
 
 	var results []wfutils.ResultOrError[VBExportResult]
@@ -206,7 +201,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		})
 		if err != nil {
 			errs = append(errs, err)
-			err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("VB Export of %s failed: ```%s```", params.VXID, err.Error()))
+			err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟥 VB Export of %s failed: ```%s```", params.VXID, err.Error()))
 			if err != nil {
 				errs = append(errs, err)
 			}

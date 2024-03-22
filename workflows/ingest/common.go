@@ -12,6 +12,7 @@ import (
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/bcc-code/bcc-media-flows/workflows"
 	"github.com/samber/lo"
+	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -58,6 +59,9 @@ func CreatePreviews(ctx workflow.Context, assetIDs []string) error {
 
 func createPreviewsAsync(ctx workflow.Context, assetIDs []string) []workflow.ChildWorkflowFuture {
 	var wfFutures []workflow.ChildWorkflowFuture
+	opts := workflow.GetChildWorkflowOptions(ctx)
+	opts.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
+	ctx = workflow.WithChildOptions(ctx, opts)
 	for _, id := range assetIDs {
 		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
 			VXID: id,
@@ -69,6 +73,8 @@ func createPreviewsAsync(ctx workflow.Context, assetIDs []string) []workflow.Chi
 
 func transcribe(ctx workflow.Context, assetIDs []string, language string) error {
 	var wfFutures []workflow.ChildWorkflowFuture
+	opts := workflow.GetChildWorkflowOptions(ctx)
+	opts.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
 	for _, id := range assetIDs {
 		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeVX, workflows.TranscribeVXInput{
 			VXID:     id,
