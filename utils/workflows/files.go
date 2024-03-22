@@ -32,10 +32,7 @@ func MoveFile(ctx workflow.Context, source, destination paths.Path) error {
 	external := source.OnExternalDrive() || destination.OnExternalDrive()
 
 	if external {
-		return Execute(ctx, activities.Util.RcloneMoveFile, activities.RcloneFileInput{
-			Source:      source,
-			Destination: destination,
-		}).Get(ctx, nil)
+		return RcloneMoveFile(ctx, source, destination)
 	} else {
 		return Execute(ctx, activities.Util.MoveFile, activities.MoveFileInput{
 			Source:      source,
@@ -170,4 +167,58 @@ func IsImage(ctx workflow.Context, file paths.Path) (bool, error) {
 		return false, err
 	}
 	return strings.HasPrefix(*mimeType, "image"), nil
+}
+
+func RcloneCopyFile(ctx workflow.Context, source, destination paths.Path) error {
+	jobID, err := Execute(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
+		Source:      source,
+		Destination: destination,
+	}).Result(ctx)
+	if err != nil {
+		return err
+	}
+	success, err := Execute(ctx, activities.Util.RcloneWaitForJob, jobID).Result(ctx)
+	if err != nil {
+		return err
+	}
+	if !success {
+		return fmt.Errorf("rclone job failed")
+	}
+	return nil
+}
+
+func RcloneMoveFile(ctx workflow.Context, source, destination paths.Path) error {
+	jobID, err := Execute(ctx, activities.Util.RcloneMoveFile, activities.RcloneFileInput{
+		Source:      source,
+		Destination: destination,
+	}).Result(ctx)
+	if err != nil {
+		return err
+	}
+	success, err := Execute(ctx, activities.Util.RcloneWaitForJob, jobID).Result(ctx)
+	if err != nil {
+		return err
+	}
+	if !success {
+		return fmt.Errorf("rclone job failed")
+	}
+	return nil
+}
+
+func RcloneCopyDir(ctx workflow.Context, source, destination string) error {
+	jobID, err := Execute(ctx, activities.Util.RcloneCopyDir, activities.RcloneCopyDirInput{
+		Source:      source,
+		Destination: destination,
+	}).Result(ctx)
+	if err != nil {
+		return err
+	}
+	success, err := Execute(ctx, activities.Util.RcloneWaitForJob, jobID).Result(ctx)
+	if err != nil {
+		return err
+	}
+	if !success {
+		return fmt.Errorf("rclone job failed")
+	}
+	return nil
 }

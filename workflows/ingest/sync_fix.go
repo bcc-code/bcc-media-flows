@@ -41,10 +41,16 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 	for _, lang := range languages {
 		path := audioPaths[lang]
 		dest := outputFolder.Append(path.Base())
-		f := wfutils.Execute(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
+		jobID, err := wfutils.Execute(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
 			Source:      path,
 			Destination: dest,
-		}).Future
+		}).Result(ctx)
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+
+		f := wfutils.Execute(ctx, activities.Util.RcloneWaitForJob, jobID).Future
 		selector.AddFuture(f, func(future workflow.Future) {
 			var copied bool
 			err := future.Get(ctx, &copied)

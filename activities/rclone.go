@@ -11,7 +11,10 @@ import (
 	"go.temporal.io/sdk/activity"
 )
 
-func waitForJob(ctx context.Context, jobID int) (bool, error) {
+func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, jobID int) (bool, error) {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Starting RcloneWaitForJob")
+
 	for {
 		job, err := rclone.CheckJobStatus(jobID)
 		if err != nil {
@@ -36,16 +39,15 @@ type RcloneCopyDirInput struct {
 	Destination string
 }
 
-func (ua UtilActivities) RcloneCopyDir(ctx context.Context, input RcloneCopyDirInput) (bool, error) {
+func (ua UtilActivities) RcloneCopyDir(ctx context.Context, input RcloneCopyDirInput) (int, error) {
 	activity.RecordHeartbeat(ctx, "Rclone CopyDir")
 	activity.GetLogger(ctx).Debug(fmt.Sprintf("Rclone CopyDir: %s -> %s", input.Source, input.Destination))
 
 	res, err := rclone.CopyDir(input.Source, input.Destination)
 	if err != nil {
-		return false, err
+		return 0, err
 	}
-
-	return waitForJob(ctx, res.JobID)
+	return res.JobID, nil
 }
 
 type RcloneFileInput struct {
@@ -53,7 +55,7 @@ type RcloneFileInput struct {
 	Destination paths.Path
 }
 
-func (ua UtilActivities) RcloneMoveFile(ctx context.Context, input RcloneFileInput) (bool, error) {
+func (ua UtilActivities) RcloneMoveFile(ctx context.Context, input RcloneFileInput) (int, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting RcloneMoveFile")
 
@@ -65,13 +67,13 @@ func (ua UtilActivities) RcloneMoveFile(ctx context.Context, input RcloneFileInp
 		dstFs, dstRemote,
 	)
 	if err != nil {
-		return false, err
+		return 0, err
 	}
 
-	return waitForJob(ctx, res.JobID)
+	return res.JobID, nil
 }
 
-func (ua UtilActivities) RcloneCopyFile(ctx context.Context, input RcloneFileInput) (bool, error) {
+func (ua UtilActivities) RcloneCopyFile(ctx context.Context, input RcloneFileInput) (int, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting RcloneCopyFile")
 
@@ -83,8 +85,8 @@ func (ua UtilActivities) RcloneCopyFile(ctx context.Context, input RcloneFileInp
 		dstFs, dstRemote,
 	)
 	if err != nil {
-		return false, err
+		return 0, err
 	}
 
-	return waitForJob(ctx, res.JobID)
+	return res.JobID, nil
 }

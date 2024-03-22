@@ -43,10 +43,15 @@ func HandleMultitrackFile(
 
 	lucidPath = lucidPath.Append(path.Base()).Prepend("01 Liveopptak fra Brunstad/01 RAW/" + date)
 
-	err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
+	jobID, err := wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      path,
 		Destination: lucidPath,
-	}).Get(ctx, nil)
+	}).Result(ctx)
+	if err != nil {
+		return err
+	}
+
+	_, err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.RcloneWaitForJob, jobID).Result(ctx)
 	if err != nil {
 		return err
 	}

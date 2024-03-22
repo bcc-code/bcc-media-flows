@@ -80,10 +80,7 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		extraFileName += "_SUB_NOR"
 	}
 
-	err = wfutils.Execute(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
-		Source:      videoResult.OutputPath,
-		Destination: deliveryFolder.Append("Abekas-AVCI", params.OriginalFilenameWithoutExt+extraFileName+videoResult.OutputPath.Ext()),
-	}).Get(ctx, nil)
+	err = wfutils.RcloneCopyFile(ctx, videoResult.OutputPath, deliveryFolder.Append("Abekas-AVCI", params.OriginalFilenameWithoutExt+extraFileName+videoResult.OutputPath.Ext()))
 	if err != nil {
 		return nil, err
 	}

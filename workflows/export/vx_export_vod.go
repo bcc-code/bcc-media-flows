@@ -274,10 +274,7 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 
 	if v.params.Upload {
 		// Copies created files and any remaining files needed.
-		err = wfutils.Execute(ctx, activities.Util.RcloneCopyDir, activities.RcloneCopyDirInput{
-			Source:      outputDir.Rclone(),
-			Destination: fmt.Sprintf("s3prod:vod-asset-ingest-prod/" + v.ingestFolder),
-		}).Get(ctx, nil)
+		err = wfutils.RcloneCopyDir(ctx, outputDir.Rclone(), fmt.Sprintf("s3prod:vod-asset-ingest-prod/%s", v.ingestFolder))
 		if err != nil {
 			return nil, err
 		}
@@ -357,8 +354,13 @@ func (v *vxExportVodService) copyToIngest(ctx workflow.Context, path paths.Path)
 	if !v.params.Upload {
 		return
 	}
-	v.tasks = append(v.tasks, wfutils.Execute(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
+	jobID, err := wfutils.Execute(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      path,
 		Destination: paths.New(paths.AssetIngestDrive, filepath.Join(v.ingestFolder, path.Base())),
-	}).Future)
+	}).Result(ctx)
+	if err != nil {
+		v.errs = append(v.errs, err)
+		return
+	}
+	v.tasks = append(v.tasks, wfutils.Execute(ctx, activities.Util.RcloneWaitForJob, jobID).Future)
 }
