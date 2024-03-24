@@ -43,7 +43,7 @@ func MultitrackMux(files paths.Files, outputPath paths.Path, cb ffmpeg.ProgressC
 		"-vf", fmt.Sprintf("scale=960:540:force_original_aspect_ratio=decrease,pad=960:540:(ow-iw)/2:(oh-ih)/2,drawtext=text=%s:fontsize=36:fontcolor=white:x=100:y=100", text),
 		"-c:v", "libx264",
 		"-c:a", "pcm_s24le",
-		outputPath.Local(),
+		outputPath.Append(files[0].Base()+".mxf").Local(),
 	)
 
 	_, err = ffmpeg.Do(params, ffmpeg.StreamInfo{}, cb)
