@@ -126,7 +126,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		return *dest != DestinationHippo
 	})
 
-	if len(destinationsWithAudioOutput) > 0 && analyzeResult.HasAudio {
+	if len(destinationsWithAudioOutput) > 0 && analyzeResult.HasAudio && !strings.Contains(videoFilePath.Base(), "_KLICK") {
 		normalizeAudioResult, err := wfutils.Execute(ctx, activities.Audio.NormalizeAudioActivity, activities.NormalizeAudioParams{
 			FilePath:              videoFilePath,
 			TargetLUFS:            -23,
