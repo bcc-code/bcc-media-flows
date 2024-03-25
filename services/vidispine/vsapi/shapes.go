@@ -121,22 +121,26 @@ func (c *Client) GetResolutions(itemVXID string) ([]Resolution, error) {
 	r := shape.VideoComponent[0].Resolution
 	var qualities []Resolution
 	if r.Width/r.Height == 16/9 {
-		switch r.Height {
-		case 2160:
+
+		if r.Height >= 2160 {
 			qualities = append(qualities, Resolution{Width: 3840, Height: 2160})
-			fallthrough
-		case 1080:
+		}
+
+		if r.Height >= 1080 {
 			qualities = append(qualities, Resolution{Width: 1920, Height: 1080})
-			fallthrough
-		case 720:
+		}
+
+		if r.Height >= 720 {
 			qualities = append(qualities, Resolution{Width: 1280, Height: 720})
-			fallthrough
-		case 560:
+		}
+
+		if r.Height >= 560 {
 			qualities = append(qualities, Resolution{Width: 960, Height: 540})
 			qualities = append(qualities, Resolution{Width: 640, Height: 360})
 			qualities = append(qualities, Resolution{Width: 480, Height: 270})
 			qualities = append(qualities, Resolution{Width: 320, Height: 180})
 		}
+
 	} else {
 		qualities = append(qualities, r)
 		for r.Width%2 == 0 && r.Height%2 == 0 {
