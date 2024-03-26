@@ -44,7 +44,7 @@ func watchersHandler(ctx *gin.Context) {
 	}
 
 	// This needs to match any subfolder
-	multitrackPath := strings.HasPrefix(result.Path, "/mnt/isilon/system/multitrack/Ingest/tempFraBrunstad/")
+	multitrackPath := strings.HasPrefix(result.Path, "/mnt/isilon/system/multitrack/Ingest/tempFraBrunstad/") || strings.HasPrefix(result.Path, "/mnt/dmzshare/multitrack/Ingest/tempFraBrunstad/")
 	growingPath := strings.HasPrefix(result.Path, "/mnt/dmzshare/ingestgrow/")
 	rawImportIsilon := strings.HasPrefix(result.Path, "/mnt/isilon/Input/Rawmaterial/")
 
