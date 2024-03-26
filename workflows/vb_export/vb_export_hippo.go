@@ -107,8 +107,14 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 	} else {
 		_ = wfutils.CopyFile(ctx, params.InputFile, outputFile)
 	}
+	rcloneDestination := deliveryFolder.Append("Hippo", params.OriginalFilenameWithoutExt+outputFile.Ext())
 
-	err = wfutils.RcloneCopyFile(ctx, outputFile, deliveryFolder.Append("Hippo", params.OriginalFilenameWithoutExt+outputFile.Ext()))
+	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, 10)
+	if err != nil {
+		return nil, err
+	}
+
+	err = wfutils.RcloneCopyFile(ctx, outputFile, rcloneDestination)
 	if err != nil {
 		return nil, err
 	}

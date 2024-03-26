@@ -54,7 +54,14 @@ func VBExportToBStage(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		filePath = videoResult.OutputPath
 	}
 
-	err = wfutils.RcloneCopyFile(ctx, filePath, deliveryFolder.Append("B-Stage", params.OriginalFilenameWithoutExt+filePath.Ext()))
+	rcloneDestination := deliveryFolder.Append("B-Stage", params.OriginalFilenameWithoutExt+filePath.Ext())
+
+	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, 10)
+	if err != nil {
+		return nil, err
+	}
+
+	err = wfutils.RcloneCopyFile(ctx, filePath, rcloneDestination)
 	if err != nil {
 		return nil, err
 	}

@@ -3,6 +3,7 @@ package wfutils
 import (
 	"encoding/xml"
 	"fmt"
+	"go.temporal.io/sdk/temporal"
 	"path/filepath"
 	"strings"
 	"time"
@@ -173,6 +174,31 @@ func RcloneCheckFileExists(ctx workflow.Context, file paths.Path) (bool, error) 
 	return Execute(ctx, activities.Util.RcloneCheckFileExists, activities.RcloneSingleFileInput{
 		File: file,
 	}).Result(ctx)
+}
+
+func RcloneWaitForFileGone(ctx workflow.Context, file paths.Path, retries int) error {
+	fileExists := true
+	for i := 0; i < retries; i++ {
+		exists, err := RcloneCheckFileExists(ctx, file)
+		if err != nil {
+			return err
+		}
+
+		if !exists {
+			// The file does not exist so we can continue with upload
+			fileExists = false
+			break
+		}
+
+		NotifyTelegramChannel(ctx, fmt.Sprintf("⚠️ File ```%s``` already exists, retrying in one minute (%d/%d)", file.Rclone(), i, retries))
+		workflow.Sleep(ctx, time.Minute)
+	}
+
+	if fileExists {
+		return temporal.NewNonRetryableApplicationError("File already exists", "FILE_EXISTS", nil)
+	}
+
+	return nil
 }
 
 func RcloneCopyFile(ctx workflow.Context, source, destination paths.Path) error {
