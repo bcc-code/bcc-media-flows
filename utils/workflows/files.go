@@ -169,6 +169,12 @@ func IsImage(ctx workflow.Context, file paths.Path) (bool, error) {
 	return strings.HasPrefix(*mimeType, "image"), nil
 }
 
+func RcloneCheckFileExists(ctx workflow.Context, file paths.Path) (bool, error) {
+	return Execute(ctx, activities.Util.RcloneCheckFileExists, activities.RcloneSingleFileInput{
+		File: file,
+	}).Result(ctx)
+}
+
 func RcloneCopyFile(ctx workflow.Context, source, destination paths.Path) error {
 	jobID, err := Execute(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      source,

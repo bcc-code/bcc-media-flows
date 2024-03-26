@@ -90,3 +90,21 @@ func (ua UtilActivities) RcloneCopyFile(ctx context.Context, input RcloneFileInp
 
 	return res.JobID, nil
 }
+
+type RcloneSingleFileInput struct {
+	File paths.Path
+}
+
+func (ua UtilActivities) RcloneCheckFileExists(ctx context.Context, input RcloneSingleFileInput) (bool, error) {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Starting RcloneCheckFileExists")
+
+	fs, remote := input.File.RcloneFsRemote()
+
+	stats, err := rclone.Stat(fs, remote)
+	if err != nil {
+		return false, err
+	}
+
+	return stats != nil, nil
+}

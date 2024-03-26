@@ -2,7 +2,9 @@ package vb_export
 
 import (
 	"fmt"
+	"go.temporal.io/sdk/temporal"
 	"strings"
+	"time"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
@@ -78,6 +80,27 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 	extraFileName := ""
 	if params.SubtitleFile != nil {
 		extraFileName += "_SUB_NOR"
+	}
+
+	fileExists := true
+	for i := 0; i < 10; i++ {
+		exists, err := wfutils.RcloneCheckFileExists(ctx, videoResult.OutputPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if !exists {
+			// The file does not exist so we can continue with upload
+			fileExists = false
+			break
+		}
+
+		wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("⚠️ File %s already exists, retrying in one minute (%d/10)", videoResult.OutputPath, i))
+		workflow.Sleep(ctx, time.Minute)
+	}
+
+	if fileExists {
+		return nil, temporal.NewNonRetryableApplicationError("File already exists", "FILE_EXISTS", nil)
 	}
 
 	err = wfutils.RcloneCopyFile(ctx, videoResult.OutputPath, deliveryFolder.Append("Abekas-AVCI", params.OriginalFilenameWithoutExt+extraFileName+videoResult.OutputPath.Ext()))
