@@ -164,7 +164,7 @@ func metaToChapter(meta *vsapi.MetadataResult) asset.Chapter {
 
 	out.Persons = lo.Filter(meta.GetArray(vscommon.FieldPersonsAppearing), func(p string, _ int) bool { return p != "" })
 
-	if out.ChapterType == ChapterTypeSong.Value {
+	if out.ChapterType == ChapterTypeSong.Value || out.ChapterType == ChapterTypeSingAlong.Value {
 		match := SongExtract.FindStringSubmatch(strings.ToUpper(out.Label))
 		if len(match) == 3 {
 			out.SongCollection = match[1]
