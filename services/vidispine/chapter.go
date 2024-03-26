@@ -32,7 +32,7 @@ var (
 		"appelle":        ChapterTypeSpeech,
 		"vitnesbyrd":     ChapterTypeTestimony,
 		"end-credit":     ChapterTypeCredits,
-		"sing-along":     ChapterTypeSingAlong,
+		"singalong":      ChapterTypeSingAlong,
 		"panel":          ChapterTypeOther,
 		"intervju":       ChapterTypeOther,
 		"temafilm":       ChapterTypeOther,
