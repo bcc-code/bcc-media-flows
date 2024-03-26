@@ -82,9 +82,11 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		extraFileName += "_SUB_NOR"
 	}
 
+	rcloneDestination := deliveryFolder.Append("Abekas-AVCI", params.OriginalFilenameWithoutExt+extraFileName+videoResult.OutputPath.Ext())
+
 	fileExists := true
 	for i := 0; i < 10; i++ {
-		exists, err := wfutils.RcloneCheckFileExists(ctx, videoResult.OutputPath)
+		exists, err := wfutils.RcloneCheckFileExists(ctx, rcloneDestination)
 		if err != nil {
 			return nil, err
 		}
@@ -103,7 +105,7 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		return nil, temporal.NewNonRetryableApplicationError("File already exists", "FILE_EXISTS", nil)
 	}
 
-	err = wfutils.RcloneCopyFile(ctx, videoResult.OutputPath, deliveryFolder.Append("Abekas-AVCI", params.OriginalFilenameWithoutExt+extraFileName+videoResult.OutputPath.Ext()))
+	err = wfutils.RcloneCopyFile(ctx, videoResult.OutputPath, rcloneDestination)
 	if err != nil {
 		return nil, err
 	}
