@@ -53,9 +53,11 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		return nil, err
 	}
 
-	outputFile := hippoOutputDir.Append(params.InputFile.SetExt("mov").Base())
+	outputFile := hippoOutputDir.Append(params.InputFile.Base())
 
 	if !isImage {
+		outputFile = hippoOutputDir.Append(params.InputFile.SetExt("mov").Base())
+
 		if params.AnalyzeResult.FrameRate != 25 && params.AnalyzeResult.FrameRate != 50 && params.AnalyzeResult.FrameRate != 60 {
 			return nil, merry.New("Expected 25 or 50 fps input")
 		}
