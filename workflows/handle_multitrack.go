@@ -15,6 +15,41 @@ type HandleMultitrackFileInput struct {
 	Path string
 }
 
+func makeLucidMultitrackPath(ctx workflow.Context, path paths.Path) paths.Path {
+	out := paths.Path{
+		Drive: paths.LucidLinkDrive,
+	}
+
+	path, _ = wfutils.StandardizeFileName(ctx, path)
+
+	if path.Drive == paths.IsilonDrive {
+		out.Path = strings.Replace(path.Path, "system/multitrack/Ingest/tempFraBrunstad", "", 1)
+	} else if path.Drive == paths.DMZShareDrive {
+		out.Path = strings.Replace(path.Path, "multitrack/Ingest/tempFraBrunstad", "", 1)
+	}
+
+	out.Append(path.Base()).Prepend("01 Liveopptak fra Brunstad/01 RAW/" + time.Now().Format("2006-01-02"))
+	return out
+}
+
+func makeMultitrackIsilonArchivePath(ctx workflow.Context, path paths.Path) paths.Path {
+	out := paths.Path{
+		Drive: paths.IsilonDrive,
+	}
+
+	path, _ = wfutils.StandardizeFileName(ctx, path)
+
+	if path.Drive == paths.IsilonDrive {
+		out.Path = strings.Replace(path.Dir().Path, "system/multitrack/Ingest/tempFraBrunstad", "", 1)
+	} else if path.Drive == paths.DMZShareDrive {
+		out.Path = strings.Replace(path.Dir().Path, "multitrack/Ingest/tempFraBrunstad", "", 1)
+	}
+
+	out.Prepend(fmt.Sprintf("AudioArchive/%d/%d", time.Now().Year(), time.Now().Month())).Append(path.Base())
+
+	return out
+}
+
 func HandleMultitrackFile(
 	ctx workflow.Context,
 	params HandleMultitrackFileInput,
@@ -30,18 +65,7 @@ func HandleMultitrackFile(
 		return err
 	}
 
-	path, err = wfutils.StandardizeFileName(ctx, path)
-	if err != nil {
-		return err
-	}
-
-	date := time.Now().Format("2006-01-02")
-	lucidPath := paths.Path{
-		Drive: paths.LucidLinkDrive,
-		Path:  strings.Replace(path.Dir().Path, "system/multitrack/Ingest/tempFraBrunstad", "", 1),
-	}
-
-	lucidPath = lucidPath.Append(path.Base()).Prepend("01 Liveopptak fra Brunstad/01 RAW/" + date)
+	lucidPath := makeLucidMultitrackPath(ctx, path)
 
 	jobID, err := wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      path,
@@ -56,11 +80,7 @@ func HandleMultitrackFile(
 		return err
 	}
 
-	isilonArchivePath := paths.Path{
-		Drive: paths.IsilonDrive,
-		Path:  strings.Replace(path.Dir().Path, "system/multitrack/Ingest/tempFraBrunstad", "", 1),
-	}.Prepend(fmt.Sprintf("AudioArchive/%d/%d", time.Now().Year(), time.Now().Month())).Append(path.Base())
-
+	isilonArchivePath := makeMultitrackIsilonArchivePath(ctx, path)
 	err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.MoveFile, activities.MoveFileInput{
 		Source:      path,
 		Destination: isilonArchivePath,
