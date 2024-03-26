@@ -28,8 +28,7 @@ func makeLucidMultitrackPath(ctx workflow.Context, path paths.Path) paths.Path {
 		out.Path = strings.Replace(path.Path, "multitrack/Ingest/tempFraBrunstad", "", 1)
 	}
 
-	out.Append(path.Base()).Prepend("01 Liveopptak fra Brunstad/01 RAW/" + time.Now().Format("2006-01-02"))
-	return out
+	return out.Append(path.Base()).Prepend("01 Liveopptak fra Brunstad/01 RAW/" + time.Now().Format("2006-01-02"))
 }
 
 func makeMultitrackIsilonArchivePath(ctx workflow.Context, path paths.Path) paths.Path {
@@ -45,9 +44,7 @@ func makeMultitrackIsilonArchivePath(ctx workflow.Context, path paths.Path) path
 		out.Path = strings.Replace(path.Dir().Path, "multitrack/Ingest/tempFraBrunstad", "", 1)
 	}
 
-	out.Prepend(fmt.Sprintf("AudioArchive/%d/%d", time.Now().Year(), time.Now().Month())).Append(path.Base())
-
-	return out
+	return out.Prepend(fmt.Sprintf("AudioArchive/%d/%d", time.Now().Year(), time.Now().Month())).Append(path.Base())
 }
 
 func HandleMultitrackFile(
