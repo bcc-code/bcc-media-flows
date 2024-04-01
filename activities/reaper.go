@@ -16,10 +16,10 @@ func (ua UtilActivities) StartReaper(ctx context.Context, _ any) (any, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusConflict {
-		return nil, errors.New("Received non-200 response status: " + resp.Status)
-	}
+	/*
+		if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusConflict {
+			return nil, errors.New("Received non-200 response status: " + resp.Status)
+		}*/
 
 	return nil, nil
 }
