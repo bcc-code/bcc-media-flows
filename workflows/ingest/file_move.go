@@ -2,6 +2,7 @@ package ingestworkflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ingest"
@@ -36,7 +37,7 @@ func MoveUploadedFiles(ctx workflow.Context, params MoveUploadedFilesParams) err
 		}
 		newPath := params.OutputDir.Append(filename + f.Ext())
 
-		err = wfutils.MoveFile(ctx, f, newPath)
+		err = wfutils.MoveFile(ctx, f, newPath, rclone.PriorityNormal)
 		if err != nil {
 			errors = append(errors, err)
 			continue

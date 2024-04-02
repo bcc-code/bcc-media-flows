@@ -2,6 +2,7 @@ package ingestworkflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
@@ -74,7 +75,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 		}
 
 		newPath := outputDir.Append(f.Base())
-		err = wfutils.MoveFile(ctx, f, newPath)
+		err = wfutils.MoveFile(ctx, f, newPath, rclone.PriorityNormal)
 		if err != nil {
 			return nil, err
 		}

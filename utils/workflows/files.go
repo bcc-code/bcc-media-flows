@@ -3,6 +3,7 @@ package wfutils
 import (
 	"encoding/xml"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"go.temporal.io/sdk/temporal"
 	"path/filepath"
 	"strings"
@@ -29,11 +30,11 @@ func StandardizeFileName(ctx workflow.Context, file paths.Path) (paths.Path, err
 	return result.Path, err
 }
 
-func MoveFile(ctx workflow.Context, source, destination paths.Path) error {
+func MoveFile(ctx workflow.Context, source, destination paths.Path, priority rclone.Priority) error {
 	external := source.OnExternalDrive() || destination.OnExternalDrive()
 
 	if external {
-		return RcloneMoveFile(ctx, source, destination)
+		return RcloneMoveFile(ctx, source, destination, priority)
 	} else {
 		return Execute(ctx, activities.Util.MoveFile, activities.MoveFileInput{
 			Source:      source,
@@ -49,9 +50,9 @@ func CopyFile(ctx workflow.Context, source, destination paths.Path) error {
 	}).Get(ctx, nil)
 }
 
-func MoveToFolder(ctx workflow.Context, file, folder paths.Path) (paths.Path, error) {
+func MoveToFolder(ctx workflow.Context, file, folder paths.Path, priority rclone.Priority) (paths.Path, error) {
 	newPath := folder.Append(file.Base())
-	err := MoveFile(ctx, file, newPath)
+	err := MoveFile(ctx, file, newPath, priority)
 	return newPath, err
 }
 
@@ -201,10 +202,11 @@ func RcloneWaitForFileGone(ctx workflow.Context, file paths.Path, retries int) e
 	return nil
 }
 
-func RcloneCopyFile(ctx workflow.Context, source, destination paths.Path) error {
+func RcloneCopyFile(ctx workflow.Context, source, destination paths.Path, priority rclone.Priority) error {
 	jobID, err := Execute(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      source,
 		Destination: destination,
+		Priority:    priority,
 	}).Result(ctx)
 	if err != nil {
 		return err
@@ -219,10 +221,11 @@ func RcloneCopyFile(ctx workflow.Context, source, destination paths.Path) error 
 	return nil
 }
 
-func RcloneMoveFile(ctx workflow.Context, source, destination paths.Path) error {
+func RcloneMoveFile(ctx workflow.Context, source, destination paths.Path, priority rclone.Priority) error {
 	jobID, err := Execute(ctx, activities.Util.RcloneMoveFile, activities.RcloneFileInput{
 		Source:      source,
 		Destination: destination,
+		Priority:    priority,
 	}).Result(ctx)
 	if err != nil {
 		return err
@@ -237,10 +240,11 @@ func RcloneMoveFile(ctx workflow.Context, source, destination paths.Path) error 
 	return nil
 }
 
-func RcloneCopyDir(ctx workflow.Context, source, destination string) error {
+func RcloneCopyDir(ctx workflow.Context, source, destination string, priority rclone.Priority) error {
 	jobID, err := Execute(ctx, activities.Util.RcloneCopyDir, activities.RcloneCopyDirInput{
 		Source:      source,
 		Destination: destination,
+		Priority:    priority,
 	}).Result(ctx)
 	if err != nil {
 		return err

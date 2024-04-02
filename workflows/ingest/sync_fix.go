@@ -2,6 +2,7 @@ package ingestworkflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
@@ -44,6 +45,7 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 		jobID, err := wfutils.Execute(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
 			Source:      path,
 			Destination: dest,
+			Priority:    rclone.PriorityHigh,
 		}).Result(ctx)
 		if err != nil {
 			errs = append(errs, err)

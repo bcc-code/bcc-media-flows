@@ -2,6 +2,7 @@ package workflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"strings"
 	"time"
 
@@ -67,6 +68,7 @@ func HandleMultitrackFile(
 	jobID, err := wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      path,
 		Destination: lucidPath,
+		Priority:    rclone.PriorityLow,
 	}).Result(ctx)
 	if err != nil {
 		return err

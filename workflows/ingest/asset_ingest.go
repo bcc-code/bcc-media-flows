@@ -2,6 +2,7 @@ package ingestworkflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"path/filepath"
 	"strings"
 
@@ -90,6 +91,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 	_, err = wfutils.MoveToFolder(ctx,
 		xmlPath,
 		xmlPath.Dir().Append("processed"),
+		rclone.PriorityNormal,
 	)
 	if err != nil {
 		return nil, err
@@ -203,7 +205,7 @@ func copyToDir(ctx workflow.Context, dest paths.Path, files []ingest.File) error
 		return err
 	}
 
-	err = wfutils.RcloneCopyDir(ctx, dir.Rclone(), dest.Rclone())
+	err = wfutils.RcloneCopyDir(ctx, dir.Rclone(), dest.Rclone(), rclone.PriorityNormal)
 	if err != nil {
 		return err
 	}

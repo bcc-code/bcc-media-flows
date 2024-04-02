@@ -1,6 +1,7 @@
 package export
 
 import (
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"path/filepath"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -55,7 +56,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 	if err != nil {
 		return nil, err
 	}
-	err = wfutils.RcloneCopyDir(ctx, params.OutputDir.Rclone(), destination)
+	err = wfutils.RcloneCopyDir(ctx, params.OutputDir.Rclone(), destination, rclone.PriorityNormal)
 	if err != nil {
 		return nil, err
 	}

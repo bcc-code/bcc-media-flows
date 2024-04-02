@@ -2,6 +2,7 @@ package workflows
 
 import (
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -61,15 +62,15 @@ func TranscribeFile(
 		return err
 	}
 
-	_, err = wfutils.MoveToFolder(ctx, transcribeOutput.JSONPath, destination)
+	_, err = wfutils.MoveToFolder(ctx, transcribeOutput.JSONPath, destination, rclone.PriorityNormal)
 	if err != nil {
 		return err
 	}
-	_, err = wfutils.MoveToFolder(ctx, transcribeOutput.SRTPath, destination)
+	_, err = wfutils.MoveToFolder(ctx, transcribeOutput.SRTPath, destination, rclone.PriorityNormal)
 	if err != nil {
 		return err
 	}
-	_, err = wfutils.MoveToFolder(ctx, transcribeOutput.TXTPath, destination)
+	_, err = wfutils.MoveToFolder(ctx, transcribeOutput.TXTPath, destination, rclone.PriorityNormal)
 	return err
 
 }
