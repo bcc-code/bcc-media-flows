@@ -35,30 +35,43 @@ func waitForTransferSlot(priority Priority, timeout time.Duration) (chan bool, e
 	return ch, nil
 }
 
-func CheckFileTransferQueue() {
+func StartFileTransferQueue() {
 	for {
-		stats, _ := GetRcloneStatus()
-		count := len(stats.Transferring)
+		checkFileTransferQueue()
+		time.Sleep(time.Second * 5)
+	}
+}
 
-		if count >= maxConcurrentTransfers {
-			return
-		}
+func checkFileTransferQueue() {
+	stats, _ := GetRcloneStatus()
+	count := len(stats.Transferring)
 
-		queueLock.Lock()
+	if count >= maxConcurrentTransfers {
+		return
+	}
 
-		for _, priority := range Priorities.Members() {
-			for _, ch := range transferQueue[priority] {
-				if count >= maxConcurrentTransfers {
-					goto sleep
-				}
+	queueLock.Lock()
+	defer queueLock.Unlock()
 
-				count++
-				ch <- true
+	for _, priority := range Priorities.Members() {
+		started := 0
+		for _, ch := range transferQueue[priority] {
+			count++
+			started++
+			ch <- true
+
+			if count >= maxConcurrentTransfers {
+				// If we've reached the maximum number of concurrent transfers, then we can stop processing the queue
+				// and remove the items that we've already started
+				transferQueue[priority] = transferQueue[priority][started:]
+				return
 			}
 		}
 
-	sleep:
-		queueLock.Unlock()
-		time.Sleep(time.Second * 5)
+		if started > 0 {
+			// If we get to here, then we've exhausted the queue for this priority and can replace it with an empty slice
+			transferQueue[priority] = []chan bool{}
+		}
 	}
+
 }
