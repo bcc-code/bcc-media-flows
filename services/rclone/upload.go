@@ -71,7 +71,10 @@ func MoveFile(sourceRemote, sourcePath, destinationRemote, destinationPath strin
 		return nil, err
 	}
 
-	waitForTransferSlot(priority, time.Hour)
+	err = waitForTransferSlot(priority, time.Hour)
+	if err != nil {
+		return nil, err
+	}
 
 	req, err := http.NewRequest("POST", baseUrl+"/operations/movefile", bytes.NewReader(body))
 	if err != nil {
@@ -93,7 +96,10 @@ func CopyFile(sourceRemote, sourcePath, destinationRemote, destinationPath strin
 		return nil, err
 	}
 
-	waitForTransferSlot(priority, time.Hour)
+	err = waitForTransferSlot(priority, time.Hour)
+	if err != nil {
+		return nil, err
+	}
 
 	req, err := http.NewRequest("POST", baseUrl+"/operations/copyfile", bytes.NewReader(body))
 	if err != nil {

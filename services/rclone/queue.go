@@ -18,7 +18,8 @@ func init() {
 	}
 }
 
-func waitForTransferSlot(priority Priority, timeout time.Duration) (chan bool, error) {
+func waitForTransferSlot(priority Priority, timeout time.Duration) error {
+	// Create an unbuffered channel
 	ch := make(chan bool)
 
 	queueLock.Lock()
@@ -29,10 +30,10 @@ func waitForTransferSlot(priority Priority, timeout time.Duration) (chan bool, e
 	case <-ch:
 		break
 	case <-time.After(timeout):
-		return nil, merry.Wrap(errTimeout)
+		return merry.Wrap(errTimeout)
 	}
 
-	return ch, nil
+	return nil
 }
 
 func StartFileTransferQueue() {
@@ -56,9 +57,16 @@ func checkFileTransferQueue() {
 	for _, priority := range Priorities.Members() {
 		started := 0
 		for _, ch := range transferQueue[priority] {
-			count++
-			started++
-			ch <- true
+
+			// This is a non-blocking send, so if the channel is full, we can skip it.
+			// It basically means that the other side is not listening and we can move on.
+			// this approach works because we're using an unbuffered channel
+			select {
+			case ch <- true:
+				count++
+				started++
+			default:
+			}
 
 			if count >= maxConcurrentTransfers {
 				// If we've reached the maximum number of concurrent transfers, then we can stop processing the queue

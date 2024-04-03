@@ -130,7 +130,7 @@ func main() {
 		MaxConcurrentActivityExecutionSize: activityCount, // Doesn't make sense to have more than one activity running at a time
 	}
 
-	go rclone.CheckFileTransferQueue()
+	go rclone.StartFileTransferQueue()
 
 	registerWorker(c, environment.GetQueue(), workerOptions)
 }
