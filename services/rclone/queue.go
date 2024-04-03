@@ -44,7 +44,11 @@ func StartFileTransferQueue() {
 }
 
 func checkFileTransferQueue() {
-	stats, _ := GetRcloneStatus()
+	stats, err := GetRcloneStatus()
+	if err != nil {
+		return
+	}
+
 	count := len(stats.Transferring)
 
 	if count >= maxConcurrentTransfers {
