@@ -1,9 +1,10 @@
 package rclone
 
 import (
-	"github.com/ansel1/merry/v2"
 	"sync"
 	"time"
+
+	"github.com/ansel1/merry/v2"
 )
 
 const maxConcurrentTransfers = 5
@@ -43,14 +44,21 @@ func CheckFileTransferQueue() {
 			return
 		}
 
+		queueLock.Lock()
+
 		for _, priority := range Priorities.Members() {
 			for _, ch := range transferQueue[priority] {
 				if count >= maxConcurrentTransfers {
-					return
+					goto sleep
 				}
+
+				count++
 				ch <- true
 			}
 		}
+
+	sleep:
+		queueLock.Unlock()
 		time.Sleep(time.Second * 5)
 	}
 }
