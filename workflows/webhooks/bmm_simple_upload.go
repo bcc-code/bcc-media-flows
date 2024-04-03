@@ -2,6 +2,7 @@ package webhooks
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"strconv"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -43,7 +44,7 @@ func BmmSimpleUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 
 	newPath := outputDir.Append(fmt.Sprintf("BMM-%d-%s%s", params.TrackID, params.Language, path.Ext()))
 
-	err = wfutils.MoveFile(ctx, path, newPath)
+	err = wfutils.MoveFile(ctx, path, newPath, rclone.PriorityNormal)
 	if err != nil {
 		return nil, err
 	}

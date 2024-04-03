@@ -2,6 +2,7 @@ package workflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
@@ -37,7 +38,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	if err != nil {
 		return err
 	}
-	path, err = wfutils.MoveToFolder(ctx, path, processingFolder)
+	path, err = wfutils.MoveToFolder(ctx, path, processingFolder, rclone.PriorityNormal)
 	if err != nil {
 		return err
 	}
@@ -119,13 +120,13 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	ctx = workflow.WithTaskQueue(ctx, environment.GetWorkerQueue())
 
 	if err != nil {
-		path, _ = wfutils.MoveToFolder(ctx, path, errorFolder)
+		path, _ = wfutils.MoveToFolder(ctx, path, errorFolder, rclone.PriorityNormal)
 		return err
 	} else {
-		path, _ = wfutils.MoveToFolder(ctx, path, processedFolder)
+		path, _ = wfutils.MoveToFolder(ctx, path, processedFolder, rclone.PriorityNormal)
 
 		if transcodeOutput != nil {
-			_, _ = wfutils.MoveToFolder(ctx, transcodeOutput.OutputPath, outFolder)
+			_, _ = wfutils.MoveToFolder(ctx, transcodeOutput.OutputPath, outFolder, rclone.PriorityNormal)
 		}
 	}
 

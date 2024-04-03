@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"path/filepath"
 	"strings"
 
@@ -274,7 +275,7 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 
 	if v.params.Upload {
 		// Copies created files and any remaining files needed.
-		err = wfutils.RcloneCopyDir(ctx, outputDir.Rclone(), fmt.Sprintf("s3prod:vod-asset-ingest-prod/%s", v.ingestFolder))
+		err = wfutils.RcloneCopyDir(ctx, outputDir.Rclone(), fmt.Sprintf("s3prod:vod-asset-ingest-prod/%s", v.ingestFolder), rclone.PriorityNormal)
 		if err != nil {
 			return nil, err
 		}
@@ -357,6 +358,7 @@ func (v *vxExportVodService) copyToIngest(ctx workflow.Context, path paths.Path)
 	jobID, err := wfutils.Execute(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      path,
 		Destination: paths.New(paths.AssetIngestDrive, filepath.Join(v.ingestFolder, path.Base())),
+		Priority:    rclone.PriorityNormal,
 	}).Result(ctx)
 	if err != nil {
 		v.errs = append(v.errs, err)

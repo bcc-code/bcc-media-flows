@@ -3,10 +3,29 @@ package rclone
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/ansel1/merry/v2"
+	"github.com/orsinium-labs/enum"
 	"net/http"
+	"time"
 )
 
 const baseUrl = "http://rclone.lan.bcc.media"
+
+var (
+	errTimeout = merry.Sentinel("timeout waiting for transfer slot")
+)
+
+type Priority enum.Member[string]
+
+var (
+	PriorityLow    = Priority{Value: "low"}
+	PriorityNormal = Priority{Value: "normal"}
+	PriorityHigh   = Priority{Value: "high"}
+
+	// Priorities determines the order of priority
+	// The leftmost item is the highest priority
+	Priorities = enum.New(PriorityHigh, PriorityNormal, PriorityLow)
+)
 
 type copyRequest struct {
 	Async       bool   `json:"_async"`
@@ -40,7 +59,7 @@ type fileRequest struct {
 	DestinationPath   string `json:"dstRemote"`
 }
 
-func MoveFile(sourceRemote, sourcePath, destinationRemote, destinationPath string) (*JobResponse, error) {
+func MoveFile(sourceRemote, sourcePath, destinationRemote, destinationPath string, priority Priority) (*JobResponse, error) {
 	body, err := json.Marshal(fileRequest{
 		Async:             true,
 		SourceRemote:      sourceRemote,
@@ -48,6 +67,11 @@ func MoveFile(sourceRemote, sourcePath, destinationRemote, destinationPath strin
 		DestinationRemote: destinationRemote,
 		DestinationPath:   destinationPath,
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = waitForTransferSlot(priority, time.Hour)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +84,7 @@ func MoveFile(sourceRemote, sourcePath, destinationRemote, destinationPath strin
 	return doRequest[JobResponse](req)
 }
 
-func CopyFile(sourceRemote, sourcePath, destinationRemote, destinationPath string) (*JobResponse, error) {
+func CopyFile(sourceRemote, sourcePath, destinationRemote, destinationPath string, priority Priority) (*JobResponse, error) {
 	body, err := json.Marshal(fileRequest{
 		Async:             true,
 		SourceRemote:      sourceRemote,
@@ -68,6 +92,11 @@ func CopyFile(sourceRemote, sourcePath, destinationRemote, destinationPath strin
 		DestinationRemote: destinationRemote,
 		DestinationPath:   destinationPath,
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = waitForTransferSlot(priority, time.Hour)
 	if err != nil {
 		return nil, err
 	}

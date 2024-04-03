@@ -2,6 +2,7 @@ package ingestworkflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -107,7 +108,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	}
 
 	file := params.OutputDir.Append(filename)
-	err = wfutils.MoveFile(ctx, *sourceFile, file)
+	err = wfutils.MoveFile(ctx, *sourceFile, file, rclone.PriorityNormal)
 	if err != nil {
 		return nil, err
 	}

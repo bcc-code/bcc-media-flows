@@ -5,6 +5,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -116,7 +117,7 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		return nil, err
 	}
 
-	err = wfutils.RcloneCopyFile(ctx, outputFile, rcloneDestination)
+	err = wfutils.RcloneCopyFile(ctx, outputFile, rcloneDestination, rclone.PriorityHigh)
 	if err != nil {
 		return nil, err
 	}

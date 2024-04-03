@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"net/http"
 	"net/url"
 	"path"
@@ -149,7 +150,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		for _, lang := range keys {
 			p := params.MergeResult.JSONTranscript[lang]
 
-			err = wfutils.MoveFile(ctx, p, params.OutputDir.Append(p.Base()))
+			err = wfutils.MoveFile(ctx, p, params.OutputDir.Append(p.Base()), rclone.PriorityNormal)
 			if err != nil {
 				return nil, err
 			}
@@ -220,7 +221,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	config := getBMMDestinationConfig(params.ExportDestination)
 
 	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
-	err = wfutils.RcloneCopyDir(ctx, params.OutputDir.Rclone(), config.Bucket+ingestFolder)
+	err = wfutils.RcloneCopyDir(ctx, params.OutputDir.Rclone(), config.Bucket+ingestFolder, rclone.PriorityNormal)
 	if err != nil {
 		return nil, err
 	}

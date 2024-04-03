@@ -30,6 +30,7 @@ func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, jobID int) (bool,
 			}
 			return true, nil
 		}
+
 		time.Sleep(time.Second * 10)
 	}
 }
@@ -37,6 +38,7 @@ func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, jobID int) (bool,
 type RcloneCopyDirInput struct {
 	Source      string
 	Destination string
+	Priority    rclone.Priority
 }
 
 func (ua UtilActivities) RcloneCopyDir(ctx context.Context, input RcloneCopyDirInput) (int, error) {
@@ -53,6 +55,7 @@ func (ua UtilActivities) RcloneCopyDir(ctx context.Context, input RcloneCopyDirI
 type RcloneFileInput struct {
 	Source      paths.Path
 	Destination paths.Path
+	Priority    rclone.Priority
 }
 
 func (ua UtilActivities) RcloneMoveFile(ctx context.Context, input RcloneFileInput) (int, error) {
@@ -65,6 +68,7 @@ func (ua UtilActivities) RcloneMoveFile(ctx context.Context, input RcloneFileInp
 	res, err := rclone.MoveFile(
 		srcFs, srcRemote,
 		dstFs, dstRemote,
+		input.Priority,
 	)
 	if err != nil {
 		return 0, err
@@ -83,6 +87,7 @@ func (ua UtilActivities) RcloneCopyFile(ctx context.Context, input RcloneFileInp
 	res, err := rclone.CopyFile(
 		srcFs, srcRemote,
 		dstFs, dstRemote,
+		input.Priority,
 	)
 	if err != nil {
 		return 0, err

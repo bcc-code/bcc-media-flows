@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"log"
 	"os"
 	"reflect"
@@ -128,6 +129,8 @@ func main() {
 		LocalActivityWorkerOnly:            false,
 		MaxConcurrentActivityExecutionSize: activityCount, // Doesn't make sense to have more than one activity running at a time
 	}
+
+	go rclone.StartFileTransferQueue()
 
 	registerWorker(c, environment.GetQueue(), workerOptions)
 }
