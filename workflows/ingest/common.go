@@ -125,7 +125,7 @@ func notifyImportFailed(ctx workflow.Context, targets []notifications.Target, jo
 		Targets: targets,
 		Message: notifications.ImportFailed{
 			Error: importError.Error(),
-			Title: "Import completed",
+			Title: "Import failed",
 			JobID: strconv.Itoa(jobID),
 			Files: lo.Map(lo.Entries(filesByAssetID), func(entry lo.Entry[string, paths.Path], _ int) notifications.File {
 				return notifications.File{
