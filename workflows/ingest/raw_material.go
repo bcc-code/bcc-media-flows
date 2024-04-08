@@ -34,7 +34,7 @@ func RawMaterialForm(ctx workflow.Context, params RawMaterialFormParams) error {
 
 	originalFiles, err := wfutils.ListFiles(ctx, params.Directory)
 	if err != nil {
-		notifyImportFailed(ctx, params.Targets, params.Metadata.JobProperty.JobID, err)
+		notifyImportFailed(ctx, params.Targets, params.Metadata.JobProperty.JobID, originalFiles, err)
 		return err
 	}
 
@@ -44,7 +44,7 @@ func RawMaterialForm(ctx workflow.Context, params RawMaterialFormParams) error {
 		Language:         params.Metadata.JobProperty.Language,
 	})
 	if err != nil {
-		notifyImportFailed(ctx, params.Targets, params.Metadata.JobProperty.JobID, err)
+		notifyImportFailed(ctx, params.Targets, params.Metadata.JobProperty.JobID, originalFiles, err)
 		return err
 	}
 
