@@ -119,3 +119,20 @@ func notifyImportCompleted(ctx workflow.Context, targets []notifications.Target,
 		},
 	}).Get(ctx, nil)
 }
+
+func notifyImportFailed(ctx workflow.Context, targets []notifications.Target, jobID int, importError error) error {
+	return wfutils.Execute(ctx, activities.Util.NotifyImportFailed, activities.NotifyImportFailedInput{
+		Targets: targets,
+		Message: notifications.ImportFailed{
+			Error: importError.Error(),
+			Title: "Import failed",
+			JobID: strconv.Itoa(jobID),
+			Files: lo.Map(lo.Entries(filesByAssetID), func(entry lo.Entry[string, paths.Path], _ int) notifications.File {
+				return notifications.File{
+					VXID: entry.Key,
+					Name: entry.Value.Base(),
+				}
+			}),
+		},
+	}).Get(ctx, nil)
+}

@@ -40,6 +40,19 @@ func (ua UtilActivities) NotifyImportCompleted(ctx context.Context, input Notify
 	return nil, client.Send(input.Targets, input.Message)
 }
 
+type NotifyImportFailedInput struct {
+	Targets []notifications.Target
+	Message notifications.ImportFailed
+}
+
+func (ua UtilActivities) NotifyImportFailed(ctx context.Context, input NotifyImportFailedInput) (any, error) {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Sending notification")
+
+	client := notifications.NewClient(notificationServices{})
+	return nil, client.Send(input.Targets, input.Message)
+}
+
 type notificationServices struct {
 }
 

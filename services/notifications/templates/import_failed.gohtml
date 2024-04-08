@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+{{- /*gotype: github.com/bcc-code/bccm-flows/services/notifications.ImportFailed */}}
+<head>
+    <title>Home</title>
+</head>
+<body>
+    <div>
+        <h2>{{.Title}}</h2>
+        <p>{{.JobID}}</p>
+        <h2 color="red">Error</h2>
+        <p>{{.Error}}</p>
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>VX-ID</th>
+                        <th>Name</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {{ range $file := .Files }}
+                <tr>
+                    <td>
+                        {{$file.VXID}}
+                    </td>
+                    <td>
+                        {{$file.Name}}
+                    </td>
+                </tr>
+                {{ end }}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

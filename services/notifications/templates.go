@@ -11,6 +11,10 @@ var (
 	importCompletedTemplateString string
 	importCompletedTemplate       = template.Must(template.New("import_completed").Parse(importCompletedTemplateString))
 
+	//go:embed templates/import_failed.gohtml
+	importFailedTemplateString string
+	importFailedTemplate       = template.Must(template.New("import_failed").Parse(importFailedTemplateString))
+
 	//go:embed templates/simple_notification.gohtml
 	simpleNotificationTemplateFS string
 	simpleNotificationTemplate   = template.Must(template.New("simple_notification").Parse(simpleNotificationTemplateFS))
@@ -34,6 +38,23 @@ func (t ImportCompleted) RenderHTML() (string, error) {
 }
 
 func (t ImportCompleted) RenderMarkdown() (string, error) {
+	return "", nil
+}
+
+type ImportFailed struct {
+	Title string
+	JobID string
+	Error string
+	Files []File
+}
+
+func (ImportFailed) IsTemplate() {}
+
+func (t ImportFailed) RenderHTML() (string, error) {
+	return renderHtmlTemplate(importFailedTemplate, t)
+}
+
+func (t ImportFailed) RenderMarkdown() (string, error) {
 	return "", nil
 }
 
