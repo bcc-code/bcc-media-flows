@@ -12,7 +12,7 @@ func notifyExportDone(ctx workflow.Context, params VXExportChildWorkflowParams, 
 }
 
 func notifyTelegramChannel(ctx workflow.Context, message string) error {
-	err := wfutils.NotifyTelegramChannel(ctx, message)
+	_, err := wfutils.NotifyTelegramChannel(ctx, message)
 	logger := workflow.GetLogger(ctx)
 	if err != nil {
 		logger.Error("Failed to notify telegram channel", "error", err)

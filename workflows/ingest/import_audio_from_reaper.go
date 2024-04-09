@@ -115,7 +115,7 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 	err := doImportAudioFileFromReaper(ctx, params)
 
 	if err != nil {
-		_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟥 Import of audio file from Reaper failed: ```%s```", err.Error()))
+		_, _ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟥 Import of audio file from Reaper failed: ```%s```", err.Error()))
 		return err
 	}
 	return nil
@@ -161,7 +161,7 @@ func doImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFro
 	}
 
 	if isSilent {
-		_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟧 File %s is silent, skipping", bccmflows.LanguagesByReaper[reaperTrackNumber].LanguageName))
+		_, _ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟧 File %s is silent, skipping", bccmflows.LanguagesByReaper[reaperTrackNumber].LanguageName))
 
 		// This is not a fail, so we should not send an error
 		return nil

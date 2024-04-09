@@ -26,11 +26,11 @@ func UpdateAssetRelations(ctx workflow.Context, params UpdateAssetRelationsParam
 	}).Result(ctx)
 
 	if err != nil {
-		_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟥 Failed to update asset relations: ```%v```", err))
+		_, _ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟥 Failed to update asset relations: ```%v```", err))
 		return err
 	}
 
-	_ = wfutils.NotifyTelegramChannel(ctx,
+	_, _ = wfutils.NotifyTelegramChannel(ctx,
 		fmt.Sprintf(
 			"🟩 Updated asset relations for asset %s with for %d languages: %s",
 			params.AssetID,

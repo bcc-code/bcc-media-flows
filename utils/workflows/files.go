@@ -3,7 +3,9 @@ package wfutils
 import (
 	"encoding/xml"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/notifications"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
+	"github.com/rs/zerolog/log"
 	"go.temporal.io/sdk/temporal"
 	"path/filepath"
 	"strings"
@@ -179,6 +181,7 @@ func RcloneCheckFileExists(ctx workflow.Context, file paths.Path) (bool, error) 
 
 func RcloneWaitForFileGone(ctx workflow.Context, file paths.Path, retries int) error {
 	fileExists := true
+	var msg *notifications.SendResult
 	for i := 0; i < retries; i++ {
 		exists, err := RcloneCheckFileExists(ctx, file)
 		if err != nil {
@@ -191,7 +194,15 @@ func RcloneWaitForFileGone(ctx workflow.Context, file paths.Path, retries int) e
 			break
 		}
 
-		NotifyTelegramChannel(ctx, fmt.Sprintf("⚠️ File ```%s``` already exists, retrying in one minute (%d/%d)", file.Rclone(), i, retries))
+		if msg != nil {
+			msg, err = UpdateTelegramMessage(ctx, msg, fmt.Sprintf("⚠️ File ```%s``` still exists, retrying in one minute (%d/%d)", file.Rclone(), i, retries))
+		} else {
+			msg, err = NotifyTelegramChannel(ctx, fmt.Sprintf("⚠️ File ```%s``` already exists, retrying in one minute (%d/%d)", file.Rclone(), i, retries))
+		}
+
+		if err != nil {
+			log.Err(err).Msg("Failed to send notification")
+		}
 		workflow.Sleep(ctx, time.Minute)
 	}
 
@@ -211,7 +222,10 @@ func RcloneCopyFile(ctx workflow.Context, source, destination paths.Path, priori
 	if err != nil {
 		return err
 	}
-	success, err := Execute(ctx, activities.Util.RcloneWaitForJob, jobID).Result(ctx)
+	success, err := Execute(ctx,
+		activities.Util.RcloneWaitForJob,
+		activities.RcloneWaitForJobInput{JobID: jobID},
+	).Result(ctx)
 	if err != nil {
 		return err
 	}
@@ -230,7 +244,10 @@ func RcloneMoveFile(ctx workflow.Context, source, destination paths.Path, priori
 	if err != nil {
 		return err
 	}
-	success, err := Execute(ctx, activities.Util.RcloneWaitForJob, jobID).Result(ctx)
+	success, err := Execute(ctx,
+		activities.Util.RcloneWaitForJob,
+		activities.RcloneWaitForJobInput{JobID: jobID},
+	).Result(ctx)
 	if err != nil {
 		return err
 	}
@@ -249,7 +266,10 @@ func RcloneCopyDir(ctx workflow.Context, source, destination string, priority rc
 	if err != nil {
 		return err
 	}
-	success, err := Execute(ctx, activities.Util.RcloneWaitForJob, jobID).Result(ctx)
+	success, err := Execute(ctx,
+		activities.Util.RcloneWaitForJob,
+		activities.RcloneWaitForJobInput{JobID: jobID},
+	).Result(ctx)
 	if err != nil {
 		return err
 	}

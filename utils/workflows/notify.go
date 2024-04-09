@@ -8,17 +8,29 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-func Notify(ctx workflow.Context, targets []notifications.Target, title, message string) error {
+func Notify(ctx workflow.Context, targets []notifications.Target, title, message string) (*notifications.SendResult, error) {
 	return Execute(ctx, activities.Util.NotifySimple, activities.NotifySimpleInput{
 		Targets: targets,
 		Message: notifications.SimpleNotification{
 			Title:   title,
 			Message: message,
 		},
-	}).Get(ctx, nil)
+	}).Result(ctx)
 }
 
-func NotifyTelegramChannel(ctx workflow.Context, message string) error {
+type UpdateTelegramMessageInput struct {
+}
+
+func UpdateTelegramMessage(ctx workflow.Context, original *notifications.SendResult, newMessage string) (*notifications.SendResult, error) {
+	return Execute(ctx, activities.Util.UpdateTelegramMessage, activities.UpdateTelegramMessageInput{
+		OriginalMessage: original.TelegramMessage,
+		NewMessage: notifications.SimpleNotification{
+			Message: newMessage,
+		},
+	}).Result(ctx)
+}
+
+func NotifyTelegramChannel(ctx workflow.Context, message string) (*notifications.SendResult, error) {
 	return Execute(ctx, activities.Util.NotifySimple, activities.NotifySimpleInput{
 		Targets: []notifications.Target{
 			{
@@ -29,5 +41,5 @@ func NotifyTelegramChannel(ctx workflow.Context, message string) error {
 		Message: notifications.SimpleNotification{
 			Message: message,
 		},
-	}).Get(ctx, nil)
+	}).Result(ctx)
 }

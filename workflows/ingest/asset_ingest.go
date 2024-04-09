@@ -117,7 +117,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 		return notifications.Email(strings.TrimSpace(s))
 	})
 
-	err = wfutils.Notify(ctx, targets, "Import triggered", "Order form: "+metadata.JobProperty.OrderForm)
+	_, err = wfutils.Notify(ctx, targets, "Import triggered", "Order form: "+metadata.JobProperty.OrderForm)
 	if err != nil {
 		return nil, err
 	}

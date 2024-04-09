@@ -8,7 +8,7 @@ import (
 	"gopkg.in/telebot.v3"
 )
 
-func SendTelegramMessage(chatID int64, message notifications.Template) error {
+func SendTelegramMessage(chatID int64, message notifications.Template) (*telebot.Message, error) {
 	pref := telebot.Settings{
 		Token:  os.Getenv("TELEGRAM_BOT_TOKEN"),
 		Poller: &telebot.LongPoller{Timeout: 10 * time.Second},
@@ -17,13 +17,29 @@ func SendTelegramMessage(chatID int64, message notifications.Template) error {
 	bot, err := telebot.NewBot(pref)
 	markdown, err := message.RenderMarkdown()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_, err = bot.Send(&telebot.Chat{
+	msg, err := bot.Send(&telebot.Chat{
 		ID: chatID,
 	}, markdown, telebot.ModeMarkdown)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+
+	return msg, nil
+}
+
+func EditTelegramMessage(msg *telebot.Message, message notifications.Template) (*telebot.Message, error) {
+	pref := telebot.Settings{
+		Token:  os.Getenv("TELEGRAM_BOT_TOKEN"),
+		Poller: &telebot.LongPoller{Timeout: 10 * time.Second},
+	}
+
+	bot, err := telebot.NewBot(pref)
+	markdown, err := message.RenderMarkdown()
+	if err != nil {
+		return nil, err
+	}
+
+	return bot.Edit(msg, markdown, telebot.ModeMarkdown)
 }
