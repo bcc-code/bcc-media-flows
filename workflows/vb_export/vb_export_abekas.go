@@ -92,7 +92,7 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		return nil, err
 	}
 
-	notifyExportDone(ctx, params, "abekas")
+	notifyExportDone(ctx, params, "abekas", videoResult.OutputPath)
 
 	return &VBExportResult{
 		ID: params.ParentParams.VXID,

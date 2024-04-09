@@ -129,7 +129,7 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		return nil, err
 	}
 
-	notifyExportDone(ctx, params, "hippo")
+	notifyExportDone(ctx, params, "hippo", outputFile)
 
 	return &VBExportResult{
 		ID: params.ParentParams.VXID,

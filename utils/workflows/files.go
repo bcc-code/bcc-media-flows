@@ -186,7 +186,7 @@ func RcloneWaitForFileGone(ctx workflow.Context, file paths.Path, retries int) e
 		}
 
 		if !exists {
-			// The file does not exist so we can continue with upload
+			// The file does not exist, so we can continue with upload
 			fileExists = false
 			break
 		}

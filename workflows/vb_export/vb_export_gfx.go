@@ -67,7 +67,7 @@ func VBExportToGfx(ctx workflow.Context, params VBExportChildWorkflowParams) (*V
 		return nil, err
 	}
 
-	notifyExportDone(ctx, params, "gfx")
+	notifyExportDone(ctx, params, "gfx", filePath)
 
 	return &VBExportResult{
 		ID: params.ParentParams.VXID,

@@ -229,8 +229,8 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	return results, err
 }
 
-func notifyExportDone(ctx workflow.Context, params VBExportChildWorkflowParams, flow string) {
-	_ = notifyTelegramChannel(ctx, fmt.Sprintf("🟩 Export of `%s` finished.\nDestination: `%s`", params.ParentParams.VXID, flow))
+func notifyExportDone(ctx workflow.Context, params VBExportChildWorkflowParams, flow string, tempExportPath paths.Path) {
+	_ = notifyTelegramChannel(ctx, fmt.Sprintf("🟩 Export of `%s` finished.\nDestination: `%s`, Preview: `%s`", params.ParentParams.VXID, flow, tempExportPath.Local()))
 }
 
 func notifyTelegramChannel(ctx workflow.Context, message string) error {
