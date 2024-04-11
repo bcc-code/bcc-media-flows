@@ -2,6 +2,7 @@ package workflows
 
 import (
 	"fmt"
+
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -109,7 +110,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	case common.FolderTranscribe:
 		ctx = workflow.WithTaskQueue(ctx, environment.GetWorkerQueue())
 		err = workflow.ExecuteChildWorkflow(ctx, TranscribeFile, TranscribeFileInput{
-			Language:        "no",
+			Language:        "auto",
 			File:            path.Linux(),
 			DestinationPath: outFolder.Linux(),
 		}).Get(ctx, nil)
