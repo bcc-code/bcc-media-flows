@@ -215,7 +215,7 @@ func Parse(path string) (Path, error) {
 			}
 		}
 	}
-	return Path{}, ErrPathNotValid
+	return Path{}, merry.Wrap(ErrPathNotValid, merry.WithUserMessagef("path %s is not valid", path))
 }
 
 func MustParse(path string) Path {

@@ -200,7 +200,7 @@ func copyToDir(ctx workflow.Context, dest paths.Path, files []ingest.File) error
 		return fmt.Errorf("multiple directories not supported: %s", dirs)
 	}
 
-	dir, err := paths.Parse(filepath.Join("/mnt/dmzshare", "workflow", dirs[0]))
+	dir, err := paths.Parse(filepath.Join("/mnt/filecatalyst/workflow", dirs[0]))
 	if err != nil {
 		return err
 	}
@@ -213,7 +213,7 @@ func copyToDir(ctx workflow.Context, dest paths.Path, files []ingest.File) error
 	for _, file := range files {
 		err = wfutils.DeletePathRecursively(
 			ctx,
-			paths.MustParse(filepath.Join("/mnt/dmzshare", "workflow", file.FilePath, file.FileName)),
+			paths.MustParse(filepath.Join("/mnt/filecatalyst/workflow", file.FilePath, file.FileName)),
 		)
 		if err != nil {
 			return err
