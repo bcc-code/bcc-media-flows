@@ -25,7 +25,7 @@ func makeLucidMultitrackPath(ctx workflow.Context, path paths.Path) paths.Path {
 
 	if path.Drive == paths.IsilonDrive {
 		out.Path = strings.Replace(path.Path, "system/multitrack/Ingest/tempFraBrunstad", "", 1)
-	} else if path.Drive == paths.DMZShareDrive {
+	} else if path.Drive == paths.FileCatalystDrive {
 		out.Path = strings.Replace(path.Path, "multitrack/Ingest/tempFraBrunstad", "", 1)
 	}
 
@@ -41,7 +41,7 @@ func makeMultitrackIsilonArchivePath(ctx workflow.Context, path paths.Path) path
 
 	if path.Drive == paths.IsilonDrive {
 		out.Path = strings.Replace(path.Dir().Path, "system/multitrack/Ingest/tempFraBrunstad", "", 1)
-	} else if path.Drive == paths.DMZShareDrive {
+	} else if path.Drive == paths.FileCatalystDrive {
 		out.Path = strings.Replace(path.Dir().Path, "multitrack/Ingest/tempFraBrunstad", "", 1)
 	}
 

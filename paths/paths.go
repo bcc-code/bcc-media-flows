@@ -49,15 +49,15 @@ func (d *Drive) UnmarshalJSON(value []byte) error {
 }
 
 var (
-	IsilonDrive      = Drive{Value: "isilon"}
-	TempDrive        = Drive{Value: "temp"}
-	DMZShareDrive    = Drive{Value: "dmzshare"}
-	BrunstadDrive    = Drive{Value: "brunstad"}
-	AssetIngestDrive = Drive{Value: "asset_ingest"}
-	LucidLinkDrive   = Drive{Value: "lucid"}
-	Drives           = enum.New(IsilonDrive, DMZShareDrive, TempDrive, AssetIngestDrive, BrunstadDrive, LucidLinkDrive)
-	ErrDriveNotFound = merry.Sentinel("drive not found")
-	ErrPathNotValid  = merry.Sentinel("path not valid")
+	IsilonDrive       = Drive{Value: "isilon"}
+	TempDrive         = Drive{Value: "temp"}
+	BrunstadDrive     = Drive{Value: "brunstad"}
+	AssetIngestDrive  = Drive{Value: "asset_ingest"}
+	LucidLinkDrive    = Drive{Value: "lucid"}
+	FileCatalystDrive = Drive{Value: "filecatalyst"}
+	Drives            = enum.New(IsilonDrive, FileCatalystDrive, TempDrive, AssetIngestDrive, BrunstadDrive, LucidLinkDrive)
+	ErrDriveNotFound  = merry.Sentinel("drive not found")
+	ErrPathNotValid   = merry.Sentinel("path not valid")
 )
 
 //goland:noinspection GoMixedReceiverTypes
@@ -65,8 +65,8 @@ func (d Drive) RcloneName() string {
 	switch d {
 	case IsilonDrive:
 		return "isilon"
-	case DMZShareDrive:
-		return "dmzshare"
+	case FileCatalystDrive:
+		return "isilon"
 	case BrunstadDrive:
 		return "brunstad"
 	case LucidLinkDrive:
@@ -80,8 +80,8 @@ func (d Drive) RclonePath() string {
 	switch d {
 	case IsilonDrive:
 		return "isilon:isilon"
-	case DMZShareDrive:
-		return "dmz:dmzshare"
+	case FileCatalystDrive:
+		return "isilon:filecatalyst"
 	case AssetIngestDrive:
 		return "s3prod:vod-asset-ingest-prod"
 	case BrunstadDrive:
@@ -134,8 +134,8 @@ func (p Path) RcloneFsRemote() (string, string) {
 		return "isilon:", filepath.Join("temp", p.Path)
 	case IsilonDrive:
 		return "isilon:", filepath.Join("isilon", p.Path)
-	case DMZShareDrive:
-		return "dmz:", filepath.Join("dmzshare", p.Path)
+	case FileCatalystDrive:
+		return "isilon:", filepath.Join("filecatalyst", p.Path)
 	case AssetIngestDrive:
 		return "s3prod:", filepath.Join("vod-asset-ingest-prod", p.Path)
 	case BrunstadDrive:
@@ -195,12 +195,12 @@ type prefix struct {
 }
 
 var drivePrefixes = map[Drive]prefix{
-	IsilonDrive:      {"/mnt/isilon/", environment.GetIsilonPrefix(), "isilon:isilon/"},
-	DMZShareDrive:    {"/mnt/dmzshare/", environment.GetDmzShareMountPrefix(), "dmz:dmzshare/"},
-	TempDrive:        {"/mnt/temp/", environment.GetTempMountPrefix(), "isilon:temp/"},
-	AssetIngestDrive: {"/dev/null/", "/dev/null/", "s3prod:vod-asset-ingest-prod/"},
-	BrunstadDrive:    {"/dev/null/", "/dev/null/", "brunstad:/"},
-	LucidLinkDrive:   {"/dev/null/", "/dev/null/", "lucid:lucidlink/"},
+	IsilonDrive:       {"/mnt/isilon/", environment.GetIsilonPrefix(), "isilon:isilon/"},
+	FileCatalystDrive: {"/mnt/filecatalyst/", environment.GetFileCatalystMountPrefix(), "isilon:filecatalyst/"},
+	TempDrive:         {"/mnt/temp/", environment.GetTempMountPrefix(), "isilon:temp/"},
+	AssetIngestDrive:  {"/dev/null/", "/dev/null/", "s3prod:vod-asset-ingest-prod/"},
+	BrunstadDrive:     {"/dev/null/", "/dev/null/", "brunstad:/"},
+	LucidLinkDrive:    {"/dev/null/", "/dev/null/", "lucid:lucidlink/"},
 }
 
 func Parse(path string) (Path, error) {

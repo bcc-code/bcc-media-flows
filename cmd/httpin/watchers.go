@@ -36,7 +36,7 @@ func watchersHandler(ctx *gin.Context) {
 		return
 	}
 
-	xmlPath, err := filepath.Match("/mnt/dmzshare/workflow/xml/*", result.Path)
+	xmlPath, err := filepath.Match("/mnt/filecatalyst/workflow/xml/*", result.Path)
 	if err != nil {
 		fmt.Println(err.Error())
 		ctx.String(500, err.Error())
@@ -45,14 +45,8 @@ func watchersHandler(ctx *gin.Context) {
 
 	// This needs to match any subfolder
 	multitrackPath := strings.HasPrefix(result.Path, "/mnt/isilon/system/multitrack/Ingest/tempFraBrunstad/") || strings.HasPrefix(result.Path, "/mnt/dmzshare/multitrack/Ingest/tempFraBrunstad/")
-	growingPath := strings.HasPrefix(result.Path, "/mnt/dmzshare/ingestgrow/")
+	growingPath := strings.HasPrefix(result.Path, "/mnt/filecatalyst/ingestgrow/")
 	rawImportIsilon := strings.HasPrefix(result.Path, "/mnt/isilon/Input/Rawmaterial/")
-
-	if err != nil {
-		fmt.Println(err.Error())
-		ctx.String(500, err.Error())
-		return
-	}
 
 	if xmlPath {
 		err = doIngest(ctx, result.Path)

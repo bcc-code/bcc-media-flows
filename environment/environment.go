@@ -62,14 +62,14 @@ func GetTempMountPrefix() string {
 	return "/mnt/temp"
 }
 
-var dmzShareMountPrefix = os.Getenv("DMZSHARE_MOUNT_PREFIX")
+var fileCatalystMountPrefix = os.Getenv("FILECATALYST_MOUNT_PREFIX")
 
-func GetDmzShareMountPrefix() string {
+func GetFileCatalystMountPrefix() string {
 	// For local testing
-	if dmzShareMountPrefix != "" {
-		return dmzShareMountPrefix
+	if fileCatalystMountPrefix != "" {
+		return fileCatalystMountPrefix
 	}
-	return "/mnt/dmzshare"
+	return "/mnt/filecatalyst"
 }
 
 func IsilonPathFix(path string) string {
