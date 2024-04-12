@@ -68,7 +68,11 @@ func GetOldFiles(rootDir string, olderThan time.Time) ([]string, error) {
 			if err != nil {
 				return err
 			}
-			if info.ModTime().Before(olderThan) {
+			if info.ModTime().Before(olderThan) &&
+				filepath.Base(path)[0] != '.' &&
+				!strings.HasPrefix(filepath.Base(path), "README") {
+				// Is old, not hidden, and not a README file
+
 				older = append(older, path)
 			}
 		}
