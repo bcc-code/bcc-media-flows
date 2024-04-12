@@ -60,7 +60,7 @@ func ExecuteAnalysisCmd(cmd *exec.Cmd, outputCallback func(string)) (string, err
 		return "", fmt.Errorf("start failed %s", err.Error())
 	}
 
-	jsonStarted := false
+	jsonActive := false
 
 	scannerOut := bufio.NewScanner(stdout)
 	scannerOut.Split(bufio.ScanLines)
@@ -78,15 +78,15 @@ func ExecuteAnalysisCmd(cmd *exec.Cmd, outputCallback func(string)) (string, err
 		line := scannerErr.Text()
 
 		if line == "{" {
-			jsonStarted = true
+			jsonActive = true
 		}
 
-		if jsonStarted {
+		if jsonActive {
 			result += line + "\n"
 		}
 
 		if line == "}" {
-			jsonStarted = false
+			jsonActive = false
 		}
 	}
 
