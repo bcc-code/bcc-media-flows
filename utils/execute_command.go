@@ -85,6 +85,9 @@ func ExecuteAnalysisCmd(cmd *exec.Cmd, outputCallback func(string)) (string, err
 			result += line + "\n"
 		}
 
+		if line == "}" {
+			jsonStarted = false
+		}
 	}
 
 	// replace -Inf with -99 if the audio was silent
