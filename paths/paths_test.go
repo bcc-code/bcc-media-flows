@@ -52,3 +52,16 @@ func Test_Lucid(t *testing.T) {
 
 	assert.Equal(t, "lucid:lucidlink/tesing/test/test/Felles/Opptak1/lkajhdwid-323.wav", lucidPath.Rclone())
 }
+
+func Test_FileCatalyst(t *testing.T) {
+	pathString := "/mnt/filecatalyst/ingestgrow/MDTES01_MU1.mxf"
+
+	path, err := Parse(pathString)
+
+	assert.Nil(t, err)
+
+	assert.Equal(t, FileCatalystDrive, path.Drive)
+	assert.Equal(t, "ingestgrow/MDTES01_MU1.mxf", path.Path)
+
+	assert.Equal(t, "/mnt/filecatalyst/ingestgrow/MDTES01_MU1.mxf", path.Local())
+}

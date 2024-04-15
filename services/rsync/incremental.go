@@ -38,9 +38,10 @@ func IncrementalCopy(in, out paths.Path, statCallback func(FileInfo)) error {
 		if err != nil {
 			return false, err
 		}
-		if info.Size() == fileSize {
+		if info.Size() >= 10 && info.Size() == fileSize {
 			return true, nil
 		}
+
 		fileSize = info.Size()
 		statCallback(FileInfo{
 			Name:    info.Name(),
