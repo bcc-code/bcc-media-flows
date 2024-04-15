@@ -19,7 +19,7 @@ func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, jobID int) (bool,
 	for {
 		job, err := rclone.CheckJobStatus(jobID)
 		if err != nil {
-			return false, err
+			return false, temporal.NewNonRetryableApplicationError(fmt.Sprintf("rclone job failed: %s", err.Error()), "rclone_job_failed", nil)
 		}
 		activity.RecordHeartbeat(ctx, job)
 		if job == nil {
