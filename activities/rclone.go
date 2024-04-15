@@ -9,6 +9,7 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"go.temporal.io/sdk/activity"
+	"go.temporal.io/sdk/temporal"
 )
 
 func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, jobID int) (bool, error) {
@@ -26,7 +27,7 @@ func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, jobID int) (bool,
 		}
 		if job.Finished {
 			if !job.Success {
-				return false, fmt.Errorf("rclone job failed: %s", job.Error)
+				return false, temporal.NewNonRetryableApplicationError(fmt.Sprintf("rclone job failed: %s", job.Error), "rclone_job_failed", nil)
 			}
 			return true, nil
 		}
