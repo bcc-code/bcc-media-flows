@@ -8,22 +8,60 @@ import (
 	"gopkg.in/telebot.v3"
 )
 
-func SendTelegramMessage(chatID int64, message notifications.Template) error {
-	pref := telebot.Settings{
-		Token:  os.Getenv("TELEGRAM_BOT_TOKEN"),
-		Poller: &telebot.LongPoller{Timeout: 10 * time.Second},
+var (
+	telegramBot *telebot.Bot
+)
+
+type Notification struct {
+	Chat            Chat
+	Message         notifications.Template
+	telegramMessage *telebot.Message
+}
+
+func getOrInitTelegramBot() (*telebot.Bot, error) {
+	if telegramBot == nil {
+		pref := telebot.Settings{
+			Token:  os.Getenv("TELEGRAM_BOT_TOKEN"),
+			Poller: &telebot.LongPoller{Timeout: 10 * time.Second},
+		}
+
+		bot, err := telebot.NewBot(pref)
+		if err != nil {
+			return nil, err
+		}
+
+		telegramBot = bot
 	}
 
-	bot, err := telebot.NewBot(pref)
-	markdown, err := message.RenderMarkdown()
+	return telegramBot, nil
+}
+
+func SendNotification(notification *Notification) (*Notification, error) {
+	bot, err := getOrInitTelegramBot()
 	if err != nil {
-		return err
+		return notification, err
 	}
-	_, err = bot.Send(&telebot.Chat{
-		ID: chatID,
-	}, markdown, telebot.ModeMarkdown)
+
+	markdown, err := notification.Message.RenderMarkdown()
 	if err != nil {
-		return err
+		return notification, err
 	}
-	return nil
+
+	var msg *telebot.Message
+	if notification.telegramMessage == nil {
+		msg, err = bot.Send(
+			&telebot.Chat{ID: Chats.Value(notification.Chat)},
+			markdown,
+			telebot.ModeMarkdown,
+		)
+	} else {
+		msg, err = bot.Edit(
+			notification.telegramMessage,
+			markdown,
+			telebot.ModeMarkdown,
+		)
+	}
+
+	notification.telegramMessage = msg
+	return notification, err
 }

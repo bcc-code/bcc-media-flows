@@ -2,68 +2,34 @@ package activities
 
 import (
 	"context"
-	"os"
-
+	"fmt"
 	"github.com/bcc-code/bcc-media-flows/services/emails"
 	"github.com/bcc-code/bcc-media-flows/services/notifications"
-	"github.com/bcc-code/bcc-media-flows/services/telegram"
-	"go.temporal.io/sdk/activity"
 )
 
-type NotifySimpleInput struct {
-	Targets []notifications.Target
-	Message notifications.SimpleNotification
+type EmailMessageInput struct {
+	Message notifications.Template
+	To      []string
+	CC      []string
+	BCC     []string
 }
 
-func (ua UtilActivities) NotifySimple(ctx context.Context, input NotifySimpleInput) (any, error) {
-	logger := activity.GetLogger(ctx)
-	if os.Getenv("DEBUG") != "" && os.Getenv("TELEGRAM_CHAT_ID") == "" {
-		logger.Info("Ignoring notification for debug without TELEGRAM_CHAT_ID")
-		return nil, nil
+func (ua UtilActivities) SendEmail(ctx context.Context, msg EmailMessageInput) (any, error) {
+	var errors []error
+	for _, email := range msg.To {
+		err := emails.Send(email, msg.Message)
+		if err != nil {
+			errors = append(errors, err)
+		}
 	}
-	logger.Info("Sending notification")
 
-	client := notifications.NewClient(notificationServices{})
-	return nil, client.Send(input.Targets, input.Message)
-}
+	if len(errors) > 0 {
+		errMsg := ""
+		for _, err := range errors {
+			errMsg += err.Error() + "\n"
+		}
+		return nil, fmt.Errorf("failed to send email: %s", errMsg)
+	}
 
-type NotifyImportCompletedInput struct {
-	Targets []notifications.Target
-	Message notifications.ImportCompleted
-}
-
-func (ua UtilActivities) NotifyImportCompleted(ctx context.Context, input NotifyImportCompletedInput) (any, error) {
-	logger := activity.GetLogger(ctx)
-	logger.Info("Sending notification")
-
-	client := notifications.NewClient(notificationServices{})
-	return nil, client.Send(input.Targets, input.Message)
-}
-
-type NotifyImportFailedInput struct {
-	Targets []notifications.Target
-	Message notifications.ImportFailed
-}
-
-func (ua UtilActivities) NotifyImportFailed(ctx context.Context, input NotifyImportFailedInput) (any, error) {
-	logger := activity.GetLogger(ctx)
-	logger.Info("Sending notification")
-
-	client := notifications.NewClient(notificationServices{})
-	return nil, client.Send(input.Targets, input.Message)
-}
-
-type notificationServices struct {
-}
-
-func (ns notificationServices) SendEmail(email string, message notifications.Template) error {
-	return emails.Send(email, message)
-}
-
-func (ns notificationServices) SendTelegramMessage(chatID int64, message notifications.Template) error {
-	return telegram.SendTelegramMessage(chatID, message)
-}
-
-func (ns notificationServices) SendSMS(phoneNumber string, message notifications.Template) error {
-	return nil
+	return nil, nil
 }
