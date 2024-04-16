@@ -117,7 +117,7 @@ func notifyImportCompleted(ctx workflow.Context, emails []string, jobID int, fil
 		}),
 	}
 
-	wfutils.Execute(ctx, activities.Util.SendTelegramMessage, &telegram.Notification{
+	wfutils.Execute(ctx, activities.Util.SendTelegramMessage, &telegram.Message{
 		Chat:    telegram.ChatOther,
 		Message: content,
 	}).Get(ctx, nil)
@@ -140,7 +140,7 @@ func notifyImportFailed(ctx workflow.Context, emails []string, jobID int, filesB
 		}),
 	}
 
-	wfutils.Execute(ctx, activities.Util.SendTelegramMessage, &telegram.Notification{
+	wfutils.Execute(ctx, activities.Util.SendTelegramMessage, &telegram.Message{
 		Chat:    telegram.ChatOther,
 		Message: content,
 	}).Get(ctx, nil)

@@ -21,8 +21,8 @@ func (ua UtilActivities) StartReaper(ctx context.Context, _ any) (any, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusConflict {
-		telegram.SendNotification(
-			&telegram.Notification{
+		telegram.SendMessage(
+			&telegram.Message{
 				Chat: telegram.ChatOther,
 				Message: notifications.SimpleNotification{
 					Message: fmt.Sprintf("❗❗unable to start reaper. Response: %s\nIngest of video is not impacted.", resp.Status),

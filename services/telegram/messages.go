@@ -12,7 +12,7 @@ var (
 	telegramBot *telebot.Bot
 )
 
-type Notification struct {
+type Message struct {
 	Chat            Chat
 	Message         notifications.Template
 	telegramMessage *telebot.Message
@@ -36,32 +36,32 @@ func getOrInitTelegramBot() (*telebot.Bot, error) {
 	return telegramBot, nil
 }
 
-func SendNotification(notification *Notification) (*Notification, error) {
+func SendMessage(message *Message) (*Message, error) {
 	bot, err := getOrInitTelegramBot()
 	if err != nil {
-		return notification, err
+		return message, err
 	}
 
-	markdown, err := notification.Message.RenderMarkdown()
+	markdown, err := message.Message.RenderMarkdown()
 	if err != nil {
-		return notification, err
+		return message, err
 	}
 
 	var msg *telebot.Message
-	if notification.telegramMessage == nil {
+	if message.telegramMessage == nil {
 		msg, err = bot.Send(
-			&telebot.Chat{ID: Chats.Value(notification.Chat)},
+			&telebot.Chat{ID: Chats.Value(message.Chat)},
 			markdown,
 			telebot.ModeMarkdown,
 		)
 	} else {
 		msg, err = bot.Edit(
-			notification.telegramMessage,
+			message.telegramMessage,
 			markdown,
 			telebot.ModeMarkdown,
 		)
 	}
 
-	notification.telegramMessage = msg
-	return notification, err
+	message.telegramMessage = msg
+	return message, err
 }

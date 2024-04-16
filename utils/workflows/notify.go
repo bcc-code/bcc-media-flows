@@ -8,7 +8,7 @@ import (
 )
 
 func NotifyTelegramChannel(ctx workflow.Context, channel telegram.Chat, message string) {
-	err := Execute(ctx, activities.Util.SendTelegramMessage, &telegram.Notification{
+	err := Execute(ctx, activities.Util.SendTelegramMessage, &telegram.Message{
 		Message: &notifications.SimpleNotification{
 			Message: message,
 		},
