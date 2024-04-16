@@ -51,14 +51,21 @@ func IncrementalCopy(in, out paths.Path, statCallback func(FileInfo)) error {
 		return false, nil
 	}
 
+	doneCount := 0
 	for {
+
 		done, err := doCopy()
 		if err != nil {
 			return err
 		}
+
 		if done {
-			return nil
+			doneCount++
+			if doneCount == 5 {
+				return nil
+			}
 		}
+
 		time.Sleep(time.Second * 15)
 	}
 }
