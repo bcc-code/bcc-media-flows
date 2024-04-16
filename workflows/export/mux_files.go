@@ -46,8 +46,6 @@ func getSubtitlesResult(subtitleFiles map[string]paths.Path) []smil.TextStream {
 	return subtitles
 }
 
-var fileQualities = []int{1080, 540, 180}
-
 func createTranslatedFile(ctx workflow.Context, language string, videoPath, outputPath, audioPath paths.Path, subtitlePaths map[string]paths.Path) workflow.Future {
 	base := videoPath.Base()
 	fileName := base[:len(base)-len(filepath.Ext(base))] + "-" + language

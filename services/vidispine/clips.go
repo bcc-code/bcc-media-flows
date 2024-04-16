@@ -6,7 +6,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 )
 
-func SeqToClips(client Client, seq *vsapi.SequenceDocument, audioSource ExportAudioSource) ([]*Clip, error) {
+func SeqToClips(client Client, seq *vsapi.SequenceDocument) ([]*Clip, error) {
 	out := []*Clip{}
 
 	for _, track := range seq.Track {

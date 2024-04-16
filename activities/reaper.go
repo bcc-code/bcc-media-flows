@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/notifications"
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"io"
 	"net/http"
 )
@@ -16,10 +19,17 @@ func (ua UtilActivities) StartReaper(ctx context.Context, _ any) (any, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	/*
-		if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusConflict {
-			return nil, errors.New("Received non-200 response status: " + resp.Status)
-		}*/
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusConflict {
+		telegram.SendNotification(
+			&telegram.Notification{
+				Chat: telegram.ChatOther,
+				Message: notifications.SimpleNotification{
+					Message: fmt.Sprintf("❗❗unable to start reaper. Response: %s\nIngest of video is not impacted.", resp.Status),
+				},
+			},
+		)
+	}
 
 	return nil, nil
 }
@@ -28,7 +38,7 @@ type ReaperResult struct {
 	Files []string
 }
 
-func (ua UtilActivities) StopReaper(ctx context.Context, _ any) (*ReaperResult, error) {
+func (ua UtilActivities) StopReaper(_ context.Context, _ any) (*ReaperResult, error) {
 	resp, err := http.Get(reaperBaseUrl + "/stop")
 	if err != nil {
 		return nil, err
@@ -51,7 +61,7 @@ func (ua UtilActivities) StopReaper(ctx context.Context, _ any) (*ReaperResult, 
 	}, err
 }
 
-func (ua UtilActivities) ListReaperFiles(ctx context.Context, _ any) (*ReaperResult, error) {
+func (ua UtilActivities) ListReaperFiles(_ context.Context, _ any) (*ReaperResult, error) {
 	resp, err := http.Get(reaperBaseUrl + "/files")
 	if err != nil {
 		return nil, err

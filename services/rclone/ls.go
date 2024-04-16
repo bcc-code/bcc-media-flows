@@ -31,7 +31,7 @@ type listResponse struct {
 }
 
 type statsResponse struct {
-	File *RcloneFile `json:"item",omitempty`
+	File *RcloneFile `json:"item,omitempty"`
 }
 
 type RcloneFile struct {

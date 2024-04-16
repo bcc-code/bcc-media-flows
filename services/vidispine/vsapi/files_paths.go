@@ -107,7 +107,6 @@ func (c *Client) ListFilesForStorage(
 		SetResult(&FileSearchResult{}).
 		Get(requestURL.String())
 
-	//spew.Dump(string(result.Body()))
 	if err != nil {
 		return nil, err
 	}
