@@ -14,7 +14,7 @@ type EmailMessageInput struct {
 	BCC     []string
 }
 
-func (ua UtilActivities) SendEmail(ctx context.Context, msg EmailMessageInput) (any, error) {
+func (ua UtilActivities) SendEmail(_ context.Context, msg EmailMessageInput) (any, error) {
 	var errors []error
 	for _, email := range msg.To {
 		err := emails.Send(email, msg.Message)
