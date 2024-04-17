@@ -9,7 +9,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 	"github.com/bcc-code/bcc-media-flows/services/transcode"
 	"github.com/bcc-code/bcc-media-flows/utils"
-	"github.com/go-errors/errors"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/activity"
 )
@@ -77,7 +76,7 @@ func (aa AudioActivities) AdjustAudioToVideoStart(ctx context.Context, input Adj
 	samplesToAdd := audioSamples - videoSamples + 2400
 
 	if samplesToAdd < 0 {
-		return nil, errors.New("Audio starts before video. This is currently not supported")
+		return nil, fmt.Errorf("audio starts before video. This is currently not supported")
 	}
 
 	_, err = aa.PrependSilence(ctx, PrependSilenceInput{
@@ -141,7 +140,7 @@ func (aa AudioActivities) ExtractAudio(ctx context.Context, input ExtractAudioIn
 
 	for _, channel := range input.Channels {
 		if _, ok := availableChannels[channel]; !ok {
-			return nil, errors.Errorf("Channel %d not found in video", channel)
+			return nil, fmt.Errorf("channel %d not found in video", channel)
 		}
 
 		extractedChannels[channel] = input.OutputFolder.Append(fmt.Sprintf(input.FileNamePattern, channel))

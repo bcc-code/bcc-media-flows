@@ -435,7 +435,7 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 		if err != nil {
 			return nil, err
 		}
-		out.Clips, err = SeqToClips(client, seq, *audioSource)
+		out.Clips, err = SeqToClips(client, seq)
 		if err != nil {
 			return nil, err
 		}

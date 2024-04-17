@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"go.temporal.io/sdk/temporal"
 	"path/filepath"
 	"strings"
@@ -191,7 +192,7 @@ func RcloneWaitForFileGone(ctx workflow.Context, file paths.Path, retries int) e
 			break
 		}
 
-		NotifyTelegramChannel(ctx, fmt.Sprintf("⚠️ File ```%s``` already exists, retrying in one minute (%d/%d)", file.Rclone(), i, retries))
+		NotifyTelegramChannel(ctx, telegram.ChatOslofjord, fmt.Sprintf("⚠️ File ```%s``` already exists, retrying in one minute (%d/%d)", file.Rclone(), i, retries))
 		workflow.Sleep(ctx, time.Minute)
 	}
 

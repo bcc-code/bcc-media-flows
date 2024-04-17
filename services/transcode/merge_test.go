@@ -9,8 +9,6 @@ import (
 	"testing"
 )
 
-const TestRoot = "/Users/fredrikvedvik/Desktop/Transcoding/test/"
-
 func Test_Merge(t *testing.T) {
 	_, _ = MergeVideo(common.MergeInput{
 		Title:     "Test",

@@ -44,19 +44,19 @@ func fromXMLFile[T any](o T, file string) {
 	}
 }
 
-func expectGetShape(vs *vsmock.MockVSClient, vxID string, count int) {
+func expectGetShape(vs *vsmock.MockClient, vxID string, count int) {
 	shape := &vsapi.ShapeResult{}
 	fromJSONFile(shape, fmt.Sprintf("testdata/get_shapes/%s.json", vxID))
 	vs.EXPECT().GetShapes(vxID).Return(shape, nil).Times(count)
 }
 
-func expectGetMetadata(vs *vsmock.MockVSClient, vxID string, count int) {
+func expectGetMetadata(vs *vsmock.MockClient, vxID string, count int) {
 	meta := &vsapi.MetadataResult{}
 	fromJSONFile(meta, fmt.Sprintf("testdata/get_metadata/%s.json", vxID))
 	vs.EXPECT().GetMetadata(vxID).Return(meta, nil).Times(count)
 }
 
-func expectGetSequence(vs *vsmock.MockVSClient, vxID string, count int) {
+func expectGetSequence(vs *vsmock.MockClient, vxID string, count int) {
 	seq := &vsapi.SequenceDocument{}
 	fromXMLFile(seq, fmt.Sprintf("testdata/get_sequence/%s.xml", vxID))
 	vs.EXPECT().GetSequence(vxID).Return(seq, nil).Times(count)
@@ -64,7 +64,7 @@ func expectGetSequence(vs *vsmock.MockVSClient, vxID string, count int) {
 
 func Test_GetDataForExportSEQ(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	vsClient := vsmock.NewMockVSClient(ctrl)
+	vsClient := vsmock.NewMockClient(ctrl)
 
 	expectGetMetadata(vsClient, "VX-431566", 1)
 	expectGetMetadata(vsClient, "VX-431552", 45)
@@ -103,7 +103,7 @@ func Test_GetDataForExportSEQ(t *testing.T) {
 
 func Test_GetDataForExportEmbeddedAudio(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	vsClient := vsmock.NewMockVSClient(ctrl)
+	vsClient := vsmock.NewMockClient(ctrl)
 
 	expectGetMetadata(vsClient, "VX-464406", 1)
 
@@ -122,7 +122,7 @@ func Test_GetDataForExportEmbeddedAudio(t *testing.T) {
 
 func Test_GetDataForExportAsset(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	vsClient := vsmock.NewMockVSClient(ctrl)
+	vsClient := vsmock.NewMockClient(ctrl)
 
 	expectGetMetadata(vsClient, "VX-464458", 1)
 
@@ -139,7 +139,7 @@ func Test_GetDataForExportAsset(t *testing.T) {
 
 func Test_GetDataForExportSubclip(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	vsClient := vsmock.NewMockVSClient(ctrl)
+	vsClient := vsmock.NewMockClient(ctrl)
 
 	expectGetMetadata(vsClient, "VX-460824", 1)
 
@@ -155,7 +155,7 @@ func Test_GetDataForExportSubclip(t *testing.T) {
 
 func Test_GetDataForExportSubtitles(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	vsClient := vsmock.NewMockVSClient(ctrl)
+	vsClient := vsmock.NewMockClient(ctrl)
 
 	expectGetMetadata(vsClient, "VX-447459", 1)
 	expectGetMetadata(vsClient, "VX-447219", 13)

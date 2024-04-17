@@ -35,13 +35,6 @@ func GetAudioQueue() string {
 	return QueueAudio
 }
 
-func GetLowPriorityQueue() string {
-	if queue == QueueDebug {
-		return QueueDebug
-	}
-	return QueueLowPriority
-}
-
 var isilonPrefix = os.Getenv("ISILON_PREFIX")
 
 func GetIsilonPrefix() string {

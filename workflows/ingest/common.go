@@ -1,6 +1,7 @@
 package ingestworkflows
 
 import (
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"strconv"
 
 	"github.com/ansel1/merry/v2"
@@ -104,34 +105,49 @@ func getOrderFormFilename(orderForm OrderForm, file paths.Path, props ingest.Job
 	return "", merry.New("Unsupported order form")
 }
 
-func notifyImportCompleted(ctx workflow.Context, targets []notifications.Target, jobID int, filesByAssetID map[string]paths.Path) error {
-	return wfutils.Execute(ctx, activities.Util.NotifyImportCompleted, activities.NotifyImportCompletedInput{
-		Targets: targets,
-		Message: notifications.ImportCompleted{
-			Title: "Import completed",
-			JobID: strconv.Itoa(jobID),
-			Files: lo.Map(lo.Entries(filesByAssetID), func(entry lo.Entry[string, paths.Path], _ int) notifications.File {
-				return notifications.File{
-					VXID: entry.Key,
-					Name: entry.Value.Base(),
-				}
-			}),
-		},
+func notifyImportCompleted(ctx workflow.Context, emails []string, jobID int, filesByAssetID map[string]paths.Path) error {
+	content := notifications.ImportCompleted{
+		Title: "Import completed",
+		JobID: strconv.Itoa(jobID),
+		Files: lo.Map(lo.Entries(filesByAssetID), func(entry lo.Entry[string, paths.Path], _ int) notifications.File {
+			return notifications.File{
+				VXID: entry.Key,
+				Name: entry.Value.Base(),
+			}
+		}),
+	}
+
+	wfutils.Execute(ctx, activities.Util.SendTelegramMessage, &telegram.Message{
+		Chat:    telegram.ChatOther,
+		Message: content,
+	}).Get(ctx, nil)
+
+	return wfutils.Execute(ctx, activities.Util.SendEmail, activities.EmailMessageInput{
+		To:      emails,
+		Message: content,
 	}).Get(ctx, nil)
 }
 
-func notifyImportFailed(ctx workflow.Context, targets []notifications.Target, jobID int, filesByAssetID []paths.Path, importError error) error {
-	return wfutils.Execute(ctx, activities.Util.NotifyImportFailed, activities.NotifyImportFailedInput{
-		Targets: targets,
-		Message: notifications.ImportFailed{
-			Error: importError.Error(),
-			Title: "Import failed",
-			JobID: strconv.Itoa(jobID),
-			Files: lo.Map(filesByAssetID, func(entry paths.Path, _ int) notifications.File {
-				return notifications.File{
-					Name: entry.Base(),
-				}
-			}),
-		},
+func notifyImportFailed(ctx workflow.Context, emails []string, jobID int, filesByAssetID []paths.Path, importError error) error {
+	content := notifications.ImportFailed{
+		Error: importError.Error(),
+		Title: "Import failed",
+		JobID: strconv.Itoa(jobID),
+		Files: lo.Map(filesByAssetID, func(entry paths.Path, _ int) notifications.File {
+			return notifications.File{
+				Name: entry.Base(),
+			}
+		}),
+	}
+
+	wfutils.Execute(ctx, activities.Util.SendTelegramMessage, &telegram.Message{
+		Chat:    telegram.ChatOther,
+		Message: content,
 	}).Get(ctx, nil)
+
+	return wfutils.Execute(ctx, activities.Util.SendEmail, activities.EmailMessageInput{
+		To:      emails,
+		Message: content,
+	}).Get(ctx, nil)
+
 }
