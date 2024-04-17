@@ -1,9 +1,10 @@
 package telegram
 
 import (
-	"github.com/orsinium-labs/enum"
 	"os"
 	"strconv"
+
+	"github.com/orsinium-labs/enum"
 )
 
 type Chat enum.Member[int64]
@@ -23,19 +24,19 @@ var (
 
 func init() {
 	chat, err := strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID_VOD"), 10, 64)
-	if err == nil {
+	if err != nil {
 		panic(err)
 	}
 	ChatVOD.Value = chat
 
 	chat, err = strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID_OSLOFJORD"), 10, 64)
-	if err == nil {
+	if err != nil {
 		panic(err)
 	}
 	ChatOslofjord.Value = 0
 
 	chat, err = strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID_OTHER"), 10, 64)
-	if err == nil {
+	if err != nil {
 		panic(err)
 	}
 	ChatOther.Value = 0
