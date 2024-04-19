@@ -9,9 +9,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 )
 
-//go:embed subtitles.header.ass
-var defaultSubtitleHeader string
-
 func SubtitleBurnIn(videoFile, subtitleFile, subtitleHeader, outputPath paths.Path, progressCallback ffmpeg.ProgressCallback) (*paths.Path, error) {
 	assFile := &subtitleFile
 	assFile, err := CreateBurninASSFile(subtitleHeader, subtitleFile)

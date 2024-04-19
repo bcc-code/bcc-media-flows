@@ -2,6 +2,7 @@ package workflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -26,11 +27,12 @@ func UpdateAssetRelations(ctx workflow.Context, params UpdateAssetRelationsParam
 	}).Result(ctx)
 
 	if err != nil {
-		_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟥 Failed to update asset relations: ```%v```", err))
+		wfutils.NotifyTelegramChannel(ctx, telegram.ChatOther, fmt.Sprintf("🟥 Failed to update asset relations: ```%v```", err))
 		return err
 	}
 
-	_ = wfutils.NotifyTelegramChannel(ctx,
+	wfutils.NotifyTelegramChannel(ctx,
+		telegram.ChatOther,
 		fmt.Sprintf(
 			"🟩 Updated asset relations for asset %s with for %d languages: %s",
 			params.AssetID,

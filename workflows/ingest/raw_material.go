@@ -9,7 +9,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 	"github.com/bcc-code/bcc-media-flows/services/ingest"
-	"github.com/bcc-code/bcc-media-flows/services/notifications"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
@@ -17,7 +16,7 @@ import (
 
 type RawMaterialFormParams struct {
 	OrderForm OrderForm
-	Targets   []notifications.Target
+	Targets   []string
 	Metadata  *ingest.Metadata
 	Directory paths.Path
 }

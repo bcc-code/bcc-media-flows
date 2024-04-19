@@ -3,6 +3,7 @@ package ingestworkflows
 import (
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
@@ -20,7 +21,7 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟦 `%s`\n\nApplying adjustments to audio files.\n%dms", params.VXID, params.Adjustment))
+	wfutils.NotifyTelegramChannel(ctx, telegram.ChatVOD, fmt.Sprintf("🟦 `%s`\n\nApplying adjustments to audio files.\n%dms", params.VXID, params.Adjustment))
 
 	audioPaths, err := wfutils.Execute(ctx, activities.Vidispine.GetRelatedAudioFiles, params.VXID).Result(ctx)
 	if err != nil {
@@ -94,7 +95,7 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 		selector.Select(ctx)
 	}
 
-	_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟩 `%s`\n\nAdjustments applied to audio files.", params.VXID))
+	wfutils.NotifyTelegramChannel(ctx, telegram.ChatVOD, fmt.Sprintf("🟩 `%s`\n\nAdjustments applied to audio files.", params.VXID))
 
 	return nil
 }

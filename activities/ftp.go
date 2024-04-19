@@ -13,7 +13,7 @@ type FtpPlayoutRenameParams struct {
 
 type FtpPlayoutRenameResult struct{}
 
-func (ua UtilActivities) FtpPlayoutRename(ctx context.Context, params FtpPlayoutRenameParams) (*FtpPlayoutRenameResult, error) {
+func (ua UtilActivities) FtpPlayoutRename(_ context.Context, params FtpPlayoutRenameParams) (*FtpPlayoutRenameResult, error) {
 	client, err := ftp.Playout()
 	if err != nil {
 		return nil, err

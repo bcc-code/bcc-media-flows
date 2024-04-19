@@ -8,7 +8,6 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ingest"
-	"github.com/bcc-code/bcc-media-flows/services/notifications"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
@@ -113,14 +112,11 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 		return nil, err
 	}
 
-	targets := lo.Map(strings.Split(metadata.JobProperty.SenderEmail, ","), func(s string, _ int) notifications.Target {
-		return notifications.Email(strings.TrimSpace(s))
+	targets := lo.Map(strings.Split(metadata.JobProperty.SenderEmail, ","), func(s string, _ int) string {
+		return strings.TrimSpace(s)
 	})
 
-	err = wfutils.Notify(ctx, targets, "Import triggered", "Order form: "+metadata.JobProperty.OrderForm)
-	if err != nil {
-		return nil, err
-	}
+	wfutils.NotifyEmails(ctx, targets, "Import triggered", "Order form: "+metadata.JobProperty.OrderForm)
 
 	switch *orderForm {
 	case OrderFormRawMaterial:

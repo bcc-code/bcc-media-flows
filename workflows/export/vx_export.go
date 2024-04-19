@@ -2,6 +2,7 @@ package export
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"strings"
 	"time"
 
@@ -98,7 +99,8 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
-	err = wfutils.NotifyTelegramChannel(ctx,
+	wfutils.NotifyTelegramChannel(ctx,
+		telegram.ChatVOD,
 		fmt.Sprintf(
 			"🟦 Export of `%s` started.\nTitle: `%s`\nDestinations: `%s`\n\nRunID: `%s`",
 			params.VXID,
@@ -107,9 +109,6 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 			workflow.GetInfo(ctx).OriginalRunID,
 		),
 	)
-	if err != nil {
-		errs = append(errs, err)
-	}
 
 	logger.Info("Retrieved data from vidispine")
 
@@ -146,7 +145,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		Languages:      params.Languages,
 	}).Get(ctx, &mergeResult)
 	if err != nil {
-		_ = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
+		wfutils.NotifyTelegramChannel(ctx, telegram.ChatVOD, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
 		return nil, err
 	}
 
@@ -220,10 +219,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		})
 		if err != nil {
 			errs = append(errs, err)
-			err = wfutils.NotifyTelegramChannel(ctx, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
-			if err != nil {
-				errs = append(errs, err)
-			}
+			wfutils.NotifyTelegramChannel(ctx, telegram.ChatVOD, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
 		}
 	}
 	err = nil
