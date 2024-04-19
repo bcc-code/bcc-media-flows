@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/services/notifications"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"io"
 	"net/http"
@@ -21,14 +20,7 @@ func (ua UtilActivities) StartReaper(ctx context.Context, _ any) (any, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusConflict {
-		telegram.SendMessage(
-			&telegram.Message{
-				Chat: telegram.ChatOther,
-				Message: notifications.SimpleNotification{
-					Message: fmt.Sprintf("❗❗unable to start reaper. Response: %s\nIngest of video is not impacted.", resp.Status),
-				},
-			},
-		)
+		telegram.SendText(telegram.ChatOther, fmt.Sprintf("❗❗unable to start reaper. Response: %s\nIngest of video is not impacted.", resp.Status))
 	}
 
 	return nil, nil

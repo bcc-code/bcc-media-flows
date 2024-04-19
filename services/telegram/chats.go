@@ -33,11 +33,11 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	ChatOslofjord.Value = 0
+	ChatOslofjord.Value = chat
 
 	chat, err = strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID_OTHER"), 10, 64)
 	if err != nil {
 		panic(err)
 	}
-	ChatOther.Value = 0
+	ChatOther.Value = chat
 }

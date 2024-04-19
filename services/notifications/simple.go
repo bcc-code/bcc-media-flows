@@ -20,6 +20,10 @@ func (t SimpleNotification) RenderHTML() (string, error) {
 	return renderHtmlTemplate(simpleNotificationTemplate, t)
 }
 
+func (t SimpleNotification) Subject() string {
+	return t.Title
+}
+
 func (t SimpleNotification) RenderMarkdown() (string, error) {
 	var markdown string
 	if t.Title != "" {

@@ -4,20 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/services/emails"
-	"github.com/bcc-code/bcc-media-flows/services/notifications"
 )
 
-type EmailMessageInput struct {
-	Message notifications.Template
-	To      []string
-	CC      []string
-	BCC     []string
-}
-
-func (ua UtilActivities) SendEmail(_ context.Context, msg EmailMessageInput) (any, error) {
+func (ua UtilActivities) SendEmail(_ context.Context, msg emails.Message) (any, error) {
 	var errors []error
 	for _, email := range msg.To {
-		err := emails.Send(email, msg.Message)
+		err := emails.Send(email, msg.Subject, msg.HTML)
 		if err != nil {
 			errors = append(errors, err)
 		}

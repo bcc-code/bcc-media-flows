@@ -1,6 +1,7 @@
 package ingestworkflows
 
 import (
+	"github.com/bcc-code/bcc-media-flows/services/emails"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"strconv"
 
@@ -105,7 +106,7 @@ func getOrderFormFilename(orderForm OrderForm, file paths.Path, props ingest.Job
 	return "", merry.New("Unsupported order form")
 }
 
-func notifyImportCompleted(ctx workflow.Context, emails []string, jobID int, filesByAssetID map[string]paths.Path) error {
+func notifyImportCompleted(ctx workflow.Context, recipients []string, jobID int, filesByAssetID map[string]paths.Path) error {
 	content := notifications.ImportCompleted{
 		Title: "Import completed",
 		JobID: strconv.Itoa(jobID),
@@ -117,18 +118,14 @@ func notifyImportCompleted(ctx workflow.Context, emails []string, jobID int, fil
 		}),
 	}
 
-	wfutils.Execute(ctx, activities.Util.SendTelegramMessage, &telegram.Message{
-		Chat:    telegram.ChatOther,
-		Message: content,
-	}).Get(ctx, nil)
+	msg, _ := telegram.NewMessage(telegram.ChatOther, content)
+	wfutils.Execute(ctx, activities.Util.SendTelegramMessage, msg).Get(ctx, nil)
 
-	return wfutils.Execute(ctx, activities.Util.SendEmail, activities.EmailMessageInput{
-		To:      emails,
-		Message: content,
-	}).Get(ctx, nil)
+	email, _ := emails.NewMessage(content, recipients, nil, nil)
+	return wfutils.Execute(ctx, activities.Util.SendEmail, email).Get(ctx, nil)
 }
 
-func notifyImportFailed(ctx workflow.Context, emails []string, jobID int, filesByAssetID []paths.Path, importError error) error {
+func notifyImportFailed(ctx workflow.Context, recipients []string, jobID int, filesByAssetID []paths.Path, importError error) error {
 	content := notifications.ImportFailed{
 		Error: importError.Error(),
 		Title: "Import failed",
@@ -140,14 +137,9 @@ func notifyImportFailed(ctx workflow.Context, emails []string, jobID int, filesB
 		}),
 	}
 
-	wfutils.Execute(ctx, activities.Util.SendTelegramMessage, &telegram.Message{
-		Chat:    telegram.ChatOther,
-		Message: content,
-	}).Get(ctx, nil)
+	msg, _ := telegram.NewMessage(telegram.ChatOther, content)
+	wfutils.Execute(ctx, activities.Util.SendTelegramMessage, msg).Get(ctx, nil)
 
-	return wfutils.Execute(ctx, activities.Util.SendEmail, activities.EmailMessageInput{
-		To:      emails,
-		Message: content,
-	}).Get(ctx, nil)
-
+	email, _ := emails.NewMessage(content, recipients, nil, nil)
+	return wfutils.Execute(ctx, activities.Util.SendEmail, email).Get(ctx, nil)
 }

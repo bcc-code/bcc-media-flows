@@ -24,3 +24,7 @@ func (t ImportCompleted) RenderHTML() (string, error) {
 func (t ImportCompleted) RenderMarkdown() (string, error) {
 	return "", nil
 }
+
+func (t ImportCompleted) Subject() string {
+	return t.Title
+}

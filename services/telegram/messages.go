@@ -1,10 +1,10 @@
 package telegram
 
 import (
+	"github.com/bcc-code/bcc-media-flows/services/notifications"
 	"os"
 	"time"
 
-	"github.com/bcc-code/bcc-media-flows/services/notifications"
 	"gopkg.in/telebot.v3"
 )
 
@@ -12,10 +12,19 @@ var (
 	telegramBot *telebot.Bot
 )
 
+func NewMessage(chat Chat, template notifications.Template) (*Message, error) {
+	markdown, err := template.RenderMarkdown()
+
+	return &Message{
+		Chat:     chat,
+		Markdown: markdown,
+	}, err
+}
+
 type Message struct {
 	Chat            Chat
-	Message         notifications.Template
-	telegramMessage *telebot.Message
+	Markdown        string
+	TelegramMessage *telebot.Message
 }
 
 func getOrInitTelegramBot() (*telebot.Bot, error) {
@@ -42,26 +51,28 @@ func SendMessage(message *Message) (*Message, error) {
 		return message, err
 	}
 
-	markdown, err := message.Message.RenderMarkdown()
-	if err != nil {
-		return message, err
-	}
-
 	var msg *telebot.Message
-	if message.telegramMessage == nil {
+	if message.TelegramMessage == nil {
 		msg, err = bot.Send(
 			&telebot.Chat{ID: Chats.Value(message.Chat)},
-			markdown,
+			message.Markdown,
 			telebot.ModeMarkdown,
 		)
 	} else {
 		msg, err = bot.Edit(
-			message.telegramMessage,
-			markdown,
+			message.TelegramMessage,
+			message.Markdown,
 			telebot.ModeMarkdown,
 		)
 	}
 
-	message.telegramMessage = msg
+	message.TelegramMessage = msg
 	return message, err
+}
+
+func SendText(chat Chat, text string) (*Message, error) {
+	return SendMessage(&Message{
+		Chat:     chat,
+		Markdown: text,
+	})
 }
