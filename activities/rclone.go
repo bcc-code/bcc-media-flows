@@ -46,7 +46,7 @@ func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, params RcloneWait
 	}
 
 	tmpl := notifications.Simple{}
-	msg := telegram.NewMessage(notificationOptions.ChatID, tmpl)
+	msg, _ := telegram.NewMessage(notificationOptions.ChatID, tmpl)
 
 	if notificationOptions.StartNotification {
 		job, err := rclone.CheckJobStatus(jobID)
@@ -55,7 +55,7 @@ func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, params RcloneWait
 		}
 
 		tmpl.Message = fmt.Sprintf("Rclone job started: %s, Expected ETA: %d s", job.StartTime, job.Output.Eta)
-		msg.Message = tmpl
+		_ = msg.UpdateWithTemplate(tmpl)
 		msg, _ = telegram.Send(msg)
 	}
 
@@ -74,7 +74,7 @@ func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, params RcloneWait
 
 			if notificationOptions.EndNotification {
 				tmpl.Message = fmt.Sprintf("Rclone job finished: %s, Duration: %f", job.StartTime, job.Duration)
-				msg.Message = tmpl
+				msg.UpdateWithTemplate(tmpl)
 				msg, _ = telegram.Send(msg)
 			}
 
@@ -87,7 +87,7 @@ func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, params RcloneWait
 
 		if notificationOptions.NotificationInterval > 0 && time.Since(lastNotification) > notificationOptions.NotificationInterval {
 			tmpl.Message = fmt.Sprintf("Rclone job running: %s, ETA: %d s", job.StartTime, job.Output.Eta)
-			msg.Message = tmpl
+			msg.UpdateWithTemplate(tmpl)
 			msg, _ = telegram.Send(msg)
 			lastNotification = time.Now()
 		}
