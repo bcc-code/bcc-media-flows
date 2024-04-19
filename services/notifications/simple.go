@@ -11,20 +11,20 @@ var (
 	simpleNotificationTemplate   = template.Must(template.New("simple_notification").Parse(simpleNotificationTemplateFS))
 )
 
-type SimpleNotification struct {
+type Simple struct {
 	Title   string
 	Message string
 }
 
-func (t SimpleNotification) RenderHTML() (string, error) {
+func (t Simple) RenderHTML() (string, error) {
 	return renderHtmlTemplate(simpleNotificationTemplate, t)
 }
 
-func (t SimpleNotification) Subject() string {
+func (t Simple) Subject() string {
 	return t.Title
 }
 
-func (t SimpleNotification) RenderMarkdown() (string, error) {
+func (t Simple) RenderMarkdown() (string, error) {
 	var markdown string
 	if t.Title != "" {
 		markdown += "#" + t.Title + "\n\n"

@@ -5,6 +5,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/ansel1/merry/v2"
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -32,6 +33,15 @@ var (
 		DestinationHippo,
 	)
 	deliveryFolder = paths.New(paths.BrunstadDrive, "/Delivery/FraMB/")
+)
+
+var (
+	rcloneNotificationOptions = &activities.TelegramNotificationOptions{
+		ChatID:               telegram.ChatOslofjord,
+		NotificationInterval: time.Minute,
+		StartNotification:    true,
+		EndNotification:      true,
+	}
 )
 
 type VBExportParams struct {
@@ -81,7 +91,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	}
 
 	var errs []error
-	wfutils.NotifyTelegramChannel(ctx, telegram.ChatOslofjord, fmt.Sprintf("🟦 VB Export of %s started.\nDestination(s): %s\n\nRunID: %s", params.VXID, strings.Join(params.Destinations, ", "), workflow.GetInfo(ctx).OriginalRunID))
+	wfutils.SendTelegramText(ctx, telegram.ChatOslofjord, fmt.Sprintf("🟦 VB Export of %s started.\nDestination(s): %s\n\nRunID: %s", params.VXID, strings.Join(params.Destinations, ", "), workflow.GetInfo(ctx).OriginalRunID))
 
 	shapes, err := avidispine.GetClient().GetShapes(params.VXID)
 	if err != nil {
@@ -212,7 +222,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		})
 		if err != nil {
 			errs = append(errs, err)
-			wfutils.NotifyTelegramChannel(ctx, telegram.ChatOslofjord, fmt.Sprintf("🟥 VB Export of %s failed: ```%s```", params.VXID, err.Error()))
+			wfutils.SendTelegramText(ctx, telegram.ChatOslofjord, fmt.Sprintf("🟥 VB Export of %s failed: ```%s```", params.VXID, err.Error()))
 			if err != nil {
 				errs = append(errs, err)
 			}
@@ -229,5 +239,5 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 
 func notifyExportDone(ctx workflow.Context, params VBExportChildWorkflowParams, flow string, tempExportPath paths.Path) {
 	message := fmt.Sprintf("🟩 Export of `%s` finished.\nDestination: `%s`, Preview: `%s`", params.ParentParams.VXID, flow, tempExportPath.Local())
-	wfutils.NotifyTelegramChannel(ctx, telegram.ChatOslofjord, message)
+	wfutils.SendTelegramText(ctx, telegram.ChatOslofjord, message)
 }

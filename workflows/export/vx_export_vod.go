@@ -364,5 +364,5 @@ func (v *vxExportVodService) copyToIngest(ctx workflow.Context, path paths.Path)
 		v.errs = append(v.errs, err)
 		return
 	}
-	v.tasks = append(v.tasks, wfutils.Execute(ctx, activities.Util.RcloneWaitForJob, jobID).Future)
+	v.tasks = append(v.tasks, wfutils.Execute(ctx, activities.Util.RcloneWaitForJob, activities.RcloneWaitForJobInput{JobID: jobID}).Future)
 }

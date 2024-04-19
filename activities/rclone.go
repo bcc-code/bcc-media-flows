@@ -3,33 +3,93 @@ package activities
 import (
 	"context"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/notifications"
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
-
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
+
 	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/temporal"
 )
 
-func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, jobID int) (bool, error) {
+type TelegramNotificationOptions struct {
+	ChatID               telegram.Chat
+	NotificationInterval time.Duration
+	StartNotification    bool
+	EndNotification      bool
+}
+
+type RcloneWaitForJobInput struct {
+	JobID               int
+	NotificationOptions *TelegramNotificationOptions
+}
+
+func JobFailedErr(err error) error {
+	return temporal.NewNonRetryableApplicationError(fmt.Sprintf("rclone job failed: %s", err.Error()), "rclone_job_failed", err)
+}
+
+func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, params RcloneWaitForJobInput) (bool, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting RcloneWaitForJob")
+
+	jobID := params.JobID
+	notificationOptions := params.NotificationOptions
+
+	if notificationOptions == nil {
+		notificationOptions = &TelegramNotificationOptions{
+			NotificationInterval: 0,
+			StartNotification:    false,
+			EndNotification:      false,
+		}
+	}
+
+	tmpl := notifications.Simple{}
+	msg, _ := telegram.NewMessage(notificationOptions.ChatID, tmpl)
+
+	if notificationOptions.StartNotification {
+		job, err := rclone.CheckJobStatus(jobID)
+		if err != nil {
+			return false, JobFailedErr(err)
+		}
+
+		tmpl.Message = fmt.Sprintf("Rclone job started: %s, Expected ETA: %d s", job.StartTime, job.Output.Eta)
+		_ = msg.UpdateWithTemplate(tmpl)
+		msg, _ = telegram.Send(msg)
+	}
+
+	lastNotification := time.Now()
 
 	for {
 		job, err := rclone.CheckJobStatus(jobID)
 		if err != nil {
-			return false, temporal.NewNonRetryableApplicationError(fmt.Sprintf("rclone job failed: %s", err.Error()), "rclone_job_failed", nil)
+			return false, JobFailedErr(err)
 		}
 		activity.RecordHeartbeat(ctx, job)
 		if job == nil {
 			return false, nil
 		}
 		if job.Finished {
-			if !job.Success {
-				return false, temporal.NewNonRetryableApplicationError(fmt.Sprintf("rclone job failed: %s", job.Error), "rclone_job_failed", nil)
+
+			if notificationOptions.EndNotification {
+				tmpl.Message = fmt.Sprintf("Rclone job finished: %s, Duration: %f", job.StartTime, job.Duration)
+				msg.UpdateWithTemplate(tmpl)
+				msg, _ = telegram.Send(msg)
 			}
+
+			if !job.Success {
+				return false, JobFailedErr(fmt.Errorf("job failed: %s", job.Output.LastError))
+			}
+
 			return true, nil
+		}
+
+		if notificationOptions.NotificationInterval > 0 && time.Since(lastNotification) > notificationOptions.NotificationInterval {
+			tmpl.Message = fmt.Sprintf("Rclone job running: %s, ETA: %d s", job.StartTime, job.Output.Eta)
+			msg.UpdateWithTemplate(tmpl)
+			msg, _ = telegram.Send(msg)
+			lastNotification = time.Now()
 		}
 
 		time.Sleep(time.Second * 10)

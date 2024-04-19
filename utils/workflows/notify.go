@@ -8,11 +8,8 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-func NotifyTelegramChannel(ctx workflow.Context, channel telegram.Chat, message string) {
-	msg, err := telegram.NewMessage(channel, notifications.SimpleNotification{
-		Message: message,
-	})
-
+func SendTelegramText(ctx workflow.Context, channel telegram.Chat, message string) {
+	msg, err := telegram.NewMessage(channel, notifications.Simple{Message: message})
 	if err != nil {
 		workflow.GetLogger(ctx).Error("Failed to create telegram message", "error", err)
 		return
@@ -25,8 +22,18 @@ func NotifyTelegramChannel(ctx workflow.Context, channel telegram.Chat, message 
 	}
 }
 
-func NotifyEmails(ctx workflow.Context, targets []string, subject, message string) {
-	msg, err := emails.NewMessage(notifications.SimpleNotification{
+func SendTelegramMessage(ctx workflow.Context, channel telegram.Chat, msg *telegram.Message) *telegram.Message {
+	msg, err := Execute(ctx, activities.Util.SendTelegramMessage, msg).Result(ctx)
+
+	if err != nil {
+		workflow.GetLogger(ctx).Error("Failed to send telegram message", "error", err)
+	}
+
+	return msg
+}
+
+func SendEmails(ctx workflow.Context, targets []string, subject, message string) {
+	msg, err := emails.NewMessage(notifications.Simple{
 		Title:   subject,
 		Message: message,
 	}, targets, nil, nil)

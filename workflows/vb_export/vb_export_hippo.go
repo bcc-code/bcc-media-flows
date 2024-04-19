@@ -6,6 +6,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -112,12 +113,12 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 	}
 	rcloneDestination := deliveryFolder.Append("Hippo", params.OriginalFilenameWithoutExt+outputFile.Ext())
 
-	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, 10)
+	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
 	if err != nil {
 		return nil, err
 	}
 
-	err = wfutils.RcloneCopyFile(ctx, outputFile, rcloneDestination, rclone.PriorityHigh)
+	err = wfutils.RcloneCopyFileWithNotifications(ctx, outputFile, rcloneDestination, rclone.PriorityHigh, rcloneNotificationOptions)
 	if err != nil {
 		return nil, err
 	}

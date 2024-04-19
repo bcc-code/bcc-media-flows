@@ -27,6 +27,16 @@ type Message struct {
 	TelegramMessage *telebot.Message
 }
 
+func (m *Message) UpdateWithTemplate(template notifications.Template) error {
+	markdown, err := template.RenderMarkdown()
+	if err != nil {
+		return err
+	}
+
+	m.Markdown = markdown
+	return nil
+}
+
 func getOrInitTelegramBot() (*telebot.Bot, error) {
 	if telegramBot == nil {
 		pref := telebot.Settings{
@@ -45,7 +55,7 @@ func getOrInitTelegramBot() (*telebot.Bot, error) {
 	return telegramBot, nil
 }
 
-func SendMessage(message *Message) (*Message, error) {
+func Send(message *Message) (*Message, error) {
 	bot, err := getOrInitTelegramBot()
 	if err != nil {
 		return message, err
@@ -71,7 +81,7 @@ func SendMessage(message *Message) (*Message, error) {
 }
 
 func SendText(chat Chat, text string) (*Message, error) {
-	return SendMessage(&Message{
+	return Send(&Message{
 		Chat:     chat,
 		Markdown: text,
 	})

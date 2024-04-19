@@ -74,7 +74,9 @@ func HandleMultitrackFile(
 		return err
 	}
 
-	_, err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.RcloneWaitForJob, jobID).Result(ctx)
+	_, err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.RcloneWaitForJob, activities.RcloneWaitForJobInput{
+		JobID: jobID,
+	}).Result(ctx)
 	if err != nil {
 		return err
 	}
