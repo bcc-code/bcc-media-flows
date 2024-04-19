@@ -21,7 +21,7 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	wfutils.NotifyTelegramChannel(ctx, telegram.ChatVOD, fmt.Sprintf("🟦 `%s`\n\nApplying adjustments to audio files.\n%dms", params.VXID, params.Adjustment))
+	wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟦 `%s`\n\nApplying adjustments to audio files.\n%dms", params.VXID, params.Adjustment))
 
 	audioPaths, err := wfutils.Execute(ctx, activities.Vidispine.GetRelatedAudioFiles, params.VXID).Result(ctx)
 	if err != nil {
@@ -53,7 +53,7 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 			continue
 		}
 
-		f := wfutils.Execute(ctx, activities.Util.RcloneWaitForJob, jobID).Future
+		f := wfutils.Execute(ctx, activities.Util.RcloneWaitForJob, activities.RcloneWaitForJobInput{JobID: jobID}).Future
 		selector.AddFuture(f, func(future workflow.Future) {
 			var copied bool
 			err := future.Get(ctx, &copied)
@@ -95,7 +95,7 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 		selector.Select(ctx)
 	}
 
-	wfutils.NotifyTelegramChannel(ctx, telegram.ChatVOD, fmt.Sprintf("🟩 `%s`\n\nAdjustments applied to audio files.", params.VXID))
+	wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟩 `%s`\n\nAdjustments applied to audio files.", params.VXID))
 
 	return nil
 }

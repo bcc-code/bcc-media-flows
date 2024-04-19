@@ -5,6 +5,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/ansel1/merry/v2"
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -32,6 +33,15 @@ var (
 		DestinationHippo,
 	)
 	deliveryFolder = paths.New(paths.BrunstadDrive, "/Delivery/FraMB/")
+)
+
+var (
+	rcloneNotificationOptions = &activities.TelegramNotificationOptions{
+		ChatID:               telegram.ChatOslofjord,
+		NotificationInterval: time.Minute,
+		StartNotification:    true,
+		EndNotification:      true,
+	}
 )
 
 type VBExportParams struct {

@@ -116,7 +116,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 		return strings.TrimSpace(s)
 	})
 
-	wfutils.NotifyEmails(ctx, targets, "Import triggered", "Order form: "+metadata.JobProperty.OrderForm)
+	wfutils.SendEmails(ctx, targets, "Import triggered", "Order form: "+metadata.JobProperty.OrderForm)
 
 	switch *orderForm {
 	case OrderFormRawMaterial:

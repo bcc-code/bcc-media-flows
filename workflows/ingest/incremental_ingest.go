@@ -38,7 +38,7 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 
 	err := doIncremental(ctx, params)
 	if err != nil {
-		wfutils.NotifyTelegramChannel(ctx, telegram.ChatOther, fmt.Sprintf("🟥 Incremental ingest failed\n\n```%s```", err.Error()))
+		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟥 Incremental ingest failed\n\n```%s```", err.Error()))
 		return err
 	}
 	return nil
@@ -87,7 +87,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 		return err
 	}
 
-	wfutils.NotifyTelegramChannel(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Starting live ingest: https://vault.bcc.media/item/%s", assetResult.AssetID))
+	wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Starting live ingest: https://vault.bcc.media/item/%s", assetResult.AssetID))
 
 	var jobResult vsactivity.FileJobResult
 	err = wfutils.Execute(ctx, activities.Vidispine.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
@@ -104,7 +104,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	if err != nil {
 		return err
 	}
-	wfutils.NotifyTelegramChannel(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Video ingest ended: https://vault.bcc.media/item/%s\n\nImporting reaper files.", assetResult.AssetID))
+	wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Video ingest ended: https://vault.bcc.media/item/%s\n\nImporting reaper files.", assetResult.AssetID))
 
 	// List Reaper files
 	reaperResult := &activities.ReaperResult{}
@@ -154,7 +154,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 			errors = append(errors, err)
 		}
 	}
-	wfutils.NotifyTelegramChannel(ctx, telegram.ChatOther, "🟩 Audio import finished")
+	wfutils.SendTelegramText(ctx, telegram.ChatOther, "🟩 Audio import finished")
 
 	err = transcribeFuture.Get(ctx, nil)
 	if err != nil {

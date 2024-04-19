@@ -99,7 +99,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
-	wfutils.NotifyTelegramChannel(ctx,
+	wfutils.SendTelegramText(ctx,
 		telegram.ChatVOD,
 		fmt.Sprintf(
 			"🟦 Export of `%s` started.\nTitle: `%s`\nDestinations: `%s`\n\nRunID: `%s`",
@@ -145,7 +145,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		Languages:      params.Languages,
 	}).Get(ctx, &mergeResult)
 	if err != nil {
-		wfutils.NotifyTelegramChannel(ctx, telegram.ChatVOD, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
+		wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
 		return nil, err
 	}
 
@@ -219,7 +219,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		})
 		if err != nil {
 			errs = append(errs, err)
-			wfutils.NotifyTelegramChannel(ctx, telegram.ChatVOD, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
+			wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
 		}
 	}
 	err = nil

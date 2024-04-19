@@ -45,7 +45,14 @@ func getOrInitTelegramBot() (*telebot.Bot, error) {
 	return telegramBot, nil
 }
 
-func SendMessage(message *Message) (*Message, error) {
+func NewMessage(channel Chat, message notifications.Template) *Message {
+	return &Message{
+		Message: message,
+		Chat:    channel,
+	}
+}
+
+func Send(message *Message) (*Message, error) {
 	bot, err := getOrInitTelegramBot()
 	if err != nil {
 		return message, err

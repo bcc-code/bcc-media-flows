@@ -3,6 +3,7 @@ package wfutils
 import (
 	"encoding/xml"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/notifications"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"go.temporal.io/sdk/temporal"
@@ -178,8 +179,12 @@ func RcloneCheckFileExists(ctx workflow.Context, file paths.Path) (bool, error) 
 	}).Result(ctx)
 }
 
-func RcloneWaitForFileGone(ctx workflow.Context, file paths.Path, retries int) error {
+func RcloneWaitForFileGone(ctx workflow.Context, file paths.Path, notificationChannel telegram.Chat, retries int) error {
 	fileExists := true
+
+	template := &notifications.Simple{}
+	msg := telegram.NewMessage(notificationChannel, template)
+
 	for i := 0; i < retries; i++ {
 		exists, err := RcloneCheckFileExists(ctx, file)
 		if err != nil {
@@ -192,7 +197,10 @@ func RcloneWaitForFileGone(ctx workflow.Context, file paths.Path, retries int) e
 			break
 		}
 
-		NotifyTelegramChannel(ctx, telegram.ChatOslofjord, fmt.Sprintf("⚠️ File ```%s``` already exists, retrying in one minute (%d/%d)", file.Rclone(), i, retries))
+		template.Message = fmt.Sprintf("⚠️ File ```%s``` still exists, retrying in one minute (%d/%d)", file.Rclone(), i+1, retries)
+		msg.Message = template
+		msg = SendTelegramMessage(ctx, msg)
+
 		workflow.Sleep(ctx, time.Minute)
 	}
 
@@ -204,6 +212,10 @@ func RcloneWaitForFileGone(ctx workflow.Context, file paths.Path, retries int) e
 }
 
 func RcloneCopyFile(ctx workflow.Context, source, destination paths.Path, priority rclone.Priority) error {
+	return RcloneCopyFileWithNotifications(ctx, source, destination, priority, nil)
+}
+
+func RcloneCopyFileWithNotifications(ctx workflow.Context, source, destination paths.Path, priority rclone.Priority, notificationOptions *activities.TelegramNotificationOptions) error {
 	jobID, err := Execute(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{
 		Source:      source,
 		Destination: destination,
@@ -212,7 +224,10 @@ func RcloneCopyFile(ctx workflow.Context, source, destination paths.Path, priori
 	if err != nil {
 		return err
 	}
-	success, err := Execute(ctx, activities.Util.RcloneWaitForJob, jobID).Result(ctx)
+	success, err := Execute(ctx, activities.Util.RcloneWaitForJob, activities.RcloneWaitForJobInput{
+		JobID:               jobID,
+		NotificationOptions: notificationOptions,
+	}).Result(ctx)
 	if err != nil {
 		return err
 	}
@@ -231,7 +246,7 @@ func RcloneMoveFile(ctx workflow.Context, source, destination paths.Path, priori
 	if err != nil {
 		return err
 	}
-	success, err := Execute(ctx, activities.Util.RcloneWaitForJob, jobID).Result(ctx)
+	success, err := Execute(ctx, activities.Util.RcloneWaitForJob, activities.RcloneWaitForJobInput{JobID: jobID}).Result(ctx)
 	if err != nil {
 		return err
 	}
@@ -250,7 +265,9 @@ func RcloneCopyDir(ctx workflow.Context, source, destination string, priority rc
 	if err != nil {
 		return err
 	}
-	success, err := Execute(ctx, activities.Util.RcloneWaitForJob, jobID).Result(ctx)
+	success, err := Execute(ctx, activities.Util.RcloneWaitForJob, activities.RcloneWaitForJobInput{
+		JobID: jobID,
+	}).Result(ctx)
 	if err != nil {
 		return err
 	}

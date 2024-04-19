@@ -6,5 +6,5 @@ import (
 )
 
 func (ua UtilActivities) SendTelegramMessage(_ context.Context, msg *telegram.Message) (*telegram.Message, error) {
-	return telegram.SendMessage(msg)
+	return telegram.Send(msg)
 }

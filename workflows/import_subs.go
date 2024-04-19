@@ -27,14 +27,14 @@ func ImportSubtitlesFromSubtrans(
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	logger.Info("Starting sub import flow")
-	wfutils.NotifyTelegramChannel(ctx, telegram.ChatOther, "🟦 Starting sub import for VXID: "+params.VXID)
+	wfutils.SendTelegramText(ctx, telegram.ChatOther, "🟦 Starting sub import for VXID: "+params.VXID)
 
 	err := doImportSubtitlesFromSubtrans(ctx, params)
 	if err != nil {
-		wfutils.NotifyTelegramChannel(ctx, telegram.ChatOther, fmt.Sprintf("🟥 Sub import for VXID: %s failed\n\n```%s```", params.VXID, err.Error()))
+		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟥 Sub import for VXID: %s failed\n\n```%s```", params.VXID, err.Error()))
 		return err
 	}
-	wfutils.NotifyTelegramChannel(ctx, telegram.ChatOther, "🟩 Sub import for VXID: "+params.VXID+" finished")
+	wfutils.SendTelegramText(ctx, telegram.ChatOther, "🟩 Sub import for VXID: "+params.VXID+" finished")
 	return nil
 }
 
@@ -97,7 +97,7 @@ func doImportSubtitlesFromSubtrans(ctx workflow.Context, params ImportSubtitlesF
 		}).Get(ctx, nil)
 	}
 
-	wfutils.NotifyTelegramChannel(
+	wfutils.SendTelegramText(
 		ctx,
 		telegram.ChatOther,
 		fmt.Sprintf("Sub import for VXID: %s finished (%s). Starting preview import.", params.VXID, strings.Join(langs, ", ")),

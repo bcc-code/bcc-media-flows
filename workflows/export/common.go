@@ -11,7 +11,7 @@ import (
 func notifyExportDone(ctx workflow.Context, params VXExportChildWorkflowParams, flow string) {
 	message := fmt.Sprintf("🟩 Export of `%s` finished.\nDestination: `%s`", params.ExportData.Title, flow)
 
-	wfutils.NotifyTelegramChannel(
+	wfutils.SendTelegramText(
 		ctx,
 		telegram.ChatVOD,
 		message,
