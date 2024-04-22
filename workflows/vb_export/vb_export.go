@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -91,7 +92,6 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	}
 
 	var errs []error
-	wfutils.SendTelegramText(ctx, telegram.ChatOslofjord, fmt.Sprintf("🟦 VB Export of %s started.\nDestination(s): %s\n\nRunID: %s", params.VXID, strings.Join(params.Destinations, ", "), workflow.GetInfo(ctx).OriginalRunID))
 
 	shapes, err := avidispine.GetClient().GetShapes(params.VXID)
 	if err != nil {
@@ -108,6 +108,12 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	if videoShape == nil {
 		return nil, fmt.Errorf("no original shape found for item %s", params.VXID)
 	}
+
+	wfutils.SendTelegramText(ctx, telegram.ChatOslofjord,
+		fmt.Sprintf("🟦 VB Export of %s - %s started.\nDestination(s): %s\n\nRunID: %s",
+			params.VXID, filepath.Base(videoShape.GetPath()), strings.Join(params.Destinations, ", "), workflow.GetInfo(ctx).OriginalRunID,
+		),
+	)
 
 	tempDir, err := wfutils.GetWorkflowTempFolder(ctx)
 	if err != nil {

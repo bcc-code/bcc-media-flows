@@ -49,14 +49,12 @@ func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, params RcloneWait
 	msg, _ := telegram.NewMessage(notificationOptions.ChatID, tmpl)
 
 	if notificationOptions.StartNotification {
-		job, err := rclone.CheckJobStatus(jobID)
-		if err != nil {
-			return false, JobFailedErr(err)
+		job, found := rclone.GetJobStats(jobID)
+		if found {
+			tmpl.Message = fmt.Sprintf("Rclone job started: %s, Expected ETA: %d s", job.Name, job.Eta)
+			_ = msg.UpdateWithTemplate(tmpl)
+			msg, _ = telegram.Send(msg)
 		}
-
-		tmpl.Message = fmt.Sprintf("Rclone job started: %s, Expected ETA: %d s", job.StartTime, job.Output.Eta)
-		_ = msg.UpdateWithTemplate(tmpl)
-		msg, _ = telegram.Send(msg)
 	}
 
 	lastNotification := time.Now()
@@ -73,9 +71,12 @@ func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, params RcloneWait
 		if job.Finished {
 
 			if notificationOptions.EndNotification {
-				tmpl.Message = fmt.Sprintf("Rclone job finished: %s, Duration: %f", job.StartTime, job.Duration)
-				msg.UpdateWithTemplate(tmpl)
-				msg, _ = telegram.Send(msg)
+				job, found := rclone.GetJobStats(jobID)
+				if found {
+					tmpl.Message = fmt.Sprintf("Rclone job started: %s, Expected ETA: %d s", job.Name, job.Eta)
+					_ = msg.UpdateWithTemplate(tmpl)
+					msg, _ = telegram.Send(msg)
+				}
 			}
 
 			if !job.Success {
@@ -86,10 +87,12 @@ func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, params RcloneWait
 		}
 
 		if notificationOptions.NotificationInterval > 0 && time.Since(lastNotification) > notificationOptions.NotificationInterval {
-			tmpl.Message = fmt.Sprintf("Rclone job running: %s, ETA: %d s", job.StartTime, job.Output.Eta)
-			msg.UpdateWithTemplate(tmpl)
-			msg, _ = telegram.Send(msg)
-			lastNotification = time.Now()
+			job, found := rclone.GetJobStats(jobID)
+			if found {
+				tmpl.Message = fmt.Sprintf("Rclone job started: %s, Expected ETA: %d s", job.Name, job.Eta)
+				_ = msg.UpdateWithTemplate(tmpl)
+				msg, _ = telegram.Send(msg)
+			}
 		}
 
 		time.Sleep(time.Second * 10)

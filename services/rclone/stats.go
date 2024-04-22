@@ -1,7 +1,10 @@
 package rclone
 
 import (
+	"fmt"
+	cache "github.com/Code-Hex/go-generics-cache"
 	"net/http"
+	"time"
 )
 
 type CoreStats struct {
@@ -42,6 +45,31 @@ type Transferring struct {
 	SrcFs      string  `json:"srcFs"`
 }
 
+func (s CoreStats) ForJob(job string) Transferring {
+	for _, transfer := range s.Transferring {
+		if transfer.Group == "job/"+job {
+			return transfer
+		}
+	}
+
+	return Transferring{
+		Bytes:      -1,
+		Eta:        -1,
+		Percentage: -1,
+		Size:       -1,
+		Speed:      -1,
+		SpeedAvg:   -1,
+	}
+}
+
+var (
+	statsCache = cache.New[string, Transferring](cache.WithJanitorInterval[string, Transferring](time.Minute * 1))
+)
+
+func GetJobStats(job int) (Transferring, bool) {
+	return statsCache.Get(fmt.Sprintf("job/%d", job))
+}
+
 func GetRcloneStatus() (*CoreStats, error) {
 	req, err := http.NewRequest(http.MethodPost, baseUrl+"/core/stats", nil)
 	if err != nil {
@@ -55,6 +83,10 @@ func GetRcloneStatus() (*CoreStats, error) {
 
 	if res.Transferring == nil {
 		res.Transferring = []Transferring{}
+	}
+
+	for _, t := range res.Transferring {
+		statsCache.Set(t.Group, t, cache.WithExpiration(time.Minute*60))
 	}
 	return res, nil
 }

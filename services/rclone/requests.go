@@ -3,7 +3,7 @@ package rclone
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
+	"github.com/ansel1/merry/v2"
 	"net/http"
 	"os"
 )
@@ -11,6 +11,10 @@ import (
 var (
 	username = os.Getenv("RCLONE_USERNAME")
 	password = os.Getenv("RCLONE_PASSWORD")
+)
+
+var (
+	errNon200Status = merry.Sentinel("non-200 status")
 )
 
 func doRequest[T any](req *http.Request) (*T, error) {
@@ -31,7 +35,7 @@ func doRequest[T any](req *http.Request) (*T, error) {
 	}()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("rclone returned %d", res.StatusCode)
+		return nil, merry.Wrap(errNon200Status, merry.WithHTTPCode(res.StatusCode))
 	}
 
 	var response *T
