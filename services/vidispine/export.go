@@ -319,7 +319,7 @@ func getEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) (*C
 				File:    clip.VideoFile,
 				Streams: streams,
 			}
-		} else {
+		} else if lang != "" {
 			return clip, errors.New("No language " + lang + " found in bccmflows.LanguagesByISO")
 		}
 	}

@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
@@ -25,19 +26,19 @@ var (
 func init() {
 	chat, err := strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID_VOD"), 10, 64)
 	if err != nil {
-		panic(err)
+		fmt.Printf("Error parsing TELEGRAM_CHAT_ID_VOD: %v\n", err)
 	}
 	ChatVOD.Value = chat
 
 	chat, err = strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID_OSLOFJORD"), 10, 64)
 	if err != nil {
-		panic(err)
+		fmt.Printf("Error parsing TELEGRAM_CHAT_ID_OSLOFJORD: %v\n", err)
 	}
 	ChatOslofjord.Value = chat
 
 	chat, err = strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID_OTHER"), 10, 64)
 	if err != nil {
-		panic(err)
+		fmt.Printf("Error parsing TELEGRAM_CHAT_ID_OTHER: %v\n", err)
 	}
 	ChatOther.Value = chat
 }
