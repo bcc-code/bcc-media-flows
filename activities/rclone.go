@@ -51,7 +51,7 @@ func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, params RcloneWait
 	if notificationOptions.StartNotification {
 		job, found := rclone.GetJobStats(jobID)
 		if found {
-			tmpl.Message = fmt.Sprintf("Rclone job started: %s, Expected ETA: %d s", job.Name, job.Eta)
+			tmpl.Message = fmt.Sprintf("Copying file to Oslofjord: `%s`, Expected ETA: %d s", job.Name, job.Eta)
 			_ = msg.UpdateWithTemplate(tmpl)
 			msg, _ = telegram.Send(msg)
 		}
@@ -69,11 +69,10 @@ func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, params RcloneWait
 			return false, nil
 		}
 		if job.Finished {
-
 			if notificationOptions.EndNotification {
 				job, found := rclone.GetJobStats(jobID)
 				if found {
-					tmpl.Message = fmt.Sprintf("Rclone job started: %s, Expected ETA: %d s", job.Name, job.Eta)
+					tmpl.Message = fmt.Sprintf("Copying file to Oslofjord: `%s`, Expected ETA: %d s", job.Name, job.Eta)
 					_ = msg.UpdateWithTemplate(tmpl)
 					msg, _ = telegram.Send(msg)
 				}
@@ -89,7 +88,7 @@ func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, params RcloneWait
 		if notificationOptions.NotificationInterval > 0 && time.Since(lastNotification) > notificationOptions.NotificationInterval {
 			job, found := rclone.GetJobStats(jobID)
 			if found {
-				tmpl.Message = fmt.Sprintf("Rclone job started: %s, Expected ETA: %d s", job.Name, job.Eta)
+				tmpl.Message = fmt.Sprintf("Copying file to Oslofjord: `%s`, Expected ETA: %d s", job.Name, job.Eta)
 				_ = msg.UpdateWithTemplate(tmpl)
 				msg, _ = telegram.Send(msg)
 			}
