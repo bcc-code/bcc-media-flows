@@ -23,7 +23,12 @@ func Test_SubtitlesBurnIn(t *testing.T) {
 		Path:  "",
 	}
 
-	p, err := SubtitleBurnIn(videoPath, subtitlePath, outputPath, func(progress ffmpeg.Progress) {
+	subtitleHeaderPath := paths.Path{
+		Drive: paths.TempDrive,
+		Path:  "header.aas",
+	}
+
+	p, err := SubtitleBurnIn(videoPath, subtitlePath, subtitleHeaderPath, outputPath, func(progress ffmpeg.Progress) {
 		t.Logf("Progress: %v", progress.Percent)
 	})
 	assert.Nil(t, err)

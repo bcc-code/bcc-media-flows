@@ -178,7 +178,7 @@ func GetTimeCode(path string) (string, error) {
 	return strings.TrimSpace(res), nil
 }
 
-// GetTimeReferencce returns the time reference of the specified wav file.
+// GetTimeReference returns the time reference of the specified wav file.
 //
 // Example:
 // ffprobe 01-240122_1517.wav
@@ -191,7 +191,7 @@ func GetTimeCode(path string) (string, error) {
 //	  time_reference  : 2641753158   <----------------- This is what we want
 //	Duration: 00:01:29.09, bitrate: 2304 kb/s
 //	Stream #0:0: Audio: pcm_s24le ([1][0][0][0] / 0x0001), 48000 Hz, 2 channels, s32 (24 bit), 2304 kb/s
-func GetTimeReferencce(path string) (int, error) {
+func GetTimeReference(path string) (int, error) {
 	cmd := exec.Command(
 		"ffprobe",
 		"-v", "quiet",
