@@ -163,6 +163,11 @@ func (p Path) Base() string {
 	return filepath.Base(p.Path)
 }
 
+func (p Path) BaseNoExt() string {
+	res, _ := strings.CutSuffix(p.Base(), filepath.Ext(p.Base()))
+	return res
+}
+
 func (p Path) Append(path ...string) Path {
 	paths := []string{p.Path}
 	paths = append(paths, path...)

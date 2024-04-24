@@ -25,6 +25,12 @@ type AudioInput struct {
 	DestinationPath paths.Path
 }
 
+type WavAudioInput struct {
+	Path            paths.Path
+	DestinationPath paths.Path
+	Timecode        string
+}
+
 type AudioResult struct {
 	OutputPath paths.Path
 	Bitrate    string

@@ -24,7 +24,7 @@ func (aa AudioActivities) TranscodeToAudioAac(ctx context.Context, input common.
 	return transcode.AudioAac(input, progressCallback)
 }
 
-func (aa AudioActivities) TranscodeToAudioWav(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
+func (aa AudioActivities) TranscodeToAudioWav(ctx context.Context, input common.WavAudioInput) (*common.AudioResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeToAudioWav")
 	log.Info("Starting TranscodeToAudioAacActivity")

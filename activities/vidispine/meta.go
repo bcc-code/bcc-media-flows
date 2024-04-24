@@ -53,6 +53,11 @@ func (a Activities) GetFileFromVXActivity(ctx context.Context, params GetFileFro
 	return nil, fmt.Errorf("no shape found for tags: %v", params.Tags)
 }
 
+func (a Activities) GetVXMetadata(_ context.Context, params VXOnlyParam) (*vsapi.MetadataResult, error) {
+	vsClient := GetClient()
+	return vsClient.GetMetadata(params.VXID)
+}
+
 type SetVXMetadataFieldParams struct {
 	VXID  string
 	Key   string

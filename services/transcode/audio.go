@@ -197,16 +197,25 @@ func PrepareForTranscriptoion(input common.AudioInput, cb ffmpeg.ProgressCallbac
 	}, nil
 }
 
-func AudioWav(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.AudioResult, error) {
+func AudioWav(input common.WavAudioInput, cb ffmpeg.ProgressCallback) (*common.AudioResult, error) {
+	outputFilePath := input.DestinationPath.Append(input.Path.BaseNoExt() + ".wav").Local()
+
 	params := []string{
 		"-progress", "pipe:1",
 		"-hide_banner",
-		"-i", input.Path.Local(),
+		"-codec:a", "pcm_s24le",
 	}
 
-	outputFilePath := filepath.Join(input.DestinationPath.Local(), input.Path.Base())
-	outputFilePath = fmt.Sprintf("%s-%s.wav", outputFilePath[:len(outputFilePath)-len(filepath.Ext(outputFilePath))], input.Bitrate)
+	if input.Timecode != "" {
+		tcSamples, err := utils.TCToSamples(input.Timecode, 25, 48000)
+		if err != nil {
+			return nil, err
+		}
+		params = append(params, "-metadata", fmt.Sprintf("time_reference=%d", tcSamples))
+		params = append(params, "-write_bext", "1")
+	}
 
+	params = append(params, "-i", input.Path.Local())
 	params = append(params, "-y", outputFilePath)
 
 	info, err := ffmpeg.GetStreamInfo(input.Path.Local())
@@ -236,7 +245,6 @@ func AudioWav(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 
 	return &common.AudioResult{
 		OutputPath: outputPath,
-		Bitrate:    input.Bitrate,
 		Format:     "wav",
 		FileSize:   fileInfo.Size(),
 	}, nil
