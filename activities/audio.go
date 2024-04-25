@@ -62,7 +62,7 @@ func (aa AudioActivities) AdjustAudioToVideoStart(ctx context.Context, input Adj
 		return nil, err
 	}
 
-	audioSamples, err := ffmpeg.GetTimeReferencce(input.AudioFile.Local())
+	audioSamples, err := ffmpeg.GetTimeReference(input.AudioFile.Local())
 	if err != nil {
 		return nil, err
 	}
@@ -71,6 +71,7 @@ func (aa AudioActivities) AdjustAudioToVideoStart(ctx context.Context, input Adj
 	if err != nil {
 		return nil, err
 	}
+
 	// 2400 is the number of samples in 50ms of audio at 48000Hz
 	// This seems to be a "standard" offset between youplay and reaper
 	samplesToAdd := audioSamples - videoSamples + 2400
@@ -170,5 +171,27 @@ func (aa AudioActivities) Convert51to4Mono(ctx context.Context, input common.Aud
 	err := transcode.Convert51to4Mono(input.Path, input.DestinationPath, progressCallback)
 	return &common.AudioResult{
 		OutputPath: input.DestinationPath,
+	}, err
+}
+
+type ToneInput struct {
+	Frequency       int
+	Duration        float64
+	SampleRate      int
+	TimeCode        string
+	DestinationFile paths.Path
+}
+
+// GenerateToneFile generates a tone file with the specified frequency, duration, sample rate and time code.
+//
+// These files are used as pilot tones in the audio playback at Oslofjord.
+func (aa AudioActivities) GenerateToneFile(ctx context.Context, input ToneInput) (*common.AudioResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "GenerateToneFile")
+	log.Info("Starting GenerateToneFileActivity")
+
+	err := transcode.GenerateToneFile(input.Frequency, input.Duration, input.SampleRate, input.TimeCode, input.DestinationFile)
+	return &common.AudioResult{
+		OutputPath: input.DestinationFile,
 	}, err
 }

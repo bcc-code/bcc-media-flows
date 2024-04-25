@@ -3,6 +3,7 @@ package transcode
 import (
 	"bytes"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/utils"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -383,6 +384,25 @@ func ExtractAudioChannels(filePath paths.Path, output map[int]paths.Path, cb ffm
 	}
 
 	return out, nil
+}
+
+func GenerateToneFile(frequency int, duration float64, sampleRate int, timecode string, filePath paths.Path) error {
+	samples, err := utils.TCToSamples(timecode, 25, sampleRate)
+	if err != nil {
+		return err
+	}
+
+	params := []string{
+		"-f", "lavfi",
+		"-i", fmt.Sprintf("sine=frequency=%d:sample_rate=%d:duration=%f", frequency, sampleRate, duration),
+		"-codec:a", "pcm_s24le",
+		"-metadata", fmt.Sprintf("time_reference=%d", samples),
+		"-write_bext", "1",
+		filePath.Local(),
+	}
+
+	_, err = ffmpeg.Do(params, ffmpeg.StreamInfo{}, nil)
+	return err
 }
 
 func TrimFile(inFile, outFile paths.Path, start, end float64, cb ffmpeg.ProgressCallback) error {

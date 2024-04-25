@@ -55,7 +55,8 @@ var (
 	AssetIngestDrive  = Drive{Value: "asset_ingest"}
 	LucidLinkDrive    = Drive{Value: "lucid"}
 	FileCatalystDrive = Drive{Value: "filecatalyst"}
-	Drives            = enum.New(IsilonDrive, FileCatalystDrive, TempDrive, AssetIngestDrive, BrunstadDrive, LucidLinkDrive)
+	TestDrive         = Drive{Value: "test"}
+	Drives            = enum.New(IsilonDrive, FileCatalystDrive, TempDrive, AssetIngestDrive, BrunstadDrive, LucidLinkDrive, TestDrive)
 	ErrDriveNotFound  = merry.Sentinel("drive not found")
 	ErrPathNotValid   = merry.Sentinel("path not valid")
 )
@@ -201,6 +202,7 @@ var drivePrefixes = map[Drive]prefix{
 	AssetIngestDrive:  {"/dev/null/", "/dev/null/", "s3prod:vod-asset-ingest-prod/"},
 	BrunstadDrive:     {"/dev/null/", "/dev/null/", "brunstad:/"},
 	LucidLinkDrive:    {"/dev/null/", "/dev/null/", "lucid:lucidlink/"},
+	TestDrive:         {"./testdata/", "./testdata/", "/dev/null/"},
 }
 
 func Parse(path string) (Path, error) {
