@@ -3,6 +3,7 @@ package ingestworkflows
 import (
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
@@ -46,8 +47,16 @@ type AssetParams struct {
 
 type AssetResult struct{}
 
+var (
+	brokenPathRegExp = regexp.MustCompile(`(/files/\d+)/files/\d+`)
+)
+
 // sanitizeDuplicatdPath removes duplicated path from the string
 func sanitizeDuplicatdPath(s string) string {
+	if brokenPathRegExp.MatchString(s) {
+		return brokenPathRegExp.ReplaceAllString(s, "$1")
+	}
+
 	original := s
 	s = strings.Trim(s, "/") // Remove trailing and leading slashes
 	mid := len(s) / 2

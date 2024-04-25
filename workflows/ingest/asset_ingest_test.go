@@ -16,6 +16,7 @@ func TestSanizizeDuplicatePaths(t *testing.T) {
 		{"1/2/3/4", "1/2/3/4"},
 		{"1/2/3/4/4/3/2/1", "1/2/3/4/4/3/2/1"},
 		{"/1/2/1/2//", "/1/2"},
+		{"/files/5892/files/589", "/files/5892"},
 	}
 
 	for _, d := range data {
