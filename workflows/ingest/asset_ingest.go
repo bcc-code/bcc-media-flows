@@ -2,9 +2,10 @@ package ingestworkflows
 
 import (
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"path/filepath"
 	"strings"
+
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ingest"
@@ -47,15 +48,18 @@ type AssetResult struct{}
 
 // sanitizeDuplicatdPath removes duplicated path from the string
 func sanitizeDuplicatdPath(s string) string {
+	original := s
+	s = strings.Trim(s, "/") // Remove trailing and leading slashes
+	mid := len(s) / 2
+
 	if len(s)%2 != 0 {
-		return s // Return string if length is odd
+		s = s[:mid] + s[mid+1:] // Remove middle character if string length is odd
 	}
 
-	mid := len(s) / 2
 	if s[:mid] == s[mid:] {
-		return s[:mid] // Return one part if halves are equal
+		return "/" + s[:mid] // Return one part if halves are equal
 	}
-	return s // Return original string if halves are not equal
+	return original // Return original string if halves are not equal
 }
 
 func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
