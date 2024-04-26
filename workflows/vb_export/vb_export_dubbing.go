@@ -2,6 +2,7 @@ package vb_export
 
 import (
 	"fmt"
+
 	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
@@ -37,6 +38,10 @@ func VBExportToDubbing(ctx workflow.Context, params VBExportChildWorkflowParams)
 	}
 
 	vxMeta, err := wfutils.Execute(ctx, activities.Vidispine.GetVXMetadata, vsactivity.VXOnlyParam{VXID: vxID}).Result(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	exportTC := vxMeta.Get(vscommon.FieldExportTCOverride, "00:00:00:00")
 
 	transcodeSelector := workflow.NewSelector(ctx)
