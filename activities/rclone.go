@@ -60,7 +60,7 @@ func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, params RcloneWait
 	lastNotification := time.Now()
 
 	for {
-		job, err := rclone.CheckJobStatus(jobID)
+		job, err := rclone.CheckJobStatus(jobID, 5)
 		if err != nil {
 			return false, JobFailedErr(err)
 		}

@@ -47,11 +47,25 @@ type JobResponse struct {
 	JobID int `json:"jobid"`
 }
 
-func CheckJobStatus(jobID int) (*JobStatus, error) {
+func CheckJobStatus(jobID int, retries int) (*JobStatus, error) {
+	runNr := 1
+
 	req, err := http.NewRequest(http.MethodPost, baseUrl+"/job/status", strings.NewReader(`{"jobid":`+strconv.Itoa(jobID)+`}`))
 	if err != nil {
 		return nil, err
 	}
 
-	return doRequest[JobStatus](req)
+	var status *JobStatus
+	for runNr <= retries {
+		status, err = doRequest[JobStatus](req)
+
+		if err == nil {
+			break
+		}
+
+		runNr++
+		time.Sleep(5 * time.Second)
+	}
+
+	return status, err
 }
