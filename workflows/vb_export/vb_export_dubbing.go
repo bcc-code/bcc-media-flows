@@ -15,6 +15,7 @@ import (
 )
 
 func VBExportToDubbing(ctx workflow.Context, params VBExportChildWorkflowParams) (*VBExportResult, error) {
+	deliveryFolder := deliveryFolder.Append(params.OriginalFilenameWithoutExt)
 
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToAbekas")
