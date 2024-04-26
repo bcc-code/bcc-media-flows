@@ -204,6 +204,7 @@ func AudioWav(input common.WavAudioInput, cb ffmpeg.ProgressCallback) (*common.A
 		"-progress", "pipe:1",
 		"-hide_banner",
 		"-codec:a", "pcm_s24le",
+		"-i", input.Path.Local(),
 	}
 
 	if input.Timecode != "" {
@@ -215,7 +216,6 @@ func AudioWav(input common.WavAudioInput, cb ffmpeg.ProgressCallback) (*common.A
 		params = append(params, "-write_bext", "1")
 	}
 
-	params = append(params, "-i", input.Path.Local())
 	params = append(params, "-y", outputFilePath)
 
 	info, err := ffmpeg.GetStreamInfo(input.Path.Local())
