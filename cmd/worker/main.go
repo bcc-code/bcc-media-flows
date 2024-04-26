@@ -70,6 +70,7 @@ var workerWorkflows = []any{
 	vb_export.VBExportToBStage,
 	vb_export.VBExportToGfx,
 	vb_export.VBExportToHippo,
+	vb_export.VBExportToDubbing,
 	scheduled.CleanupTemp,
 }
 

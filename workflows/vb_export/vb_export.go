@@ -2,11 +2,12 @@ package vb_export
 
 import (
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 
 	"github.com/ansel1/merry/v2"
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -23,15 +24,17 @@ import (
 type Destination enum.Member[string]
 
 var (
-	DestinationAbekas = Destination{Value: "abekas"}
-	DestinationBStage = Destination{Value: "b-stage"}
-	DestinationGfx    = Destination{Value: "gfx"}
-	DestinationHippo  = Destination{Value: "hippo"}
-	Destinations      = enum.New(
+	DestinationAbekas  = Destination{Value: "abekas"}
+	DestinationBStage  = Destination{Value: "b-stage"}
+	DestinationGfx     = Destination{Value: "gfx"}
+	DestinationHippo   = Destination{Value: "hippo"}
+	DestinationDubbing = Destination{Value: "dubbing"}
+	Destinations       = enum.New(
 		DestinationAbekas,
 		DestinationBStage,
 		DestinationGfx,
 		DestinationHippo,
+		DestinationDubbing,
 	)
 	deliveryFolder = paths.New(paths.BrunstadDrive, "/Delivery/FraMB/")
 )
@@ -200,6 +203,8 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 			w = VBExportToGfx
 		case DestinationHippo:
 			w = VBExportToHippo
+		case DestinationDubbing:
+			w = VBExportToDubbing
 
 		default:
 			return nil, fmt.Errorf("destination not implemented: %s", dest)

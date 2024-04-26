@@ -52,6 +52,12 @@ func CopyFile(ctx workflow.Context, source, destination paths.Path) error {
 	}).Get(ctx, nil)
 }
 
+func CopyToFolder(ctx workflow.Context, file, folder paths.Path, priority rclone.Priority) (paths.Path, error) {
+	newPath := folder.Append(file.Base())
+	err := CopyFile(ctx, file, newPath)
+	return newPath, err
+}
+
 func MoveToFolder(ctx workflow.Context, file, folder paths.Path, priority rclone.Priority) (paths.Path, error) {
 	newPath := folder.Append(file.Base())
 	err := MoveFile(ctx, file, newPath, priority)
