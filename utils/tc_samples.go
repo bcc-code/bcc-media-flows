@@ -2,12 +2,40 @@ package utils
 
 import (
 	"fmt"
+	"github.com/orsinium-labs/enum"
 	"strconv"
 	"strings"
 )
 
+type FrameRate enum.Member[string]
+
+var (
+	FrameRatePAL  = FrameRate{"PAL"}
+	FrameRateNTSC = FrameRate{"NTSC"}
+	FrameRates    = enum.New(FrameRateNTSC, FrameRatePAL)
+)
+
 func TCToSamples(tc string, fps int, sampleRate int) (int, error) {
-	frames, err := timecodeToFrames(tc, fps)
+	frames := 0
+	var err error
+	if strings.Contains(tc, "@") {
+
+		splitTc := strings.Split(tc, "@")
+
+		switch splitTc[1] {
+		case FrameRatePAL.Value:
+			fps = 25
+		case FrameRateNTSC.Value:
+			fps = 30
+		default:
+			return 0, fmt.Errorf("invalid frame rate")
+		}
+
+		frames, err = strconv.Atoi(splitTc[0])
+	} else {
+		frames, err = timecodeToFrames(tc, fps)
+	}
+
 	if err != nil {
 		return 0, err
 	}
