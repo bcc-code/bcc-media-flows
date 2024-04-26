@@ -26,20 +26,35 @@ func doRequest[T any](req *http.Request) (*T, error) {
 	basicAuth := base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
 	req.Header.Set("Authorization", "Basic "+basicAuth)
 
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
+	tryCount := 1
+
+	var res *http.Response
+
+	for tryCount <= 5 {
+		resInner, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+
+		if resInner.StatusCode != 200 {
+			tryCount++
+			continue
+		}
+
+		res = resInner
+		break
 	}
-	defer func() {
-		_ = res.Body.Close()
-	}()
 
 	if res.StatusCode != 200 {
 		return nil, merry.Wrap(errNon200Status, merry.WithHTTPCode(res.StatusCode))
 	}
 
+	defer func() {
+		_ = res.Body.Close()
+	}()
+
 	var response *T
-	err = json.NewDecoder(res.Body).Decode(&response)
+	err := json.NewDecoder(res.Body).Decode(&response)
 	if err != nil {
 		return nil, err
 	}
