@@ -15,7 +15,7 @@ type RsyncIncrementalCopyInput struct {
 
 type RsyncIncrementalCopyResult struct{}
 
-func (ua UtilActivities) RsyncIncrementalCopy(ctx context.Context, input RsyncIncrementalCopyInput) (*RsyncIncrementalCopyResult, error) {
+func (l LiveActivities) RsyncIncrementalCopy(ctx context.Context, input RsyncIncrementalCopyInput) (*RsyncIncrementalCopyResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting RsyncIncrementalCopy")
 

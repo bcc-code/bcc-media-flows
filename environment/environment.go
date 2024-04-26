@@ -35,6 +35,13 @@ func GetAudioQueue() string {
 	return QueueAudio
 }
 
+func GetLiveIngestQueue() string {
+	if queue == QueueDebug {
+		return QueueDebug
+	}
+	return QueueLiveIngest
+}
+
 var isilonPrefix = os.Getenv("ISILON_PREFIX")
 
 func GetIsilonPrefix() string {

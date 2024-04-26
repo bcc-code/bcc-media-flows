@@ -31,6 +31,10 @@ type UtilActivities struct{}
 
 var Util = UtilActivities{}
 
+type LiveActivities struct{}
+
+var Live = LiveActivities{}
+
 var Vidispine = vsactivity.Vidispine
 
 func getFunctionName(i any) string {
@@ -47,6 +51,8 @@ var audioActivities = GetMethodNames(Audio)
 
 var videoActivities = GetMethodNames(Video)
 
+var liveActivities = GetMethodNames(Live)
+
 // GetQueueForActivity detects which queue the activity belongs in, else returns the worker queue.
 // Used to execute the activity where the required dependencies are available.
 // For example ffmpeg activities has to be executed in either the Transcode queue or Audio queue where we know ffmpeg is installed on the workers.
@@ -57,6 +63,9 @@ func GetQueueForActivity(activity any) string {
 	}
 	if lo.Contains(videoActivities, f) {
 		return environment.GetTranscodeQueue()
+	}
+	if lo.Contains(liveActivities, f) {
+		return environment.GetLiveIngestQueue()
 	}
 	return environment.GetWorkerQueue()
 }

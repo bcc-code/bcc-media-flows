@@ -59,7 +59,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	/// Start file copy
 
-	copyTask := wfutils.Execute(ctx, activities.Util.RsyncIncrementalCopy, activities.RsyncIncrementalCopyInput{
+	copyTask := wfutils.Execute(ctx, activities.Live.RsyncIncrementalCopy, activities.RsyncIncrementalCopyInput{
 		In:  in,
 		Out: rawPath,
 	})
@@ -82,7 +82,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	var p any
 	// REAPER: Start recording
-	err = wfutils.Execute(ctx, activities.Util.StartReaper, p).Get(ctx, nil)
+	err = wfutils.Execute(ctx, activities.Live.StartReaper, p).Get(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	// List Reaper files
 	reaperResult := &activities.ReaperResult{}
-	err = wfutils.Execute(ctx, activities.Util.ListReaperFiles, nil).Get(ctx, reaperResult)
+	err = wfutils.Execute(ctx, activities.Live.ListReaperFiles, nil).Get(ctx, reaperResult)
 	if err != nil {
 		return err
 	}

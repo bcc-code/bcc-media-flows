@@ -176,6 +176,9 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		registerActivitiesInStruct(w, activities.Video)
 	case environment.QueueAudio:
 		registerActivitiesInStruct(w, activities.Audio)
+	case environment.QueueLiveIngest:
+		registerActivitiesInStruct(w, activities.Live)
+
 	}
 	fmt.Println("STARTING")
 	err := w.Run(worker.InterruptCh())
