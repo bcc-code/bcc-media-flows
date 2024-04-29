@@ -15,7 +15,7 @@ import (
 )
 
 func VBExportToDubbing(ctx workflow.Context, params VBExportChildWorkflowParams) (*VBExportResult, error) {
-	deliveryFolder := deliveryFolder.Append(params.OriginalFilenameWithoutExt)
+	deliveryFolder := deliveryFolder.Append("Reaper-Wav", params.OriginalFilenameWithoutExt)
 
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToAbekas")
@@ -63,7 +63,7 @@ func VBExportToDubbing(ctx workflow.Context, params VBExportChildWorkflowParams)
 			Timecode:        exportTC,
 		})
 
-		transcodeSelector.AddFuture(f.Future, postTranscodeAudio(ctx, audioFile, lang))
+		transcodeSelector.AddFuture(f.Future, postTranscodeAudio(ctx, audioFile, deliveryFolder, lang))
 	}
 
 	pilotFile := dubbingOutputDir.Append(params.OriginalFilenameWithoutExt + "_PILOT.wav")
@@ -93,9 +93,8 @@ func VBExportToDubbing(ctx workflow.Context, params VBExportChildWorkflowParams)
 	}, nil
 }
 
-func postTranscodeAudio(ctx workflow.Context, originalFile paths.Path, lang string) func(f workflow.Future) {
+func postTranscodeAudio(ctx workflow.Context, originalFile paths.Path, destinationBase paths.Path, lang string) func(f workflow.Future) {
 	logger := workflow.GetLogger(ctx)
-	oslofjordDst := deliveryFolder.Append("Reaper-Wav")
 	return func(f workflow.Future) {
 		res := &common.AudioResult{}
 		err := f.Get(ctx, res)
@@ -115,6 +114,6 @@ func postTranscodeAudio(ctx workflow.Context, originalFile paths.Path, lang stri
 		dstName := res.OutputPath.Dir().Append(fmt.Sprintf("%s_%d_%s.wav", baseName, dubbReaperChannel, lang))
 
 		wfutils.MoveFile(ctx, res.OutputPath, dstName, rclone.PriorityHigh)
-		wfutils.RcloneCopyFile(ctx, dstName, oslofjordDst, rclone.PriorityHigh)
+		wfutils.RcloneCopyFile(ctx, dstName, destinationBase.Append(dstName.Base()), rclone.PriorityHigh)
 	}
 }
