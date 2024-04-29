@@ -94,7 +94,7 @@ func BmmSimpleUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 
 	future := workflow.ExecuteChildWorkflow(ctx, export.VXExport, export.VXExportParams{
 		VXID:         res.AssetID,
-		Destinations: []string{"bmm"},
+		Destinations: []string{"bmm-integration"},
 		Languages:    []string{params.Language},
 	})
 
