@@ -20,19 +20,13 @@ func MultitrackMux(files paths.Files, outputPath paths.Path, cb ffmpeg.ProgressC
 
 	text := strings.Join(lines, "\n")
 
-	blankFile := paths.Path{
-		Drive: paths.IsilonDrive,
-		Path:  "system/assets/BlankVideo10h.mxf",
-	}
-
 	info, err := ffmpeg.GetStreamInfo(files[0].Local())
 	if err != nil {
 		return nil, err
 	}
 
 	params := []string{
-		"-i", blankFile.Local(),
-		"-t", fmt.Sprintf("%f", info.TotalSeconds),
+		"-f", "lavfi", "-i", fmt.Sprintf("color=c=black:s=1920x1080:r=25:d=%f", info.TotalSeconds),
 	}
 
 	for _, f := range files {
@@ -43,6 +37,7 @@ func MultitrackMux(files paths.Files, outputPath paths.Path, cb ffmpeg.ProgressC
 		"-vf", fmt.Sprintf("scale=960:540:force_original_aspect_ratio=decrease,pad=960:540:(ow-iw)/2:(oh-ih)/2,drawtext=text=%s:fontsize=36:fontcolor=white:x=100:y=100", text),
 		"-c:v", "libx264",
 		"-c:a", "pcm_s24le",
+		"-t", fmt.Sprintf("%f", info.TotalSeconds),
 		outputPath.Append(files[0].Base()+".mxf").Local(),
 	)
 
