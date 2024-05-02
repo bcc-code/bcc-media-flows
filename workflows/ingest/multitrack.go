@@ -90,6 +90,8 @@ func Multitrack(ctx workflow.Context, params MasterParams) (*MasterResult, error
 		return nil, err
 	}
 
+	createPreviewsAsync(ctx, []string{result.AssetID})
+
 	err = notifyImportCompleted(ctx, params.Targets, params.Metadata.JobProperty.JobID, map[string]paths.Path{
 		result.AssetID: muxResult.OutputPath,
 	})
