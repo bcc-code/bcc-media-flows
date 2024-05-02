@@ -148,8 +148,8 @@ func (a Activities) UpdateAssetRelations(ctx context.Context, params VXOnlyParam
 		}
 		title = strings.Join(titleSplit, ".")
 
-		if title[len(title)-4] != '_' {
-			// If the foruth to last character is not an underscore, it is not a language code
+		if title[len(title)-4] != '_' && title[len(title)-4] != '-' {
+			// If the foruth to last character is not an underscore or dash, it is not a language code
 			continue
 		}
 
