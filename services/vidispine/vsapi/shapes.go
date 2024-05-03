@@ -143,10 +143,20 @@ func (c *Client) GetResolutions(itemVXID string) ([]Resolution, error) {
 
 	} else {
 		qualities = append(qualities, r)
-		for r.Width%2 == 0 && r.Height%2 == 0 {
+		for {
 			r = Resolution{Width: r.Width / 2, Height: r.Height / 2}
+
+			// Make sure stuff is divisible by 2
+			if r.Width%2 != 0 {
+				r.Width++
+			}
+
+			if r.Height%2 != 0 {
+				r.Height++
+			}
+
 			qualities = append(qualities, r)
-			if r.Height < 200 {
+			if r.Height < 200 || r.Width < 180 {
 				break
 			}
 		}
