@@ -164,7 +164,7 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 	sort.Slice(chapters, func(i, j int) bool {
 		return chapters[i].Timestamp < chapters[j].Timestamp
 	})
-	subclipNames := lo.Map(chapters, func(c asset.Chapter, _ int) string {
+	subclipNames := lo.Map(chapters, func(c asset.TimedMetadata, _ int) string {
 		return c.Title
 	})
 

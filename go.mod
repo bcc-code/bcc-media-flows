@@ -7,7 +7,7 @@ toolchain go1.21.5
 require (
 	cloud.google.com/go/pubsub v1.37.0
 	github.com/ansel1/merry/v2 v2.1.2
-	github.com/bcc-code/bcc-media-platform v0.0.0-20240403152536-af8da58e911d
+	github.com/bcc-code/bcc-media-platform v0.0.0-20240508084603-4659d96ed3da
 	github.com/bcc-code/mediabank-bridge v1.1.1
 	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/creativeprojects/go-selfupdate v1.1.3

@@ -4,13 +4,14 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"net/http"
 	"net/url"
 	"path"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
@@ -173,7 +174,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		jsonData.TranscriptionFiles[lang] = transcript.Base()
 	}
 
-	var chapters []asset.Chapter
+	var chapters []asset.TimedMetadata
 	err = wfutils.Execute(ctx, activities.Vidispine.GetChapterDataActivity, vsactivity.GetChapterDataParams{
 		ExportData: &params.ExportData,
 	}).Get(ctx, &chapters)

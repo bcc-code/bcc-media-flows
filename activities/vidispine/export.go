@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
 
-	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	"go.temporal.io/sdk/activity"
 )
 
@@ -42,7 +42,7 @@ type GetChapterDataParams struct {
 	ExportData *vidispine.ExportData
 }
 
-func (a Activities) GetChapterDataActivity(ctx context.Context, params GetChapterDataParams) ([]asset.Chapter, error) {
+func (a Activities) GetChapterDataActivity(ctx context.Context, params GetChapterDataParams) ([]asset.TimedMetadata, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "GetChapterDataActivity")
 	log.Info("Starting GetChapterDataActivity")

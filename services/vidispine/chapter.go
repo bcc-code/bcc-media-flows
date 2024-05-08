@@ -7,61 +7,52 @@ import (
 	"strings"
 
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
+	pcommon "github.com/bcc-code/bcc-media-platform/backend/common"
 
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
-	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
 )
 
-type ChapterType enum.Member[string]
-
 var (
-	ChapterTypeSong      = ChapterType{"song"}
-	ChapterTypeSpeech    = ChapterType{"speech"}
-	ChapterTypeTestimony = ChapterType{"testimony"}
-	ChapterTypeOther     = ChapterType{"other"}
-	ChapterTypeCredits   = ChapterType{"credits"}
-	ChapterTypeSingAlong = ChapterType{"sing_along"}
-
-	ChapterTypeMap = map[string]ChapterType{
-		"sang":           ChapterTypeSong,
-		"musikkvideo":    ChapterTypeSong,
-		"musikal":        ChapterTypeSong,
-		"tale":           ChapterTypeSpeech,
-		"appelle":        ChapterTypeSpeech,
-		"vitnesbyrd":     ChapterTypeTestimony,
-		"end-credit":     ChapterTypeCredits,
-		"singalong":      ChapterTypeSingAlong,
-		"panel":          ChapterTypeOther,
-		"intervju":       ChapterTypeOther,
-		"temafilm":       ChapterTypeOther,
-		"animasjon":      ChapterTypeOther,
-		"programleder":   ChapterTypeOther,
-		"dokumentar":     ChapterTypeOther,
-		"ordforklaring":  ChapterTypeOther,
-		"frsending":      ChapterTypeOther,
-		"ettersending":   ChapterTypeOther,
-		"bildekavalkade": ChapterTypeOther,
-		"skuespill":      ChapterTypeOther,
-		"aksjonstatus":   ChapterTypeOther,
-		"hilse":          ChapterTypeOther,
-		"konkuranse":     ChapterTypeOther,
-		"informasjon":    ChapterTypeOther,
-		"bnn":            ChapterTypeOther,
-		"promo":          ChapterTypeOther,
-		"mte":            ChapterTypeOther,
-		"fest":           ChapterTypeOther,
-		"underholdning":  ChapterTypeOther,
-		"kortfilm":       ChapterTypeOther,
-		"anslag":         ChapterTypeOther,
-		"teaser":         ChapterTypeOther,
-		"reality":        ChapterTypeOther,
-		"studio":         ChapterTypeOther,
-		"talk-show":      ChapterTypeOther,
-		"presentasjon":   ChapterTypeOther,
-		"seminar":        ChapterTypeOther,
-		"reportasje":     ChapterTypeOther,
+	ChapterTypeMap = map[string]pcommon.ChapterType{
+		"sang":           pcommon.ChapterTypeSong,
+		"musikkvideo":    pcommon.ChapterTypeSong,
+		"musikal":        pcommon.ChapterTypeSong,
+		"tale":           pcommon.ChapterTypeSpeech,
+		"appelle":        pcommon.ChapterTypeSpeech,
+		"vitnesbyrd":     pcommon.ChapterTypeTestimony,
+		"end-credit":     pcommon.ChapterTypeOther,
+		"singalong":      pcommon.ChapterTypeSingAlong,
+		"panel":          pcommon.ChapterTypeOther,
+		"intervju":       pcommon.ChapterTypeOther,
+		"temafilm":       pcommon.ChapterTypeOther,
+		"animasjon":      pcommon.ChapterTypeOther,
+		"programleder":   pcommon.ChapterTypeOther,
+		"dokumentar":     pcommon.ChapterTypeOther,
+		"ordforklaring":  pcommon.ChapterTypeOther,
+		"frsending":      pcommon.ChapterTypeOther,
+		"ettersending":   pcommon.ChapterTypeOther,
+		"bildekavalkade": pcommon.ChapterTypeOther,
+		"skuespill":      pcommon.ChapterTypeOther,
+		"aksjonstatus":   pcommon.ChapterTypeOther,
+		"hilse":          pcommon.ChapterTypeOther,
+		"konkuranse":     pcommon.ChapterTypeOther,
+		"informasjon":    pcommon.ChapterTypeOther,
+		"bnn":            pcommon.ChapterTypeOther,
+		"promo":          pcommon.ChapterTypeOther,
+		"mte":            pcommon.ChapterTypeOther,
+		"fest":           pcommon.ChapterTypeOther,
+		"underholdning":  pcommon.ChapterTypeOther,
+		"kortfilm":       pcommon.ChapterTypeOther,
+		"anslag":         pcommon.ChapterTypeOther,
+		"teaser":         pcommon.ChapterTypeOther,
+		"reality":        pcommon.ChapterTypeOther,
+		"studio":         pcommon.ChapterTypeOther,
+		"talk-show":      pcommon.ChapterTypeOther,
+		"presentasjon":   pcommon.ChapterTypeOther,
+		"seminar":        pcommon.ChapterTypeOther,
+		"reportasje":     pcommon.ChapterTypeOther,
 	}
 )
 
@@ -71,7 +62,7 @@ var SongCollectionMap = map[string]string{
 	"HV":  "WOTL",
 }
 
-func GetChapterData(client Client, exportData *ExportData) ([]asset.Chapter, error) {
+func GetChapterData(client Client, exportData *ExportData) ([]asset.TimedMetadata, error) {
 	metaCache := map[string]*vsapi.MetadataResult{}
 
 	allChapters := map[string]*vsapi.MetadataResult{}
@@ -131,7 +122,7 @@ func GetChapterData(client Client, exportData *ExportData) ([]asset.Chapter, err
 		}
 	}
 
-	var chapters []asset.Chapter
+	var chapters []asset.TimedMetadata
 	for _, data := range allChapters {
 		chapter := metaToChapter(data)
 		if chapter.Timestamp == 0 {
@@ -143,8 +134,8 @@ func GetChapterData(client Client, exportData *ExportData) ([]asset.Chapter, err
 	return chapters, nil
 }
 
-func metaToChapter(meta *vsapi.MetadataResult) asset.Chapter {
-	out := asset.Chapter{}
+func metaToChapter(meta *vsapi.MetadataResult) asset.TimedMetadata {
+	out := asset.TimedMetadata{}
 
 	out.Label = meta.Get(vscommon.FieldTitle, "")
 	out.Title = meta.Get(vscommon.FieldTitle, "")
@@ -154,7 +145,7 @@ func metaToChapter(meta *vsapi.MetadataResult) asset.Chapter {
 	if chapterType, ok := ChapterTypeMap[meta.Get(vscommon.FieldSubclipType, "")]; ok {
 		out.ChapterType = chapterType.Value
 	} else {
-		out.ChapterType = ChapterTypeOther.Value
+		out.ChapterType = pcommon.ChapterTypeOther.Value
 	}
 
 	// This is more or less useless
@@ -164,7 +155,7 @@ func metaToChapter(meta *vsapi.MetadataResult) asset.Chapter {
 
 	out.Persons = lo.Filter(meta.GetArray(vscommon.FieldPersonsAppearing), func(p string, _ int) bool { return p != "" })
 
-	if out.ChapterType == ChapterTypeSong.Value || out.ChapterType == ChapterTypeSingAlong.Value {
+	if out.ChapterType == pcommon.ChapterTypeSong.Value || out.ChapterType == pcommon.ChapterTypeSingAlong.Value {
 		match := SongExtract.FindStringSubmatch(strings.ToUpper(out.Label))
 		if len(match) == 3 {
 			out.SongCollection = match[1]
