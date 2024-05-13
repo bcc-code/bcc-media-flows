@@ -2,10 +2,8 @@ package cantemo
 
 import (
 	"context"
+	"github.com/bcc-code/bcc-media-flows/services/cantemo"
 	"os"
-
-	"github.com/go-resty/resty/v2"
-	"go.temporal.io/sdk/activity"
 )
 
 type AddRelationParams struct {
@@ -13,24 +11,12 @@ type AddRelationParams struct {
 	Child  string
 }
 
-func AddRelation(ctx context.Context, params AddRelationParams) (any, error) {
-	log := activity.GetLogger(ctx)
-	log.Info("Starting AddRelationActivity")
-
-	// Warning: this can not have a trailing slash
+func getClient() *cantemo.Client {
 	urlBase := os.Getenv("CANTEMO_URL")
 	token := os.Getenv("CANTEMO_TOKEN")
+	return cantemo.NewClient(urlBase, token)
+}
 
-	client := resty.New()
-	client.SetBaseURL(urlBase)
-	client.SetHeader("Auth-Token", token)
-	client.SetHeader("Accept", "application/json")
-	client.SetDisableWarn(true)
-
-	req := client.R()
-	res, err := req.Post(urlBase + "/API/v2/items/" + params.Parent + "/relation/" + params.Child + "?type=portal_metadata_cascade&direction=D")
-
-	log.Debug("Response: ", res)
-
-	return nil, err
+func AddRelation(ctx context.Context, params AddRelationParams) (any, error) {
+	return nil, getClient().AddRelation(params.Parent, params.Child)
 }
