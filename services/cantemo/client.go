@@ -81,7 +81,7 @@ func (c *Client) GetTranscriptionJSON(itemID string) (*Transcription, error) {
 
 		res, err := c.restyClient.R().
 			SetResult(&Transcription{}).
-			Get("/vs/item/download/VX-486350/?shape=VX-978080")
+			Get(format.DownloadURI)
 
 		if err != nil {
 			return nil, err
