@@ -66,7 +66,7 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 				return
 			}
 			var f workflow.Future
-			samples := params.Adjustment / 1000 * 48000
+			samples := int(float64(params.Adjustment) / 1000.0 * 48000.0)
 			if samples > 0 {
 				f = wfutils.Execute(ctx, activities.Audio.PrependSilence, activities.PrependSilenceInput{
 					FilePath:   dest,
