@@ -35,11 +35,21 @@ func MultitrackMux(files paths.Files, outputPath paths.Path, cb ffmpeg.ProgressC
 
 	outputPath = outputPath.Append(files[0].Base() + ".mxf")
 
+	params = append(params, "-map", "v")
+	for i, _ := range files {
+		//params = append(params, "-map", fmt.Sprintf("%d", i))
+		t := i + 1
+		params = append(params, "-filter_complex", fmt.Sprintf("[%d:a:0]channelsplit=channel_layout=stereo[l%d][r%d]", t, t, t))
+		params = append(params, "-map", fmt.Sprintf("[l%d]", t))
+		params = append(params, "-map", fmt.Sprintf("[r%d]", t))
+	}
+
 	params = append(params,
 		"-vf", fmt.Sprintf("scale=960:540:force_original_aspect_ratio=decrease,pad=960:540:(ow-iw)/2:(oh-ih)/2,drawtext=text=%s:fontsize=36:fontcolor=white:x=100:y=100", text),
 		"-c:v", "libx264",
 		"-c:a", "pcm_s24le",
 		"-t", fmt.Sprintf("%f", info.TotalSeconds),
+		"-y",
 		outputPath.Local(),
 	)
 
