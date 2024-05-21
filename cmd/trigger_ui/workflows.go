@@ -27,30 +27,30 @@ type WorkflowDetails struct {
 	Start      string
 }
 
-func (s *TriggerServer) listGET(c *gin.Context) {
+func (s *TriggerServer) listGET(ctx *gin.Context) {
 	var workflowList []WorkflowDetails
 
-	workflows, err := s.wfClient.ListWorkflow(c, &workflowservice.ListWorkflowExecutionsRequest{
+	workflows, err := s.wfClient.ListWorkflow(ctx, &workflowservice.ListWorkflowExecutionsRequest{
 		Query: "WorkflowType = 'VXExport'",
 	})
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	for i := 0; i < len(workflows.Executions); i++ {
-		res, err := s.wfClient.WorkflowService().GetWorkflowExecutionHistory(c, &workflowservice.GetWorkflowExecutionHistoryRequest{
+		res, err := s.wfClient.WorkflowService().GetWorkflowExecutionHistory(ctx, &workflowservice.GetWorkflowExecutionHistoryRequest{
 			Execution: workflows.Executions[i].GetExecution(),
 			Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
 		})
 
 		if err != nil {
-			renderErrorPage(c, http.StatusInternalServerError, err)
+			renderErrorPage(ctx, http.StatusInternalServerError, err)
 			return
 		}
 		attributes, ok := res.History.Events[0].Attributes.(*history.HistoryEvent_WorkflowExecutionStartedEventAttributes)
 		if !ok {
-			renderErrorPage(c, 500, errors.New("unexpected attribute type on first workflow event. Was not HistoryEvent_WorkflowExecutionStartedEventAttributes"))
+			renderErrorPage(ctx, 500, errors.New("unexpected attribute type on first workflow event. Was not HistoryEvent_WorkflowExecutionStartedEventAttributes"))
 			break
 		}
 
@@ -58,13 +58,13 @@ func (s *TriggerServer) listGET(c *gin.Context) {
 		err = json.Unmarshal(attributes.WorkflowExecutionStartedEventAttributes.Input.Payloads[0].Data, &data)
 
 		if err != nil {
-			renderErrorPage(c, http.StatusInternalServerError, err)
+			renderErrorPage(ctx, http.StatusInternalServerError, err)
 			return
 		}
 
 		meta, err := s.vidispine.GetMetadata(data.VXID)
 		if err != nil {
-			renderErrorPage(c, http.StatusInternalServerError, err)
+			renderErrorPage(ctx, http.StatusInternalServerError, err)
 			return
 		}
 		name := meta.Get(vscommon.FieldTitle, "")
@@ -91,7 +91,7 @@ func (s *TriggerServer) listGET(c *gin.Context) {
 		"Terminated": "red",
 	}
 
-	c.HTML(http.StatusOK, "list.gohtml", WorkflowListParams{
+	ctx.HTML(http.StatusOK, "list.gohtml", WorkflowListParams{
 		WorkflowList:     workflowList,
 		WorkflowStatuses: workflowStatuses,
 	})

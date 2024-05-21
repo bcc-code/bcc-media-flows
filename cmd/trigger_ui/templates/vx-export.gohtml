@@ -7,6 +7,13 @@
 <body class="flex bg-gray-100">
 {{ $selectClasses := "p-2 border rounded-md bg-transparent"}}
 <section class="mx-auto p-4 md:p-8 bg-white">
+    <form method="post" action="timed-metadata">
+        <button
+            class="cursor-pointer rounded-md bg-[#6A64F1] py-3 px-8 text-center text-base font-semibold text-white outline-none"
+            type="submit">
+            Export timed metadata
+        </button>
+    </form>
     <form id="requestForm" method="post" class="flex flex-col gap-4 justify-between divide-y-1">
         <h1 class="text-center w-full font-bold text-3xl text-gray-600 p-4" id="vxID">{{
             .Title }}</h1>

@@ -46,67 +46,67 @@ func (s *TriggerServer) removeProgramID(id string) error {
 	return err
 }
 
-func (s *TriggerServer) uploadMasterAdminGET(c *gin.Context) {
+func (s *TriggerServer) uploadMasterAdminGET(ctx *gin.Context) {
 	programIDs, err := s.getProgramIDs()
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	c.HTML(http.StatusOK, "upload-master-admin.gohtml", gin.H{
+	ctx.HTML(http.StatusOK, "upload-master-admin.gohtml", gin.H{
 		"programIds": programIDs,
 	})
 }
 
-func (s *TriggerServer) uploadMasterAdminPOST(c *gin.Context) {
-	code := c.PostForm("code")
-	name := c.PostForm("name")
+func (s *TriggerServer) uploadMasterAdminPOST(ctx *gin.Context) {
+	code := ctx.PostForm("code")
+	name := ctx.PostForm("name")
 
 	if code != "" && name != "" {
 		err := s.addProgramID(strings.ToUpper(code) + " - " + name)
 		if err != nil {
-			renderErrorPage(c, http.StatusInternalServerError, err)
+			renderErrorPage(ctx, http.StatusInternalServerError, err)
 			return
 		}
 	}
 
-	for _, id := range c.PostFormArray("deleteIds[]") {
+	for _, id := range ctx.PostFormArray("deleteIds[]") {
 		err := s.removeProgramID(id)
 		if err != nil {
-			renderErrorPage(c, http.StatusInternalServerError, err)
+			renderErrorPage(ctx, http.StatusInternalServerError, err)
 			return
 		}
 	}
 
-	s.uploadMasterAdminGET(c)
+	s.uploadMasterAdminGET(ctx)
 }
 
-func (s *TriggerServer) uploadMasterGET(c *gin.Context) {
+func (s *TriggerServer) uploadMasterGET(ctx *gin.Context) {
 	filenames, err := getFilenames(masterTriggerDir)
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	tags, err := s.getTags()
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	persons, err := s.getPersons()
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	programIDs, err := s.getProgramIDs()
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	c.HTML(http.StatusOK, "upload-master.gohtml", gin.H{
+	ctx.HTML(http.StatusOK, "upload-master.gohtml", gin.H{
 		"files":      filenames,
 		"tags":       tags,
 		"persons":    persons,
@@ -128,11 +128,11 @@ type MasterPostParams struct {
 	DirectToPlayback   bool     `form:"directToPlayback"`
 }
 
-func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
+func (s *TriggerServer) uploadMasterPOST(ctx *gin.Context) {
 	var params MasterPostParams
-	err := c.BindWith(&params, binding.Form)
+	err := ctx.BindWith(&params, binding.Form)
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -145,14 +145,14 @@ func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
 	for _, tag := range params.Tags {
 		err := s.addTag(tag)
 		if err != nil {
-			renderErrorPage(c, http.StatusInternalServerError, err)
+			renderErrorPage(ctx, http.StatusInternalServerError, err)
 			return
 		}
 	}
 	for _, person := range params.Persons {
 		err := s.addPerson(person)
 		if err != nil {
-			renderErrorPage(c, http.StatusInternalServerError, err)
+			renderErrorPage(ctx, http.StatusInternalServerError, err)
 			return
 		}
 	}
@@ -160,11 +160,11 @@ func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
 	rawPath := filepath.Join(masterTriggerDir, params.Path)
 	path, err := paths.Parse(rawPath)
 	if err != nil {
-		renderErrorPage(c, http.StatusBadRequest, err)
+		renderErrorPage(ctx, http.StatusBadRequest, err)
 		return
 	}
 
-	_, err = s.wfClient.ExecuteWorkflow(c, workflowOptions, ingestworkflows.Masters, ingestworkflows.MasterParams{
+	_, err = s.wfClient.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.Masters, ingestworkflows.MasterParams{
 		Metadata: &ingest.Metadata{
 			JobProperty: ingest.JobProperty{
 				ProgramID:          params.ProgramID,
@@ -181,7 +181,7 @@ func (s *TriggerServer) uploadMasterPOST(c *gin.Context) {
 		SourceFile: &path,
 	})
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
