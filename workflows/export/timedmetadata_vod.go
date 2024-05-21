@@ -58,6 +58,8 @@ func ExportTimedMetadata(ctx workflow.Context, params ExportTimedMetadataParams)
 		return nil, err
 	}
 
+	// TODO: generate image for each chapter into outputDir/. See ImageFilename in asset.TimedMetadata.
+
 	marshalled, err := json.Marshal(timedMetadata)
 	if err != nil {
 		return nil, err
@@ -74,7 +76,7 @@ func ExportTimedMetadata(ctx workflow.Context, params ExportTimedMetadataParams)
 		return nil, err
 	}
 
-	err = wfutils.PublishEvent(ctx, events.TypeAssetTimedMetadataDelivered, events.AssetIngestTimedMetadata{
+	err = wfutils.PublishEvent(ctx, events.TypeAssetTimedMetadataDelivered, events.AssetTimedMetadataDelivered{
 		VXID:     params.VXID,
 		JSONPath: s3Dir + "/timedmetadata.json",
 	})
