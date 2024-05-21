@@ -46,7 +46,7 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 	if analyzeResult.HasAlpha {
 		rcloneDestination := deliveryFolder.Append("Abekas-AVCI", params.InputFile.Base())
 
-		message := fmt.Sprintf("ℹ️ %s has alpha channel, copying directly delivery folder with no transoding", params.InputFile.Base())
+		message := fmt.Sprintf("ℹ️ `%s` has alpha channel, copying directly delivery folder with no transoding", params.InputFile.Base())
 		wfutils.SendTelegramText(ctx, telegram.ChatOslofjord, message)
 
 		err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
