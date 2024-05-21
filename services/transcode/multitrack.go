@@ -37,7 +37,6 @@ func MultitrackMux(files paths.Files, outputPath paths.Path, cb ffmpeg.ProgressC
 
 	params = append(params, "-map", "v")
 	for i, _ := range files {
-		//params = append(params, "-map", fmt.Sprintf("%d", i))
 		t := i + 1
 		params = append(params, "-filter_complex", fmt.Sprintf("[%d:a:0]channelsplit=channel_layout=stereo[l%d][r%d]", t, t, t))
 		params = append(params, "-map", fmt.Sprintf("[l%d]", t))
