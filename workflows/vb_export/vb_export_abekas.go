@@ -43,6 +43,29 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		return nil, err
 	}
 
+	if analyzeResult.HasAlpha {
+		rcloneDestination := deliveryFolder.Append("Abekas-AVCI", params.InputFile.Base())
+
+		message := fmt.Sprintf("ℹ️ `%s` has alpha channel, copying directly delivery folder with no transoding", params.InputFile.Base())
+		wfutils.SendTelegramText(ctx, telegram.ChatOslofjord, message)
+
+		err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
+		if err != nil {
+			return nil, err
+		}
+
+		err = wfutils.RcloneCopyFileWithNotifications(ctx, params.InputFile, rcloneDestination, rclone.PriorityHigh, rcloneNotificationOptions)
+		if err != nil {
+			return nil, err
+		}
+
+		notifyExportDone(ctx, params, "abekas", params.InputFile)
+		return &VBExportResult{
+			ID:    params.ParentParams.VXID,
+			Title: params.OriginalFilenameWithoutExt,
+		}, nil
+	}
+
 	fileToTranscode := params.InputFile
 
 	// Check for 5.1 audio
