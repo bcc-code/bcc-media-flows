@@ -99,6 +99,7 @@ func singleValueArrayFromRows(rows *sql.Rows, err error) ([]string, error) {
 }
 
 type TriggerGETParams struct {
+	ID                      string
 	Title                   string
 	AssetExportDestinations []string
 	Filenames               []string
@@ -175,6 +176,7 @@ func (s *TriggerServer) vxExportGET(ctx *gin.Context) {
 	}
 
 	ctx.HTML(http.StatusOK, "vx-export.gohtml", TriggerGETParams{
+		ID:                      vxID,
 		Title:                   title,
 		Filenames:               filenames,
 		Languages:               s.languages,
@@ -303,7 +305,30 @@ func (s *TriggerServer) vxExportPOST(ctx *gin.Context) {
 	})
 }
 func (s *TriggerServer) vxExportTimedMetadataPOST(ctx *gin.Context) {
+	queue := getQueue()
+	vxID := ctx.PostForm("id")
+	workflowOptions := client.StartWorkflowOptions{
+		TaskQueue: queue,
+	}
 
+	if os.Getenv("DEBUG") == "" {
+		workflowOptions.SearchAttributes = map[string]any{
+			"CustomStringField": vxID,
+		}
+	}
+	workflowOptions.ID = uuid.NewString()
+	res, err := s.wfClient.ExecuteWorkflow(ctx, workflowOptions, export.ExportTimedMetadata, export.ExportTimedMetadataParams{
+		VXID: vxID,
+	})
+	if err != nil {
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.HTML(http.StatusOK, "success.gohtml", gin.H{
+		"WorkflowID": res.GetID(),
+		"Title":      "Export timed metadata",
+	})
 }
 
 func main() {
