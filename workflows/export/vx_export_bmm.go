@@ -164,7 +164,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	jsonData.ImportDate = params.ExportData.ImportDate
 	jsonData.TranscriptionFiles = map[string]string{}
 	jsonData.Title = params.ExportData.Title
-	if params.ExportData.BmmTitle != nil {
+	if params.ExportData.BmmTitle != nil && *params.ExportData.BmmTitle != "" {
 		jsonData.Title = *params.ExportData.BmmTitle
 	}
 	jsonData.TrackID = params.ExportData.BmmTrackID
