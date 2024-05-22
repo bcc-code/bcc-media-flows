@@ -38,7 +38,7 @@ func Test_PrependSilence(t *testing.T) {
 	output := paths.MustParse("./testdata/generated/test_tone_stereo_prefixed.wav")
 
 	cb, _ := printProgress()
-	res, err := PrependSilence(input, output, 0, 48000, cb)
+	res, err := PrependSilence(input, output, 1.0, 48000, cb)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, res)
 
