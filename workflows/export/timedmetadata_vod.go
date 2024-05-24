@@ -16,8 +16,7 @@ import (
 )
 
 type ExportTimedMetadataParams struct {
-	VXID       string
-	ExportData *vidispine.ExportData
+	VXID string
 }
 
 type ExportTimedMetadataResult struct {
@@ -38,16 +37,14 @@ func ExportTimedMetadata(ctx workflow.Context, params ExportTimedMetadataParams)
 	}
 	outputDir := tempDir.Append("output")
 
-	exportData := params.ExportData
-	if exportData == nil {
-		err := wfutils.Execute(ctx, vsactivity.Vidispine.GetExportDataActivity, vsactivity.GetExportDataParams{
-			VXID:        params.VXID,
-			Languages:   []string{"no"},
-			AudioSource: vidispine.ExportAudioSourceEmbedded.Value,
-		}).Get(ctx, &exportData)
-		if err != nil {
-			return nil, err
-		}
+	var exportData *vidispine.ExportData
+	err = wfutils.Execute(ctx, vsactivity.Vidispine.GetExportDataActivity, vsactivity.GetExportDataParams{
+		VXID:        params.VXID,
+		Languages:   []string{"no"},
+		AudioSource: vidispine.ExportAudioSourceEmbedded.Value,
+	}).Get(ctx, &exportData)
+	if err != nil {
+		return nil, err
 	}
 
 	var timedMetadata *[]asset.TimedMetadata
@@ -82,7 +79,7 @@ func ExportTimedMetadata(ctx workflow.Context, params ExportTimedMetadataParams)
 		return nil, err
 	}
 
-	message := fmt.Sprintf("🟩 Chapter export to VOD finished for %s (`%s`).\nIt should show up in the linked assets within a few minutes.", params.ExportData.Title, params.VXID)
+	message := fmt.Sprintf("🟩 Chapter export to VOD finished for %s (`%s`).\nIt should show up in the linked assets within a few minutes.", exportData.Title, params.VXID)
 
 	wfutils.SendTelegramText(
 		ctx,
