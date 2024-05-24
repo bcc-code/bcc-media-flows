@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/temporal"
 
@@ -47,7 +46,6 @@ func (a Activities) WaitForJobCompletion(ctx context.Context, params WaitForJobC
 			return nil, nil
 		}
 		if job.Status != "STARTED" && job.Status != "READY" && job.Status != "WAITING" {
-			spew.Dump(job)
 			return nil, fmt.Errorf("job failed with status: %s", job.Status)
 		}
 		activity.RecordHeartbeat(ctx, job)

@@ -77,7 +77,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	xmlPath, err := paths.Parse(params.XMLPath)
+	xmlPath, err := paths.SafeParse(ctx, params.XMLPath)
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +209,7 @@ func copyToDir(ctx workflow.Context, dest paths.Path, files []ingest.File) error
 		return fmt.Errorf("multiple directories not supported: %s", dirs)
 	}
 
-	dir, err := paths.Parse(filepath.Join("/mnt/filecatalyst/workflow", dirs[0]))
+	dir, err := paths.SafeParse(ctx, filepath.Join("/mnt/filecatalyst/workflow", dirs[0]))
 	if err != nil {
 		return err
 	}
@@ -220,9 +220,14 @@ func copyToDir(ctx workflow.Context, dest paths.Path, files []ingest.File) error
 	}
 
 	for _, file := range files {
+		filePath, err := paths.SafeParse(ctx, filepath.Join("/mnt/filecatalyst/workflow", file.FilePath, file.FileName))
+		if err != nil {
+			return err
+		}
+
 		err = wfutils.DeletePathRecursively(
 			ctx,
-			paths.MustParse(filepath.Join("/mnt/filecatalyst/workflow", file.FilePath, file.FileName)),
+			filePath,
 		)
 		if err != nil {
 			return err

@@ -12,7 +12,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/common/smil"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
-	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -32,9 +31,10 @@ type MuxFilesResult struct {
 	Subtitles []smil.TextStream
 }
 
-func getSubtitlesResult(subtitleFiles map[string]paths.Path) []smil.TextStream {
+func getSubtitlesResult(ctx workflow.Context, subtitleFiles map[string]paths.Path) []smil.TextStream {
 	var subtitles []smil.TextStream
-	subtitleLanguages := utils.LanguageKeysToOrderedLanguages(lo.Keys(subtitleFiles))
+	keys, _ := wfutils.GetMapKeysSafely(ctx, subtitleFiles)
+	subtitleLanguages := utils.LanguageKeysToOrderedLanguages(keys)
 	for _, language := range subtitleLanguages {
 		path := subtitleFiles[language.ISO6391]
 		subtitles = append(subtitles, smil.TextStream{

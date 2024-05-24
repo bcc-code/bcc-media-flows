@@ -1,6 +1,7 @@
 package wfutils
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/services/notifications"
@@ -88,13 +89,63 @@ func ListFiles(ctx workflow.Context, path paths.Path) (paths.Files, error) {
 }
 
 func UnmarshalXMLFile[T any](ctx workflow.Context, file paths.Path) (*T, error) {
-	var r T
 	res, err := ReadFile(ctx, file)
 	if err != nil {
 		return nil, err
 	}
-	err = xml.Unmarshal(res, &r)
-	return &r, err
+
+	unmarsallResult := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
+		var r T
+		err := xml.Unmarshal(res, &r)
+		if err != nil {
+			panic(err)
+		}
+		return r
+	})
+
+	var data T
+	unmarsallResult.Get(data)
+
+	return &data, nil
+}
+
+func SafeMarshallXml(ctx workflow.Context, data any) ([]byte, error) {
+	var res []byte
+	err := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
+		xmlData, err := xml.MarshalIndent(data, "", "\t")
+		if err != nil {
+			panic(err)
+		}
+
+		return xmlData
+	}).Get(&res)
+	return res, err
+}
+
+func SafeMarshallJson(ctx workflow.Context, data any) ([]byte, error) {
+	var res []byte
+	err := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
+		bytes, err := json.Marshal(data)
+		if err != nil {
+			panic(err)
+		}
+		return bytes
+	}).Get(res)
+	return res, err
+}
+
+func SafeUnmarshalJson[T any](ctx workflow.Context, data []byte) (*T, error) {
+	var res *T
+	err := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
+		var res *T
+		err := json.Unmarshal(data, res)
+		if err != nil {
+			panic(err)
+		}
+		return nil
+	}).Get(res)
+
+	return res, err
 }
 
 func DeletePath(ctx workflow.Context, path paths.Path) error {
@@ -110,10 +161,19 @@ func DeletePathRecursively(ctx workflow.Context, path paths.Path) error {
 	}).Get(ctx, nil)
 }
 
+func Now(ctx workflow.Context) time.Time {
+	se := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
+		return time.Now()
+	})
+
+	var date time.Time
+	se.Get(date)
+	return date
+}
+
 func GetWorkflowLucidLinkOutputFolder(ctx workflow.Context, root string) paths.Path {
 	info := workflow.GetInfo(ctx)
-
-	date := time.Now()
+	date := Now(ctx)
 
 	path := paths.New(
 		paths.LucidLinkDrive,
@@ -129,8 +189,7 @@ func GetWorkflowLucidLinkOutputFolder(ctx workflow.Context, root string) paths.P
 
 func GetWorkflowIsilonOutputFolder(ctx workflow.Context, root string) (paths.Path, error) {
 	info := workflow.GetInfo(ctx)
-
-	date := time.Now()
+	date := Now(ctx)
 
 	path := paths.New(
 		paths.IsilonDrive,
@@ -155,7 +214,14 @@ func GetWorkflowAuxOutputFolder(ctx workflow.Context) (paths.Path, error) {
 func GetWorkflowTempFolder(ctx workflow.Context) (paths.Path, error) {
 	info := workflow.GetInfo(ctx)
 
-	path := paths.MustParse(filepath.Join(environment.GetTempMountPrefix(), "workflows", info.OriginalRunID))
+	var path paths.Path
+	err := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
+		return paths.MustParse(filepath.Join(environment.GetTempMountPrefix(), "workflows", info.OriginalRunID))
+	}).Get(&path)
+
+	if err != nil {
+		return path, err
+	}
 
 	return path, CreateFolder(ctx, path)
 }

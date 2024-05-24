@@ -33,7 +33,7 @@ func TranscribeFile(
 		return err
 	}
 
-	file, err := paths.Parse(params.File)
+	file, err := paths.SafeParse(ctx, params.File)
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func TranscribeFile(
 		return err
 	}
 
-	destination, err := paths.Parse(params.DestinationPath)
+	destination, err := paths.SafeParse(ctx, params.DestinationPath)
 	if err != nil {
 		return err
 	}

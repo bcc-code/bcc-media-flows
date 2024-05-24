@@ -3,6 +3,7 @@ package webhooks
 import (
 	"encoding/json"
 	"fmt"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 
 	"github.com/orsinium-labs/enum"
 	"go.temporal.io/sdk/workflow"
@@ -38,11 +39,12 @@ func WebHook(ctx workflow.Context, input WebHookInput) (*WebHookResult, error) {
 
 	switch *webHookType {
 	case WebHookBmmSimpleUpload:
-		var params BmmSimpleUploadParams
-		if err := json.Unmarshal(input.Parameters, &params); err != nil {
+		params, err := wfutils.SafeUnmarshalJson[BmmSimpleUploadParams](ctx, input.Parameters)
+		if err != nil {
 			return nil, err
 		}
-		err := workflow.ExecuteChildWorkflow(ctx, BmmSimpleUpload, params).Get(ctx, nil)
+
+		err = workflow.ExecuteChildWorkflow(ctx, BmmSimpleUpload, params).Get(ctx, nil)
 		if err != nil {
 			return nil, err
 		}

@@ -28,7 +28,7 @@ type BmmSimpleUploadResult struct {
 func BmmSimpleUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSimpleUploadResult, error) {
 	workflow.GetLogger(ctx).Info("Starting BmmSimpleUpload")
 
-	path, err := paths.Parse(params.FilePath)
+	path, err := paths.SafeParse(ctx, params.FilePath)
 	if err != nil {
 		return nil, err
 	}

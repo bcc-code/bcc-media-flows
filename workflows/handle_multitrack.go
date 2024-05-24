@@ -2,14 +2,12 @@ package workflows
 
 import (
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/services/rclone"
-	"strings"
-	"time"
-
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
+	"strings"
 )
 
 type HandleMultitrackFileInput struct {
@@ -29,7 +27,8 @@ func makeLucidMultitrackPath(ctx workflow.Context, path paths.Path) paths.Path {
 		out.Path = strings.Replace(path.Path, "multitrack/Ingest/tempFraBrunstad", "", 1)
 	}
 
-	return out.Append(path.Base()).Prepend("01 Liveopptak fra Brunstad/01 RAW/" + time.Now().Format("2006-01-02"))
+	now := wfutils.Now(ctx)
+	return out.Append(path.Base()).Prepend("01 Liveopptak fra Brunstad/01 RAW/" + now.Format("2006-01-02"))
 }
 
 func makeMultitrackIsilonArchivePath(ctx workflow.Context, path paths.Path) paths.Path {
@@ -45,7 +44,8 @@ func makeMultitrackIsilonArchivePath(ctx workflow.Context, path paths.Path) path
 		out.Path = strings.Replace(path.Dir().Path, "multitrack/Ingest/tempFraBrunstad", "", 1)
 	}
 
-	return out.Prepend(fmt.Sprintf("AudioArchive/%d/%d", time.Now().Year(), time.Now().Month())).Append(path.Base())
+	now := wfutils.Now(ctx)
+	return out.Prepend(fmt.Sprintf("AudioArchive/%d/%d", now.Year(), now.Month())).Append(path.Base())
 }
 
 func HandleMultitrackFile(
@@ -58,7 +58,7 @@ func HandleMultitrackFile(
 	options := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	path, err := paths.Parse(params.Path)
+	path, err := paths.SafeParse(ctx, params.Path)
 	if err != nil {
 		return err
 	}

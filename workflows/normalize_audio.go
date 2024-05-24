@@ -31,7 +31,7 @@ func NormalizeAudioLevelWorkflow(
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 	out := &NormalizeAudioResult{}
 
-	filePath, err := paths.Parse(params.FilePath)
+	filePath, err := paths.SafeParse(ctx, params.FilePath)
 	if err != nil {
 		return nil, err
 	}

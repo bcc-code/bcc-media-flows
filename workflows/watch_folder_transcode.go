@@ -2,13 +2,11 @@ package workflows
 
 import (
 	"fmt"
-
-	"github.com/bcc-code/bcc-media-flows/services/rclone"
-
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -25,7 +23,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	path, err := paths.Parse(params.Path)
+	path, err := paths.SafeParse(ctx, params.Path)
 	if err != nil {
 		return err
 	}

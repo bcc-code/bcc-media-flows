@@ -96,7 +96,9 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 
 	var errs []error
 
-	shapes, err := avidispine.GetClient().GetShapes(params.VXID)
+	shapes, err := wfutils.Execute(ctx, activities.Vidispine.GetShapes, avidispine.VXOnlyParam{
+		VXID: params.VXID,
+	}).Result(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +131,11 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
-	videoFilePath := paths.MustParse(videoShape.GetPath())
+	videoFilePath, err := paths.SafeParse(ctx, videoShape.GetPath())
+	if err != nil {
+		return nil, err
+	}
+
 	originalFilenameWithoutExt := videoFilePath.Base()[0 : len(videoFilePath.Base())-len(videoFilePath.Ext())]
 	var analyzeResult *ffmpeg.StreamInfo
 	err = wfutils.Execute(ctx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
@@ -161,7 +167,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	var subtitleFile *paths.Path
 	var subtitleStyle *paths.Path
 	if params.SubtitleShapeTag != "" {
-		subtitleStylePath, err := paths.Parse(subtitleStyleBase + params.SubtitleStyle)
+		subtitleStylePath, err := paths.SafeParse(ctx, subtitleStyleBase+params.SubtitleStyle)
 		if err != nil {
 			return nil, err
 		}
@@ -171,7 +177,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		for _, shape := range shapes.Shape {
 			for _, tag := range shape.Tag {
 				if tag == params.SubtitleShapeTag {
-					path := paths.MustParse(shape.GetPath())
+					path, _ := paths.SafeParse(ctx, shape.GetPath())
 					subtitleFile = &path
 					break outer
 				}

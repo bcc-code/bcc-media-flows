@@ -123,10 +123,13 @@ func ImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromR
 }
 
 func doImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFromReaperParams) error {
-	inputFile := paths.MustParse(params.Path)
+	inputFile, err := paths.SafeParse(ctx, params.Path)
+	if err != nil {
+		return err
+	}
 
 	fileOK := false
-	err := wfutils.Execute(ctx, activities.Util.WaitForFile, activities.FileInput{
+	err = wfutils.Execute(ctx, activities.Util.WaitForFile, activities.FileInput{
 		Path: inputFile,
 	}).Get(ctx, &fileOK)
 	if err != nil {

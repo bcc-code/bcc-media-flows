@@ -2,6 +2,7 @@ package paths
 
 import (
 	"encoding/json"
+	"go.temporal.io/sdk/workflow"
 	"path/filepath"
 	"strings"
 
@@ -208,6 +209,15 @@ var drivePrefixes = map[Drive]prefix{
 	BrunstadDrive:     {"/dev/null/", "/dev/null/", "brunstad:/"},
 	LucidLinkDrive:    {"/dev/null/", "/dev/null/", "lucid:lucidlink/"},
 	TestDrive:         {"./testdata/", "./testdata/", "/dev/null/"},
+}
+
+func SafeParse(ctx workflow.Context, path string) (Path, error) {
+	var p Path
+	err := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
+		return MustParse(path)
+	}).Get(p)
+
+	return p, err
 }
 
 func Parse(path string) (Path, error) {

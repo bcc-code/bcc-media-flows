@@ -24,7 +24,7 @@ func TranscodePreviewFile(
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	filePath, err := paths.Parse(params.FilePath)
+	filePath, err := paths.SafeParse(ctx, params.FilePath)
 	if err != nil {
 		return err
 	}
