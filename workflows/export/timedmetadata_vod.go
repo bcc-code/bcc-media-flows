@@ -58,8 +58,6 @@ func ExportTimedMetadata(ctx workflow.Context, params ExportTimedMetadataParams)
 		return nil, err
 	}
 
-	// TODO: generate image for each chapter into outputDir/. See ImageFilename in asset.TimedMetadata.
-
 	marshalled, err := json.Marshal(timedMetadata)
 	if err != nil {
 		return nil, err

@@ -18,7 +18,8 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/worker",
-      "envFile": "${workspaceFolder}/.env"
+      "envFile": "${workspaceFolder}/.env",
+      "console": "externalTerminal"
     },
     {
       "name": "Attach worker",
