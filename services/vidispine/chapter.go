@@ -53,8 +53,33 @@ var (
 		"presentasjon":   pcommon.ChapterTypeOther,
 		"seminar":        pcommon.ChapterTypeOther,
 		"reportasje":     pcommon.ChapterTypeOther,
+		"tydning":        pcommon.ChapterTypeOther,
 	}
 )
+
+var typesToFilterOut = []string{
+	"end-credit",
+	"tydning",
+	"bnn",
+	"frsending",
+	"ettersending",
+	"programleder",
+}
+
+var prioritizedTypeOrder = []pcommon.ChapterType{
+	pcommon.ChapterTypeInterview,
+	pcommon.ChapterTypeTheme,
+	pcommon.ChapterTypeSpeech,
+	pcommon.ChapterTypeSingAlong,
+	pcommon.ChapterTypeSong,
+}
+
+func mapSubclipType(vsChapterType string) pcommon.ChapterType {
+	if chapterType, ok := ChapterTypeMap[vsChapterType]; ok {
+		return chapterType
+	}
+	return pcommon.ChapterTypeOther
+}
 
 var SongExtract = regexp.MustCompile("(FMB|HV) ?-? ?([0-9]+)")
 var SongCollectionMap = map[string]string{
@@ -124,7 +149,10 @@ func GetChapterData(client Client, exportData *ExportData) ([]asset.TimedMetadat
 
 	var chapters []asset.TimedMetadata
 	for _, data := range allChapters {
-		chapter := metaToChapter(data)
+		chapter, keep := metaToChapter(data)
+		if !keep {
+			continue
+		}
 		if chapter.Timestamp == 0 {
 			chapter.Timestamp = originalStart[data.Get(vscommon.FieldTitle, "")]
 		}
@@ -134,7 +162,7 @@ func GetChapterData(client Client, exportData *ExportData) ([]asset.TimedMetadat
 	return chapters, nil
 }
 
-func metaToChapter(meta *vsapi.MetadataResult) asset.TimedMetadata {
+func metaToChapter(meta *vsapi.MetadataResult) (asset.TimedMetadata, bool) {
 	out := asset.TimedMetadata{}
 
 	out.Label = meta.Get(vscommon.FieldTitle, "")
@@ -142,16 +170,15 @@ func metaToChapter(meta *vsapi.MetadataResult) asset.TimedMetadata {
 	start, _ := vscommon.TCToSeconds(meta.Terse["title"][0].Start)
 	out.Timestamp = start
 
-	if chapterType, ok := ChapterTypeMap[meta.Get(vscommon.FieldSubclipType, "")]; ok {
-		out.ChapterType = chapterType.Value
-	} else {
-		out.ChapterType = pcommon.ChapterTypeOther.Value
+	subclipTypes := meta.GetArray(vscommon.FieldSubclipType)
+	if len(subclipTypes) == 0 {
+		return out, false
 	}
-
-	// This is more or less useless
-	// out.Description = meta.Get(FieldDescription, "")
-
-	out.Highlight = false // When do we set this?
+	if lo.Contains(typesToFilterOut, subclipTypes[0]) {
+		return out, false
+	}
+	subclipType, chapterType := findBestChapterType(subclipTypes)
+	out.ChapterType = chapterType.Value
 
 	out.Persons = lo.Filter(meta.GetArray(vscommon.FieldPersonsAppearing), func(p string, _ int) bool { return p != "" })
 
@@ -163,5 +190,34 @@ func metaToChapter(meta *vsapi.MetadataResult) asset.TimedMetadata {
 		}
 	}
 
-	return out
+	if out.ChapterType == pcommon.ChapterTypeOther.Value {
+		out.Title = subclipType
+	}
+	if strings.Contains(out.Label, " - ") {
+		out.Title = strings.Split(out.Label, " - ")[0]
+	}
+
+	return out, true
+}
+
+func findBestChapterType(subclipTypes []string) (string, *pcommon.ChapterType) {
+	if len(subclipTypes) > 1 {
+		for _, t := range subclipTypes {
+			c := mapSubclipType(t)
+			if c == pcommon.ChapterTypeOther {
+				return t, &c
+			}
+		}
+		for _, t := range prioritizedTypeOrder {
+			for _, subclipType := range subclipTypes {
+				t2 := mapSubclipType(subclipType)
+				if t.Value == t2.Value {
+					return subclipType, &t
+				}
+			}
+		}
+	}
+
+	chapterType := mapSubclipType(subclipTypes[0])
+	return subclipTypes[0], &chapterType
 }
