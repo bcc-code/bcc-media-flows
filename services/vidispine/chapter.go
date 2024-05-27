@@ -3,7 +3,6 @@ package vidispine
 import (
 	"fmt"
 	"math"
-	"regexp"
 	"strings"
 
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
@@ -13,79 +12,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/samber/lo"
 )
-
-var (
-	ChapterTypeMap = map[string]pcommon.ChapterType{
-		"sang":           pcommon.ChapterTypeSong,
-		"musikkvideo":    pcommon.ChapterTypeSong,
-		"musikal":        pcommon.ChapterTypeSong,
-		"tale":           pcommon.ChapterTypeSpeech,
-		"appelle":        pcommon.ChapterTypeSpeech,
-		"vitnesbyrd":     pcommon.ChapterTypeTestimony,
-		"end-credit":     pcommon.ChapterTypeOther,
-		"singalong":      pcommon.ChapterTypeSingAlong,
-		"panel":          pcommon.ChapterTypeOther,
-		"intervju":       pcommon.ChapterTypeOther,
-		"temafilm":       pcommon.ChapterTypeOther,
-		"animasjon":      pcommon.ChapterTypeOther,
-		"programleder":   pcommon.ChapterTypeOther,
-		"dokumentar":     pcommon.ChapterTypeOther,
-		"ordforklaring":  pcommon.ChapterTypeOther,
-		"frsending":      pcommon.ChapterTypeOther,
-		"ettersending":   pcommon.ChapterTypeOther,
-		"bildekavalkade": pcommon.ChapterTypeOther,
-		"skuespill":      pcommon.ChapterTypeOther,
-		"aksjonstatus":   pcommon.ChapterTypeOther,
-		"hilse":          pcommon.ChapterTypeOther,
-		"konkuranse":     pcommon.ChapterTypeOther,
-		"informasjon":    pcommon.ChapterTypeOther,
-		"bnn":            pcommon.ChapterTypeOther,
-		"promo":          pcommon.ChapterTypeOther,
-		"mte":            pcommon.ChapterTypeOther,
-		"fest":           pcommon.ChapterTypeOther,
-		"underholdning":  pcommon.ChapterTypeOther,
-		"kortfilm":       pcommon.ChapterTypeOther,
-		"anslag":         pcommon.ChapterTypeOther,
-		"teaser":         pcommon.ChapterTypeOther,
-		"reality":        pcommon.ChapterTypeOther,
-		"studio":         pcommon.ChapterTypeOther,
-		"talk-show":      pcommon.ChapterTypeOther,
-		"presentasjon":   pcommon.ChapterTypeOther,
-		"seminar":        pcommon.ChapterTypeOther,
-		"reportasje":     pcommon.ChapterTypeOther,
-		"tydning":        pcommon.ChapterTypeOther,
-	}
-)
-
-var typesToFilterOut = []string{
-	"end-credit",
-	"tydning",
-	"bnn",
-	"frsending",
-	"ettersending",
-	"programleder",
-}
-
-var prioritizedTypeOrder = []pcommon.ChapterType{
-	pcommon.ChapterTypeInterview,
-	pcommon.ChapterTypeTheme,
-	pcommon.ChapterTypeSpeech,
-	pcommon.ChapterTypeSingAlong,
-	pcommon.ChapterTypeSong,
-}
-
-func mapSubclipType(vsChapterType string) pcommon.ChapterType {
-	if chapterType, ok := ChapterTypeMap[vsChapterType]; ok {
-		return chapterType
-	}
-	return pcommon.ChapterTypeOther
-}
-
-var SongExtract = regexp.MustCompile("(FMB|HV) ?-? ?([0-9]+)")
-var SongCollectionMap = map[string]string{
-	"FMB": "AB",
-	"HV":  "WOTL",
-}
 
 func GetChapterData(client Client, exportData *ExportData) ([]asset.TimedMetadata, error) {
 	metaCache := map[string]*vsapi.MetadataResult{}
@@ -174,7 +100,7 @@ func metaToChapter(meta *vsapi.MetadataResult) (asset.TimedMetadata, bool) {
 	if len(subclipTypes) == 0 {
 		return out, false
 	}
-	if lo.Contains(typesToFilterOut, subclipTypes[0]) {
+	if lo.Contains(chapterTypesToFilterOut, subclipTypes[0]) {
 		return out, false
 	}
 	subclipType, chapterType := findBestChapterType(subclipTypes)
@@ -198,26 +124,4 @@ func metaToChapter(meta *vsapi.MetadataResult) (asset.TimedMetadata, bool) {
 	}
 
 	return out, true
-}
-
-func findBestChapterType(subclipTypes []string) (string, *pcommon.ChapterType) {
-	if len(subclipTypes) > 1 {
-		for _, t := range subclipTypes {
-			c := mapSubclipType(t)
-			if c == pcommon.ChapterTypeOther {
-				return t, &c
-			}
-		}
-		for _, t := range prioritizedTypeOrder {
-			for _, subclipType := range subclipTypes {
-				t2 := mapSubclipType(subclipType)
-				if t.Value == t2.Value {
-					return subclipType, &t
-				}
-			}
-		}
-	}
-
-	chapterType := mapSubclipType(subclipTypes[0])
-	return subclipTypes[0], &chapterType
 }
