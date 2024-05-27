@@ -10,7 +10,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	"github.com/bcc-code/bcc-media-platform/backend/events"
 	"go.temporal.io/sdk/workflow"
 )
@@ -37,20 +36,18 @@ func ExportTimedMetadata(ctx workflow.Context, params ExportTimedMetadataParams)
 	}
 	outputDir := tempDir.Append("output")
 
-	var exportData *vidispine.ExportData
-	err = wfutils.Execute(ctx, vsactivity.Vidispine.GetExportDataActivity, vsactivity.GetExportDataParams{
+	exportData, err := wfutils.Execute(ctx, vsactivity.Vidispine.GetExportDataActivity, vsactivity.GetExportDataParams{
 		VXID:        params.VXID,
 		Languages:   []string{"no"},
 		AudioSource: vidispine.ExportAudioSourceEmbedded.Value,
-	}).Get(ctx, &exportData)
+	}).Result(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var timedMetadata *[]asset.TimedMetadata
-	err = wfutils.Execute(ctx, activities.Vidispine.GetChapterDataActivity, vsactivity.GetChapterDataParams{
+	timedMetadata, err := wfutils.Execute(ctx, activities.Vidispine.GetChapterDataActivity, vsactivity.GetChapterDataParams{
 		ExportData: exportData,
-	}).Get(ctx, &timedMetadata)
+	}).Result(ctx)
 	if err != nil {
 		return nil, err
 	}
