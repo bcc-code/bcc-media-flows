@@ -75,7 +75,7 @@ func ExportTimedMetadata(ctx workflow.Context, params ExportTimedMetadataParams)
 		return nil, err
 	}
 
-	message := fmt.Sprintf("🟩 Chapter export to VOD finished for %s (`%s`).\nIt should show up in the linked assets within a few minutes.", exportData.Title, params.VXID)
+	message := fmt.Sprintf("🟩 Chapter export to VOD finished for `%s` (`%s`).\nIt should show up in the linked assets within a few minutes.", exportData.Title, params.VXID)
 
 	wfutils.SendTelegramText(
 		ctx,
