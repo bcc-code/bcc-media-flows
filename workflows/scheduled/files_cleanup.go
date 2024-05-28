@@ -21,9 +21,10 @@ func CleanupTemp(ctx workflow.Context) (CleanupResult, error) {
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	deletedFiles := []string{}
+
 	err := wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.DeleteOldFiles, activities.CleanupInput{
 		Root:      paths.MustParse("/mnt/temp/"),
-		OlderThan: time.Now().Add(-14 * 24 * time.Hour),
+		OlderThan: wfutils.Now(ctx).Add(-14 * 24 * time.Hour),
 	}).Get(ctx, &deletedFiles)
 
 	logger.Info("Deleted files", "count", len(deletedFiles))

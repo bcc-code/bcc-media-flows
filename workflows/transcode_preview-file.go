@@ -24,13 +24,10 @@ func TranscodePreviewFile(
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	filePath, err := paths.Parse(params.FilePath)
-	if err != nil {
-		return err
-	}
+	filePath := paths.MustParse(params.FilePath)
 
 	previewResponse := &activities.TranscodePreviewResponse{}
-	err = wfutils.Execute(ctx, activities.Video.TranscodePreview, activities.TranscodePreviewParams{
+	err := wfutils.Execute(ctx, activities.Video.TranscodePreview, activities.TranscodePreviewParams{
 		FilePath:           filePath,
 		DestinationDirPath: filePath.Dir(),
 	}).Get(ctx, previewResponse)

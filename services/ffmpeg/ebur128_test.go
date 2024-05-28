@@ -3,7 +3,6 @@ package ffmpeg
 import (
 	"encoding/json"
 	"github.com/bcc-code/bcc-media-flows/utils"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 	"os/exec"
 	"testing"
@@ -26,8 +25,6 @@ func TestExecuteAnalysisCmd_Normalize(t *testing.T) {
 	}
 
 	res, err := utils.ExecuteAnalysisCmd(cmd, callback)
-
-	spew.Dump(res)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, res)

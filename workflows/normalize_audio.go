@@ -31,13 +31,10 @@ func NormalizeAudioLevelWorkflow(
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 	out := &NormalizeAudioResult{}
 
-	filePath, err := paths.Parse(params.FilePath)
-	if err != nil {
-		return nil, err
-	}
+	filePath := paths.MustParse(params.FilePath)
 
 	r128Result := &common.AnalyzeEBUR128Result{}
-	err = wfutils.Execute(ctx, activities.Audio.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
+	err := wfutils.Execute(ctx, activities.Audio.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
 		FilePath:       filePath,
 		TargetLoudness: params.TargetLUFS,
 	}).Get(ctx, r128Result)

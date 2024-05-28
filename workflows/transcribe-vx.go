@@ -2,14 +2,11 @@ package workflows
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/common"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 
-	"github.com/davecgh/go-spew/spew"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -95,7 +92,6 @@ func TranscribeVX(
 		errs = append(errs, err)
 	}
 	if len(errs) > 0 {
-		spew.Dump(errs)
 		return fmt.Errorf("failed to import transcription files: %v", errs)
 	}
 
@@ -108,7 +104,7 @@ func TranscribeVX(
 		return err
 	}
 
-	txtValue, err := os.ReadFile(transcriptionJob.TXTPath.Local())
+	txtValue, err := wfutils.ReadFile(ctx, transcriptionJob.TXTPath)
 	if err != nil {
 		return err
 	}

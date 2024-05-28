@@ -167,3 +167,12 @@ func (a Activities) UpdateAssetRelations(ctx context.Context, params VXOnlyParam
 
 	return updatedLanguages, nil
 }
+
+func (a Activities) GetShapes(ctx context.Context, params VXOnlyParam) (*vsapi.ShapeResult, error) {
+	log := activity.GetLogger(ctx)
+	log.Info("Starting GetShapes")
+
+	vsClient := GetClient()
+
+	return vsClient.GetShapes(params.VXID)
+}
