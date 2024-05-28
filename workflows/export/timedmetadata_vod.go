@@ -38,7 +38,7 @@ func ExportTimedMetadata(ctx workflow.Context, params ExportTimedMetadataParams)
 
 	exportData, err := wfutils.Execute(ctx, vsactivity.Vidispine.GetExportDataActivity, vsactivity.GetExportDataParams{
 		VXID:        params.VXID,
-		Languages:   []string{"no"},
+		Languages:   []string{"nor"},
 		AudioSource: vidispine.ExportAudioSourceEmbedded.Value,
 	}).Result(ctx)
 	if err != nil {
