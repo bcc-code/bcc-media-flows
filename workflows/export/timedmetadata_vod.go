@@ -1,7 +1,6 @@
 package export
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -52,7 +51,7 @@ func ExportTimedMetadata(ctx workflow.Context, params ExportTimedMetadataParams)
 		return nil, err
 	}
 
-	marshalled, err := json.Marshal(timedMetadata)
+	marshalled, err := wfutils.MarshalJson(ctx, timedMetadata)
 	if err != nil {
 		return nil, err
 	}
