@@ -2,9 +2,10 @@ package export
 
 import (
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"path/filepath"
 	"strings"
+
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 
 	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -149,17 +150,6 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	return result, err
 }
 
-type vxExportVodService struct {
-	params                 VXExportChildWorkflowParams
-	ingestFolder           string
-	qualitiesWithLanguages map[resolutionString][]bccmflows.Language
-	filesSelector          workflow.Selector
-	streams                []smil.Video
-	files                  []asset.IngestFileMeta
-	tasks                  []workflow.Future
-	errs                   []error
-}
-
 func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, tempDir paths.Path, normalizeAudio, ignoreSilence bool) (map[string]paths.Path, error) {
 	prepareFilesSelector := workflow.NewSelector(ctx)
 
@@ -225,6 +215,17 @@ func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, 
 	return audioFiles, nil
 }
 
+type vxExportVodService struct {
+	params                 VXExportChildWorkflowParams
+	ingestFolder           string
+	qualitiesWithLanguages map[resolutionString][]bccmflows.Language
+	filesSelector          workflow.Selector
+	streams                []smil.Video
+	files                  []asset.IngestFileMeta
+	tasks                  []workflow.Future
+	errs                   []error
+}
+
 func (v *vxExportVodService) setMetadataAndPublishToVOD(
 	ctx workflow.Context,
 	chapterDataWF workflow.Future,
@@ -255,7 +256,7 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 	ingestData.SmilFile = "aws.smil"
 	if chapterDataWF != nil {
 		ingestData.ChaptersFile = "chapters.json"
-		var chaptersData []asset.Chapter
+		var chaptersData []asset.TimedMetadata
 		err = chapterDataWF.Get(ctx, &chaptersData)
 		if err != nil {
 			return nil, err
@@ -287,7 +288,7 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 			return nil, err
 		}
 
-		err = wfutils.PublishEvent(ctx, "asset.delivered", events.AssetDelivered{
+		err = wfutils.PublishEvent(ctx, events.TypeAssetDelivered, events.AssetDelivered{
 			JSONMetaPath: filepath.Join(v.ingestFolder, "ingest.json"),
 		})
 		if err != nil {

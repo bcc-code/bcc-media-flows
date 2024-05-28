@@ -62,8 +62,8 @@ func getOverlayFilePath(file string) string {
 	return filepath.Join(overlaysDir, file)
 }
 
-func renderErrorPage(c *gin.Context, httpStatus int, err error) {
-	c.HTML(httpStatus, "error.gohtml", gin.H{
+func renderErrorPage(ctx *gin.Context, httpStatus int, err error) {
+	ctx.HTML(httpStatus, "error.gohtml", gin.H{
 		"errorMessage": err.Error(),
 	})
 }
@@ -99,6 +99,7 @@ func singleValueArrayFromRows(rows *sql.Rows, err error) ([]string, error) {
 }
 
 type TriggerGETParams struct {
+	ID                      string
 	Title                   string
 	AssetExportDestinations []string
 	Filenames               []string
@@ -124,17 +125,17 @@ func ratio(w, h int) string {
 	return fmt.Sprintf("%d:%d", w/a, h/a)
 }
 
-func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
-	vxID := c.Query("id")
+func (s *TriggerServer) vxExportGET(ctx *gin.Context) {
+	vxID := ctx.Query("id")
 	meta, err := s.vidispine.GetMetadata(vxID)
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	resolutions, err := s.vidispine.GetResolutions(vxID)
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -147,24 +148,24 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 
 	filenames, err := getFilenames(overlaysDir)
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	exportData, err := vidispine.GetDataForExport(s.vidispine, vxID, nil, nil, "")
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	chapters, err := vidispine.GetChapterData(s.vidispine, exportData)
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	sort.Slice(chapters, func(i, j int) bool {
 		return chapters[i].Timestamp < chapters[j].Timestamp
 	})
-	subclipNames := lo.Map(chapters, func(c asset.Chapter, _ int) string {
+	subclipNames := lo.Map(chapters, func(c asset.TimedMetadata, _ int) string {
 		return c.Title
 	})
 
@@ -174,7 +175,8 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 		ratioString = ratio(resolutions[0].Width, resolutions[0].Height)
 	}
 
-	c.HTML(http.StatusOK, "vx-export.gohtml", TriggerGETParams{
+	ctx.HTML(http.StatusOK, "vx-export.gohtml", TriggerGETParams{
+		ID:                      vxID,
 		Title:                   title,
 		Filenames:               filenames,
 		Languages:               s.languages,
@@ -188,10 +190,10 @@ func (s *TriggerServer) triggerHandlerGET(c *gin.Context) {
 	})
 }
 
-func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
-	vxID := c.Query("id")
-	languages := c.PostFormArray("languages[]")
-	audioSource := c.PostForm("audioSource")
+func (s *TriggerServer) vxExportPOST(ctx *gin.Context) {
+	vxID := ctx.Query("id")
+	languages := ctx.PostFormArray("languages[]")
+	audioSource := ctx.PostForm("audioSource")
 
 	queue := getQueue()
 	workflowOptions := client.StartWorkflowOptions{
@@ -225,21 +227,21 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 	}()
 
 	var watermarkPath string
-	watermarkFile := c.PostForm("watermarkFile")
+	watermarkFile := ctx.PostForm("watermarkFile")
 	if watermarkFile != "" {
 		watermarkPath = getOverlayFilePath(watermarkFile)
 	}
 
-	resolutionIndexes := lo.Map(c.PostFormArray("resolutions[]"), func(i string, _ int) int {
+	resolutionIndexes := lo.Map(ctx.PostFormArray("resolutions[]"), func(i string, _ int) int {
 		return utils.AsInt(i)
 	})
-	fileIndexes := lo.Map(c.PostFormArray("files[]"), func(i string, _ int) int {
+	fileIndexes := lo.Map(ctx.PostFormArray("files[]"), func(i string, _ int) int {
 		return utils.AsInt(i)
 	})
 
 	vsresolutions, err := s.vidispine.GetResolutions(vxID)
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -255,34 +257,34 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 
 	params := export.VXExportParams{
 		VXID:          vxID,
-		WithChapters:  c.PostForm("withChapters") == "on",
-		IgnoreSilence: c.PostForm("ignoreSilence") == "on",
+		WithChapters:  ctx.PostForm("withChapters") == "on",
+		IgnoreSilence: ctx.PostForm("ignoreSilence") == "on",
 		WatermarkPath: watermarkPath,
 		AudioSource:   audioSource,
-		Destinations:  c.PostFormArray("destinations[]"),
+		Destinations:  ctx.PostFormArray("destinations[]"),
 		Languages:     languages,
 		Resolutions:   selectedResolutions,
 	}
 
 	var wfID string
 
-	subclips := c.PostFormArray("subclips[]")
+	subclips := ctx.PostFormArray("subclips[]")
 	if len(subclips) > 0 {
 		for _, subclip := range subclips {
 			params.Subclip = subclip
 			workflowOptions.ID = uuid.NewString()
-			_, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, export.VXExport, params)
+			_, err := s.wfClient.ExecuteWorkflow(ctx, workflowOptions, export.VXExport, params)
 			if err != nil {
-				renderErrorPage(c, http.StatusInternalServerError, err)
+				renderErrorPage(ctx, http.StatusInternalServerError, err)
 				return
 			}
 		}
 	} else {
 		workflowOptions.ID = uuid.NewString()
-		res, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, export.VXExport, params)
+		res, err := s.wfClient.ExecuteWorkflow(ctx, workflowOptions, export.VXExport, params)
 
 		if err != nil {
-			renderErrorPage(c, http.StatusInternalServerError, err)
+			renderErrorPage(ctx, http.StatusInternalServerError, err)
 			return
 		}
 
@@ -291,15 +293,41 @@ func (s *TriggerServer) triggerHandlerPOST(c *gin.Context) {
 
 	meta, err := s.vidispine.GetMetadata(vxID)
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	// Render success page, with back button
 
-	c.HTML(http.StatusOK, "success.gohtml", gin.H{
+	ctx.HTML(http.StatusOK, "success.gohtml", gin.H{
 		"WorkflowID": wfID,
 		"Title":      meta.Get(vscommon.FieldTitle, ""),
+	})
+}
+func (s *TriggerServer) vxExportTimedMetadataPOST(ctx *gin.Context) {
+	queue := getQueue()
+	vxID := ctx.PostForm("id")
+	workflowOptions := client.StartWorkflowOptions{
+		TaskQueue: queue,
+	}
+
+	if os.Getenv("DEBUG") == "" {
+		workflowOptions.SearchAttributes = map[string]any{
+			"CustomStringField": vxID,
+		}
+	}
+	workflowOptions.ID = uuid.NewString()
+	res, err := s.wfClient.ExecuteWorkflow(ctx, workflowOptions, export.ExportTimedMetadata, export.ExportTimedMetadataParams{
+		VXID: vxID,
+	})
+	if err != nil {
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.HTML(http.StatusOK, "success.gohtml", gin.H{
+		"WorkflowID": res.GetID(),
+		"Title":      "Export timed metadata",
 	})
 }
 
@@ -348,12 +376,13 @@ func main() {
 	router.GET("/list", server.listGET)
 
 	router.Group("/vx-export").
-		GET("/", server.triggerHandlerGET).
-		POST("/", server.triggerHandlerPOST)
+		GET("/", server.vxExportGET).
+		POST("/", server.vxExportPOST).
+		POST("/timed-metadata", server.vxExportTimedMetadataPOST)
 
 	router.Group("/vb-export").
-		GET("/", server.VBTriggerHandlerGET).
-		POST("/", server.VBTriggerHandlerPOST)
+		GET("/", server.vbExportGET).
+		POST("/", server.vbExportPOST)
 
 	router.Group("/upload-master").
 		GET("/", server.uploadMasterGET).

@@ -23,16 +23,16 @@ type VBTriggerGETParams struct {
 
 var subtitleStylesDir = os.Getenv("SUBTITLE_STYLES_DIR")
 
-func (s *TriggerServer) VBTriggerHandlerGET(c *gin.Context) {
-	vxID := c.Query("id")
+func (s *TriggerServer) vbExportGET(ctx *gin.Context) {
+	vxID := ctx.Query("id")
 	meta, err := s.vidispine.GetMetadata(vxID)
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	shapes, err := s.vidispine.GetShapes(vxID)
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -51,11 +51,11 @@ func (s *TriggerServer) VBTriggerHandlerGET(c *gin.Context) {
 	subStyles, err := getFilenames(subtitleStylesDir)
 	if err != nil {
 		log.Print(err)
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	c.HTML(http.StatusOK, "vb-export.gohtml", VBTriggerGETParams{
+	ctx.HTML(http.StatusOK, "vb-export.gohtml", VBTriggerGETParams{
 		Title:          title,
 		Destinations:   vb_export.Destinations.Values(),
 		SubtitleShapes: subtitleShapes,
@@ -63,8 +63,8 @@ func (s *TriggerServer) VBTriggerHandlerGET(c *gin.Context) {
 	})
 }
 
-func (s *TriggerServer) VBTriggerHandlerPOST(c *gin.Context) {
-	vxID := c.Query("id")
+func (s *TriggerServer) vbExportPOST(ctx *gin.Context) {
+	vxID := ctx.Query("id")
 
 	queue := getQueue()
 	workflowOptions := client.StartWorkflowOptions{
@@ -79,17 +79,17 @@ func (s *TriggerServer) VBTriggerHandlerPOST(c *gin.Context) {
 
 	params := vb_export.VBExportParams{
 		VXID:             vxID,
-		Destinations:     c.PostFormArray("destinations[]"),
-		SubtitleShapeTag: c.PostForm("subtitleShape"),
-		SubtitleStyle:    c.PostForm("subtitleStyle"),
+		Destinations:     ctx.PostFormArray("destinations[]"),
+		SubtitleShapeTag: ctx.PostForm("subtitleShape"),
+		SubtitleStyle:    ctx.PostForm("subtitleStyle"),
 	}
 
 	var wfID string
 	workflowOptions.ID = uuid.NewString()
-	res, err := s.wfClient.ExecuteWorkflow(c, workflowOptions, vb_export.VBExport, params)
+	res, err := s.wfClient.ExecuteWorkflow(ctx, workflowOptions, vb_export.VBExport, params)
 
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -97,11 +97,11 @@ func (s *TriggerServer) VBTriggerHandlerPOST(c *gin.Context) {
 
 	meta, err := s.vidispine.GetMetadata(vxID)
 	if err != nil {
-		renderErrorPage(c, http.StatusInternalServerError, err)
+		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	c.HTML(http.StatusOK, "success.gohtml", gin.H{
+	ctx.HTML(http.StatusOK, "success.gohtml", gin.H{
 		"WorkflowID": wfID,
 		"Title":      meta.Get(vscommon.FieldTitle, ""),
 	})

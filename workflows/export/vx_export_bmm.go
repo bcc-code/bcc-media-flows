@@ -3,11 +3,12 @@ package export
 import (
 	"crypto/sha1"
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"path"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
@@ -154,7 +155,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		}
 	}
 
-	var chapters []asset.Chapter
+	var chapters []asset.TimedMetadata
 	err = wfutils.Execute(ctx, activities.Vidispine.GetChapterDataActivity, vsactivity.GetChapterDataParams{
 		ExportData: &params.ExportData,
 	}).Get(ctx, &chapters)
@@ -184,6 +185,9 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		BaseURL:      config.BaseURL,
 		IngestFolder: ingestFolder,
 	}).Result(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	notifyExportDone(ctx, params, params.ExportDestination.Value)
 
@@ -194,7 +198,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	}, nil
 }
 
-func makeBMMJSON(ctx workflow.Context, params VXExportChildWorkflowParams, audioResults map[string][]common.AudioResult, normalizedResults map[string]activities.NormalizeAudioResult, chapters []asset.Chapter) ([]byte, error) {
+func makeBMMJSON(ctx workflow.Context, params VXExportChildWorkflowParams, audioResults map[string][]common.AudioResult, normalizedResults map[string]activities.NormalizeAudioResult, chapters []asset.TimedMetadata) ([]byte, error) {
 	// Prepare data for the JSON file
 	jsonData := prepareBMMData(ctx, audioResults, normalizedResults)
 	jsonData.Length = int(params.MergeResult.Duration)

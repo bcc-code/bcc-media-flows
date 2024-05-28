@@ -113,6 +113,15 @@ func triggerHandler(ctx *gin.Context) {
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.TranscodePreviewFile, workflows.TranscodePreviewFileInput{
 			FilePath: file,
 		})
+	case "ExportTimedMetadata":
+		if vxID == "" {
+			ctx.Status(http.StatusBadRequest)
+			return
+		}
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, export.ExportTimedMetadata, export.ExportTimedMetadataParams{
+			VXID: vxID,
+		})
+
 	case "ExportAssetVX":
 		if vxID == "" {
 			ctx.Status(http.StatusBadRequest)

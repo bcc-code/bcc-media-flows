@@ -3,6 +3,11 @@
 This repository contains definitions and code for execution of flows.
 
 We use [Temporal IO](https://temporal.io) for managing and running workflows for Media pipelines.
+To start a local server, you can use:
+
+```
+temporal server start-dev
+```
 
 ## [Worker](/cmd/worker)
 

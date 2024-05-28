@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"log"
 	"os"
 	"reflect"
 	"runtime"
 	"strconv"
 	"time"
+
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 
 	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
 	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
@@ -51,6 +52,7 @@ var workerWorkflows = []any{
 	export.VXExportToPlayout,
 	export.MergeExportData,
 	export.VXExportToBMM,
+	export.ExportTimedMetadata,
 	workflows.ExecuteFFmpeg,
 	workflows.ImportSubtitlesFromSubtrans,
 	workflows.UpdateAssetRelations,
