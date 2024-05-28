@@ -185,6 +185,9 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		BaseURL:      config.BaseURL,
 		IngestFolder: ingestFolder,
 	}).Result(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	notifyExportDone(ctx, params, params.ExportDestination.Value)
 
