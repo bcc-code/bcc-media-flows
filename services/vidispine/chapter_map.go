@@ -12,45 +12,14 @@ var SongCollectionMap = map[string]string{
 	"HV":  "WOTL",
 }
 var (
-	ChapterTypeMap = map[string]pcommon.ChapterType{
-		"sang":           pcommon.ChapterTypeSong,
-		"musikkvideo":    pcommon.ChapterTypeSong,
-		"musikal":        pcommon.ChapterTypeSong,
-		"tale":           pcommon.ChapterTypeSpeech,
-		"appelle":        pcommon.ChapterTypeSpeech,
-		"vitnesbyrd":     pcommon.ChapterTypeTestimony,
-		"end-credit":     pcommon.ChapterTypeOther,
-		"singalong":      pcommon.ChapterTypeSingAlong,
-		"panel":          pcommon.ChapterTypeOther,
-		"intervju":       pcommon.ChapterTypeOther,
-		"temafilm":       pcommon.ChapterTypeOther,
-		"animasjon":      pcommon.ChapterTypeOther,
-		"programleder":   pcommon.ChapterTypeOther,
-		"dokumentar":     pcommon.ChapterTypeOther,
-		"ordforklaring":  pcommon.ChapterTypeOther,
-		"frsending":      pcommon.ChapterTypeOther,
-		"ettersending":   pcommon.ChapterTypeOther,
-		"bildekavalkade": pcommon.ChapterTypeOther,
-		"skuespill":      pcommon.ChapterTypeOther,
-		"aksjonstatus":   pcommon.ChapterTypeOther,
-		"hilse":          pcommon.ChapterTypeOther,
-		"konkuranse":     pcommon.ChapterTypeOther,
-		"informasjon":    pcommon.ChapterTypeOther,
-		"bnn":            pcommon.ChapterTypeOther,
-		"promo":          pcommon.ChapterTypeOther,
-		"mte":            pcommon.ChapterTypeOther,
-		"fest":           pcommon.ChapterTypeOther,
-		"underholdning":  pcommon.ChapterTypeOther,
-		"kortfilm":       pcommon.ChapterTypeOther,
-		"anslag":         pcommon.ChapterTypeOther,
-		"teaser":         pcommon.ChapterTypeOther,
-		"reality":        pcommon.ChapterTypeOther,
-		"studio":         pcommon.ChapterTypeOther,
-		"talk-show":      pcommon.ChapterTypeOther,
-		"presentasjon":   pcommon.ChapterTypeOther,
-		"seminar":        pcommon.ChapterTypeOther,
-		"reportasje":     pcommon.ChapterTypeOther,
-		"tydning":        pcommon.ChapterTypeOther,
+	chapterTypeMap = map[string]pcommon.ChapterType{
+		"sang":        pcommon.ChapterTypeSong,
+		"musikkvideo": pcommon.ChapterTypeSong,
+		"musikal":     pcommon.ChapterTypeSong,
+		"tale":        pcommon.ChapterTypeSpeech,
+		"appelle":     pcommon.ChapterTypeSpeech,
+		"vitnesbyrd":  pcommon.ChapterTypeTestimony,
+		"singalong":   pcommon.ChapterTypeSingAlong,
 	}
 )
 
@@ -64,7 +33,7 @@ var chapterTypesToFilterOut = []string{
 }
 
 func mapSubclipType(vsChapterType string) pcommon.ChapterType {
-	if chapterType, ok := ChapterTypeMap[vsChapterType]; ok {
+	if chapterType, ok := chapterTypeMap[vsChapterType]; ok {
 		return chapterType
 	}
 	return pcommon.ChapterTypeOther
