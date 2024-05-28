@@ -3,6 +3,7 @@ package wfutils
 import (
 	"encoding/json"
 	"encoding/xml"
+
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -27,7 +28,7 @@ func MarshalJson(ctx workflow.Context, data any) ([]byte, error) {
 			panic(err)
 		}
 		return bytes
-	}).Get(res)
+	}).Get(&res)
 	return res, err
 }
 
@@ -40,7 +41,7 @@ func UnmarshalJson[T any](ctx workflow.Context, data []byte) (*T, error) {
 			panic(err)
 		}
 		return nil
-	}).Get(res)
+	}).Get(&res)
 
 	return res, err
 }
