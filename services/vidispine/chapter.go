@@ -3,7 +3,6 @@ package vidispine
 import (
 	"fmt"
 	"math"
-	"regexp"
 	"strings"
 
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
@@ -13,54 +12,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/samber/lo"
 )
-
-var (
-	ChapterTypeMap = map[string]pcommon.ChapterType{
-		"sang":           pcommon.ChapterTypeSong,
-		"musikkvideo":    pcommon.ChapterTypeSong,
-		"musikal":        pcommon.ChapterTypeSong,
-		"tale":           pcommon.ChapterTypeSpeech,
-		"appelle":        pcommon.ChapterTypeSpeech,
-		"vitnesbyrd":     pcommon.ChapterTypeTestimony,
-		"end-credit":     pcommon.ChapterTypeOther,
-		"singalong":      pcommon.ChapterTypeSingAlong,
-		"panel":          pcommon.ChapterTypeOther,
-		"intervju":       pcommon.ChapterTypeOther,
-		"temafilm":       pcommon.ChapterTypeOther,
-		"animasjon":      pcommon.ChapterTypeOther,
-		"programleder":   pcommon.ChapterTypeOther,
-		"dokumentar":     pcommon.ChapterTypeOther,
-		"ordforklaring":  pcommon.ChapterTypeOther,
-		"frsending":      pcommon.ChapterTypeOther,
-		"ettersending":   pcommon.ChapterTypeOther,
-		"bildekavalkade": pcommon.ChapterTypeOther,
-		"skuespill":      pcommon.ChapterTypeOther,
-		"aksjonstatus":   pcommon.ChapterTypeOther,
-		"hilse":          pcommon.ChapterTypeOther,
-		"konkuranse":     pcommon.ChapterTypeOther,
-		"informasjon":    pcommon.ChapterTypeOther,
-		"bnn":            pcommon.ChapterTypeOther,
-		"promo":          pcommon.ChapterTypeOther,
-		"mte":            pcommon.ChapterTypeOther,
-		"fest":           pcommon.ChapterTypeOther,
-		"underholdning":  pcommon.ChapterTypeOther,
-		"kortfilm":       pcommon.ChapterTypeOther,
-		"anslag":         pcommon.ChapterTypeOther,
-		"teaser":         pcommon.ChapterTypeOther,
-		"reality":        pcommon.ChapterTypeOther,
-		"studio":         pcommon.ChapterTypeOther,
-		"talk-show":      pcommon.ChapterTypeOther,
-		"presentasjon":   pcommon.ChapterTypeOther,
-		"seminar":        pcommon.ChapterTypeOther,
-		"reportasje":     pcommon.ChapterTypeOther,
-	}
-)
-
-var SongExtract = regexp.MustCompile("(FMB|HV) ?-? ?([0-9]+)")
-var SongCollectionMap = map[string]string{
-	"FMB": "AB",
-	"HV":  "WOTL",
-}
 
 func GetChapterData(client Client, exportData *ExportData) ([]asset.TimedMetadata, error) {
 	metaCache := map[string]*vsapi.MetadataResult{}
@@ -124,7 +75,10 @@ func GetChapterData(client Client, exportData *ExportData) ([]asset.TimedMetadat
 
 	var chapters []asset.TimedMetadata
 	for _, data := range allChapters {
-		chapter := metaToChapter(data)
+		chapter, keep := metaToChapter(data)
+		if !keep {
+			continue
+		}
 		if chapter.Timestamp == 0 {
 			chapter.Timestamp = originalStart[data.Get(vscommon.FieldTitle, "")]
 		}
@@ -134,7 +88,7 @@ func GetChapterData(client Client, exportData *ExportData) ([]asset.TimedMetadat
 	return chapters, nil
 }
 
-func metaToChapter(meta *vsapi.MetadataResult) asset.TimedMetadata {
+func metaToChapter(meta *vsapi.MetadataResult) (asset.TimedMetadata, bool) {
 	out := asset.TimedMetadata{}
 
 	out.Label = meta.Get(vscommon.FieldTitle, "")
@@ -142,16 +96,15 @@ func metaToChapter(meta *vsapi.MetadataResult) asset.TimedMetadata {
 	start, _ := vscommon.TCToSeconds(meta.Terse["title"][0].Start)
 	out.Timestamp = start
 
-	if chapterType, ok := ChapterTypeMap[meta.Get(vscommon.FieldSubclipType, "")]; ok {
-		out.ChapterType = chapterType.Value
-	} else {
-		out.ChapterType = pcommon.ChapterTypeOther.Value
+	subclipTypes := meta.GetArray(vscommon.FieldSubclipType)
+	if len(subclipTypes) == 0 {
+		return out, false
 	}
-
-	// This is more or less useless
-	// out.Description = meta.Get(FieldDescription, "")
-
-	out.Highlight = false // When do we set this?
+	if lo.Contains(chapterTypesToFilterOut, subclipTypes[0]) {
+		return out, false
+	}
+	subclipType, chapterType := findBestChapterType(subclipTypes)
+	out.ChapterType = chapterType.Value
 
 	out.Persons = lo.Filter(meta.GetArray(vscommon.FieldPersonsAppearing), func(p string, _ int) bool { return p != "" })
 
@@ -163,5 +116,12 @@ func metaToChapter(meta *vsapi.MetadataResult) asset.TimedMetadata {
 		}
 	}
 
-	return out
+	if out.ChapterType == pcommon.ChapterTypeOther.Value {
+		out.Title = subclipType
+	}
+	if strings.Contains(out.Label, " - ") {
+		out.Title = strings.Split(out.Label, " - ")[0]
+	}
+
+	return out, true
 }
