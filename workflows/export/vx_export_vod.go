@@ -1,8 +1,6 @@
 package export
 
 import (
-	"encoding/json"
-	"encoding/xml"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -64,10 +62,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 
 	var wm *paths.Path
 	if params.ParentParams.WatermarkPath != "" {
-		path, err := paths.Parse(params.ParentParams.WatermarkPath)
-		if err != nil {
-			return nil, err
-		}
+		path := paths.MustParse(params.ParentParams.WatermarkPath)
 		wm = &path
 	}
 
@@ -116,7 +111,9 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	for range videoKeys {
 		service.filesSelector.Select(ctx)
 	}
-	for range service.qualitiesWithLanguages {
+
+	langKeys, _ := wfutils.GetMapKeysSafely(ctx, service.qualitiesWithLanguages)
+	for range langKeys {
 		service.filesSelector.Select(ctx)
 	}
 
@@ -137,10 +134,20 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, err
 	}
 
-	return service.setMetadataAndPublishToVOD(
-		ctx,
-		chapterDataWF,
-		params.OutputDir)
+	var result *VXExportResult
+	err = workflow.SideEffect(ctx, func(ctx workflow.Context) any {
+		err, out := service.setMetadataAndPublishToVOD(
+			ctx,
+			chapterDataWF,
+			params.OutputDir)
+		if err != nil {
+			panic(err)
+		}
+
+		return out
+	}).Get(result)
+
+	return result, err
 }
 
 func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, tempDir paths.Path, normalizeAudio, ignoreSilence bool) (map[string]paths.Path, error) {
@@ -236,9 +243,9 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 	smilData.Head.Meta.Content = "mp4"
 
 	smilData.Body.Switch.Videos = v.streams
-	smilData.Body.Switch.TextStreams = getSubtitlesResult(v.params.MergeResult.SubtitleFiles)
+	smilData.Body.Switch.TextStreams = getSubtitlesResult(ctx, v.params.MergeResult.SubtitleFiles)
 
-	xmlData, _ := xml.MarshalIndent(smilData, "", "\t")
+	xmlData, _ := wfutils.MarshalXml(ctx, smilData)
 	xmlData = append([]byte("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n"), xmlData...)
 	err := wfutils.WriteFile(ctx, outputDir.Append("aws.smil"), xmlData)
 	if err != nil {
@@ -254,7 +261,7 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 		if err != nil {
 			return nil, err
 		}
-		marshalled, err := json.Marshal(chaptersData)
+		marshalled, err := wfutils.MarshalJson(ctx, chaptersData)
 		if err != nil {
 			return nil, err
 		}
@@ -264,7 +271,7 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 		}
 	}
 
-	marshalled, err := json.Marshal(ingestData)
+	marshalled, err := wfutils.MarshalJson(ctx, ingestData)
 	if err != nil {
 		return nil, err
 	}

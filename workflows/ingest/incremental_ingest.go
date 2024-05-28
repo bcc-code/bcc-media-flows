@@ -12,7 +12,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/bcc-code/bcc-media-flows/workflows"
-	"github.com/bcc-code/mediabank-bridge/log"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -45,10 +44,10 @@ func Incremental(ctx workflow.Context, params IncrementalParams) error {
 }
 
 func doIncremental(ctx workflow.Context, params IncrementalParams) error {
-	in, err := paths.Parse(params.Path)
-	if err != nil {
-		return err
-	}
+	logger := workflow.GetLogger(ctx)
+	logger.Info("Starting doIncremental")
+
+	in := paths.MustParse(params.Path)
 
 	outDir, err := wfutils.GetWorkflowRawOutputFolder(ctx)
 	if err != nil {
@@ -73,9 +72,9 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	}
 
 	// TODO: this value vas empty? Manually set?
-	err = wfutils.SetVidispineMeta(ctx, assetResult.AssetID, vscommon.FieldIngested.Value, time.Now().Format(time.RFC3339))
+	err = wfutils.SetVidispineMeta(ctx, assetResult.AssetID, vscommon.FieldIngested.Value, wfutils.Now(ctx).Format(time.RFC3339))
 	if err != nil {
-		log.L.Error().Err(err).Send()
+		logger.Error("%w", err)
 	}
 
 	videoVXID := assetResult.AssetID

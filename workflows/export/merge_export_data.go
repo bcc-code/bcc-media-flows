@@ -34,7 +34,18 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 	logger.Info("Starting MergeExportData")
 	data := params.ExportData
 
-	mergeInput, audioMergeInputs, subtitleMergeInputs, jsonTranscriptFile := exportDataToMergeInputs(data, params.TempDir, params.SubtitlesDir)
+	var dataMergeInputs MergeInput
+	err := workflow.SideEffect(ctx, func(ctx workflow.Context) interface{} {
+		return exportDataToMergeInputs(data, params.TempDir, params.SubtitlesDir)
+	}).Get(&dataMergeInputs)
+	if err != nil {
+		return nil, err
+	}
+
+	mergeInput := dataMergeInputs.MergeInput
+	audioMergeInputs := dataMergeInputs.AudioMergeInputs
+	subtitleMergeInputs := dataMergeInputs.SubtitleMergeInputs
+	jsonTranscriptFile := dataMergeInputs.JSONTranscriptInput
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
@@ -139,13 +150,17 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 	}, nil
 }
 
-func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir paths.Path) (
-	mergeInput common.MergeInput,
-	audioMergeInputs map[string]*common.MergeInput,
-	subtitleMergeInputs map[string]*common.MergeInput,
-	JSONTranscriptInput *common.MergeInput,
-) {
-	mergeInput = common.MergeInput{
+type MergeInput struct {
+	MergeInput          common.MergeInput
+	AudioMergeInputs    map[string]*common.MergeInput
+	SubtitleMergeInputs map[string]*common.MergeInput
+	JSONTranscriptInput *common.MergeInput
+}
+
+func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir paths.Path) MergeInput {
+	var JSONTranscriptInput *common.MergeInput
+
+	mergeInput := common.MergeInput{
 		Title:     data.SafeTitle,
 		OutputDir: tempDir,
 		WorkDir:   tempDir,
@@ -158,8 +173,8 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir p
 		Items:     []common.MergeInputItem{},
 	}
 
-	audioMergeInputs = map[string]*common.MergeInput{}
-	subtitleMergeInputs = map[string]*common.MergeInput{}
+	audioMergeInputs := map[string]*common.MergeInput{}
+	subtitleMergeInputs := map[string]*common.MergeInput{}
 
 	for _, clip := range data.Clips {
 		mergeInput.Duration += clip.OutSeconds - clip.InSeconds
@@ -218,5 +233,10 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir p
 		JSONTranscriptInput = transcriptInput
 	}
 
-	return
+	return MergeInput{
+		MergeInput:          mergeInput,
+		AudioMergeInputs:    audioMergeInputs,
+		SubtitleMergeInputs: subtitleMergeInputs,
+		JSONTranscriptInput: JSONTranscriptInput,
+	}
 }

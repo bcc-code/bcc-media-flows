@@ -210,6 +210,12 @@ var drivePrefixes = map[Drive]prefix{
 	TestDrive:         {"./testdata/", "./testdata/", "/dev/null/"},
 }
 
+// Parse parses a path string into a Path struct
+//
+// Note that even though this function iterates over a map,
+// the output is deterministic and the order of the map is irrelevant.
+//
+//workflowcheck:ignore
 func Parse(path string) (Path, error) {
 	for drive, ps := range drivePrefixes {
 		prefixes := []string{ps.Linux, ps.Client, ps.Rclone}

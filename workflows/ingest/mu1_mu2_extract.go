@@ -136,8 +136,14 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 		return fmt.Errorf("no offset - this is extremely unlikely to happen, please check the input files - STOPPING WORKFLOW")
 	}
 
+	audioKeys, err := wfutils.GetMapKeysSafely(ctx, mu1Files.AudioFiles)
+	if err != nil {
+		return err
+	}
+
 	// We do not touch MU1 audio files
-	for i, file := range mu1Files.AudioFiles {
+	for _, i := range audioKeys {
+		file := mu1Files.AudioFiles[i]
 		destinationFile := destinationPath.Append(file.Base())
 		f := wfutils.Execute(ctx, activities.Util.CopyFile, activities.MoveFileInput{
 			Source:      file,

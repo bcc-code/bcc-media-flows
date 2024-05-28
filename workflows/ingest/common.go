@@ -107,15 +107,22 @@ func getOrderFormFilename(orderForm OrderForm, file paths.Path, props ingest.Job
 }
 
 func notifyImportCompleted(ctx workflow.Context, recipients []string, jobID int, filesByAssetID map[string]paths.Path) error {
-	content := notifications.ImportCompleted{
-		Title: "Import completed",
-		JobID: strconv.Itoa(jobID),
-		Files: lo.Map(lo.Entries(filesByAssetID), func(entry lo.Entry[string, paths.Path], _ int) notifications.File {
-			return notifications.File{
-				VXID: entry.Key,
-				Name: entry.Value.Base(),
-			}
-		}),
+	var content notifications.ImportCompleted
+	err := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
+		return notifications.ImportCompleted{
+			Title: "Import completed",
+			JobID: strconv.Itoa(jobID),
+			Files: lo.Map(lo.Entries(filesByAssetID), func(entry lo.Entry[string, paths.Path], _ int) notifications.File {
+				return notifications.File{
+					VXID: entry.Key,
+					Name: entry.Value.Base(),
+				}
+			}),
+		}
+	}).Get(content)
+
+	if err != nil {
+		return err
 	}
 
 	msg, _ := telegram.NewMessage(telegram.ChatOther, content)

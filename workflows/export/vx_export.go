@@ -2,18 +2,16 @@ package export
 
 import (
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/services/telegram"
-	"strings"
-	"time"
-
 	"github.com/ansel1/merry/v2"
 	avidispine "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
+	"strings"
 )
 
 type AssetExportDestination enum.Member[string]
@@ -181,7 +179,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		case AssetExportDestinationVOD:
 			w = VXExportToVOD
 			if hasDestination(AssetExportDestinationIsilon) {
-				date := time.Now()
+				date := wfutils.Now(ctx)
 				id := workflow.GetInfo(ctx).OriginalRunID
 				childParams.OutputDir = paths.Path{
 					Drive: paths.IsilonDrive,

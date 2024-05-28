@@ -28,11 +28,7 @@ type BmmSimpleUploadResult struct {
 func BmmSimpleUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSimpleUploadResult, error) {
 	workflow.GetLogger(ctx).Info("Starting BmmSimpleUpload")
 
-	path, err := paths.Parse(params.FilePath)
-	if err != nil {
-		return nil, err
-	}
-
+	path := paths.MustParse(params.FilePath)
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	workflow.GetLogger(ctx).Info("Uploading file to BMM", "path", path)

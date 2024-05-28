@@ -2,10 +2,7 @@ package export
 
 import (
 	"crypto/sha1"
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/url"
 	"path"
 	"strconv"
 	"strings"
@@ -158,8 +155,49 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		}
 	}
 
+	var chapters []asset.TimedMetadata
+	err = wfutils.Execute(ctx, activities.Vidispine.GetChapterDataActivity, vsactivity.GetChapterDataParams{
+		ExportData: &params.ExportData,
+	}).Get(ctx, &chapters)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonData, err := makeBMMJSON(ctx, params, audioResults, normalizedResults, chapters)
+	if err != nil {
+		return nil, err
+	}
+
+	err = wfutils.WriteFile(ctx, params.OutputDir.Append("bmm.json"), jsonData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to write JSON file: %w", err)
+	}
+
+	config := getBMMDestinationConfig(params.ExportDestination)
+
+	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
+	err = wfutils.RcloneCopyDir(ctx, params.OutputDir.Rclone(), config.Bucket+ingestFolder, rclone.PriorityNormal)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = wfutils.Execute(ctx, activities.Util.TriggerBMMImport, activities.TriggerBMMImportInput{
+		BaseURL:      config.BaseURL,
+		IngestFolder: ingestFolder,
+	}).Result(ctx)
+
+	notifyExportDone(ctx, params, params.ExportDestination.Value)
+
+	return &VXExportResult{
+		ID:       params.ParentParams.VXID,
+		Title:    params.ExportData.Title,
+		Duration: formatSecondsToTimestamp(params.MergeResult.Duration),
+	}, nil
+}
+
+func makeBMMJSON(ctx workflow.Context, params VXExportChildWorkflowParams, audioResults map[string][]common.AudioResult, normalizedResults map[string]activities.NormalizeAudioResult, chapters []asset.TimedMetadata) ([]byte, error) {
 	// Prepare data for the JSON file
-	jsonData := prepareBMMData(audioResults, normalizedResults)
+	jsonData := prepareBMMData(ctx, audioResults, normalizedResults)
 	jsonData.Length = int(params.MergeResult.Duration)
 	jsonData.MediabankenID = fmt.Sprintf("%s-%s", params.ParentParams.VXID, HashTitle(params.ExportData.Title))
 	jsonData.ImportDate = params.ExportData.ImportDate
@@ -170,16 +208,10 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	}
 	jsonData.TrackID = params.ExportData.BmmTrackID
 
-	for lang, transcript := range params.MergeResult.JSONTranscript {
+	langs, _ := wfutils.GetMapKeysSafely(ctx, params.MergeResult.JSONTranscript)
+	for _, lang := range langs {
+		transcript := params.MergeResult.JSONTranscript[lang]
 		jsonData.TranscriptionFiles[lang] = transcript.Base()
-	}
-
-	var chapters []asset.TimedMetadata
-	err = wfutils.Execute(ctx, activities.Vidispine.GetChapterDataActivity, vsactivity.GetChapterDataParams{
-		ExportData: &params.ExportData,
-	}).Get(ctx, &chapters)
-	if err != nil {
-		return nil, err
 	}
 
 	if len(chapters) > 0 {
@@ -190,7 +222,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 			}
 		}
 
-		d := time.Now().Truncate(time.Hour * 6)
+		d := wfutils.Now(ctx).Truncate(time.Hour * 6)
 		if params.ExportData.ImportDate != nil {
 			d = *params.ExportData.ImportDate
 		}
@@ -206,46 +238,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		}
 	}
 
-	marshalled, err := json.Marshal(jsonData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal JSON: %w", err)
-	}
-
-	err = wfutils.WriteFile(ctx, params.OutputDir.Append("bmm.json"), marshalled)
-	if err != nil {
-		return nil, fmt.Errorf("failed to write JSON file: %w", err)
-	}
-
-	config := getBMMDestinationConfig(params.ExportDestination)
-
-	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
-	err = wfutils.RcloneCopyDir(ctx, params.OutputDir.Rclone(), config.Bucket+ingestFolder, rclone.PriorityNormal)
-	if err != nil {
-		return nil, err
-	}
-
-	trigger := config.BaseURL + "/events/mediabanken-export/?path="
-	jsonS3Path := path.Join(ingestFolder, "bmm.json")
-	trigger += url.QueryEscape(jsonS3Path)
-
-	resp, err := http.Post(trigger, "application/json", nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to trigger BMM: %w", err)
-	}
-
-	resp.Body.Close()
-
-	if resp.StatusCode > 200 {
-		return nil, fmt.Errorf("failed to trigger BMM: %s", resp.Status)
-	}
-
-	notifyExportDone(ctx, params, params.ExportDestination.Value)
-
-	return &VXExportResult{
-		ID:       params.ParentParams.VXID,
-		Title:    params.ExportData.Title,
-		Duration: formatSecondsToTimestamp(params.MergeResult.Duration),
-	}, nil
+	return wfutils.MarshalJson(ctx, jsonData)
 }
 
 type BMMData struct {
@@ -277,12 +270,18 @@ type BMMAudioFile struct {
 	Size            int64   `json:"size"`
 }
 
-func prepareBMMData(audioFiles map[string][]common.AudioResult, analysis map[string]activities.NormalizeAudioResult) BMMData {
+func prepareBMMData(ctx workflow.Context, audioFiles map[string][]common.AudioResult, analysis map[string]activities.NormalizeAudioResult) BMMData {
 	out := BMMData{
 		AudioFiles: map[string][]BMMAudioFile{},
 	}
 
-	for lang, variations := range audioFiles {
+	audioFileKeys, err := wfutils.GetMapKeysSafely(ctx, audioFiles)
+	if err != nil {
+		return out
+	}
+
+	for _, lang := range audioFileKeys {
+		variations := audioFiles[lang]
 		var langFiles []BMMAudioFile
 
 		for _, file := range variations {

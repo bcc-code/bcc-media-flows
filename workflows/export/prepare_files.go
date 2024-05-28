@@ -2,12 +2,10 @@ package export
 
 import (
 	"fmt"
-
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"github.com/bcc-code/mediabank-bridge/log"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -67,7 +65,7 @@ func resolutionFromString(str resolutionString) Resolution {
 	var r Resolution
 	_, err := fmt.Sscanf(string(str), "%dx%d-%t", &r.Width, &r.Height, &r.File)
 	if err != nil {
-		log.L.Error().Err(err).Send()
+		fmt.Sprintf("Failed to parse resolution string %s, err: %s", str, err.Error())
 	}
 	return r
 }
