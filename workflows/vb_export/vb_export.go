@@ -131,10 +131,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
-	videoFilePath, err := paths.SafeParse(ctx, videoShape.GetPath())
-	if err != nil {
-		return nil, err
-	}
+	videoFilePath := paths.MustParse(videoShape.GetPath())
 
 	originalFilenameWithoutExt := videoFilePath.Base()[0 : len(videoFilePath.Base())-len(videoFilePath.Ext())]
 	var analyzeResult *ffmpeg.StreamInfo
@@ -167,17 +164,14 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	var subtitleFile *paths.Path
 	var subtitleStyle *paths.Path
 	if params.SubtitleShapeTag != "" {
-		subtitleStylePath, err := paths.SafeParse(ctx, subtitleStyleBase+params.SubtitleStyle)
-		if err != nil {
-			return nil, err
-		}
+		subtitleStylePath := paths.MustParse(subtitleStyleBase + params.SubtitleStyle)
 		subtitleStyle = &subtitleStylePath
 
 	outer:
 		for _, shape := range shapes.Shape {
 			for _, tag := range shape.Tag {
 				if tag == params.SubtitleShapeTag {
-					path, _ := paths.SafeParse(ctx, shape.GetPath())
+					path := paths.MustParse(shape.GetPath())
 					subtitleFile = &path
 					break outer
 				}

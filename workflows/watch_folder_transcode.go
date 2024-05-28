@@ -23,12 +23,10 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	path, err := paths.SafeParse(ctx, params.Path)
-	if err != nil {
-		return err
-	}
+	path := paths.MustParse(params.Path)
 	dir := path.Dir()
-	path, err = wfutils.StandardizeFileName(ctx, path)
+
+	path, err := wfutils.StandardizeFileName(ctx, path)
 	if err != nil {
 		return err
 	}

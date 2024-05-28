@@ -2,7 +2,6 @@ package paths
 
 import (
 	"encoding/json"
-	"go.temporal.io/sdk/workflow"
 	"path/filepath"
 	"strings"
 
@@ -211,15 +210,12 @@ var drivePrefixes = map[Drive]prefix{
 	TestDrive:         {"./testdata/", "./testdata/", "/dev/null/"},
 }
 
-func SafeParse(ctx workflow.Context, path string) (Path, error) {
-	var p Path
-	err := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
-		return MustParse(path)
-	}).Get(p)
-
-	return p, err
-}
-
+// Parse parses a path string into a Path struct
+//
+// Note that even though this function iterates over a map,
+// the output is deterministic and the order of the map is irrelevant.
+//
+//workflowcheck:ignore
 func Parse(path string) (Path, error) {
 	for drive, ps := range drivePrefixes {
 		prefixes := []string{ps.Linux, ps.Client, ps.Rclone}

@@ -33,21 +33,13 @@ func TranscribeFile(
 		return err
 	}
 
-	file, err := paths.SafeParse(ctx, params.File)
-	if err != nil {
-		return err
-	}
+	file := paths.MustParse(params.File)
+	destination := paths.MustParse(params.DestinationPath)
 
-	wavFile := common.AudioResult{}
-	err = wfutils.Execute(ctx, activities.Audio.PrepareForTranscriptoion, common.AudioInput{
+	wavFile, err := wfutils.Execute(ctx, activities.Audio.PrepareForTranscriptoion, common.AudioInput{
 		Path:            file,
 		DestinationPath: tempFolder,
-	}).Get(ctx, &wavFile)
-	if err != nil {
-		return err
-	}
-
-	destination, err := paths.SafeParse(ctx, params.DestinationPath)
+	}).Result(ctx)
 	if err != nil {
 		return err
 	}

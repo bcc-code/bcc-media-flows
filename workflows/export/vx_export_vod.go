@@ -61,10 +61,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 
 	var wm *paths.Path
 	if params.ParentParams.WatermarkPath != "" {
-		path, err := paths.SafeParse(ctx, params.ParentParams.WatermarkPath)
-		if err != nil {
-			return nil, err
-		}
+		path := paths.MustParse(params.ParentParams.WatermarkPath)
 		wm = &path
 	}
 
@@ -247,7 +244,7 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 	smilData.Body.Switch.Videos = v.streams
 	smilData.Body.Switch.TextStreams = getSubtitlesResult(ctx, v.params.MergeResult.SubtitleFiles)
 
-	xmlData, _ := wfutils.SafeMarshallXml(ctx, smilData)
+	xmlData, _ := wfutils.MarshalXml(ctx, smilData)
 	xmlData = append([]byte("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n"), xmlData...)
 	err := wfutils.WriteFile(ctx, outputDir.Append("aws.smil"), xmlData)
 	if err != nil {
@@ -263,7 +260,7 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 		if err != nil {
 			return nil, err
 		}
-		marshalled, err := wfutils.SafeMarshallJson(ctx, chaptersData)
+		marshalled, err := wfutils.MarshalJson(ctx, chaptersData)
 		if err != nil {
 			return nil, err
 		}
@@ -273,7 +270,7 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 		}
 	}
 
-	marshalled, err := wfutils.SafeMarshallJson(ctx, ingestData)
+	marshalled, err := wfutils.MarshalJson(ctx, ingestData)
 	if err != nil {
 		return nil, err
 	}

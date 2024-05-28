@@ -39,7 +39,7 @@ func WebHook(ctx workflow.Context, input WebHookInput) (*WebHookResult, error) {
 
 	switch *webHookType {
 	case WebHookBmmSimpleUpload:
-		params, err := wfutils.SafeUnmarshalJson[BmmSimpleUploadParams](ctx, input.Parameters)
+		params, err := wfutils.UnmarshalJson[BmmSimpleUploadParams](ctx, input.Parameters)
 		if err != nil {
 			return nil, err
 		}

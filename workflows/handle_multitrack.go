@@ -58,11 +58,7 @@ func HandleMultitrackFile(
 	options := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	path, err := paths.SafeParse(ctx, params.Path)
-	if err != nil {
-		return err
-	}
-
+	path := paths.MustParse(params.Path)
 	lucidPath := makeLucidMultitrackPath(ctx, path)
 
 	jobID, err := wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.RcloneCopyFile, activities.RcloneFileInput{

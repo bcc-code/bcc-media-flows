@@ -1,7 +1,6 @@
 package wfutils
 
 import (
-	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/services/notifications"
@@ -107,45 +106,6 @@ func UnmarshalXMLFile[T any](ctx workflow.Context, file paths.Path) (*T, error) 
 	unmarsallResult.Get(data)
 
 	return &data, nil
-}
-
-func SafeMarshallXml(ctx workflow.Context, data any) ([]byte, error) {
-	var res []byte
-	err := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
-		xmlData, err := xml.MarshalIndent(data, "", "\t")
-		if err != nil {
-			panic(err)
-		}
-
-		return xmlData
-	}).Get(&res)
-	return res, err
-}
-
-func SafeMarshallJson(ctx workflow.Context, data any) ([]byte, error) {
-	var res []byte
-	err := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
-		bytes, err := json.Marshal(data)
-		if err != nil {
-			panic(err)
-		}
-		return bytes
-	}).Get(res)
-	return res, err
-}
-
-func SafeUnmarshalJson[T any](ctx workflow.Context, data []byte) (*T, error) {
-	var res *T
-	err := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
-		var res *T
-		err := json.Unmarshal(data, res)
-		if err != nil {
-			panic(err)
-		}
-		return nil
-	}).Get(res)
-
-	return res, err
 }
 
 func DeletePath(ctx workflow.Context, path paths.Path) error {

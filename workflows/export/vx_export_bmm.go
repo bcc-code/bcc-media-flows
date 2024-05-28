@@ -237,7 +237,7 @@ func makeBMMJSON(ctx workflow.Context, params VXExportChildWorkflowParams, audio
 		}
 	}
 
-	return wfutils.SafeMarshallJson(ctx, jsonData)
+	return wfutils.MarshalJson(ctx, jsonData)
 }
 
 type BMMData struct {

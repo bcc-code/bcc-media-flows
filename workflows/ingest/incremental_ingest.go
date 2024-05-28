@@ -47,10 +47,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting doIncremental")
 
-	in, err := paths.SafeParse(ctx, params.Path)
-	if err != nil {
-		return err
-	}
+	in := paths.MustParse(params.Path)
 
 	outDir, err := wfutils.GetWorkflowRawOutputFolder(ctx)
 	if err != nil {
