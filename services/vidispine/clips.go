@@ -1,6 +1,7 @@
 package vidispine
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
@@ -78,4 +79,67 @@ func ClipsFromMeta(client Client, vxID string, meta *vsapi.MetadataResult, subcl
 	}
 
 	return clips, nil
+}
+
+func getClipForAsset(
+	client Client,
+	itemVXID string,
+	meta *vsapi.MetadataResult,
+	clipsMeta map[string]*vsapi.MetadataResult,
+) (*Clip, error) {
+
+	shapes, err := client.GetShapes(itemVXID)
+	if err != nil {
+		return nil, err
+	}
+
+	shape := shapes.GetShape("original")
+	if shape == nil {
+		return nil, fmt.Errorf("no original shape found for item %s", itemVXID)
+	}
+
+	clip := Clip{
+		VXID:      itemVXID,
+		VideoFile: shape.GetPath(),
+	}
+
+	in, out, err := meta.GetInOut("")
+	if err != nil {
+		return nil, err
+	}
+	clip.InSeconds = in
+	clip.OutSeconds = out
+	return &clip, nil
+
+}
+
+func getClipForSubclip(
+	client Client,
+	itemVXID string,
+	subclipName string,
+	meta *vsapi.MetadataResult,
+	clipsMeta map[string]*vsapi.MetadataResult,
+) (*Clip, error) {
+	shapes, err := client.GetShapes(itemVXID)
+	if err != nil {
+		return nil, err
+	}
+
+	shape := shapes.GetShape("original")
+	if shape == nil {
+		return nil, fmt.Errorf("no original shape found for item %s", itemVXID)
+	}
+
+	subclipMeta, ok := clipsMeta[subclipName]
+	if !ok {
+		return nil, errors.New("Subclip " + subclipName + " does not exist")
+	}
+
+	in, out, err := subclipMeta.GetInOut(meta.Get(vscommon.FieldStartTC, "0@PAL"))
+	return &Clip{
+		VXID:       itemVXID,
+		VideoFile:  shape.GetPath(),
+		InSeconds:  in,
+		OutSeconds: out,
+	}, err
 }
