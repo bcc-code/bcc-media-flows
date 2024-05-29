@@ -3,6 +3,7 @@ package vidispine
 import (
 	"fmt"
 	"math"
+	"slices"
 	"strings"
 
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
@@ -14,8 +15,8 @@ import (
 )
 
 type GetChapterMetaResult struct {
-	AllChapters   map[string]*vsapi.MetadataResult
-	OriginalStart map[string]float64
+	Meta          *vsapi.MetadataResult
+	OriginalStart float64
 }
 
 // GetChapterMetaForClips will return all chapters for the given clips.
@@ -23,11 +24,14 @@ type GetChapterMetaResult struct {
 // Clips might be a part of a sequence, and this function will also convert the timecodes
 // to be relative to the sequence.
 //
-//	It will also merge chapters with the same title, so that the in and out points are the earliest and latest.
-func GetChapterMetaForClips(client Client, clips []*Clip) (*GetChapterMetaResult, error) {
+// - The returned AllChapters is a map with the title of the chapter as the key and the metadata as the value.
+//
+// - The OriginalStart is a map with the title of the chapter as the key and the original start time of the clip as the value.
+//
+// - If two chapters share the same title, they will have unique titles in the AllChapters map.
+func GetChapterMetaForClips(client Client, clips []*Clip) ([]*GetChapterMetaResult, error) {
 	metaCache := map[string]*vsapi.MetadataResult{}
-	allChapters := map[string]*vsapi.MetadataResult{}
-	originalStart := map[string]float64{}
+	allChapters := map[string][]*GetChapterMetaResult{}
 
 	for _, clip := range clips {
 		if _, ok := metaCache[clip.VXID]; !ok {
@@ -52,46 +56,33 @@ func GetChapterMetaForClips(client Client, clips []*Clip) (*GetChapterMetaResult
 			// We need to convert the timestamps from Vidispine into something we can calculate with on sequence level
 			data := convertFromClipTCTimeToSequenceRelativeTime(clip, data, tcStartSeconds)
 
-			chapter, exists := allChapters[title]
-			if !exists {
-				allChapters[title] = data
-				originalStart[title] = clip.InSeconds
-				continue
+			// find overlapping chapters with the same title
+			other, found := lo.Find(allChapters[title], func(chapter *GetChapterMetaResult) bool {
+				return isOverlapping(chapter.Meta.Terse, data.Terse)
+			})
+			if found {
+				other.Meta.Terse = mergeTerseTimecodes(other.Meta.Terse, data.Terse)
+				o, err := vscommon.TCToSeconds(data.Terse["title"][0].Start)
+				if err != nil {
+					other.OriginalStart = o
+				}
 			}
 
-			chapter.Terse = mergeTerseTimecodes(chapter.Terse, data.Terse)
-			o, _ := vscommon.TCToSeconds(chapter.Terse["title"][0].Start)
-			originalStart[title] = o
+			allChapters[title] = append(allChapters[title], &GetChapterMetaResult{
+				Meta:          data,
+				OriginalStart: clip.InSeconds,
+			})
 		}
 	}
 
-	return &GetChapterMetaResult{
-		AllChapters:   allChapters,
-		OriginalStart: originalStart,
-	}, nil
-}
-
-// This chapter already exists, so we need to merge the data.
-// Since the source is the same the only diff is the in and out point
-// i.e. we only need the earlies in and latest out point on all values
-func mergeTerseTimecodes(terseA, terseB map[string][]*vsapi.MetadataField) map[string][]*vsapi.MetadataField {
-	tcIn1, _ := vscommon.TCToSeconds(terseA["title"][0].Start)
-	tcOut1, _ := vscommon.TCToSeconds(terseA["title"][0].End)
-
-	tcIn2, _ := vscommon.TCToSeconds(terseB["title"][0].Start)
-	tcOut2, _ := vscommon.TCToSeconds(terseB["title"][0].End)
-
-	newIn := math.Min(tcIn1, tcIn2)
-	newOut := math.Max(tcOut1, tcOut2)
-
-	for name := range terseB {
-		for i := range terseB[name] {
-			terseB[name][i].Start = fmt.Sprintf("%.0f@PAL", newIn*25)
-			terseB[name][i].End = fmt.Sprintf("%.0f@PAL", newOut*25)
-		}
+	var out []*GetChapterMetaResult
+	for _, chapters := range allChapters {
+		out = append(out, chapters...)
 	}
-
-	return terseB
+	slices.SortFunc(out, func(a, b *GetChapterMetaResult) int {
+		return int(a.OriginalStart - b.OriginalStart)
+	})
+	return out, nil
 }
 
 func GetTimedMetadataChapters(client Client, clips []*Clip) ([]asset.TimedMetadata, error) {
@@ -101,13 +92,13 @@ func GetTimedMetadataChapters(client Client, clips []*Clip) ([]asset.TimedMetada
 	}
 
 	var chapters []asset.TimedMetadata
-	for _, data := range vsChapters.AllChapters {
-		chapter, keep := metaToChapter(data)
+	for _, data := range vsChapters {
+		chapter, keep := metaToChapter(data.Meta)
 		if !keep {
 			continue
 		}
 		if chapter.Timestamp == 0 {
-			chapter.Timestamp = vsChapters.OriginalStart[data.Get(vscommon.FieldTitle, "")]
+			chapter.Timestamp = data.OriginalStart
 		}
 		chapters = append(chapters, chapter)
 	}
@@ -151,4 +142,37 @@ func metaToChapter(meta *vsapi.MetadataResult) (asset.TimedMetadata, bool) {
 	}
 
 	return out, true
+}
+
+func isOverlapping(terseA, terseB map[string][]*vsapi.MetadataField) bool {
+	tcIn1, _ := vscommon.TCToSeconds(terseA["title"][0].Start)
+	tcOut1, _ := vscommon.TCToSeconds(terseA["title"][0].End)
+
+	tcIn2, _ := vscommon.TCToSeconds(terseB["title"][0].Start)
+	tcOut2, _ := vscommon.TCToSeconds(terseB["title"][0].End)
+
+	return tcIn1 < tcOut2 && tcOut1 > tcIn2
+}
+
+// This chapter already exists, so we need to merge the data.
+// Since the source is the same the only diff is the in and out point
+// i.e. we only need the earlies in and latest out point on all values
+func mergeTerseTimecodes(terseA, terseB map[string][]*vsapi.MetadataField) map[string][]*vsapi.MetadataField {
+	tcIn1, _ := vscommon.TCToSeconds(terseA["title"][0].Start)
+	tcOut1, _ := vscommon.TCToSeconds(terseA["title"][0].End)
+
+	tcIn2, _ := vscommon.TCToSeconds(terseB["title"][0].Start)
+	tcOut2, _ := vscommon.TCToSeconds(terseB["title"][0].End)
+
+	newIn := math.Min(tcIn1, tcIn2)
+	newOut := math.Max(tcOut1, tcOut2)
+
+	for name := range terseB {
+		for i := range terseB[name] {
+			terseB[name][i].Start = fmt.Sprintf("%.0f@PAL", newIn*25)
+			terseB[name][i].End = fmt.Sprintf("%.0f@PAL", newOut*25)
+		}
+	}
+
+	return terseB
 }
