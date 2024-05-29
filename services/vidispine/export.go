@@ -169,8 +169,10 @@ func GetRelatedAudioPaths(client Client, vxID string) (map[string]string, error)
 	return result, nil
 }
 
-func getRelatedAudios(client Client, clip *Clip, oLanguagesToExport []string) (*Clip, error) {
-
+// enrichClipWithRelatedAudios modifies the clip in-place
+//
+// TODO: return audiofiles instead of modifying original
+func enrichClipWithRelatedAudios(client Client, clip *Clip, oLanguagesToExport []string) error {
 	languagesToExport := make([]string, len(oLanguagesToExport))
 	copy(languagesToExport, oLanguagesToExport)
 
@@ -185,17 +187,17 @@ func getRelatedAudios(client Client, clip *Clip, oLanguagesToExport []string) (*
 		// Figure out which field holds the related id
 		relatedField := bccmflows.LanguagesByISO[lang].RelatedMBFieldID
 		if relatedField == "" {
-			return clip, errors.New("No related field for language " + lang + ". This indicates missing support in Vidispine")
+			return errors.New("No related field for language " + lang + ". This indicates missing support in Vidispine")
 		}
 
 		// Get metadata for the video clip
 		clipMeta, err := client.GetMetadata(clip.VXID)
 		if err != nil {
-			return clip, err
+			return err
 		}
 
 		// Now we know what audio to export
-		relatedAudioVXID := clipMeta.Get(vscommon.FieldType{relatedField}, "")
+		relatedAudioVXID := clipMeta.Get(vscommon.FieldType{Value: relatedField}, "")
 		if relatedAudioVXID == "" {
 			// If nor (floor language) is missing we fall back to silece
 			if lang == "nor" {
@@ -213,7 +215,7 @@ func getRelatedAudios(client Client, clip *Clip, oLanguagesToExport []string) (*
 
 		relatedAudioShapes, err := client.GetShapes(relatedAudioVXID)
 		if err != nil {
-			return clip, err
+			return err
 		}
 
 		// Ok now we can finally get the path to the audio file
@@ -223,7 +225,7 @@ func getRelatedAudios(client Client, clip *Clip, oLanguagesToExport []string) (*
 				// Fall back to "nor" audio and issue a warning *somewhere*
 				clip.AudioFiles[lang] = clip.AudioFiles["nor"]
 			} else {
-				return clip, fmt.Errorf("no original or fallback shape found for item %s", relatedAudioVXID)
+				return fmt.Errorf("no original or fallback shape found for item %s", relatedAudioVXID)
 			}
 			continue
 		}
@@ -233,7 +235,7 @@ func getRelatedAudios(client Client, clip *Clip, oLanguagesToExport []string) (*
 		if len(relatedAudioShape.AudioComponent) > 0 {
 			streams = append(streams, relatedAudioShape.AudioComponent[0].EssenceStreamID)
 		} else {
-			return clip, fmt.Errorf("no audio components found for item %s", relatedAudioVXID)
+			return fmt.Errorf("no audio components found for item %s", relatedAudioVXID)
 		}
 
 		clip.AudioFiles[lang] = &AudioFile{
@@ -243,18 +245,21 @@ func getRelatedAudios(client Client, clip *Clip, oLanguagesToExport []string) (*
 		}
 	}
 
-	return clip, nil
+	return nil
 }
 
-func getEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) (*Clip, error) {
+// enrichClipWithEmbeddedAudio modifies the clip in-place with embedded audio
+//
+// TODO: return audiofiles instead of modifying original
+func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) error {
 	shapes, err := client.GetShapes(clip.VXID)
 	if err != nil {
-		return clip, err
+		return err
 	}
 
 	shape := shapes.GetShape("original")
 	if len(shape.AudioComponent) != 16 && len(shape.AudioComponent) != 8 && len(shape.AudioComponent) > 2 {
-		return clip, fmt.Errorf("found %d audio components, expected 1, 2 or 16", len(shape.AudioComponent))
+		return fmt.Errorf("found %d audio components, expected 1, 2 or 16", len(shape.AudioComponent))
 	}
 
 	if len(shape.AudioComponent) == 0 {
@@ -267,7 +272,7 @@ func getEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) (*C
 			}
 		}
 
-		return clip, nil
+		return nil
 	}
 
 	if len(shape.AudioComponent) == 1 {
@@ -280,7 +285,7 @@ func getEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) (*C
 			}
 		}
 
-		return clip, nil
+		return nil
 	}
 
 	if len(shape.AudioComponent) == 2 {
@@ -288,7 +293,7 @@ func getEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) (*C
 		for _, c := range shape.AudioComponent {
 			streams = append(streams, c.EssenceStreamID)
 			if c.ChannelCount != 1 {
-				return clip, fmt.Errorf("found %d channels in audio component, expected 1", c.ChannelCount)
+				return fmt.Errorf("found %d channels in audio component, expected 1", c.ChannelCount)
 			}
 		}
 
@@ -304,14 +309,14 @@ func getEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) (*C
 
 	if len(shape.AudioComponent) == 8 {
 		if len(languagesToExport) > 1 {
-			return clip, fmt.Errorf("found 8 audio components, expected 16")
+			return fmt.Errorf("found 8 audio components, expected 16")
 		}
 
 		var streams []int
 		for _, c := range shape.AudioComponent[:2] {
 			streams = append(streams, c.EssenceStreamID)
 			if c.ChannelCount != 1 {
-				return clip, fmt.Errorf("found %d channels in audio component, expected 1", c.ChannelCount)
+				return fmt.Errorf("found %d channels in audio component, expected 1", c.ChannelCount)
 			}
 		}
 
@@ -340,11 +345,11 @@ func getEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) (*C
 				Streams: streams,
 			}
 		} else if lang != "" {
-			return clip, errors.New("No language " + lang + " found in bccmflows.LanguagesByISO")
+			return errors.New("No language " + lang + " found in bccmflows.LanguagesByISO")
 		}
 	}
 
-	return clip, nil
+	return nil
 }
 
 // GetSubclipNames returns the names of all the subclips
@@ -461,9 +466,9 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 		}
 
 		if *audioSource == ExportAudioSourceRelated {
-			clip, err = getRelatedAudios(client, clip, languagesToExport)
+			err = enrichClipWithRelatedAudios(client, clip, languagesToExport)
 		} else if *audioSource == ExportAudioSourceEmbedded {
-			clip, err = getEmbeddedAudio(client, clip, languagesToExport)
+			err = enrichClipWithEmbeddedAudio(client, clip, languagesToExport)
 		}
 
 		if err != nil {
