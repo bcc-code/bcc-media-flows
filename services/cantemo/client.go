@@ -94,23 +94,23 @@ func (c *Client) GetTranscriptionJSON(itemID string) (*Transcription, error) {
 	return &Transcription{}, nil
 }
 
-type GetTagsResponse struct {
-	Tags []string `json:"tags"`
-}
-
 // GetFieldTags will return all tags for a given field
 //
 // The field probably needs to be a tags field (field_type: "tags")
 func (c *Client) GetFieldTags(field string) ([]string, error) {
+	type getTagsResponse struct {
+		Tags []string `json:"tags"`
+	}
+
 	res, err := c.restyClient.R().
-		SetResult(&GetTagsResponse{}).
+		SetResult(&getTagsResponse{}).
 		Get("/API/v2/metadata-schema/fields/" + field + "/tags/?size=10000")
 
 	if err != nil {
 		return nil, err
 	}
 
-	result := res.Result().(*GetTagsResponse)
+	result := res.Result().(*getTagsResponse)
 	if result == nil {
 		return nil, err
 	}
