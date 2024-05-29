@@ -33,7 +33,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	var chapterDataWF workflow.Future
 	if params.ParentParams.WithChapters {
 		chapterDataWF = wfutils.Execute(ctx, activities.Vidispine.GetTimedMetadataChaptersActivity, vsactivity.GetTimedMetadataChaptersParams{
-			ExportData: &params.ExportData,
+			Clips: params.ExportData.Clips,
 		}).Future
 	}
 
