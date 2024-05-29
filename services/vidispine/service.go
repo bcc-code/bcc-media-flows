@@ -15,8 +15,7 @@ type Client interface {
 	AddShapeToItem(shapeTag, itemVXID, fileVXID string) (string, error)
 	DeleteShape(assetID, shapeID string) error
 	AddSidecarToItem(itemVXID, filePath, language string) (string, error)
-	SetItemMetadataField(itemVXID, group, field, value string) error
-	AddToItemMetadataField(itemID, group, key, value string) error
+	SetItemMetadataField(params vsapi.SetItemMetadataFieldParams) error
 	CreatePlaceholder(ingestType vsapi.PlaceholderType, title string) (string, error)
 	CreateThumbnails(assetID string, width, height int) (string, error)
 	GetJob(jobID string) (*vsapi.JobDocument, error)

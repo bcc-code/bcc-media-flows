@@ -2,6 +2,7 @@ package workflows
 
 import (
 	"fmt"
+
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/common"
@@ -110,9 +111,9 @@ func TranscribeVX(
 	}
 
 	err = wfutils.Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
-		VXID:  params.VXID,
-		Key:   transcriptionMetadataFieldName,
-		Value: string(txtValue),
+		ItemID: params.VXID,
+		Key:    transcriptionMetadataFieldName,
+		Value:  string(txtValue),
 	}).Get(ctx, nil)
 	if err != nil {
 		return err

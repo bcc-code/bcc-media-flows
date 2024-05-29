@@ -24,25 +24,26 @@ func WaitForVidispineJob(ctx workflow.Context, jobID string) error {
 
 func SetVidispineMeta(ctx workflow.Context, assetID, key, value string) error {
 	return Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
-		VXID:  assetID,
-		Key:   key,
-		Value: value,
+		ItemID: assetID,
+		Key:    key,
+		Value:  value,
 	}).Get(ctx, nil)
 }
 
 func SetVidispineMetaInGroup(ctx workflow.Context, assetID, key, value, group string) error {
 	return Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
-		VXID:  assetID,
-		Key:   key,
-		Value: value,
-		Group: group,
+		ItemID:  assetID,
+		Key:     key,
+		Value:   value,
+		GroupID: group,
 	}).Get(ctx, nil)
 }
 
 func AddVidispineMetaValue(ctx workflow.Context, assetID, key, value string) error {
-	return Execute(ctx, activities.Vidispine.AddVXMetadataFieldValueActivity, vsactivity.SetVXMetadataFieldParams{
-		VXID:  assetID,
-		Key:   key,
-		Value: value,
+	return Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
+		ItemID: assetID,
+		Key:    key,
+		Value:  value,
+		Add:    true,
 	}).Get(ctx, nil)
 }

@@ -1,7 +1,6 @@
 package vsapi
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"net/url"
@@ -60,35 +59,20 @@ func (c *Client) GetMetadata(vsID string) (*MetadataResult, error) {
 	return resp.Result().(*MetadataResult), nil
 }
 
-func (c *Client) setItemMetadataField(itemID, startTC, endTC, group, key, value string, add bool) error {
+func (c *Client) SetItemMetadataField(params SetItemMetadataFieldParams) error {
 	requestURL, _ := url.Parse(c.baseURL)
-	requestURL.Path += fmt.Sprintf("/item/%s/metadata", url.PathEscape(itemID))
+	requestURL.Path += fmt.Sprintf("/item/%s/metadata", url.PathEscape(params.ItemID))
 	q := requestURL.Query()
 	requestURL.RawQuery = q.Encode()
 
-	if startTC == "" {
-		startTC = "-INF"
+	if params.StartTC == "" {
+		params.StartTC = MinusInf
 	}
-	if endTC == "" {
-		endTC = "+INF"
+	if params.EndTC == "" {
+		params.EndTC = PlusInf
 	}
 
-	var body bytes.Buffer
-	err := xmlSetMetadataPlaceholderTmpl.Execute(&body, struct {
-		StartTC string
-		EndTC   string
-		Group   string
-		Key     string
-		Value   string
-		Add     bool
-	}{
-		startTC,
-		endTC,
-		group,
-		key,
-		value,
-		add,
-	})
+	body, err := createSetItemMetadataFieldXml(params)
 	if err != nil {
 		return err
 	}
@@ -103,21 +87,6 @@ func (c *Client) setItemMetadataField(itemID, startTC, endTC, group, key, value 
 	}
 
 	return nil
-}
-func (c *Client) SetItemMetadataField(itemID, group, key, value string) error {
-	return c.setItemMetadataField(itemID, MinusInf, PlusInf, group, key, value, false)
-}
-
-func (c *Client) AddToItemMetadataField(itemID, group, key, value string) error {
-	return c.setItemMetadataField(itemID, MinusInf, PlusInf, group, key, value, true)
-}
-
-func (c *Client) SetItemMetadataFieldWithTC(itemID, startTC, endTC, group, key, value string) error {
-	return c.setItemMetadataField(itemID, startTC, endTC, group, key, value, false)
-}
-
-func (c *Client) AddToItemMetadataFieldWithTC(itemID, startTC, endTC, group, key, value string) error {
-	return c.setItemMetadataField(itemID, startTC, endTC, group, key, value, true)
 }
 
 // GetInOut returns the in and out point of the clip in seconds, suitable

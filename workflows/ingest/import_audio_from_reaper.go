@@ -2,10 +2,11 @@ package ingestworkflows
 
 import (
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 
 	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -77,19 +78,19 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 		}
 
 		err = wfutils.Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
-			VXID:  params.VideoVXID,
-			Group: "System",
-			Key:   bccmflows.LanguagesByISO[lang].RelatedMBFieldID,
-			Value: assetResult.AssetID,
+			ItemID:  params.VideoVXID,
+			GroupID: "System",
+			Key:     bccmflows.LanguagesByISO[lang].RelatedMBFieldID,
+			Value:   assetResult.AssetID,
 		}).Get(ctx, nil)
 		if err != nil {
 			logger.Error(fmt.Sprintf("SetVXMetadataFieldActivity: %s", err.Error()))
 		}
 
 		err = wfutils.Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
-			VXID:  assetResult.AssetID,
-			Key:   vscommon.FieldLanguagesRecorded.Value,
-			Value: lang,
+			ItemID: assetResult.AssetID,
+			Key:    vscommon.FieldLanguagesRecorded.Value,
+			Value:  lang,
 		}).Get(ctx, nil)
 
 		if err != nil {
