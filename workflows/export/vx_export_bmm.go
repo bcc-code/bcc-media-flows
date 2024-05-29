@@ -156,7 +156,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	}
 
 	var chapters []asset.TimedMetadata
-	err = wfutils.Execute(ctx, activities.Vidispine.GetChapterDataActivity, vsactivity.GetChapterDataParams{
+	err = wfutils.Execute(ctx, activities.Vidispine.GetTimedMetadataChaptersActivity, vsactivity.GetTimedMetadataChaptersParams{
 		ExportData: &params.ExportData,
 	}).Get(ctx, &chapters)
 	if err != nil {

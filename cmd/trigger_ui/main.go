@@ -157,7 +157,7 @@ func (s *TriggerServer) vxExportGET(ctx *gin.Context) {
 		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	chapters, err := vidispine.GetChapterData(s.vidispine, exportData)
+	chapters, err := vidispine.GetTimedMetadataChapters(s.vidispine, exportData.Clips)
 	if err != nil {
 		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
