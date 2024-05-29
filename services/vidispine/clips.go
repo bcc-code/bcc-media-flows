@@ -50,11 +50,7 @@ func SeqToClips(client Client, seq *vsapi.SequenceDocument) ([]*Clip, error) {
 //
 // If subclipTitle is provided, it will return a single clip for that subclip
 func ClipsFromMeta(client Client, vxID string, meta *vsapi.MetadataResult, subclipTitle string) ([]*Clip, error) {
-	metaClips := meta.SplitByClips()
-	originalClipMeta := metaClips[vsapi.OriginalClip]
-
 	isSequence := meta.Get(vscommon.FieldSequenceSize, "0") != "0"
-
 	if isSequence {
 		seq, err := client.GetSequence(vxID)
 		if err != nil {
@@ -62,6 +58,9 @@ func ClipsFromMeta(client Client, vxID string, meta *vsapi.MetadataResult, subcl
 		}
 		return SeqToClips(client, seq)
 	}
+
+	metaClips := meta.SplitByClips()
+	originalClipMeta := metaClips[vsapi.OriginalClip]
 
 	var clips []*Clip
 	if subclipTitle != "" {
