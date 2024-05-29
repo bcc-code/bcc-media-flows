@@ -72,7 +72,39 @@ var (
 	EmtpySRTFile = environment.GetIsilonPrefix() + "/system/assets/empty.srt"
 )
 
-func getClipForAssetOrSubclip(
+func getClipForAsset(
+	client Client,
+	itemVXID string,
+	meta *vsapi.MetadataResult,
+	clipsMeta map[string]*vsapi.MetadataResult,
+) (*Clip, error) {
+
+	shapes, err := client.GetShapes(itemVXID)
+	if err != nil {
+		return nil, err
+	}
+
+	shape := shapes.GetShape("original")
+	if shape == nil {
+		return nil, fmt.Errorf("no original shape found for item %s", itemVXID)
+	}
+
+	clip := Clip{
+		VXID:      itemVXID,
+		VideoFile: shape.GetPath(),
+	}
+
+	in, out, err := meta.GetInOut("")
+	if err != nil {
+		return nil, err
+	}
+	clip.InSeconds = in
+	clip.OutSeconds = out
+	return &clip, nil
+
+}
+
+func getClipForSubclip(
 	client Client,
 	itemVXID string,
 	subclipName string,
@@ -89,30 +121,18 @@ func getClipForAssetOrSubclip(
 		return nil, fmt.Errorf("no original shape found for item %s", itemVXID)
 	}
 
-	clip := Clip{
-		VXID:      itemVXID,
-		VideoFile: shape.GetPath(),
-	}
-
-	if subclipName == "" {
-		in, out, err := meta.GetInOut("")
-		if err != nil {
-			return nil, err
-		}
-		clip.InSeconds = in
-		clip.OutSeconds = out
-		return &clip, nil
-	}
-
 	subclipMeta, ok := clipsMeta[subclipName]
 	if !ok {
 		return nil, errors.New("Subclip " + subclipName + " does not exist")
 	}
 
 	in, out, err := subclipMeta.GetInOut(meta.Get(vscommon.FieldStartTC, "0@PAL"))
-	clip.InSeconds = in
-	clip.OutSeconds = out
-	return &clip, err
+	return &Clip{
+		VXID:       itemVXID,
+		VideoFile:  shape.GetPath(),
+		InSeconds:  in,
+		OutSeconds: out,
+	}, err
 }
 
 // GetRelatedAudioPaths returns all related audio paths for a given VXID
@@ -377,9 +397,6 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 		}
 	}
 
-	// Check for sequence
-	isSequence := meta.Get(vscommon.FieldSequenceSize, "0") != "0"
-
 	title := meta.Get(vscommon.FieldTitle, "")
 	subclipTitle := subclip
 	if subclipTitle == "" {
@@ -430,21 +447,9 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 	}
 
 	// Get the video clips as a base
-	if isSequence {
-		seq, err := client.GetSequence(itemVXID)
-		if err != nil {
-			return nil, err
-		}
-		out.Clips, err = SeqToClips(client, seq)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		clip, err := getClipForAssetOrSubclip(client, itemVXID, subclipTitle, meta, metaClips)
-		if err != nil {
-			return nil, err
-		}
-		out.Clips = append(out.Clips, clip)
+	out.Clips, err = ClipsFromMeta(client, itemVXID, meta, subclipTitle)
+	if err != nil {
+		return nil, err
 	}
 
 	// Process the video clips and get the audio parts
