@@ -134,20 +134,10 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, err
 	}
 
-	var result *VXExportResult
-	err = workflow.SideEffect(ctx, func(ctx workflow.Context) any {
-		err, out := service.setMetadataAndPublishToVOD(
-			ctx,
-			chapterDataWF,
-			params.OutputDir)
-		if err != nil {
-			panic(err)
-		}
-
-		return out
-	}).Get(result)
-
-	return result, err
+	return service.setMetadataAndPublishToVOD(
+		ctx,
+		chapterDataWF,
+		params.OutputDir)
 }
 
 func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, tempDir paths.Path, normalizeAudio, ignoreSilence bool) (map[string]paths.Path, error) {
