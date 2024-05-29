@@ -471,16 +471,26 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 		}
 	}
 
+	err = addSubtitlesAndTranscriptionsToClips(client, out.Clips)
+	if err != nil {
+		return nil, err
+	}
+
+	return &out, nil
+}
+
+// addSubtitlesAndTranscriptionsToClips modifies the original clips to include subtitles and transcriptions
+func addSubtitlesAndTranscriptionsToClips(client Client, clips []*Clip) error {
 	allSubLanguages := mapset.NewSet[string]()
 
 	// Fetch subs
-	for _, clip := range out.Clips {
+	for _, clip := range clips {
 		clip.SubtitleFiles = map[string]string{}
 
 		// This is independent of audio language export config, we include all subs available
 		clipShapes, err := client.GetShapes(clip.VXID)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		for langCode := range bccmflows.LanguagesByISO {
@@ -502,7 +512,7 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 		}
 	}
 
-	for _, clip := range out.Clips {
+	for _, clip := range clips {
 		// Add empty subs for all languages that any of the clips have subs for if they are missing
 		// This makes it easier to handle down the line if we always have a sub file for all languages
 		for langCode := range allSubLanguages.Iter() {
@@ -511,8 +521,7 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 			}
 		}
 	}
-
-	return &out, nil
+	return nil
 }
 
 // convertFromClipTCTimeToSequenceRelativeTime ain't this a nice name?
