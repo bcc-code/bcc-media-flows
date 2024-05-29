@@ -63,11 +63,15 @@ func Test_GetInOut_SubclipErr(t *testing.T) {
 func Test_GenerateMetUpdateXML(t *testing.T) {
 	buf := new(bytes.Buffer)
 	xmlSetMetadataPlaceholderTmpl.Execute(buf, struct {
-		Group string
-		Key   string
-		Value string
-		Add   bool
+		StartTC string
+		EndTC   string
+		Group   string
+		Key     string
+		Value   string
+		Add     bool
 	}{
+		"-INF",
+		"+INF",
 		"System",
 		"portal_mf442906",
 		"VX-480938",

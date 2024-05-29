@@ -60,19 +60,30 @@ func (c *Client) GetMetadata(vsID string) (*MetadataResult, error) {
 	return resp.Result().(*MetadataResult), nil
 }
 
-func (c *Client) setItemMetadataField(itemID, group, key, value string, add bool) error {
+func (c *Client) setItemMetadataField(itemID, startTC, endTC, group, key, value string, add bool) error {
 	requestURL, _ := url.Parse(c.baseURL)
 	requestURL.Path += fmt.Sprintf("/item/%s/metadata", url.PathEscape(itemID))
 	q := requestURL.Query()
 	requestURL.RawQuery = q.Encode()
 
+	if startTC == "" {
+		startTC = "-INF"
+	}
+	if endTC == "" {
+		endTC = "+INF"
+	}
+
 	var body bytes.Buffer
 	err := xmlSetMetadataPlaceholderTmpl.Execute(&body, struct {
-		Group string
-		Key   string
-		Value string
-		Add   bool
+		StartTC string
+		EndTC   string
+		Group   string
+		Key     string
+		Value   string
+		Add     bool
 	}{
+		startTC,
+		endTC,
 		group,
 		key,
 		value,
@@ -87,14 +98,26 @@ func (c *Client) setItemMetadataField(itemID, group, key, value string, add bool
 		SetBody(body.String()).
 		Put(requestURL.String())
 
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 func (c *Client) SetItemMetadataField(itemID, group, key, value string) error {
-	return c.setItemMetadataField(itemID, group, key, value, false)
+	return c.setItemMetadataField(itemID, MinusInf, PlusInf, group, key, value, false)
 }
 
 func (c *Client) AddToItemMetadataField(itemID, group, key, value string) error {
-	return c.setItemMetadataField(itemID, group, key, value, true)
+	return c.setItemMetadataField(itemID, MinusInf, PlusInf, group, key, value, true)
+}
+
+func (c *Client) SetItemMetadataFieldWithTC(itemID, startTC, endTC, group, key, value string) error {
+	return c.setItemMetadataField(itemID, startTC, endTC, group, key, value, false)
+}
+
+func (c *Client) AddToItemMetadataFieldWithTC(itemID, startTC, endTC, group, key, value string) error {
+	return c.setItemMetadataField(itemID, startTC, endTC, group, key, value, true)
 }
 
 // GetInOut returns the in and out point of the clip in seconds, suitable
@@ -109,7 +132,7 @@ func (m *MetadataResult) GetInOut(beginTC string) (float64, float64, error) {
 	}
 
 	start := 0.0
-	if v.Start == "-INF" && v.End == "+INF" {
+	if v.Start == MinusInf && v.End == PlusInf {
 		// This is a full asset so we return 0.0 start and the lenght of the asset as end
 		endString := m.Get(vscommon.FieldDurationSeconds, "0")
 		end, err := strconv.ParseFloat(endString, 64)
