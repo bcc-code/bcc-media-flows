@@ -21,14 +21,8 @@ type GetChapterMetaResult struct {
 
 // GetChapterMetaForClips will return all chapters for the given clips.
 //
-// Clips might be a part of a sequence, and this function will also convert the timecodes
+// Clips might be a part of a sequence, so this function will also convert the timecodes
 // to be relative to the sequence.
-//
-// - The returned AllChapters is a map with the title of the chapter as the key and the metadata as the value.
-//
-// - The OriginalStart is a map with the title of the chapter as the key and the original start time of the clip as the value.
-//
-// - If two chapters share the same title, they will have unique titles in the AllChapters map.
 func GetChapterMetaForClips(client Client, clips []*Clip) ([]*GetChapterMetaResult, error) {
 	metaCache := map[string]*vsapi.MetadataResult{}
 	allChapters := map[string][]*GetChapterMetaResult{}
