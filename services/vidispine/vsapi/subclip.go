@@ -6,11 +6,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 )
 
-// Subclips are defined by using the same start and end timecode on various
-// metadata fields. This function will return all the metadata fields for each
-// subclip, identified by the tiltle (keys of the map).
-// The full clip will be included using the key FULL_CLIP.
-
 const (
 	// This is an arbitrary value, but it should be unique to prvent collisions with real titles
 	OriginalClip = "311a21f7-c07d-4fb6-b34b-fe4125869402"
@@ -18,6 +13,12 @@ const (
 	PlusInf      = "+INF"
 )
 
+// SplitByClips will split the metadata into clips based on the start and end timecode.
+//
+// The result is a map with the key being either:
+// - OriginalClip if the metadata is for the full clip (+INF to -INF)
+// - The title of the clip
+// - A concatenation of the start and end timecode (if no title exists)
 func (meta *MetadataResult) SplitByClips() map[string]*MetadataResult {
 	temp := map[string]*MetadataResult{}
 

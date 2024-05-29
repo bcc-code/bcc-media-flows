@@ -18,6 +18,12 @@ type GetChapterMetaResult struct {
 	OriginalStart map[string]float64
 }
 
+// GetChapterMetaForClips will return all chapters for the given clips.
+//
+// Clips might be a part of a sequence, and this function will also convert the timecodes
+// to be relative to the sequence.
+//
+//	It will also merge chapters with the same title, so that the in and out points are the earliest and latest.
 func GetChapterMetaForClips(client Client, clips []*Clip) (*GetChapterMetaResult, error) {
 	metaCache := map[string]*vsapi.MetadataResult{}
 	allChapters := map[string]*vsapi.MetadataResult{}
@@ -46,33 +52,16 @@ func GetChapterMetaForClips(client Client, clips []*Clip) (*GetChapterMetaResult
 			// We need to convert the timestamps from Vidispine into something we can calculate with on sequence level
 			data := convertFromClipTCTimeToSequenceRelativeTime(clip, data, tcStartSeconds)
 
-			// We don't have this chapter yet
-			if _, ok := allChapters[title]; !ok {
+			chapter, exists := allChapters[title]
+			if !exists {
 				allChapters[title] = data
 				originalStart[title] = clip.InSeconds
 				continue
 			}
 
-			// This chapter already exists, so we need to merge the data.
-			// Since the source is the same the only diff is the in and out point
-			// i.e. we only need the earlies in and latest out point on all values
-
-			tcIn1, _ := vscommon.TCToSeconds(data.Terse["title"][0].Start)
-			tcOut1, _ := vscommon.TCToSeconds(data.Terse["title"][0].End)
-
-			tcIn2, _ := vscommon.TCToSeconds(allChapters[title].Terse["title"][0].Start)
-			tcOut2, _ := vscommon.TCToSeconds(allChapters[title].Terse["title"][0].End)
-
-			newIn := math.Min(tcIn1, tcIn2)
-			newOut := math.Max(tcOut1, tcOut2)
-
-			for name := range allChapters[title].Terse {
-				for i := range allChapters[title].Terse[name] {
-					originalStart[title] = tcIn1
-					allChapters[title].Terse[name][i].Start = fmt.Sprintf("%.0f@PAL", newIn*25)
-					allChapters[title].Terse[name][i].End = fmt.Sprintf("%.0f@PAL", newOut*25)
-				}
-			}
+			chapter.Terse = mergeTerseTimecodes(chapter.Terse, data.Terse)
+			o, _ := vscommon.TCToSeconds(chapter.Terse["title"][0].Start)
+			originalStart[title] = o
 		}
 	}
 
@@ -80,6 +69,29 @@ func GetChapterMetaForClips(client Client, clips []*Clip) (*GetChapterMetaResult
 		AllChapters:   allChapters,
 		OriginalStart: originalStart,
 	}, nil
+}
+
+// This chapter already exists, so we need to merge the data.
+// Since the source is the same the only diff is the in and out point
+// i.e. we only need the earlies in and latest out point on all values
+func mergeTerseTimecodes(terseA, terseB map[string][]*vsapi.MetadataField) map[string][]*vsapi.MetadataField {
+	tcIn1, _ := vscommon.TCToSeconds(terseA["title"][0].Start)
+	tcOut1, _ := vscommon.TCToSeconds(terseA["title"][0].End)
+
+	tcIn2, _ := vscommon.TCToSeconds(terseB["title"][0].Start)
+	tcOut2, _ := vscommon.TCToSeconds(terseB["title"][0].End)
+
+	newIn := math.Min(tcIn1, tcIn2)
+	newOut := math.Max(tcOut1, tcOut2)
+
+	for name := range terseB {
+		for i := range terseB[name] {
+			terseB[name][i].Start = fmt.Sprintf("%.0f@PAL", newIn*25)
+			terseB[name][i].End = fmt.Sprintf("%.0f@PAL", newOut*25)
+		}
+	}
+
+	return terseB
 }
 
 func GetTimedMetadataChapters(client Client, clips []*Clip) ([]asset.TimedMetadata, error) {
