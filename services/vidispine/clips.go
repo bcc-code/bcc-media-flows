@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 )
 
 func SeqToClips(client Client, seq *vsapi.SequenceDocument) ([]*Clip, error) {
@@ -42,4 +43,39 @@ func SeqToClips(client Client, seq *vsapi.SequenceDocument) ([]*Clip, error) {
 	}
 
 	return out, nil
+}
+
+// ClipsFromMeta returns a list of clips based off a metadata result
+//
+// If subclipTitle is provided, it will return a single clip for that subclip
+func ClipsFromMeta(client Client, vxID string, meta *vsapi.MetadataResult, subclipTitle string) ([]*Clip, error) {
+	metaClips := meta.SplitByClips()
+	originalClipMeta := metaClips[vsapi.OriginalClip]
+
+	isSequence := meta.Get(vscommon.FieldSequenceSize, "0") != "0"
+
+	if isSequence {
+		seq, err := client.GetSequence(vxID)
+		if err != nil {
+			return nil, err
+		}
+		return SeqToClips(client, seq)
+	}
+
+	var clips []*Clip
+	if subclipTitle != "" {
+		clip, err := getClipForSubclip(client, vxID, subclipTitle, originalClipMeta, metaClips)
+		if err != nil {
+			return nil, err
+		}
+		clips = append(clips, clip)
+	} else {
+		clip, err := getClipForAsset(client, vxID, originalClipMeta, metaClips)
+		if err != nil {
+			return nil, err
+		}
+		clips = append(clips, clip)
+	}
+
+	return clips, nil
 }

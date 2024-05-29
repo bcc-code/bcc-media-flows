@@ -13,14 +13,17 @@ import (
 	"github.com/samber/lo"
 )
 
-func GetChapterData(client Client, exportData *ExportData) ([]asset.TimedMetadata, error) {
+type GetChapterMetaResult struct {
+	AllChapters   map[string]*vsapi.MetadataResult
+	OriginalStart map[string]float64
+}
+
+func GetChapterMetaForClips(client Client, clips []*Clip) (*GetChapterMetaResult, error) {
 	metaCache := map[string]*vsapi.MetadataResult{}
-
 	allChapters := map[string]*vsapi.MetadataResult{}
-
 	originalStart := map[string]float64{}
 
-	for _, clip := range exportData.Clips {
+	for _, clip := range clips {
 		if _, ok := metaCache[clip.VXID]; !ok {
 			meta, err := client.GetMetadata(clip.VXID)
 			if err != nil {
@@ -73,14 +76,26 @@ func GetChapterData(client Client, exportData *ExportData) ([]asset.TimedMetadat
 		}
 	}
 
+	return &GetChapterMetaResult{
+		AllChapters:   allChapters,
+		OriginalStart: originalStart,
+	}, nil
+}
+
+func GetTimedMetadataChapters(client Client, clips []*Clip) ([]asset.TimedMetadata, error) {
+	vsChapters, err := GetChapterMetaForClips(client, clips)
+	if err != nil {
+		return nil, err
+	}
+
 	var chapters []asset.TimedMetadata
-	for _, data := range allChapters {
+	for _, data := range vsChapters.AllChapters {
 		chapter, keep := metaToChapter(data)
 		if !keep {
 			continue
 		}
 		if chapter.Timestamp == 0 {
-			chapter.Timestamp = originalStart[data.Get(vscommon.FieldTitle, "")]
+			chapter.Timestamp = vsChapters.OriginalStart[data.Get(vscommon.FieldTitle, "")]
 		}
 		chapters = append(chapters, chapter)
 	}

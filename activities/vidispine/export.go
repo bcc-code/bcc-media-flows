@@ -38,18 +38,18 @@ func (a Activities) GetExportDataActivity(ctx context.Context, params GetExportD
 	return data, nil
 }
 
-type GetChapterDataParams struct {
-	ExportData *vidispine.ExportData
+type GetTimedMetadataChaptersParams struct {
+	Clips []*vidispine.Clip
 }
 
-func (a Activities) GetChapterDataActivity(ctx context.Context, params GetChapterDataParams) ([]asset.TimedMetadata, error) {
+func (a Activities) GetTimedMetadataChaptersActivity(ctx context.Context, params GetTimedMetadataChaptersParams) ([]asset.TimedMetadata, error) {
 	log := activity.GetLogger(ctx)
-	activity.RecordHeartbeat(ctx, "GetChapterDataActivity")
-	log.Info("Starting GetChapterDataActivity")
+	activity.RecordHeartbeat(ctx, "GetTimedMetadataChaptersActivity")
+	log.Info("Starting GetTimedMetadataChaptersActivity")
 
 	client := GetClient()
 
-	return vidispine.GetChapterData(client, params.ExportData)
+	return vidispine.GetTimedMetadataChapters(client, params.Clips)
 }
 
 func (a Activities) GetRelatedAudioFiles(ctx context.Context, vxID string) (map[string]paths.Path, error) {

@@ -72,7 +72,39 @@ var (
 	EmtpySRTFile = environment.GetIsilonPrefix() + "/system/assets/empty.srt"
 )
 
-func getClipForAssetOrSubclip(
+func getClipForAsset(
+	client Client,
+	itemVXID string,
+	meta *vsapi.MetadataResult,
+	clipsMeta map[string]*vsapi.MetadataResult,
+) (*Clip, error) {
+
+	shapes, err := client.GetShapes(itemVXID)
+	if err != nil {
+		return nil, err
+	}
+
+	shape := shapes.GetShape("original")
+	if shape == nil {
+		return nil, fmt.Errorf("no original shape found for item %s", itemVXID)
+	}
+
+	clip := Clip{
+		VXID:      itemVXID,
+		VideoFile: shape.GetPath(),
+	}
+
+	in, out, err := meta.GetInOut("")
+	if err != nil {
+		return nil, err
+	}
+	clip.InSeconds = in
+	clip.OutSeconds = out
+	return &clip, nil
+
+}
+
+func getClipForSubclip(
 	client Client,
 	itemVXID string,
 	subclipName string,
@@ -89,30 +121,18 @@ func getClipForAssetOrSubclip(
 		return nil, fmt.Errorf("no original shape found for item %s", itemVXID)
 	}
 
-	clip := Clip{
-		VXID:      itemVXID,
-		VideoFile: shape.GetPath(),
-	}
-
-	if subclipName == "" {
-		in, out, err := meta.GetInOut("")
-		if err != nil {
-			return nil, err
-		}
-		clip.InSeconds = in
-		clip.OutSeconds = out
-		return &clip, nil
-	}
-
 	subclipMeta, ok := clipsMeta[subclipName]
 	if !ok {
 		return nil, errors.New("Subclip " + subclipName + " does not exist")
 	}
 
 	in, out, err := subclipMeta.GetInOut(meta.Get(vscommon.FieldStartTC, "0@PAL"))
-	clip.InSeconds = in
-	clip.OutSeconds = out
-	return &clip, err
+	return &Clip{
+		VXID:       itemVXID,
+		VideoFile:  shape.GetPath(),
+		InSeconds:  in,
+		OutSeconds: out,
+	}, err
 }
 
 // GetRelatedAudioPaths returns all related audio paths for a given VXID
@@ -149,8 +169,10 @@ func GetRelatedAudioPaths(client Client, vxID string) (map[string]string, error)
 	return result, nil
 }
 
-func getRelatedAudios(client Client, clip *Clip, oLanguagesToExport []string) (*Clip, error) {
-
+// enrichClipWithRelatedAudios modifies the clip in-place
+//
+// TODO: return audiofiles instead of modifying original
+func enrichClipWithRelatedAudios(client Client, clip *Clip, oLanguagesToExport []string) error {
 	languagesToExport := make([]string, len(oLanguagesToExport))
 	copy(languagesToExport, oLanguagesToExport)
 
@@ -165,17 +187,17 @@ func getRelatedAudios(client Client, clip *Clip, oLanguagesToExport []string) (*
 		// Figure out which field holds the related id
 		relatedField := bccmflows.LanguagesByISO[lang].RelatedMBFieldID
 		if relatedField == "" {
-			return clip, errors.New("No related field for language " + lang + ". This indicates missing support in Vidispine")
+			return errors.New("No related field for language " + lang + ". This indicates missing support in Vidispine")
 		}
 
 		// Get metadata for the video clip
 		clipMeta, err := client.GetMetadata(clip.VXID)
 		if err != nil {
-			return clip, err
+			return err
 		}
 
 		// Now we know what audio to export
-		relatedAudioVXID := clipMeta.Get(vscommon.FieldType{relatedField}, "")
+		relatedAudioVXID := clipMeta.Get(vscommon.FieldType{Value: relatedField}, "")
 		if relatedAudioVXID == "" {
 			// If nor (floor language) is missing we fall back to silece
 			if lang == "nor" {
@@ -193,7 +215,7 @@ func getRelatedAudios(client Client, clip *Clip, oLanguagesToExport []string) (*
 
 		relatedAudioShapes, err := client.GetShapes(relatedAudioVXID)
 		if err != nil {
-			return clip, err
+			return err
 		}
 
 		// Ok now we can finally get the path to the audio file
@@ -203,7 +225,7 @@ func getRelatedAudios(client Client, clip *Clip, oLanguagesToExport []string) (*
 				// Fall back to "nor" audio and issue a warning *somewhere*
 				clip.AudioFiles[lang] = clip.AudioFiles["nor"]
 			} else {
-				return clip, fmt.Errorf("no original or fallback shape found for item %s", relatedAudioVXID)
+				return fmt.Errorf("no original or fallback shape found for item %s", relatedAudioVXID)
 			}
 			continue
 		}
@@ -213,7 +235,7 @@ func getRelatedAudios(client Client, clip *Clip, oLanguagesToExport []string) (*
 		if len(relatedAudioShape.AudioComponent) > 0 {
 			streams = append(streams, relatedAudioShape.AudioComponent[0].EssenceStreamID)
 		} else {
-			return clip, fmt.Errorf("no audio components found for item %s", relatedAudioVXID)
+			return fmt.Errorf("no audio components found for item %s", relatedAudioVXID)
 		}
 
 		clip.AudioFiles[lang] = &AudioFile{
@@ -223,18 +245,21 @@ func getRelatedAudios(client Client, clip *Clip, oLanguagesToExport []string) (*
 		}
 	}
 
-	return clip, nil
+	return nil
 }
 
-func getEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) (*Clip, error) {
+// enrichClipWithEmbeddedAudio modifies the clip in-place with embedded audio
+//
+// TODO: return audiofiles instead of modifying original
+func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) error {
 	shapes, err := client.GetShapes(clip.VXID)
 	if err != nil {
-		return clip, err
+		return err
 	}
 
 	shape := shapes.GetShape("original")
 	if len(shape.AudioComponent) != 16 && len(shape.AudioComponent) != 8 && len(shape.AudioComponent) > 2 {
-		return clip, fmt.Errorf("found %d audio components, expected 1, 2 or 16", len(shape.AudioComponent))
+		return fmt.Errorf("found %d audio components, expected 1, 2 or 16", len(shape.AudioComponent))
 	}
 
 	if len(shape.AudioComponent) == 0 {
@@ -247,7 +272,7 @@ func getEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) (*C
 			}
 		}
 
-		return clip, nil
+		return nil
 	}
 
 	if len(shape.AudioComponent) == 1 {
@@ -260,7 +285,7 @@ func getEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) (*C
 			}
 		}
 
-		return clip, nil
+		return nil
 	}
 
 	if len(shape.AudioComponent) == 2 {
@@ -268,7 +293,7 @@ func getEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) (*C
 		for _, c := range shape.AudioComponent {
 			streams = append(streams, c.EssenceStreamID)
 			if c.ChannelCount != 1 {
-				return clip, fmt.Errorf("found %d channels in audio component, expected 1", c.ChannelCount)
+				return fmt.Errorf("found %d channels in audio component, expected 1", c.ChannelCount)
 			}
 		}
 
@@ -284,14 +309,14 @@ func getEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) (*C
 
 	if len(shape.AudioComponent) == 8 {
 		if len(languagesToExport) > 1 {
-			return clip, fmt.Errorf("found 8 audio components, expected 16")
+			return fmt.Errorf("found 8 audio components, expected 16")
 		}
 
 		var streams []int
 		for _, c := range shape.AudioComponent[:2] {
 			streams = append(streams, c.EssenceStreamID)
 			if c.ChannelCount != 1 {
-				return clip, fmt.Errorf("found %d channels in audio component, expected 1", c.ChannelCount)
+				return fmt.Errorf("found %d channels in audio component, expected 1", c.ChannelCount)
 			}
 		}
 
@@ -320,11 +345,11 @@ func getEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) (*C
 				Streams: streams,
 			}
 		} else if lang != "" {
-			return clip, errors.New("No language " + lang + " found in bccmflows.LanguagesByISO")
+			return errors.New("No language " + lang + " found in bccmflows.LanguagesByISO")
 		}
 	}
 
-	return clip, nil
+	return nil
 }
 
 // GetSubclipNames returns the names of all the subclips
@@ -377,9 +402,6 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 		}
 	}
 
-	// Check for sequence
-	isSequence := meta.Get(vscommon.FieldSequenceSize, "0") != "0"
-
 	title := meta.Get(vscommon.FieldTitle, "")
 	subclipTitle := subclip
 	if subclipTitle == "" {
@@ -430,21 +452,9 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 	}
 
 	// Get the video clips as a base
-	if isSequence {
-		seq, err := client.GetSequence(itemVXID)
-		if err != nil {
-			return nil, err
-		}
-		out.Clips, err = SeqToClips(client, seq)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		clip, err := getClipForAssetOrSubclip(client, itemVXID, subclipTitle, meta, metaClips)
-		if err != nil {
-			return nil, err
-		}
-		out.Clips = append(out.Clips, clip)
+	out.Clips, err = ClipsFromMeta(client, itemVXID, meta, subclipTitle)
+	if err != nil {
+		return nil, err
 	}
 
 	// Process the video clips and get the audio parts
@@ -456,9 +466,9 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 		}
 
 		if *audioSource == ExportAudioSourceRelated {
-			clip, err = getRelatedAudios(client, clip, languagesToExport)
+			err = enrichClipWithRelatedAudios(client, clip, languagesToExport)
 		} else if *audioSource == ExportAudioSourceEmbedded {
-			clip, err = getEmbeddedAudio(client, clip, languagesToExport)
+			err = enrichClipWithEmbeddedAudio(client, clip, languagesToExport)
 		}
 
 		if err != nil {
@@ -466,16 +476,26 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 		}
 	}
 
+	err = addSubtitlesAndTranscriptionsToClips(client, out.Clips)
+	if err != nil {
+		return nil, err
+	}
+
+	return &out, nil
+}
+
+// addSubtitlesAndTranscriptionsToClips modifies the original clips to include subtitles and transcriptions
+func addSubtitlesAndTranscriptionsToClips(client Client, clips []*Clip) error {
 	allSubLanguages := mapset.NewSet[string]()
 
 	// Fetch subs
-	for _, clip := range out.Clips {
+	for _, clip := range clips {
 		clip.SubtitleFiles = map[string]string{}
 
 		// This is independent of audio language export config, we include all subs available
 		clipShapes, err := client.GetShapes(clip.VXID)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		for langCode := range bccmflows.LanguagesByISO {
@@ -497,7 +517,7 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 		}
 	}
 
-	for _, clip := range out.Clips {
+	for _, clip := range clips {
 		// Add empty subs for all languages that any of the clips have subs for if they are missing
 		// This makes it easier to handle down the line if we always have a sub file for all languages
 		for langCode := range allSubLanguages.Iter() {
@@ -506,8 +526,7 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 			}
 		}
 	}
-
-	return &out, nil
+	return nil
 }
 
 // convertFromClipTCTimeToSequenceRelativeTime ain't this a nice name?

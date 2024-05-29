@@ -44,8 +44,8 @@ func ExportTimedMetadata(ctx workflow.Context, params ExportTimedMetadataParams)
 		return nil, err
 	}
 
-	timedMetadata, err := wfutils.Execute(ctx, activities.Vidispine.GetChapterDataActivity, vsactivity.GetChapterDataParams{
-		ExportData: exportData,
+	timedMetadata, err := wfutils.Execute(ctx, activities.Vidispine.GetTimedMetadataChaptersActivity, vsactivity.GetTimedMetadataChaptersParams{
+		Clips: exportData.Clips,
 	}).Result(ctx)
 	if err != nil {
 		return nil, err
