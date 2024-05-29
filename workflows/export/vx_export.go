@@ -2,6 +2,8 @@ package export
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/ansel1/merry/v2"
 	avidispine "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -11,7 +13,6 @@ import (
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
-	"strings"
 )
 
 type AssetExportDestination enum.Member[string]
@@ -35,7 +36,7 @@ type VXExportParams struct {
 	VXID          string
 	WithChapters  bool
 	WatermarkPath string
-	Destinations  []string
+	Destinations  []string `jsonschema:"enum=vod,enum=playout,enum=bmm,enum=bmm-integration,enum=isilon"`
 	AudioSource   string
 	Languages     []string
 	Subclip       string

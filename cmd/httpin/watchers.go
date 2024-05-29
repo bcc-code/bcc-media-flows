@@ -11,8 +11,8 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/paths"
-	"github.com/bcc-code/bcc-media-flows/workflows"
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
+	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"
@@ -80,7 +80,7 @@ func doMultitrackCopy(ctx context.Context, path string) error {
 		TaskQueue: environment.GetWorkerQueue(),
 	}
 
-	_, err = c.ExecuteWorkflow(ctx, workflowOptions, workflows.HandleMultitrackFile, workflows.HandleMultitrackFileInput{
+	_, err = c.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.HandleMultitrackFile, miscworkflows.HandleMultitrackFileInput{
 		Path: path,
 	})
 
@@ -126,7 +126,7 @@ func doTranscode(ctx context.Context, path string) error {
 		TaskQueue: environment.GetWorkerQueue(),
 	}
 
-	_, err = c.ExecuteWorkflow(ctx, workflowOptions, workflows.WatchFolderTranscode, workflows.WatchFolderTranscodeInput{
+	_, err = c.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.WatchFolderTranscode, miscworkflows.WatchFolderTranscodeInput{
 		Path:       path,
 		FolderName: t,
 	})

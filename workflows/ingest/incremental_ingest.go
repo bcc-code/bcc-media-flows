@@ -2,16 +2,17 @@ package ingestworkflows
 
 import (
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"strings"
 	"time"
+
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
+	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"github.com/bcc-code/bcc-media-flows/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -137,7 +138,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	}
 
 	// Transcribe the video
-	transcribeFuture := workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeVX, workflows.TranscribeVXInput{
+	transcribeFuture := workflow.ExecuteChildWorkflow(ctx, miscworkflows.TranscribeVX, miscworkflows.TranscribeVXInput{
 		VXID:     videoVXID,
 		Language: "no",
 	})

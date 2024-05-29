@@ -2,15 +2,16 @@ package webhooks
 
 import (
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"strconv"
+
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"github.com/bcc-code/bcc-media-flows/workflows"
 	"github.com/bcc-code/bcc-media-flows/workflows/export"
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
+	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -80,7 +81,7 @@ func BmmSimpleUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 		return nil, err
 	}
 
-	err = workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeVX, workflows.TranscribeVXInput{
+	err = workflow.ExecuteChildWorkflow(ctx, miscworkflows.TranscribeVX, miscworkflows.TranscribeVXInput{
 		VXID:     res.AssetID,
 		Language: params.Language,
 	}).Get(ctx, nil)

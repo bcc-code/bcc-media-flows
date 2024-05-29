@@ -2,10 +2,12 @@ package ingestworkflows
 
 import (
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
+	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 
 	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -15,7 +17,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"github.com/bcc-code/bcc-media-flows/workflows"
 	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/workflow"
 )
@@ -62,7 +63,7 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 		}
 
 		// We dow *not* wait for preview to be ready
-		workflow.ExecuteChildWorkflow(previewCtx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
+		workflow.ExecuteChildWorkflow(previewCtx, miscworkflows.TranscodePreviewVX, miscworkflows.TranscodePreviewVXInput{
 			VXID:  assetResult.AssetID,
 			Delay: params.PreviewDelay,
 		})

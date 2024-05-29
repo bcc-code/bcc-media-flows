@@ -1,9 +1,11 @@
 package ingestworkflows
 
 import (
+	"strconv"
+
 	"github.com/bcc-code/bcc-media-flows/services/emails"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
-	"strconv"
+	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 
 	"github.com/ansel1/merry/v2"
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -12,7 +14,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/ingest"
 	"github.com/bcc-code/bcc-media-flows/services/notifications"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"github.com/bcc-code/bcc-media-flows/workflows"
 	"github.com/samber/lo"
 	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/workflow"
@@ -65,7 +66,7 @@ func createPreviewsAsync(ctx workflow.Context, assetIDs []string) []workflow.Chi
 	opts.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
 	ctx = workflow.WithChildOptions(ctx, opts)
 	for _, id := range assetIDs {
-		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
+		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, miscworkflows.TranscodePreviewVX, miscworkflows.TranscodePreviewVXInput{
 			VXID: id,
 		}))
 	}
@@ -78,7 +79,7 @@ func transcribe(ctx workflow.Context, assetIDs []string, language string) error 
 	opts := workflow.GetChildWorkflowOptions(ctx)
 	opts.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
 	for _, id := range assetIDs {
-		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, workflows.TranscribeVX, workflows.TranscribeVXInput{
+		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, miscworkflows.TranscribeVX, miscworkflows.TranscribeVXInput{
 			VXID:     id,
 			Language: language,
 		}))

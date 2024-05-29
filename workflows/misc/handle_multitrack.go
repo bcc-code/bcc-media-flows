@@ -1,13 +1,14 @@
-package workflows
+package miscworkflows
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
-	"strings"
 )
 
 type HandleMultitrackFileInput struct {

@@ -1,7 +1,8 @@
-package workflows
+package miscworkflows
 
 import (
 	"fmt"
+
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/common"
