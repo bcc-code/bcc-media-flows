@@ -321,15 +321,15 @@ func GetSubclipNames(client Client, itemVXID string) ([]string, error) {
 // GetDataForExport returns the data needed to export the item with the given VXID
 // If exportSubclip is true, the subclip will be exported, otherwise the whole clip
 func GetDataForExport(client Client, itemVXID string, languagesToExport []string, audioSource *ExportAudioSource, subclip string) (*ExportData, error) {
-	meta, err := client.GetMetadata(itemVXID)
+	originalMeta, err := client.GetMetadata(itemVXID)
 	if err != nil {
 		return nil, err
 	}
 
-	metaClips := meta.SplitByClips()
+	metaClips := originalMeta.SplitByClips()
 
 	// Get the metadata for the original clip
-	meta = metaClips[vsapi.OriginalClip]
+	meta := metaClips[vsapi.OriginalClip]
 
 	// Determine where to take the audio from
 	if audioSource == nil {
@@ -389,7 +389,7 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 	}
 
 	// Get the video clips as a base
-	out.Clips, err = ClipsFromMeta(client, itemVXID, meta, subclipTitle)
+	out.Clips, err = ClipsFromMeta(client, itemVXID, originalMeta, subclipTitle)
 	if err != nil {
 		return nil, err
 	}

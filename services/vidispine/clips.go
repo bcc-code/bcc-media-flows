@@ -48,7 +48,9 @@ func SeqToClips(client Client, seq *vsapi.SequenceDocument) ([]*Clip, error) {
 
 // ClipsFromMeta returns a list of clips based off a metadata result
 //
-// If subclipTitle is provided, it will return a single clip for that subclip
+// If `subclipTitle` is provided, it will return a single clip for that subclip.
+//
+// Expects `meta` to be the original metadata from client.GetMetadata(), not split by clips
 func ClipsFromMeta(client Client, vxID string, meta *vsapi.MetadataResult, subclipTitle string) ([]*Clip, error) {
 	isSequence := meta.Get(vscommon.FieldSequenceSize, "0") != "0"
 	if isSequence {
@@ -59,18 +61,18 @@ func ClipsFromMeta(client Client, vxID string, meta *vsapi.MetadataResult, subcl
 		return SeqToClips(client, seq)
 	}
 
-	metaClips := meta.SplitByClips()
-	originalClipMeta := metaClips[vsapi.OriginalClip]
+	clipsMeta := meta.SplitByClips()
+	originalClipMeta := clipsMeta[vsapi.OriginalClip]
 
 	var clips []*Clip
 	if subclipTitle != "" {
-		clip, err := getClipForSubclip(client, vxID, subclipTitle, originalClipMeta, metaClips)
+		clip, err := getClipForSubclip(client, vxID, subclipTitle, originalClipMeta, clipsMeta)
 		if err != nil {
 			return nil, err
 		}
 		clips = append(clips, clip)
 	} else {
-		clip, err := getClipForAsset(client, vxID, originalClipMeta, metaClips)
+		clip, err := getClipForAsset(client, vxID, originalClipMeta)
 		if err != nil {
 			return nil, err
 		}
@@ -84,7 +86,6 @@ func getClipForAsset(
 	client Client,
 	itemVXID string,
 	meta *vsapi.MetadataResult,
-	clipsMeta map[string]*vsapi.MetadataResult,
 ) (*Clip, error) {
 
 	shapes, err := client.GetShapes(itemVXID)
