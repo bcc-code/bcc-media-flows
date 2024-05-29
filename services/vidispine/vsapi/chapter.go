@@ -7,20 +7,15 @@ import (
 )
 
 func (c *Client) GetChapterMeta(itemVXID string, inTc, outTc float64) (map[string]*MetadataResult, error) {
-	inString := fmt.Sprintf("%.2f", inTc)
-	outString := fmt.Sprintf("%.2f", outTc)
-
-	url := fmt.Sprintf("%s/item/%s?content=metadata&terse=true&sampleRate=PAL&interval=%s-%s&group=Subclips", c.baseURL, itemVXID, inString, outString)
-
-	resp, err := c.restyClient.R().
-		SetResult(&MetadataResult{}).
-		Get(url)
-
+	metaResult, err := c.GetMetadataAdvanced(GetMetadataAdvancedParams{
+		ItemID: itemVXID,
+		Group:  "Subclips",
+		InTC:   inTc,
+		OutTC:  outTc,
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	metaResult := resp.Result().(*MetadataResult)
 
 	clips := metaResult.SplitByClips()
 	outClips := map[string]*MetadataResult{}
@@ -30,6 +25,7 @@ func (c *Client) GetChapterMeta(itemVXID string, inTc, outTc float64) (map[strin
 			continue
 		}
 
+		// TODO: @KillerX can you document why we need to do this? e.g. by extracting into a function
 		for _, field := range clip.Terse {
 			for _, value := range field {
 				if valueStart, _ := vscommon.TCToSeconds(value.Start); valueStart < inTc {

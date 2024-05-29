@@ -59,6 +59,29 @@ func (c *Client) GetMetadata(vsID string) (*MetadataResult, error) {
 	return resp.Result().(*MetadataResult), nil
 }
 
+type GetMetadataAdvancedParams struct {
+	ItemID string
+	Group  string
+	InTC   float64
+	OutTC  float64
+}
+
+func (c *Client) GetMetadataAdvanced(params GetMetadataAdvancedParams) (*MetadataResult, error) {
+	inString := fmt.Sprintf("%.2f", params.InTC)
+	outString := fmt.Sprintf("%.2f", params.OutTC)
+	url := fmt.Sprintf("%s/item/%s?content=metadata&terse=true&sampleRate=PAL&interval=%s-%s&group=%s", c.baseURL, params.ItemID, inString, outString, params.Group)
+
+	resp, err := c.restyClient.R().
+		SetResult(&MetadataResult{}).
+		Get(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Result().(*MetadataResult), nil
+}
+
 func (c *Client) SetItemMetadataField(params SetItemMetadataFieldParams) error {
 	requestURL, _ := url.Parse(c.baseURL)
 	requestURL.Path += fmt.Sprintf("/item/%s/metadata", url.PathEscape(params.ItemID))
