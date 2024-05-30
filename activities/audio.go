@@ -35,13 +35,22 @@ func (aa AudioActivities) TranscodeToAudioWav(ctx context.Context, input common.
 	return transcode.AudioWav(input, progressCallback)
 }
 
-func (aa AudioActivities) PrepareForTranscriptoion(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
+func (aa AudioActivities) PrepareForTranscription(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeToAudioWav")
 	log.Info("Starting TranscodeToAudioAacActivity")
 
 	stopChan, progressCallback := registerProgressCallback(ctx)
 	defer close(stopChan)
+
+	result, err := aa.AnalyzeFile(ctx, AnalyzeFileParams{FilePath: input.Path})
+	if err != nil {
+		return nil, err
+	}
+
+	if !result.HasAudio {
+		return nil, nil
+	}
 
 	return transcode.PrepareForTranscriptoion(input, progressCallback)
 }

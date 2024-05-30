@@ -36,12 +36,18 @@ func TranscribeFile(
 	file := paths.MustParse(params.File)
 	destination := paths.MustParse(params.DestinationPath)
 
-	wavFile, err := wfutils.Execute(ctx, activities.Audio.PrepareForTranscriptoion, common.AudioInput{
+	wavFile, err := wfutils.Execute(ctx, activities.Audio.PrepareForTranscription, common.AudioInput{
 		Path:            file,
 		DestinationPath: tempFolder,
 	}).Result(ctx)
 	if err != nil {
 		return err
+	}
+
+	if wavFile == nil {
+		// No error and no result means there was no audio to be processed,
+		// so we can skip the rest
+		return nil
 	}
 
 	transcribeOutput := &activities.TranscribeResponse{}
