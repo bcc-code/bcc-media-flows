@@ -35,7 +35,12 @@ func (aa AudioActivities) TranscodeToAudioWav(ctx context.Context, input common.
 	return transcode.AudioWav(input, progressCallback)
 }
 
-func (aa AudioActivities) PrepareForTranscription(ctx context.Context, input common.AudioInput) (*common.AudioResult, error) {
+type PrepareTranscriptionResult struct {
+	OutputPath paths.Path
+	HasAudio   bool
+}
+
+func (aa AudioActivities) PrepareForTranscription(ctx context.Context, input common.AudioInput) (*PrepareTranscriptionResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeToAudioWav")
 	log.Info("Starting TranscodeToAudioAacActivity")
@@ -49,10 +54,20 @@ func (aa AudioActivities) PrepareForTranscription(ctx context.Context, input com
 	}
 
 	if !result.HasAudio {
-		return nil, nil
+		return &PrepareTranscriptionResult{
+			HasAudio: false,
+		}, nil
 	}
 
-	return transcode.PrepareForTranscriptoion(input, progressCallback)
+	res, err := transcode.PrepareForTranscriptoion(input, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+
+	return &PrepareTranscriptionResult{
+		OutputPath: res.OutputPath,
+		HasAudio:   true,
+	}, err
 }
 
 type AdjustAudioToVideoStartInput struct {

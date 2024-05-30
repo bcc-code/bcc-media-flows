@@ -43,7 +43,7 @@ func TranscribeVX(
 		return err
 	}
 
-	wavFile, err := wfutils.Execute(ctx, activities.Audio.PrepareForTranscription, common.AudioInput{
+	prepareResult, err := wfutils.Execute(ctx, activities.Audio.PrepareForTranscription, common.AudioInput{
 		Path:            shapes.FilePath,
 		DestinationPath: tempFolder,
 	}).Result(ctx)
@@ -51,9 +51,7 @@ func TranscribeVX(
 		return err
 	}
 
-	if wavFile == nil {
-		// No error and no result means there was no audio to be processed,
-		// so we can skip the rest
+	if !prepareResult.HasAudio {
 		return nil
 	}
 
@@ -65,7 +63,7 @@ func TranscribeVX(
 	transcriptionJob := &activities.TranscribeResponse{}
 	err = wfutils.Execute(ctx, activities.Util.Transcribe, activities.TranscribeParams{
 		Language:        params.Language,
-		File:            wavFile.OutputPath,
+		File:            prepareResult.OutputPath,
 		DestinationPath: destinationPath,
 	}).Get(ctx, transcriptionJob)
 
