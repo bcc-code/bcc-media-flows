@@ -82,20 +82,63 @@ func (c *Client) GetMetadataAdvanced(params GetMetadataAdvancedParams) (*Metadat
 	return resp.Result().(*MetadataResult), nil
 }
 
-func (c *Client) SetItemMetadataField(params SetItemMetadataFieldParams) error {
+type ItemMetadataFieldParams struct {
+	ItemID  string
+	GroupID string
+	StartTC string
+	EndTC   string
+	Key     string
+	Value   string
+}
+
+func (c *Client) SetItemMetadataField(params ItemMetadataFieldParams) error {
 	requestURL, _ := url.Parse(c.baseURL)
 	requestURL.Path += fmt.Sprintf("/item/%s/metadata", url.PathEscape(params.ItemID))
 	q := requestURL.Query()
 	requestURL.RawQuery = q.Encode()
 
-	if params.StartTC == "" {
-		params.StartTC = MinusInf
-	}
-	if params.EndTC == "" {
-		params.EndTC = PlusInf
+	body, err := createSetItemMetadataFieldXml(
+		xmlSetItemMetadataFieldParams{
+			StartTC: params.StartTC,
+			EndTC:   params.EndTC,
+			GroupID: params.GroupID,
+			Key:     params.Key,
+			Value:   params.Value,
+			Add:     false,
+		},
+	)
+	if err != nil {
+		return err
 	}
 
-	body, err := createSetItemMetadataFieldXml(params)
+	_, err = c.restyClient.R().
+		SetHeader("content-type", "application/xml").
+		SetBody(body.String()).
+		Put(requestURL.String())
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Client) AddToItemMetadataField(params ItemMetadataFieldParams) error {
+	requestURL, _ := url.Parse(c.baseURL)
+	requestURL.Path += fmt.Sprintf("/item/%s/metadata", url.PathEscape(params.ItemID))
+	q := requestURL.Query()
+	requestURL.RawQuery = q.Encode()
+
+	body, err := createSetItemMetadataFieldXml(
+		xmlSetItemMetadataFieldParams{
+			StartTC: params.StartTC,
+			EndTC:   params.EndTC,
+			GroupID: params.GroupID,
+			Key:     params.Key,
+			Value:   params.Value,
+			Add:     true,
+		},
+	)
 	if err != nil {
 		return err
 	}

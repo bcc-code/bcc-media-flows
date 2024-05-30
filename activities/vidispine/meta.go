@@ -58,18 +58,28 @@ func (a Activities) GetVXMetadata(_ context.Context, params VXOnlyParam) (*vsapi
 	return vsClient.GetMetadata(params.VXID)
 }
 
-type SetVXMetadataFieldParams = vsapi.SetItemMetadataFieldParams
+type VXMetadataFieldParams = vsapi.ItemMetadataFieldParams
 
 type SetVXMetadataFieldResult struct {
 }
 
-func (a Activities) SetVXMetadataFieldActivity(ctx context.Context, params vsapi.SetItemMetadataFieldParams) (*SetVXMetadataFieldResult, error) {
+func (a Activities) SetVXMetadataFieldActivity(ctx context.Context, params vsapi.ItemMetadataFieldParams) (*SetVXMetadataFieldResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting SetVXMetadataFieldActivity")
 
 	vsClient := GetClient()
 
 	err := vsClient.SetItemMetadataField(params)
+	return nil, err
+}
+
+func (a Activities) AddToVXMetadataFieldActivity(ctx context.Context, params vsapi.ItemMetadataFieldParams) (*SetVXMetadataFieldResult, error) {
+	log := activity.GetLogger(ctx)
+	log.Info("Starting SetVXMetadataFieldActivity")
+
+	vsClient := GetClient()
+
+	err := vsClient.AddToItemMetadataField(params)
 	return nil, err
 }
 
@@ -143,7 +153,7 @@ func (a Activities) UpdateAssetRelations(ctx context.Context, params VXOnlyParam
 
 		if l, ok := bccmflows.LanguagesByISO[strings.ToLower(title)]; ok {
 			err := vsClient.SetItemMetadataField(
-				vsapi.SetItemMetadataFieldParams{
+				vsapi.ItemMetadataFieldParams{
 					ItemID:  vxID,
 					GroupID: "System",
 					Key:     l.RelatedMBFieldID,

@@ -60,7 +60,7 @@ func Test_GetInOut_SubclipErr(t *testing.T) {
 }
 
 func Test_GenerateMetUpdateXML(t *testing.T) {
-	buf, _ := createSetItemMetadataFieldXml(SetItemMetadataFieldParams{
+	buf, _ := createSetItemMetadataFieldXml(xmlSetItemMetadataFieldParams{
 		StartTC: "-INF",
 		EndTC:   "+INF",
 		GroupID: "System",
@@ -91,7 +91,7 @@ func Test_GenerateMetUpdateXML(t *testing.T) {
 }
 
 func Test_GenerateMetUpdateWithTCXML(t *testing.T) {
-	buf, _ := createSetItemMetadataFieldXml(SetItemMetadataFieldParams{
+	buf, _ := createSetItemMetadataFieldXml(xmlSetItemMetadataFieldParams{
 		StartTC: "arbitraryValue1",
 		EndTC:   "arbitraryValue2",
 		Key:     "portal_mf442906",

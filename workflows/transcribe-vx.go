@@ -110,7 +110,7 @@ func TranscribeVX(
 		return err
 	}
 
-	err = wfutils.Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
+	err = wfutils.Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.VXMetadataFieldParams{
 		ItemID: params.VXID,
 		Key:    transcriptionMetadataFieldName,
 		Value:  string(txtValue),

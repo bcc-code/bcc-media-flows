@@ -87,8 +87,7 @@ const (
 </MetadataDocument>`
 )
 
-type SetItemMetadataFieldParams struct {
-	ItemID  string
+type xmlSetItemMetadataFieldParams struct {
 	GroupID string
 	StartTC string
 	EndTC   string
@@ -97,7 +96,13 @@ type SetItemMetadataFieldParams struct {
 	Add     bool
 }
 
-func createSetItemMetadataFieldXml(params SetItemMetadataFieldParams) (*bytes.Buffer, error) {
+func createSetItemMetadataFieldXml(params xmlSetItemMetadataFieldParams) (*bytes.Buffer, error) {
+	if params.StartTC == "" {
+		params.StartTC = MinusInf
+	}
+	if params.EndTC == "" {
+		params.EndTC = PlusInf
+	}
 	buf := new(bytes.Buffer)
 	err := xmlSetMetadataPlaceholderTmpl.Execute(buf, params)
 	return buf, err

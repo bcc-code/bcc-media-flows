@@ -77,7 +77,7 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 			return err
 		}
 
-		err = wfutils.Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
+		err = wfutils.Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.VXMetadataFieldParams{
 			ItemID:  params.VideoVXID,
 			GroupID: "System",
 			Key:     bccmflows.LanguagesByISO[lang].RelatedMBFieldID,
@@ -87,7 +87,7 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 			logger.Error(fmt.Sprintf("SetVXMetadataFieldActivity: %s", err.Error()))
 		}
 
-		err = wfutils.Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.SetVXMetadataFieldParams{
+		err = wfutils.Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.VXMetadataFieldParams{
 			ItemID: assetResult.AssetID,
 			Key:    vscommon.FieldLanguagesRecorded.Value,
 			Value:  lang,
