@@ -13,7 +13,9 @@ const (
 	PlusInf      = "+INF"
 )
 
-// SplitByClips will split the metadata into clips based on the start and end timecode.
+// SplitByClips will split the metadata into clips based on how vidispine handles subclips
+// That is: All metadata on one asset that has the identical start and end timecode belongs to the same subclip
+// Metadata that applies to the whole underlying asset is denoted by `-INF` and `+INF` timecode.
 //
 // The result is a map with the key being either:
 // - OriginalClip if the metadata is for the full clip (+INF to -INF)
