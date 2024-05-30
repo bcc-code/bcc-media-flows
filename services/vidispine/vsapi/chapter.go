@@ -25,17 +25,9 @@ func (c *Client) GetChapterMeta(itemVXID string, inTc, outTc float64) (map[strin
 			continue
 		}
 
-		// TODO: @KillerX can you document why we need to do this? e.g. by extracting into a function
 		for _, field := range clip.Terse {
 			for _, value := range field {
-				if valueStart, _ := vscommon.TCToSeconds(value.Start); valueStart < inTc {
-					value.Start = fmt.Sprintf("%.0f@PAL", inTc*25)
-				}
-
-				if valueEnd, _ := vscommon.TCToSeconds(value.End); valueEnd > outTc {
-					value.End = fmt.Sprintf("%.0f@PAL", outTc*25)
-				}
-
+				trimTimecodesToBeWithinRange(value, inTc, outTc)
 			}
 		}
 
@@ -43,4 +35,15 @@ func (c *Client) GetChapterMeta(itemVXID string, inTc, outTc float64) (map[strin
 	}
 
 	return outClips, nil
+}
+
+// trimTimecodesToBeWithinRange ensures that the timecodes are within the clip range
+func trimTimecodesToBeWithinRange(value *MetadataField, inTc, outTc float64) {
+	if valueStart, _ := vscommon.TCToSeconds(value.Start); valueStart < inTc {
+		value.Start = fmt.Sprintf("%.0f@PAL", inTc*25)
+	}
+
+	if valueEnd, _ := vscommon.TCToSeconds(value.End); valueEnd > outTc {
+		value.End = fmt.Sprintf("%.0f@PAL", outTc*25)
+	}
 }

@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-{{- /*gotype: github.com/bcc-code/bccm-flows/services/notifications.ImportCompleted */}}
+{{- /*gotype: github.com/bcc-code/bcc-media-flows/services/notifications.ImportCompleted */}}
+
 <head>
     <title>Home</title>
 </head>
+
 <body>
     <div>
         <h2>{{.Title}}</h2>
@@ -17,19 +19,20 @@
                     </tr>
                 </thead>
                 <tbody>
-                {{ range $file := .Files }}
-                <tr>
-                    <td>
-                        {{$file.VXID}}
-                    </td>
-                    <td>
-                        {{$file.Name}}
-                    </td>
-                </tr>
-                {{ end }}
+                    {{ range $file := .Files }}
+                    <tr>
+                        <td>
+                            {{$file.VXID}}
+                        </td>
+                        <td>
+                            {{$file.Name}}
+                        </td>
+                    </tr>
+                    {{ end }}
                 </tbody>
             </table>
         </div>
     </div>
 </body>
+
 </html>
