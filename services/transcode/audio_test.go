@@ -2,32 +2,49 @@ package transcode
 
 import (
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
+	"github.com/bcc-code/bcc-media-flows/utils/testutils"
 	"os"
 	"testing"
 
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_Audio(t *testing.T) {
+	tempDstPath := paths.MustParse("./testdata/test" + t.Name() + ".wav")
+	err := GenerateToneFile(1000, 5, 48000, "01:00:00:00", tempDstPath)
+	assert.NoError(t, err)
+
 	p, stop := printProgress()
 	defer close(stop)
-	_, err := AudioAac(common.AudioInput{
-		Path:            paths.MustParse(root + "SOTM_7v2123_SEQ-nor.wav"),
-		DestinationPath: paths.MustParse(root),
+	res, err := AudioAac(common.AudioInput{
+		Path:            tempDstPath,
+		DestinationPath: tempDstPath.Dir(),
 		Bitrate:         "128k",
 	}, p)
 	assert.Nil(t, err)
+	assert.NotNil(t, res)
+
+	info, err := ffmpeg.GetStreamInfo(res.OutputPath.Local())
+	assert.NoError(t, err)
+
+	assert.True(t, info.HasAudio)
+	assert.False(t, info.HasVideo)
+	assert.InDelta(t, 5, 0.2, info.TotalSeconds)
+	assert.Equal(t, 1, len(info.AudioStreams))
 }
 
-func Test_AudioSplit(t *testing.T) {
-	files, err := SplitAudioChannels(paths.MustParse("/tmp/AS23_20231202_2000_PGM_MU1_Joy_to_the_world-eng_normalized-256k.mp3"), paths.MustParse("/tmp/"), nil)
+func Test_AudioSplit_Stereo(t *testing.T) {
+	tempDstPath := paths.MustParse("./testdata/test" + t.Name() + ".wav")
+	testutils.GenerateStreoAudioFile(tempDstPath, 10)
+
+	p, stop := printProgress()
+	defer close(stop)
+	files, err := SplitAudioChannels(tempDstPath, tempDstPath.Dir(), p)
 
 	assert.Nil(t, err)
-
-	spew.Dump(files)
+	assert.Len(t, files, 2)
 }
 
 func Test_AudioSilence(t *testing.T) {
