@@ -207,17 +207,28 @@ func (s *TriggerServer) vxExportPOST(ctx *gin.Context) {
 	}
 
 	go func() {
-		err := s.vidispine.SetItemMetadataField(vxID, "", vscommon.FieldExportAudioSource.Value, audioSource)
+		err := s.vidispine.SetItemMetadataField(vsapi.ItemMetadataFieldParams{
+			ItemID: vxID,
+			Key:    vscommon.FieldExportAudioSource.Value,
+			Value:  audioSource,
+		})
 		if err != nil {
 			log.Default().Println(err)
 		}
 
 		for i, element := range languages {
 			if i == 0 {
-				err = s.vidispine.SetItemMetadataField(vxID, "", vscommon.FieldLangsToExport.Value, element)
+				err = s.vidispine.SetItemMetadataField(vsapi.ItemMetadataFieldParams{
+					ItemID: vxID,
+					Key:    vscommon.FieldLangsToExport.Value,
+					Value:  element,
+				})
 			} else {
-				err = s.vidispine.AddToItemMetadataField(vxID, "", vscommon.FieldLangsToExport.Value, element)
-
+				err = s.vidispine.AddToItemMetadataField(vsapi.ItemMetadataFieldParams{
+					ItemID: vxID,
+					Key:    vscommon.FieldLangsToExport.Value,
+					Value:  element,
+				})
 			}
 
 			if err != nil {

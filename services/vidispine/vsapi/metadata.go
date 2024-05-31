@@ -1,7 +1,6 @@
 package vsapi
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"net/url"
@@ -60,35 +59,54 @@ func (c *Client) GetMetadata(vsID string) (*MetadataResult, error) {
 	return resp.Result().(*MetadataResult), nil
 }
 
-func (c *Client) setItemMetadataField(itemID, startTC, endTC, group, key, value string, add bool) error {
+type GetMetadataAdvancedParams struct {
+	ItemID string
+	Group  string
+	InTC   float64
+	OutTC  float64
+}
+
+func (c *Client) GetMetadataAdvanced(params GetMetadataAdvancedParams) (*MetadataResult, error) {
+	inString := fmt.Sprintf("%.2f", params.InTC)
+	outString := fmt.Sprintf("%.2f", params.OutTC)
+	url := fmt.Sprintf("%s/item/%s?content=metadata&terse=true&sampleRate=PAL&interval=%s-%s&group=%s", c.baseURL, params.ItemID, inString, outString, params.Group)
+
+	resp, err := c.restyClient.R().
+		SetResult(&MetadataResult{}).
+		Get(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Result().(*MetadataResult), nil
+}
+
+type ItemMetadataFieldParams struct {
+	ItemID  string
+	GroupID string
+	StartTC string
+	EndTC   string
+	Key     string
+	Value   string
+}
+
+func (c *Client) SetItemMetadataField(params ItemMetadataFieldParams) error {
 	requestURL, _ := url.Parse(c.baseURL)
-	requestURL.Path += fmt.Sprintf("/item/%s/metadata", url.PathEscape(itemID))
+	requestURL.Path += fmt.Sprintf("/item/%s/metadata", url.PathEscape(params.ItemID))
 	q := requestURL.Query()
 	requestURL.RawQuery = q.Encode()
 
-	if startTC == "" {
-		startTC = "-INF"
-	}
-	if endTC == "" {
-		endTC = "+INF"
-	}
-
-	var body bytes.Buffer
-	err := xmlSetMetadataPlaceholderTmpl.Execute(&body, struct {
-		StartTC string
-		EndTC   string
-		Group   string
-		Key     string
-		Value   string
-		Add     bool
-	}{
-		startTC,
-		endTC,
-		group,
-		key,
-		value,
-		add,
-	})
+	body, err := createSetItemMetadataFieldXml(
+		xmlSetItemMetadataFieldParams{
+			StartTC: params.StartTC,
+			EndTC:   params.EndTC,
+			GroupID: params.GroupID,
+			Key:     params.Key,
+			Value:   params.Value,
+			Add:     false,
+		},
+	)
 	if err != nil {
 		return err
 	}
@@ -104,20 +122,37 @@ func (c *Client) setItemMetadataField(itemID, startTC, endTC, group, key, value 
 
 	return nil
 }
-func (c *Client) SetItemMetadataField(itemID, group, key, value string) error {
-	return c.setItemMetadataField(itemID, MinusInf, PlusInf, group, key, value, false)
-}
 
-func (c *Client) AddToItemMetadataField(itemID, group, key, value string) error {
-	return c.setItemMetadataField(itemID, MinusInf, PlusInf, group, key, value, true)
-}
+func (c *Client) AddToItemMetadataField(params ItemMetadataFieldParams) error {
+	requestURL, _ := url.Parse(c.baseURL)
+	requestURL.Path += fmt.Sprintf("/item/%s/metadata", url.PathEscape(params.ItemID))
+	q := requestURL.Query()
+	requestURL.RawQuery = q.Encode()
 
-func (c *Client) SetItemMetadataFieldWithTC(itemID, startTC, endTC, group, key, value string) error {
-	return c.setItemMetadataField(itemID, startTC, endTC, group, key, value, false)
-}
+	body, err := createSetItemMetadataFieldXml(
+		xmlSetItemMetadataFieldParams{
+			StartTC: params.StartTC,
+			EndTC:   params.EndTC,
+			GroupID: params.GroupID,
+			Key:     params.Key,
+			Value:   params.Value,
+			Add:     true,
+		},
+	)
+	if err != nil {
+		return err
+	}
 
-func (c *Client) AddToItemMetadataFieldWithTC(itemID, startTC, endTC, group, key, value string) error {
-	return c.setItemMetadataField(itemID, startTC, endTC, group, key, value, true)
+	_, err = c.restyClient.R().
+		SetHeader("content-type", "application/xml").
+		SetBody(body.String()).
+		Put(requestURL.String())
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetInOut returns the in and out point of the clip in seconds, suitable

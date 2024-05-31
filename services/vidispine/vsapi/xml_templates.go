@@ -1,11 +1,14 @@
 package vsapi
 
-import "text/template"
+import (
+	"bytes"
+	"text/template"
+)
 
 var (
 	xmlMasterPlaceholderTmpl      = template.Must(template.New("master").Parse(xmlMasterPlaceholder))
 	xmlRawMaterialPlaceholderTmpl = template.Must(template.New("raw").Parse(xmlRawMaterialPlaceholder))
-	xmlSetMetadataPlaceholderTmpl = template.Must(template.New("metadata").Parse(xmlSetMetadataPlaceholder))
+	xmlSetMetadataPlaceholderTmpl = template.Must(template.New("metadata").Parse(xmlSetItemMetadataFieldPlaceholder))
 )
 
 const (
@@ -62,12 +65,12 @@ const (
 	</timespan>
 </MetadataDocument>`
 
-	xmlSetMetadataPlaceholder = `<?xml version="1.0"?>
+	xmlSetItemMetadataFieldPlaceholder = `<?xml version="1.0"?>
 <MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine">
 	<timespan start="{{.StartTC}}" end="{{.EndTC}}">
-		{{ if .Group }}
+		{{ if .GroupID }}
 		<group>
-			<name>{{.Group}}</name>
+			<name>{{.GroupID}}</name>
 		{{end}}
 		<field>
 			<name>{{.Key}}</name>
@@ -77,9 +80,30 @@ const (
 				<value>{{.Value}}</value>
 			{{end}}
 		</field>
-		{{ if .Group }}
+		{{ if .GroupID }}
 		</group>
 		{{end}}
 	</timespan>
 </MetadataDocument>`
 )
+
+type xmlSetItemMetadataFieldParams struct {
+	GroupID string
+	StartTC string
+	EndTC   string
+	Key     string
+	Value   string
+	Add     bool
+}
+
+func createSetItemMetadataFieldXml(params xmlSetItemMetadataFieldParams) (*bytes.Buffer, error) {
+	if params.StartTC == "" {
+		params.StartTC = MinusInf
+	}
+	if params.EndTC == "" {
+		params.EndTC = PlusInf
+	}
+	buf := new(bytes.Buffer)
+	err := xmlSetMetadataPlaceholderTmpl.Execute(buf, params)
+	return buf, err
+}
