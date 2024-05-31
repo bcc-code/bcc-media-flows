@@ -43,13 +43,16 @@ func TranscribeVX(
 		return err
 	}
 
-	wavFile := common.AudioResult{}
-	err = wfutils.Execute(ctx, activities.Audio.PrepareForTranscriptoion, common.AudioInput{
+	prepareResult, err := wfutils.Execute(ctx, activities.Audio.PrepareForTranscription, common.AudioInput{
 		Path:            shapes.FilePath,
 		DestinationPath: tempFolder,
-	}).Get(ctx, &wavFile)
+	}).Result(ctx)
 	if err != nil {
 		return err
+	}
+
+	if !prepareResult.HasAudio {
+		return nil
 	}
 
 	destinationPath, err := wfutils.GetWorkflowAuxOutputFolder(ctx)
@@ -60,7 +63,7 @@ func TranscribeVX(
 	transcriptionJob := &activities.TranscribeResponse{}
 	err = wfutils.Execute(ctx, activities.Util.Transcribe, activities.TranscribeParams{
 		Language:        params.Language,
-		File:            wavFile.OutputPath,
+		File:            prepareResult.OutputPath,
 		DestinationPath: destinationPath,
 	}).Get(ctx, transcriptionJob)
 
