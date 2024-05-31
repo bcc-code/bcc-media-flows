@@ -2,6 +2,7 @@ package paths
 
 import (
 	"encoding/json"
+	"go.temporal.io/sdk/temporal"
 	"path/filepath"
 	"strings"
 
@@ -228,7 +229,12 @@ func Parse(path string) (Path, error) {
 			}
 		}
 	}
-	return Path{}, merry.Wrap(ErrPathNotValid, merry.WithUserMessagef("path %s is not valid", path))
+	return Path{},
+		temporal.NewNonRetryableApplicationError(
+			"path is invalid", "invalid_path",
+			merry.Wrap(ErrPathNotValid),
+			path,
+		)
 }
 
 func MustParse(path string) Path {
