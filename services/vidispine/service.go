@@ -7,6 +7,11 @@ import (
 
 type Client interface {
 	GetMetadata(vsID string) (*vsapi.MetadataResult, error)
+	// GetChapterMeta returns all "Subclips" for a given itemVXID, in the given timecode range.
+	//
+	// The timecodes are in seconds.
+	//
+	// The result is a map with the key being the clip key (See SplitByClips) and the value being the metadata result.
 	GetChapterMeta(itemVXID string, inTc, outTc float64) (map[string]*vsapi.MetadataResult, error)
 	GetShapes(itemVXID string) (*vsapi.ShapeResult, error)
 	GetSequence(itemVXID string) (*vsapi.SequenceDocument, error)
