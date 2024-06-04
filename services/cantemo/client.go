@@ -1,8 +1,9 @@
 package cantemo
 
 import (
-	"github.com/go-resty/resty/v2"
 	"strings"
+
+	"github.com/go-resty/resty/v2"
 )
 
 type Client struct {
@@ -91,4 +92,27 @@ func (c *Client) GetTranscriptionJSON(itemID string) (*Transcription, error) {
 	}
 
 	return &Transcription{}, nil
+}
+
+// GetFieldTags will return all tags for a given field
+//
+// The field probably needs to be a tags field (field_type: "tags")
+func (c *Client) GetFieldTags(field string) ([]string, error) {
+	type getTagsResponse struct {
+		Tags []string `json:"tags"`
+	}
+
+	res, err := c.restyClient.R().
+		SetResult(&getTagsResponse{}).
+		Get("/API/v2/metadata-schema/fields/" + field + "/tags/?size=10000")
+
+	if err != nil {
+		return nil, err
+	}
+
+	result := res.Result().(*getTagsResponse)
+	if result == nil {
+		return nil, err
+	}
+	return result.Tags, nil
 }
