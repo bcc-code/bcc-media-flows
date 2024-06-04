@@ -71,7 +71,16 @@ func (meta *MetadataResult) SplitByClips() map[string]*MetadataResult {
 		if key == "-INF-+INF" {
 			key = OriginalClip
 		} else {
-			key = val.Get(vscommon.FieldTitle, key)
+			title := val.Get(vscommon.FieldTitle, "")
+			if title != "" {
+				if _, exists := out[title]; exists {
+					// If the title already exists, we append the key to the title
+					// to prevent collisions
+					key = fmt.Sprintf("%s_%s", title, key)
+				} else {
+					key = title
+				}
+			}
 		}
 
 		out[key] = val
