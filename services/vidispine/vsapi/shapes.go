@@ -176,6 +176,9 @@ func (sr ShapeResult) GetShape(tag string) *Shape {
 func (s Shape) GetPath() string {
 	// Cut off the "file://" prefix
 	for _, fc := range s.ContainerComponent.File {
+		if len(fc.URI) == 0 {
+			continue
+		}
 		p, _ := url.PathUnescape(fc.URI[0][7:])
 		return p
 	}
