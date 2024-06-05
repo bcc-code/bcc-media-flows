@@ -119,7 +119,7 @@ func notifyImportCompleted(ctx workflow.Context, recipients []string, jobID int,
 				}
 			}),
 		}
-	}).Get(content)
+	}).Get(&content)
 
 	if err != nil {
 		return err
