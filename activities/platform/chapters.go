@@ -5,7 +5,9 @@ import (
 	"regexp"
 	"strings"
 
+	cantemoactivities "github.com/bcc-code/bcc-media-flows/activities/cantemo"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/bcc-code/bcc-media-flows/services/cantemo"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
@@ -29,19 +31,25 @@ func (a Activities) GetTimedMetadataChaptersActivity(ctx context.Context, params
 	log.Info("Starting GetTimedMetadataChaptersActivity")
 
 	vsClient := vsactivity.GetClient()
+	cantemoClient := cantemoactivities.GetClient()
 
-	return GetTimedMetadataChapters(vsClient, params.Clips)
+	return GetTimedMetadataChapters(vsClient, cantemoClient, params.Clips)
 }
 
-func GetTimedMetadataChapters(vsClient vidispine.Client, clips []*vidispine.Clip) ([]asset.TimedMetadata, error) {
+func GetTimedMetadataChapters(vsClient vidispine.Client, cantemoClient *cantemo.Client, clips []*vidispine.Clip) ([]asset.TimedMetadata, error) {
 	vsChapters, err := vidispine.GetChapterMetaForClips(vsClient, clips)
+	if err != nil {
+		return nil, err
+	}
+
+	subclipTypeNames, err := cantemoClient.GetLookupChoices("Subclips", vscommon.FieldSubclipType.Value)
 	if err != nil {
 		return nil, err
 	}
 
 	var chapters []asset.TimedMetadata
 	for _, data := range vsChapters {
-		chapter, keep := metaToChapter(data.Meta)
+		chapter, keep := metaToChapter(data.Meta, subclipTypeNames)
 		if !keep {
 			continue
 		}
@@ -54,11 +62,9 @@ func GetTimedMetadataChapters(vsClient vidispine.Client, clips []*vidispine.Clip
 	return chapters, nil
 }
 
-func metaToChapter(meta *vsapi.MetadataResult) (asset.TimedMetadata, bool) {
+func metaToChapter(meta *vsapi.MetadataResult, subclipTypeNames map[string]string) (asset.TimedMetadata, bool) {
 	out := asset.TimedMetadata{}
 
-	out.Label = meta.Get(vscommon.FieldTitle, "")
-	out.Title = meta.Get(vscommon.FieldTitle, "")
 	start, _ := vscommon.TCToSeconds(meta.Terse["title"][0].Start)
 	out.Timestamp = start
 
@@ -82,9 +88,16 @@ func metaToChapter(meta *vsapi.MetadataResult) (asset.TimedMetadata, bool) {
 		}
 	}
 
+	out.Label = meta.Get(vscommon.FieldTitle, "")
+	out.Title = meta.Get(vscommon.FieldTitle, "")
 	if out.ChapterType == pcommon.ChapterTypeOther.Value {
-		out.Title = subclipType
+		if typeName, ok := subclipTypeNames[subclipType]; ok {
+			out.Title = typeName
+		} else {
+			out.Title = subclipType
+		}
 	}
+
 	if strings.Contains(out.Label, " - ") {
 		out.Title = strings.Split(out.Label, " - ")[0]
 	}

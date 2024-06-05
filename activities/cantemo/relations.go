@@ -2,8 +2,9 @@ package cantemo
 
 import (
 	"context"
-	"github.com/bcc-code/bcc-media-flows/services/cantemo"
 	"os"
+
+	"github.com/bcc-code/bcc-media-flows/services/cantemo"
 )
 
 type AddRelationParams struct {
@@ -11,12 +12,12 @@ type AddRelationParams struct {
 	Child  string
 }
 
-func getClient() *cantemo.Client {
+func GetClient() *cantemo.Client {
 	urlBase := os.Getenv("CANTEMO_URL")
 	token := os.Getenv("CANTEMO_TOKEN")
 	return cantemo.NewClient(urlBase, token)
 }
 
 func AddRelation(ctx context.Context, params AddRelationParams) (any, error) {
-	return nil, getClient().AddRelation(params.Parent, params.Child)
+	return nil, GetClient().AddRelation(params.Parent, params.Child)
 }
