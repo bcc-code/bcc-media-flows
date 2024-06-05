@@ -93,7 +93,7 @@ func UnmarshalXMLFile[T any](ctx workflow.Context, file paths.Path) (*T, error) 
 		return nil, err
 	}
 
-	unmarsallResult := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
+	unmarsalResult := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
 		var r T
 		err := xml.Unmarshal(res, &r)
 		if err != nil {
@@ -103,9 +103,8 @@ func UnmarshalXMLFile[T any](ctx workflow.Context, file paths.Path) (*T, error) 
 	})
 
 	var data T
-	unmarsallResult.Get(data)
-
-	return &data, nil
+	err = unmarsalResult.Get(&data)
+	return &data, err
 }
 
 func DeletePath(ctx workflow.Context, path paths.Path) error {
