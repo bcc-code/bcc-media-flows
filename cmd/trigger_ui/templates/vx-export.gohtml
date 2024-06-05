@@ -56,12 +56,14 @@
                 <p class="text-sm mb-2">Leave empty to export the entire asset (or use the field specified on the asset)
                 </p>
                 <ul class="flex flex-col gap-1">
-                    {{range $subclip := .SubclipNames}}
+                    {{range $element := .Subclips}}
+                    {{$subclip := $element.Title}}
+                    {{$start := $element.FormattedStartTime}}
                     <li class="flex flex-row gap-1">
                         <input type="checkbox" class="form-checkbox h-4 w-4 my-auto" id="{{$subclip}}" name="subclips[]"
                             value="{{$subclip}}" />
                         <label for="{{$subclip}}" class="my-auto">
-                            {{$subclip}}
+                            {{$start}} - {{$subclip}}
                         </label>
                     </li>
                     {{end}}
@@ -71,8 +73,7 @@
                 <div class="flex">
                     <h3 class="font-bold">Language Exports</h3>
                     <div class="ml-auto flex gap-1">
-                        {{$buttonClasses := "bg-green-200 cursor-pointer rounded-md p-0.5 px-1 text-sm border
-                        border-gray-400 hover:bg-gray-200 transition"}}
+                        {{$buttonClasses := "bg-green-200 cursor-pointer rounded-md p-0.5 px-1 text-sm border border-gray-400 hover:bg-gray-200 transition"}}
                         <div id="selected-languages-count">
                             0 selected
                         </div>

@@ -9,7 +9,6 @@ import (
 	"sort"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
-	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	"github.com/bcc-code/bcc-media-platform/backend/utils"
 	"github.com/google/uuid"
 	"github.com/samber/lo"
@@ -107,9 +106,15 @@ type TriggerGETParams struct {
 	SelectedLanguages       []string
 	SelectedAudioSource     string
 	AudioSources            []string
-	SubclipNames            []string
+	Subclips                []Subclip
 	Resolutions             []vsapi.Resolution
 	Ratio                   string
+}
+
+type Subclip struct {
+	Title              string
+	StartSeconds       float64
+	FormattedStartTime string
 }
 
 func ratio(w, h int) string {
@@ -157,16 +162,23 @@ func (s *TriggerServer) vxExportGET(ctx *gin.Context) {
 		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	chapters, err := vidispine.GetTimedMetadataChapters(s.vidispine, exportData.Clips)
+	rawChapters, err := vidispine.GetChapterMetaForClips(s.vidispine, exportData.Clips)
 	if err != nil {
 		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	sort.Slice(chapters, func(i, j int) bool {
-		return chapters[i].Timestamp < chapters[j].Timestamp
+
+	subclips := lo.Map(rawChapters, func(c *vidispine.GetChapterMetaResult, _ int) Subclip {
+		ts, _ := vscommon.TCToSeconds(c.Meta.Terse["title"][0].Start)
+		return Subclip{
+			Title:              c.Meta.Get(vscommon.FieldTitle, ""),
+			StartSeconds:       ts,
+			FormattedStartTime: fmt.Sprintf("%02d:%02d:%02d", int(ts/3600), int(ts/60)%60, int(ts)%60),
+		}
 	})
-	subclipNames := lo.Map(chapters, func(c asset.TimedMetadata, _ int) string {
-		return c.Title
+
+	sort.Slice(subclips, func(i, j int) bool {
+		return subclips[i].StartSeconds < subclips[j].StartSeconds
 	})
 
 	var ratioString string
@@ -182,7 +194,7 @@ func (s *TriggerServer) vxExportGET(ctx *gin.Context) {
 		Languages:               s.languages,
 		SelectedLanguages:       selectedLanguages,
 		SelectedAudioSource:     selectedAudioSource,
-		SubclipNames:            subclipNames,
+		Subclips:                subclips,
 		AudioSources:            vidispine.ExportAudioSources.Values(),
 		AssetExportDestinations: export.AssetExportDestinations.Values(),
 		Resolutions:             resolutions,
