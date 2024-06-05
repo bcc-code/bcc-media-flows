@@ -26,10 +26,6 @@ func (s *UnitTestEncoding) AfterTest(suiteName, testName string) {
 	s.env.AssertExpectations(s.T())
 }
 
-//func NowTestWF(ctx workflow.Context) (time.Time, error) {
-//return Now(ctx), nil
-//}
-
 type testStruct struct {
 	Name  string `xml:"name" json:"name"`
 	Thing int    `xml:"thing" json:"thing"`
