@@ -19,12 +19,8 @@ func (c *Client) GetChapterMeta(itemVXID string, inTc, outTc float64) (map[strin
 
 	clips := metaResult.SplitByClips()
 	outClips := map[string]*MetadataResult{}
-	
-	for key, clip := range clips {
 
-		if clip.Get(vscommon.FieldExportAsChapter, "") != "export_as_chapter" {
-			continue
-		}
+	for key, clip := range clips {
 
 		for _, field := range clip.Terse {
 			for _, value := range field {
