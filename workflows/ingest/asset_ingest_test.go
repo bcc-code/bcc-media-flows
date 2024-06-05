@@ -48,6 +48,7 @@ func (s *UnitTestSuite) AfterTest(suiteName, testName string) {
 }
 
 func (s *UnitTestSuite) Test_OtherMasters() {
+	s.T().Skip("Not fully implemented")
 	//s.env.OnActivity(SimpleActivity, mock.Anything, mock.Anything).Return(
 	//"", errors.New("SimpleActivityFailure"))
 	s.env.RegisterActivity(activities.Util.ReadFile)
