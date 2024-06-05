@@ -9,6 +9,23 @@ import (
 	"github.com/bcc-code/bcc-media-flows/workflows/webhooks"
 )
 
+var TriggerableWorkflows = []any{
+	export.VXExport,
+	vb_export.VBExport,
+	webhooks.WebHook,
+	webhooks.BmmSimpleUpload,
+	miscworkflows.TranscodePreviewVX,
+	miscworkflows.TranscodePreviewFile,
+	miscworkflows.TranscribeFile,
+	miscworkflows.TranscribeVX,
+	miscworkflows.HandleMultitrackFile,
+	export.ExportTimedMetadata,
+	miscworkflows.ImportSubtitlesFromSubtrans,
+	miscworkflows.UpdateAssetRelations,
+	miscworkflows.NormalizeAudioLevelWorkflow,
+	scheduled.CleanupTemp,
+}
+
 var WorkerWorkflows = []any{
 	miscworkflows.TranscodePreviewVX,
 	miscworkflows.TranscodePreviewFile,

@@ -23,7 +23,7 @@ type WorkflowSchema struct {
 func getWorkflowSchemas(ctx *gin.Context) {
 	var schemas []WorkflowSchema
 
-	for _, wf := range workflows.WorkerWorkflows {
+	for _, wf := range workflows.TriggerableWorkflows {
 		typ := reflect.TypeOf(wf)
 		if typ.NumIn() > 1 {
 			name, _ := getFunctionName(wf)
@@ -78,8 +78,8 @@ func triggerDynamicHandler(ctx *gin.Context) {
 		return
 	}
 
-	allWorkflows := workflows.WorkerWorkflows
-	wf, found := lo.Find(allWorkflows, func(wf any) bool {
+	workflows := workflows.TriggerableWorkflows
+	wf, found := lo.Find(workflows, func(wf any) bool {
 		name, _ := getFunctionName(wf)
 		return name == workflowName
 	})
