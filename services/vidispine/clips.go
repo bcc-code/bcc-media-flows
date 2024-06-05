@@ -1,9 +1,11 @@
 package vidispine
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 )
 
 func SeqToClips(client Client, seq *vsapi.SequenceDocument) ([]*Clip, error) {
@@ -42,4 +44,102 @@ func SeqToClips(client Client, seq *vsapi.SequenceDocument) ([]*Clip, error) {
 	}
 
 	return out, nil
+}
+
+// ClipsFromMeta returns a list of clips based off a metadata result
+//
+// If `subclipTitle` is provided, it will return a single clip for that subclip.
+//
+// Expects `meta` to be the original metadata from client.GetMetadata(), not split by clips
+func ClipsFromMeta(client Client, vxID string, meta *vsapi.MetadataResult, subclipTitle string) ([]*Clip, error) {
+	isSequence := meta.Get(vscommon.FieldSequenceSize, "0") != "0"
+	if isSequence {
+		seq, err := client.GetSequence(vxID)
+		if err != nil {
+			return nil, err
+		}
+		return SeqToClips(client, seq)
+	}
+
+	clipsMeta := meta.SplitByClips()
+	originalClipMeta := clipsMeta[vsapi.OriginalClip]
+
+	var clips []*Clip
+	if subclipTitle != "" {
+		clip, err := getClipForSubclip(client, vxID, subclipTitle, originalClipMeta, clipsMeta)
+		if err != nil {
+			return nil, err
+		}
+		clips = append(clips, clip)
+	} else {
+		clip, err := getClipForAsset(client, vxID, originalClipMeta)
+		if err != nil {
+			return nil, err
+		}
+		clips = append(clips, clip)
+	}
+
+	return clips, nil
+}
+
+func getClipForAsset(
+	client Client,
+	itemVXID string,
+	meta *vsapi.MetadataResult,
+) (*Clip, error) {
+
+	shapes, err := client.GetShapes(itemVXID)
+	if err != nil {
+		return nil, err
+	}
+
+	shape := shapes.GetShape("original")
+	if shape == nil {
+		return nil, fmt.Errorf("no original shape found for item %s", itemVXID)
+	}
+
+	clip := Clip{
+		VXID:      itemVXID,
+		VideoFile: shape.GetPath(),
+	}
+
+	in, out, err := meta.GetInOut("")
+	if err != nil {
+		return nil, err
+	}
+	clip.InSeconds = in
+	clip.OutSeconds = out
+	return &clip, nil
+
+}
+
+func getClipForSubclip(
+	client Client,
+	itemVXID string,
+	subclipName string,
+	meta *vsapi.MetadataResult,
+	clipsMeta map[string]*vsapi.MetadataResult,
+) (*Clip, error) {
+	shapes, err := client.GetShapes(itemVXID)
+	if err != nil {
+		return nil, err
+	}
+
+	shape := shapes.GetShape("original")
+	if shape == nil {
+		return nil, fmt.Errorf("no original shape found for item %s", itemVXID)
+	}
+
+	subclipMeta, ok := clipsMeta[subclipName]
+	if !ok {
+		return nil, errors.New("Subclip " + subclipName + " does not exist")
+	}
+
+	in, out, err := subclipMeta.GetInOut(meta.Get(vscommon.FieldStartTC, "0@PAL"))
+	return &Clip{
+		VXID:       itemVXID,
+		VideoFile:  shape.GetPath(),
+		InSeconds:  in,
+		OutSeconds: out,
+	}, err
 }

@@ -7,6 +7,11 @@ import (
 
 type Client interface {
 	GetMetadata(vsID string) (*vsapi.MetadataResult, error)
+	// GetChapterMeta returns all "Subclips" for a given itemVXID, in the given timecode range.
+	//
+	// The timecodes are in seconds.
+	//
+	// The result is a map with the key being the clip key (See SplitByClips) and the value being the metadata result.
 	GetChapterMeta(itemVXID string, inTc, outTc float64) (map[string]*vsapi.MetadataResult, error)
 	GetShapes(itemVXID string) (*vsapi.ShapeResult, error)
 	GetSequence(itemVXID string) (*vsapi.SequenceDocument, error)
@@ -15,8 +20,8 @@ type Client interface {
 	AddShapeToItem(shapeTag, itemVXID, fileVXID string) (string, error)
 	DeleteShape(assetID, shapeID string) error
 	AddSidecarToItem(itemVXID, filePath, language string) (string, error)
-	SetItemMetadataField(itemVXID, group, field, value string) error
-	AddToItemMetadataField(itemID, group, key, value string) error
+	SetItemMetadataField(params vsapi.ItemMetadataFieldParams) error
+	AddToItemMetadataField(params vsapi.ItemMetadataFieldParams) error
 	CreatePlaceholder(ingestType vsapi.PlaceholderType, title string) (string, error)
 	CreateThumbnails(assetID string, width, height int) (string, error)
 	GetJob(jobID string) (*vsapi.JobDocument, error)

@@ -2,6 +2,7 @@ package paths
 
 import (
 	"encoding/json"
+	"go.temporal.io/sdk/temporal"
 	"path/filepath"
 	"strings"
 
@@ -21,7 +22,8 @@ func GetSiblingFolder(path, folder string) (string, error) {
 
 func FixFilename(path string) string {
 	filename := filepath.Base(path)
-	newFilename := strings.Replace(filepath.Clean(filename), " ", "_", -1)
+	newFilename := strings.ReplaceAll(filepath.Clean(filename), " ", "_")
+	newFilename = strings.ReplaceAll(newFilename, ",", "_")
 	newPath := filepath.Join(filepath.Dir(path), newFilename)
 	return newPath
 }
@@ -207,7 +209,7 @@ var drivePrefixes = map[Drive]prefix{
 	AssetIngestDrive:  {"/dev/null/", "/dev/null/", "s3prod:vod-asset-ingest-prod/"},
 	BrunstadDrive:     {"/dev/null/", "/dev/null/", "brunstad:/"},
 	LucidLinkDrive:    {"/dev/null/", "/dev/null/", "lucid:lucidlink/"},
-	TestDrive:         {"./testdata/", "./testdata/", "/dev/null/"},
+	TestDrive:         {"./testdata/", "testdata/", "/dev/null/"},
 }
 
 // Parse parses a path string into a Path struct
@@ -228,7 +230,12 @@ func Parse(path string) (Path, error) {
 			}
 		}
 	}
-	return Path{}, merry.Wrap(ErrPathNotValid, merry.WithUserMessagef("path %s is not valid", path))
+	return Path{},
+		temporal.NewNonRetryableApplicationError(
+			"path is invalid", "invalid_path",
+			merry.Wrap(ErrPathNotValid),
+			path,
+		)
 }
 
 func MustParse(path string) Path {

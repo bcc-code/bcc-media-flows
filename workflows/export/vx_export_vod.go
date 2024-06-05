@@ -32,8 +32,8 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	// We start chapter export and pick the results up later when needed
 	var chapterDataWF workflow.Future
 	if params.ParentParams.WithChapters {
-		chapterDataWF = wfutils.Execute(ctx, activities.Vidispine.GetChapterDataActivity, vsactivity.GetChapterDataParams{
-			ExportData: &params.ExportData,
+		chapterDataWF = wfutils.Execute(ctx, activities.Vidispine.GetTimedMetadataChaptersActivity, vsactivity.GetTimedMetadataChaptersParams{
+			Clips: params.ExportData.Clips,
 		}).Future
 	}
 
@@ -134,20 +134,10 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, err
 	}
 
-	var result *VXExportResult
-	err = workflow.SideEffect(ctx, func(ctx workflow.Context) any {
-		err, out := service.setMetadataAndPublishToVOD(
-			ctx,
-			chapterDataWF,
-			params.OutputDir)
-		if err != nil {
-			panic(err)
-		}
-
-		return out
-	}).Get(result)
-
-	return result, err
+	return service.setMetadataAndPublishToVOD(
+		ctx,
+		chapterDataWF,
+		params.OutputDir)
 }
 
 func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, tempDir paths.Path, normalizeAudio, ignoreSilence bool) (map[string]paths.Path, error) {

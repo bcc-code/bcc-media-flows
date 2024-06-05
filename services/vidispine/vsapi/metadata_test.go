@@ -1,7 +1,6 @@
 package vsapi
 
 import (
-	"bytes"
 	"encoding/json"
 	"os"
 	"testing"
@@ -61,17 +60,12 @@ func Test_GetInOut_SubclipErr(t *testing.T) {
 }
 
 func Test_GenerateMetUpdateXML(t *testing.T) {
-	buf := new(bytes.Buffer)
-	xmlSetMetadataPlaceholderTmpl.Execute(buf, struct {
-		Group string
-		Key   string
-		Value string
-		Add   bool
-	}{
-		"System",
-		"portal_mf442906",
-		"VX-480938",
-		false,
+	buf, _ := createSetItemMetadataFieldXml(xmlSetItemMetadataFieldParams{
+		StartTC: "-INF",
+		EndTC:   "+INF",
+		GroupID: "System",
+		Key:     "portal_mf442906",
+		Value:   "VX-480938",
 	})
 
 	print(buf.String())
@@ -90,6 +84,31 @@ func Test_GenerateMetUpdateXML(t *testing.T) {
 		</field>
 		
 		</group>
+		
+	</timespan>
+</MetadataDocument>`
+	assert.Equal(t, expected, buf.String())
+}
+
+func Test_GenerateMetUpdateWithTCXML(t *testing.T) {
+	buf, _ := createSetItemMetadataFieldXml(xmlSetItemMetadataFieldParams{
+		StartTC: "arbitraryValue1",
+		EndTC:   "arbitraryValue2",
+		Key:     "portal_mf442906",
+		Value:   "VX-480938",
+	})
+
+	print(buf.String())
+	expected := `<?xml version="1.0"?>
+<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine">
+	<timespan start="arbitraryValue1" end="arbitraryValue2">
+		
+		<field>
+			<name>portal_mf442906</name>
+			
+				<value>VX-480938</value>
+			
+		</field>
 		
 	</timespan>
 </MetadataDocument>`

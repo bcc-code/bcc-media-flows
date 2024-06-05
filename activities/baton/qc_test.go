@@ -20,6 +20,8 @@ func (s *UnitTestSuite) SetupTest() {
 }
 
 func (s *UnitTestSuite) TestQC() {
+	// This test currently takes about 6 minutes and can only run locally in Moss.
+	s.T().Skip("Too long")
 	s.env.RegisterActivity(QC)
 	s.env.ExecuteActivity(QC, QCParams{
 		Path: paths.Path{

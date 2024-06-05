@@ -11,7 +11,7 @@ func PublishEvent[T any](ctx workflow.Context, eventName string, data T) error {
 	event := cloudevents.NewEvent()
 	event.SetID(uuid.NewString())
 	event.SetSpecVersion(cloudevents.VersionV1)
-	event.SetSource("bccm-flows")
+	event.SetSource("bcc-media-flows")
 	event.SetType(eventName)
 	err := event.SetData(
 		cloudevents.ApplicationJSON,

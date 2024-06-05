@@ -1,6 +1,8 @@
 package activities
 
 import (
+	"os"
+	"path"
 	"testing"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -21,11 +23,22 @@ func (s *UnitTestSuite) SetupTest() {
 }
 
 func (s *UnitTestSuite) TestStandardizeFileName() {
-	p, err := paths.Parse("/mnt/filecatalyst/a  b /c/d e g.txt")
 	t := s.T()
 
-	ua := UtilActivities{}
+	pathString := "./testdata/generated/a/b sdwef ,,_ /ss _.t xt.FFF"
+	fileString := "asdk lkawd 823 ,, .xYz"
+	err := os.MkdirAll(pathString, os.ModePerm)
 	assert.NoError(t, err)
+
+	// path.Join normalizes the path
+	fullPath := "./" + path.Join(pathString, fileString)
+	err = os.WriteFile(fullPath, []byte("test"), os.ModePerm)
+	assert.NoError(t, err)
+
+	p, err := paths.Parse(fullPath)
+	assert.NoError(t, err)
+
+	ua := UtilActivities{}
 
 	s.env.RegisterActivity(ua.StandardizeFileName)
 	res, err := s.env.ExecuteActivity(ua.StandardizeFileName, FileInput{Path: p})
@@ -33,11 +46,11 @@ func (s *UnitTestSuite) TestStandardizeFileName() {
 	assert.NoError(t, err)
 	assert.NotNil(t, res)
 
-	p2 := &paths.Path{}
-	res.Get(p2)
+	res2 := &FileResult{}
+	res.Get(res2)
 
 	assert.NoError(t, err)
-	assert.Equal(t, "/a/b/c/d_e_g.txt", p2.Path)
+	assert.Equal(t, pathString+"/asdk_lkawd_823____.xYz", "./"+res2.Path.Local())
 }
 
 func TestUnitTestSuite(t *testing.T) {

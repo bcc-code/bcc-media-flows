@@ -58,33 +58,28 @@ func (a Activities) GetVXMetadata(_ context.Context, params VXOnlyParam) (*vsapi
 	return vsClient.GetMetadata(params.VXID)
 }
 
-type SetVXMetadataFieldParams struct {
-	VXID  string
-	Key   string
-	Value string
-	Group string
-}
+type VXMetadataFieldParams = vsapi.ItemMetadataFieldParams
 
 type SetVXMetadataFieldResult struct {
 }
 
-func (a Activities) SetVXMetadataFieldActivity(ctx context.Context, params SetVXMetadataFieldParams) (*SetVXMetadataFieldResult, error) {
+func (a Activities) SetVXMetadataFieldActivity(ctx context.Context, params vsapi.ItemMetadataFieldParams) (*SetVXMetadataFieldResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting SetVXMetadataFieldActivity")
 
 	vsClient := GetClient()
 
-	err := vsClient.SetItemMetadataField(params.VXID, params.Group, params.Key, params.Value)
+	err := vsClient.SetItemMetadataField(params)
 	return nil, err
 }
 
-func (a Activities) AddVXMetadataFieldValueActivity(ctx context.Context, params SetVXMetadataFieldParams) (*SetVXMetadataFieldResult, error) {
+func (a Activities) AddToVXMetadataFieldActivity(ctx context.Context, params vsapi.ItemMetadataFieldParams) (*SetVXMetadataFieldResult, error) {
 	log := activity.GetLogger(ctx)
-	log.Info("Starting AddVXMetadataFieldValueActivity")
+	log.Info("Starting SetVXMetadataFieldActivity")
 
 	vsClient := GetClient()
 
-	err := vsClient.AddToItemMetadataField(params.VXID, params.Group, params.Key, params.Value)
+	err := vsClient.AddToItemMetadataField(params)
 	return nil, err
 }
 
@@ -157,7 +152,13 @@ func (a Activities) UpdateAssetRelations(ctx context.Context, params VXOnlyParam
 		title = title[len(title)-3:]
 
 		if l, ok := bccmflows.LanguagesByISO[strings.ToLower(title)]; ok {
-			err := vsClient.SetItemMetadataField(vxID, "System", l.RelatedMBFieldID, other)
+			err := vsClient.SetItemMetadataField(
+				vsapi.ItemMetadataFieldParams{
+					ItemID:  vxID,
+					GroupID: "System",
+					Key:     l.RelatedMBFieldID,
+					Value:   other,
+				})
 			if err != nil {
 				return nil, err
 			}

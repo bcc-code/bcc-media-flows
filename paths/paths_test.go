@@ -65,3 +65,10 @@ func Test_FileCatalyst(t *testing.T) {
 
 	assert.Equal(t, "/mnt/filecatalyst/ingestgrow/MDTES01_MU1.mxf", path.Local())
 }
+
+func Test_InvalidPath(t *testing.T) {
+	pathString := "/an/invalid/path"
+	pathRes, err := Parse(pathString)
+	assert.Empty(t, pathRes)
+	assert.Error(t, err)
+}

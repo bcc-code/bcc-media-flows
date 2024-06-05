@@ -3,38 +3,14 @@ package transcode
 import (
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
+	"github.com/bcc-code/bcc-media-flows/utils/testutils"
 	"github.com/stretchr/testify/assert"
-	"os"
-	"os/exec"
 	"testing"
 )
 
-func GenerateTestFile() paths.Path {
-	outFile := paths.MustParse("./testdata/generated/test_tone_stereo.wav")
-	os.MkdirAll(outFile.Dir().Local(), 0755)
-
-	args := []string{
-		"-f", "lavfi",
-		"-i", "sine=frequency=300:duration=10:sample_rate=48000",
-		"-f", "lavfi",
-		"-i", "sine=frequency=1000:duration=10:sample_rate=48000",
-		"-filter_complex", "[0:a][1:a]amerge=inputs=2[a]",
-		"-map", "[a]",
-		"-c:a", "pcm_s16le",
-		outFile.Local(),
-	}
-
-	cmd := exec.Command("ffmpeg", args...)
-	err := cmd.Run()
-	if err != nil {
-		panic(err)
-	}
-
-	return outFile
-}
-
 func Test_PrependSilence(t *testing.T) {
-	input := GenerateTestFile()
+	input := paths.MustParse("./testdata/generated/stereo_test.wav")
+	testutils.GenerateStreoAudioFile(input, 10)
 	output := paths.MustParse("./testdata/generated/test_tone_stereo_prefixed.wav")
 
 	cb, _ := printProgress()
