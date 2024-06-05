@@ -153,6 +153,8 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 
 		registerActivitiesInStruct(w, activities.Vidispine)
 
+		registerActivitiesInStruct(w, activities.Platform)
+
 		registerActivitiesInStruct(w, activities.Video)
 
 		registerActivitiesInStruct(w, activities.Audio)
