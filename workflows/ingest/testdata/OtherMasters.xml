@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Metadata>
+    <jobPropertyList>
+        <jobID>6003</jobID>
+        <userName>USERNAME</userName>
+        <companyName></companyName>
+        <sourceIP>0.0.0.0</sourceIP>
+        <userEmail>john.doe@exmple.com</userEmail>
+        <ingestStation>filecatalyst</ingestStation>
+        <uploadBitRate>60520 kbps</uploadBitRate>
+        <uploadTime>01:17:14</uploadTime>
+        <ftpSiteId>IID</ftpSiteId>
+        <fileCount>1</fileCount>
+        <orderForm>Other_Masters</orderForm>
+        <submissionDate>Tue Jun 04 12:44:46 CEST 2024</submissionDate>
+        <lastDateChanged>Tue Jun 04 11:27:31 CEST 2024</lastDateChanged>
+        <status>pending</status>
+        <programid>TEST - Testing</programid>
+        <received_filename>S01_E05_FULL</received_filename>
+        <promo_type>MAS</promo_type>
+        <language>ENG</language>
+        <programtitle>Testing the test</programtitle>
+        <episodedescription></episodedescription>
+        <Tags>test, testing, tester</Tags>
+        <PersonsAppearing></PersonsAppearing>
+        <sender_email>jane.doe@example.com</sender_email>
+        <direct_playback>No</direct_playback>
+        <asset_type>MAS</asset_type>
+    </jobPropertyList>
+    <fileList>
+        <file>
+            <FileName>FILE.mov</FileName>
+            <isFolder>false</isFolder>
+            <fileSize>35898615306</fileSize>
+            <filePath>/files/6003</filePath>
+        </file>
+    </fileList>
+    <jobHistoryLog>
+        <jobLog>
+            <logId>0</logId>
+            <jobLogDate>Tue Jun 04 12:44:46 CEST 2024</jobLogDate>
+            <jobLogDescription>status changed to 'submitted'</jobLogDescription>
+            <jobLogBy></jobLogBy>
+        </jobLog>
+        <jobLog>
+            <logId>1</logId>
+            <jobLogDate>Tue Jun 04 12:44:46 CEST 2024</jobLogDate>
+            <jobLogDescription>Job is being submitted. File transfer complete, files uploaded, by fcwebta from 0.1.1.1</jobLogDescription>
+            <jobLogBy>userson</jobLogBy>
+        </jobLog>
+        <jobLog>
+            <logId>2</logId>
+            <jobLogDate>Tue Jun 04 11:27:54 CEST 2024</jobLogDate>
+            <jobLogDescription>TA for upload started </jobLogDescription>
+            <jobLogBy>0.0.0.0</jobLogBy>
+        </jobLog>
+        <jobLog>
+            <logId>3</logId>
+            <jobLogDate>Tue Jun 04 11:27:32 CEST 2024</jobLogDate>
+            <jobLogDescription>uploading files via TheThing</jobLogDescription>
+            <jobLogBy>userson</jobLogBy>
+        </jobLog>
+    </jobHistoryLog>
+</Metadata>
