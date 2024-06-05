@@ -121,16 +121,6 @@ func DeletePathRecursively(ctx workflow.Context, path paths.Path) error {
 	}).Get(ctx, nil)
 }
 
-func Now(ctx workflow.Context) time.Time {
-	se := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
-		return time.Now()
-	})
-
-	var date time.Time
-	se.Get(date)
-	return date
-}
-
 func GetWorkflowLucidLinkOutputFolder(ctx workflow.Context, root string) paths.Path {
 	info := workflow.GetInfo(ctx)
 	date := Now(ctx)
