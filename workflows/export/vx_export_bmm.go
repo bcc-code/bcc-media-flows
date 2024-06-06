@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
+	platform_activities "github.com/bcc-code/bcc-media-flows/activities/platform"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
-	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/common"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
@@ -156,7 +156,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	}
 
 	var chapters []asset.TimedMetadata
-	err = wfutils.Execute(ctx, activities.Vidispine.GetTimedMetadataChaptersActivity, vsactivity.GetTimedMetadataChaptersParams{
+	err = wfutils.Execute(ctx, activities.Platform.GetTimedMetadataChaptersActivity, platform_activities.GetTimedMetadataChaptersParams{
 		Clips: params.ExportData.Clips,
 	}).Get(ctx, &chapters)
 	if err != nil {

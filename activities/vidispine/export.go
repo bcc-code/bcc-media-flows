@@ -6,7 +6,6 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
-	"github.com/bcc-code/bcc-media-platform/backend/asset"
 
 	"go.temporal.io/sdk/activity"
 )
@@ -36,20 +35,6 @@ func (a Activities) GetExportDataActivity(ctx context.Context, params GetExportD
 	}
 
 	return data, nil
-}
-
-type GetTimedMetadataChaptersParams struct {
-	Clips []*vidispine.Clip
-}
-
-func (a Activities) GetTimedMetadataChaptersActivity(ctx context.Context, params GetTimedMetadataChaptersParams) ([]asset.TimedMetadata, error) {
-	log := activity.GetLogger(ctx)
-	activity.RecordHeartbeat(ctx, "GetTimedMetadataChaptersActivity")
-	log.Info("Starting GetTimedMetadataChaptersActivity")
-
-	client := GetClient()
-
-	return vidispine.GetTimedMetadataChapters(client, params.Clips)
 }
 
 func (a Activities) GetRelatedAudioFiles(ctx context.Context, vxID string) (map[string]paths.Path, error) {

@@ -5,11 +5,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	platform_activities "github.com/bcc-code/bcc-media-flows/activities/platform"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 
 	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/activities"
-	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/common/smil"
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -32,7 +32,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	// We start chapter export and pick the results up later when needed
 	var chapterDataWF workflow.Future
 	if params.ParentParams.WithChapters {
-		chapterDataWF = wfutils.Execute(ctx, activities.Vidispine.GetTimedMetadataChaptersActivity, vsactivity.GetTimedMetadataChaptersParams{
+		chapterDataWF = wfutils.Execute(ctx, activities.Platform.GetTimedMetadataChaptersActivity, platform_activities.GetTimedMetadataChaptersParams{
 			Clips: params.ExportData.Clips,
 		}).Future
 	}
