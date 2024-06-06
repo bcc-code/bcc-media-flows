@@ -5,6 +5,7 @@ import (
 	"runtime"
 	"strings"
 
+	platform_activities "github.com/bcc-code/bcc-media-flows/activities/platform"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/samber/lo"
@@ -36,6 +37,8 @@ type LiveActivities struct{}
 var Live = LiveActivities{}
 
 var Vidispine = vsactivity.Vidispine
+
+var Platform = platform_activities.PlatformActivities
 
 func getFunctionName(i any) string {
 	if fullName, ok := i.(string); ok {

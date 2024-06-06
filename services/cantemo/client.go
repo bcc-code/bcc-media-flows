@@ -126,7 +126,7 @@ type LookupChoice struct {
 // GetLookupChoices will return all choices for a given field
 //
 // The field probably needs to be a lookup field (field_type: "lookup")
-func (c *Client) GetLookupChoices(group, field string) ([]LookupChoice, error) {
+func (c *Client) GetLookupChoices(group, field string) (map[string]string, error) {
 	type LookupChoicesResponse struct {
 		Choices          []LookupChoice `json:"choices"`
 		FieldName        string         `json:"field_name"`
@@ -146,9 +146,14 @@ func (c *Client) GetLookupChoices(group, field string) ([]LookupChoice, error) {
 		return nil, nil
 	}
 
-	if data.MoreChoicesExist {
-		return data.Choices, fmt.Errorf("more choices exist for field %s. Returning error since this is a situation we didnt expect to happen", field)
+	choices := make(map[string]string)
+	for _, choice := range data.Choices {
+		choices[choice.Key] = choice.Value
 	}
 
-	return data.Choices, nil
+	if data.MoreChoicesExist {
+		return choices, fmt.Errorf("more choices exist for field %s. Returning error since this is a situation we didnt expect to happen", field)
+	}
+
+	return choices, nil
 }

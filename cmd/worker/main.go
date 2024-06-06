@@ -153,6 +153,8 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 
 		registerActivitiesInStruct(w, activities.Vidispine)
 
+		registerActivitiesInStruct(w, activities.Platform)
+
 		registerActivitiesInStruct(w, activities.Video)
 
 		registerActivitiesInStruct(w, activities.Audio)
@@ -170,6 +172,8 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		}
 
 		registerActivitiesInStruct(w, activities.Vidispine)
+
+		registerActivitiesInStruct(w, activities.Platform)
 
 		for _, wf := range workerWorkflows {
 			w.RegisterWorkflow(wf)

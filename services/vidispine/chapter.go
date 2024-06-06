@@ -4,10 +4,6 @@ import (
 	"fmt"
 	"math"
 	"slices"
-	"strings"
-
-	"github.com/bcc-code/bcc-media-platform/backend/asset"
-	pcommon "github.com/bcc-code/bcc-media-platform/backend/common"
 
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
@@ -77,65 +73,6 @@ func GetChapterMetaForClips(client Client, clips []*Clip) ([]*GetChapterMetaResu
 		return int(a.OriginalStart - b.OriginalStart)
 	})
 	return out, nil
-}
-
-func GetTimedMetadataChapters(client Client, clips []*Clip) ([]asset.TimedMetadata, error) {
-	vsChapters, err := GetChapterMetaForClips(client, clips)
-	if err != nil {
-		return nil, err
-	}
-
-	var chapters []asset.TimedMetadata
-	for _, data := range vsChapters {
-		chapter, keep := metaToChapter(data.Meta)
-		if !keep {
-			continue
-		}
-		if chapter.Timestamp == 0 {
-			chapter.Timestamp = data.OriginalStart
-		}
-		chapters = append(chapters, chapter)
-	}
-
-	return chapters, nil
-}
-
-func metaToChapter(meta *vsapi.MetadataResult) (asset.TimedMetadata, bool) {
-	out := asset.TimedMetadata{}
-
-	out.Label = meta.Get(vscommon.FieldTitle, "")
-	out.Title = meta.Get(vscommon.FieldTitle, "")
-	start, _ := vscommon.TCToSeconds(meta.Terse["title"][0].Start)
-	out.Timestamp = start
-
-	subclipTypes := meta.GetArray(vscommon.FieldSubclipType)
-	if len(subclipTypes) == 0 {
-		return out, false
-	}
-	if lo.Contains(chapterTypesToFilterOut, subclipTypes[0]) {
-		return out, false
-	}
-	subclipType, chapterType := findBestChapterType(subclipTypes)
-	out.ChapterType = chapterType.Value
-
-	out.Persons = lo.Filter(meta.GetArray(vscommon.FieldPersonsAppearing), func(p string, _ int) bool { return p != "" })
-
-	if out.ChapterType == pcommon.ChapterTypeSong.Value || out.ChapterType == pcommon.ChapterTypeSingAlong.Value {
-		match := SongExtract.FindStringSubmatch(strings.ToUpper(out.Label))
-		if len(match) == 3 {
-			out.SongCollection = match[1]
-			out.SongNumber = match[2]
-		}
-	}
-
-	if out.ChapterType == pcommon.ChapterTypeOther.Value {
-		out.Title = subclipType
-	}
-	if strings.Contains(out.Label, " - ") {
-		out.Title = strings.Split(out.Label, " - ")[0]
-	}
-
-	return out, true
 }
 
 func isOverlapping(terseA, terseB map[string][]*vsapi.MetadataField) bool {

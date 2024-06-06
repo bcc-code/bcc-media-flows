@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
+	platform_activities "github.com/bcc-code/bcc-media-flows/activities/platform"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
@@ -44,7 +45,7 @@ func ExportTimedMetadata(ctx workflow.Context, params ExportTimedMetadataParams)
 		return nil, err
 	}
 
-	timedMetadata, err := wfutils.Execute(ctx, activities.Vidispine.GetTimedMetadataChaptersActivity, vsactivity.GetTimedMetadataChaptersParams{
+	timedMetadata, err := wfutils.Execute(ctx, activities.Platform.GetTimedMetadataChaptersActivity, platform_activities.GetTimedMetadataChaptersParams{
 		Clips: exportData.Clips,
 	}).Result(ctx)
 	if err != nil {
