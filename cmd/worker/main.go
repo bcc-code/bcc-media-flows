@@ -11,21 +11,15 @@ import (
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
+	"github.com/bcc-code/bcc-media-flows/workflows"
 
 	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
 	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
 	"github.com/bcc-code/bcc-media-flows/environment"
-	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
-	"github.com/bcc-code/bcc-media-flows/workflows/scheduled"
-	"github.com/bcc-code/bcc-media-flows/workflows/vb_export"
-	"github.com/bcc-code/bcc-media-flows/workflows/webhooks"
 	"github.com/teamwork/reload"
 	"go.temporal.io/sdk/activity"
 
-	"github.com/bcc-code/bcc-media-flows/workflows/export"
-
 	"github.com/bcc-code/bcc-media-flows/activities"
-	"github.com/bcc-code/bcc-media-flows/workflows"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
@@ -36,44 +30,6 @@ import (
 var utilActivities = []any{
 	batonactivities.QC,
 	cantemo.AddRelation,
-}
-
-var workerWorkflows = []any{
-	workflows.TranscodePreviewVX,
-	workflows.TranscodePreviewFile,
-	workflows.TranscribeFile,
-	workflows.TranscribeVX,
-	workflows.WatchFolderTranscode,
-	workflows.HandleMultitrackFile,
-	webhooks.WebHook,
-	webhooks.BmmSimpleUpload,
-	export.VXExport,
-	export.VXExportToVOD,
-	export.VXExportToPlayout,
-	export.MergeExportData,
-	export.VXExportToBMM,
-	export.ExportTimedMetadata,
-	workflows.ExecuteFFmpeg,
-	workflows.ImportSubtitlesFromSubtrans,
-	workflows.UpdateAssetRelations,
-	ingestworkflows.Asset,
-	ingestworkflows.RawMaterial,
-	ingestworkflows.RawMaterialForm,
-	ingestworkflows.Masters,
-	ingestworkflows.Incremental,
-	ingestworkflows.MoveUploadedFiles,
-	ingestworkflows.ImportAudioFileFromReaper,
-	ingestworkflows.ExtractAudioFromMU1MU2,
-	ingestworkflows.IngestSyncFix,
-	ingestworkflows.Multitrack,
-	workflows.NormalizeAudioLevelWorkflow,
-	vb_export.VBExport,
-	vb_export.VBExportToAbekas,
-	vb_export.VBExportToBStage,
-	vb_export.VBExportToGfx,
-	vb_export.VBExportToHippo,
-	vb_export.VBExportToDubbing,
-	scheduled.CleanupTemp,
 }
 
 // registerActivitiesInStruct registers all methods in a struct as activities
@@ -159,7 +115,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 
 		registerActivitiesInStruct(w, activities.Audio)
 
-		for _, wf := range workerWorkflows {
+		for _, wf := range workflows.WorkerWorkflows {
 			w.RegisterWorkflow(wf)
 		}
 	case environment.QueueLowPriority:
@@ -171,11 +127,10 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 			w.RegisterActivity(a)
 		}
 
+		registerActivitiesInStruct(w, activities.Platform)
 		registerActivitiesInStruct(w, activities.Vidispine)
 
-		registerActivitiesInStruct(w, activities.Platform)
-
-		for _, wf := range workerWorkflows {
+		for _, wf := range workflows.WorkerWorkflows {
 			w.RegisterWorkflow(wf)
 		}
 	case environment.QueueTranscode:

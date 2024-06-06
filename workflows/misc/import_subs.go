@@ -1,9 +1,10 @@
-package workflows
+package miscworkflows
 
 import (
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"strings"
+
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"

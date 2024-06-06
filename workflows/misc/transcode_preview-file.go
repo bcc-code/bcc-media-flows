@@ -1,4 +1,4 @@
-package workflows
+package miscworkflows
 
 import (
 	"github.com/bcc-code/bcc-media-flows/activities"

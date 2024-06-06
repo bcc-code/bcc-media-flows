@@ -2,11 +2,13 @@ package ingestworkflows
 
 import (
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
+	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
@@ -18,7 +20,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"github.com/bcc-code/bcc-media-flows/workflows"
 	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/workflow"
 )
@@ -147,7 +148,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	asyncCtx := workflow.WithChildOptions(ctx, parentAbandonOptions)
 
 	// Trigger transcribe and create previews but don't wait for them to finish
-	workflow.ExecuteChildWorkflow(asyncCtx, workflows.TranscribeVX, workflows.TranscribeVXInput{
+	workflow.ExecuteChildWorkflow(asyncCtx, miscworkflows.TranscribeVX, miscworkflows.TranscribeVXInput{
 		VXID:     result.AssetID,
 		Language: "no",
 	})

@@ -6,18 +6,20 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"reflect"
+	"runtime"
 	"strconv"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
+	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"github.com/bcc-code/bcc-media-flows/workflows/webhooks"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin/binding"
 
 	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/workflows/export"
-
-	"github.com/bcc-code/bcc-media-flows/workflows"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -78,7 +80,7 @@ func triggerHandler(ctx *gin.Context) {
 			ctx.Status(http.StatusBadRequest)
 			return
 		}
-		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.TranscribeVX, workflows.TranscribeVXInput{
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.TranscribeVX, miscworkflows.TranscribeVXInput{
 			Language: language,
 			VXID:     vxID,
 		})
@@ -91,7 +93,7 @@ func triggerHandler(ctx *gin.Context) {
 			ctx.Status(http.StatusBadRequest)
 			return
 		}
-		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.TranscribeFile, workflows.TranscribeFileInput{
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.TranscribeFile, miscworkflows.TranscribeFileInput{
 			Language:        language,
 			DestinationPath: getParamFromCtx(ctx, "destinationPath"),
 			File:            getParamFromCtx(ctx, "file"),
@@ -101,7 +103,7 @@ func triggerHandler(ctx *gin.Context) {
 			ctx.Status(http.StatusBadRequest)
 			return
 		}
-		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.TranscodePreviewVX, workflows.TranscodePreviewVXInput{
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.TranscodePreviewVX, miscworkflows.TranscodePreviewVXInput{
 			VXID: vxID,
 		})
 	case "TranscodePreviewFile":
@@ -110,7 +112,7 @@ func triggerHandler(ctx *gin.Context) {
 			ctx.Status(http.StatusBadRequest)
 			return
 		}
-		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.TranscodePreviewFile, workflows.TranscodePreviewFileInput{
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.TranscodePreviewFile, miscworkflows.TranscodePreviewFileInput{
 			FilePath: file,
 		})
 	case "ExportTimedMetadata":
@@ -168,7 +170,7 @@ func triggerHandler(ctx *gin.Context) {
 			ctx.Status(http.StatusBadRequest)
 			return
 		}
-		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.ExecuteFFmpeg, workflows.ExecuteFFmpegInput{
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.ExecuteFFmpeg, miscworkflows.ExecuteFFmpegInput{
 			Arguments: input.Arguments,
 		})
 	case "AssetIngest":
@@ -185,7 +187,7 @@ func triggerHandler(ctx *gin.Context) {
 			ctx.Status(http.StatusBadRequest)
 			return
 		}
-		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.ImportSubtitlesFromSubtrans, workflows.ImportSubtitlesFromSubtransInput{
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.ImportSubtitlesFromSubtrans, miscworkflows.ImportSubtitlesFromSubtransInput{
 			VXID: vxID,
 		})
 	case "UpdateAssetRelations":
@@ -193,7 +195,7 @@ func triggerHandler(ctx *gin.Context) {
 			ctx.Status(http.StatusBadRequest)
 			return
 		}
-		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.UpdateAssetRelations, workflows.UpdateAssetRelationsParams{
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.UpdateAssetRelations, miscworkflows.UpdateAssetRelationsParams{
 			AssetID: vxID,
 		})
 	case "NormalizeAudio":
@@ -203,7 +205,7 @@ func triggerHandler(ctx *gin.Context) {
 			return
 		}
 
-		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, workflows.NormalizeAudioLevelWorkflow, workflows.NormalizeAudioParams{
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.NormalizeAudioLevelWorkflow, miscworkflows.NormalizeAudioParams{
 			FilePath:              getParamFromCtx(ctx, "file"),
 			TargetLUFS:            target,
 			PerformOutputAnalysis: true,
@@ -244,6 +246,7 @@ var html string
 
 func main() {
 	r := gin.Default()
+	r.Use(cors.Default())
 
 	r.POST("/trigger/:job", triggerHandler)
 	r.GET("/trigger/:job", triggerHandler)
@@ -254,10 +257,34 @@ func main() {
 		ctx.Writer.WriteString(html)
 	})
 
+	r.GET("/schemas", getWorkflowSchemas)
+	r.POST("/trigger-dynamic", triggerDynamicHandler)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080" // Default port if not specified
 	}
 
 	_ = r.Run(":" + port)
+}
+
+func getFunctionName(i interface{}) (name string, isMethod bool) {
+	if fullName, ok := i.(string); ok {
+		return fullName, false
+	}
+	fullName := runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
+	// Full function name that has a struct pointer receiver has the following format
+	// <prefix>.(*<type>).<function>
+	isMethod = strings.ContainsAny(fullName, "*")
+	elements := strings.Split(fullName, ".")
+	shortName := elements[len(elements)-1]
+	// This allows to call activities by method pointer
+	// Compiler adds -fm suffix to a function name which has a receiver
+	// Note that this works even if struct pointer used to get the function is nil
+	// It is possible because nil receivers are allowed.
+	// For example:
+	// var a *Activities
+	// ExecuteActivity(ctx, a.Foo)
+	// will call this function which is going to return "Foo"
+	return strings.TrimSuffix(shortName, "-fm"), isMethod
 }
