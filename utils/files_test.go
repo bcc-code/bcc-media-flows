@@ -24,3 +24,7 @@ func TestIsDirEmpty(t *testing.T) {
 	assert.Error(t, err)
 	assert.False(t, empty)
 }
+
+func TestValidRawFilename(t *testing.T) {
+	assert.True(t, utils.ValidRawFilename("KJS80_INTERVJUFILM_BRØDRE_RCC_AUD_V02.wav"))
+}

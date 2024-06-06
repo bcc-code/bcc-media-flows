@@ -2,6 +2,7 @@ package notifications
 
 import (
 	_ "embed"
+	"fmt"
 	"html/template"
 )
 
@@ -23,7 +24,17 @@ func (t ImportFailed) RenderHTML() (string, error) {
 }
 
 func (t ImportFailed) RenderMarkdown() (string, error) {
-	return "", nil
+	md := "❌ Import failed\n" +
+		"Job ID: %s\n" +
+		"Error: %s\n" +
+		"Files:\n%s"
+
+	files := ""
+	for _, f := range t.Files {
+		files += fmt.Sprintf("* `%s`\n", f.Name)
+	}
+
+	return fmt.Sprintf(md, t.JobID, t.Error, files), nil
 }
 
 func (t ImportFailed) Subject() string {

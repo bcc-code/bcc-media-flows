@@ -145,9 +145,12 @@ func notifyImportFailed(ctx workflow.Context, recipients []string, jobID int, fi
 		}),
 	}
 
-	msg, _ := telegram.NewMessage(telegram.ChatOther, content)
-	wfutils.Execute(ctx, activities.Util.SendTelegramMessage, msg).Get(ctx, nil)
+	msg, err := telegram.NewMessage(telegram.ChatOther, content)
+	if err != nil {
+		return err
+	}
 
+	wfutils.Execute(ctx, activities.Util.SendTelegramMessage, msg).Get(ctx, nil)
 	email, _ := emails.NewMessage(content, recipients, nil, nil)
 	return wfutils.Execute(ctx, activities.Util.SendEmail, email).Get(ctx, nil)
 }

@@ -2,6 +2,7 @@ package notifications
 
 import (
 	_ "embed"
+	"fmt"
 	"html/template"
 )
 
@@ -22,7 +23,16 @@ func (t ImportCompleted) RenderHTML() (string, error) {
 }
 
 func (t ImportCompleted) RenderMarkdown() (string, error) {
-	return "", nil
+	md := "✅ Import completed\n" +
+		"Job ID: %s\n" +
+		"Files:\n%s"
+
+	files := ""
+	for _, f := range t.Files {
+		files += fmt.Sprintf("* `%s`\n", f.Name)
+	}
+
+	return fmt.Sprintf(md, t.JobID, files), nil
 }
 
 func (t ImportCompleted) Subject() string {
