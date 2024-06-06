@@ -26,7 +26,7 @@ func (t ImportFailed) RenderHTML() (string, error) {
 func (t ImportFailed) RenderMarkdown() (string, error) {
 	md := "❌ Import failed\n" +
 		"Job ID: %s\n" +
-		"Error: %s\n" +
+		"Error: `%s`\n" +
 		"Files:\n%s"
 
 	files := ""
