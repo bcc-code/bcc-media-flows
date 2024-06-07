@@ -241,6 +241,10 @@ func makeBMMJSON(ctx workflow.Context, params VXExportChildWorkflowParams, audio
 			jsonData.SongCollection = &chapter.SongCollection
 			jsonData.SongNumber = &chapter.SongNumber
 		}
+
+		if len(jsonData.PersonsAppearing) == 0 && jsonData.SongNumber == nil && jsonData.Title == "" {
+			jsonData.Title = chapter.Title
+		}
 	}
 
 	if len(jsonData.PersonsAppearing) == 0 && jsonData.SongNumber == nil && jsonData.Title == "" {
