@@ -114,11 +114,15 @@ var (
 	chapterTypeMap = map[string]pcommon.ChapterType{
 		"sang":        pcommon.ChapterTypeSong,
 		"musikkvideo": pcommon.ChapterTypeSong,
-		"musikal":     pcommon.ChapterTypeSong,
-		"tale":        pcommon.ChapterTypeSpeech,
-		"appelle":     pcommon.ChapterTypeSpeech,
-		"vitnesbyrd":  pcommon.ChapterTypeTestimony,
 		"singalong":   pcommon.ChapterTypeSingAlong,
+		"tale":        pcommon.ChapterTypeSpeech,
+		"vitnesbyrd":  pcommon.ChapterTypeSpeech,
+		"appelle":     pcommon.ChapterTypeSpeech,
+		"panel":       pcommon.ChapterTypeInterview,
+		"intervju":    pcommon.ChapterTypeInterview,
+		"kortfilm":    pcommon.ChapterTypeTheme,
+		"anslag":      pcommon.ChapterTypeTheme,
+		"temafilm":    pcommon.ChapterTypeTheme,
 	}
 )
 
