@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.temporal.io/sdk/testsuite"
 	"testing"
+	"time"
 )
 
 type CleanupProductionTestSuite struct {
@@ -16,9 +17,11 @@ type CleanupProductionTestSuite struct {
 
 func (s *CleanupProductionTestSuite) SetupTest() {
 	s.env = s.NewTestWorkflowEnvironment()
+	s.env.SetTestTimeout(200 * time.Second)
 	s.env.RegisterActivity(cantemo.GetFiles)
 	s.env.RegisterActivity(cantemo.GetFormats)
 	s.env.RegisterActivity(cantemo.RenameFile)
+	s.env.RegisterActivity(RenameCantemoFileSpecial)
 }
 
 func (s *CleanupProductionTestSuite) AfterTest(suiteName, testName string) {
