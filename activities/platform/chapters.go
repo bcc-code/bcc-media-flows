@@ -90,16 +90,17 @@ func metaToChapter(meta *vsapi.MetadataResult, subclipTypeNames map[string]strin
 
 	out.Label = meta.Get(vscommon.FieldTitle, "")
 	out.Title = meta.Get(vscommon.FieldTitle, "")
+
+	if strings.Contains(out.Label, " - ") {
+		out.Title = strings.Split(out.Label, " - ")[0]
+	}
+
 	if out.ChapterType == pcommon.ChapterTypeOther.Value {
 		if typeName, ok := subclipTypeNames[subclipType]; ok {
 			out.Title = typeName
 		} else {
 			out.Title = subclipType
 		}
-	}
-
-	if strings.Contains(out.Label, " - ") {
-		out.Title = strings.Split(out.Label, " - ")[0]
 	}
 
 	return out, true
