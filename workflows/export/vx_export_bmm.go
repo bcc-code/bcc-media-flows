@@ -199,6 +199,8 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 }
 
 func makeBMMJSON(ctx workflow.Context, params VXExportChildWorkflowParams, audioResults map[string][]common.AudioResult, normalizedResults map[string]activities.NormalizeAudioResult, chapters []asset.TimedMetadata) ([]byte, error) {
+	logger := workflow.GetLogger(ctx)
+
 	// Prepare data for the JSON file
 	jsonData := prepareBMMData(ctx, audioResults, normalizedResults)
 	jsonData.Length = int(params.MergeResult.Duration)
@@ -209,7 +211,6 @@ func makeBMMJSON(ctx workflow.Context, params VXExportChildWorkflowParams, audio
 	if params.ExportData.BmmTitle != nil && *params.ExportData.BmmTitle != "" {
 		jsonData.Title = *params.ExportData.BmmTitle
 	}
-
 	jsonData.TrackID = params.ExportData.BmmTrackID
 
 	langs, _ := wfutils.GetMapKeysSafely(ctx, params.MergeResult.JSONTranscript)
@@ -240,6 +241,11 @@ func makeBMMJSON(ctx workflow.Context, params VXExportChildWorkflowParams, audio
 			jsonData.SongCollection = &chapter.SongCollection
 			jsonData.SongNumber = &chapter.SongNumber
 		}
+	}
+
+	if len(jsonData.PersonsAppearing) == 0 && jsonData.SongNumber == nil && jsonData.Title == "" {
+		logger.Info("No BMM data found, using default title %s", params.ExportData.Title)
+		jsonData.Title = params.ExportData.Title
 	}
 
 	return wfutils.MarshalJson(ctx, jsonData)
