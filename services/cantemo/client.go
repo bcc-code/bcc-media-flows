@@ -2,7 +2,9 @@ package cantemo
 
 import (
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"strings"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -156,4 +158,49 @@ func (c *Client) GetLookupChoices(group, field string) (map[string]string, error
 	}
 
 	return choices, nil
+}
+
+func (c *Client) GetFiles(path string, state string, storageFilter string, page int) (*GetFilesResult, error) {
+	result := &GetFilesResult{}
+	res, err := c.restyClient.R().
+		SetResult(result).
+		SetQueryParam("item_type", "file").
+		SetQueryParam("import_state", state).
+		SetQueryParam("storage", storageFilter).
+		SetQueryParam("page", fmt.Sprintf("%d", page)).
+		SetQueryParam("page_size", "50").
+		SetQueryParam("include_hidden", "false").
+		SetQueryParam("sort", "name_asc").
+		Get("/API/v2/files/")
+
+	if err != nil {
+		return nil, err
+	}
+
+	result = res.Result().(*GetFilesResult)
+
+	for i, obj := range result.Objects {
+		// 2021-04-20T16:44:51.790+0000
+		ts, err := time.Parse("2006-01-02T15:04:05.000-0700", obj.TimestampRaw)
+		if err != nil {
+			return nil, err
+		}
+
+		result.Objects[i].Timestamp = ts
+	}
+
+	return result, err
+}
+
+func (c *Client) RenameFile(itemID, shapeID, storageID, filename string) error {
+	url := "/API/v2/items/" + itemID + "/shape/" + shapeID + "/" + storageID + "/rename/"
+	spew.Dump(url)
+	res, err := c.restyClient.R().
+		SetFormData(map[string]string{
+			"destination_storage": storageID,
+			"filename":            filename,
+		}).
+		Put(url)
+	spew.Dump(res.String())
+	return err
 }
