@@ -144,9 +144,7 @@ func CleanupProduction(
 		}
 
 		page++
-		if page > 800 {
-			return nil
-		}
+		println(page)
 	}
 
 	return nil
