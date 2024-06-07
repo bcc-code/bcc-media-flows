@@ -205,10 +205,11 @@ func makeBMMJSON(ctx workflow.Context, params VXExportChildWorkflowParams, audio
 	jsonData.MediabankenID = fmt.Sprintf("%s-%s", params.ParentParams.VXID, HashTitle(params.ExportData.Title))
 	jsonData.ImportDate = params.ExportData.ImportDate
 	jsonData.TranscriptionFiles = map[string]string{}
-	jsonData.Title = params.ExportData.Title
+
 	if params.ExportData.BmmTitle != nil && *params.ExportData.BmmTitle != "" {
 		jsonData.Title = *params.ExportData.BmmTitle
 	}
+
 	jsonData.TrackID = params.ExportData.BmmTrackID
 
 	langs, _ := wfutils.GetMapKeysSafely(ctx, params.MergeResult.JSONTranscript)
