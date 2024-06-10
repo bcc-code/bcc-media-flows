@@ -168,14 +168,22 @@ func (s *TriggerServer) vxExportGET(ctx *gin.Context) {
 		return
 	}
 
-	subclips := lo.Map(rawChapters, func(c *vidispine.GetChapterMetaResult, _ int) Subclip {
+	//subclips := lo.Map(rawChapters, func(c *vidispine.GetChapterMetaResult, _ int) Subclip {
+	var subclips []Subclip
+	for _, c := range rawChapters {
+		if len(c.Meta.Terse["title"]) == 0 {
+			continue
+		}
+
 		ts, _ := vscommon.TCToSeconds(c.Meta.Terse["title"][0].Start)
-		return Subclip{
+		s := Subclip{
 			Title:              c.Meta.Get(vscommon.FieldTitle, ""),
 			StartSeconds:       ts,
 			FormattedStartTime: fmt.Sprintf("%02d:%02d:%02d", int(ts/3600), int(ts/60)%60, int(ts)%60),
 		}
-	})
+
+		subclips = append(subclips, s)
+	}
 
 	sort.Slice(subclips, func(i, j int) bool {
 		return subclips[i].StartSeconds < subclips[j].StartSeconds
