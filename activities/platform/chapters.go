@@ -75,12 +75,12 @@ func metaToChapter(meta *vsapi.MetadataResult, subclipTypeNames map[string]strin
 	if lo.Contains(chapterTypesToFilterOut, subclipTypes[0]) {
 		return out, false
 	}
-	subclipType, chapterType := findBestChapterType(subclipTypes)
-	out.ChapterType = chapterType.Value
+	subclipType, chapterType := findBestContentType(subclipTypes)
+	out.ContentType = chapterType.Value
 
 	out.Persons = lo.Filter(meta.GetArray(vscommon.FieldPersonsAppearing), func(p string, _ int) bool { return p != "" })
 
-	if out.ChapterType == pcommon.ChapterTypeSong.Value || out.ChapterType == pcommon.ChapterTypeSingAlong.Value {
+	if out.ContentType == pcommon.ContentTypeSong.Value || out.ContentType == pcommon.ContentTypeSingAlong.Value {
 		match := SongExtract.FindStringSubmatch(strings.ToUpper(out.Label))
 		if len(match) == 3 {
 			out.SongCollection = match[1]
@@ -95,7 +95,7 @@ func metaToChapter(meta *vsapi.MetadataResult, subclipTypeNames map[string]strin
 		out.Title = strings.Split(out.Label, " - ")[0]
 	}
 
-	if out.ChapterType == pcommon.ChapterTypeOther.Value {
+	if out.ContentType == pcommon.ContentTypeOther.Value {
 		if typeName, ok := subclipTypeNames[subclipType]; ok {
 			out.Title = typeName
 		} else {
@@ -112,18 +112,18 @@ var SongCollectionMap = map[string]string{
 	"HV":  "WOTL",
 }
 var (
-	chapterTypeMap = map[string]pcommon.ChapterType{
-		"sang":        pcommon.ChapterTypeSong,
-		"musikkvideo": pcommon.ChapterTypeSong,
-		"singalong":   pcommon.ChapterTypeSingAlong,
-		"tale":        pcommon.ChapterTypeSpeech,
-		"vitnesbyrd":  pcommon.ChapterTypeSpeech,
-		"appelle":     pcommon.ChapterTypeSpeech,
-		"panel":       pcommon.ChapterTypeInterview,
-		"intervju":    pcommon.ChapterTypeInterview,
-		"kortfilm":    pcommon.ChapterTypeTheme,
-		"anslag":      pcommon.ChapterTypeTheme,
-		"temafilm":    pcommon.ChapterTypeTheme,
+	chapterTypeMap = map[string]pcommon.ContentType{
+		"sang":        pcommon.ContentTypeSong,
+		"musikkvideo": pcommon.ContentTypeSong,
+		"singalong":   pcommon.ContentTypeSingAlong,
+		"tale":        pcommon.ContentTypeSpeech,
+		"vitnesbyrd":  pcommon.ContentTypeSpeech,
+		"appelle":     pcommon.ContentTypeSpeech,
+		"panel":       pcommon.ContentTypeInterview,
+		"intervju":    pcommon.ContentTypeInterview,
+		"kortfilm":    pcommon.ContentTypeTheme,
+		"anslag":      pcommon.ContentTypeTheme,
+		"temafilm":    pcommon.ContentTypeTheme,
 	}
 )
 
@@ -136,22 +136,22 @@ var chapterTypesToFilterOut = []string{
 	"programleder",
 }
 
-func mapSubclipType(vsChapterType string) pcommon.ChapterType {
-	if chapterType, ok := chapterTypeMap[vsChapterType]; ok {
+func mapSubclipType(vsContentType string) pcommon.ContentType {
+	if chapterType, ok := chapterTypeMap[vsContentType]; ok {
 		return chapterType
 	}
-	return pcommon.ChapterTypeOther
+	return pcommon.ContentTypeOther
 }
 
-func findBestChapterType(subclipTypes []string) (string, *pcommon.ChapterType) {
+func findBestContentType(subclipTypes []string) (string, *pcommon.ContentType) {
 	if len(subclipTypes) > 1 {
-		for _, prioritizedType := range []pcommon.ChapterType{
-			pcommon.ChapterTypeOther,
-			pcommon.ChapterTypeInterview,
-			pcommon.ChapterTypeTheme,
-			pcommon.ChapterTypeSpeech,
-			pcommon.ChapterTypeSingAlong,
-			pcommon.ChapterTypeSong,
+		for _, prioritizedType := range []pcommon.ContentType{
+			pcommon.ContentTypeOther,
+			pcommon.ContentTypeInterview,
+			pcommon.ContentTypeTheme,
+			pcommon.ContentTypeSpeech,
+			pcommon.ContentTypeSingAlong,
+			pcommon.ContentTypeSong,
 		} {
 			for _, subclipType := range subclipTypes {
 				chapterType := mapSubclipType(subclipType)
