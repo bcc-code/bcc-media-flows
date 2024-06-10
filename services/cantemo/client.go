@@ -2,7 +2,6 @@ package cantemo
 
 import (
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"strings"
 	"time"
 
@@ -195,13 +194,11 @@ func (c *Client) GetFiles(path string, state string, storageFilter string, page 
 
 func (c *Client) RenameFile(itemID, shapeID, storageID, filename string) error {
 	url := "/API/v2/items/" + itemID + "/shape/" + shapeID + "/" + storageID + "/rename/"
-	spew.Dump(url)
-	res, err := c.restyClient.R().
+	_, err := c.restyClient.R().
 		SetFormData(map[string]string{
 			"destination_storage": storageID,
 			"filename":            filename,
 		}).
 		Put(url)
-	spew.Dump(res.String())
 	return err
 }
