@@ -235,7 +235,7 @@ func makeBMMJSON(ctx workflow.Context, params VXExportChildWorkflowParams, audio
 		jsonData.RecordedAt = &chaperRecordedAt
 
 		jsonData.StartsAt = chapter.Timestamp
-		jsonData.Type = chapter.ChapterType
+		jsonData.Type = chapter.ContentType
 
 		if chapter.SongNumber != "" && chapter.SongCollection != "" {
 			jsonData.SongCollection = &chapter.SongCollection
