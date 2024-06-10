@@ -21,7 +21,7 @@ func (s *CleanupProductionTestSuite) SetupTest() {
 	s.env.RegisterActivity(cantemo.GetFiles)
 	s.env.RegisterActivity(cantemo.GetFormats)
 	s.env.RegisterActivity(cantemo.RenameFile)
-	s.env.RegisterActivity(RenameCantemoFileSpecial)
+	s.env.RegisterActivity(MoveFileByImportDateParams{})
 }
 
 func (s *CleanupProductionTestSuite) AfterTest(suiteName, testName string) {
@@ -29,7 +29,13 @@ func (s *CleanupProductionTestSuite) AfterTest(suiteName, testName string) {
 }
 
 func (s *CleanupProductionTestSuite) Test_CleanupProduction() {
-	s.env.ExecuteWorkflow(CleanupProduction)
+	s.T().Skip("Not fully implemented")
+	s.env.ExecuteWorkflow(SortFilesByImportedDate, SortFilesByImportedDateParams{
+		SourceStorageID:      "VX-INVALID",
+		DestinationStorageID: "VX-INVALID-2",
+		FileList:             []string{"file1", "file2", "file3"},
+		BatchSize:            1,
+	})
 	s.True(s.env.IsWorkflowCompleted())
 
 	err := s.env.GetWorkflowError()

@@ -160,7 +160,7 @@ func (c *Client) GetLookupChoices(group, field string) (map[string]string, error
 	return choices, nil
 }
 
-func (c *Client) GetFiles(path string, state string, storageFilter string, page int) (*GetFilesResult, error) {
+func (c *Client) GetFiles(path string, state string, storageFilter string, page int, query string) (*GetFilesResult, error) {
 	result := &GetFilesResult{}
 	res, err := c.restyClient.R().
 		SetResult(result).
@@ -171,6 +171,7 @@ func (c *Client) GetFiles(path string, state string, storageFilter string, page 
 		SetQueryParam("page_size", "50").
 		SetQueryParam("include_hidden", "false").
 		SetQueryParam("sort", "name_asc").
+		SetQueryParam("query", query).
 		Get("/API/v2/files/")
 
 	if err != nil {
