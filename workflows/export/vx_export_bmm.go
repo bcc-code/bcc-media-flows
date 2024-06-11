@@ -227,7 +227,7 @@ func makeBMMJSON(ctx workflow.Context, params VXExportChildWorkflowParams, audio
 			}
 		}
 
-		d := wfutils.Now(ctx).Truncate(time.Hour * 6)
+		d := workflow.Now(ctx).Truncate(time.Hour * 6)
 		if params.ExportData.ImportDate != nil {
 			d = *params.ExportData.ImportDate
 		}

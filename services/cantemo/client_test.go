@@ -79,6 +79,7 @@ func TestClient_GetFiles(t *testing.T) {
 		"imported",
 		"VX-42",
 		1,
+		"",
 	)
 
 	assert.NoError(t, err)

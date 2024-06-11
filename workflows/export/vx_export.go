@@ -180,7 +180,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		case AssetExportDestinationVOD:
 			w = VXExportToVOD
 			if hasDestination(AssetExportDestinationIsilon) {
-				date := wfutils.Now(ctx)
+				date := workflow.Now(ctx)
 				id := workflow.GetInfo(ctx).OriginalRunID
 				childParams.OutputDir = paths.Path{
 					Drive: paths.IsilonDrive,

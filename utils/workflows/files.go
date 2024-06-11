@@ -122,7 +122,7 @@ func DeletePathRecursively(ctx workflow.Context, path paths.Path) error {
 
 func GetWorkflowLucidLinkOutputFolder(ctx workflow.Context, root string) paths.Path {
 	info := workflow.GetInfo(ctx)
-	date := Now(ctx)
+	date := workflow.Now(ctx)
 
 	path := paths.New(
 		paths.LucidLinkDrive,
@@ -138,7 +138,7 @@ func GetWorkflowLucidLinkOutputFolder(ctx workflow.Context, root string) paths.P
 
 func GetWorkflowIsilonOutputFolder(ctx workflow.Context, root string) (paths.Path, error) {
 	info := workflow.GetInfo(ctx)
-	date := Now(ctx)
+	date := workflow.Now(ctx)
 
 	path := paths.New(
 		paths.IsilonDrive,
