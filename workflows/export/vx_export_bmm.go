@@ -3,7 +3,6 @@ package export
 import (
 	"crypto/sha1"
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"path"
 	"strconv"
 	"strings"
