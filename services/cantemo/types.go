@@ -13,7 +13,7 @@ type Video struct {
 	VideoCodec      string `json:"videoCodec"`
 	VideoFPS        string `json:"videoFPS"`
 	VideoResolution string `json:"videoResolution"`
-	//VideoBitRate    int    `json:"videoBitRate"`
+	//VideoBitRate    int    `json:"videoBitRate"` Commented out because it fails to parse in cases where VideoBitRate is ""
 	FieldOrder  string `json:"fieldOrder"`
 	PixelFormat string `json:"pixelFormat"`
 }
