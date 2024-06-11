@@ -3,6 +3,7 @@ package export
 import (
 	"crypto/sha1"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"path"
 	"strconv"
 	"strings"
@@ -92,7 +93,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 			return nil, fmt.Errorf("failed to normalize audio for language %s: %w", lang, err)
 		}
 
-		logger.Debug("Normalized audio for language %s: %v", lang, normalizedRes)
+		logger.Debug("Normalized audio for language", lang, normalizedRes)
 		normalizedResults[lang] = normalizedRes
 		params.MergeResult.AudioFiles[lang] = normalizedRes.FilePath
 	}
@@ -198,7 +199,13 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	}, nil
 }
 
-func makeBMMJSON(ctx workflow.Context, params VXExportChildWorkflowParams, audioResults map[string][]common.AudioResult, normalizedResults map[string]activities.NormalizeAudioResult, chapters []asset.TimedMetadata) ([]byte, error) {
+func makeBMMJSON(
+	ctx workflow.Context,
+	params VXExportChildWorkflowParams,
+	audioResults map[string][]common.AudioResult,
+	normalizedResults map[string]activities.NormalizeAudioResult,
+	chapters []asset.TimedMetadata,
+) ([]byte, error) {
 	logger := workflow.GetLogger(ctx)
 
 	// Prepare data for the JSON file
@@ -248,7 +255,7 @@ func makeBMMJSON(ctx workflow.Context, params VXExportChildWorkflowParams, audio
 	}
 
 	if len(jsonData.PersonsAppearing) == 0 && jsonData.SongNumber == nil && jsonData.Title == "" {
-		logger.Info("No BMM data found, using default title %s", params.ExportData.Title)
+		logger.Info("No BMM data found, using default title", "title", params.ExportData.Title)
 		jsonData.Title = params.ExportData.Title
 	}
 

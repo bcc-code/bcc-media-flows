@@ -1,0 +1,102 @@
+{
+  "RunID": "a0e3916b-59f8-4991-ad7c-84433d723f54",
+  "parent_params": {
+    "VXID": "VX-486737",
+    "WithChapters": false,
+    "WatermarkPath": "",
+    "Destinations": [
+      "bmm-integration"
+    ],
+    "AudioSource": "embedded",
+    "Languages": [
+      "nor"
+    ],
+    "Subclip": "PERSON - SUBCLIP",
+    "IgnoreSilence": false,
+    "Resolutions": [
+      {
+        "Width": 1920,
+        "Height": 1080,
+        "File": false
+      },
+      {
+        "Width": 1280,
+        "Height": 720,
+        "File": false
+      },
+      {
+        "Width": 960,
+        "Height": 540,
+        "File": false
+      },
+      {
+        "Width": 640,
+        "Height": 360,
+        "File": false
+      },
+      {
+        "Width": 480,
+        "Height": 270,
+        "File": false
+      },
+      {
+        "Width": 320,
+        "Height": 180,
+        "File": false
+      }
+    ]
+  },
+  "export_data": {
+    "Clips": [
+      {
+        "VideoFile": "/video/file/path.mxf",
+        "InSeconds": 1907.7599999999948,
+        "OutSeconds": 3025.399999999994,
+        "SequenceIn": 0,
+        "SequenceOut": 0,
+        "AudioFiles": {
+          "nor": {
+            "VXID": "VX-486737",
+            "Streams": [
+              1,
+              2
+            ],
+            "File": "/audio/file/path.wav"
+          }
+        },
+        "SubtitleFiles": {},
+        "JSONTranscriptFile": "",
+        "VXID": "VX-486737"
+      }
+    ],
+    "SafeTitle": "PI24_20240517_2000_PGM_MU1mxf_John_F_Doe",
+    "Title": "PI24_20240517_2000_PGM_MU1.mxf - John F. Doe",
+    "ImportDate": "2024-05-17T17:48:47.821Z",
+    "BmmTitle": "",
+    "BmmTrackID": null
+  },
+  "MergeResult": {
+    "Duration": 1117.6399999999994,
+    "VideoFile": null,
+    "AudioFiles": {
+      "nor": {
+        "Drive": "temp",
+        "Path": "/path/to/temp/file.wav"
+      }
+    },
+    "SubtitleFiles": {},
+    "JSONTranscript": {}
+  },
+  "TempDir": {
+    "Drive": "temp",
+    "Path": "workflows/a0e3916b-59f8-4991-ad7c-84433d723f54"
+  },
+  "OutputDir": {
+    "Drive": "temp",
+    "Path": "workflows/a0e3916b-59f8-4991-ad7c-84433d723f54/output/bmm-integration"
+  },
+  "Upload": true,
+  "ExportDestination": {
+    "Value": "bmm-integration"
+  }
+}
