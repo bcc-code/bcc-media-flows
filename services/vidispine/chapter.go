@@ -45,6 +45,9 @@ func GetChapterMetaForClips(client Client, clips []*Clip) ([]*GetChapterMetaResu
 		for title, data := range chapterMeta {
 			// We need to convert the timestamps from Vidispine into something we can calculate with on sequence level
 			data := convertFromClipTCTimeToSequenceRelativeTime(clip, data, tcStartSeconds)
+			if len(data.Terse["title"]) == 0 {
+				continue
+			}
 
 			// find overlapping chapters with the same title
 			other, found := lo.Find(allChapters[title], func(chapter *GetChapterMetaResult) bool {
