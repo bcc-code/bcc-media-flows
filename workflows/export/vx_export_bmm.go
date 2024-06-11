@@ -3,6 +3,7 @@ package export
 import (
 	"crypto/sha1"
 	"fmt"
+	pcommon "github.com/bcc-code/bcc-media-platform/backend/common"
 	"path"
 	"strconv"
 	"strings"
@@ -246,6 +247,10 @@ func makeBMMJSON(
 		if chapter.SongNumber != "" && chapter.SongCollection != "" {
 			jsonData.SongCollection = &chapter.SongCollection
 			jsonData.SongNumber = &chapter.SongNumber
+		}
+
+		if chapter.ContentType == pcommon.ContentTypeSong.Value && chapter.SongCollection == "" {
+			jsonData.Title = chapter.Title
 		}
 
 		if len(jsonData.PersonsAppearing) == 0 && jsonData.SongNumber == nil && jsonData.Title == "" {
