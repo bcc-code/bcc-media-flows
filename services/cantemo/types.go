@@ -13,9 +13,9 @@ type Video struct {
 	VideoCodec      string `json:"videoCodec"`
 	VideoFPS        string `json:"videoFPS"`
 	VideoResolution string `json:"videoResolution"`
-	VideoBitRate    int    `json:"videoBitRate"`
-	FieldOrder      string `json:"fieldOrder"`
-	PixelFormat     string `json:"pixelFormat"`
+	//VideoBitRate    int    `json:"videoBitRate"`
+	FieldOrder  string `json:"fieldOrder"`
+	PixelFormat string `json:"pixelFormat"`
 }
 type Audio struct {
 	AudioChannelCount int    `json:"audioChannelCount"`
@@ -179,4 +179,56 @@ type Permissions struct {
 	URIWritePermission      bool `json:"uri_write_permission"`
 	MetadataReadPermission  bool `json:"metadata_read_permission"`
 	MetadataWritePermission bool `json:"metadata_write_permission"`
+}
+
+// GetFiles
+
+type GetFilesResult struct {
+	Objects []Objects `json:"objects"`
+	Meta    Meta      `json:"meta"`
+}
+
+type Item struct {
+	ID  string `json:"id"`
+	URL string `json:"url"`
+}
+
+type Metadata struct {
+}
+
+type Objects struct {
+	ID                 string   `json:"id"`
+	Path               string   `json:"path"`
+	Parent             string   `json:"parent"`
+	Name               string   `json:"name"`
+	ExcludeFromListing bool     `json:"exclude_from_listing"`
+	ParentID           string   `json:"parent_id"`
+	URI                string   `json:"uri"`
+	State              string   `json:"state"`
+	Size               int      `json:"size"`
+	Hash               string   `json:"hash"`
+	TimestampRaw       string   `json:"timestamp"`
+	RefreshFlag        bool     `json:"refreshFlag"`
+	StorageName        string   `json:"storage_name"`
+	Storage            string   `json:"storage"`
+	Item               Item     `json:"item"`
+	Metadata           Metadata `json:"metadata"`
+	ItemType           string   `json:"item_type"`
+	VidispineID        string   `json:"vidispine_id"`
+	Type               string   `json:"type"`
+	Timestamp          time.Time
+}
+
+type Meta struct {
+	HasNext        bool `json:"has_next"`
+	HasPrevious    bool `json:"has_previous"`
+	HasOtherPages  bool `json:"has_other_pages"`
+	Next           int  `json:"next"`
+	Previous       int  `json:"previous"`
+	Hits           int  `json:"hits"`
+	FirstOnPage    int  `json:"first_on_page"`
+	LastOnPage     int  `json:"last_on_page"`
+	ResultsPerPage int  `json:"results_per_page"`
+	Page           int  `json:"page"`
+	Pages          int  `json:"pages"`
 }

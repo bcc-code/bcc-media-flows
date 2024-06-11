@@ -60,3 +60,27 @@ func TestClient_GetPreview(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, meta)
 }
+
+func TestClient_GetFiles(t *testing.T) {
+	baseURL := os.Getenv("CANTEMO_URL")
+	token := os.Getenv("CANTEMO_TOKEN")
+
+	if baseURL == "" {
+		t.Skip("CANTEMO_URL not set")
+	}
+
+	if token == "" {
+		t.Skip("CANTEMO_TOKEN not set")
+	}
+
+	client := NewClient(baseURL, token)
+	files, err := client.GetFiles(
+		"/",
+		"imported",
+		"VX-42",
+		1,
+	)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, files)
+}
