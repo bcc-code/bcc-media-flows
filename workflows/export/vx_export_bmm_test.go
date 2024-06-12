@@ -2,6 +2,7 @@ package export
 
 import (
 	"encoding/json"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
@@ -16,7 +17,22 @@ type BMMExportTestSuite struct {
 	suite.Suite
 	testsuite.WorkflowTestSuite
 
-	env *testsuite.TestWorkflowEnvironment
+	env               *testsuite.TestWorkflowEnvironment
+	params            VXExportChildWorkflowParams
+	normalizedResults map[string]activities.NormalizeAudioResult
+	audioResults      map[string][]common.AudioResult
+}
+
+func (s *BMMExportTestSuite) SetupSuite() {
+	jsonData, err := os.ReadFile("./testdata/bmm_chapter_export_input.json")
+	s.NoError(err)
+	s.NotEmpty(jsonData)
+
+	err = json.Unmarshal(jsonData, &s.params)
+	s.NoError(err)
+
+	s.normalizedResults = map[string]activities.NormalizeAudioResult{}
+	s.audioResults = map[string][]common.AudioResult{}
 }
 
 func (s *BMMExportTestSuite) SetupTest() {
@@ -27,35 +43,18 @@ func (s *BMMExportTestSuite) AfterTest(suiteName, testName string) {
 	s.env.AssertExpectations(s.T())
 }
 
-func (s *BMMExportTestSuite) Test_GenerateJSON_PersonAppearing() {
-	jsonData, err := os.ReadFile("./testdata/bmm_chapter_export_input.json")
-	s.NoError(err)
-	s.NotEmpty(jsonData)
+type testData struct {
+	Chapters                 []asset.TimedMetadata
+	ExpectedTitle            string
+	ExpectedPersonsAppearing []string
+	ExpecedSongNumber        *string
+	ExpectedSongCollection   *string
+}
 
-	params := VXExportChildWorkflowParams{}
-	err = json.Unmarshal(jsonData, &params)
-	s.NoError(err)
-
-	audioResults := map[string][]common.AudioResult{}
-	normalizedResults := map[string]activities.NormalizeAudioResult{}
-	chapters := []asset.TimedMetadata{
-		asset.TimedMetadata{
-			ContentType:    pcommon.ContentTypeSpeech.Value,
-			Timestamp:      1907.7599999999948,
-			Label:          "LABEL",
-			Title:          "TITLE",
-			Description:    "",
-			SongNumber:     "",
-			SongCollection: "",
-			Highlight:      false,
-			ImageFilename:  "",
-			Persons:        []string{"PERSON"},
-		},
-	}
-
-	s.env.ExecuteWorkflow(makeBMMJSON, params, audioResults, normalizedResults, chapters)
+func (s *BMMExportTestSuite) doTestGenerateJson(t testData) {
+	s.env.ExecuteWorkflow(makeBMMJSON, s.params, s.audioResults, s.normalizedResults, t.Chapters)
 	s.True(s.env.IsWorkflowCompleted())
-	err = s.env.GetWorkflowError()
+	err := s.env.GetWorkflowError()
 	s.NoError(err)
 
 	res := []byte{}
@@ -66,146 +65,107 @@ func (s *BMMExportTestSuite) Test_GenerateJSON_PersonAppearing() {
 	err = json.Unmarshal(res, &d)
 	s.NoError(err)
 
-	s.Empty(d.Title)
-	s.NotEmpty(d.PersonsAppearing)
-	s.Equal("PERSON", d.PersonsAppearing[0])
+	s.Equal(t.ExpectedTitle, d.Title)
+	s.Equal(t.ExpecedSongNumber, d.SongNumber)
+	s.Equal(t.ExpectedSongCollection, d.SongCollection)
+	s.Equal(t.ExpectedPersonsAppearing, d.PersonsAppearing)
+}
+
+func (s *BMMExportTestSuite) Test_GenerateJSON() {
+	t := testData{
+		Chapters: []asset.TimedMetadata{
+			asset.TimedMetadata{
+				ContentType:    pcommon.ContentTypeSpeech.Value,
+				Timestamp:      1907.7599999999948,
+				Label:          "LABEL",
+				Title:          "TITLE",
+				Description:    "",
+				SongNumber:     "",
+				SongCollection: "",
+				Highlight:      false,
+				ImageFilename:  "",
+				Persons:        []string{"PERSON"},
+			},
+		},
+		ExpectedTitle:            "",
+		ExpectedPersonsAppearing: []string{"PERSON"},
+		ExpecedSongNumber:        nil,
+		ExpectedSongCollection:   nil,
+	}
+
+	s.doTestGenerateJson(t)
 }
 
 func (s *BMMExportTestSuite) Test_GenerateJSON_HVSong() {
-	jsonData, err := os.ReadFile("./testdata/bmm_chapter_export_input.json")
-	s.NoError(err)
-	s.NotEmpty(jsonData)
-
-	params := VXExportChildWorkflowParams{}
-	err = json.Unmarshal(jsonData, &params)
-	s.NoError(err)
-
-	audioResults := map[string][]common.AudioResult{}
-	normalizedResults := map[string]activities.NormalizeAudioResult{}
-	chapters := []asset.TimedMetadata{
-		asset.TimedMetadata{
-			ContentType:    pcommon.ContentTypeSong.Value,
-			Timestamp:      1907.7599999999948,
-			Label:          "LABEL",
-			Title:          "TITLE",
-			Description:    "",
-			SongNumber:     "404",
-			SongCollection: "HV",
-			Highlight:      false,
-			ImageFilename:  "",
-			Persons:        []string{"PERSON"},
+	t := testData{
+		Chapters: []asset.TimedMetadata{
+			asset.TimedMetadata{
+				ContentType:    pcommon.ContentTypeSong.Value,
+				Timestamp:      1907.7599999999948,
+				Label:          "LABEL",
+				Title:          "TITLE",
+				Description:    "",
+				SongNumber:     "404",
+				SongCollection: "HV",
+				Highlight:      false,
+				ImageFilename:  "",
+				Persons:        []string{"PERSON"},
+			},
 		},
+		ExpectedTitle:            "",
+		ExpectedPersonsAppearing: []string{"PERSON"},
+		ExpecedSongNumber:        aws.String("404"),
+		ExpectedSongCollection:   aws.String("HV"),
 	}
-
-	s.env.ExecuteWorkflow(makeBMMJSON, params, audioResults, normalizedResults, chapters)
-	s.True(s.env.IsWorkflowCompleted())
-	err = s.env.GetWorkflowError()
-	s.NoError(err)
-
-	res := []byte{}
-	s.env.GetWorkflowResult(&res)
-	s.NotEmpty(res)
-
-	d := BMMData{}
-	err = json.Unmarshal(res, &d)
-	s.NoError(err)
-
-	s.Empty(d.Title)
-	s.NotEmpty(d.PersonsAppearing)
-	s.Equal("PERSON", d.PersonsAppearing[0])
-	s.Equal("404", *d.SongNumber)
-	s.Equal("HV", *d.SongCollection)
+	s.doTestGenerateJson(t)
 }
 
 func (s *BMMExportTestSuite) Test_GenerateJSON_UnknownSong() {
-	jsonData, err := os.ReadFile("./testdata/bmm_chapter_export_input.json")
-	s.NoError(err)
-	s.NotEmpty(jsonData)
-
-	params := VXExportChildWorkflowParams{}
-	err = json.Unmarshal(jsonData, &params)
-	s.NoError(err)
-
-	audioResults := map[string][]common.AudioResult{}
-	normalizedResults := map[string]activities.NormalizeAudioResult{}
-	chapters := []asset.TimedMetadata{
-		asset.TimedMetadata{
-			ContentType:    pcommon.ContentTypeSong.Value,
-			Timestamp:      1907.7599999999948,
-			Label:          "SOME RANDOM SONG",
-			Title:          "SONG TITLE",
-			Description:    "",
-			SongNumber:     "",
-			SongCollection: "",
-			Highlight:      false,
-			ImageFilename:  "",
-			Persons:        []string{"VOKALIST"},
+	t := testData{
+		Chapters: []asset.TimedMetadata{
+			asset.TimedMetadata{
+				ContentType:    pcommon.ContentTypeSong.Value,
+				Timestamp:      1907.7599999999948,
+				Label:          "SOME RANDOM SONG",
+				Title:          "SONG TITLE",
+				Description:    "",
+				SongNumber:     "",
+				SongCollection: "",
+				Highlight:      false,
+				ImageFilename:  "",
+				Persons:        []string{"VOKALIST"},
+			},
 		},
+		ExpectedTitle:            "SONG TITLE",
+		ExpectedPersonsAppearing: []string{"VOKALIST"},
+		ExpecedSongNumber:        nil,
+		ExpectedSongCollection:   nil,
 	}
-
-	s.env.ExecuteWorkflow(makeBMMJSON, params, audioResults, normalizedResults, chapters)
-	s.True(s.env.IsWorkflowCompleted())
-	err = s.env.GetWorkflowError()
-	s.NoError(err)
-
-	res := []byte{}
-	s.env.GetWorkflowResult(&res)
-	s.NotEmpty(res)
-
-	d := BMMData{}
-	err = json.Unmarshal(res, &d)
-	s.NoError(err)
-
-	s.Equal("SONG TITLE", d.Title)
-	s.NotEmpty(d.PersonsAppearing)
-	s.Equal("VOKALIST", d.PersonsAppearing[0])
-	s.Empty(d.SongNumber)
-	s.Empty(d.SongCollection)
+	s.doTestGenerateJson(t)
 }
 
 func (s *BMMExportTestSuite) Test_GenerateJSON_SingAlong() {
-	jsonData, err := os.ReadFile("./testdata/bmm_chapter_export_input.json")
-	s.NoError(err)
-	s.NotEmpty(jsonData)
-
-	params := VXExportChildWorkflowParams{}
-	err = json.Unmarshal(jsonData, &params)
-	s.NoError(err)
-
-	audioResults := map[string][]common.AudioResult{}
-	normalizedResults := map[string]activities.NormalizeAudioResult{}
-	chapters := []asset.TimedMetadata{
-		asset.TimedMetadata{
-			ContentType:    pcommon.ContentTypeSingAlong.Value,
-			Timestamp:      1907.7599999999948,
-			Label:          "LABEL",
-			Title:          "TITLE",
-			Description:    "",
-			SongNumber:     "404",
-			SongCollection: "HV",
-			Highlight:      false,
-			ImageFilename:  "",
-			Persons:        []string{},
+	t := testData{
+		Chapters: []asset.TimedMetadata{
+			asset.TimedMetadata{
+				ContentType:    pcommon.ContentTypeSingAlong.Value,
+				Timestamp:      1907.7599999999948,
+				Label:          "LABEL",
+				Title:          "TITLE",
+				Description:    "",
+				SongNumber:     "404",
+				SongCollection: "HV",
+				Highlight:      false,
+				ImageFilename:  "",
+				Persons:        []string{},
+			},
 		},
+		ExpectedTitle:            "",
+		ExpectedPersonsAppearing: nil,
+		ExpecedSongNumber:        aws.String("404"),
+		ExpectedSongCollection:   aws.String("HV"),
 	}
-
-	s.env.ExecuteWorkflow(makeBMMJSON, params, audioResults, normalizedResults, chapters)
-	s.True(s.env.IsWorkflowCompleted())
-	err = s.env.GetWorkflowError()
-	s.NoError(err)
-
-	res := []byte{}
-	s.env.GetWorkflowResult(&res)
-	s.NotEmpty(res)
-
-	d := BMMData{}
-	err = json.Unmarshal(res, &d)
-	s.NoError(err)
-
-	s.Empty(d.Title)
-	s.Empty(d.PersonsAppearing)
-	s.Equal("404", *d.SongNumber)
-	s.Equal("HV", *d.SongCollection)
+	s.doTestGenerateJson(t)
 }
 
 func TestBMMExport(t *testing.T) {
