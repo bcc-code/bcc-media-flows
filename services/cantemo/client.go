@@ -135,8 +135,12 @@ func (c *Client) GetLookupChoices(group, field string) (map[string]string, error
 		MoreChoicesExist bool           `json:"more_choices_exist"`
 	}
 	res, err := c.restyClient.R().
+		SetBody(map[string]any{
+			"fields":       []string{},
+			"query_string": "",
+		}).
 		SetResult(&LookupChoicesResponse{}).
-		Get("/API/v2/metadata-schema/groups/" + group + "/" + field + "/lookup_choices/")
+		Post(fmt.Sprintf("/API/v2/metadata-schema/groups/%s/%s/lookup_choices/", group, field))
 
 	if err != nil {
 		return nil, err
