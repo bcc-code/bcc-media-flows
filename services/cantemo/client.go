@@ -28,8 +28,8 @@ func NewClient(baseURL, authToken string) *Client {
 	client.SetDisableWarn(true)
 	client.SetError(cantemoErrorResponse{})
 	client.OnAfterResponse(func(c *resty.Client, resp *resty.Response) error {
-		cantemoError := resp.Error().(*cantemoErrorResponse)
-		if cantemoError != nil {
+		cantemoError, ok := resp.Error().(*cantemoErrorResponse)
+		if ok && cantemoError != nil {
 			return merry.New(cantemoError.Detail, merry.WithHTTPCode(resp.StatusCode()))
 		}
 		return nil
