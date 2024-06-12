@@ -73,7 +73,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	}
 
 	// TODO: this value vas empty? Manually set?
-	err = wfutils.SetVidispineMeta(ctx, assetResult.AssetID, vscommon.FieldIngested.Value, wfutils.Now(ctx).Format(time.RFC3339))
+	err = wfutils.SetVidispineMeta(ctx, assetResult.AssetID, vscommon.FieldIngested.Value, workflow.Now(ctx).Format(time.RFC3339))
 	if err != nil {
 		logger.Error("%w", err)
 	}
