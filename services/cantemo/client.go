@@ -5,12 +5,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ansel1/merry/v2"
 	"github.com/go-resty/resty/v2"
 )
 
 type Client struct {
 	baseURL     string
 	restyClient *resty.Client
+}
+
+type cantemoErrorResponse struct {
+	Detail string `json:"detail"`
 }
 
 func NewClient(baseURL, authToken string) *Client {
@@ -21,6 +26,14 @@ func NewClient(baseURL, authToken string) *Client {
 	client.SetHeader("Auth-Token", authToken)
 	client.SetHeader("Accept", "application/json")
 	client.SetDisableWarn(true)
+	client.SetError(cantemoErrorResponse{})
+	client.OnAfterResponse(func(c *resty.Client, resp *resty.Response) error {
+		cantemoError := resp.Error().(*cantemoErrorResponse)
+		if cantemoError != nil {
+			return merry.New(cantemoError.Detail, merry.WithHTTPCode(resp.StatusCode()))
+		}
+		return nil
+	})
 
 	return &Client{
 		baseURL:     baseURL,
