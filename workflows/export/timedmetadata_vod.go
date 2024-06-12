@@ -19,7 +19,8 @@ type ExportTimedMetadataParams struct {
 }
 
 type ExportTimedMetadataResult struct {
-	VXID string
+	VXID  string
+	Count int
 }
 
 // ExportTimedMetadata exports chapters to VOD as timedmetadata
@@ -52,6 +53,19 @@ func ExportTimedMetadata(ctx workflow.Context, params ExportTimedMetadataParams)
 		return nil, err
 	}
 
+	if len(timedMetadata) == 0 {
+		message := fmt.Sprintf("🟩 Timedmetadata->VOD for `%s` (`%s`) done.\nCount: %d.", exportData.Title, params.VXID, 0)
+		wfutils.SendTelegramText(
+			ctx,
+			telegram.ChatVOD,
+			message,
+		)
+		return &ExportTimedMetadataResult{
+			VXID:  params.VXID,
+			Count: 0,
+		}, nil
+	}
+
 	marshalled, err := wfutils.MarshalJson(ctx, timedMetadata)
 	if err != nil {
 		return nil, err
@@ -76,7 +90,7 @@ func ExportTimedMetadata(ctx workflow.Context, params ExportTimedMetadataParams)
 		return nil, err
 	}
 
-	message := fmt.Sprintf("🟩 Chapter export to VOD finished for `%s` (`%s`).\nIt should show up in the linked assets within a few minutes.", exportData.Title, params.VXID)
+	message := fmt.Sprintf("🟩 Timedmetadata->VOD for `%s` (`%s`) done.\nCount: %d. They should show up in the linked assets within a few minutes.", exportData.Title, params.VXID, len(timedMetadata))
 
 	wfutils.SendTelegramText(
 		ctx,
@@ -85,6 +99,7 @@ func ExportTimedMetadata(ctx workflow.Context, params ExportTimedMetadataParams)
 	)
 
 	return &ExportTimedMetadataResult{
-		VXID: params.VXID,
+		VXID:  params.VXID,
+		Count: len(timedMetadata),
 	}, nil
 }
