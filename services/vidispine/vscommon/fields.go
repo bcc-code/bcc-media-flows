@@ -14,7 +14,6 @@ var (
 	FieldSequenceSize          = FieldType{"__sequence_size"}
 	FieldStartTC               = FieldType{"startTimeCode"}
 	FieldStlText               = FieldType{"stl_text"}
-	FieldSubclipToExport       = FieldType{"portal_mf230973"}
 	FieldSubclipType           = FieldType{"portal_mf594493"}
 	FieldTitle                 = FieldType{"title"}
 	FieldIngested              = FieldType{"portal_ingested"}
@@ -42,7 +41,7 @@ var (
 	FieldAssetAudioCodec       = FieldType{"ASSET_AUDIO_CODEC"}
 	FieldOriginalAudioCodec    = FieldType{"originalAudioCodec"}
 	FieldTypes                 = enum.New(FieldDurationSeconds, FieldDescription, FieldExportAudioSource, FieldLangsToExport,
-		FieldPersonsAppearing, FieldSequenceSize, FieldStartTC, FieldSubclipToExport, FieldSubclipType, FieldTitle,
+		FieldPersonsAppearing, FieldSequenceSize, FieldStartTC, FieldSubclipType, FieldTitle,
 		FieldSource, FieldExportAsChapter, FieldSubtransStoryID, FieldOriginalURI, FieldUploadedBy, FieldUploadJob,
 		FieldLanguagesRecorded, FieldGeneralTags, FieldOriginalFileName, FieldOriginalFileNameField,
 		FieldEpisodeDescription, FieldSeason, FieldProgram, FieldEpisode, FieldStlText, FieldIngested, FieldDialogLoudness,

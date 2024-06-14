@@ -132,7 +132,7 @@ func getClipForSubclip(
 
 	subclipMeta, ok := clipsMeta[subclipName]
 	if !ok {
-		return nil, errors.New("Subclip " + subclipName + " does not exist")
+		return nil, errors.New("Subclip \"" + subclipName + "\" does not exist")
 	}
 
 	in, out, err := subclipMeta.GetInOut(meta.Get(vscommon.FieldStartTC, "0@PAL"))
