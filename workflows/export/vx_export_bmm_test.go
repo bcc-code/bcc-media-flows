@@ -71,7 +71,7 @@ func (s *BMMExportTestSuite) doTestGenerateJson(t testData) {
 	s.Equal(t.ExpectedPersonsAppearing, d.PersonsAppearing)
 }
 
-func (s *BMMExportTestSuite) Test_GenerateJSON() {
+func (s *BMMExportTestSuite) Test_GenerateJSON_Speech() {
 	t := testData{
 		Chapters: []asset.TimedMetadata{
 			asset.TimedMetadata{
