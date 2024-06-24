@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/ansel1/merry/v2"
@@ -288,6 +289,13 @@ func (ua UtilActivities) DeleteOldFiles(ctx context.Context, input CleanupInput)
 	}
 
 	for _, file := range files {
+
+		if strings.HasSuffix(file, "readme.txt") {
+			// We do not delete readme files as they provide info about what the folders do and also keep the
+			// the folders from being deleted
+			continue
+		}
+
 		err := os.Remove(file)
 		if err != nil {
 			return deleted, err
