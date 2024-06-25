@@ -14,34 +14,50 @@ type CleanupResult struct {
 	DeletedCount int
 }
 
-func CleanupTemp(ctx workflow.Context) (CleanupResult, error) {
+func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting temp files cleanup")
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
+	foldersToCleanup := map[string]time.Time{
+		"/mnt/temp/":                    workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		"/mnt/filecatalyst/ingestgrow/": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		"/mnt/filecatalyst/workflow/":   workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+	}
+
 	deletedFiles := []string{}
 
-	err := wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.DeleteOldFiles, activities.CleanupInput{
-		Root:      paths.MustParse("/mnt/temp/"),
-		OlderThan: workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-	}).Get(ctx, &deletedFiles)
+	for folder, olderThan := range foldersToCleanup {
+		deletedFilesLoop := []string{}
+		err := wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.DeleteOldFiles, activities.CleanupInput{
+			Root:      paths.MustParse(folder),
+			OlderThan: olderThan,
+		}).Get(ctx, &deletedFilesLoop)
 
-	logger.Info("Deleted files", "count", len(deletedFiles))
+		logger.Info("Deleted files", "count", len(deletedFiles))
 
-	res := CleanupResult{
+		if err != nil {
+			logger.Error("Error during temp files cleanup", "error", err)
+			return nil, err
+		}
+
+		deletedFiles = append(deletedFiles, deletedFilesLoop...)
+
+		err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.DeleteEmptyDirectories, activities.CleanupInput{
+			Root: paths.MustParse(folder),
+		}).Get(ctx, nil)
+
+		if err != nil {
+			return nil, err
+		}
+
+	}
+
+	res := &CleanupResult{
 		DeletedFiles: deletedFiles,
 		DeletedCount: len(deletedFiles),
 	}
 
-	if err != nil {
-		logger.Error("Error during temp files cleanup", "error", err)
-		return res, err
-	}
-
-	err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.DeleteEmptyDirectories, activities.CleanupInput{
-		Root: paths.MustParse("/mnt/temp/"),
-	}).Get(ctx, nil)
-
-	return res, err
+	return res, nil
 }
