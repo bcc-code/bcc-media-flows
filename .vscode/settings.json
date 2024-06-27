@@ -1,5 +1,6 @@
 {
-    "files.associations": {
-        "*.gohtml": "html",
-    }
+  "files.associations": {
+    "*.gohtml": "html"
+  },
+  "go.testEnvFile": "${workspaceFolder}/.env"
 }
