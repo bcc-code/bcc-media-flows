@@ -78,6 +78,7 @@ func transcribe(ctx workflow.Context, assetIDs []string, language string) error 
 	var wfFutures []workflow.ChildWorkflowFuture
 	opts := workflow.GetChildWorkflowOptions(ctx)
 	opts.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
+	ctx = workflow.WithChildOptions(ctx, opts)
 	for _, id := range assetIDs {
 		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, miscworkflows.TranscribeVX, miscworkflows.TranscribeVXInput{
 			VXID:     id,
