@@ -92,6 +92,7 @@ func CopyFile(sourceRemote, sourcePath, destinationRemote, destinationPath strin
 		DestinationRemote: destinationRemote,
 		DestinationPath:   destinationPath,
 	})
+
 	if err != nil {
 		return nil, err
 	}

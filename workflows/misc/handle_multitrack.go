@@ -46,7 +46,7 @@ func makeMultitrackIsilonArchivePath(ctx workflow.Context, path paths.Path) path
 	}
 
 	now := workflow.Now(ctx)
-	return out.Prepend(fmt.Sprintf("AudioArchive/%d/%d", now.Year(), now.Month())).Append(path.Base())
+	return out.Prepend(fmt.Sprintf("AudioArchive/%02d/%02d/%02d", now.Year(), now.Month(), now.Day())).Append(path.Base())
 }
 
 func HandleMultitrackFile(
