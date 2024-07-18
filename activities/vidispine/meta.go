@@ -105,6 +105,15 @@ func (a Activities) GetRelations(ctx context.Context, assetID string) ([]vsapi.R
 	return vsClient.GetRelations(assetID)
 }
 
+func (a Activities) GetTrashedItems(ctx context.Context, _ any) ([]string, error) {
+	log := activity.GetLogger(ctx)
+	log.Info("Starting GetTrashedItems")
+
+	vsClient := GetClient()
+
+	return vsClient.GetTrash()
+}
+
 // UpdateAssetRelations attempts to find languages of related audio files and update the metadata
 // of this asset with the link
 func (a Activities) UpdateAssetRelations(ctx context.Context, params VXOnlyParam) ([]string, error) {

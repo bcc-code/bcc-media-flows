@@ -2,6 +2,7 @@
 package vidispine
 
 import (
+	"context"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 )
 
@@ -28,4 +29,6 @@ type Client interface {
 	AddFileToPlaceholder(itemID, fileID, tag string, fileState vsapi.FileState) (string, error)
 	GetResolutions(itemVXID string) ([]vsapi.Resolution, error)
 	GetRelations(assetID string) ([]vsapi.Relation, error)
+	GetTrash() ([]string, error)
+	DeleteItems(ctx context.Context, itemVXIDs []string) error
 }
