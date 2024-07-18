@@ -30,5 +30,5 @@ type Client interface {
 	GetResolutions(itemVXID string) ([]vsapi.Resolution, error)
 	GetRelations(assetID string) ([]vsapi.Relation, error)
 	GetTrash() ([]string, error)
-	DeleteItems(ctx context.Context, itemVXIDs []string) error
+	DeleteItems(ctx context.Context, itemVXIDs []string, deleteFiles bool) error
 }

@@ -20,7 +20,8 @@ func MediabankenPurgeTrash(ctx workflow.Context) (*MediabankenPurgeTrashResult, 
 	}
 
 	err = wfutils.Execute(ctx, activities.Vidispine.DeleteItems, vsactivity.DeleteItemsParams{
-		VXIDs: trashedIDs,
+		VXIDs:       trashedIDs,
+		DeleteFiles: true,
 	}).Wait(ctx)
 
 	if err != nil {

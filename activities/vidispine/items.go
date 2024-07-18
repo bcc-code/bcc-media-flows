@@ -6,8 +6,8 @@ import (
 )
 
 type DeleteItemsParams struct {
-	VXIDs []string
-	//	DeleteFiles bool // TODO: Should probably be implemented in the future
+	VXIDs       []string
+	DeleteFiles bool
 }
 
 // DeleteItems deletes items from Vidispine, including all files on disk!
@@ -17,5 +17,5 @@ func (a Activities) DeleteItems(ctx context.Context, params DeleteItemsParams) (
 
 	vsClient := GetClient()
 
-	return nil, vsClient.DeleteItems(ctx, params.VXIDs)
+	return nil, vsClient.DeleteItems(ctx, params.VXIDs, params.DeleteFiles)
 }
