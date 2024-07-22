@@ -57,16 +57,30 @@ func getVideosByQuality(videoFilePath, outputDir paths.Path, watermarkPath *path
 
 type resolutionString string
 
+func (r *Resolution) EnsureEven() {
+	if r.Height%2 != 0 {
+		r.Height = r.Height + 1
+	}
+
+	if r.Width%2 != 0 {
+		r.Width = r.Width + 1
+	}
+}
+
 func resolutionToString(r Resolution) resolutionString {
+	r.EnsureEven()
 	return resolutionString(fmt.Sprintf("%dx%d-%t", r.Width, r.Height, r.File))
 }
 
 func resolutionFromString(str resolutionString) Resolution {
 	var r Resolution
+
 	_, err := fmt.Sscanf(string(str), "%dx%d-%t", &r.Width, &r.Height, &r.File)
 	if err != nil {
 		fmt.Sprintf("Failed to parse resolution string %s, err: %s", str, err.Error())
 	}
+
+	r.EnsureEven()
 	return r
 }
 

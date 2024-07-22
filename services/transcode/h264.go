@@ -69,6 +69,7 @@ func H264(input H264EncodeInput, progressCallback ffmpeg.ProgressCallback) (*Enc
 	}
 
 	if input.Resolution != "" {
+
 		params = append(
 			params,
 			"-s", input.Resolution,
