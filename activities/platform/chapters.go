@@ -80,6 +80,9 @@ func metaToChapter(meta *vsapi.MetadataResult, subclipTypeNames map[string]strin
 
 	out.Persons = lo.Filter(meta.GetArray(vscommon.FieldPersonsAppearing), func(p string, _ int) bool { return p != "" })
 
+	out.Label = meta.Get(vscommon.FieldTitle, "")
+	out.Title = meta.Get(vscommon.FieldTitle, "")
+
 	if out.ContentType == pcommon.ContentTypeSong.Value || out.ContentType == pcommon.ContentTypeSingAlong.Value {
 		match := SongExtract.FindStringSubmatch(strings.ToUpper(out.Label))
 		if len(match) == 3 {
@@ -87,9 +90,6 @@ func metaToChapter(meta *vsapi.MetadataResult, subclipTypeNames map[string]strin
 			out.SongNumber = match[2]
 		}
 	}
-
-	out.Label = meta.Get(vscommon.FieldTitle, "")
-	out.Title = meta.Get(vscommon.FieldTitle, "")
 
 	if meta.Get(vscommon.FieldSubclipExportTitle, "") != "yes" {
 		if out.ContentType == pcommon.ContentTypeOther.Value {
