@@ -89,7 +89,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 			FrameRate:  25,
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderAVCIntra100HD:
-		err = wfutils.Execute(ctx, activities.Video.TranscodeToH264Activity, activities.EncodeParams{
+		err = wfutils.Execute(ctx, activities.Video.TranscodeToAVCIntraActivity, activities.EncodeParams{
 			FilePath:   path,
 			OutputDir:  tmpFolder,
 			Resolution: "1920x1080",
