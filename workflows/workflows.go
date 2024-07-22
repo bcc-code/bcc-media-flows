@@ -24,6 +24,7 @@ var TriggerableWorkflows = []any{
 	miscworkflows.UpdateAssetRelations,
 	miscworkflows.NormalizeAudioLevelWorkflow,
 	scheduled.CleanupTemp,
+	scheduled.MediabankenPurgeTrash,
 }
 
 var WorkerWorkflows = []any{
@@ -62,4 +63,5 @@ var WorkerWorkflows = []any{
 	vb_export.VBExportToHippo,
 	vb_export.VBExportToDubbing,
 	scheduled.CleanupTemp,
+	scheduled.MediabankenPurgeTrash,
 }
