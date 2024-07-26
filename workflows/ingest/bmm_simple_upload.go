@@ -1,4 +1,4 @@
-package webhooks
+package ingestworkflows
 
 import (
 	"fmt"
@@ -10,23 +10,23 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/bcc-code/bcc-media-flows/workflows/export"
-	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"go.temporal.io/sdk/workflow"
 )
 
 type BmmSimpleUploadParams struct {
-	TrackID    int    `json:"trackId"`
-	UploadedBy string `json:"uploadedBy"`
-	FilePath   string `json:"filePath"`
-	Title      string `json:"title"`
-	Language   string `json:"language"`
+	TrackID             int    `json:"trackId"`
+	UploadedBy          string `json:"uploadedBy"`
+	FilePath            string `json:"filePath"`
+	Title               string `json:"title"`
+	Language            string `json:"language"`
+	BmmTargetEnvionment string `json:"bmmTargetEnvironment"`
 }
 
 type BmmSimpleUploadResult struct {
 }
 
-func BmmSimpleUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSimpleUploadResult, error) {
+func BmmIngestUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSimpleUploadResult, error) {
 	workflow.GetLogger(ctx).Info("Starting BmmSimpleUpload")
 
 	path := paths.MustParse(params.FilePath)
@@ -46,17 +46,17 @@ func BmmSimpleUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 		return nil, err
 	}
 
-	res, err := ingestworkflows.ImportFileAsTag(ctx, "original", newPath, "BMM-"+strconv.Itoa(params.TrackID)+" "+params.Language+" - "+params.Title)
+	res, err := ImportFileAsTag(ctx, "original", newPath, "BMM-"+strconv.Itoa(params.TrackID)+" "+params.Language+" - "+params.Title)
 	if err != nil {
 		return nil, err
 	}
 
-	err = ingestworkflows.SetUploadedBy(ctx, res.AssetID, params.UploadedBy)
+	err = SetUploadedBy(ctx, res.AssetID, params.UploadedBy)
 	if err != nil {
 		return nil, err
 	}
 
-	err = ingestworkflows.SetUploadJobID(ctx, res.AssetID, workflow.GetInfo(ctx).OriginalRunID)
+	err = SetUploadJobID(ctx, res.AssetID, workflow.GetInfo(ctx).OriginalRunID)
 	if err != nil {
 		return nil, err
 	}
@@ -89,13 +89,18 @@ func BmmSimpleUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 		return nil, err
 	}
 
+	destinations := []string{export.AssetExportDestinationBMM.Value}
+	if params.BmmTargetEnvionment == "bmm-int" {
+		destinations = []string{export.AssetExportDestinationBMMIntegration.Value}
+	}
+
 	future := workflow.ExecuteChildWorkflow(ctx, export.VXExport, export.VXExportParams{
 		VXID:         res.AssetID,
-		Destinations: []string{"bmm-integration"},
+		Destinations: destinations,
 		Languages:    []string{params.Language},
 	})
 
-	_ = ingestworkflows.CreatePreviews(ctx, []string{res.AssetID})
+	_ = CreatePreviews(ctx, []string{res.AssetID})
 
 	err = future.Get(ctx, nil)
 	if err != nil {
