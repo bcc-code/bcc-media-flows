@@ -6,14 +6,12 @@ import (
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"github.com/bcc-code/bcc-media-flows/workflows/scheduled"
 	"github.com/bcc-code/bcc-media-flows/workflows/vb_export"
-	"github.com/bcc-code/bcc-media-flows/workflows/webhooks"
 )
 
 var TriggerableWorkflows = []any{
 	export.VXExport,
 	vb_export.VBExport,
-	webhooks.WebHook,
-	webhooks.BmmSimpleUpload,
+	ingestworkflows.BmmIngestUpload,
 	miscworkflows.TranscodePreviewVX,
 	miscworkflows.TranscodePreviewFile,
 	miscworkflows.TranscribeFile,
@@ -34,8 +32,7 @@ var WorkerWorkflows = []any{
 	miscworkflows.TranscribeVX,
 	miscworkflows.WatchFolderTranscode,
 	miscworkflows.HandleMultitrackFile,
-	webhooks.WebHook,
-	webhooks.BmmSimpleUpload,
+	ingestworkflows.BmmIngestUpload,
 	export.VXExport,
 	export.VXExportToVOD,
 	export.VXExportToPlayout,
