@@ -2,6 +2,7 @@ package miscworkflows
 
 import (
 	"fmt"
+	"github.com/samber/lo"
 	"path/filepath"
 	"strings"
 	"time"
@@ -53,9 +54,8 @@ func TranscodePreviewVX(
 		return err
 	}
 
-	switch strings.ToLower(filepath.Ext(shapes.FilePath.Path)) {
-	case ".mxf", ".mov", ".mp4", ".wav", ".mpg", ".aif":
-	default:
+	allowedExtensions := []string{".mxf", ".mov", ".mp4", ".wav", ".mpg", ".aif", ".mp3"}
+	if lo.Contains(allowedExtensions, strings.ToLower(filepath.Ext(shapes.FilePath.Path))) {
 		return fmt.Errorf("unsupported file extension: %s", filepath.Ext(shapes.FilePath.Path))
 	}
 
