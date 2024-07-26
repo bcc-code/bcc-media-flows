@@ -55,7 +55,7 @@ func TranscodePreviewVX(
 	}
 
 	allowedExtensions := []string{".mxf", ".mov", ".mp4", ".wav", ".mpg", ".aif", ".mp3"}
-	if lo.Contains(allowedExtensions, strings.ToLower(filepath.Ext(shapes.FilePath.Path))) {
+	if !lo.Contains(allowedExtensions, strings.ToLower(filepath.Ext(shapes.FilePath.Path))) {
 		return fmt.Errorf("unsupported file extension: %s", filepath.Ext(shapes.FilePath.Path))
 	}
 
