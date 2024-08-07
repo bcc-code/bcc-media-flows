@@ -210,6 +210,8 @@ func DoTranscribe(
 	restyClient.RetryWaitTime = 10
 	restyClient.RetryMaxWaitTime = 30
 
+	language = normalizeTranscriptionLanguage(language)
+
 	resp, err := restyClient.R().EnableTrace().
 		SetBody(TranscribeInput{
 			Path:       inputFile,
