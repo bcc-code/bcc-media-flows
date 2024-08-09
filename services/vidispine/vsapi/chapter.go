@@ -21,11 +21,17 @@ func (c *Client) GetChapterMeta(itemVXID string, inTc, outTc float64) (map[strin
 	outClips := map[string]*MetadataResult{}
 
 	for key, clip := range clips {
+		duration := 0.0
 
 		for _, field := range clip.Terse {
 			for _, value := range field {
-				trimTimecodesToBeWithinRange(value, inTc, outTc)
+				duration = trimTimecodesToBeWithinRange(value, inTc, outTc)
 			}
+		}
+
+		if duration < 10.0 {
+			// If the trimmed chapter duration is < 10s we don't consider it a valid chapter
+			continue
 		}
 
 		outClips[key] = clip
@@ -35,12 +41,16 @@ func (c *Client) GetChapterMeta(itemVXID string, inTc, outTc float64) (map[strin
 }
 
 // trimTimecodesToBeWithinRange ensures that the timecodes are within the clip range
-func trimTimecodesToBeWithinRange(value *MetadataField, inTc, outTc float64) {
-	if valueStart, _ := vscommon.TCToSeconds(value.Start); valueStart < inTc {
+func trimTimecodesToBeWithinRange(value *MetadataField, inTc, outTc float64) float64 {
+	valueStart, _ := vscommon.TCToSeconds(value.Start)
+	if valueStart < inTc {
 		value.Start = fmt.Sprintf("%.0f@PAL", inTc*25)
 	}
 
-	if valueEnd, _ := vscommon.TCToSeconds(value.End); valueEnd > outTc {
+	valueEnd, _ := vscommon.TCToSeconds(value.End)
+	if valueEnd > outTc {
 		value.End = fmt.Sprintf("%.0f@PAL", outTc*25)
 	}
+
+	return valueEnd - valueStart
 }
