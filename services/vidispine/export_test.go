@@ -115,7 +115,7 @@ func Test_GetDataForExportEmbeddedAudio(t *testing.T) {
 	expected := &vidispine.ExportData{}
 	fromJSONFile(expected, "testdata/GetDataForExport/VX-464406.json")
 
-	res, err := vidispine.GetDataForExport(vsClient, "VX-464406", nil, nil, "")
+	res, err := vidispine.GetDataForExport(vsClient, "VX-464406", nil, nil, "Kåre J. Smith - Tale")
 	assert.NoError(t, err)
 	assert.Equal(t, expected, res)
 }
@@ -148,7 +148,7 @@ func Test_GetDataForExportSubclip(t *testing.T) {
 	expected := &vidispine.ExportData{}
 	fromJSONFile(expected, "testdata/GetDataForExport/VX-460824.json")
 
-	res, err := vidispine.GetDataForExport(vsClient, "VX-460824", nil, nil, "")
+	res, err := vidispine.GetDataForExport(vsClient, "VX-460824", nil, nil, "Kåre J. Smith - Tale")
 	assert.NoError(t, err)
 	assert.Equal(t, expected, res)
 }

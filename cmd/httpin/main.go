@@ -9,11 +9,12 @@ import (
 	"runtime"
 	"strconv"
 
+	"strings"
+
 	"github.com/bcc-code/bcc-media-flows/environment"
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"github.com/gin-contrib/cors"
-	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/workflows/export"
 

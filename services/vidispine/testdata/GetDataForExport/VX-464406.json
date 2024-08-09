@@ -9,7 +9,7 @@
       "AudioFiles": {
         "deu": {
           "VXID": "VX-464402",
-          "Channels": [
+          "Streams": [
             3,
             4
           ],
@@ -17,7 +17,7 @@
         },
         "eng": {
           "VXID": "VX-464402",
-          "Channels": [
+          "Streams": [
             7,
             8
           ],
@@ -25,21 +25,21 @@
         },
         "fin": {
           "VXID": "VX-464402",
-          "Channels": [
+          "Streams": [
             11
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         },
         "fra": {
           "VXID": "VX-464402",
-          "Channels": [
+          "Streams": [
             9
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         },
         "nld": {
           "VXID": "VX-464402",
-          "Channels": [
+          "Streams": [
             5,
             6
           ],
@@ -47,7 +47,7 @@
         },
         "nor": {
           "VXID": "VX-464402",
-          "Channels": [
+          "Streams": [
             1,
             2
           ],
@@ -55,42 +55,42 @@
         },
         "pol": {
           "VXID": "VX-464402",
-          "Channels": [
+          "Streams": [
             16
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         },
         "por": {
           "VXID": "VX-464402",
-          "Channels": [
+          "Streams": [
             13
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         },
         "ron": {
           "VXID": "VX-464402",
-          "Channels": [
+          "Streams": [
             14
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         },
         "rus": {
           "VXID": "VX-464402",
-          "Channels": [
+          "Streams": [
             12
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         },
         "spa": {
           "VXID": "VX-464402",
-          "Channels": [
+          "Streams": [
             10
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         },
         "tur": {
           "VXID": "VX-464402",
-          "Channels": [
+          "Streams": [
             15
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
@@ -100,7 +100,8 @@
       "VXID": "VX-464402"
     }
   ],
-  "Title": "SEQ_TITLE_2",
-  "SafeTitle": "SEQ_TITLE_2",
-  "ImportDate": "2023-08-08T19:39:55.559Z"
+  "Title": "SEQ_TITLE_2 - Kåre J. Smith - Tale",
+  "SafeTitle": "SEQ_TITLE_2_Kre_J_Smith_Tale",
+  "ImportDate": "2023-08-08T19:39:55.559Z",
+  "BmmTitle": ""
 }

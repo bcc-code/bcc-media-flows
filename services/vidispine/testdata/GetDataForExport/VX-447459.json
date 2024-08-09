@@ -9,105 +9,92 @@
       "AudioFiles": {
         "cmn": {
           "VXID": "VX-447208",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            1
           ],
           "File": "/path/to/file/SOTM_7v2123_MAS_ENG.mov"
         },
         "deu": {
           "VXID": "VX-447206",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/path/to/file/SOTM_7v2123_MAS_ENG_DEU.wav"
         },
         "eng": {
           "VXID": "VX-447499",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/path/to/file/SOTM_7v2123_MAS_ENG_ENG.wav"
         },
         "fra": {
           "VXID": "VX-447214",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/path/to/file/SOTM_7v2123_MAS_ENG_NOR.wav"
         },
         "hun": {
           "VXID": "VX-447207",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/path/to/file/SOTM_7v2123_MAS_ENG_HUN.wav"
         },
         "kha": {
           "VXID": "VX-447215",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/path/to/file/SOTM_7v2123_MAS_ENG_KHA.wav"
         },
         "nld": {
           "VXID": "VX-447216",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/path/to/file/SOTM_7v2123_MAS_ENG_NLD.wav"
         },
         "nor": {
           "VXID": "VX-447214",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/path/to/file/SOTM_7v2123_MAS_ENG_NOR.wav"
         },
         "por": {
           "VXID": "VX-447212",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/path/to/file/SOTM_7v2123_MAS_ENG_POR.wav"
         },
         "ron": {
           "VXID": "VX-447211",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/path/to/file/SOTM_7v2123_MAS_ENG_RON.wav"
         },
         "rus": {
           "VXID": "VX-447217",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/path/to/file/SOTM_7v2123_MAS_ENG_RUS.wav"
         },
         "spa": {
           "VXID": "VX-447213",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/path/to/file/SOTM_7v2123_MAS_ENG_SPA.wav"
         },
         "tur": {
           "VXID": "VX-447210",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/path/to/file/SOTM_7v2123_MAS_ENG_TUR.wav"
         }
@@ -141,105 +128,92 @@
       "AudioFiles": {
         "cmn": {
           "VXID": "",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "deu": {
           "VXID": "",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "eng": {
           "VXID": "",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "fra": {
           "VXID": "",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "hun": {
           "VXID": "",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "kha": {
           "VXID": "",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "nld": {
           "VXID": "",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "nor": {
           "VXID": "",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "por": {
           "VXID": "",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "ron": {
           "VXID": "",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "rus": {
           "VXID": "",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "spa": {
           "VXID": "",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         },
         "tur": {
           "VXID": "",
-          "Channels": [
-            1,
-            2
+          "Streams": [
+            0
           ],
           "File": "/mnt/isilon/system/assets/BlankAudio10h.wav"
         }
@@ -265,5 +239,8 @@
       "VXID": "VX-439354"
     }
   ],
-  "Title": "SOTM_7v2123_SEQ"
+  "Title": "SOTM_7v2123_SEQ",
+  "SafeTitle": "SOTM_7v2123_SEQ",
+  "BmmTitle": "",
+  "ImportDate": "2023-03-27T13:04:00.235Z"
 }

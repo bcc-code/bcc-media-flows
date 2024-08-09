@@ -3,11 +3,12 @@ package export
 import (
 	"crypto/sha1"
 	"fmt"
-	pcommon "github.com/bcc-code/bcc-media-platform/backend/common"
 	"path"
 	"strconv"
 	"strings"
 	"time"
+
+	pcommon "github.com/bcc-code/bcc-media-platform/backend/common"
 
 	platform_activities "github.com/bcc-code/bcc-media-flows/activities/platform"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
