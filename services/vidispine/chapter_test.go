@@ -95,6 +95,7 @@ func Test_GetChapterMetaForClips_Overlapping(t *testing.T) {
 }
 
 // This is an edge case where the annotations overlap by a few frames
+// This test is identical to Test_GetChapterMetaForClips_Overlapping but with a different subclip that was exibithing the same behaviour
 func Test_GetChapterMetaForClips_Overlapping2(t *testing.T) {
 	clips := []*Clip{
 		{
