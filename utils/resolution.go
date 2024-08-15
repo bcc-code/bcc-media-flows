@@ -5,8 +5,6 @@ import "fmt"
 var (
 	Resolution4K   = MustResolution("3840x2160")
 	Resolution1080 = MustResolution("1920x1080")
-	Resolution720  = MustResolution("1280x720")
-	Resolution480  = MustResolution("854x480")
 )
 
 type Resolution struct {
