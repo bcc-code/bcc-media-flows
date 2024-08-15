@@ -59,6 +59,13 @@ func Test_GetChapterMetaForClips_Overlapping(t *testing.T) {
 		t.Skip("VIDISPINE_BASE_URL is not set")
 	}
 
+	// The important thing here is the VXID of the main file (not the audio file),
+	// together with the in and out points of the clip.
+	//
+	// The situation is that two annotations (chapters) in MB overlap by a few frames,
+	// making the system think that there are two chapters between the in and out point.
+	// While this is techinically correct, it is not what we want, if one of the "chapters"
+	// is very short (less than 10 seconds). At this point it is unlikely to be a real chapter and we can ignore it.
 	testData := [][]*Clip{
 		{
 			{
