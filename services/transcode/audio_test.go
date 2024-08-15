@@ -56,12 +56,12 @@ func Test_AudioSilence(t *testing.T) {
 
 func Test_AudioChannelSilence(t *testing.T) {
 	// One channel should be silent
-	isSilent, err := AudioStreamIsSilent(paths.MustParse("./testdata/silence_test_4chan_1silent.wav"), 0, 1, 1)
+	isSilent, err := AudioStreamIsSilent(paths.MustParse("./testdata/silence_test_4ch_1silent.wav"), 0, 1, 1)
 	assert.Nil(t, err)
 	assert.True(t, isSilent)
 
 	// If we check all channels, it should be false
-	isSilent, err = AudioStreamIsSilent(paths.MustParse("./testdata/silence_test_4chan_1silent.wav"), 0, 1, 4)
+	isSilent, err = AudioStreamIsSilent(paths.MustParse("./testdata/silence_test_4ch_1silent.wav"), 0, 1, 4)
 	assert.Nil(t, err)
 	assert.False(t, isSilent)
 }
