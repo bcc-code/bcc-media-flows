@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestResolutionFromString(t *testing.T) {
+func TestResolution(t *testing.T) {
 	for range 10 {
 		x := rand.Int()
 		y := rand.Int()
@@ -25,5 +25,14 @@ func TestResolutionFromString(t *testing.T) {
 
 		assert.Equal(t, resolution.Height%2, 0)
 		assert.Equal(t, resolution.Width%2, 0)
+	}
+
+	for range 10 {
+		x := rand.Float32()
+		y := rand.Float32()
+
+		resolution, err := ResolutionFromString(fmt.Sprintf("%fx%f", x, y))
+		assert.Error(t, err)
+		assert.Nil(t, resolution)
 	}
 }
