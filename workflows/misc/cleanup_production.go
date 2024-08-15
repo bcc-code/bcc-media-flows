@@ -30,6 +30,8 @@ type SortFilesByImportedDateParams struct {
 //
 // This workflow is intentionally not registered anywhere, as it is not meant to be used in normal day-to-day operations
 // without modification and testing.
+//
+//workflowcheck:ignore
 func SortFilesByImportedDate(
 	ctx workflow.Context,
 	params SortFilesByImportedDateParams,
@@ -43,7 +45,7 @@ func SortFilesByImportedDate(
 	cnt := 1
 	total := len(params.FileList)
 	failed := map[string]error{}
-	start := time.Now()
+	start := workflow.Now(ctx)
 
 	if params.BatchSize < 1 {
 		params.BatchSize = 1
@@ -52,7 +54,8 @@ func SortFilesByImportedDate(
 	filesChan := lo.SliceToChannel(params.BatchSize, params.FileList)
 
 	for {
-		items, _, _, ok := lo.Buffer(filesChan, params.BatchSize)
+		items, _, _, ok := lo.Buffer[string](filesChan, params.BatchSize)
+
 		if !ok {
 			break
 		}
