@@ -3,6 +3,7 @@ package activities
 import (
 	"context"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/utils"
 
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -14,7 +15,7 @@ import (
 type EncodeParams struct {
 	FilePath       paths.Path
 	OutputDir      paths.Path
-	Resolution     string
+	Resolution     *utils.Resolution
 	FrameRate      int
 	Bitrate        string
 	Interlace      bool

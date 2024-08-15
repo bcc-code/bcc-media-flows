@@ -2,6 +2,7 @@ package miscworkflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/utils"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
@@ -67,7 +68,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 		err = wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:   path,
 			OutputDir:  tmpFolder,
-			Resolution: "1920x1080",
+			Resolution: utils.Resolution1080,
 			FrameRate:  25,
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderProRes422HQNative:
@@ -85,14 +86,14 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 		err = wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:   path,
 			OutputDir:  tmpFolder,
-			Resolution: "3840x2160",
+			Resolution: utils.Resolution4K,
 			FrameRate:  25,
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderAVCIntra100HD:
 		err = wfutils.Execute(ctx, activities.Video.TranscodeToAVCIntraActivity, activities.EncodeParams{
 			FilePath:   path,
 			OutputDir:  tmpFolder,
-			Resolution: "1920x1080",
+			Resolution: utils.Resolution1080,
 			FrameRate:  25,
 			Bitrate:    "100M",
 		}).Get(ctx, &transcodeOutput)
@@ -100,7 +101,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 		err = wfutils.Execute(ctx, activities.Video.TranscodeToXDCAMActivity, activities.EncodeParams{
 			FilePath:   path,
 			OutputDir:  tmpFolder,
-			Resolution: "1920x1080",
+			Resolution: utils.Resolution1080,
 			FrameRate:  25,
 			Bitrate:    "60M",
 		}).Get(ctx, &transcodeOutput)

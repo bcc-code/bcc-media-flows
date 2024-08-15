@@ -5,6 +5,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/utils"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -21,7 +22,7 @@ type PrepareFilesResult struct {
 	AudioFiles map[string]paths.Path
 }
 
-func getVideosByQuality(videoFilePath, outputDir paths.Path, watermarkPath *paths.Path, resolutions []Resolution) map[resolutionString]common.VideoInput {
+func getVideosByQuality(videoFilePath, outputDir paths.Path, watermarkPath *paths.Path, resolutions []utils.Resolution) map[resolutionString]common.VideoInput {
 	var qualities = map[resolutionString]common.VideoInput{}
 
 	for _, r := range resolutions {
@@ -57,23 +58,13 @@ func getVideosByQuality(videoFilePath, outputDir paths.Path, watermarkPath *path
 
 type resolutionString string
 
-func (r *Resolution) EnsureEven() {
-	if r.Height%2 != 0 {
-		r.Height = r.Height + 1
-	}
-
-	if r.Width%2 != 0 {
-		r.Width = r.Width + 1
-	}
-}
-
-func resolutionToString(r Resolution) resolutionString {
+func resolutionToString(r utils.Resolution) resolutionString {
 	r.EnsureEven()
 	return resolutionString(fmt.Sprintf("%dx%d-%t", r.Width, r.Height, r.File))
 }
 
-func resolutionFromString(str resolutionString) Resolution {
-	var r Resolution
+func resolutionFromString(str resolutionString) utils.Resolution {
+	var r utils.Resolution
 
 	_, err := fmt.Sscanf(string(str), "%dx%d-%t", &r.Width, &r.Height, &r.File)
 	if err != nil {
@@ -84,7 +75,7 @@ func resolutionFromString(str resolutionString) Resolution {
 	return r
 }
 
-func doVideoTasks(ctx workflow.Context, selector workflow.Selector, qualities map[resolutionString]common.VideoInput, callback func(f workflow.Future, q Resolution)) ([]resolutionString, error) {
+func doVideoTasks(ctx workflow.Context, selector workflow.Selector, qualities map[resolutionString]common.VideoInput, callback func(f workflow.Future, q utils.Resolution)) ([]resolutionString, error) {
 	keys, err := wfutils.GetMapKeysSafely(ctx, qualities)
 	if err != nil {
 		return nil, err

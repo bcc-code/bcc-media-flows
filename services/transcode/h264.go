@@ -1,6 +1,7 @@
 package transcode
 
 import (
+	"github.com/bcc-code/bcc-media-flows/utils"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,7 +15,7 @@ import (
 type H264EncodeInput struct {
 	FilePath       string
 	OutputDir      string
-	Resolution     string
+	Resolution     *utils.Resolution
 	FrameRate      int
 	Bitrate        string
 	Interlace      bool
@@ -68,11 +69,11 @@ func H264(input H264EncodeInput, progressCallback ffmpeg.ProgressCallback) (*Enc
 		)
 	}
 
-	if input.Resolution != "" {
-
+	if input.Resolution != nil {
+		input.Resolution.EnsureEven()
 		params = append(
 			params,
-			"-s", input.Resolution,
+			"-s", input.Resolution.FFMpegString(),
 		)
 	}
 

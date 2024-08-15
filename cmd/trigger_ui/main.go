@@ -3,13 +3,14 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/utils"
 	"log"
 	"net/http"
 	"path/filepath"
 	"sort"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
-	"github.com/bcc-code/bcc-media-platform/backend/utils"
+	bccmUtils "github.com/bcc-code/bcc-media-platform/backend/utils"
 	"github.com/google/uuid"
 	"github.com/samber/lo"
 
@@ -168,7 +169,6 @@ func (s *TriggerServer) vxExportGET(ctx *gin.Context) {
 		return
 	}
 
-	//subclips := lo.Map(rawChapters, func(c *vidispine.GetChapterMetaResult, _ int) Subclip {
 	var subclips []Subclip
 	for _, c := range rawChapters {
 		if len(c.Meta.Terse["title"]) == 0 {
@@ -264,10 +264,10 @@ func (s *TriggerServer) vxExportPOST(ctx *gin.Context) {
 	}
 
 	resolutionIndexes := lo.Map(ctx.PostFormArray("resolutions[]"), func(i string, _ int) int {
-		return utils.AsInt(i)
+		return bccmUtils.AsInt(i)
 	})
 	fileIndexes := lo.Map(ctx.PostFormArray("files[]"), func(i string, _ int) int {
-		return utils.AsInt(i)
+		return bccmUtils.AsInt(i)
 	})
 
 	vsresolutions, err := s.vidispine.GetResolutions(vxID)
@@ -276,10 +276,10 @@ func (s *TriggerServer) vxExportPOST(ctx *gin.Context) {
 		return
 	}
 
-	var selectedResolutions []export.Resolution
+	var selectedResolutions []utils.Resolution
 	for _, i := range resolutionIndexes {
 		r := vsresolutions[i]
-		selectedResolutions = append(selectedResolutions, export.Resolution{
+		selectedResolutions = append(selectedResolutions, utils.Resolution{
 			Width:  r.Width,
 			Height: r.Height,
 			File:   lo.Contains(fileIndexes, i),

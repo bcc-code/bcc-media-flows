@@ -26,5 +26,6 @@ func TestIsDirEmpty(t *testing.T) {
 }
 
 func TestValidRawFilename(t *testing.T) {
-	assert.True(t, utils.ValidRawFilename("KJS80_INTERVJUFILM_BRØDRE_RCC_AUD_V02.wav"))
+	// Ø is not allowed
+	assert.False(t, utils.ValidRawFilename("KJS80_INTERVJUFILM_BRØDRE_RCC_AUD_V02.wav"))
 }

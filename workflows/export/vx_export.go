@@ -2,6 +2,7 @@ package export
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/utils"
 	"strings"
 
 	"github.com/ansel1/merry/v2"
@@ -41,7 +42,7 @@ type VXExportParams struct {
 	Languages     []string
 	Subclip       string
 	IgnoreSilence bool
-	Resolutions   []Resolution
+	Resolutions   []utils.Resolution
 }
 
 type VXExportResult struct {
@@ -50,12 +51,6 @@ type VXExportResult struct {
 	Duration     string `json:"duration"`
 	SmilFile     string `json:"smil_file"`
 	ChaptersFile string `json:"chapters_file"`
-}
-
-type Resolution struct {
-	Width  int
-	Height int
-	File   bool
 }
 
 type VXExportChildWorkflowParams struct {

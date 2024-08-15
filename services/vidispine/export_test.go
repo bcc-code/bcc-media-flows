@@ -10,7 +10,9 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
@@ -182,38 +184,23 @@ func Test_GetDataForExportSubtitles(t *testing.T) {
 	expected := &vidispine.ExportData{}
 	fromJSONFile(expected, "testdata/GetDataForExport/VX-447459.json")
 
+	for i, _ := range expected.Clips {
+		for j, _ := range expected.Clips[i].AudioFiles {
+			if strings.HasSuffix(expected.Clips[i].AudioFiles[j].File, "BlankAudio10h.wav") {
+				// Manually construct the path and force it into the expected data
+				expected.Clips[i].AudioFiles[j].File = paths.Path{paths.Drive{Value: "isilon"}, "/system/assets/BlankAudio10h.wav"}.Local()
+			}
+		}
+
+		for j, _ := range expected.Clips[i].SubtitleFiles {
+			if strings.HasSuffix(expected.Clips[i].SubtitleFiles[j], "empty.srt") {
+				// Manually construct the path and force it into the expected data
+				expected.Clips[i].SubtitleFiles[j] = paths.Path{paths.Drive{Value: "isilon"}, "/system/assets/empty.srt"}.Local()
+			}
+		}
+	}
+
 	res, err := vidispine.GetDataForExport(vsClient, "VX-447459", nil, nil, "")
 	assert.NoError(t, err)
 	assert.Equal(t, expected, res)
 }
-
-/*
-func Test_GetChapterData(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	vsClient := vsmock.NewMockVSClient(ctrl)
-
-	expectGetMetadata(vsClient, "VX-431566", 1)
-
-
-	c := vidispine.NewVidispineService(vsClient)
-
-	testVXIDs := []string{
-		"VX-431566",
-		"VX-411326",
-		"VX-410884",
-		"VX-467749",
-	}
-
-	for _, vxid := range testVXIDs {
-		spew.Dump(vxid)
-		exportData, err := c.GetDataForExport(vxid)
-		assert.NoError(t, err)
-		assert.NotNil(t, exportData)
-
-		chapters, err := c.GetChapterData(exportData)
-		assert.NoError(t, err)
-		assert.NotNil(t, chapters)
-		spew.Dump(chapters)
-	}
-
-}*/

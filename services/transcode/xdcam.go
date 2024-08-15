@@ -1,6 +1,7 @@
 package transcode
 
 import (
+	"github.com/bcc-code/bcc-media-flows/utils"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -12,7 +13,7 @@ import (
 type XDCAMEncodeInput struct {
 	FilePath   string
 	OutputDir  string
-	Resolution string
+	Resolution *utils.Resolution
 	FrameRate  int
 	Bitrate    string
 	Interlace  bool
@@ -39,10 +40,10 @@ func generateFfmpegParamsForXDCAM(input XDCAMEncodeInput, output string) []strin
 		)
 	}
 
-	if input.Resolution != "" {
+	if input.Resolution != nil {
 		params = append(
 			params,
-			"-s", input.Resolution,
+			"-s", input.Resolution.FFMpegString(),
 		)
 	}
 
