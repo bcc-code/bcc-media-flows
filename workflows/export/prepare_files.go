@@ -75,10 +75,7 @@ func resolutionToString(r Resolution) resolutionString {
 func resolutionFromString(str resolutionString) Resolution {
 	var r Resolution
 
-	_, err := fmt.Sscanf(string(str), "%dx%d-%t", &r.Width, &r.Height, &r.File)
-	if err != nil {
-		fmt.Sprintf("Failed to parse resolution string %s, err: %s", str, err.Error())
-	}
+	_, _ = fmt.Sscanf(string(str), "%dx%d-%t", &r.Width, &r.Height, &r.File)
 
 	r.EnsureEven()
 	return r

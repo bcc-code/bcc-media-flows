@@ -28,7 +28,14 @@ func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 
 	deletedFiles := []string{}
 
-	for folder, olderThan := range foldersToCleanup {
+	folders, err := wfutils.GetMapKeysSafely(ctx, foldersToCleanup)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, folder := range folders {
+		olderThan := foldersToCleanup[folder]
+
 		deletedFilesLoop := []string{}
 		err := wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.DeleteOldFiles, activities.CleanupInput{
 			Root:      paths.MustParse(folder),
