@@ -18,11 +18,12 @@ type Language struct {
 type LanguageList []Language
 
 var (
-	LanguagesByNumber map[int]Language
-	LanguagesByISO    map[string]Language
-	LanguagesByMU1    map[int]Language
-	LanguagesByMU2    map[int]Language
-	LanguagesByReaper map[int]Language
+	LanguagesByNumber       map[int]Language
+	LanguagesByISO          map[string]Language
+	LanguagesByMU1          map[int]Language
+	LanguagesByMU2          map[int]Language
+	LanguagesByReaper       map[int]Language
+	LanguagesByISOTwoLetter map[string]Language
 )
 
 func init() {
@@ -31,6 +32,7 @@ func init() {
 	LanguagesByMU1 = languages.ByMU1()
 	LanguagesByMU2 = languages.ByMU2()
 	LanguagesByReaper = languages.ByReaperChan()
+	LanguagesByISOTwoLetter = languages.ByISO6392TwoLetter()
 }
 
 func (l LanguageList) ByNumber() map[int]Language {
@@ -83,6 +85,14 @@ func (l LanguageList) ByReaperChan() map[int]Language {
 			continue
 		}
 		out[lang.ReaperChannel] = lang
+	}
+	return out
+}
+
+func (l LanguageList) ByISO6392TwoLetter() map[string]Language {
+	out := make(map[string]Language)
+	for _, lang := range l {
+		out[lang.ISO6392TwoLetter] = lang
 	}
 	return out
 }

@@ -3,6 +3,7 @@ package export
 import (
 	"crypto/sha1"
 	"fmt"
+	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"path"
 	"strconv"
 	"strings"
@@ -223,8 +224,16 @@ func makeBMMJSON(
 
 	langs, _ := wfutils.GetMapKeysSafely(ctx, params.MergeResult.JSONTranscript)
 	for _, lang := range langs {
+		bmmTextLang := lang
+
+		// The text languages are mapped with two letter codes so we need to convert to code
+		// in order to be uniform with the audio languages
+		if val, ok := bccmflows.LanguagesByISOTwoLetter[lang]; ok {
+			bmmTextLang = val.ISO6391
+		}
+
 		transcript := params.MergeResult.JSONTranscript[lang]
-		jsonData.TranscriptionFiles[lang] = transcript.Base()
+		jsonData.TranscriptionFiles[bmmTextLang] = transcript.Base()
 	}
 
 	if len(chapters) > 0 {
