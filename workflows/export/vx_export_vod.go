@@ -2,6 +2,7 @@ package export
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/utils"
 	"path/filepath"
 	"strings"
 
@@ -73,7 +74,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		qualitiesWithLanguages: getQualitiesWithLanguages(audioKeys, params.ParentParams.Resolutions),
 	}
 
-	onVideoCreated := func(f workflow.Future, resolution Resolution) {
+	onVideoCreated := func(f workflow.Future, resolution utils.Resolution) {
 		var result common.VideoResult
 		err := f.Get(ctx, &result)
 		if err != nil {
@@ -117,7 +118,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		service.filesSelector.Select(ctx)
 	}
 
-	for range lo.Filter(params.ParentParams.Resolutions, func(item Resolution, _ int) bool {
+	for range lo.Filter(params.ParentParams.Resolutions, func(item utils.Resolution, _ int) bool {
 		return item.File
 	}) {
 		for range audioKeys {
@@ -299,7 +300,7 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 	}, nil
 }
 
-func (v *vxExportVodService) handleFileWorkflowFuture(ctx workflow.Context, lang string, resolution Resolution, f workflow.Future) {
+func (v *vxExportVodService) handleFileWorkflowFuture(ctx workflow.Context, lang string, resolution utils.Resolution, f workflow.Future) {
 	logger := workflow.GetLogger(ctx)
 
 	var result common.MuxResult
@@ -323,7 +324,7 @@ func (v *vxExportVodService) handleFileWorkflowFuture(ctx workflow.Context, lang
 	v.copyToIngest(ctx, result.Path)
 }
 
-func (v *vxExportVodService) handleStreamWorkflowFuture(ctx workflow.Context, r Resolution, f workflow.Future) {
+func (v *vxExportVodService) handleStreamWorkflowFuture(ctx workflow.Context, r utils.Resolution, f workflow.Future) {
 	logger := workflow.GetLogger(ctx)
 	var result common.MuxResult
 	err := f.Get(ctx, &result)

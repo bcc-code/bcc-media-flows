@@ -48,16 +48,22 @@ func Test_AudioSplit_Stereo(t *testing.T) {
 }
 
 func Test_AudioSilence(t *testing.T) {
-	isSilent, err := AudioIsSilent(paths.MustParse("/private/temp/workflows/5d2ea767-6b71-44c6-a207-005d7522326c/FKTB_20210415_2000_SEQ-slv.wav"))
+	isSilent, err := AudioIsSilent(paths.MustParse("./testdata/silence_test_mono.wav"))
 	assert.Nil(t, err)
 
 	assert.True(t, isSilent)
 }
 
 func Test_AudioChannelSilence(t *testing.T) {
-	isSilent, err := AudioStreamIsSilent(paths.MustParse("/private/temp/workflows/5d2ea767-6b71-44c6-a207-005d7522326c/FKTB_20210415_2000_SEQ-slv.wav"), 0, 1, 20)
+	// One channel should be silent
+	isSilent, err := AudioStreamIsSilent(paths.MustParse("./testdata/silence_test_4ch_1silent.wav"), 0, 1, 1)
 	assert.Nil(t, err)
 	assert.True(t, isSilent)
+
+	// If we check all channels, it should be false
+	isSilent, err = AudioStreamIsSilent(paths.MustParse("./testdata/silence_test_4ch_1silent.wav"), 0, 1, 4)
+	assert.Nil(t, err)
+	assert.False(t, isSilent)
 }
 
 func Test_ToneGenerator(t *testing.T) {

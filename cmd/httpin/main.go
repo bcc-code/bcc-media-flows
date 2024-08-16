@@ -3,6 +3,7 @@ package main
 import (
 	_ "embed"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/utils"
 	"net/http"
 	"os"
 	"reflect"
@@ -134,7 +135,7 @@ func triggerHandler(ctx *gin.Context) {
 		}
 
 		resolutionsString := getParamFromCtx(ctx, "resolutions")
-		var resolutions []export.Resolution
+		var resolutions []utils.Resolution
 		if resolutionsString != "" {
 			for _, r := range strings.Split(resolutionsString, ",") {
 				var width, height int
@@ -143,7 +144,7 @@ func triggerHandler(ctx *gin.Context) {
 					ctx.Status(http.StatusBadRequest)
 					return
 				}
-				resolutions = append(resolutions, export.Resolution{
+				resolutions = append(resolutions, utils.Resolution{
 					Width:  width,
 					Height: height,
 					File:   false,

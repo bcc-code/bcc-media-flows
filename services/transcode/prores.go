@@ -1,6 +1,7 @@
 package transcode
 
 import (
+	"github.com/bcc-code/bcc-media-flows/utils"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -13,7 +14,7 @@ import (
 type ProResInput struct {
 	FilePath       string
 	OutputDir      string
-	Resolution     string
+	Resolution     *utils.Resolution
 	FrameRate      int
 	Use4444        bool
 	BurnInSubtitle *paths.Path
@@ -72,10 +73,10 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProRe
 		)
 	}
 
-	if input.Resolution != "" {
+	if input.Resolution != nil {
 		params = append(
 			params,
-			"-s", input.Resolution,
+			"-s", input.Resolution.FFMpegString(),
 		)
 	}
 

@@ -2,6 +2,7 @@ package export
 
 import (
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
+	"github.com/bcc-code/bcc-media-flows/utils"
 	"path/filepath"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -30,7 +31,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 		Bitrate:    "50M",
 		FilePath:   *params.MergeResult.VideoFile,
 		OutputDir:  xdcamOutputDir,
-		Resolution: "1920x1080",
+		Resolution: utils.Resolution1080,
 		FrameRate:  25,
 		Interlace:  true,
 	}).Get(ctx, &videoResult)

@@ -1,6 +1,7 @@
 package transcode
 
 import (
+	"github.com/bcc-code/bcc-media-flows/utils"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -13,7 +14,7 @@ import (
 type AVCIntraEncodeInput struct {
 	FilePath       string
 	OutputDir      string
-	Resolution     string
+	Resolution     *utils.Resolution
 	FrameRate      int
 	Interlace      bool
 	BurnInSubtitle *paths.Path
@@ -45,10 +46,10 @@ func AvcIntra(input AVCIntraEncodeInput, progressCallback ffmpeg.ProgressCallbac
 		"-x264opts", "colormatrix=bt709",
 	}
 
-	if input.Resolution != "" {
+	if input.Resolution != nil {
 		params = append(
 			params,
-			"-s", input.Resolution,
+			"-s", input.Resolution.FFMpegString(),
 		)
 	}
 

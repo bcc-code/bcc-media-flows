@@ -58,12 +58,12 @@ func createTranslatedFile(ctx workflow.Context, language string, videoPath, outp
 	}).Future
 }
 
-func getQualitiesWithLanguages(audioKeys []string, resolutions []Resolution) map[resolutionString][]bccmflows.Language {
+func getQualitiesWithLanguages(audioKeys []string, resolutions []utils.Resolution) map[resolutionString][]bccmflows.Language {
 	languages := utils.LanguageKeysToOrderedLanguages(audioKeys)
 
 	languagesPerQuality := map[resolutionString][]bccmflows.Language{}
 
-	var sortedByHeightAsc []Resolution
+	var sortedByHeightAsc []utils.Resolution
 	for _, r := range resolutions {
 		if len(sortedByHeightAsc) == 0 {
 			sortedByHeightAsc = append(sortedByHeightAsc, r)
@@ -74,7 +74,7 @@ func getQualitiesWithLanguages(audioKeys []string, resolutions []Resolution) map
 		} else {
 			for i, s := range sortedByHeightAsc {
 				if s.Height > r.Height {
-					sortedByHeightAsc = append(sortedByHeightAsc[:i], append([]Resolution{r}, sortedByHeightAsc[i:]...)...)
+					sortedByHeightAsc = append(sortedByHeightAsc[:i], append([]utils.Resolution{r}, sortedByHeightAsc[i:]...)...)
 					break
 				}
 			}
@@ -93,7 +93,7 @@ func getQualitiesWithLanguages(audioKeys []string, resolutions []Resolution) map
 	return languagesPerQuality
 }
 
-func createStreamFile(ctx workflow.Context, resolution Resolution, videoFile, outputPath paths.Path, languageMapping map[resolutionString][]bccmflows.Language, audioFiles map[string]paths.Path) workflow.Future {
+func createStreamFile(ctx workflow.Context, resolution utils.Resolution, videoFile, outputPath paths.Path, languageMapping map[resolutionString][]bccmflows.Language, audioFiles map[string]paths.Path) workflow.Future {
 	audioFilePaths := map[string]paths.Path{}
 	for _, lang := range languageMapping[resolutionToString(resolution)] {
 		audioFilePaths[lang.ISO6391] = audioFiles[lang.ISO6391]

@@ -6,6 +6,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
+	"github.com/bcc-code/bcc-media-flows/utils"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 	"strings"
@@ -85,7 +86,7 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 	videoResult, err := wfutils.Execute(ctx, activities.Video.TranscodeToAVCIntraActivity, activities.EncodeParams{
 		FilePath:       fileToTranscode,
 		OutputDir:      abekasOutputDir,
-		Resolution:     "1920x1080",
+		Resolution:     utils.Resolution1080,
 		FrameRate:      50,
 		Interlace:      true,
 		BurnInSubtitle: params.SubtitleFile,
