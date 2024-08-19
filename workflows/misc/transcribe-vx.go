@@ -2,6 +2,7 @@ package miscworkflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
@@ -15,8 +16,9 @@ const transcriptionMetadataFieldName = "portal_mf624761"
 
 // TranscribeVXInput is the input to the TranscribeFile
 type TranscribeVXInput struct {
-	Language string
-	VXID     string
+	Language            string
+	VXID                string
+	NotificationChannel *telegram.Chat
 }
 
 // TranscribeVX is the workflow that transcribes a video
@@ -99,13 +101,26 @@ func TranscribeVX(
 		return fmt.Errorf("failed to import transcription files: %v", errs)
 	}
 
-	err = wfutils.Execute(ctx, activities.Vidispine.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
+	importSRTResult, err := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
 		FilePath: transcriptionJob.SRTPath,
 		Language: "no",
 		AssetID:  params.VXID,
-	}).Get(ctx, nil)
+	}).Result(ctx)
 	if err != nil {
 		return err
+	}
+
+	err = wfutils.Execute(ctx, activities.Vidispine.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
+		JobID:     importSRTResult.JobID,
+		SleepTime: 10,
+	}).Wait(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	if params.NotificationChannel != nil {
+		wfutils.SendTelegramText(ctx, *params.NotificationChannel, fmt.Sprintf("🟦 Transcription import completed for VXID: %s", params.VXID))
 	}
 
 	txtValue, err := wfutils.ReadFile(ctx, transcriptionJob.TXTPath)
