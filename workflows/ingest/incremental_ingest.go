@@ -139,8 +139,9 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	// Transcribe the video
 	transcribeFuture := workflow.ExecuteChildWorkflow(ctx, miscworkflows.TranscribeVX, miscworkflows.TranscribeVXInput{
-		VXID:     videoVXID,
-		Language: "no",
+		VXID:                videoVXID,
+		Language:            "no",
+		NotificationChannel: &telegram.ChatOther,
 	})
 
 	_ = wfutils.Execute(ctx, activities.Vidispine.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
@@ -154,6 +155,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 			errors = append(errors, err)
 		}
 	}
+
 	wfutils.SendTelegramText(ctx, telegram.ChatOther, "🟩 Audio import finished")
 
 	err = transcribeFuture.Get(ctx, nil)
