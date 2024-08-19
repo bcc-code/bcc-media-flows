@@ -21,8 +21,9 @@ type OrderForm enum.Member[string]
 var (
 	OrderFormRawMaterial  = OrderForm{Value: "Rawmaterial"}
 	OrderFormVBMaster     = OrderForm{Value: "VB"}
+	OrderFormVBMasterBulk = OrderForm{Value: "VB_Bulk"}
 	OrderFormSeriesMaster = OrderForm{Value: "Series_Masters"}
-	OrderFormOtherMaster  = OrderForm{Value: "Other_Masters"} // TODO: set correct value
+	OrderFormOtherMaster  = OrderForm{Value: "Other_Masters"}
 	OrderFormLEDMaterial  = OrderForm{Value: "LED-Material"}
 	OrderFormPodcast      = OrderForm{Value: "Podcast"}
 	OrderFormMultitrackPB = OrderForm{Value: "MultitrackPB"}
@@ -135,7 +136,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			Metadata:  metadata,
 			Directory: fcOutputDir,
 		}).Get(ctx, nil)
-	case OrderFormSeriesMaster, OrderFormOtherMaster, OrderFormVBMaster, OrderFormLEDMaterial, OrderFormPodcast:
+	case OrderFormSeriesMaster, OrderFormOtherMaster, OrderFormVBMaster, OrderFormVBMasterBulk, OrderFormLEDMaterial, OrderFormPodcast:
 		var outputDir paths.Path
 		outputDir, err = wfutils.GetWorkflowMastersOutputFolder(ctx)
 		if err != nil {
