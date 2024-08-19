@@ -188,14 +188,14 @@ func Test_GetDataForExportSubtitles(t *testing.T) {
 		for j, _ := range expected.Clips[i].AudioFiles {
 			if strings.HasSuffix(expected.Clips[i].AudioFiles[j].File, "BlankAudio10h.wav") {
 				// Manually construct the path and force it into the expected data
-				expected.Clips[i].AudioFiles[j].File = paths.Path{paths.Drive{Value: "isilon"}, "/system/assets/BlankAudio10h.wav"}.Local()
+				expected.Clips[i].AudioFiles[j].File = paths.Path{Drive: paths.Drive{Value: "isilon"}, Path: "/system/assets/BlankAudio10h.wav"}.Local()
 			}
 		}
 
 		for j, _ := range expected.Clips[i].SubtitleFiles {
 			if strings.HasSuffix(expected.Clips[i].SubtitleFiles[j], "empty.srt") {
 				// Manually construct the path and force it into the expected data
-				expected.Clips[i].SubtitleFiles[j] = paths.Path{paths.Drive{Value: "isilon"}, "/system/assets/empty.srt"}.Local()
+				expected.Clips[i].SubtitleFiles[j] = paths.Path{Drive: paths.Drive{Value: "isilon"}, Path: "/system/assets/empty.srt"}.Local()
 			}
 		}
 	}
