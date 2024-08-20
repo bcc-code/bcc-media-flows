@@ -2,14 +2,14 @@ package common
 
 import (
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/utils"
 )
 
 type VideoInput struct {
 	Path            paths.Path
 	Bitrate         string
 	BufferSize      string
-	Width           int
-	Height          int
+	Resolution      utils.Resolution
 	FrameRate       int
 	WatermarkPath   *paths.Path
 	DestinationPath paths.Path

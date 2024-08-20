@@ -43,3 +43,23 @@ func (r *Resolution) EnsureEven() {
 		r.Width = r.Width + 1
 	}
 }
+
+// ResizeToFit returns the biggest ressolution in the aspect ratio of the source
+// that fits into this resolution, while keeping the aspect ratio the same as the source
+func (r *Resolution) ResizeToFit(source Resolution) Resolution {
+	aspect := float32(source.Width) / float32(source.Height)
+
+	out := Resolution{
+		Width:  r.Width,
+		Height: r.Height,
+		File:   source.File,
+	}
+
+	if float32(out.Width)/float32(out.Height) > aspect {
+		out.Width = int(float32(out.Height) * aspect)
+	} else {
+		out.Height = int(float32(out.Width) / aspect)
+	}
+
+	return out
+}

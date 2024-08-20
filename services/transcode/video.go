@@ -8,12 +8,10 @@ import (
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
+	"github.com/bcc-code/bcc-media-flows/utils"
 )
 
 func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.VideoResult, error) {
-	h264encoder := os.Getenv("H264_ENCODER")
-	h264encoder = "libx264"
-
 	params := []string{
 		"-hide_banner",
 		"-progress", "pipe:1",
@@ -26,22 +24,19 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		)
 	}
 
-	switch h264encoder {
-	case "libx264":
-		params = append(params,
-			"-c:v", h264encoder,
-			"-profile:v", "high422",
-			"-preset", "slow",
-			"-level:v", "1.3",
-			"-tune", "film",
-			"-vsync", "1",
-			"-g", "48",
-			"-pix_fmt", "yuv420p",
-			"-x264opts", "no-scenecut",
-			"-crf", "22",
-			"-write_tmcd", "0",
-		)
-	}
+	params = append(params,
+		"-c:v", "libx264",
+		"-profile:v", "high422",
+		"-preset", "slow",
+		"-level:v", "1.3",
+		"-tune", "film",
+		"-vsync", "1",
+		"-g", "48",
+		"-pix_fmt", "yuv420p",
+		"-x264opts", "no-scenecut",
+		"-crf", "22",
+		"-write_tmcd", "0",
+	)
 
 	info, err := ffmpeg.GetStreamInfo(input.Path.Local())
 	if err != nil {
@@ -65,16 +60,16 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		filterComplex += "[0:0]copy[main];"
 	}
 
-	height := input.Height
-	width := -1
-	videoIsPortrait := info.Height > info.Width
-	paramsIsPortrait := input.Height > input.Width
-	if info.Height != 0 && info.Width != 0 && videoIsPortrait && !paramsIsPortrait {
-		height = -1
-		width = input.Height
+	targetResolution := input.Resolution
+	sourceResolution := utils.Resolution{
+		Width:  info.Width,
+		Height: info.Height,
 	}
 
-	filterComplex += fmt.Sprintf("[main]scale=%[1]d:%[2]d:force_original_aspect_ratio=decrease[out]", width, height)
+	ffmpegResolution := targetResolution.ResizeToFit(sourceResolution)
+	ffmpegResolution.EnsureEven()
+
+	filterComplex += fmt.Sprintf("[main]scale=%[1]d:%[2]d[out]", ffmpegResolution.Width, ffmpegResolution.Height)
 
 	params = append(params,
 		"-filter_complex", filterComplex,
@@ -87,7 +82,7 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 
 	filename := input.Path.Base()
 	filename = filename[:len(filename)-len(filepath.Ext(filename))] +
-		fmt.Sprintf("_%dx%d.mp4", input.Width, input.Height)
+		fmt.Sprintf("_%dx%d.mp4", input.Resolution.Width, input.Resolution.Height)
 
 	outputFilePath := filepath.Join(input.DestinationPath.Local(), filename)
 
