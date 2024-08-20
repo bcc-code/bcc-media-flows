@@ -2,9 +2,10 @@ package rclone
 
 import (
 	"fmt"
-	cache "github.com/Code-Hex/go-generics-cache"
 	"net/http"
 	"time"
+
+	cache "github.com/Code-Hex/go-generics-cache"
 )
 
 type CoreStats struct {
@@ -63,7 +64,7 @@ func (s CoreStats) ForJob(job string) Transferring {
 }
 
 var (
-	statsCache = cache.New[string, Transferring](cache.WithJanitorInterval[string, Transferring](time.Minute * 1))
+	statsCache = cache.New(cache.WithJanitorInterval[string, Transferring](time.Minute * 1))
 )
 
 func GetJobStats(job int) (Transferring, bool) {

@@ -1,9 +1,7 @@
 package rclone
 
 import (
-	"net/http"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -47,25 +45,16 @@ type JobResponse struct {
 	JobID int `json:"jobid"`
 }
 
-func CheckJobStatus(jobID int, retries int) (*JobStatus, error) {
-	runNr := 1
+func (r *Client) CheckJobStatus(jobID int) (*JobStatus, error) {
+	req := r.restyClient.R()
+	req.SetBody(`{"jobid":` + strconv.Itoa(jobID) + `}`)
+	req.SetResult(&JobStatus{})
+	res, err := req.Post("/job/status")
 
-	req, err := http.NewRequest(http.MethodPost, baseUrl+"/job/status", strings.NewReader(`{"jobid":`+strconv.Itoa(jobID)+`}`))
 	if err != nil {
 		return nil, err
 	}
 
-	var status *JobStatus
-	for runNr <= retries {
-		status, err = doRequest[JobStatus](req)
-
-		if err == nil {
-			break
-		}
-
-		runNr++
-		time.Sleep(5 * time.Second)
-	}
-
+	status := res.Result().(*JobStatus)
 	return status, err
 }

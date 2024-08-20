@@ -3,10 +3,11 @@ package rclone
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ansel1/merry/v2"
-	"github.com/orsinium-labs/enum"
 	"net/http"
 	"time"
+
+	"github.com/ansel1/merry/v2"
+	"github.com/orsinium-labs/enum"
 )
 
 const baseUrl = "http://rclone.lan.bcc.media"
@@ -57,6 +58,32 @@ type fileRequest struct {
 	SourcePath        string `json:"srcRemote"`
 	DestinationRemote string `json:"dstFs"`
 	DestinationPath   string `json:"dstRemote"`
+}
+
+func (c *Client) MoveFile(sourceRemote, sourcePath, destinationRemote, destinationPath string, priority Priority) (*JobResponse, error) {
+	fileRequest := fileRequest{
+		Async:             true,
+		SourceRemote:      sourceRemote,
+		SourcePath:        sourcePath,
+		DestinationRemote: destinationRemote,
+		DestinationPath:   destinationPath,
+	}
+
+	err := waitForTransferSlot(priority, time.Hour)
+	if err != nil {
+		return nil, err
+	}
+
+	req := c.restyClient.R()
+	req.SetBody(fileRequest)
+	req.SetResult(&JobResponse{})
+
+	res, err := req.Post("/operations/movefile")
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Result().(*JobResponse), nil
 }
 
 func MoveFile(sourceRemote, sourcePath, destinationRemote, destinationPath string, priority Priority) (*JobResponse, error) {
