@@ -2,6 +2,7 @@ package export
 
 import (
 	"fmt"
+
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -30,8 +31,7 @@ func getVideosByQuality(videoFilePath, outputDir paths.Path, watermarkPath *path
 			Path:            videoFilePath,
 			DestinationPath: outputDir,
 			WatermarkPath:   watermarkPath,
-			Width:           r.Width,
-			Height:          r.Height,
+			Resolution:      r,
 		}
 		if r.Height > 2000 {
 			input.Bitrate = "10M"
