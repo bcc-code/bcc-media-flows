@@ -1,11 +1,12 @@
 package transcode
 
 import (
-	"github.com/bcc-code/bcc-media-flows/utils"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/bcc-code/bcc-media-flows/utils"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
@@ -69,12 +70,18 @@ func H264(input H264EncodeInput, progressCallback ffmpeg.ProgressCallback) (*Enc
 		)
 	}
 
+	var videoFilters []string
+
 	if input.Resolution != nil {
 		input.Resolution.EnsureEven()
 		params = append(
 			params,
 			"-s", input.Resolution.FFMpegString(),
 		)
+
+		// This ensures that the scaled image is evenly divisible by 2,
+		// because the `-s` keeps the aspect ratio and thus can't be forced to be even
+		videoFilters = append(videoFilters, "scale=trunc(iw/2)*2:trunc(ih/2)*2")
 	}
 
 	if input.FrameRate != 0 {
@@ -83,8 +90,6 @@ func H264(input H264EncodeInput, progressCallback ffmpeg.ProgressCallback) (*Enc
 			"-r", strconv.Itoa(input.FrameRate),
 		)
 	}
-
-	var videoFilters []string
 
 	if input.Interlace {
 		params = append(
