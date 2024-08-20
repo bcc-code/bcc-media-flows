@@ -114,7 +114,7 @@ func (c *Client) GetResolutions(itemVXID string) ([]Resolution, error) {
 	if shape == nil {
 		return nil, fmt.Errorf("no original shape found")
 	}
-	if len(shape.VideoComponent) != 1 {
+	if len(shape.VideoComponent) == 0 {
 		return nil, nil
 	}
 
