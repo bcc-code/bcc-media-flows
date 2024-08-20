@@ -2,9 +2,10 @@ package export
 
 import (
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/utils"
 	"path/filepath"
 	"strings"
+
+	"github.com/bcc-code/bcc-media-flows/utils"
 
 	platform_activities "github.com/bcc-code/bcc-media-flows/activities/platform"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
@@ -71,7 +72,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		ingestFolder:           params.ExportData.SafeTitle + "_" + params.RunID,
 		params:                 params,
 		filesSelector:          workflow.NewSelector(ctx),
-		qualitiesWithLanguages: getQualitiesWithLanguages(audioKeys, params.ParentParams.Resolutions),
+		qualitiesWithLanguages: assignLanguagesToResolutions(audioKeys, params.ParentParams.Resolutions),
 	}
 
 	onVideoCreated := func(f workflow.Future, resolution utils.Resolution) {
@@ -83,9 +84,18 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 			return
 		}
 
-		future := createStreamFile(ctx, resolution, result.OutputPath, params.OutputDir, service.qualitiesWithLanguages, audioFiles)
+		resolutionWithLanguages, found := lo.Find(service.qualitiesWithLanguages, func(q ResolutionWithLanguages) bool {
+			return q.Resolution == resolutionToString(resolution)
+		})
+		if !found {
+			logger.Error("Failed to find language for resolution", "resolution", resolution)
+			service.errs = append(service.errs, fmt.Errorf("failed to find language for resolution %v", resolution))
+			return
+		}
+		languages := resolutionWithLanguages.Languages
+		future := createStreamFile(ctx, languages, result.OutputPath, params.OutputDir, audioFiles)
 		onFileCreated := func(f workflow.Future) {
-			service.handleStreamWorkflowFuture(ctx, resolution, f)
+			service.handleStreamWorkflowFuture(ctx, languages, f)
 		}
 		service.filesSelector.AddFuture(future, onFileCreated)
 		if resolution.File {
@@ -113,8 +123,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		service.filesSelector.Select(ctx)
 	}
 
-	langKeys, _ := wfutils.GetMapKeysSafely(ctx, service.qualitiesWithLanguages)
-	for range langKeys {
+	for range service.qualitiesWithLanguages {
 		service.filesSelector.Select(ctx)
 	}
 
@@ -209,7 +218,7 @@ func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, 
 type vxExportVodService struct {
 	params                 VXExportChildWorkflowParams
 	ingestFolder           string
-	qualitiesWithLanguages map[resolutionString][]bccmflows.Language
+	qualitiesWithLanguages []ResolutionWithLanguages
 	filesSelector          workflow.Selector
 	streams                []smil.Video
 	files                  []asset.IngestFileMeta
@@ -324,7 +333,7 @@ func (v *vxExportVodService) handleFileWorkflowFuture(ctx workflow.Context, lang
 	v.copyToIngest(ctx, result.Path)
 }
 
-func (v *vxExportVodService) handleStreamWorkflowFuture(ctx workflow.Context, r utils.Resolution, f workflow.Future) {
+func (v *vxExportVodService) handleStreamWorkflowFuture(ctx workflow.Context, fileLanguages []bccmflows.Language, f workflow.Future) {
 	logger := workflow.GetLogger(ctx)
 	var result common.MuxResult
 	err := f.Get(ctx, &result)
@@ -333,8 +342,6 @@ func (v *vxExportVodService) handleStreamWorkflowFuture(ctx workflow.Context, r 
 		v.errs = append(v.errs, err)
 		return
 	}
-
-	fileLanguages := v.qualitiesWithLanguages[resolutionToString(r)]
 
 	v.streams = append(v.streams, smil.Video{
 		Src:          result.Path.Base(),

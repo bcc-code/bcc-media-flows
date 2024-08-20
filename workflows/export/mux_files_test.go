@@ -1,14 +1,15 @@
 package export
 
 import (
-	"github.com/bcc-code/bcc-media-flows/utils"
 	"testing"
+
+	"github.com/bcc-code/bcc-media-flows/utils"
 
 	"github.com/davecgh/go-spew/spew"
 )
 
 func Test_getQualitiesWithLanguages(t *testing.T) {
-	l := getQualitiesWithLanguages([]string{"en", "no"}, []utils.Resolution{
+	l := assignLanguagesToResolutions([]string{"en", "no"}, []utils.Resolution{
 		{
 			Width:  1920,
 			Height: 1080,
