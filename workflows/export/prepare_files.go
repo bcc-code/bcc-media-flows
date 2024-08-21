@@ -60,13 +60,13 @@ type resolutionString string
 
 func resolutionToString(r utils.Resolution) resolutionString {
 	r.EnsureEven()
-	return resolutionString(fmt.Sprintf("%dx%d-%t", r.Width, r.Height, r.File))
+	return resolutionString(fmt.Sprintf("%dx%d-%t", r.Width, r.Height, r.IsFile))
 }
 
 func resolutionFromString(str resolutionString) utils.Resolution {
 	var r utils.Resolution
 
-	_, _ = fmt.Sscanf(string(str), "%dx%d-%t", &r.Width, &r.Height, &r.File)
+	_, _ = fmt.Sscanf(string(str), "%dx%d-%t", &r.Width, &r.Height, &r.IsFile)
 
 	r.EnsureEven()
 	return r

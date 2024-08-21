@@ -40,9 +40,10 @@ func TestResolution(t *testing.T) {
 
 func TestResolutionToFit(t *testing.T) {
 	type testCase struct {
-		Source   Resolution
-		Target   Resolution
-		Expected Resolution
+		Source               Resolution
+		Target               Resolution
+		Expected             Resolution
+		ExpectResolutionFlip bool
 	}
 
 	testCases := []testCase{
@@ -86,21 +87,61 @@ func TestResolutionToFit(t *testing.T) {
 				Height: 1080,
 			},
 			Target: Resolution{
+				Width:  640,
+				Height: 480,
+			},
+			Expected: Resolution{
+				Width:  640,
+				Height: 360,
+			},
+		},
+
+		// Flipped portrait/landscape
+		{
+			Source: Resolution{
+				Width:  1080,
+				Height: 1920,
+			},
+			Target: Resolution{
+				Width:  1920,
+				Height: 1080,
+			},
+			Expected: Resolution{
+				Width:  1080,
+				Height: 1920,
+			},
+			ExpectResolutionFlip: true,
+		},
+
+		// Different aspect ratio + flip
+		{
+			Source: Resolution{
+				Width:  1920,
+				Height: 1080,
+			},
+			Target: Resolution{
 				Width:  480,
 				Height: 640,
 			},
 			Expected: Resolution{
-				Width:  480,
-				Height: 270,
+				Width:  640,
+				Height: 360,
 			},
+			ExpectResolutionFlip: true,
 		},
 	}
 
 	for _, tc := range testCases {
-		out := tc.Target.ResizeToFit(tc.Source)
+		out := tc.Source.ResizedToFit(tc.Target)
 		assert.Equal(t, tc.Expected, out)
+
+		if tc.ExpectResolutionFlip {
+			tc.Target.Width, tc.Target.Height = tc.Target.Height, tc.Target.Width
+		}
+
 		assert.LessOrEqual(t, out.Width, tc.Target.Width)
 		assert.LessOrEqual(t, out.Height, tc.Target.Height)
+
 		assert.InDelta(t, float32(out.Width)/float32(out.Height), float32(tc.Source.Width)/float32(tc.Source.Height), 0.01)
 	}
 }

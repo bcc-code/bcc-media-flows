@@ -3,12 +3,13 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/utils"
 	"net/http"
 	"os"
 	"reflect"
 	"runtime"
 	"strconv"
+
+	"github.com/bcc-code/bcc-media-flows/utils"
 
 	"strings"
 
@@ -147,7 +148,7 @@ func triggerHandler(ctx *gin.Context) {
 				resolutions = append(resolutions, utils.Resolution{
 					Width:  width,
 					Height: height,
-					File:   false,
+					IsFile: false,
 				})
 			}
 		}

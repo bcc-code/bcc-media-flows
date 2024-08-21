@@ -66,7 +66,7 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		Height: info.Height,
 	}
 
-	ffmpegResolution := targetResolution.ResizeToFit(sourceResolution)
+	ffmpegResolution := sourceResolution.ResizedToFit(targetResolution)
 	ffmpegResolution.EnsureEven()
 
 	filterComplex += fmt.Sprintf("[main]scale=%[1]d:%[2]d[out]", ffmpegResolution.Width, ffmpegResolution.Height)

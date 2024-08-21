@@ -3,11 +3,12 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/utils"
 	"log"
 	"net/http"
 	"path/filepath"
 	"sort"
+
+	"github.com/bcc-code/bcc-media-flows/utils"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
 	bccmUtils "github.com/bcc-code/bcc-media-platform/backend/utils"
@@ -282,7 +283,7 @@ func (s *TriggerServer) vxExportPOST(ctx *gin.Context) {
 		selectedResolutions = append(selectedResolutions, utils.Resolution{
 			Width:  r.Width,
 			Height: r.Height,
-			File:   lo.Contains(fileIndexes, i),
+			IsFile: lo.Contains(fileIndexes, i),
 		})
 	}
 
