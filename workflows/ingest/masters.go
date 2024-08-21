@@ -119,9 +119,12 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	switch params.OrderForm {
 	case OrderFormOtherMaster, OrderFormVBMaster, OrderFormSeriesMaster, OrderFormLEDMaterial, OrderFormPodcast:
 		filename, err = masterFilename(params.Metadata.JobProperty)
+	case OrderFormVBMasterBulk:
+		break
 	default:
 		return nil, fmt.Errorf("unsupported order form: %s", params.OrderForm)
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +156,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	for _, sourceFile := range sourceFiles {
 		file := params.OutputDir.Append(sourceFile.Base())
 
-		if filename == "" {
+		if filename != "" {
 			file = params.OutputDir.Append(filename)
 		}
 
