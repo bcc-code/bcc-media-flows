@@ -48,6 +48,14 @@ func (r *Resolution) EnsureEven() {
 
 // ResizeToFit returns the biggest resolution in the aspect ratio of the source
 // that fits into this resolution, while keeping the aspect ratio the same as the source
+//
+// If the destination and the source are not both in landscape or portrait, the target
+// will be rotated to fit the source better and produce the largest results possible.
+//
+// Examples:
+// Source: 1920x1080, target: 1920x1080 -> 1920x1080
+// Source: 1920x1080, target: 1280x720 -> 1280x720
+// Source: 1080x1920, target: 1920x1080 -> 1080x1920 <-- Notice the rotation of the target
 func (r *Resolution) ResizedToFit(target Resolution) Resolution {
 	tAspect := float32(target.Width) / float32(target.Height)
 	sAspect := float32(r.Width) / float32(r.Height)
