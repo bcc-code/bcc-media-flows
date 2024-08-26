@@ -67,8 +67,6 @@ func resolutionFromString(str resolutionString) utils.Resolution {
 	var r utils.Resolution
 
 	_, _ = fmt.Sscanf(string(str), "%dx%d-%t", &r.Width, &r.Height, &r.IsFile)
-
-	r.EnsureEven()
 	return r
 }
 
