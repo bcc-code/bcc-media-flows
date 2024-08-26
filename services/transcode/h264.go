@@ -78,10 +78,6 @@ func H264(input H264EncodeInput, progressCallback ffmpeg.ProgressCallback) (*Enc
 			params,
 			"-s", input.Resolution.FFMpegString(),
 		)
-
-		// This ensures that the scaled image is evenly divisible by 2,
-		// because the `-s` keeps the aspect ratio and thus can't be forced to be even
-		videoFilters = append(videoFilters, "scale=trunc(iw/2)*2:trunc(ih/2)*2")
 	}
 
 	if input.FrameRate != 0 {

@@ -2,9 +2,10 @@ package export
 
 import (
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/utils"
 	"path/filepath"
 	"strings"
+
+	"github.com/bcc-code/bcc-media-flows/utils"
 
 	platform_activities "github.com/bcc-code/bcc-media-flows/activities/platform"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
@@ -88,7 +89,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 			service.handleStreamWorkflowFuture(ctx, resolution, f)
 		}
 		service.filesSelector.AddFuture(future, onFileCreated)
-		if resolution.File {
+		if resolution.IsFile {
 			for _, key := range audioKeys {
 				lang := key
 				audioPath := audioFiles[lang]
@@ -119,7 +120,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	}
 
 	for range lo.Filter(params.ParentParams.Resolutions, func(item utils.Resolution, _ int) bool {
-		return item.File
+		return item.IsFile
 	}) {
 		for range audioKeys {
 			service.filesSelector.Select(ctx)

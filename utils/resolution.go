@@ -1,6 +1,8 @@
 package utils
 
-import "fmt"
+import (
+	"fmt"
+)
 
 var (
 	Resolution4K   = MustResolution("3840x2160")
@@ -10,7 +12,7 @@ var (
 type Resolution struct {
 	Width  int
 	Height int
-	File   bool
+	IsFile bool
 }
 
 func ResolutionFromString(str string) (*Resolution, error) {
@@ -42,4 +44,49 @@ func (r *Resolution) EnsureEven() {
 	if r.Width%2 != 0 {
 		r.Width = r.Width + 1
 	}
+}
+
+// ResizeToFit returns the biggest resolution in the aspect ratio of the source
+// that fits into this resolution, while keeping the aspect ratio the same as the source
+//
+// If the destination and the source are not both in landscape or portrait, the target
+// will be rotated to fit the source better and produce the largest results possible.
+//
+// Examples:
+// Source: 1920x1080, target: 1920x1080 -> 1920x1080
+// Source: 1920x1080, target: 1280x720 -> 1280x720
+// Source: 1080x1920, target: 1920x1080 -> 1080x1920 <-- Notice the rotation of the target
+func (r *Resolution) ResizedToFit(target Resolution) Resolution {
+	tAspect := float32(target.Width) / float32(target.Height)
+	sAspect := float32(r.Width) / float32(r.Height)
+
+	// If the target and source are in diferent modes (landscape vs portrait)
+	// then rotate the target in order to fit the source better into the target
+	//
+	// The main use case here is shorts
+	flip := tAspect < 1 && sAspect > 1 || tAspect > 1 && sAspect < 1
+	tempRes := *r
+
+	if flip {
+		tempRes.Width, tempRes.Height = tempRes.Height, tempRes.Width
+		sAspect = float32(tempRes.Width) / float32(tempRes.Height)
+	}
+
+	out := Resolution{
+		Width:  target.Width,
+		Height: target.Height,
+		IsFile: r.IsFile,
+	}
+
+	if tAspect > sAspect {
+		out.Width = int(float32(target.Height) * sAspect)
+	} else {
+		out.Height = int(float32(target.Width) / sAspect)
+	}
+
+	if flip {
+		out.Width, out.Height = out.Height, out.Width
+	}
+
+	return out
 }
