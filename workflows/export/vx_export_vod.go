@@ -73,6 +73,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		params:                 params,
 		filesSelector:          workflow.NewSelector(ctx),
 		qualitiesWithLanguages: assignLanguagesToResolutions(audioKeys, params.ParentParams.Resolutions),
+		smilVideos:             make(map[resolutionString]smil.Video),
 	}
 
 	onVideoCreated := func(f workflow.Future, resolution utils.Resolution) {
