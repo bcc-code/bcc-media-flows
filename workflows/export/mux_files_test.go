@@ -9,7 +9,7 @@ import (
 )
 
 func Test_getQualitiesWithLanguages(t *testing.T) {
-	l := getQualitiesWithLanguages([]string{"en", "no"}, []utils.Resolution{
+	l := assignLanguagesToResolutions([]string{"en", "no"}, []utils.Resolution{
 		{
 			Width:  1920,
 			Height: 1080,

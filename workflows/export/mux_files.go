@@ -2,34 +2,20 @@ package export
 
 import (
 	"path/filepath"
+	"sort"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
-	"github.com/bcc-code/bcc-media-flows/utils/workflows"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 
 	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/common/smil"
 	"github.com/bcc-code/bcc-media-flows/utils"
-	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	"go.temporal.io/sdk/workflow"
 )
 
 type quality string
-
-type MuxFilesParams struct {
-	VideoFiles    map[quality]paths.Path
-	AudioFiles    map[string]paths.Path
-	SubtitleFiles map[string]paths.Path
-	OutputPath    paths.Path
-	WithFiles     bool
-}
-
-type MuxFilesResult struct {
-	Files     []asset.IngestFileMeta
-	Streams   []smil.Video
-	Subtitles []smil.TextStream
-}
 
 func getSubtitlesResult(ctx workflow.Context, subtitleFiles map[string]paths.Path) []smil.TextStream {
 	var subtitles []smil.TextStream
@@ -58,44 +44,52 @@ func createTranslatedFile(ctx workflow.Context, language string, videoPath, outp
 	}).Future
 }
 
-func getQualitiesWithLanguages(audioKeys []string, resolutions []utils.Resolution) map[resolutionString][]bccmflows.Language {
+type ResolutionWithLanguages struct {
+	Resolution resolutionString
+	Languages  []bccmflows.Language
+}
+
+func assignLanguagesToResolutions(audioKeys []string, resolutions []utils.Resolution) []ResolutionWithLanguages {
 	languages := utils.LanguageKeysToOrderedLanguages(audioKeys)
 
-	languagesPerQuality := map[resolutionString][]bccmflows.Language{}
+	sortedResolutions := sortResolutionsForVODStreaming(resolutions)
 
-	var sortedByHeightAsc []utils.Resolution
-	for _, r := range resolutions {
-		if len(sortedByHeightAsc) == 0 {
-			sortedByHeightAsc = append(sortedByHeightAsc, r)
-			continue
+	qualities := make([]ResolutionWithLanguages, len(sortedResolutions))
+	for i, r := range sortedResolutions {
+		qualities[i] = ResolutionWithLanguages{
+			Resolution: resolutionToString(r),
+			Languages:  []bccmflows.Language{},
 		}
-		if sortedByHeightAsc[len(sortedByHeightAsc)-1].Height < r.Height {
-			sortedByHeightAsc = append(sortedByHeightAsc, r)
-		} else {
-			for i, s := range sortedByHeightAsc {
-				if s.Height > r.Height {
-					sortedByHeightAsc = append(sortedByHeightAsc[:i], append([]utils.Resolution{r}, sortedByHeightAsc[i:]...)...)
-					break
-				}
-			}
-		}
-	}
-
-	for _, r := range sortedByHeightAsc {
-		q := resolutionToString(r)
-		languagesPerQuality[q] = []bccmflows.Language{}
-		for len(languages) > 0 && len(languagesPerQuality[q]) < 16 {
-			languagesPerQuality[q] = append(languagesPerQuality[q], languages[0])
+		for len(languages) > 0 && len(qualities[i].Languages) < 16 {
+			qualities[i].Languages = append(qualities[i].Languages, languages[0])
 			languages = languages[1:]
 		}
 	}
 
-	return languagesPerQuality
+	return qualities
 }
 
-func createStreamFile(ctx workflow.Context, resolution utils.Resolution, videoFile, outputPath paths.Path, languageMapping map[resolutionString][]bccmflows.Language, audioFiles map[string]paths.Path) workflow.Future {
+// sortResolutionsForVODStreaming sorts resolutions so that 540p is first, then ascending height
+func sortResolutionsForVODStreaming(resolutions []utils.Resolution) []utils.Resolution {
+	sortedResolutions := make([]utils.Resolution, len(resolutions))
+	copy(sortedResolutions, resolutions)
+
+	sort.Slice(sortedResolutions, func(i, j int) bool {
+		if sortedResolutions[i].Height == 540 {
+			return true
+		}
+		if sortedResolutions[j].Height == 540 {
+			return false
+		}
+		return sortedResolutions[i].Height < sortedResolutions[j].Height
+	})
+
+	return sortedResolutions
+}
+
+func createStreamFile(ctx workflow.Context, languages []bccmflows.Language, videoFile, outputPath paths.Path, audioFiles map[string]paths.Path) workflow.Future {
 	audioFilePaths := map[string]paths.Path{}
-	for _, lang := range languageMapping[resolutionToString(resolution)] {
+	for _, lang := range languages {
 		audioFilePaths[lang.ISO6391] = audioFiles[lang.ISO6391]
 	}
 
