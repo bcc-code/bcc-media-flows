@@ -19,14 +19,15 @@ type MergeExportDataResult struct {
 }
 
 type MergeExportDataParams struct {
-	ExportData     *vidispine.ExportData
-	SubtitlesDir   paths.Path
-	TempDir        paths.Path
-	MakeVideo      bool
-	MakeSubtitles  bool
-	MakeAudio      bool
-	MakeTranscript bool
-	Languages      []string
+	ExportData       *vidispine.ExportData
+	SubtitlesDir     paths.Path
+	TempDir          paths.Path
+	MakeVideo        bool
+	MakeSubtitles    bool
+	MakeAudio        bool
+	MakeTranscript   bool
+	Languages        []string
+	OriginalLanguage string
 }
 
 func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*MergeExportDataResult, error) {
@@ -138,7 +139,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 		if err != nil {
 			return nil, err
 		}
-		jsonTranscriptResult["no"] = res.Path
+		jsonTranscriptResult[data.OriginalLanguage] = res.Path
 	}
 
 	return &MergeExportDataResult{

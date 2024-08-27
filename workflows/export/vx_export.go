@@ -2,8 +2,9 @@ package export
 
 import (
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/utils"
 	"strings"
+
+	"github.com/bcc-code/bcc-media-flows/utils"
 
 	"github.com/ansel1/merry/v2"
 	avidispine "github.com/bcc-code/bcc-media-flows/activities/vidispine"
@@ -129,14 +130,15 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 
 	var mergeResult MergeExportDataResult
 	err = workflow.ExecuteChildWorkflow(ctx, MergeExportData, MergeExportDataParams{
-		ExportData:     data,
-		TempDir:        tempDir,
-		SubtitlesDir:   subtitlesOutputDir,
-		MakeVideo:      !bmmOnly,
-		MakeAudio:      true,
-		MakeSubtitles:  true,
-		MakeTranscript: true,
-		Languages:      params.Languages,
+		ExportData:       data,
+		TempDir:          tempDir,
+		SubtitlesDir:     subtitlesOutputDir,
+		MakeVideo:        !bmmOnly,
+		MakeAudio:        true,
+		MakeSubtitles:    true,
+		MakeTranscript:   true,
+		Languages:        params.Languages,
+		OriginalLanguage: data.OriginalLanguage,
 	}).Get(ctx, &mergeResult)
 	if err != nil {
 		wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
