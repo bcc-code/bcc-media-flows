@@ -1,8 +1,8 @@
 package rclone
 
 import (
+	"encoding/json"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -47,10 +47,16 @@ type JobResponse struct {
 	JobID int `json:"jobid"`
 }
 
+type JobStatusRequest struct {
+	JobID int `json:"jobid"`
+}
+
 func CheckJobStatus(jobID int, retries int) (*JobStatus, error) {
 	runNr := 1
 
-	req, err := http.NewRequest(http.MethodPost, baseUrl+"/job/status", strings.NewReader(`{"jobid":`+strconv.Itoa(jobID)+`}`))
+	body, _ := json.Marshal(JobStatusRequest{JobID: jobID})
+
+	req, err := http.NewRequest(http.MethodPost, baseUrl+"/job/status", strings.NewReader(string(body)))
 	if err != nil {
 		return nil, err
 	}

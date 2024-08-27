@@ -20,17 +20,17 @@ type listOpts struct {
 	HashTypes     []string `json:"hashTypes,omitempty"`
 }
 
-type listRequest struct {
+type ListRequest struct {
 	Remote string   `json:"fs"`
 	Path   string   `json:"remote"`
 	Opt    listOpts `json:"opt"`
 }
 
-type listResponse struct {
+type ListResponse struct {
 	List []RcloneFile `json:"list"`
 }
 
-type statsResponse struct {
+type StatsResponse struct {
 	File *RcloneFile `json:"item,omitempty"`
 }
 
@@ -44,7 +44,7 @@ type RcloneFile struct {
 }
 
 func ListFiles(remote, path string) ([]RcloneFile, error) {
-	body, err := json.Marshal(listRequest{
+	body, err := json.Marshal(ListRequest{
 		Remote: remote,
 		Path:   path,
 		Opt: listOpts{
@@ -60,7 +60,7 @@ func ListFiles(remote, path string) ([]RcloneFile, error) {
 		return nil, err
 	}
 
-	resp, err := doRequest[listResponse](req)
+	resp, err := doRequest[ListResponse](req)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func ListFiles(remote, path string) ([]RcloneFile, error) {
 }
 
 func Stat(remote, path string) (*RcloneFile, error) {
-	body, err := json.Marshal(listRequest{
+	body, err := json.Marshal(ListRequest{
 		Remote: remote,
 		Path:   path,
 		Opt: listOpts{
@@ -84,7 +84,7 @@ func Stat(remote, path string) (*RcloneFile, error) {
 		return nil, err
 	}
 
-	resp, err := doRequest[statsResponse](req)
+	resp, err := doRequest[StatsResponse](req)
 	if err != nil {
 		return nil, err
 	}
