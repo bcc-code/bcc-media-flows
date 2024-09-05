@@ -70,7 +70,12 @@ func IsilonExport(ctx workflow.Context, params IsilonExportParams) error {
 		return err
 	}
 
-	outputDir := tempDir.Append("output")
+	date := workflow.Now(ctx)
+	id := workflow.GetInfo(ctx).OriginalRunID
+	outputDir := paths.Path{
+		Drive: paths.IsilonDrive,
+		Path:  fmt.Sprintf("Export/%s/%s", date.Format("2006-01"), data.SafeTitle+"-"+id),
+	}
 
 	subtitlesOutputDir := outputDir.Append("subtitles")
 	err = wfutils.CreateFolder(ctx, subtitlesOutputDir)
@@ -87,7 +92,7 @@ func IsilonExport(ctx workflow.Context, params IsilonExportParams) error {
 		SubtitlesDir:     subtitlesOutputDir,
 		MakeVideo:        true,
 		MakeAudio:        true,
-		MakeSubtitles:    true,
+		MakeSubtitles:    false,
 		MakeTranscript:   false,
 		Languages:        selectedLanguages,
 		OriginalLanguage: data.OriginalLanguage,
