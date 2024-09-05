@@ -3,6 +3,7 @@ package activities
 import (
 	"context"
 	"fmt"
+
 	"github.com/bcc-code/bcc-media-flows/utils"
 
 	"github.com/bcc-code/bcc-media-flows/common"
@@ -14,6 +15,7 @@ import (
 
 type EncodeParams struct {
 	FilePath       paths.Path
+	AudioPaths     []paths.Path
 	OutputDir      paths.Path
 	Resolution     *utils.Resolution
 	FrameRate      int
@@ -36,8 +38,14 @@ func (va VideoActivities) TranscodeToProResActivity(ctx context.Context, input E
 	stop, progressCallback := registerProgressCallback(ctx)
 	defer close(stop)
 
+	audioPaths := []string{}
+	for _, audioPath := range input.AudioPaths {
+		audioPaths = append(audioPaths, audioPath.Local())
+	}
+
 	transcodeResult, err := transcode.ProRes(transcode.ProResInput{
 		FilePath:       input.FilePath.Local(),
+		AudioPaths:     audioPaths,
 		OutputDir:      input.OutputDir.Local(),
 		FrameRate:      input.FrameRate,
 		Resolution:     input.Resolution,

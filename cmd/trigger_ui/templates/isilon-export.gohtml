@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<script src="https://cdn.tailwindcss.com"></script>
+		<title>{{- /*gotype: github.com/bcc-code/bcc-media-flows/cmd/trigger_ui.TriggerGETParams */}}Isilon Export</title>
+	</head>
+
+	<body class="flex bg-gray-100">
+		{{ $selectClasses := "p-2 border rounded-md bg-transparent"}}
+		<section class="mx-auto p-4 md:p-8 bg-white">
+			<h1 class="text-center w-full font-bold text-3xl text-gray-600 p-4">
+				{{ .Title }}
+			</h1>
+			<form id="requestForm" method="post" class="flex flex-col gap-4 justify-between divide-y-1">
+				<div class="flex flex-col">
+					<label class="font-bold" for="audioSource">Audio Source</label>
+					<select class="{{$selectClasses}}" name="audioSource" id="audioSource">
+						{{$selectedAudio := .SelectedAudioSource}}
+
+						{{range $index, $element := .AudioSources}}
+						{{if eq $element $selectedAudio}}
+						<option value={{$element}} selected>{{$element}}</option>
+						{{else}}
+						<option value={{$element}}>{{$element}}</option>
+						{{end}}
+						{{end}}
+					</select>
+				</div>
+				<div class="flex flex-col">
+					<div class="flex">
+						<h3 class="font-bold">Language Exports</h3>
+						<ul class="flex flex-col gap-1">
+							{{$selectedLanguages := .SelectedLanguages}}
+							{{range $key, $language := .Languages}}
+								<li class="flex flex-row gap-1">
+									<input type="radio" class="language-radio form-checkbox h-4 w-4 my-auto" id="{{.ISO6391}}" name="language" value={{.ISO6391}}/>
+									<label for="{{.ISO6391}}" class="my-auto">
+										<span class="uppercase">{{.ISO6391}}</span> - {{.LanguageName}}
+									</label>
+								</li>
+							{{end}}
+						</ul>
+					</div>
+					<div class="flex flex-col">
+						<label class="font-bold" for="resolutions">Resolutions - {{.Ratio}}</label>
+						<ul>
+							{{range $index, $element := .Resolutions}}
+								{{$w := $element.Width}}
+								{{$h := $element.Height}}
+								<li class="flex gap-2">
+									<div>
+										<input type=radio class="form-checkbox h-4 w-4 inline-block align-middle" name="resolution" id="{{$index}}" value={{$index}}>
+										<label for="{{$index}}">{{ $w }}x{{ $h }}</label>
+									</div>
+								</li>
+							{{end}}
+						</ul>
+					</div>
+					<div class="flex flex-col">
+						<label class="font-bold" for="watermarkFile">Overlay</label>
+						<select class="{{$selectClasses}}" name="watermarkFile" id="watermarkFile">
+							<option value="">None</option>
+							{{range $index, $element := .Filenames}}
+								<option value={{$element}}>{{$element}}</option>
+							{{end}}
+						</select>
+					</div>
+				<div class="flex flex-col">
+					<div class="flex">
+						<h3 class="font-bold">Export Format</h3>
+					</div>
+					<select name="exportFormat" id="exportFormat" class="{{$selectClasses}}">
+						<option value="prores_422_hq" selected>ProRes 422 HQ</option>
+					</select>
+				</div>
+					<input id="submit"
+						   class="cursor-pointer rounded-md bg-[#6A64F1] py-3 px-8 text-center text-base font-semibold text-white outline-none"
+						   type="submit" value="Start export">
+			</form>
+		</section>
+	</body>
+</html>
