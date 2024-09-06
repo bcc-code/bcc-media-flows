@@ -2,6 +2,7 @@ package miscworkflows
 
 import (
 	"fmt"
+
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -9,6 +10,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/common"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 
+	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -101,20 +103,15 @@ func TranscribeVX(
 		return fmt.Errorf("failed to import transcription files: %v", errs)
 	}
 
-	importSRTResult, err := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
+	parentAbandonOptions := workflow.GetChildWorkflowOptions(ctx)
+	parentAbandonOptions.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
+	asyncCtx := workflow.WithChildOptions(ctx, parentAbandonOptions)
+	// Fire and forget
+	wfutils.Execute(asyncCtx, activities.Vidispine.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
 		FilePath: transcriptionJob.SRTPath,
 		Language: "no",
 		AssetID:  params.VXID,
-	}).Result(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = wfutils.Execute(ctx, activities.Vidispine.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
-		JobID:     importSRTResult.JobID,
-		SleepTime: 10,
-	}).Wait(ctx)
-
+	})
 	if err != nil {
 		return err
 	}
