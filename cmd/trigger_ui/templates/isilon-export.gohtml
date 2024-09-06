@@ -36,7 +36,7 @@
 							{{$selectedLanguages := .SelectedLanguages}}
 							{{range $key, $language := .Languages}}
 								<li class="flex flex-row gap-1">
-									<input type="radio" class="language-radio form-checkbox h-4 w-4 my-auto" id="{{.ISO6391}}" name="language" value={{.ISO6391}}/>
+									<input type="radio" class="language-radio form-checkbox h-4 w-4 my-auto" id="{{.ISO6391}}" name="language" value="{{.ISO6391}}" />
 									<label for="{{.ISO6391}}" class="my-auto">
 										<span class="uppercase">{{.ISO6391}}</span> - {{.LanguageName}}
 									</label>
