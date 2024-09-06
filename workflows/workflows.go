@@ -38,6 +38,7 @@ var WorkerWorkflows = []any{
 	export.VXExportToPlayout,
 	export.MergeExportData,
 	export.VXExportToBMM,
+	export.IsilonExport,
 	export.ExportTimedMetadata,
 	miscworkflows.ExecuteFFmpeg,
 	miscworkflows.ImportSubtitlesFromSubtrans,

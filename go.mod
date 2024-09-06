@@ -22,6 +22,7 @@ require (
 	github.com/sendgrid/sendgrid-go v3.14.0+incompatible
 	github.com/stretchr/testify v1.9.0
 	github.com/teamwork/reload v1.4.2
+	github.com/teris-io/shortid v0.0.0-20220617161101-71ec9f2aa569
 	go.temporal.io/api v1.21.0
 	go.temporal.io/sdk v1.24.0
 	go.uber.org/mock v0.4.0

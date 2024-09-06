@@ -1,11 +1,12 @@
 package transcode
 
 import (
-	"github.com/bcc-code/bcc-media-flows/utils"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/bcc-code/bcc-media-flows/utils"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
@@ -13,6 +14,7 @@ import (
 
 type ProResInput struct {
 	FilePath       string
+	AudioPaths     []string
 	OutputDir      string
 	Resolution     *utils.Resolution
 	FrameRate      int
@@ -37,16 +39,24 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProRe
 		"-progress", "pipe:1",
 		"-hide_banner",
 		"-i", input.FilePath,
+	}
+
+	for _, i := range input.AudioPaths {
+		params = append(params, "-i", i)
+	}
+
+	params = append(params,
 		"-c:v", "prores_ks",
 		"-vendor", "ap10",
 		"-color_primaries", "bt709",
 		"-color_trc", "bt709",
 		"-colorspace", "bt709",
 		"-bits_per_mb", "8000",
-	}
+	)
 
 	videoFilters := []string{
 		"setfield=tff",
+		"yadif=0:-1:0",
 	}
 
 	if input.BurnInSubtitle != nil {
@@ -93,10 +103,29 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProRe
 	}
 
 	outputPath := filepath.Join(input.OutputDir, filename)
+
+	if len(input.AudioPaths) == 0 {
+		params = append(
+			params,
+			"-map", "a",
+		)
+	} else {
+		params = append(
+			params,
+			"-c:a", "aac",
+		)
+
+		for i := range input.AudioPaths {
+			params = append(
+				params,
+				"-map", strconv.Itoa(i+1),
+			)
+		}
+	}
+
 	params = append(
 		params,
 		"-map", "v",
-		"-map", "a",
 		"-y",
 		outputPath,
 	)

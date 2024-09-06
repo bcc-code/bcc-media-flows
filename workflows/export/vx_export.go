@@ -173,17 +173,15 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 				continue
 			}
 			childParams.Upload = false
+			date := workflow.Now(ctx)
+			id := workflow.GetInfo(ctx).OriginalRunID
+			childParams.OutputDir = paths.Path{
+				Drive: paths.IsilonDrive,
+				Path:  fmt.Sprintf("Export/%s/%s", date.Format("2006-01"), data.SafeTitle+"-"+id[0:8]),
+			}
 			fallthrough
 		case AssetExportDestinationVOD:
 			w = VXExportToVOD
-			if hasDestination(AssetExportDestinationIsilon) {
-				date := workflow.Now(ctx)
-				id := workflow.GetInfo(ctx).OriginalRunID
-				childParams.OutputDir = paths.Path{
-					Drive: paths.IsilonDrive,
-					Path:  fmt.Sprintf("Export/%s/%s", date.Format("2006-01"), data.SafeTitle+"-"+id[0:8]),
-				}
-			}
 		case AssetExportDestinationPlayout:
 			w = VXExportToPlayout
 		case AssetExportDestinationBMM, AssetExportDestinationBMMIntegration:

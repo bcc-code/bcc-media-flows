@@ -416,6 +416,10 @@ func main() {
 		GET("/", server.vbExportGET).
 		POST("/", server.vbExportPOST)
 
+	router.Group("/isilon-export").
+		GET("/", server.isilonExportGET).
+		POST("/", server.isilonExportPOST)
+
 	router.Group("/upload-master").
 		GET("/", server.uploadMasterGET).
 		POST("/", server.uploadMasterPOST).
