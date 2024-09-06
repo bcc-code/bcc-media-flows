@@ -9,7 +9,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/orsinium-labs/enum"
 	"go.temporal.io/sdk/workflow"
 )
@@ -126,7 +125,8 @@ func IsilonExport(ctx workflow.Context, params IsilonExportParams) error {
 			return err
 		}
 
-		spew.Dump(videoResult)
+		wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟩 Export of `%s` completed:\n```\n%s\n```", params.VXID, videoResult.OutputPath.Linux()))
+
 	default:
 		return fmt.Errorf("invalid export format: %s", exportFormat.Value)
 	}
