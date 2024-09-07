@@ -98,7 +98,7 @@ func IsilonExport(ctx workflow.Context, params IsilonExportParams) error {
 	}).Get(ctx, &mergeResult)
 
 	if err != nil {
-		wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
+		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
 		return err
 	}
 
@@ -125,7 +125,7 @@ func IsilonExport(ctx workflow.Context, params IsilonExportParams) error {
 			return err
 		}
 
-		wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟩 Export of `%s` completed:\n```\n%s\n```", params.VXID, videoResult.OutputPath.Linux()))
+		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟩 Export of `%s` completed:\n```\n%s\n```", params.VXID, videoResult.OutputPath.Linux()))
 
 	default:
 		return fmt.Errorf("invalid export format: %s", exportFormat.Value)
