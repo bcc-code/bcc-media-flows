@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -16,8 +17,14 @@ type ResultOrError[T any] struct {
 func GetDefaultActivityOptions() workflow.ActivityOptions {
 	return workflow.ActivityOptions{
 		StartToCloseTimeout:    time.Hour * 4,
-		ScheduleToCloseTimeout: time.Hour * 48,
-		HeartbeatTimeout:       time.Minute * 1,
+		ScheduleToCloseTimeout: time.Hour * 12,
+		HeartbeatTimeout:       time.Minute * 2,
+		RetryPolicy: &temporal.RetryPolicy{
+			BackoffCoefficient: 2,
+			MaximumInterval:    60 * time.Second,
+			InitialInterval:    1 * time.Second,
+			MaximumAttempts:    10,
+		},
 	}
 }
 
