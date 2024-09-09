@@ -98,13 +98,19 @@ func IsilonExport(ctx workflow.Context, params IsilonExportParams) error {
 	}).Get(ctx, &mergeResult)
 
 	if err != nil {
-		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
+		wfutils.SendTelegramErorr(ctx, telegram.ChatOther, params.VXID, err)
 		return err
 	}
 
 	audioPaths := []paths.Path{}
-	for _, audioPath := range mergeResult.AudioFiles {
-		audioPaths = append(audioPaths, audioPath)
+	audioKeys, err := wfutils.GetMapKeysSafely(ctx, mergeResult.AudioFiles)
+	if err != nil {
+		wfutils.SendTelegramErorr(ctx, telegram.ChatOther, params.VXID, err)
+		return err
+	}
+
+	for _, key := range audioKeys {
+		audioPaths = append(audioPaths, mergeResult.AudioFiles[key])
 	}
 
 	switch exportFormat.Value {
