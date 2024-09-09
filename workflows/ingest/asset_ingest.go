@@ -28,6 +28,7 @@ var (
 	OrderFormMultitrackPB = OrderForm{Value: "MultitrackPB"}
 	OrderFormUpload       = OrderForm{Value: "Upload"}
 	OrderFormMusic        = OrderForm{Value: "Music"}
+	OrderFormDistribution = OrderForm{Value: "Distribution"}
 	OrderForms            = enum.New(
 		OrderFormRawMaterial,
 		OrderFormMusic,
@@ -38,6 +39,7 @@ var (
 		OrderFormLEDMaterial,
 		OrderFormPodcast,
 		OrderFormMultitrackPB,
+		OrderFormDistribution,
 	)
 )
 
@@ -175,9 +177,6 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 		}).Get(ctx, nil)
 	case OrderFormMusic:
 		outputDir := wfutils.GetWorkflowLucidLinkOutputFolder(ctx, "08 From Delivery")
-		if err != nil {
-			return nil, err
-		}
 
 		err = workflow.ExecuteChildWorkflow(ctx, MoveUploadedFiles, MoveUploadedFilesParams{
 			OrderForm: *orderForm,
@@ -185,7 +184,12 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			Directory: fcOutputDir,
 			OutputDir: outputDir,
 		}).Get(ctx, nil)
+	case OrderFormDistribution:
+		// Nothing to do
+		// This order form is self-contained and reqires no processing.
+		// The reason for having the case is to not throw errors in temporal even though there was nothing to do
 	}
+
 	if err != nil {
 		return nil, err
 	}
