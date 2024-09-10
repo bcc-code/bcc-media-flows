@@ -56,7 +56,7 @@ func AvcIntra(input AVCIntraEncodeInput, progressCallback ffmpeg.ProgressCallbac
 
 	if input.FrameRate != 0 {
 		videoFilters = append(
-			params,
+			videoFilters,
 			"fps="+strconv.Itoa(input.FrameRate),
 		)
 	}
@@ -67,7 +67,7 @@ func AvcIntra(input AVCIntraEncodeInput, progressCallback ffmpeg.ProgressCallbac
 			"-flags", "+ilme+ildct",
 			"-x264-params", "avcintra-class=100:interlaced=1:tff=1",
 		)
-		videoFilters = append(videoFilters, "setfield=tff", "fieldorder=tff, ", "interlace=tff")
+		videoFilters = append(videoFilters, "setfield=tff", "fieldorder=tff", "interlace=tff")
 	} else {
 		params = append(params,
 			"-x264-params", "avcintra-class=100:interlaced=0",

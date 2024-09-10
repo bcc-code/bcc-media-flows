@@ -16,6 +16,8 @@ func ExecuteCmd(cmd *exec.Cmd, outputCallback func(string)) (string, error) {
 	errorBytes := bytes.Buffer{}
 	cmd.Stderr = &errorBytes
 
+	println("FFMPEG Command:", cmd.String())
+
 	err := cmd.Start()
 	if err != nil {
 		return "", fmt.Errorf("start failed %s", err.Error())
