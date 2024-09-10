@@ -40,7 +40,6 @@ func AvcIntra(input AVCIntraEncodeInput, progressCallback ffmpeg.ProgressCallbac
 		"-ar", "48000",
 		"-b:v", "100M",
 		"-pix_fmt", "yuv422p10le",
-		"-x264-params", "avcintra-class=100:interlaced=0",
 		"-x264opts", "colorprim=bt709",
 		"-x264opts", "transfer=bt709",
 		"-x264opts", "colormatrix=bt709",
@@ -53,28 +52,30 @@ func AvcIntra(input AVCIntraEncodeInput, progressCallback ffmpeg.ProgressCallbac
 		)
 	}
 
+	var videoFilters []string
+
 	if input.FrameRate != 0 {
-		params = append(
+		videoFilters = append(
 			params,
-			"-r", strconv.Itoa(input.FrameRate),
+			"fps="+strconv.Itoa(input.FrameRate),
 		)
 	}
-
-	var videoFilters []string
 
 	if input.Interlace {
 		params = append(
 			params,
 			"-flags", "+ilme+ildct",
+			"-x264-params", "avcintra-class=100:interlaced=1:tff=1",
 		)
-		videoFilters = append(videoFilters, "setfield=tff", "fieldorder=tff")
+		videoFilters = append(videoFilters, "setfield=tff", "fieldorder=tff, ", "interlace=tff")
 	} else {
+		params = append(params,
+			"-x264-params", "avcintra-class=100:interlaced=0",
+		)
 		videoFilters = append(videoFilters, "yadif=0:-1:0")
 	}
 
 	if input.BurnInSubtitle != nil {
-		// TODO: Define the subtitle style
-
 		assFile, err := CreateBurninASSFile(*input.SubtitleStyle, *input.BurnInSubtitle)
 		if err != nil {
 			return nil, err
