@@ -35,6 +35,7 @@ var (
 		OrderFormMusic,
 		OrderFormUpload,
 		OrderFormVBMaster,
+		OrderFormVBMasterBulk,
 		OrderFormSeriesMaster,
 		OrderFormOtherMaster,
 		OrderFormLEDMaterial,
@@ -74,18 +75,7 @@ func sanitizeDuplicatdPath(s string) string {
 	return original // Return original string if halves are not equal
 }
 
-func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
-	logger := workflow.GetLogger(ctx)
-	logger.Info("Starting Asset")
-
-	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
-
-	xmlPath := paths.MustParse(params.XMLPath)
-	metadata, err := wfutils.UnmarshalXMLFile[ingest.Metadata](ctx, xmlPath)
-	if err != nil {
-		return nil, err
-	}
-
+func sanitizeOrderForm(metadata *ingest.Metadata) *ingest.Metadata {
 	fixedFiles := []string{}
 
 	// For some reason sometimes the paths in the XML are duplicated
@@ -94,6 +84,24 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 		fixedFiles = append(fixedFiles, sanitizeDuplicatdPath(file.FilePath))
 		metadata.FileList.Files[i].FilePath = sanitizeDuplicatdPath(file.FilePath)
 	}
+
+	return metadata
+}
+
+func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
+	logger := workflow.GetLogger(ctx)
+	logger.Info("Starting Asset")
+
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+
+	xmlPath := paths.MustParse(params.XMLPath)
+
+	metadata, err := wfutils.UnmarshalXMLFile[ingest.Metadata](ctx, xmlPath)
+	if err != nil {
+		return nil, err
+	}
+
+	metadata = sanitizeOrderForm(metadata)
 
 	orderForm := OrderForms.Parse(metadata.JobProperty.OrderForm)
 	if orderForm == nil {

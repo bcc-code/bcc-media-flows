@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Metadata>
+    <jobPropertyList>
+        <jobID>6434</jobID>
+        <userName>mdebelak</userName>
+        <companyName></companyName>
+        <sourceIP>10.12.135.200</sourceIP>
+        <userEmail>test@example.com</userEmail>
+        <ingestStation>filecatalyst-01/10.12.135.2</ingestStation>
+        <uploadBitRate>16 kbps</uploadBitRate>
+        <uploadTime>00:06:55</uploadTime>
+        <ftpSiteId>dmz02</ftpSiteId>
+        <fileCount>2</fileCount>
+        <orderForm>VB_BULK</orderForm>
+        <submissionDate>Fri Sep 13 09:56:05 CEST 2024</submissionDate>
+        <lastDateChanged>Fri Sep 13 09:56:05 CEST 2024</lastDateChanged>
+        <status>pending</status>
+        <programid>TEMP - Testprosjekt</programid>
+        <program_post>01</program_post>
+        <received_filename>MDTEST1</received_filename>
+        <Tags></Tags>
+        <PersonsAppearing></PersonsAppearing>
+        <language>MUL</language>
+        <sender_email>test@example.com</sender_email>
+        <direct_playback>No</direct_playback>
+        <asset_type>MAS</asset_type>
+    </jobPropertyList>
+    <fileList>
+        <file>
+            <FileName>./testdata/generated/VBBulk1.mxf</FileName>
+            <isFolder>false</isFolder>
+            <fileSize>136761</fileSize>
+            <filePath>/files/6434/files/643</filePath>
+        </file>
+        <file>
+            <FileName>./testdata/generated/VBBulk2.mxf</FileName>
+            <isFolder>false</isFolder>
+            <fileSize>762309</fileSize>
+            <filePath>/files/6434/files/643</filePath>
+        </file>
+    </fileList>
+    <jobHistoryLog/>
+</Metadata>
