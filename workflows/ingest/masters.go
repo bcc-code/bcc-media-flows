@@ -2,13 +2,13 @@ package ingestworkflows
 
 import (
 	"fmt"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
+	"github.com/samber/lo"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
@@ -36,9 +36,8 @@ type MasterParams struct {
 
 type MasterResult struct {
 	Report        *baton.QCReport
-	AssetID       string
 	AnalyzeResult *common.AnalyzeEBUR128Result
-	Path          paths.Path
+	ImportedVXs   map[string]paths.Path
 }
 
 // regexp for making sure the filename does not contain non-alphanumeric characters
@@ -55,91 +54,42 @@ func Masters(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
 		return nil, err
 	}
 
-	if utils.IsMedia(result.Path.Local()) {
-		// This isn't run on VB masters in old system, but see no reason to not run it here.
-		result.AnalyzeResult, err = analyzeAudioAndSetMetadata(ctx, result.AssetID, result.Path)
-		if err != nil {
-			return nil, err
-		}
-
-		if result.Report.TopLevelInfo.Error == 0 {
-			err = CreatePreviews(ctx, []string{result.AssetID})
-			if err != nil {
-				return nil, err
-			}
-
-			err = transcribe(ctx, []string{result.AssetID}, params.Metadata.JobProperty.Language)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
 	return result, nil
 }
 
-func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
-	var filename string
-	var err error
-	switch params.OrderForm {
-	case OrderFormOtherMaster, OrderFormVBMaster, OrderFormSeriesMaster, OrderFormLEDMaterial, OrderFormPodcast:
-		filename, err = masterFilename(params.Metadata.JobProperty)
-	default:
-		return nil, fmt.Errorf("unsupported order form: %s", params.OrderForm)
-	}
+func processMaster(ctx workflow.Context, sourceFile paths.Path, destinationFile paths.Path, metadata *ingest.Metadata) (string, error) {
+	err := wfutils.MoveFile(ctx, sourceFile, destinationFile, rclone.PriorityNormal)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	sourceFile := params.SourceFile
-	if sourceFile == nil {
-		files, err := wfutils.ListFiles(ctx, params.Directory)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(files) == 0 {
-			return nil, fmt.Errorf("no files in directory: %s", params.Directory)
-		}
-		if len(files) > 1 {
-			return nil, fmt.Errorf("too many files in directory: %s", params.Directory)
-		}
-		sourceFile = &files[0]
-	}
-
-	file := params.OutputDir.Append(filename)
-	err = wfutils.MoveFile(ctx, *sourceFile, file, rclone.PriorityNormal)
+	result, err := ImportFileAsTag(ctx, "original", destinationFile, destinationFile.Base())
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	result, err := ImportFileAsTag(ctx, "original", file, filename)
+	err = addMetaTags(ctx, result.AssetID, metadata)
 	if err != nil {
-		return nil, err
-	}
-
-	err = addMetaTags(ctx, result.AssetID, params.Metadata)
-	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	err = wfutils.WaitForVidispineJob(ctx, result.ImportJobID)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	var report *baton.QCReport
-	if utils.IsMedia(file.Local()) {
+	if utils.IsMedia(destinationFile.Local()) {
 		plan := baton.TestPlanMXF
-		if filepath.Ext(file.Base()) == ".mov" {
+		if destinationFile.Ext() == ".mov" {
 			plan = baton.TestPlanMOV
 		}
 		err = wfutils.Execute(ctx, batonactivities.QC, batonactivities.QCParams{
-			Path: file,
+			Path: destinationFile,
 			Plan: plan,
 		}).Get(ctx, &report)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 	}
 
@@ -160,18 +110,84 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 
 	createPreviewsAsync(ctx, []string{result.AssetID})
 
-	err = notifyImportCompleted(asyncCtx, params.Targets, params.Metadata.JobProperty.JobID, map[string]paths.Path{
-		result.AssetID: file,
-	})
+	return result.AssetID, nil
+}
+
+func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
+	var filename string
+	var err error
+	switch params.OrderForm {
+	case OrderFormOtherMaster, OrderFormVBMaster, OrderFormSeriesMaster, OrderFormLEDMaterial, OrderFormPodcast:
+		filename, err = masterFilename(params.Metadata.JobProperty)
+	case OrderFormVBMasterBulk:
+		break
+	default:
+		return nil, fmt.Errorf("unsupported order form: %s", params.OrderForm)
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
+	sourceFiles := []paths.Path{}
+
+	if params.SourceFile != nil {
+		sourceFiles = append(sourceFiles, *params.SourceFile)
+	} else {
+		files, err := wfutils.ListFiles(ctx, params.Directory)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(files) == 0 {
+			return nil, fmt.Errorf("no files in directory: %s", params.Directory)
+		}
+
+		if len(files) > 1 && params.OrderForm != OrderFormVBMasterBulk {
+			return nil, fmt.Errorf("too many files in directory: %s", params.Directory)
+		}
+
+		sourceFiles = files
+	}
+
+	importedVXs := map[string]paths.Path{}
+	errors := []error{}
+
+	for _, sourceFile := range sourceFiles {
+		file := params.OutputDir.Append(sourceFile.Base())
+
+		if filename != "" {
+			file = params.OutputDir.Append(filename)
+		}
+
+		result, err := processMaster(ctx, sourceFile, file, params.Metadata)
+
+		if err != nil {
+			errors = append(errors, err)
+			continue
+		}
+
+		importedVXs[result] = file
+	}
+
+	if len(errors) > 0 {
+		errText := lo.Reduce(errors, func(acc string, err error, _ int) string {
+			return acc + err.Error() + "\n"
+		}, "")
+
+		return nil, fmt.Errorf(errText)
+	}
+
+	parentAbandonOptions := workflow.GetChildWorkflowOptions(ctx)
+	parentAbandonOptions.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
+	asyncCtx := workflow.WithChildOptions(ctx, parentAbandonOptions)
+	err = notifyImportCompleted(asyncCtx, params.Targets, params.Metadata.JobProperty.JobID, importedVXs)
+	if err != nil {
+		return nil, err
+	}
+
 	return &MasterResult{
-		Report:  report,
-		AssetID: result.AssetID,
-		Path:    file,
+		ImportedVXs: importedVXs,
 	}, nil
 }
 
