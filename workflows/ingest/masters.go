@@ -2,6 +2,8 @@ package ingestworkflows
 
 import (
 	"fmt"
+	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
+	"github.com/bcc-code/bcc-media-flows/utils"
 	"regexp"
 	"strconv"
 	"strings"
@@ -76,23 +78,24 @@ func processMaster(ctx workflow.Context, sourceFile paths.Path, destinationFile 
 		return "", err
 	}
 
-	/*
-		// Temporarily disabled, as it does not do anything at the moment
-			var report *baton.QCReport
-			if utils.IsMedia(destinationFile.Local()) {
-				plan := baton.TestPlanMXF
-				if destinationFile.Ext() == ".mov" {
-					plan = baton.TestPlanMOV
-				}
-				err = wfutils.Execute(ctx, batonactivities.QC, batonactivities.QCParams{
-					Path: destinationFile,
-					Plan: plan,
-				}).Get(ctx, &report)
-				if err != nil {
-					return "", err
-				}
-			}
-	*/
+	// Temporarily disabled, as it does not do anything at the moment
+	var report *baton.QCReport
+	if utils.IsMedia(destinationFile.Local()) {
+		plan := baton.TestPlanBasic
+		if destinationFile.Ext() == ".mxf" {
+			plan = baton.TestPlanMXF
+		}
+		if destinationFile.Ext() == ".mov" {
+			plan = baton.TestPlanMOV
+		}
+		err = wfutils.Execute(ctx, batonactivities.QC, batonactivities.QCParams{
+			Path: destinationFile,
+			Plan: plan,
+		}).Get(ctx, &report)
+		if err != nil {
+			return "", err
+		}
+	}
 
 	parentAbandonOptions := workflow.GetChildWorkflowOptions(ctx)
 	parentAbandonOptions.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON

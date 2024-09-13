@@ -2,7 +2,6 @@ package baton
 
 import (
 	"fmt"
-
 	"github.com/bcc-code/bcc-media-flows/paths"
 )
 
@@ -20,7 +19,13 @@ func StartTask(client *Client, filePath paths.Path, testPlan TestPlan) (*StartTa
 	if err != nil {
 		return nil, err
 	}
-	return res.Result().(*StartTaskResult), nil
+	print(res.Body())
+	data := res.Result().(*StartTaskResult)
+	if data.TaskID == "" {
+		return nil, fmt.Errorf("task creation in BATON failed")
+	}
+
+	return data, nil
 }
 
 type TaskProgress struct {
