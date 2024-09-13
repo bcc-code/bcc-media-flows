@@ -11,14 +11,12 @@ import (
 	"github.com/samber/lo"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
-	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/baton"
 	"github.com/bcc-code/bcc-media-flows/services/ingest"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
-	"github.com/bcc-code/bcc-media-flows/utils"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/workflow"
@@ -78,20 +76,23 @@ func processMaster(ctx workflow.Context, sourceFile paths.Path, destinationFile 
 		return "", err
 	}
 
-	var report *baton.QCReport
-	if utils.IsMedia(destinationFile.Local()) {
-		plan := baton.TestPlanMXF
-		if destinationFile.Ext() == ".mov" {
-			plan = baton.TestPlanMOV
-		}
-		err = wfutils.Execute(ctx, batonactivities.QC, batonactivities.QCParams{
-			Path: destinationFile,
-			Plan: plan,
-		}).Get(ctx, &report)
-		if err != nil {
-			return "", err
-		}
-	}
+	/*
+		// Temporarily disabled, as it does not do anything at the moment
+			var report *baton.QCReport
+			if utils.IsMedia(destinationFile.Local()) {
+				plan := baton.TestPlanMXF
+				if destinationFile.Ext() == ".mov" {
+					plan = baton.TestPlanMOV
+				}
+				err = wfutils.Execute(ctx, batonactivities.QC, batonactivities.QCParams{
+					Path: destinationFile,
+					Plan: plan,
+				}).Get(ctx, &report)
+				if err != nil {
+					return "", err
+				}
+			}
+	*/
 
 	parentAbandonOptions := workflow.GetChildWorkflowOptions(ctx)
 	parentAbandonOptions.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
