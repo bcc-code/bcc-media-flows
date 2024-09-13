@@ -1,12 +1,18 @@
 package wfutils
 
 import (
+	"fmt"
+
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/services/emails"
 	"github.com/bcc-code/bcc-media-flows/services/notifications"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"go.temporal.io/sdk/workflow"
 )
+
+func SendTelegramErorr(ctx workflow.Context, channel telegram.Chat, vxid string, err error) {
+	SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", vxid, err.Error()))
+}
 
 func SendTelegramText(ctx workflow.Context, channel telegram.Chat, message string) {
 	msg, err := telegram.NewMessage(channel, notifications.Simple{Message: message})
