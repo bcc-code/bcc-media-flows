@@ -21,7 +21,7 @@ type OrderForm enum.Member[string]
 var (
 	OrderFormRawMaterial  = OrderForm{Value: "Rawmaterial"}
 	OrderFormVBMaster     = OrderForm{Value: "VB"}
-	OrderFormVBMasterBulk = OrderForm{Value: "VB_Bulk"}
+	OrderFormVBMasterBulk = OrderForm{Value: "VB_BULK"}
 	OrderFormSeriesMaster = OrderForm{Value: "Series_Masters"}
 	OrderFormOtherMaster  = OrderForm{Value: "Other_Masters"}
 	OrderFormLEDMaterial  = OrderForm{Value: "LED-Material"}
