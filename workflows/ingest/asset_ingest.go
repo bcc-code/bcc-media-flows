@@ -107,6 +107,14 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 	if orderForm == nil {
 		return nil, fmt.Errorf("unsupported order form: %s", metadata.JobProperty.OrderForm)
 	}
+
+	if *orderForm == OrderFormDistribution {
+		// Nothing to do
+		// This order form is self-contained and reqires no processing.
+		// The reason for having the case is to not throw errors in temporal even though there was nothing to do
+		return &AssetResult{}, nil
+	}
+
 	_, err = wfutils.MoveToFolder(ctx,
 		xmlPath,
 		xmlPath.Dir().Append("processed"),
@@ -193,10 +201,6 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			Directory: fcOutputDir,
 			OutputDir: outputDir,
 		}).Get(ctx, nil)
-	case OrderFormDistribution:
-		// Nothing to do
-		// This order form is self-contained and reqires no processing.
-		// The reason for having the case is to not throw errors in temporal even though there was nothing to do
 	}
 
 	if err != nil {
