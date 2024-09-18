@@ -96,7 +96,7 @@ func TranscribeVX(
 		errs = append(errs, err)
 	}
 
-	importSRTResult, err := importSRTJob.Result(ctx)
+	err = importSRTJob.Wait(ctx)
 	if err != nil {
 		errs = append(errs, err)
 	}
@@ -105,11 +105,6 @@ func TranscribeVX(
 	}
 
 	err = wfutils.WaitForVidispineJob(ctx, importJsonResult.JobID)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
-	err = wfutils.WaitForVidispineJob(ctx, importSRTResult.JobID)
 	if err != nil {
 		errs = append(errs, err)
 	}
