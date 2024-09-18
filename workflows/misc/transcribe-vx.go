@@ -106,11 +106,7 @@ func TranscribeVX(
 
 	err = wfutils.WaitForVidispineJob(ctx, importJsonResult.JobID)
 	if err != nil {
-		errs = append(errs, err)
-	}
-
-	if len(errs) > 0 {
-		return fmt.Errorf("failed to import transcription files: %v", errs)
+		return fmt.Errorf("importing of JSON file into Mediabanken failed: %v", errs)
 	}
 
 	parentAbandonOptions := workflow.GetChildWorkflowOptions(ctx)
