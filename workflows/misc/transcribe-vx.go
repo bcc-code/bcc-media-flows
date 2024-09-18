@@ -76,14 +76,14 @@ func TranscribeVX(
 		return err
 	}
 
-	importJson := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity,
+	importJsonJob := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity,
 		vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.VXID,
 			FilePath: transcriptionJob.JSONPath,
 			ShapeTag: "transcription_json",
 		})
 
-	importSRT := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity,
+	importSRTJob := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity,
 		vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.VXID,
 			FilePath: transcriptionJob.SRTPath,
@@ -91,16 +91,22 @@ func TranscribeVX(
 		})
 
 	var errs []error
-	err = importJson.Get(ctx, nil)
+	importJsonResult, err := importJsonJob.Result(ctx)
 	if err != nil {
 		errs = append(errs, err)
 	}
-	err = importSRT.Get(ctx, nil)
+
+	err = importSRTJob.Wait(ctx)
 	if err != nil {
 		errs = append(errs, err)
 	}
 	if len(errs) > 0 {
 		return fmt.Errorf("failed to import transcription files: %v", errs)
+	}
+
+	err = wfutils.WaitForVidispineJob(ctx, importJsonResult.JobID)
+	if err != nil {
+		return fmt.Errorf("importing of JSON file into Mediabanken failed: %v", errs)
 	}
 
 	parentAbandonOptions := workflow.GetChildWorkflowOptions(ctx)
