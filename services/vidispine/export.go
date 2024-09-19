@@ -322,7 +322,7 @@ func GetSubclipNames(client Client, itemVXID string) ([]string, error) {
 }
 
 // GetDataForExport returns the data needed to export the item with the given VXID
-func GetDataForExport(client Client, itemVXID string, languagesToExport []string, audioSource *ExportAudioSource, subclip string) (*ExportData, error) {
+func GetDataForExport(client Client, itemVXID string, languagesToExport []string, audioSource *ExportAudioSource, subclip string, subsAllowAI bool) (*ExportData, error) {
 	originalMeta, err := client.GetMetadata(itemVXID)
 	if err != nil {
 		return nil, err
@@ -418,7 +418,7 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 		}
 	}
 
-	err = addSubtitlesAndTranscriptionsToClips(client, out.Clips)
+	err = addSubtitlesAndTranscriptionsToClips(client, out.Clips, subsAllowAI)
 	if err != nil {
 		return nil, err
 	}
@@ -427,7 +427,7 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 }
 
 // addSubtitlesAndTranscriptionsToClips modifies the original clips to include subtitles and transcriptions
-func addSubtitlesAndTranscriptionsToClips(client Client, clips []*Clip) error {
+func addSubtitlesAndTranscriptionsToClips(client Client, clips []*Clip, allowAI bool) error {
 	allSubLanguages := mapset.NewSet[string]()
 
 	// Fetch subs
@@ -451,6 +451,15 @@ func addSubtitlesAndTranscriptionsToClips(client Client, clips []*Clip) error {
 
 			// Collect all languages that any of the clips have subs for
 			allSubLanguages.Add(langCode)
+		}
+
+		if len(clip.SubtitleFiles) == 0 && allowAI {
+			// We have no subtitles, so we fall back to transcriptions
+			shape := clipShapes.GetShape("Transcribed_Subtitle_SRT")
+			if shape != nil && shape.GetPath() != "" {
+				clip.SubtitleFiles["und-x-ai-generated"] = shape.GetPath()
+			}
+			allSubLanguages.Add("und-x-ai-generated")
 		}
 
 		shape := clipShapes.GetShape("transcription_json")

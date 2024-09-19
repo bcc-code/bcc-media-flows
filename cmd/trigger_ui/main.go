@@ -159,7 +159,7 @@ func (s *TriggerServer) vxExportGET(ctx *gin.Context) {
 		return
 	}
 
-	exportData, err := vidispine.GetDataForExport(s.vidispine, vxID, nil, nil, "")
+	exportData, err := vidispine.GetDataForExport(s.vidispine, vxID, nil, nil, "", false)
 	if err != nil {
 		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
@@ -291,6 +291,7 @@ func (s *TriggerServer) vxExportPOST(ctx *gin.Context) {
 		VXID:          vxID,
 		WithChapters:  ctx.PostForm("withChapters") == "on",
 		IgnoreSilence: ctx.PostForm("ignoreSilence") == "on",
+		SubsAllowAI:   ctx.PostForm("allowAISubtitles") == "on",
 		WatermarkPath: watermarkPath,
 		AudioSource:   audioSource,
 		Destinations:  ctx.PostFormArray("destinations[]"),

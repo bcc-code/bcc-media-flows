@@ -44,7 +44,14 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		if err != nil {
 			return nil, err
 		}
+
 		for _, key := range keys {
+
+			if key == "und-x-ai-generated" && !params.ParentParams.SubsAllowAI {
+				// Skip AI generated if not allowed
+				continue
+			}
+
 			subtitle := params.MergeResult.SubtitleFiles[key]
 			err = wfutils.CopyFile(ctx, subtitle, params.OutputDir.Append(subtitle.Base()))
 			if err != nil {
