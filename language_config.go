@@ -489,4 +489,16 @@ var languages = LanguageList{
 		MU2ChannelStart:    -1,
 		RelatedMBFieldID:   "",
 	},
+	{
+		LanguageNumber:     100,
+		LanguageName:       "AI Generated",
+		LanguageNameNative: "AI Generated",
+		LanguageNameSystem: "AI Generated",
+		ISO6391:            "und",
+		ISO6392TwoLetter:   "und-x-ai-generated",
+		ReaperChannel:      -2,
+		MU1ChannelStart:    -2,
+		MU2ChannelStart:    -2,
+		RelatedMBFieldID:   "",
+	},
 }

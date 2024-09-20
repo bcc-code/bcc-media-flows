@@ -15,6 +15,7 @@ type GetExportDataParams struct {
 	Languages   []string
 	AudioSource string
 	Subclip     string
+	SubsAllowAI bool
 }
 
 func (a Activities) GetExportDataActivity(ctx context.Context, params GetExportDataParams) (*vidispine.ExportData, error) {
@@ -29,7 +30,7 @@ func (a Activities) GetExportDataActivity(ctx context.Context, params GetExportD
 		return nil, fmt.Errorf("invalid audioSource: %s", params.AudioSource)
 	}
 
-	data, err := vidispine.GetDataForExport(client, params.VXID, params.Languages, audioSource, params.Subclip)
+	data, err := vidispine.GetDataForExport(client, params.VXID, params.Languages, audioSource, params.Subclip, params.SubsAllowAI)
 	if err != nil {
 		return nil, err
 	}

@@ -44,6 +44,7 @@ type VXExportParams struct {
 	Subclip       string
 	IgnoreSilence bool
 	Resolutions   []utils.Resolution
+	SubsAllowAI   bool
 }
 
 type VXExportResult struct {
@@ -89,6 +90,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		Languages:   params.Languages,
 		AudioSource: params.AudioSource,
 		Subclip:     params.Subclip,
+		SubsAllowAI: params.SubsAllowAI,
 	}).Get(ctx, &data)
 	if err != nil {
 		return nil, err
