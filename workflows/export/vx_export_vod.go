@@ -47,7 +47,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 
 		for _, key := range keys {
 
-			if key == "und-x-ai-generated" && !params.ParentParams.SubsAllowAI {
+			if key == "und" && !params.ParentParams.SubsAllowAI {
 				// Skip AI generated if not allowed
 				continue
 			}

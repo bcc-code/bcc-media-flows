@@ -457,9 +457,9 @@ func addSubtitlesAndTranscriptionsToClips(client Client, clips []*Clip, allowAI 
 			// We have no subtitles, so we fall back to transcriptions
 			shape := clipShapes.GetShape("Transcribed_Subtitle_SRT")
 			if shape != nil && shape.GetPath() != "" {
-				clip.SubtitleFiles["und-x-ai-generated"] = shape.GetPath()
+				clip.SubtitleFiles["und"] = shape.GetPath()
 			}
-			allSubLanguages.Add("und-x-ai-generated")
+			allSubLanguages.Add("und")
 		}
 
 		shape := clipShapes.GetShape("transcription_json")
