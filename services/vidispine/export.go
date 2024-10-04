@@ -124,6 +124,10 @@ func enrichClipWithRelatedAudios(client Client, clip *Clip, oLanguagesToExport [
 
 	for _, lang := range languagesToExport {
 
+		if lang == "und" {
+			continue
+		}
+
 		// Figure out which field holds the related id
 		relatedField := bccmflows.LanguagesByISO[lang].RelatedMBFieldID
 		if relatedField == "" {
