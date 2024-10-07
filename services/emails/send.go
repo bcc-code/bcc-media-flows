@@ -41,6 +41,7 @@ func NewMessage(template notifications.Template, to []string, cc []string, bcc [
 	return Message{
 		HTML:      html,
 		PlainText: plainText,
+		Subject:   template.Subject(),
 		To:        to,
 		CC:        cc,
 		BCC:       bcc,
