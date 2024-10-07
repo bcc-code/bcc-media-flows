@@ -1,6 +1,7 @@
 package emails
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/bcc-code/bcc-media-flows/services/notifications"
@@ -10,12 +11,20 @@ import (
 
 func Send(email string, subject string, messageHTML string) error {
 	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
-	from := mail.NewEmail("Workflows", "workflows@bcc.media")
+	from := mail.NewEmail("Workflows", "workflows@em5370.brunstad.tv")
 	to := mail.NewEmail(email, email)
 
 	m := mail.NewV3MailInit(from, subject, to, mail.NewContent("text/html", messageHTML))
-	_, err := client.Send(m)
-	return err
+	res, err := client.Send(m)
+	if err != nil {
+		return err
+	}
+
+	if res.StatusCode != 202 {
+		return fmt.Errorf("failed to send email: %s", res.Body)
+	}
+
+	return nil
 }
 
 func NewMessage(template notifications.Template, to []string, cc []string, bcc []string) (Message, error) {
