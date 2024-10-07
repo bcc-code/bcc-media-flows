@@ -2,7 +2,6 @@ package ingestworkflows
 
 import (
 	"fmt"
-	"github.com/ansel1/merry"
 	"strconv"
 	"strings"
 	"time"
@@ -189,10 +188,7 @@ func doImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFro
 		VideoFile:  getFileResult.FilePath,
 		OutputFile: outPath,
 	}).Wait(ctx)
-
-	if merry.Is(err, activities.ErrCouldNotGetTimecode) {
-		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟧 Unable to get timecode for %s. File imported unadjusted and *WILL* be out of sync with video.", bccmflows.LanguagesByReaper[reaperTrackNumber].LanguageName))
-	} else if err != nil {
+	if err != nil {
 		return err
 	}
 

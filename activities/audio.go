@@ -3,11 +3,10 @@ package activities
 import (
 	"context"
 	"fmt"
-	"github.com/ansel1/merry/v2"
-
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"github.com/bcc-code/bcc-media-flows/services/transcode"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	"github.com/samber/lo"
@@ -77,31 +76,35 @@ type AdjustAudioToVideoStartInput struct {
 	OutputFile paths.Path
 }
 
-var ErrCouldNotGetTimecode = merry.Sentinel("Unable to get timecode")
-
 func (aa AudioActivities) AdjustAudioToVideoStart(ctx context.Context, input AdjustAudioToVideoStartInput) (*common.AudioResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "AdjustAudioToVideoStart")
 	log.Info("Starting AdjustAudioToVideoStartActivity")
 
+	// 2400 is the number of samples in 50ms of audio at 48000Hz
+	// This seems to be a "standard" offset between youplay and reaper
+	samplesToAdd := 2400
+
+	videoSamples := 0
+
 	videoTC, err := ffmpeg.GetTimeCode(input.VideoFile.Local())
 	if err != nil {
-		return nil, merry.Wrap(ErrCouldNotGetTimecode)
+		log.Warn(err.Error())
+		telegram.SendText(telegram.ChatOther, fmt.Sprintf("🟧 Unable to get timecode for %s. File imported unadjusted and *WILL* be out of sync with video.", input.AudioFile))
+	} else {
+		videoSamples, err = utils.TCToSamples(videoTC, 25, 48000)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	audioSamples, err := ffmpeg.GetTimeReference(input.AudioFile.Local())
 	if err != nil {
-		return nil, merry.Wrap(ErrCouldNotGetTimecode)
+		log.Warn(err.Error())
+		telegram.SendText(telegram.ChatOther, fmt.Sprintf("🟧 Unable to get timecode for %s. File imported unadjusted and *WILL* be out of sync with video.", input.AudioFile))
+	} else if videoSamples > 0 {
+		samplesToAdd += audioSamples - videoSamples
 	}
-
-	videoSamples, err := utils.TCToSamples(videoTC, 25, 48000)
-	if err != nil {
-		return nil, merry.Wrap(ErrCouldNotGetTimecode)
-	}
-
-	// 2400 is the number of samples in 50ms of audio at 48000Hz
-	// This seems to be a "standard" offset between youplay and reaper
-	samplesToAdd := audioSamples - videoSamples + 2400
 
 	if samplesToAdd < 0 {
 		return nil, fmt.Errorf("audio starts before video. This is currently not supported")
