@@ -5,6 +5,7 @@ go 1.22
 require (
 	cloud.google.com/go/pubsub v1.38.0
 	github.com/Code-Hex/go-generics-cache v1.3.1
+	github.com/ansel1/merry v1.5.1
 	github.com/ansel1/merry/v2 v2.1.2
 	github.com/bcc-code/bcc-media-platform v0.0.0-20240610143247-2316a26ef460
 	github.com/cloudevents/sdk-go/v2 v2.15.2
@@ -42,6 +43,7 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
+	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	modernc.org/libc v1.24.1 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect
