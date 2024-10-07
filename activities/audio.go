@@ -3,6 +3,7 @@ package activities
 import (
 	"context"
 	"fmt"
+	"github.com/ansel1/merry/v2"
 
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -76,6 +77,8 @@ type AdjustAudioToVideoStartInput struct {
 	OutputFile paths.Path
 }
 
+var ErrCouldNotGetTimecode = merry.Sentinel("Unable to get timecode")
+
 func (aa AudioActivities) AdjustAudioToVideoStart(ctx context.Context, input AdjustAudioToVideoStartInput) (*common.AudioResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "AdjustAudioToVideoStart")
@@ -83,17 +86,17 @@ func (aa AudioActivities) AdjustAudioToVideoStart(ctx context.Context, input Adj
 
 	videoTC, err := ffmpeg.GetTimeCode(input.VideoFile.Local())
 	if err != nil {
-		return nil, err
+		return nil, merry.Wrap(ErrCouldNotGetTimecode)
 	}
 
 	audioSamples, err := ffmpeg.GetTimeReference(input.AudioFile.Local())
 	if err != nil {
-		return nil, err
+		return nil, merry.Wrap(ErrCouldNotGetTimecode)
 	}
 
 	videoSamples, err := utils.TCToSamples(videoTC, 25, 48000)
 	if err != nil {
-		return nil, err
+		return nil, merry.Wrap(ErrCouldNotGetTimecode)
 	}
 
 	// 2400 is the number of samples in 50ms of audio at 48000Hz
