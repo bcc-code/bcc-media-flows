@@ -190,7 +190,7 @@
 
     function enableMU1() {
         for (const [key, language] of Object.entries(languages)) {
-            if (language.MU1ChannelStart !== -1) {
+            if (language.MU1ChannelStart > -1) {
                 document.getElementById(key).checked = true
             }
         }
@@ -199,7 +199,7 @@
 
     function enableMU2() {
         for (const [key, language] of Object.entries(languages)) {
-            if (language.MU2ChannelStart !== -1) {
+            if (language.MU2ChannelStart > -1) {
                 document.getElementById(key).checked = true
             }
         }
