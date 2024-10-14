@@ -19,9 +19,8 @@ type VideoGeneratorParams struct {
 func GenerateVideoFile(outFile paths.Path, videoParams VideoGeneratorParams) paths.Path {
 	args := []string{
 		"-f", "lavfi",
-		"-i", fmt.Sprintf("color=c=blue:s=720x608:d=%f", videoParams.Duration),
+		"-i", fmt.Sprintf("testsrc=size=%dx%d:rate=%d:duration=%f", videoParams.Width, videoParams.Height, videoParams.FrameRate, videoParams.Duration),
 		"-vf", fmt.Sprintf("setsar=%s, setdar=%s", videoParams.SAR, videoParams.DAR),
-		"-r", fmt.Sprintf("%d", videoParams.FrameRate),
 		"-c:v", "prores_ks",
 		"-profile:v", "3",
 		"-y", outFile.Local(),

@@ -24,17 +24,19 @@ import (
 type Destination enum.Member[string]
 
 var (
-	DestinationAbekas  = Destination{Value: "abekas"}
-	DestinationBStage  = Destination{Value: "b-stage"}
-	DestinationGfx     = Destination{Value: "gfx"}
-	DestinationHippo   = Destination{Value: "hippo"}
-	DestinationDubbing = Destination{Value: "dubbing"}
-	Destinations       = enum.New(
+	DestinationAbekas    = Destination{Value: "abekas"}
+	DestinationBStage    = Destination{Value: "b-stage"}
+	DestinationHyperdeck = Destination{Value: "hyperdeck"}
+	DestinationGfx       = Destination{Value: "gfx"}
+	DestinationHippo     = Destination{Value: "hippo"}
+	DestinationDubbing   = Destination{Value: "dubbing"}
+	Destinations         = enum.New(
 		DestinationAbekas,
 		DestinationBStage,
 		DestinationGfx,
 		DestinationHippo,
 		DestinationDubbing,
+		DestinationHyperdeck,
 	)
 	deliveryFolder = paths.New(paths.BrunstadDrive, "/Delivery/FraMB/")
 )
@@ -199,6 +201,8 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 			w = VBExportToAbekas
 		case DestinationBStage:
 			w = VBExportToBStage
+		case DestinationHyperdeck:
+			w = VBExportToHyperdeck
 		case DestinationGfx:
 			w = VBExportToGfx
 		case DestinationHippo:

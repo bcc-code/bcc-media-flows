@@ -63,6 +63,40 @@ func (va VideoActivities) TranscodeToProResActivity(ctx context.Context, input E
 	}, nil
 }
 
+func (va VideoActivities) TranscodeToHyperdeckProResActivity(ctx context.Context, input EncodeParams) (*EncodeResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeToHyperdeckProResActivity")
+	log.Info("Starting TranscodeToHyperdeckProResActivity")
+
+	stop, progressCallback := registerProgressCallback(ctx)
+	defer close(stop)
+
+	audioPaths := []string{}
+	for _, audioPath := range input.AudioPaths {
+		audioPaths = append(audioPaths, audioPath.Local())
+	}
+
+	transcodeResult, err := transcode.ProRes(transcode.ProResInput{
+		FilePath:       input.FilePath.Local(),
+		AudioPaths:     audioPaths,
+		OutputDir:      input.OutputDir.Local(),
+		FrameRate:      input.FrameRate,
+		Resolution:     input.Resolution,
+		ForHyperdeck:   true,
+		Use4444:        input.Alpha,
+		BurnInSubtitle: input.BurnInSubtitle,
+		SubtitleStyle:  input.SubtitleStyle,
+	}, progressCallback)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	return &EncodeResult{
+		OutputPath: paths.MustParse(transcodeResult.OutputPath),
+	}, nil
+}
+
 func (va VideoActivities) TranscodeToAVCIntraActivity(ctx context.Context, input EncodeParams) (*EncodeResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeToAVCIntra")
