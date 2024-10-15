@@ -19,6 +19,7 @@ type ProResInput struct {
 	Resolution     *utils.Resolution
 	FrameRate      int
 	Use4444        bool
+	ForHyperdeck   bool
 	BurnInSubtitle *paths.Path
 	SubtitleStyle  *paths.Path
 }
@@ -67,7 +68,15 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProRe
 		videoFilters = append(videoFilters, "ass="+assFile.Local())
 	}
 
-	if input.Use4444 {
+	if input.ForHyperdeck {
+		params = append(
+			params,
+			"-pix_fmt", "yuv422p10le",
+			"-profile:v", "2",
+			"-flags", "+ildct+ilme",
+			"-top", "1",
+		)
+	} else if input.Use4444 {
 		params = append(
 			params,
 			"-pix_fmt", "yuva444p10le",
@@ -107,7 +116,7 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProRe
 	if len(input.AudioPaths) == 0 {
 		params = append(
 			params,
-			"-map", "a",
+			"-map", "a?",
 		)
 	} else {
 		params = append(
