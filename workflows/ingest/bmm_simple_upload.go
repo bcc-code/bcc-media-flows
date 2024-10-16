@@ -35,7 +35,7 @@ func BmmIngestUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 
 	workflow.GetLogger(ctx).Info("Uploading file to BMM", "path", path)
 
-	wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Importing file to MB: `%s`", path))
+	wfutils.SendTelegramText(ctx, telegram.ChatBMM, fmt.Sprintf("🟦 Importing file to MB: `%d-%s`", params.TrackID, params.Language))
 
 	outputDir, err := wfutils.GetWorkflowRawOutputFolder(ctx)
 	if err != nil {
