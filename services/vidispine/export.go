@@ -59,6 +59,8 @@ type ExportData struct {
 
 	// If there is a recorded language set in the main clip we take that, otherwise we fall back to Norwegian
 	OriginalLanguage string
+
+	TranscribedLanguage string
 }
 
 type ExportAudioSource enum.Member[string]
@@ -338,8 +340,19 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 	meta := metaClips[vsapi.OriginalClip]
 
 	originalLanguage := "no"
-	if len(meta.Terse[vscommon.FieldLanguagesRecorded.Value]) > 0 {
-		originalLanguage = meta.Terse[vscommon.FieldLanguagesRecorded.Value][0].Value
+	for _, orLang := range originalMeta.Terse[vscommon.FieldLanguagesRecorded.Value] {
+		if orLang.Value != "" {
+			originalLanguage = orLang.Value
+			break
+		}
+	}
+
+	transcribedLanguage := originalLanguage
+	for _, trLang := range originalMeta.Terse[vscommon.FieldTranscribedLanguage.Value] {
+		if trLang.Value != "" {
+			transcribedLanguage = trLang.Value
+			break
+		}
 	}
 
 	// Determine where to take the audio from
@@ -376,12 +389,13 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 	}
 
 	out := ExportData{
-		Title:            title,
-		SafeTitle:        safeTitle,
-		Clips:            []*Clip{},
-		BmmTrackID:       bmmTrackID,
-		BmmTitle:         bmmTitle,
-		OriginalLanguage: originalLanguage,
+		Title:               title,
+		SafeTitle:           safeTitle,
+		Clips:               []*Clip{},
+		BmmTrackID:          bmmTrackID,
+		BmmTitle:            bmmTitle,
+		OriginalLanguage:    originalLanguage,
+		TranscribedLanguage: transcribedLanguage,
 	}
 
 	ingested := meta.Get(vscommon.FieldIngested, "")

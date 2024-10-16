@@ -2,6 +2,7 @@ package wfutils
 
 import (
 	"context"
+	"go.temporal.io/api/enums/v1"
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -44,6 +45,33 @@ func (f Task[TR]) Wait(ctx workflow.Context) error {
 
 // Execute executes the specified activity with the correct task queue
 func Execute[T any, TR any](ctx workflow.Context, activity func(context.Context, T) (TR, error), params T) Task[TR] {
+	options := workflow.GetActivityOptions(ctx)
+	options.TaskQueue = activities.GetQueueForActivity(activity)
+
+	switch options.TaskQueue {
+	case environment.GetWorkerQueue():
+		if options.RetryPolicy == nil {
+			options.RetryPolicy = &LooseRetryPolicy
+		}
+	// usual reason for this failing is invalid files or tweaks to ffmpeg commands
+	case environment.GetTranscodeQueue(), environment.GetAudioQueue():
+		if options.RetryPolicy == nil {
+			options.RetryPolicy = &StrictRetryPolicy
+		}
+	}
+
+	ctx = workflow.WithActivityOptions(ctx, options)
+	return Task[TR]{
+		workflow.ExecuteActivity(ctx, activity, params),
+	}
+}
+
+// ExecuteIndependently executes the specified activity in such a way that it continues even if the parent workflow completes before it finishes
+func ExecuteIndependently[T any, TR any](ctx workflow.Context, activity func(context.Context, T) (TR, error), params T) Task[TR] {
+	parentAbandonOptions := workflow.GetChildWorkflowOptions(ctx)
+	parentAbandonOptions.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
+	ctx = workflow.WithChildOptions(ctx, parentAbandonOptions)
+
 	options := workflow.GetActivityOptions(ctx)
 	options.TaskQueue = activities.GetQueueForActivity(activity)
 

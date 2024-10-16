@@ -62,7 +62,6 @@ type MergeTranscriptResult struct {
 }
 
 // MergeTranscriptJSON is the activity that merges a transcript JSON
-// Note that currently Norwegian is hardcoded
 func (ua UtilActivities) MergeTranscriptJSON(
 	ctx context.Context,
 	input MergeTranscriptJSONParams,

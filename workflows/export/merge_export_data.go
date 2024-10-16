@@ -139,7 +139,18 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 		if err != nil {
 			return nil, err
 		}
-		jsonTranscriptResult[data.OriginalLanguage] = res.Path
+
+		transcriptLang := "no"
+
+		if data.OriginalLanguage != "" {
+			transcriptLang = data.OriginalLanguage
+		}
+
+		if data.TranscribedLanguage != "" {
+			transcriptLang = data.TranscribedLanguage
+		}
+
+		jsonTranscriptResult[transcriptLang] = res.Path
 	}
 
 	return &MergeExportDataResult{
