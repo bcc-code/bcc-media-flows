@@ -72,25 +72,7 @@ func ExecuteIndependently[T any, TR any](ctx workflow.Context, activity func(con
 	parentAbandonOptions.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
 	ctx = workflow.WithChildOptions(ctx, parentAbandonOptions)
 
-	options := workflow.GetActivityOptions(ctx)
-	options.TaskQueue = activities.GetQueueForActivity(activity)
-
-	switch options.TaskQueue {
-	case environment.GetWorkerQueue():
-		if options.RetryPolicy == nil {
-			options.RetryPolicy = &LooseRetryPolicy
-		}
-	// usual reason for this failing is invalid files or tweaks to ffmpeg commands
-	case environment.GetTranscodeQueue(), environment.GetAudioQueue():
-		if options.RetryPolicy == nil {
-			options.RetryPolicy = &StrictRetryPolicy
-		}
-	}
-
-	ctx = workflow.WithActivityOptions(ctx, options)
-	return Task[TR]{
-		workflow.ExecuteActivity(ctx, activity, params),
-	}
+	return Execute(ctx, activity, params)
 }
 
 // ExecuteWithLowPrioQueue executes the utility activities with the low priority queue
