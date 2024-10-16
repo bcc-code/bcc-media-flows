@@ -41,10 +41,11 @@ var (
 	FieldSubclipExportTitle    = FieldType{"portal_mf236346"}
 	FieldAssetAudioCodec       = FieldType{"ASSET_AUDIO_CODEC"}
 	FieldOriginalAudioCodec    = FieldType{"originalAudioCodec"}
+	FieldTranscribedLanguage   = FieldType{"portal_mf189205"}
 	FieldTypes                 = enum.New(FieldDurationSeconds, FieldDescription, FieldExportAudioSource, FieldLangsToExport,
 		FieldPersonsAppearing, FieldSequenceSize, FieldStartTC, FieldSubclipType, FieldTitle,
 		FieldSource, FieldExportAsChapter, FieldSubtransStoryID, FieldOriginalURI, FieldUploadedBy, FieldUploadJob,
 		FieldLanguagesRecorded, FieldGeneralTags, FieldOriginalFileName, FieldOriginalFileNameField,
 		FieldEpisodeDescription, FieldSeason, FieldProgram, FieldEpisode, FieldStlText, FieldIngested, FieldDialogLoudness,
-		FieldDialogPercentage, FieldBmmTrackID, FieldBmmTitle, FieldAssetAudioCodec, FieldOriginalAudioCodec, FieldExportTCOverride, FieldSubclipExportTitle)
+		FieldDialogPercentage, FieldBmmTrackID, FieldBmmTitle, FieldAssetAudioCodec, FieldOriginalAudioCodec, FieldExportTCOverride, FieldSubclipExportTitle, FieldTranscribedLanguage)
 )

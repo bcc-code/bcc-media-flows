@@ -2,6 +2,7 @@ package wfutils
 
 import (
 	"context"
+	"go.temporal.io/api/enums/v1"
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -63,6 +64,15 @@ func Execute[T any, TR any](ctx workflow.Context, activity func(context.Context,
 	return Task[TR]{
 		workflow.ExecuteActivity(ctx, activity, params),
 	}
+}
+
+// ExecuteIndependently executes the specified activity in such a way that it continues even if the parent workflow completes before it finishes
+func ExecuteIndependently[T any, TR any](ctx workflow.Context, activity func(context.Context, T) (TR, error), params T) Task[TR] {
+	parentAbandonOptions := workflow.GetChildWorkflowOptions(ctx)
+	parentAbandonOptions.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
+	ctx = workflow.WithChildOptions(ctx, parentAbandonOptions)
+
+	return Execute(ctx, activity, params)
 }
 
 // ExecuteWithLowPrioQueue executes the utility activities with the low priority queue

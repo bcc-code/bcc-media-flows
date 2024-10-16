@@ -10,7 +10,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/common"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 
-	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -109,18 +108,11 @@ func TranscribeVX(
 		return fmt.Errorf("importing of JSON file into Mediabanken failed: %v", errs)
 	}
 
-	parentAbandonOptions := workflow.GetChildWorkflowOptions(ctx)
-	parentAbandonOptions.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
-	asyncCtx := workflow.WithChildOptions(ctx, parentAbandonOptions)
-	// Fire and forget
-	wfutils.Execute(asyncCtx, activities.Vidispine.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
+	wfutils.ExecuteIndependently(ctx, activities.Vidispine.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
 		FilePath: transcriptionJob.SRTPath,
 		Language: "no",
 		AssetID:  params.VXID,
 	})
-	if err != nil {
-		return err
-	}
 
 	if params.NotificationChannel != nil {
 		wfutils.SendTelegramText(ctx, *params.NotificationChannel, fmt.Sprintf("🟦 Transcription import completed for VXID: %s", params.VXID))
