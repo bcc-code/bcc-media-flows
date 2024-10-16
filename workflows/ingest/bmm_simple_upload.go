@@ -2,6 +2,7 @@ package ingestworkflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"strconv"
 
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
@@ -34,6 +35,8 @@ func BmmIngestUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 
 	workflow.GetLogger(ctx).Info("Uploading file to BMM", "path", path)
 
+	wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Importing file to MB: `%s`", path))
+
 	outputDir, err := wfutils.GetWorkflowRawOutputFolder(ctx)
 	if err != nil {
 		return nil, err
@@ -43,41 +46,49 @@ func BmmIngestUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 
 	err = wfutils.MoveFile(ctx, path, newPath, rclone.PriorityNormal)
 	if err != nil {
+		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, "", err)
 		return nil, err
 	}
 
 	res, err := ImportFileAsTag(ctx, "original", newPath, "BMM-"+strconv.Itoa(params.TrackID)+" "+params.Language+" - "+params.Title)
 	if err != nil {
+		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, "", err)
 		return nil, err
 	}
 
 	err = SetUploadedBy(ctx, res.AssetID, params.UploadedBy)
 	if err != nil {
+		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
 		return nil, err
 	}
 
 	err = SetUploadJobID(ctx, res.AssetID, workflow.GetInfo(ctx).OriginalRunID)
 	if err != nil {
+		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
 		return nil, err
 	}
 
 	err = wfutils.SetVidispineMeta(ctx, res.AssetID, vscommon.FieldLanguagesRecorded.Value, params.Language)
 	if err != nil {
+		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
 		return nil, err
 	}
 
 	err = wfutils.SetVidispineMetaInGroup(ctx, res.AssetID, vscommon.FieldBmmTrackID.Value, strconv.Itoa(params.TrackID), "BMM Metadata")
 	if err != nil {
+		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
 		return nil, err
 	}
 
 	err = wfutils.SetVidispineMetaInGroup(ctx, res.AssetID, vscommon.FieldBmmTitle.Value, params.Title, "BMM Metadata")
 	if err != nil {
+		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
 		return nil, err
 	}
 
 	err = wfutils.WaitForVidispineJob(ctx, res.ImportJobID)
 	if err != nil {
+		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
 		return nil, err
 	}
 
@@ -86,6 +97,7 @@ func BmmIngestUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 		Language: params.Language,
 	}).Get(ctx, nil)
 	if err != nil {
+		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
 		return nil, err
 	}
 
@@ -104,8 +116,12 @@ func BmmIngestUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 
 	err = future.Get(ctx, nil)
 	if err != nil {
+		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
 		return nil, err
 	}
+
+	wfutils.SendTelegramText(ctx, telegram.ChatBMM, fmt.Sprintf("🟩 Successfully careate MB asset `%s`, for language `%s`, uploaded by `%s` ", res.AssetID, params.Language, params.UploadedBy))
+	wfutils.SendEmails(ctx, []string{params.UploadedBy}, "BMM Upload succesful", fmt.Sprintf("Uploaded file has been imported into Mediabanken. Asset ID: %s\nUploaded by: %s\nLanguage: %s\n", res.AssetID, params.UploadedBy, params.Language))
 
 	return &BmmSimpleUploadResult{}, nil
 }

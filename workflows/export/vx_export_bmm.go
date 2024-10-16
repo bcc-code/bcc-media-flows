@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"fmt"
 	bccmflows "github.com/bcc-code/bcc-media-flows"
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"path"
 	"strconv"
 	"strings"
@@ -60,6 +61,8 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	logger.Info("Starting ExportToBMM")
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+
+	wfutils.SendTelegramText(ctx, telegram.ChatBMM, "🟦 Exporting to BMM")
 
 	normalizedFutures := map[string]workflow.Future{}
 
@@ -192,7 +195,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, err
 	}
 
-	notifyExportDone(ctx, params, params.ExportDestination.Value)
+	notifyExportDone(ctx, telegram.ChatBMM, params, params.ExportDestination.Value)
 
 	return &VXExportResult{
 		ID:       params.ParentParams.VXID,

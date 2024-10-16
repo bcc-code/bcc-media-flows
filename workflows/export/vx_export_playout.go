@@ -2,6 +2,7 @@ package export
 
 import (
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	"path/filepath"
 
@@ -70,7 +71,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 		return nil, err
 	}
 
-	notifyExportDone(ctx, params, "playout")
+	notifyExportDone(ctx, telegram.ChatOslofjord, params, "playout")
 
 	return &VXExportResult{
 		ID:       params.ParentParams.VXID,
