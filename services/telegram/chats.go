@@ -19,8 +19,9 @@ var (
 	ChatVOD       = Chat{Value: 0}
 	ChatOslofjord = Chat{Value: 0}
 	ChatOther     = Chat{Value: 0}
+	ChatBMM       = Chat{Value: 0}
 
-	Chats = enum.New(ChatVOD, ChatOslofjord, ChatOther)
+	Chats = enum.New(ChatVOD, ChatOslofjord, ChatOther, ChatBMM)
 )
 
 func init() {
@@ -41,4 +42,10 @@ func init() {
 		fmt.Printf("Error parsing TELEGRAM_CHAT_ID_OTHER: %v\n", err)
 	}
 	ChatOther.Value = chat
+
+	chat, err = strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID_BMM"), 10, 64)
+	if err != nil {
+		fmt.Printf("Error parsing TELEGRAM_CHAT_ID_BMM: %v\n", err)
+	}
+	ChatBMM.Value = chat
 }

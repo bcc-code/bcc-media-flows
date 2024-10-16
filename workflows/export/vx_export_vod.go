@@ -2,6 +2,7 @@ package export
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"path/filepath"
 	"strings"
 
@@ -302,9 +303,9 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 		if err != nil {
 			return nil, err
 		}
-		notifyExportDone(ctx, v.params, "vod")
+		notifyExportDone(ctx, telegram.ChatVOD, v.params, "vod")
 	} else {
-		notifyExportDone(ctx, v.params, "isilon")
+		notifyExportDone(ctx, telegram.ChatVOD, v.params, "isilon")
 	}
 
 	//err = DeletePath(ctx, tempFolder)
