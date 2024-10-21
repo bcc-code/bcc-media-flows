@@ -60,7 +60,7 @@ func assignLanguagesToResolutions(audioKeys []string, resolutions []utils.Resolu
 			Resolution: resolutionToString(r),
 			Languages:  []bccmflows.Language{},
 		}
-		for len(languages) > 0 && len(qualities[i].Languages) < 16 {
+		for len(languages) > 0 && len(qualities[i].Languages) < 10 {
 			qualities[i].Languages = append(qualities[i].Languages, languages[0])
 			languages = languages[1:]
 		}
