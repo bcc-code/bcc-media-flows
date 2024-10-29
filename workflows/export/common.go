@@ -8,8 +8,8 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-func notifyExportDone(ctx workflow.Context, chat telegram.Chat, params VXExportChildWorkflowParams, flow string) {
-	message := fmt.Sprintf("🟩 Export of `%s` finished.\nDestination: `%s`", params.ExportData.Title, flow)
+func notifyExportDone(ctx workflow.Context, chat telegram.Chat, params VXExportChildWorkflowParams, flow string, notificationEmoji rune) {
+	message := fmt.Sprintf("%c Export of `%s` finished.\nDestination: `%s`", notificationEmoji, params.ExportData.Title, flow)
 
 	wfutils.SendTelegramText(
 		ctx,

@@ -303,9 +303,9 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 		if err != nil {
 			return nil, err
 		}
-		notifyExportDone(ctx, telegram.ChatVOD, v.params, "vod")
+		notifyExportDone(ctx, telegram.ChatVOD, v.params, "vod", '🟩')
 	} else {
-		notifyExportDone(ctx, telegram.ChatVOD, v.params, "isilon")
+		notifyExportDone(ctx, telegram.ChatVOD, v.params, "isilon", '🟩')
 	}
 
 	//err = DeletePath(ctx, tempFolder)

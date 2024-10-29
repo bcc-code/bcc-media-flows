@@ -71,7 +71,7 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 		return nil, err
 	}
 
-	notifyExportDone(ctx, telegram.ChatOslofjord, params, "playout")
+	notifyExportDone(ctx, telegram.ChatOslofjord, params, "playout", '🟩')
 
 	return &VXExportResult{
 		ID:       params.ParentParams.VXID,
