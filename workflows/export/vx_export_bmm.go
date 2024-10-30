@@ -62,7 +62,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	wfutils.SendTelegramText(ctx, telegram.ChatBMM, "🟦 Exporting to BMM")
+	wfutils.SendTelegramText(ctx, telegram.ChatBMM, fmt.Sprintf("🟦 Exporting to BMM - `%s`", params.ExportData.Title))
 
 	normalizedFutures := map[string]workflow.Future{}
 
@@ -195,7 +195,9 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, err
 	}
 
-	notifyExportDone(ctx, telegram.ChatBMM, params, params.ExportDestination.Value)
+	// The emoji here is blue because BMM produces messages in the same Telegram channel and we want
+	// only the last one to be green.
+	notifyExportDone(ctx, telegram.ChatBMM, params, params.ExportDestination.Value, '🟦')
 
 	return &VXExportResult{
 		ID:       params.ParentParams.VXID,
