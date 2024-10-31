@@ -23,6 +23,7 @@ func Test_H264Video_WeirdResolutions(t *testing.T) {
 		Height:    608,
 		Duration:  5,
 		FrameRate: 25,
+		Profile:   "3",
 	})
 
 	progressCallback := func(i ffmpeg.Progress) {

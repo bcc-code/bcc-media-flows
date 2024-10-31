@@ -37,7 +37,7 @@ func Test_Audio(t *testing.T) {
 
 func Test_AudioSplit_Stereo(t *testing.T) {
 	tempDstPath := paths.MustParse("./testdata/test" + t.Name() + ".wav")
-	testutils.GenerateStreoAudioFile(tempDstPath, 10)
+	testutils.GenerateMultichannelAudioFile(tempDstPath, 2, 10)
 
 	p, stop := printProgress()
 	defer close(stop)

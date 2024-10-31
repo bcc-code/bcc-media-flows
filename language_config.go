@@ -13,6 +13,7 @@ type Language struct {
 	MU2ChannelStart    int
 	MU2ChannelCount    int
 	RelatedMBFieldID   string
+	SoftronStartCh     int
 }
 
 type LanguageList []Language
@@ -123,6 +124,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    1,
 		MU1ChannelCount:    2,
 		MU2ChannelCount:    2,
+		SoftronStartCh:     0,
 		RelatedMBFieldID:   "portal_mf184670",
 	},
 	{
@@ -137,6 +139,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    -1,
 		MU1ChannelCount:    2,
 		MU2ChannelCount:    0,
+		SoftronStartCh:     2,
 		RelatedMBFieldID:   "portal_mf31408",
 	},
 	{
@@ -151,6 +154,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    -1,
 		MU1ChannelCount:    2,
 		MU2ChannelCount:    0,
+		SoftronStartCh:     4,
 		RelatedMBFieldID:   "portal_mf93393",
 	},
 	{
@@ -165,6 +169,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    -1,
 		MU1ChannelCount:    2,
 		MU2ChannelCount:    0,
+		SoftronStartCh:     6,
 		RelatedMBFieldID:   "portal_mf442906",
 	},
 	{
@@ -179,6 +184,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    -1,
 		MU1ChannelCount:    1,
 		MU2ChannelCount:    0,
+		SoftronStartCh:     8,
 		RelatedMBFieldID:   "portal_mf903178",
 	},
 	{
@@ -193,6 +199,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    -1,
 		MU1ChannelCount:    1,
 		MU2ChannelCount:    0,
+		SoftronStartCh:     10,
 		RelatedMBFieldID:   "portal_mf831437",
 	},
 	{
@@ -207,6 +214,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    -1,
 		MU1ChannelCount:    1,
 		MU2ChannelCount:    0,
+		SoftronStartCh:     12,
 		RelatedMBFieldID:   "portal_mf683496",
 	},
 	{
@@ -221,6 +229,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    -1,
 		MU1ChannelCount:    1,
 		MU2ChannelCount:    0,
+		SoftronStartCh:     14,
 		RelatedMBFieldID:   "portal_mf307547",
 	},
 	{
@@ -235,6 +244,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    -1,
 		MU1ChannelCount:    1,
 		MU2ChannelCount:    0,
+		SoftronStartCh:     16,
 		RelatedMBFieldID:   "portal_mf736581",
 	},
 	{
@@ -249,6 +259,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    -1,
 		MU1ChannelCount:    1,
 		MU2ChannelCount:    0,
+		SoftronStartCh:     18,
 		RelatedMBFieldID:   "portal_mf319181",
 	},
 	{
@@ -263,6 +274,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    -1,
 		MU1ChannelCount:    1,
 		MU2ChannelCount:    0,
+		SoftronStartCh:     20,
 		RelatedMBFieldID:   "portal_mf351607",
 	},
 	{
@@ -277,6 +289,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    -1,
 		MU1ChannelCount:    1,
 		MU2ChannelCount:    0,
+		SoftronStartCh:     22,
 		RelatedMBFieldID:   "portal_mf299396",
 	},
 	{
@@ -291,6 +304,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    3,
 		MU1ChannelCount:    0,
 		MU2ChannelCount:    1,
+		SoftronStartCh:     24,
 		RelatedMBFieldID:   "portal_mf176737",
 	},
 	{
@@ -305,6 +319,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    4,
 		MU1ChannelCount:    0,
 		MU2ChannelCount:    1,
+		SoftronStartCh:     26,
 		RelatedMBFieldID:   "portal_mf122460",
 	},
 	{
@@ -319,6 +334,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    5,
 		MU1ChannelCount:    0,
 		MU2ChannelCount:    1,
+		SoftronStartCh:     28,
 		RelatedMBFieldID:   "portal_mf384324",
 	},
 	{
@@ -333,6 +349,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    6,
 		MU1ChannelCount:    0,
 		MU2ChannelCount:    1,
+		SoftronStartCh:     30,
 		RelatedMBFieldID:   "portal_mf223187",
 	},
 	{
@@ -347,6 +364,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    7,
 		MU1ChannelCount:    0,
 		MU2ChannelCount:    1,
+		SoftronStartCh:     32,
 		RelatedMBFieldID:   "portal_mf890483",
 	},
 	{
@@ -361,6 +379,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    8,
 		MU1ChannelCount:    0,
 		MU2ChannelCount:    1,
+		SoftronStartCh:     34,
 		RelatedMBFieldID:   "portal_mf848898",
 	},
 	{
@@ -375,6 +394,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    9,
 		MU1ChannelCount:    0,
 		MU2ChannelCount:    1,
+		SoftronStartCh:     36,
 		RelatedMBFieldID:   "portal_mf162929",
 	},
 	{
@@ -389,6 +409,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    10,
 		MU1ChannelCount:    0,
 		MU2ChannelCount:    1,
+		SoftronStartCh:     38,
 		RelatedMBFieldID:   "portal_mf961978",
 	},
 	{
@@ -403,6 +424,7 @@ var languages = LanguageList{
 		MU2ChannelStart:    11,
 		MU1ChannelCount:    0,
 		MU2ChannelCount:    1,
+		SoftronStartCh:     40,
 		RelatedMBFieldID:   "portal_mf436337",
 	},
 	{
@@ -415,6 +437,7 @@ var languages = LanguageList{
 		ReaperChannel:      22,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    -1,
+		SoftronStartCh:     42,
 		RelatedMBFieldID:   "portal_mf954584",
 	},
 	{
@@ -427,6 +450,7 @@ var languages = LanguageList{
 		ReaperChannel:      23,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    -1,
+		SoftronStartCh:     44,
 		RelatedMBFieldID:   "portal_mf855789",
 	},
 	{
@@ -439,6 +463,7 @@ var languages = LanguageList{
 		ReaperChannel:      24,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    -1,
+		SoftronStartCh:     48,
 		RelatedMBFieldID:   "portal_mf355364",
 	},
 	{
@@ -451,6 +476,7 @@ var languages = LanguageList{
 		ReaperChannel:      25,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    -1,
+		SoftronStartCh:     50,
 		RelatedMBFieldID:   "portal_mf621489",
 	},
 	{
@@ -463,6 +489,7 @@ var languages = LanguageList{
 		ReaperChannel:      26,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    -1,
+		SoftronStartCh:     52,
 		RelatedMBFieldID:   "portal_mf447219",
 	},
 	{
@@ -476,6 +503,7 @@ var languages = LanguageList{
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    -1,
 		RelatedMBFieldID:   "",
+		SoftronStartCh:     54,
 	},
 	{
 		LanguageNumber:     99,
@@ -488,6 +516,7 @@ var languages = LanguageList{
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    -1,
 		RelatedMBFieldID:   "",
+		SoftronStartCh:     0,
 	},
 	{
 		LanguageNumber:     100,
@@ -500,5 +529,6 @@ var languages = LanguageList{
 		MU1ChannelStart:    -2,
 		MU2ChannelStart:    -2,
 		RelatedMBFieldID:   "",
+		SoftronStartCh:     0,
 	},
 }

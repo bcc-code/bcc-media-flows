@@ -14,6 +14,7 @@ type VideoGeneratorParams struct {
 	Height    int
 	SAR       string
 	DAR       string
+	Profile   string
 }
 
 func GenerateVideoFile(outFile paths.Path, videoParams VideoGeneratorParams) paths.Path {
@@ -22,7 +23,7 @@ func GenerateVideoFile(outFile paths.Path, videoParams VideoGeneratorParams) pat
 		"-i", fmt.Sprintf("testsrc=size=%dx%d:rate=%d:duration=%f", videoParams.Width, videoParams.Height, videoParams.FrameRate, videoParams.Duration),
 		"-vf", fmt.Sprintf("setsar=%s, setdar=%s", videoParams.SAR, videoParams.DAR),
 		"-c:v", "prores_ks",
-		"-profile:v", "3",
+		"-profile:v", videoParams.Profile,
 		"-y", outFile.Local(),
 	}
 
