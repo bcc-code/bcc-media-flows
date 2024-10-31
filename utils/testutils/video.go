@@ -2,6 +2,7 @@ package testutils
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -18,6 +19,7 @@ type VideoGeneratorParams struct {
 }
 
 func GenerateVideoFile(outFile paths.Path, videoParams VideoGeneratorParams) paths.Path {
+	os.MkdirAll(outFile.Dir().Local(), 0755)
 	args := []string{
 		"-f", "lavfi",
 		"-i", fmt.Sprintf("testsrc=size=%dx%d:rate=%d:duration=%f", videoParams.Width, videoParams.Height, videoParams.FrameRate, videoParams.Duration),

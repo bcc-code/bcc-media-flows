@@ -36,7 +36,7 @@ func (s *TranscodeTestSuite) TestAThing() {
 		Title: "Softron_20sec_64ch_1audio-por",
 		Items: []common.MergeInputItem{
 			{
-				Path:  paths.MustParse(testFilePath)
+				Path:  paths.MustParse(testFilePath),
 				Start: 0,
 				End:   3,
 				Streams: []vidispine.AudioStream{

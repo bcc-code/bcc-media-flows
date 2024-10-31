@@ -111,6 +111,7 @@ func (s *UnitTestSuite) Test_VBBulk_MasterFlow() {
 		Height:    1080,
 		Width:     1920,
 		Duration:  1,
+		Profile:   "3",
 	})
 
 	testutils.GenerateVideoFile(paths.MustParse("./testdata/generated/VBBulk/VBBulk2.mxf"), testutils.VideoGeneratorParams{
@@ -118,6 +119,7 @@ func (s *UnitTestSuite) Test_VBBulk_MasterFlow() {
 		Height:    1080,
 		Width:     1920,
 		Duration:  1,
+		Profile:   "3",
 	})
 
 	err := testutils.CopyFile("./testdata/BulkVB.xml", "./testdata/generated/BulkVB.xml")

@@ -92,5 +92,5 @@ func Test_mergeItemsToStereoStream_64Chan(t *testing.T) {
 	})
 
 	assert.NoError(t, err)
-	assert.Equal(t, "[0:a]channelsplit=channel_layout=64:channels=64[split];[split]pan=stereo|c0=c5|c1=c6[a0-s][a0-s];amerge=inputs=2[a0]", str)
+	assert.Equal(t, "[0:a]pan=stereo|c0=c5|c1=c6[a0]", str)
 }

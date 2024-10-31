@@ -10,105 +10,105 @@
         "deu": {
           "VXID": "VX-431548",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_DEU.wav"
         },
         "eng": {
           "VXID": "VX-431550",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_ENG.wav"
         },
         "fin": {
           "VXID": "VX-431554",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_FIN.wav"
         },
         "fra": {
           "VXID": "VX-431551",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_FRA.wav"
         },
         "hun": {
           "VXID": "VX-431560",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_HUN.wav"
         },
         "ita": {
           "VXID": "VX-431561",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_ITA.wav"
         },
         "nld": {
           "VXID": "VX-431549",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_NLD.wav"
         },
         "nor": {
           "VXID": "VX-431547",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_NOR.wav"
         },
         "pol": {
           "VXID": "VX-431559",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_POL.wav"
         },
         "por": {
           "VXID": "VX-431556",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_POR.wav"
         },
         "ron": {
           "VXID": "VX-431557",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_RON.wav"
         },
         "rus": {
           "VXID": "VX-431555",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_RUS.wav"
         },
         "slv": {
           "VXID": "VX-431562",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_SLV.wav"
         },
         "spa": {
           "VXID": "VX-431553",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_SPA.wav"
         },
         "tur": {
           "VXID": "VX-431558",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_TUR.wav"
         }
@@ -126,105 +126,105 @@
         "deu": {
           "VXID": "VX-431548",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_DEU.wav"
         },
         "eng": {
           "VXID": "VX-431550",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_ENG.wav"
         },
         "fin": {
           "VXID": "VX-431554",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_FIN.wav"
         },
         "fra": {
           "VXID": "VX-431551",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_FRA.wav"
         },
         "hun": {
           "VXID": "VX-431560",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_HUN.wav"
         },
         "ita": {
           "VXID": "VX-431561",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_ITA.wav"
         },
         "nld": {
           "VXID": "VX-431549",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_NLD.wav"
         },
         "nor": {
           "VXID": "VX-431547",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_NOR.wav"
         },
         "pol": {
           "VXID": "VX-431559",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_POL.wav"
         },
         "por": {
           "VXID": "VX-431556",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_POR.wav"
         },
         "ron": {
           "VXID": "VX-431557",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_RON.wav"
         },
         "rus": {
           "VXID": "VX-431555",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_RUS.wav"
         },
         "slv": {
           "VXID": "VX-431562",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_SLV.wav"
         },
         "spa": {
           "VXID": "VX-431553",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_SPA.wav"
         },
         "tur": {
           "VXID": "VX-431558",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_TUR.wav"
         }
@@ -242,105 +242,105 @@
         "deu": {
           "VXID": "VX-431548",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_DEU.wav"
         },
         "eng": {
           "VXID": "VX-431550",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_ENG.wav"
         },
         "fin": {
           "VXID": "VX-431554",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_FIN.wav"
         },
         "fra": {
           "VXID": "VX-431551",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_FRA.wav"
         },
         "hun": {
           "VXID": "VX-431560",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_HUN.wav"
         },
         "ita": {
           "VXID": "VX-431561",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_ITA.wav"
         },
         "nld": {
           "VXID": "VX-431549",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_NLD.wav"
         },
         "nor": {
           "VXID": "VX-431547",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_NOR.wav"
         },
         "pol": {
           "VXID": "VX-431559",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_POL.wav"
         },
         "por": {
           "VXID": "VX-431556",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_POR.wav"
         },
         "ron": {
           "VXID": "VX-431557",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_RON.wav"
         },
         "rus": {
           "VXID": "VX-431555",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_RUS.wav"
         },
         "slv": {
           "VXID": "VX-431562",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_SLV.wav"
         },
         "spa": {
           "VXID": "VX-431553",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_SPA.wav"
         },
         "tur": {
           "VXID": "VX-431558",
           "Streams": [
-            0
+            {"ChannelID":0,"StreamID":0}
           ],
           "File": "/path/to/file/HC22_20221030_1430_PGM_MU1_TUR.wav"
         }
@@ -353,5 +353,6 @@
   "SafeTitle": "TITLE_OF_THE_SEQUENCE",
   "BMMTitle": "",
   "ImportDate": "2022-10-30T15:18:46.52Z",
-  "OriginalLanguage": "no"
+  "OriginalLanguage": "no",
+  "TranscribedLanguage": "no"
 }
