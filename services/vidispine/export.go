@@ -189,10 +189,12 @@ func enrichClipWithRelatedAudios(client Client, clip *Clip, oLanguagesToExport [
 		var streams []AudioStream
 
 		if len(relatedAudioShape.AudioComponent) > 0 {
-			streams = append(streams, AudioStream{
-				ChannelID: 0,
-				StreamID:  uint(relatedAudioShape.AudioComponent[0].EssenceStreamID),
-			})
+			for i := 0; relatedAudioShape.AudioComponent[0].ChannelCount < 0; i++ {
+				streams = append(streams, AudioStream{
+					ChannelID: uint(i),
+					StreamID:  uint(relatedAudioShape.AudioComponent[0].EssenceStreamID),
+				})
+			}
 		} else {
 			return fmt.Errorf("no audio components found for item %s", relatedAudioVXID)
 		}
