@@ -7,6 +7,7 @@ import (
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ingest"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bcc-media-flows/utils/testutils"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
@@ -16,6 +17,7 @@ import (
 	"go.temporal.io/sdk/testsuite"
 	"os"
 	"testing"
+	"time"
 )
 
 type duplicatePathTestData struct {
@@ -74,12 +76,18 @@ func (s *UnitTestSuite) Test_VBBulk_AssetFlow() {
 
 	s.env.RegisterActivity(activities.Util.ReadFile)
 	s.env.RegisterActivity(activities.Util.MoveFile)
-	s.env.RegisterActivity(activities.Util.CreateFolder)
-	s.env.RegisterActivity(activities.Util.RcloneCopyDir)
-	s.env.RegisterActivity(activities.Util.RcloneWaitForJob)
 	s.env.RegisterActivity(activities.Util.DeletePath)
 
 	s.env.OnActivity(activities.Util.SendEmail, mock.Anything, mock.Anything).Return(nil, nil)
+	s.env.OnActivity(activities.Util.CreateFolder, mock.Anything, mock.Anything).Return("", nil)
+	s.env.OnActivity(activities.Util.RcloneCopyDir, mock.Anything, activities.RcloneCopyDirInput{
+		Source:      "isilon:filecatalyst/workflow/files/6434",
+		Destination: "isilon:temp/workflows/fc",
+		Priority:    rclone.Priority{Value: "normal"},
+	}).Return(1234, nil)
+	s.env.OnActivity(activities.Util.RcloneWaitForJob, mock.Anything, activities.RcloneWaitForJobInput{
+		JobID: 1234,
+	}).Return(true, nil)
 
 	xmlText, err := os.ReadFile("./testdata/generated/BulkVB.xml")
 	var xmlDataDirty ingest.Metadata
@@ -91,7 +99,7 @@ func (s *UnitTestSuite) Test_VBBulk_AssetFlow() {
 	s.env.OnWorkflow(Masters, mock.Anything, MasterParams{
 		OrderForm: OrderFormVBMasterBulk,
 		Directory: paths.Path{Path: "workflows/fc", Drive: paths.TempDrive},
-		OutputDir: paths.Path{Path: "Production/masters/2024/9/13", Drive: paths.IsilonDrive},
+		OutputDir: paths.Path{Path: "Production/masters/" + time.Now().Format("2006/01/02"), Drive: paths.IsilonDrive},
 		Targets: []string{
 			"test@example.com",
 		},
