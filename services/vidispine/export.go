@@ -189,7 +189,7 @@ func enrichClipWithRelatedAudios(client Client, clip *Clip, oLanguagesToExport [
 		var streams []AudioStream
 
 		if len(relatedAudioShape.AudioComponent) > 0 {
-			for i := 0; relatedAudioShape.AudioComponent[0].ChannelCount < 0; i++ {
+			for i := 0; relatedAudioShape.AudioComponent[0].ChannelCount > i; i++ {
 				streams = append(streams, AudioStream{
 					ChannelID: uint(i),
 					StreamID:  uint(relatedAudioShape.AudioComponent[0].EssenceStreamID),
@@ -272,7 +272,7 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 		// We have stereo or mono audio, so we copy it to all languages
 		for _, lang := range languagesToExport {
 			streams := []AudioStream{}
-			for i := 0; shape.AudioComponent[0].ChannelCount < 0; i++ {
+			for i := 0; shape.AudioComponent[0].ChannelCount > i; i++ {
 				streams = append(streams, AudioStream{
 					StreamID:  uint(shape.AudioComponent[0].EssenceStreamID),
 					ChannelID: uint(i),
