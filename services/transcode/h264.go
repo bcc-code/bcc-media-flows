@@ -47,6 +47,12 @@ func H264(input H264EncodeInput, progressCallback ffmpeg.ProgressCallback) (*Enc
 		profile = "high422"
 	}
 
+	if lo.SomeBy(probe.Streams, func(i ffmpeg.FFProbeStream) bool {
+		return strings.HasPrefix(i.PixFmt, "yuv444")
+	}) {
+		profile = "high444"
+	}
+
 	params := []string{
 		"-hide_banner",
 		"-progress", "pipe:1",

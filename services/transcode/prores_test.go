@@ -22,6 +22,7 @@ func Test_ProRes(t *testing.T) {
 		Height:    1080,
 		Duration:  5,
 		FrameRate: 25,
+		Profile:   "3",
 	})
 
 	progressCallback := func(i ffmpeg.Progress) {
@@ -72,6 +73,7 @@ func Test_ProResHyperdeck(t *testing.T) {
 		Height:    1080,
 		Duration:  5,
 		FrameRate: 25,
+		Profile:   "3",
 	})
 
 	progressCallback := func(i ffmpeg.Progress) {

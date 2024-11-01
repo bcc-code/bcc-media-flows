@@ -2,13 +2,14 @@ package common
 
 import (
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 )
 
 type MergeInputItem struct {
 	Path    paths.Path
 	Start   float64
 	End     float64
-	Streams []int
+	Streams []vidispine.AudioStream
 }
 
 type MergeInput struct {

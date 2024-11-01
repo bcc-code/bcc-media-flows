@@ -10,7 +10,7 @@ import (
 
 func Test_PrependSilence(t *testing.T) {
 	input := paths.MustParse("./testdata/generated/stereo_test.wav")
-	testutils.GenerateStreoAudioFile(input, 10)
+	testutils.GenerateMultichannelAudioFile(input, 2, 10)
 	output := paths.MustParse("./testdata/generated/test_tone_stereo_prefixed.wav")
 
 	cb, _ := printProgress()

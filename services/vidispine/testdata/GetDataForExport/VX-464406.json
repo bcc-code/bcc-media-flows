@@ -10,88 +10,88 @@
         "deu": {
           "VXID": "VX-464402",
           "Streams": [
-            3,
-            4
+            {"ChannelID":0,"StreamID":3},
+            {"ChannelID":0,"StreamID":4}
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         },
         "eng": {
           "VXID": "VX-464402",
           "Streams": [
-            7,
-            8
+            {"ChannelID":0,"StreamID":7},
+            {"ChannelID":0,"StreamID":8}
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         },
         "fin": {
           "VXID": "VX-464402",
           "Streams": [
-            11
+            {"ChannelID":0,"StreamID":11}
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         },
         "fra": {
           "VXID": "VX-464402",
           "Streams": [
-            9
+            {"ChannelID":0,"StreamID":9}
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         },
         "nld": {
           "VXID": "VX-464402",
           "Streams": [
-            5,
-            6
+            {"ChannelID":0,"StreamID":5},
+            {"ChannelID":0,"StreamID":6}
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         },
         "nor": {
           "VXID": "VX-464402",
           "Streams": [
-            1,
-            2
+            {"ChannelID":0,"StreamID":1},
+            {"ChannelID":0,"StreamID":2}
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         },
         "pol": {
           "VXID": "VX-464402",
           "Streams": [
-            16
+            {"ChannelID":0,"StreamID":16}
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         },
         "por": {
           "VXID": "VX-464402",
           "Streams": [
-            13
+            {"ChannelID":0,"StreamID":13}
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         },
         "ron": {
           "VXID": "VX-464402",
           "Streams": [
-            14
+            {"ChannelID":0,"StreamID":14}
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         },
         "rus": {
           "VXID": "VX-464402",
           "Streams": [
-            12
+            {"ChannelID":0,"StreamID":12}
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         },
         "spa": {
           "VXID": "VX-464402",
           "Streams": [
-            10
+            {"ChannelID":0,"StreamID":10}
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         },
         "tur": {
           "VXID": "VX-464402",
           "Streams": [
-            15
+            {"ChannelID":0,"StreamID":15}
           ],
           "File": "/path/to/file/MAGA_20230808_1800_PGM_MU1.mxf"
         }
@@ -104,5 +104,6 @@
   "SafeTitle": "SEQ_TITLE_2_Kre_J_Smith_Tale",
   "ImportDate": "2023-08-08T19:39:55.559Z",
   "BmmTitle": "",
-  "OriginalLanguage": "no"
+  "OriginalLanguage": "no",
+  "TranscribedLanguage": "no"
 }

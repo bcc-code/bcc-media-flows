@@ -76,9 +76,14 @@ func Test_GetChapterMetaForClips_Overlapping(t *testing.T) {
 				SequenceOut: 0,
 				AudioFiles: map[string]*AudioFile{
 					"nor": {
-						VXID:    "VX-489605",
-						Streams: []int{2},
-						File:    "/dummy/file.wav",
+						VXID: "VX-489605",
+						Streams: []AudioStream{
+							{
+								StreamID:  0,
+								ChannelID: 0,
+							},
+						},
+						File: "/dummy/file.wav",
 					},
 				},
 				SubtitleFiles:      map[string]string{},
@@ -95,9 +100,14 @@ func Test_GetChapterMetaForClips_Overlapping(t *testing.T) {
 				SequenceOut: 0,
 				AudioFiles: map[string]*AudioFile{
 					"nor": {
-						VXID:    "VX-489605",
-						Streams: []int{2},
-						File:    "/dummy/file.wav",
+						VXID: "VX-489605",
+						Streams: []AudioStream{
+							{
+								StreamID:  0,
+								ChannelID: 0,
+							},
+						},
+						File: "/dummy/file.wav",
 					},
 				},
 				SubtitleFiles:      map[string]string{},

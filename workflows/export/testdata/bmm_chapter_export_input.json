@@ -58,8 +58,8 @@
           "nor": {
             "VXID": "VX-486737",
             "Streams": [
-              1,
-              2
+              {"ChannelID":0,"StreamID":1},
+              {"ChannelID":0,"StreamID":2}
             ],
             "File": "/audio/file/path.wav"
           }

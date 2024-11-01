@@ -10,10 +10,11 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/paths"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/bcc-code/bcc-media-flows/paths"
 
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"

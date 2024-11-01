@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.temporal.io/sdk/testsuite"
+	"os"
 	"testing"
 )
 
@@ -21,6 +22,9 @@ func (s *EmailTestSuite) SetupTest() {
 
 func (s *EmailTestSuite) TestSimpleEmail() {
 	t := s.T()
+	if os.Getenv("SENDGRID_API_KEY") == "" {
+		t.Skip("SENDGRID_API_KEY not set")
+	}
 
 	ua := UtilActivities{}
 	s.env.RegisterActivity(ua.SendEmail)
