@@ -78,7 +78,7 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 			"-i", input.FilePath,
 			"-ss", "0.0",
 			"-i", previewWatermarkPath,
-			"-filter_complex", "sws_flags=bicubic;[0:v]split=1[VIDEO-main-.mp4];[VIDEO-main-.mp4]scale=-2:540,null[temp];[temp][1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4];[0:a:0]asplit=1[AUDIO-main-.mp4-0];[AUDIO-main-.mp4-0]aformat=channel_layouts=stereo[AUDIO-.mp4-0]",
+			"-filter_complex", "sws_flags=bicubic;[0:v]split=1[VIDEO-main-.mp4];[VIDEO-main-.mp4]scale=-2:540,null[temp];[temp][1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4][0:a]pan=stereo|c0=c0|c1=c1[AUDIO-.mp4-0]",
 			"-map", "[VIDEO-.mp4]",
 			"-map", "[AUDIO-.mp4-0]",
 			"-c:v", encoder,
