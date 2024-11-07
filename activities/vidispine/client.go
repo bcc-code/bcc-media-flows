@@ -62,16 +62,18 @@ func (a Activities) JobCompleteOrErr(ctx context.Context, params WaitForJobCompl
 
 	vsClient := GetClient()
 
-	job, err := vsClient.GetJob(params.JobID)
-	if err != nil {
-		return false, temporal.NewNonRetryableApplicationError("couldn't complete job", "JOB_FAILED", err)
-	}
-	if job.Status == "FINISHED" {
-		return true, nil
-	}
-	if job.Status != "STARTED" && job.Status != "READY" && job.Status != "WAITING" {
-		return false, temporal.NewNonRetryableApplicationError("couldn't complete job", "JOB_FAILED", fmt.Errorf("job failed with status: %s", job.Status), job)
-	}
+	for {
+		job, err := vsClient.GetJob(params.JobID)
+		if err != nil {
+			return false, temporal.NewNonRetryableApplicationError("couldn't complete job", "JOB_FAILED", err)
+		}
+		if job.Status == "FINISHED" {
+			return true, nil
+		}
+		if job.Status != "STARTED" && job.Status != "READY" && job.Status != "WAITING" {
+			return false, temporal.NewNonRetryableApplicationError("couldn't complete job", "JOB_FAILED", fmt.Errorf("job failed with status: %s", job.Status), job)
+		}
 
-	return false, fmt.Errorf("job not finished yet")
+		activity.RecordHeartbeat(ctx, job)
+	}
 }

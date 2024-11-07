@@ -54,23 +54,29 @@ func AudioPreview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) 
 	if len(audioStreams) == 16 {
 		if isMU1 {
 			for i, l := range bccmflows.LanguagesByMU1 {
+				fileName := filepath.Join(input.OutputDir, fmt.Sprintf("%d.%s.aac", i, l.ISO6391))
+
 				if l.MU1ChannelCount == 1 {
-					audioMap = append(audioMap, fmt.Sprintf("[0:a:%d]", l.MU1ChannelStart))
+					audioMap = append(audioMap, "-map", fmt.Sprintf("[0:%d]", l.MU1ChannelStart), fileName)
+				} else {
+					filterParts = append(filterParts, fmt.Sprintf("[0:%d][0:%d]amerge=inputs=2[a%d]", l.MU1ChannelStart, l.MU1ChannelStart+1, i))
+					audioMap = append(audioMap, "-map", fmt.Sprintf("[a%d]", i), fileName)
 				}
-				fileName := fmt.Sprintf("%d.%s.aac", i, l.ISO6391)
-				filterParts = append(filterParts, fmt.Sprintf("[0:a:%d][0:a:%d]amerge=inputs=2[a%d]", l.MU1ChannelStart, l.MU1ChannelStart+1, i))
-				audioMap = append(audioMap, "-map", fmt.Sprintf("[a%d]", i), fileName)
+
 				fileMap[l.ISO6391] = fileName
 			}
 		}
 		if isMU2 {
 			for i, l := range bccmflows.LanguagesByMU2 {
+				fileName := filepath.Join(input.OutputDir, fmt.Sprintf("%d.%s.aac", i, l.ISO6391))
+
 				if l.MU2ChannelCount == 1 {
-					audioMap = append(audioMap, fmt.Sprintf("[0:a:%d]", l.MU2ChannelStart))
+					audioMap = append(audioMap, "-map", fmt.Sprintf("[0:%d]", l.MU2ChannelStart), fileName)
+				} else {
+					filterParts = append(filterParts, fmt.Sprintf("[0:%d][0:%d]amerge=inputs=2[a%d]", l.MU2ChannelStart, l.MU2ChannelStart+1, i))
+					audioMap = append(audioMap, "-map", fmt.Sprintf("[a%d]", i), fileName)
 				}
-				fileName := fmt.Sprintf("%d.%s.aac", i, l.ISO6391)
-				filterParts = append(filterParts, fmt.Sprintf("[0:a:%d][0:a:%d]amerge=inputs=2[a%d]", l.MU2ChannelStart, l.MU2ChannelStart+1, i))
-				audioMap = append(audioMap, "-map", fmt.Sprintf("[a%d]", i), fileName)
+
 				fileMap[l.ISO6391] = fileName
 			}
 		} else {
@@ -79,8 +85,8 @@ func AudioPreview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) 
 
 	} else if len(audioStreams) == 1 && audioStreams[0].Channels == 64 {
 		for i, l := range bccmflows.LanguageBySoftron {
-			fileName := fmt.Sprintf("%d.%s.aac", i, l.ISO6391)
-			filterParts = append(filterParts, fmt.Sprintf("[0:a:%d]pan=stereo|c0=c%d|c1=c%d[a%d]", audioStreams[0].Index, l.SoftronStartCh, l.SoftronStartCh+1, i))
+			fileName := filepath.Join(input.OutputDir, fmt.Sprintf("%d.%s.aac", i, l.ISO6391))
+			filterParts = append(filterParts, fmt.Sprintf("[0:%d]pan=stereo|c0=c%d|c1=c%d[a%d]", audioStreams[0].Index, l.SoftronStartCh, l.SoftronStartCh+1, i))
 			audioMap = append(audioMap, "-map", fmt.Sprintf("[a%d]", i), fileName)
 			fileMap[l.ISO6391] = fileName
 		}
@@ -92,7 +98,7 @@ func AudioPreview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) 
 
 	args := []string{
 		"-i", input.FilePath,
-		"-c:a", "aac",
+		"-c:a", "aac", "-b:a", "64k", "-ar", "44100", "-ac", "2", "-profile:a", "aac_low",
 		"-filter_complex", strings.Join(filterParts, ";"),
 	}
 	args = append(args, audioMap...)
@@ -161,7 +167,7 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 			"-i", input.FilePath,
 			"-ss", "0.0",
 			"-i", previewWatermarkPath,
-			"-filter_complex", "sws_flags=bicubic;[0:v]split=1[VIDEO-main-.mp4];[VIDEO-main-.mp4]scale=-2:540,null[temp];[temp][1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4][0:a]pan=stereo|c0=c0|c1=c1[AUDIO-.mp4-0]",
+			"-filter_complex", "sws_flags=bicubic;[0:v]split=1[VIDEO-main-.mp4];[VIDEO-main-.mp4]scale=-2:540,null[temp];[temp][1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4];[0:a]pan=stereo|c0=c0|c1=c1[AUDIO-.mp4-0]",
 			"-map", "[VIDEO-.mp4]",
 			"-map", "[AUDIO-.mp4-0]",
 			"-c:v", encoder,
