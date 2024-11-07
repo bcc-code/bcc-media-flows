@@ -60,7 +60,10 @@ func assignLanguagesToResolutions(audioKeys []string, resolutions []utils.Resolu
 			Resolution: resolutionToString(r),
 			Languages:  []bccmflows.Language{},
 		}
-		for len(languages) > 0 && len(qualities[i].Languages) < 10 {
+
+		// 9 is the limit of audio streams AWS will accept on one file
+		// https://eu-north-1.console.aws.amazon.com/servicequotas/home/services/mediapackage/quotas/L-81A8E99B
+		for len(languages) > 0 && len(qualities[i].Languages) < 8 {
 			qualities[i].Languages = append(qualities[i].Languages, languages[0])
 			languages = languages[1:]
 		}
