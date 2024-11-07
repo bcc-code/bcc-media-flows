@@ -2,9 +2,10 @@ package utils
 
 import (
 	"fmt"
-	"github.com/orsinium-labs/enum"
 	"strconv"
 	"strings"
+
+	"github.com/orsinium-labs/enum"
 )
 
 type FrameRate enum.Member[string]
@@ -33,7 +34,7 @@ func TCToSamples(tc string, fps int, sampleRate int) (int, error) {
 
 		frames, err = strconv.Atoi(splitTc[0])
 	} else {
-		frames, err = timecodeToFrames(tc, fps)
+		frames, err = TimecodeToFrames(tc, fps)
 	}
 
 	if err != nil {
@@ -42,7 +43,7 @@ func TCToSamples(tc string, fps int, sampleRate int) (int, error) {
 	return frames * sampleRate / fps, nil
 }
 
-func timecodeToFrames(timecode string, frameRate int) (int, error) {
+func TimecodeToFrames(timecode string, frameRate int) (int, error) {
 	parts := strings.Split(timecode, ":")
 	if len(parts) != 4 {
 		return 0, fmt.Errorf("invalid timecode format")

@@ -15,8 +15,9 @@ type TranscodePreviewParams struct {
 }
 
 type TranscodePreviewResponse struct {
-	PreviewFilePath paths.Path
-	AudioOnly       bool
+	PreviewFilePath   paths.Path
+	AudioPreviewFiles map[string]paths.Path
+	AudioOnly         bool
 }
 
 // TranscodePreview is the activity definition for transcoding a video to preview. It only uses the specified filepath
@@ -26,18 +27,32 @@ func (va VideoActivities) TranscodePreview(ctx context.Context, input TranscodeP
 
 	stop, progressCallback := registerProgressCallback(ctx)
 	defer close(stop)
-
-	result, err := transcode.Preview(transcode.PreviewInput{
+	inputParams := transcode.PreviewInput{
 		OutputDir: input.DestinationDirPath.Local(),
 		FilePath:  input.FilePath.Local(),
-	}, progressCallback)
+	}
+
+	result, err := transcode.Preview(inputParams, progressCallback)
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil, err
 	}
 
+	result2, err := transcode.AudioPreview(inputParams, progressCallback)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	audioPreviews := map[string]paths.Path{}
+
+	for l, p := range result2.AudioTracks {
+		audioPreviews[l] = paths.MustParse(p)
+	}
+
 	return &TranscodePreviewResponse{
 		PreviewFilePath: paths.MustParse(result.LowResolutionPath),
 		AudioOnly:       result.AudioOnly,
+		AudioPreviewFiles: audioPreviews,
 	}, nil
 }

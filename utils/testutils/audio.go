@@ -2,10 +2,11 @@ package testutils
 
 import (
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/paths"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/bcc-code/bcc-media-flows/paths"
 )
 
 func GenerateDualMonoAudioFile(outFile paths.Path, length float64) paths.Path {
@@ -56,7 +57,7 @@ func GenerateMultichannelAudioFile(outFile paths.Path, chCount int, length float
 	return outFile
 }
 
-func GenerateSofronTestFile(outFile paths.Path, chCount int, length float64) paths.Path {
+func GenerateSoftronTestFile(outFile paths.Path, chCount int, length float64) paths.Path {
 	os.MkdirAll(outFile.Dir().Local(), 0755)
 
 	args := []string{}

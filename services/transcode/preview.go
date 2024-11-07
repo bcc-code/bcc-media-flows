@@ -2,9 +2,12 @@ package transcode
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
+	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/environment"
 
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
@@ -20,7 +23,87 @@ type PreviewResult struct {
 	AudioOnly         bool
 }
 
+type AudioPreviewResult struct {
+	AudioTracks map[string]string
+}
+
 var previewWatermarkPath = environment.GetIsilonPrefix() + "/system/graphics/LOGO_BTV_Preview_960-540.mov"
+
+func AudioPreview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*AudioPreviewResult, error) {
+	out := &AudioPreviewResult{}
+
+	info, err := ffmpeg.ProbeFile(input.FilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	isMU1 := strings.Contains(input.FilePath, "_MU1")
+	isMU2 := strings.Contains(input.FilePath, "_MU2")
+
+	audioStreams := []ffmpeg.FFProbeStream{}
+	for _, stream := range info.Streams {
+		if stream.CodecType == "audio" {
+			audioStreams = append(audioStreams, stream)
+		}
+	}
+
+	fileMap := map[string]string{}
+	filterParts := []string{}
+	audioMap := []string{}
+
+	if len(audioStreams) == 16 {
+		if isMU1 {
+			for i, l := range bccmflows.LanguagesByMU1 {
+				if l.MU1ChannelCount == 1 {
+					audioMap = append(audioMap, fmt.Sprintf("[0:a:%d]", l.MU1ChannelStart))
+				}
+				fileName := fmt.Sprintf("%d.%s.aac", i, l.ISO6391)
+				filterParts = append(filterParts, fmt.Sprintf("[0:a:%d][0:a:%d]amerge=inputs=2[a%d]", l.MU1ChannelStart, l.MU1ChannelStart+1, i))
+				audioMap = append(audioMap, "-map", fmt.Sprintf("[a%d]", i), fileName)
+				fileMap[l.ISO6391] = fileName
+			}
+		}
+		if isMU2 {
+			for i, l := range bccmflows.LanguagesByMU2 {
+				if l.MU2ChannelCount == 1 {
+					audioMap = append(audioMap, fmt.Sprintf("[0:a:%d]", l.MU2ChannelStart))
+				}
+				fileName := fmt.Sprintf("%d.%s.aac", i, l.ISO6391)
+				filterParts = append(filterParts, fmt.Sprintf("[0:a:%d][0:a:%d]amerge=inputs=2[a%d]", l.MU2ChannelStart, l.MU2ChannelStart+1, i))
+				audioMap = append(audioMap, "-map", fmt.Sprintf("[a%d]", i), fileName)
+				fileMap[l.ISO6391] = fileName
+			}
+		} else {
+			return nil, fmt.Errorf("Unknow format of audio channels. Not generating preview")
+		}
+
+	} else if len(audioStreams) == 1 && audioStreams[0].Channels == 64 {
+		for i, l := range bccmflows.LanguageBySoftron {
+			fileName := fmt.Sprintf("%d.%s.aac", i, l.ISO6391)
+			filterParts = append(filterParts, fmt.Sprintf("[0:a:%d]pan=stereo|c0=c%d|c1=c%d[a%d]", audioStreams[0].Index, l.SoftronStartCh, l.SoftronStartCh+1, i))
+			audioMap = append(audioMap, "-map", fmt.Sprintf("[a%d]", i), fileName)
+			fileMap[l.ISO6391] = fileName
+		}
+	} else {
+		return out, nil
+	}
+
+	out.AudioTracks = fileMap
+
+	args := []string{
+		"-i", input.FilePath,
+		"-c:a", "aac",
+		"-filter_complex", strings.Join(filterParts, ";"),
+	}
+	args = append(args, audioMap...)
+
+	_, err = ffmpeg.Do(args, ffmpeg.ProbeResultToInfo(info), progressCallback)
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
 
 func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*PreviewResult, error) {
 	encoder := os.Getenv("H264_ENCODER")
