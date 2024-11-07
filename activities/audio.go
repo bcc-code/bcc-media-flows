@@ -3,6 +3,7 @@ package activities
 import (
 	"context"
 	"fmt"
+
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
@@ -120,7 +121,7 @@ func (aa AudioActivities) AdjustAudioToVideoStart(ctx context.Context, input Adj
 	return &common.AudioResult{}, nil
 }
 
-func (aa AudioActivities) DetectSilence(ctx context.Context, input common.AudioInput) (bool, error) {
+func (aa AudioActivities) DetectSilence(ctx context.Context, input common.DetectSilenceInput) (bool, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "DetectSilence")
 	log.Info("Starting DetectSilenceActivity")

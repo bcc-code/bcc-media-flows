@@ -145,9 +145,8 @@ func doImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFro
 	}
 
 	isSilent := false
-	err = wfutils.Execute(ctx, activities.Audio.DetectSilence, common.AudioInput{
-		Path:            tempFile,
-		DestinationPath: tempFolder,
+	err = wfutils.Execute(ctx, activities.Audio.DetectSilence, common.DetectSilenceInput{
+		Path: tempFile,
 	}).Get(ctx, &isSilent)
 
 	if err != nil {

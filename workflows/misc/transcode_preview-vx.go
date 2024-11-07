@@ -2,6 +2,8 @@ package miscworkflows
 
 import (
 	"fmt"
+	bccmflows "github.com/bcc-code/bcc-media-flows"
+	"github.com/bcc-code/mediabank-bridge/log"
 	"github.com/samber/lo"
 	"path/filepath"
 	"strings"
@@ -82,6 +84,19 @@ func TranscodePreviewVX(
 			FilePath: previewResponse.PreviewFilePath,
 			ShapeTag: shapeTag,
 		}).Get(ctx, nil)
+
+	for l, p := range previewResponse.AudioPreviewFiles {
+		tag := bccmflows.LanguagesByISO[l].MBPreviewTag
+		err = wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity,
+			vsactivity.ImportFileAsShapeParams{
+				AssetID:  params.VXID,
+				FilePath: p,
+				ShapeTag: tag,
+			}).Get(ctx, nil)
+		if err != nil {
+			log.L.Log().Err(err).Msg("Error importing audio preview")
+		}
+	}
 
 	return err
 }

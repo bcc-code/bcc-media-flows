@@ -1,6 +1,8 @@
 package common
 
 import (
+	"time"
+
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/utils"
 )
@@ -23,6 +25,12 @@ type AudioInput struct {
 	Path            paths.Path
 	Bitrate         string
 	DestinationPath paths.Path
+}
+
+type DetectSilenceInput struct {
+	Path         paths.Path
+	SampleLength time.Duration
+	offset       time.Duration
 }
 
 type WavAudioInput struct {
