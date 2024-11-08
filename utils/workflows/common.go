@@ -18,7 +18,7 @@ func GetDefaultActivityOptions() workflow.ActivityOptions {
 	return workflow.ActivityOptions{
 		StartToCloseTimeout:    time.Hour * 4,
 		ScheduleToCloseTimeout: time.Hour * 12,
-		HeartbeatTimeout:       time.Minute * 2,
+		HeartbeatTimeout:       time.Minute * 10,
 		RetryPolicy: &temporal.RetryPolicy{
 			BackoffCoefficient: 2,
 			MaximumInterval:    60 * time.Second,
