@@ -65,8 +65,7 @@ func AudioPreview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) 
 
 				fileMap[l.ISO6391] = fileName
 			}
-		}
-		if isMU2 {
+		} else if isMU2 {
 			for i, l := range bccmflows.LanguagesByMU2 {
 				fileName := filepath.Join(input.OutputDir, fmt.Sprintf("%d.%s.aac", i, l.ISO6391))
 
