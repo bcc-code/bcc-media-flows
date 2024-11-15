@@ -139,7 +139,7 @@ func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) 
 
 	if len(streams) == 0 {
 		s, found := lo.Find(info.Streams, func(s ffmpeg.FFProbeStream) bool {
-			return s.ChannelLayout == "stereo" && s.Channels == 2
+			return s.Channels == 2
 		})
 		if found {
 			streams = append(streams, s)
@@ -149,7 +149,7 @@ func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) 
 	var streamString string
 	channels := 0
 	for _, stream := range streams {
-		if stream.ChannelLayout == "stereo" && stream.Channels == 2 {
+		if stream.Channels == 2 {
 			return fmt.Sprintf("[%d:%d]aselect[%s]", index, stream.Index, tag), nil
 		} else if stream.Channels == 64 && len(item.Streams) == 2 {
 			streamString += fmt.Sprintf("[0:a]pan=stereo|c0=c%d|c1=c%d[%s]", item.Streams[0].ChannelID, item.Streams[1].ChannelID, tag)
