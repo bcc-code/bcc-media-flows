@@ -1,6 +1,7 @@
 package transcode
 
 import (
+	"encoding/json"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
@@ -49,9 +50,7 @@ func Test_mergeItemsToStereoStream_dualMono(t *testing.T) {
 	assert.Equal(t, str, "[0:0][0:1]amerge=inputs=2[a0]")
 }
 
-func Test_mergeItemsToStereoStream_stero(t *testing.T) {
-	//func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) (string, error) {
-
+func Test_mergeItemsToStereoStream_stereo(t *testing.T) {
 	file := testutils.GenerateMultichannelAudioFile(paths.MustParse("./testdata/5s_stereo.wav"), 2, 1)
 
 	str, err := mergeItemToStereoStream(0, "a0", common.MergeInputItem{
@@ -65,11 +64,19 @@ func Test_mergeItemsToStereoStream_stero(t *testing.T) {
 				StreamID:  0,
 				ChannelID: 1,
 			},
+			vidispine.AudioStream{
+				StreamID:  1,
+				ChannelID: 0,
+			},
+			vidispine.AudioStream{
+				StreamID:  1,
+				ChannelID: 1,
+			},
 		},
 	})
 
 	assert.NoError(t, err)
-	assert.Equal(t, "[0:0][0:0]amerge=inputs=2[a0]", str)
+	assert.Equal(t, "[0:0]aselect[a0]", str)
 }
 
 func Test_mergeItemsToStereoStream_64Chan(t *testing.T) {

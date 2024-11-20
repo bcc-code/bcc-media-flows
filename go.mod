@@ -5,7 +5,7 @@ go 1.22
 require (
 	cloud.google.com/go/pubsub v1.38.0
 	github.com/Code-Hex/go-generics-cache v1.3.1
-	github.com/ansel1/merry/v2 v2.1.2
+	github.com/ansel1/merry/v2 v2.2.1
 	github.com/bcc-code/bcc-media-platform v0.0.0-20240610143247-2316a26ef460
 	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/creativeprojects/go-selfupdate v1.1.3
