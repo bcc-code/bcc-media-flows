@@ -1,13 +1,13 @@
 package transcode
 
 import (
-	"encoding/json"
+	"testing"
+
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	"github.com/bcc-code/bcc-media-flows/utils/testutils"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func Test_mergeItemsToStereoStream_simple(t *testing.T) {

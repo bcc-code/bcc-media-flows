@@ -7,6 +7,7 @@ type Language struct {
 	LanguageNameSystem string
 	ISO6391            string
 	ISO6392TwoLetter   string
+	BMMLangauageCode   string
 	ReaperChannel      int
 	MU1ChannelStart    int
 	MU1ChannelCount    int
@@ -27,6 +28,7 @@ var (
 	LanguagesByReaper       map[int]Language
 	LanguagesByISOTwoLetter map[string]Language
 	LanguageBySoftron       map[int]Language
+	LanguageByBMM           map[string]Language
 )
 
 func init() {
@@ -37,6 +39,7 @@ func init() {
 	LanguagesByReaper = languages.ByReaperChan()
 	LanguagesByISOTwoLetter = languages.ByISO6392TwoLetter()
 	LanguageBySoftron = languages.BySoftron()
+	LanguageByBMM = languages.ByBMMCode()
 }
 
 func (l LanguageList) BySoftron() map[int]Language {
@@ -112,6 +115,17 @@ func (l LanguageList) ByISO6392TwoLetter() map[string]Language {
 	return out
 }
 
+func (l LanguageList) ByBMMCode() map[string]Language {
+	out := make(map[string]Language, len(l))
+	for _, lang := range l {
+		if lang.BMMLangauageCode == "" {
+			continue
+		}
+		out[lang.BMMLangauageCode] = lang
+	}
+	return out
+}
+
 func (l LanguageList) Len() int {
 	return len(l)
 }
@@ -133,6 +147,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Norwegian",
 		ISO6391:            "nor",
 		ISO6392TwoLetter:   "no",
+		BMMLangauageCode:   "nb",
 		ReaperChannel:      1,
 		MU1ChannelStart:    1,
 		MU2ChannelStart:    1,
@@ -149,6 +164,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "German",
 		ISO6391:            "deu",
 		ISO6392TwoLetter:   "de",
+		BMMLangauageCode:   "de",
 		ReaperChannel:      2,
 		MU1ChannelStart:    3,
 		MU2ChannelStart:    -1,
@@ -165,6 +181,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Dutch",
 		ISO6391:            "nld",
 		ISO6392TwoLetter:   "nl",
+		BMMLangauageCode:   "nl",
 		ReaperChannel:      3,
 		MU1ChannelStart:    5,
 		MU2ChannelStart:    -1,
@@ -181,6 +198,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "English",
 		ISO6391:            "eng",
 		ISO6392TwoLetter:   "en",
+		BMMLangauageCode:   "en",
 		ReaperChannel:      4,
 		MU1ChannelStart:    7,
 		MU2ChannelStart:    -1,
@@ -197,6 +215,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "French",
 		ISO6391:            "fra",
 		ISO6392TwoLetter:   "fr",
+		BMMLangauageCode:   "fr",
 		ReaperChannel:      5,
 		MU1ChannelStart:    9,
 		MU2ChannelStart:    -1,
@@ -213,6 +232,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Spanish",
 		ISO6391:            "spa",
 		ISO6392TwoLetter:   "es",
+		BMMLangauageCode:   "es",
 		ReaperChannel:      6,
 		MU1ChannelStart:    10,
 		MU2ChannelStart:    -1,
@@ -229,6 +249,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Finnish",
 		ISO6391:            "fin",
 		ISO6392TwoLetter:   "fi",
+		BMMLangauageCode:   "fi",
 		ReaperChannel:      7,
 		MU1ChannelStart:    11,
 		MU2ChannelStart:    -1,
@@ -245,6 +266,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Russian",
 		ISO6391:            "rus",
 		ISO6392TwoLetter:   "ru",
+		BMMLangauageCode:   "ru",
 		ReaperChannel:      8,
 		MU1ChannelStart:    12,
 		MU2ChannelStart:    -1,
@@ -261,6 +283,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Portuguese",
 		ISO6391:            "por",
 		ISO6392TwoLetter:   "pt",
+		BMMLangauageCode:   "pt",
 		ReaperChannel:      9,
 		MU1ChannelStart:    13,
 		MU2ChannelStart:    -1,
@@ -277,6 +300,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Romanian",
 		ISO6391:            "ron",
 		ISO6392TwoLetter:   "ro",
+		BMMLangauageCode:   "ro",
 		ReaperChannel:      10,
 		MU1ChannelStart:    14,
 		MU2ChannelStart:    -1,
@@ -293,6 +317,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Turkish",
 		ISO6391:            "tur",
 		ISO6392TwoLetter:   "tr",
+		BMMLangauageCode:   "tr",
 		ReaperChannel:      11,
 		MU1ChannelStart:    15,
 		MU2ChannelStart:    -1,
@@ -309,6 +334,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Polish",
 		ISO6391:            "pol",
 		ISO6392TwoLetter:   "pl",
+		BMMLangauageCode:   "pl",
 		ReaperChannel:      12,
 		MU1ChannelStart:    16,
 		MU2ChannelStart:    -1,
@@ -325,6 +351,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Bulgarian",
 		ISO6391:            "bul",
 		ISO6392TwoLetter:   "bg",
+		BMMLangauageCode:   "bg",
 		ReaperChannel:      13,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    3,
@@ -341,6 +368,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Hungarian",
 		ISO6391:            "hun",
 		ISO6392TwoLetter:   "hu",
+		BMMLangauageCode:   "hun",
 		ReaperChannel:      14,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    4,
@@ -357,6 +385,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Italian",
 		ISO6391:            "ita",
 		ISO6392TwoLetter:   "it",
+		BMMLangauageCode:   "it",
 		ReaperChannel:      15,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    5,
@@ -373,6 +402,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Slovenian",
 		ISO6391:            "slv",
 		ISO6392TwoLetter:   "sl",
+		BMMLangauageCode:   "sl",
 		ReaperChannel:      16,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    6,
@@ -389,6 +419,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Simplified Chinese",
 		ISO6391:            "cmn",
 		ISO6392TwoLetter:   "zh",
+		BMMLangauageCode:   "zh",
 		ReaperChannel:      17,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    7,
@@ -405,6 +436,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Croatian",
 		ISO6391:            "hrv",
 		ISO6392TwoLetter:   "hr",
+		BMMLangauageCode:   "hr",
 		ReaperChannel:      18,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    8,
@@ -421,6 +453,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Danish",
 		ISO6391:            "dan",
 		ISO6392TwoLetter:   "da",
+		BMMLangauageCode:   "da",
 		ReaperChannel:      19,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    9,
@@ -437,6 +470,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Norwegian Translation",
 		ISO6391:            "nob",
 		ISO6392TwoLetter:   "no-x-tolk",
+		BMMLangauageCode:   "no",
 		ReaperChannel:      20,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    10,
@@ -453,6 +487,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Traditional Chinese",
 		ISO6391:            "yue",
 		ISO6392TwoLetter:   "",
+		BMMLangauageCode:   "yue",
 		ReaperChannel:      21,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    11,
@@ -468,7 +503,8 @@ var languages = LanguageList{
 		LanguageNameNative: "മലയാളം",
 		LanguageNameSystem: "Malayallam",
 		ISO6391:            "mal",
-		ISO6392TwoLetter:   "",
+		ISO6392TwoLetter:   "ml",
+		BMMLangauageCode:   "ml",
 		ReaperChannel:      22,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    -1,
@@ -483,6 +519,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Tamil",
 		ISO6391:            "tam",
 		ISO6392TwoLetter:   "ta",
+		BMMLangauageCode:   "ta",
 		ReaperChannel:      23,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    -1,
@@ -496,7 +533,8 @@ var languages = LanguageList{
 		LanguageNameNative: "eesti keel",
 		LanguageNameSystem: "Estonian",
 		ISO6391:            "est",
-		ISO6392TwoLetter:   "",
+		ISO6392TwoLetter:   "et",
+		BMMLangauageCode:   "et",
 		ReaperChannel:      24,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    -1,
@@ -511,6 +549,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Khasi",
 		ISO6391:            "kha",
 		ISO6392TwoLetter:   "",
+		BMMLangauageCode:   "kha",
 		ReaperChannel:      25,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    -1,
@@ -525,6 +564,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Swahili",
 		ISO6391:            "swa",
 		ISO6392TwoLetter:   "",
+		BMMLangauageCode:   "",
 		ReaperChannel:      26,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    -1,
@@ -539,6 +579,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "Afrikaans",
 		ISO6391:            "afr",
 		ISO6392TwoLetter:   "af",
+		BMMLangauageCode:   "af",
 		ReaperChannel:      27,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    -1,
@@ -553,6 +594,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "No linguistic content",
 		ISO6391:            "zxx",
 		ISO6392TwoLetter:   "zxx",
+		BMMLangauageCode:   "zxx",
 		ReaperChannel:      -1,
 		MU1ChannelStart:    -1,
 		MU2ChannelStart:    -1,
@@ -567,6 +609,7 @@ var languages = LanguageList{
 		LanguageNameSystem: "AI Generated",
 		ISO6391:            "und",
 		ISO6392TwoLetter:   "und-x-ai-generated",
+		BMMLangauageCode:   "",
 		ReaperChannel:      -2,
 		MU1ChannelStart:    -2,
 		MU2ChannelStart:    -2,

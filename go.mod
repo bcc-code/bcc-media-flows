@@ -19,7 +19,6 @@ require (
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/orsinium-labs/enum v1.3.0
 	github.com/samber/lo v1.38.1
-	github.com/sashabaranov/go-openai v1.32.2
 	github.com/sendgrid/sendgrid-go v3.14.0+incompatible
 	github.com/stretchr/testify v1.9.0
 	github.com/teamwork/reload v1.4.2
@@ -34,7 +33,7 @@ require (
 	cloud.google.com/go/auth v0.5.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
-	github.com/bcc-code/mediabank-bridge v1.1.1 // indirect
+	github.com/bcc-code/mediabank-bridge v1.1.1
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
@@ -130,7 +129,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/redis/go-redis/v9 v9.2.1 // indirect
 	github.com/robfig/cron v1.2.0 // indirect
-	github.com/rs/zerolog v1.31.0 // indirect
+	github.com/rs/zerolog v1.31.0
 	github.com/sendgrid/rest v2.6.9+incompatible // indirect
 	github.com/sony/gobreaker v0.5.0 // indirect
 	github.com/sqlc-dev/pqtype v0.3.0 // indirect
