@@ -2,7 +2,7 @@ package bccmflows
 
 import "github.com/ansel1/merry/v2"
 
-var LanguageParseError = merry.Sentinel("uanable to parse language code")
+var ErrLanguageParsingFailed = merry.Sentinel("uanable to parse language code")
 
 func ParseLanguageCode(langCode string) (Language, error) {
 
@@ -14,7 +14,11 @@ func ParseLanguageCode(langCode string) (Language, error) {
 		return lang, nil
 	}
 
-	return Language{}, merry.Wrap(LanguageParseError)
+	if lang, ok := LanguageByBMM[langCode]; ok {
+		return lang, nil
+	}
+
+	return Language{}, merry.Wrap(ErrLanguageParsingFailed)
 }
 
 func MustParseLanguageCode(langCode string) Language {
