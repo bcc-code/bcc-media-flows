@@ -237,6 +237,88 @@ func formatDuration(seconds float64) string {
 	return fmt.Sprintf("%02d:%02d:%02d,%03d", hours, minutes, wholeSeconds, milliseconds)
 }
 
+// MergeSubtitlesByOffset merges subtitles based on a specified offset
+//
+// This is used for example when you have several movies played in a feast.
+// this way the offset indicates the offset from the start of the event, and the subtitles will be placed there
+func MergeSubtitlesByOffset(input common.MergeInput, progressCallback ffmpeg.ProgressCallback) (*common.MergeResult, error) {
+	var files []string
+
+	for index, item := range input.Items {
+		fileOut := filepath.Join(input.WorkDir.Local(), fmt.Sprintf("%s-%d-out.srt", input.Title, index))
+		path := item.Path.Local()
+
+		cmd := exec.Command("ffmpeg",
+			"-hide_banner",
+			"-itsoffset", fmt.Sprintf("%f", item.StartOffset),
+			"-i", path,
+			"-y", fileOut,
+		)
+		_, err := utils.ExecuteCmd(cmd, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		files = append(files, fileOut)
+	}
+
+	// the files have to be present in a text file for ffmpeg to concatenate them.
+	// #subtitles.txt
+	// file /path/to/file/0.srt
+	// file /path/to/file/1.srt
+	var content string
+	for _, f := range files {
+		content += fmt.Sprintf("file '%s'\n", f)
+	}
+
+	subtitlesFile := filepath.Join(input.WorkDir.Local(), input.Title+"-subtitles.txt")
+
+	err := os.WriteFile(subtitlesFile, []byte(content), os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, f := range files {
+		err = ensureValidSrtFile(f)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	concatStr := fmt.Sprintf("concat:%s", strings.Join(files, "|"))
+
+	outputFilePath := filepath.Join(input.OutputDir.Local(), filepath.Clean(input.Title)+".srt")
+	params := []string{
+		"-hide_banner",
+		"-progress", "pipe:1",
+		"-hide_banner",
+		"-i", concatStr,
+		"-c", "copy",
+		"-y",
+		outputFilePath,
+	}
+
+	_, err = ffmpeg.Do(params, ffmpeg.StreamInfo{}, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+
+	err = ensureValidSrtFile(outputFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	outputPath, err := paths.Parse(outputFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	return &common.MergeResult{
+		Path: outputPath,
+	}, err
+}
+
+// MergeSubtitles does the merging of subtitles for the mormal mediabanken export
 func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCallback) (*common.MergeResult, error) {
 	var files []string
 	// for each file, extract the specified range and save the result to a file.

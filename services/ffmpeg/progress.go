@@ -148,7 +148,7 @@ func parseProgressCallback(command []string, info StreamInfo, cb func(Progress))
 		} else if parts[0] == "speed" {
 			progress.Speed = parts[1]
 		}
-		if parts[0] == "progress" {
+		if parts[0] == "progress" && cb != nil {
 			cb(progress)
 		}
 	}

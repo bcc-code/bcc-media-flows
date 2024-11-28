@@ -1,6 +1,7 @@
 package transcode
 
 import (
+	"os"
 	"testing"
 
 	"github.com/bcc-code/bcc-media-flows/common"
@@ -100,4 +101,68 @@ func Test_mergeItemsToStereoStream_64Chan(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, "[0:a]pan=stereo|c0=c5|c1=c6[a0]", str)
+}
+
+func Test_MergeSubtitles(t *testing.T) {
+	output := paths.MustParse("./testdata/generated/")
+	subPath := paths.MustParse("./testdata/sub1.srt")
+
+	input := common.MergeInput{
+		OutputDir: output,
+		WorkDir:   output,
+		Title:     t.Name(),
+		Items: []common.MergeInputItem{
+			common.MergeInputItem{
+				Path:  subPath,
+				Start: 0,
+				End:   5,
+			},
+			common.MergeInputItem{
+				Path:  subPath,
+				Start: 10,
+				End:   15,
+			},
+		},
+	}
+
+	res, err := MergeSubtitles(input, nil)
+	assert.NoError(t, err)
+	assert.Equal(t, paths.MustParse("./testdata/generated/Test_MergeSubtitles.srt"), res.Path)
+	assert.FileExists(t, res.Path.Local())
+
+	actual, _ := os.ReadFile(res.Path.Local())
+	expected, _ := os.ReadFile("./testdata/subtitles_merge_result.srt")
+
+	assert.Equal(t, expected, actual)
+}
+
+func Test_MergeSubtitlesByOffset(t *testing.T) {
+	output := paths.MustParse("./testdata/generated/")
+	subPath := paths.MustParse("./testdata/sub1.srt")
+
+	input := common.MergeInput{
+		OutputDir: output,
+		WorkDir:   output,
+		Title:     t.Name(),
+		Items: []common.MergeInputItem{
+			common.MergeInputItem{
+				Path:        subPath,
+				StartOffset: 0,
+			},
+			common.MergeInputItem{
+				Path:        subPath,
+				StartOffset: 100,
+			},
+		},
+	}
+
+	res, err := MergeSubtitlesByOffset(input, nil)
+	assert.NoError(t, err)
+	assert.Equal(t, paths.MustParse("./testdata/generated/Test_MergeSubtitlesByOffset.srt"), res.Path)
+	assert.FileExists(t, res.Path.Local())
+
+	actual, _ := os.ReadFile(res.Path.Local())
+	expected, _ := os.ReadFile("./testdata/subtitles_merge_by_offset_result.srt")
+
+	assert.Equal(t, expected, actual)
 }

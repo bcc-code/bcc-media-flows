@@ -6,10 +6,11 @@ import (
 )
 
 type MergeInputItem struct {
-	Path    paths.Path
-	Start   float64
-	End     float64
-	Streams []vidispine.AudioStream
+	Path        paths.Path
+	Start       float64
+	End         float64
+	StartOffset float64
+	Streams     []vidispine.AudioStream
 }
 
 type MergeInput struct {
