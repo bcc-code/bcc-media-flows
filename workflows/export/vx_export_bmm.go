@@ -3,12 +3,13 @@ package export
 import (
 	"crypto/sha1"
 	"fmt"
-	bccmflows "github.com/bcc-code/bcc-media-flows"
-	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"path"
 	"strconv"
 	"strings"
 	"time"
+
+	bccmflows "github.com/bcc-code/bcc-media-flows"
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 
 	pcommon "github.com/bcc-code/bcc-media-platform/backend/common"
 
@@ -122,6 +123,7 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 				Path:            audio.FilePath,
 				DestinationPath: params.OutputDir,
 				Bitrate:         bitrate,
+				ForceCBR:        true,
 			})
 			encodings = append(encodings, f.Future)
 		}

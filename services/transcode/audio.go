@@ -3,13 +3,14 @@ package transcode
 import (
 	"bytes"
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/utils"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/bcc-code/bcc-media-flows/utils"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
 
@@ -284,8 +285,14 @@ func AudioMP3(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 		"-hide_banner",
 		"-i", input.Path.Local(),
 		"-c:a", "libmp3lame",
-		"-q:a", fmt.Sprint(getQfactorFromBitrate(input.Bitrate)),
 	}
+
+	if input.ForceCBR {
+		params = append(params, "-b:a", input.Bitrate)
+	} else {
+		params = append(params, "-q:a", fmt.Sprint(getQfactorFromBitrate(input.Bitrate)))
+	}
+
 
 	outputFilePath := filepath.Join(input.DestinationPath.Local(), input.Path.Base())
 	outputFilePath = fmt.Sprintf("%s-%s.mp3", outputFilePath[:len(outputFilePath)-len(filepath.Ext(outputFilePath))], input.Bitrate)

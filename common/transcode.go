@@ -25,6 +25,9 @@ type AudioInput struct {
 	Path            paths.Path
 	Bitrate         string
 	DestinationPath paths.Path
+
+	// Not all codecs may support constant bitrate
+	ForceCBR bool
 }
 
 type DetectSilenceInput struct {
