@@ -126,13 +126,16 @@ func MergeAndImportSubtitlesFromCSV(ctx workflow.Context, params MergeAndImportS
 		sub := merged[lang]
 		lang := strings.ToLower(lang)
 
-		jobRes := &vsactivity.JobResult{}
-		err = wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
+		jobRes, err := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.TargetVXID,
 			FilePath: sub,
 			ShapeTag: fmt.Sprintf("sub_%s_%s", lang, "srt"),
 			Replace:  true,
-		}).Get(ctx, jobRes)
+		}).Result(ctx)
+
+		if err != nil {
+			return false, err
+		}
 
 		if jobRes.JobID == "" {
 			logger.Info("No job created for importing subtitle shape", "lang", lang, "file", sub)
