@@ -89,7 +89,7 @@ func MergeAndImportSubtitlesFromCSV(ctx workflow.Context, params MergeAndImportS
 
 			if _, ok := mergeData[lang]; !ok {
 				mergeData[lang] = &common.MergeInput{
-					Title:     params.Title,
+					Title:     params.Title + "_" + lang,
 					WorkDir:   tempPath,
 					OutputDir: outputPath,
 				}
