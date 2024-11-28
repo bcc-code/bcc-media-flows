@@ -136,6 +136,7 @@ func GetStreamInfo(path string) (StreamInfo, error) {
 	if err != nil {
 		return StreamInfo{}, err
 	}
+
 	return ProbeResultToInfo(info), nil
 }
 

@@ -1,17 +1,18 @@
 package transcode
 
 import (
-	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
-	"github.com/bcc-code/bcc-media-flows/utils/testutils"
 	"os"
 	"testing"
+
+	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
+	"github.com/bcc-code/bcc-media-flows/utils/testutils"
 
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_Audio(t *testing.T) {
+func Test_AACEncode(t *testing.T) {
 	tempDstPath := paths.MustParse("./testdata/test" + t.Name() + ".wav")
 	err := GenerateToneFile(1000, 5, 48000, "01:00:00:00", tempDstPath)
 	assert.NoError(t, err)
@@ -33,6 +34,58 @@ func Test_Audio(t *testing.T) {
 	assert.False(t, info.HasVideo)
 	assert.InDelta(t, 5, 0.2, info.TotalSeconds)
 	assert.Equal(t, 1, len(info.AudioStreams))
+}
+
+func Test_MP3Encode_VBR(t *testing.T) {
+	tempDstPath := paths.MustParse("./testdata/test" + t.Name() + ".wav")
+	err := GenerateToneFile(1000, 5, 48000, "01:00:00:00", tempDstPath)
+	assert.NoError(t, err)
+
+	p, stop := printProgress()
+	defer close(stop)
+	res, err := AudioMP3(common.AudioInput{
+		Path:            tempDstPath,
+		DestinationPath: tempDstPath.Dir(),
+		Bitrate:         "128k",
+		ForceCBR:        false,
+	}, p)
+	assert.Nil(t, err)
+	assert.NotNil(t, res)
+
+	info, err := ffmpeg.GetStreamInfo(res.OutputPath.Local())
+	assert.NoError(t, err)
+
+	assert.True(t, info.HasAudio)
+	assert.False(t, info.HasVideo)
+	assert.InDelta(t, 5, 0.2, info.TotalSeconds)
+	assert.Equal(t, 1, len(info.AudioStreams))
+
+}
+
+func Test_MP3Encode_CBR(t *testing.T) {
+	tempDstPath := paths.MustParse("./testdata/test" + t.Name() + ".wav")
+	err := GenerateToneFile(1000, 5, 48000, "01:00:00:00", tempDstPath)
+	assert.NoError(t, err)
+
+	p, stop := printProgress()
+	defer close(stop)
+	res, err := AudioMP3(common.AudioInput{
+		Path:            tempDstPath,
+		DestinationPath: tempDstPath.Dir(),
+		Bitrate:         "128k",
+		ForceCBR:        true,
+	}, p)
+	assert.Nil(t, err)
+	assert.NotNil(t, res)
+
+	info, err := ffmpeg.GetStreamInfo(res.OutputPath.Local())
+	assert.NoError(t, err)
+
+	assert.True(t, info.HasAudio)
+	assert.False(t, info.HasVideo)
+	assert.InDelta(t, 5, 0.2, info.TotalSeconds)
+	assert.Equal(t, 1, len(info.AudioStreams))
+	assert.Equal(t, "128000", info.AudioStreams[0].BitRate)
 }
 
 func Test_AudioSplit_Stereo(t *testing.T) {
