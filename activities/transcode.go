@@ -204,6 +204,22 @@ func (aa AudioActivities) TranscodeMergeAudio(ctx context.Context, params common
 	return result, nil
 }
 
+func (aa AudioActivities) MergeSubtitlesByOffset(ctx context.Context, params common.MergeInput) (*common.MergeResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "MergeSubtitlesByOffset")
+	log.Info("Starting MergeSubtitlesByOffsetActivity")
+
+	// No easy way of reporting progress, so this just triggers heartbeats
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	result, err := transcode.MergeSubtitlesByOffset(params, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 func (va VideoActivities) TranscodeMergeSubtitles(ctx context.Context, params common.MergeInput) (*common.MergeResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeMergeSubtitles")

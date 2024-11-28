@@ -1,0 +1,19 @@
+1
+00:00:01,000 --> 00:00:04,000
+Hello, this is the first subtitle
+Second line of the first subtitle
+
+2
+00:00:04,500 --> 00:00:07,800
+This is the second subtitle
+It can also have multiple lines
+And even more lines
+
+3
+00:00:08,000 --> 00:00:12,000
+Third subtitle entry
+
+4
+00:00:13,000 --> 00:00:15,500
+- Multiple speakers can be shown
+- Using dashes like this
