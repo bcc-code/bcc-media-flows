@@ -21,7 +21,7 @@ type MergeAndImportSubtitlesFromCSVParams struct {
 	TargetVXID string
 	CSVData    string
 	Title      string
-	Separator  rune
+	Separator  string
 }
 
 func convertCSVTimestamp(timestamp string) (float64, error) {
@@ -45,6 +45,13 @@ func convertCSVTimestamp(timestamp string) (float64, error) {
 	return float64(t.Hour()*3600+t.Minute()*60+t.Second()) + ms.Seconds(), nil
 }
 
+func getSeparatorRune(s string) rune {
+	for _, r := range s {
+		return r
+	}
+	return ','
+}
+
 func MergeAndImportSubtitlesFromCSV(ctx workflow.Context, params MergeAndImportSubtitlesFromCSVParams) (bool, error) {
 
 	logger := workflow.GetLogger(ctx)
@@ -58,7 +65,7 @@ func MergeAndImportSubtitlesFromCSV(ctx workflow.Context, params MergeAndImportS
 	tempPath, _ := wfutils.GetWorkflowTempFolder(ctx)
 	outputPath, _ := wfutils.GetWorkflowAuxOutputFolder(ctx)
 
-	entries, err := parseSubMergeData([]byte(params.CSVData), params.Separator)
+	entries, err := parseSubMergeData([]byte(params.CSVData), getSeparatorRune(params.Separator))
 	if err != nil {
 		return false, err
 	}
