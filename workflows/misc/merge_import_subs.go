@@ -137,8 +137,10 @@ func MergeAndImportSubtitlesFromCSV(ctx workflow.Context, params MergeAndImportS
 		_ = wfutils.Execute(ctx, activities.Vidispine.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
 			JobID:     jobRes.JobID,
 			SleepTime: 10,
-		}).Get(ctx, nil)
+		}).Wait(ctx)
 	}
+
+	wfutils.SendTelegramText(ctx, telegram.ChatOther, "🟩 CSV based sub merge and import for VXID: "+params.TargetVXID+" finished")
 
 	return true, nil
 }
