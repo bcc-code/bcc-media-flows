@@ -80,6 +80,7 @@ func TranscribeVX(
 			AssetID:  params.VXID,
 			FilePath: transcriptionJob.JSONPath,
 			ShapeTag: "transcription_json",
+			Replace:  true,
 		})
 
 	importSRTJob := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity,
@@ -87,6 +88,7 @@ func TranscribeVX(
 			AssetID:  params.VXID,
 			FilePath: transcriptionJob.SRTPath,
 			ShapeTag: "Transcribed_Subtitle_SRT",
+			Replace:  true,
 		})
 
 	var errs []error
