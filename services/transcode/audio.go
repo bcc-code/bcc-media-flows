@@ -108,7 +108,7 @@ func AudioAac(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 		"-progress", "pipe:1",
 		"-hide_banner",
 		"-i", input.Path.Local(),
-		"-c:a", "aac",
+		"-c:a", "libfdk_aac",
 		"-b:a", input.Bitrate,
 	}
 
@@ -292,7 +292,6 @@ func AudioMP3(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 	} else {
 		params = append(params, "-q:a", fmt.Sprint(getQfactorFromBitrate(input.Bitrate)))
 	}
-
 
 	outputFilePath := filepath.Join(input.DestinationPath.Local(), input.Path.Base())
 	outputFilePath = fmt.Sprintf("%s-%s.mp3", outputFilePath[:len(outputFilePath)-len(filepath.Ext(outputFilePath))], input.Bitrate)
