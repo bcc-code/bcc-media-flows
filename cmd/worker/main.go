@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -80,6 +81,23 @@ func main() {
 		panic(err)
 	}
 
+	if environment.GetQueue() == environment.QueueAudio {
+		// Test if the libfdk_aac encoder is available
+		cmd := exec.Command("ffmpeg", "-xerror",
+			"-f", "lavfi", "-xerror",
+			"-i", "sine=frequency=1000:duration=0.1",
+			"-c:a", "libfdk_aac",
+			"-f", "null", "-")
+
+		err := cmd.Run()
+		if err != nil {
+			panic(err)
+		}
+
+		if cmd.ProcessState.ExitCode() != 0 {
+			panic("audio worker must support ffmpeg with libfdk_aac")
+		}
+	}
 	workerOptions := worker.Options{
 		DeadlockDetectionTimeout:           time.Hour * 3,
 		DisableRegistrationAliasing:        true, // Recommended according to readme, default false for backwards compatibility
