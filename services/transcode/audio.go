@@ -434,6 +434,7 @@ func TrimFile(inFile, outFile paths.Path, start, end float64, cb ffmpeg.Progress
 	}
 
 	params = append(params,
+		"-map", "0",
 		"-c", "copy",
 		outFile.Local())
 

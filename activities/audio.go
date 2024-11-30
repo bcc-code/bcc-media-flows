@@ -108,7 +108,12 @@ func (aa AudioActivities) AdjustAudioToVideoStart(ctx context.Context, input Adj
 	}
 
 	if samplesToAdd < 0 {
-		return nil, fmt.Errorf("audio starts before video. This is currently not supported")
+		_, err := aa.TrimFile(ctx, TrimInput{
+			Output: input.OutputFile,
+			Input:  input.AudioFile,
+			Start:  float64(-samplesToAdd) / float64(48000),
+		})
+		return nil, err
 	}
 
 	_, err = aa.PrependSilence(ctx, PrependSilenceInput{
