@@ -221,7 +221,7 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 	shape := shapes.GetShape("original")
 
 	if len(shape.AudioComponent) != 16 && len(shape.AudioComponent) != 8 && len(shape.AudioComponent) > 2 {
-		return fmt.Errorf("found %d audio components, expected 1, 2 or 16", len(shape.AudioComponent))
+		return fmt.Errorf("found %d audio components, expected 1, 2 or 16 on item %s", len(shape.AudioComponent), clip.VXID)
 	}
 
 	if len(shape.AudioComponent) == 0 {
