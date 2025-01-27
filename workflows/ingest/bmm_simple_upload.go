@@ -2,8 +2,9 @@ package ingestworkflows
 
 import (
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"strconv"
+
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 
@@ -98,7 +99,7 @@ func BmmIngestUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 	}).Get(ctx, nil)
 	if err != nil {
 		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
-		return nil, err
+		// Continue. Just because we failed transcription we should not stop the workflow
 	}
 
 	destinations := []string{export.AssetExportDestinationBMM.Value}
