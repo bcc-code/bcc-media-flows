@@ -22,6 +22,8 @@ var TriggerableWorkflows = []any{
 	miscworkflows.MergeAndImportSubtitlesFromCSV,
 	miscworkflows.UpdateAssetRelations,
 	miscworkflows.NormalizeAudioLevelWorkflow,
+	miscworkflows.MoveMBFile,
+	miscworkflows.MoveFilesWorkerFlow,
 	scheduled.CleanupTemp,
 	scheduled.MediabankenPurgeTrash,
 }
@@ -33,6 +35,8 @@ var WorkerWorkflows = []any{
 	miscworkflows.TranscribeVX,
 	miscworkflows.WatchFolderTranscode,
 	miscworkflows.HandleMultitrackFile,
+	miscworkflows.MoveMBFile,
+	miscworkflows.MoveFilesWorkerFlow,
 	ingestworkflows.BmmIngestUpload,
 	export.VXExport,
 	export.VXExportToVOD,

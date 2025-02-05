@@ -60,6 +60,10 @@ func Execute[T any, TR any](ctx workflow.Context, activity func(context.Context,
 		}
 	}
 
+	if options.ScheduleToCloseTimeout == 0 {
+		options.ScheduleToCloseTimeout = time.Hour * 3
+	}
+
 	ctx = workflow.WithActivityOptions(ctx, options)
 	return Task[TR]{
 		workflow.ExecuteActivity(ctx, activity, params),

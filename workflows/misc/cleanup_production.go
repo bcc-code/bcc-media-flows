@@ -189,9 +189,10 @@ func generateRenameParams(ctx context.Context, file cantemoservice.Objects, oldN
 	}
 
 	return &cantemo.RenameFileParams{
-		NewPath:   newPath + newName,
-		ItemID:    file.Item.ID,
-		ShapeID:   fileFormat.ID,
-		StorageID: oldStorage,
+		NewPath:           newPath + newName,
+		ItemID:            file.Item.ID,
+		ShapeID:           fileFormat.ID,
+		SourceStorage:     oldStorage,
+		DestinatinStorage: oldStorage,
 	}, nil
 }

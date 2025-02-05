@@ -77,3 +77,18 @@ func (a Activities) JobCompleteOrErr(ctx context.Context, params WaitForJobCompl
 		activity.RecordHeartbeat(ctx, job)
 	}
 }
+
+type FindJobParams struct {
+	ItemID  string
+	JobType string
+}
+
+func (a Activities) FindJob(ctx context.Context, params FindJobParams) (*vsapi.JobDocument, error) {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Starting FindJob")
+
+	vsClient := GetClient()
+	res, err := vsClient.FindJob(params.ItemID, params.JobType)
+
+	return res, err
+}

@@ -209,13 +209,54 @@ func (c *Client) GetFiles(path string, state string, storageFilter string, page 
 	return result, err
 }
 
-func (c *Client) RenameFile(itemID, shapeID, storageID, filename string) error {
-	url := "/API/v2/items/" + itemID + "/shape/" + shapeID + "/" + storageID + "/rename/"
-	_, err := c.restyClient.R().
+type RenameFileResponse struct {
+	Message string `json:"message"`
+	TaskID  string `json:"task_id"`
+}
+
+func (c *Client) RenameFile(itemID, shapeID, sourceStorage, destinationStorage, filename string) (string, error) {
+	url := "/API/v2/items/" + itemID + "/shape/" + shapeID + "/" + sourceStorage + "/rename/"
+	res, err := c.restyClient.R().
+		SetResult(&RenameFileResponse{}).
 		SetFormData(map[string]string{
-			"destination_storage": storageID,
+			"destination_storage": destinationStorage,
 			"filename":            filename,
 		}).
 		Put(url)
-	return err
+
+	if err != nil {
+		return "", err
+	}
+
+	return res.Result().(*RenameFileResponse).TaskID, nil
+}
+
+func (c *Client) MoveFile(itemID, shapeID, sourceStorage, destinationStorage, filename string) (string, error) {
+	url := "/API/v2/items/" + itemID + "/shape/" + shapeID + "/" + sourceStorage + "/move/"
+	res, err := c.restyClient.R().
+		SetResult(&RenameFileResponse{}).
+		SetFormData(map[string]string{
+			"destination_storage": destinationStorage,
+			"filename":            filename,
+		}).
+		Put(url)
+
+	if err != nil {
+		return "", err
+	}
+
+	return res.Result().(*RenameFileResponse).TaskID, nil
+}
+
+type Task struct {
+	TaskID string `json:"task_id"`
+	State  string `json:"state"`
+}
+
+func (c *Client) GetTask(taskID string) (*Task, error) {
+	res, err := c.restyClient.R().SetResult(&Task{}).Get("/API/v2/tasks/" + taskID)
+	if err != nil {
+		return nil, err
+	}
+	return res.Result().(*Task), nil
 }

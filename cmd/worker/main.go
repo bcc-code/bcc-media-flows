@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"log"
 	"os"
 	"os/exec"
@@ -31,6 +32,9 @@ import (
 var utilActivities = []any{
 	batonactivities.QC,
 	cantemo.AddRelation,
+	cantemo.RenameFile,
+	cantemo.MoveFileWait,
+	cantemo.GetTaskInfo,
 }
 
 // registerActivitiesInStruct registers all methods in a struct as activities
@@ -98,6 +102,9 @@ func main() {
 			panic("audio worker must support ffmpeg with libfdk_aac")
 		}
 	}
+
+	ctx := context.Background()
+
 	workerOptions := worker.Options{
 		DeadlockDetectionTimeout:           time.Hour * 3,
 		DisableRegistrationAliasing:        true, // Recommended according to readme, default false for backwards compatibility
@@ -105,6 +112,7 @@ func main() {
 		Identity:                           identity,
 		LocalActivityWorkerOnly:            false,
 		MaxConcurrentActivityExecutionSize: activityCount, // Doesn't make sense to have more than one activity running at a time
+		BackgroundActivityContext:          context.WithValue(ctx, miscworkflows.ClientContextKey, c),
 	}
 
 	if os.Getenv("RCLONE_PASSWORD") != "" {

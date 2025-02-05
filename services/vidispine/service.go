@@ -26,6 +26,7 @@ type Client interface {
 	CreatePlaceholder(ingestType vsapi.PlaceholderType, title string) (string, error)
 	CreateThumbnails(assetID string, width, height int) (string, error)
 	GetJob(jobID string) (*vsapi.JobDocument, error)
+	FindJob(itemID string, jobType string) (*vsapi.JobDocument, error)
 	AddFileToPlaceholder(itemID, fileID, tag string, fileState vsapi.FileState) (string, error)
 	GetResolutions(itemVXID string) ([]vsapi.Resolution, error)
 	GetRelations(assetID string) ([]vsapi.Relation, error)
