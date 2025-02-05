@@ -81,6 +81,11 @@ func MoveFileWait(ctx context.Context, params *RenameFileParams) (any, error) {
 		return nil, err
 	}
 
+	if job == nil {
+		// No job found, don't error out. Likely nothing too do
+		return nil, nil
+	}
+
 	return vsactivitiy.Vidispine.WaitForJobCompletion(ctx, vsactivitiy.WaitForJobCompletionParams{
 		JobID:     job.JobID,
 		SleepTime: 20,
