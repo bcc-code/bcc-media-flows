@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/davecgh/go-spew/spew"
 	"go.temporal.io/sdk/client"
@@ -53,7 +54,7 @@ func StartFilesWorkerFlow(ctx context.Context, params MoveMBFileParams) error {
 		params,
 		client.StartWorkflowOptions{
 			ID:        "move_mb_file",
-			TaskQueue: "debug",
+			TaskQueue: environment.GetQueue(),
 			RetryPolicy: &temporal.RetryPolicy{
 				InitialInterval:    time.Second,
 				BackoffCoefficient: 2.0,
