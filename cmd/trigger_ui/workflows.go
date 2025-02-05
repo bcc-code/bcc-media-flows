@@ -70,7 +70,7 @@ func (s *TriggerServer) listGET(ctx *gin.Context) {
 		name := meta.Get(vscommon.FieldTitle, "")
 
 		loc, _ := time.LoadLocation("Europe/Oslo")
-		startTime := workflows.Executions[i].StartTime.In(loc).Format("Mon, 02 Jan 2006 15:04:05 MST")
+		startTime := workflows.Executions[i].StartTime.AsTime().In(loc).Format("Mon, 02 Jan 2006 15:04:05 MST")
 
 		workflowList = append(workflowList, WorkflowDetails{
 			VxID:       data.VXID,
