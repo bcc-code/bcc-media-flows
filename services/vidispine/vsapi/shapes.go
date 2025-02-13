@@ -178,6 +178,9 @@ func (s Shape) GetPath() string {
 	if len(s.ContainerComponent.File) > 0 {
 		// Cut off the "file://" prefix
 		for _, fc := range s.ContainerComponent.File {
+			if len(fc.URI) == 0 {
+				continue
+			}
 			p, _ := url.PathUnescape(fc.URI[0][7:])
 			return p
 		}
@@ -186,6 +189,9 @@ func (s Shape) GetPath() string {
 	// Does this make sense, can it be multiple files???
 	for _, bc := range s.BinaryComponent {
 		for _, f := range bc.File {
+			if len(f.URI) == 0 {
+				continue
+			}
 			p, _ := url.PathUnescape(f.URI[0][7:])
 			return p
 		}
