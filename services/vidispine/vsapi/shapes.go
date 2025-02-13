@@ -174,10 +174,13 @@ func (sr ShapeResult) GetShape(tag string) *Shape {
 }
 
 func (s Shape) GetPath() string {
-	// Cut off the "file://" prefix
-	for _, fc := range s.ContainerComponent.File {
-		p, _ := url.PathUnescape(fc.URI[0][7:])
-		return p
+
+	if len(s.ContainerComponent.File) > 0 {
+		// Cut off the "file://" prefix
+		for _, fc := range s.ContainerComponent.File {
+			p, _ := url.PathUnescape(fc.URI[0][7:])
+			return p
+		}
 	}
 
 	// Does this make sense, can it be multiple files???

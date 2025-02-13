@@ -182,6 +182,11 @@ func MoveFilesWorkerFlow(ctx workflow.Context) error {
 			shapePath := s.GetPath()
 			storage := FindStorageForPath(shapePath)
 
+			if storage.Name == "Archive" {
+				workflow.GetLogger(ctx).Debug("Skipping archive path", "path", shapePath)
+				continue
+			}
+
 			trimmedName := strings.TrimPrefix(shapePath, storage.BasePath)
 
 			depth := strings.Count(trimmedName, "/")
