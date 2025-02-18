@@ -95,7 +95,7 @@ func doImportSubtitlesFromSubtrans(ctx workflow.Context, params ImportSubtitlesF
 		_ = wfutils.Execute(ctx, activities.Vidispine.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
 			JobID:     jobRes.JobID,
 			SleepTime: 10,
-		}).Get(ctx, nil)
+		}).Wait(ctx)
 	}
 
 	wfutils.SendTelegramText(
@@ -127,7 +127,7 @@ func doImportSubtitlesFromSubtrans(ctx workflow.Context, params ImportSubtitlesF
 		_ = wfutils.Execute(ctx, activities.Vidispine.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
 			JobID:     jobRes.JobID,
 			SleepTime: 10,
-		}).Get(ctx, nil)
+		}).Wait(ctx)
 	}
 
 	return nil

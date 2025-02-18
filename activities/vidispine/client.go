@@ -26,7 +26,12 @@ type WaitForJobCompletionParams struct {
 	SleepTime int
 }
 
-func (a Activities) WaitForJobCompletion(ctx context.Context, params WaitForJobCompletionParams) (any, error) {
+type MBJobStatusResult struct {
+	JobID  string
+	Status string
+}
+
+func (a Activities) WaitForJobCompletion(ctx context.Context, params WaitForJobCompletionParams) (*MBJobStatusResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting WaitForJobCompletionActivity")
 
@@ -43,15 +48,18 @@ func (a Activities) WaitForJobCompletion(ctx context.Context, params WaitForJobC
 			return nil, err
 		}
 		if job.Status == "FINISHED" {
-			return nil, nil
+			return &MBJobStatusResult{params.JobID, job.Status}, nil
 		}
+
 		if job.Status != "STARTED" && job.Status != "READY" && job.Status != "WAITING" {
-			return nil, fmt.Errorf("job failed with status: %s", job.Status)
+			return &MBJobStatusResult{params.JobID, job.Status}, nil
 		}
+
 		activity.RecordHeartbeat(ctx, job)
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
 		}
+
 		time.Sleep(sleepTime)
 	}
 }
