@@ -2,6 +2,7 @@ package vsapi
 
 import (
 	"fmt"
+	"github.com/bcc-code/mediabank-bridge/log"
 	"net/url"
 
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
@@ -16,6 +17,7 @@ func (c *Client) GetShapes(vsID string) (*ShapeResult, error) {
 		Get(url)
 
 	if err != nil {
+		log.L.Debug().Str("error", err.Error()).Str("vsID", vsID).Msg("failed to get shapes")
 		return nil, err
 	}
 
