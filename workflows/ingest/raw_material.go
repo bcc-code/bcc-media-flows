@@ -3,6 +3,7 @@ package ingestworkflows
 import (
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
+	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
@@ -75,7 +76,8 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 			return nil, fmt.Errorf("invalid filename: %s", f)
 		}
 
-		newPath := outputDir.Append(f.Base())
+		newFileName := strings.ReplaceAll(f.Base(), " ", "_")
+		newPath := outputDir.Append(newFileName)
 		err = wfutils.MoveFile(ctx, f, newPath, rclone.PriorityNormal)
 		if err != nil {
 			return nil, err

@@ -2,6 +2,7 @@ package utils_test
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/bcc-code/bcc-media-flows/utils"
@@ -28,4 +29,9 @@ func TestIsDirEmpty(t *testing.T) {
 func TestValidRawFilename(t *testing.T) {
 	// Ø is not allowed
 	assert.False(t, utils.ValidRawFilename("KJS80_INTERVJUFILM_BRØDRE_RCC_AUD_V02.wav"))
+}
+
+func TestValidRawFilename_Spaces(t *testing.T) {
+	assert.True(t, utils.ValidRawFilename("t e s t in g.wav"))
+	assert.Equal(t, "a_b_b.wav", strings.ReplaceAll("a b b.wav", " ", "_"))
 }

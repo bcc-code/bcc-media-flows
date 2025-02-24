@@ -12,7 +12,7 @@ import (
 	"github.com/samber/lo"
 )
 
-var alphanumericalRegex = regexp.MustCompile("^[a-zA-Z0-9_-]+$")
+var alphanumericalRegex = regexp.MustCompile("^[a-zA-Z0-9_ -]+$")
 
 var imageExtensions = []string{
 	".png",

@@ -38,7 +38,7 @@ func (s *RawMaterialTestSuite) Test_RawMaterialForm_InvalidFilename() {
 
 	s.env.OnActivity(activities.Util.ListFiles, mock.Anything, mock.Anything).Return(
 		paths.Files{
-			paths.MustParse("./testdata/v i d e o.mxf"),
+			//paths.MustParse("./testdata/v i d e o.mxf"),
 			paths.MustParse("./testdata/video.mp4"),
 			paths.MustParse("./testdata/æøå.mp4"),
 		}, nil)
