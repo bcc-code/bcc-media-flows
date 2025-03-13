@@ -2,6 +2,7 @@ package ingestworkflows
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -20,19 +21,35 @@ type IncrementalParams struct {
 	Path string
 }
 
+// Constants for workflow and signal
+const (
+	LiveIngestWorkflowID  = "LIVE-INGEST"
+	FileTransferredSignal = "file_transferred"
+)
+
 // Incremental is a workflow that ingests a growing file into Vidispine.
 // It also starts the Reaper recording.
+//
+// The workflow has a fixed ID "LIVE-INGEST" and listens for file transfer signals.
+// It will repeatedly attempt to copy files until it receives a signal that the file
+// has been completely transferred.
 //
 // After the ingest is done, it stops the Reaper recording and adds the file to the placeholder.
 // The reaper command returns the list of files that were recorded, so we can await for them to be
 // available before padding them to the same start as the video file.
 // The length of the files will typically be longer than video but that is not an issue.
 //
-// After the files are mdified, the need to be ingested into Vidispine, and
+// After the files are modified, they need to be ingested into Vidispine, and
 // linked properly to the video file
 func Incremental(ctx workflow.Context, params IncrementalParams) error {
 	logger := workflow.GetLogger(ctx)
-	logger.Info("Starting Incremental")
+	logger.Info("Starting Incremental with fixed ID: LIVE-INGEST")
+
+	// Override the workflow ID to be LIVE-INGEST
+	info := workflow.GetInfo(ctx)
+	if info.WorkflowExecution.ID != LiveIngestWorkflowID {
+		logger.Warn(fmt.Sprintf("Workflow was started with ID %s instead of %s", info.WorkflowExecution.ID, LiveIngestWorkflowID))
+	}
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
@@ -57,13 +74,14 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	rawPath := outDir.Append(in.Base())
 
-	/// Start file copy
+	// Create a signal channel to listen for file transfer completions
+	signalChan := workflow.GetSignalChannel(ctx, FileTransferredSignal)
 
-	copyTask := wfutils.Execute(ctx, activities.Live.RsyncIncrementalCopy, activities.RsyncIncrementalCopyInput{
-		In:  in,
-		Out: rawPath,
-	})
+	// Extract the base filename we're waiting for
+	expectedFilename := in.Base()
+	logger.Info(fmt.Sprintf("Waiting for signal with filename: %s", expectedFilename))
 
+	// Create placeholder in Vidispine
 	var assetResult vsactivity.CreatePlaceholderResult
 	err = wfutils.Execute(ctx, activities.Vidispine.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
 		Title: in.Base(),
@@ -99,11 +117,52 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 		return err
 	}
 
-	// Wait for file to be copied
-	err = copyTask.Get(ctx, nil)
-	if err != nil {
-		return err
+	signalReceived := false
+
+	// Start listening for signals in the background
+	workflow.Go(ctx, func(ctx workflow.Context) {
+		for {
+			var signalFileName string
+			// Wait for a signal
+			signalChan.Receive(ctx, &signalFileName)
+
+			logger.Info(fmt.Sprintf("Received file transfer signal for: %s", signalFileName))
+
+			// Check if the signal matches our expected filename
+			if strings.EqualFold(filepath.Base(signalFileName), expectedFilename) {
+				logger.Info("Signal matches our file, marking as completed")
+				signalReceived = true
+				return // Exit the goroutine when we get the right signal
+			} else {
+				logger.Info(fmt.Sprintf("Signal was for a different file: %s, ignoring", signalFileName))
+			}
+		}
+	})
+
+	// Keep copying the file until we receive a signal or the copy process completes naturally
+	maxCopyAttempts := 1000 // Limit total number of attempts
+
+	for copyAttempt := 0; copyAttempt < maxCopyAttempts && !signalReceived; copyAttempt++ {
+		logger.Info(fmt.Sprintf("Starting copy attempt %d", copyAttempt+1))
+
+		copyFuture := wfutils.Execute(ctx, activities.Live.RsyncIncrementalCopy, activities.RsyncIncrementalCopyInput{
+			In:  in,
+			Out: rawPath,
+		})
+
+		err := copyFuture.Wait(ctx)
+		if err != nil {
+			logger.Error("Copy operation failed", "error", err)
+		} else {
+			logger.Info("Copy operation completed successfully")
+
+			if !signalReceived {
+				logger.Info("Sleeping for 1 minute before next copy attempt")
+				_ = workflow.Sleep(ctx, time.Minute)
+			}
+		}
 	}
+
 	wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Video ingest ended: https://vault.bcc.media/item/%s\n\nImporting reaper files.", assetResult.AssetID))
 
 	// List Reaper files

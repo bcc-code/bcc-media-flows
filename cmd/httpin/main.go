@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -233,6 +234,82 @@ func triggerHandler(ctx *gin.Context) {
 //go:embed trigger.html
 var html string
 
+func fileCatalystWebhookHandler(ctx *gin.Context) {
+	// Extract form parameters from FileCatalyst webhook
+	file := ctx.PostForm("f")            // Remote file path
+	localFile := ctx.PostForm("lf")      // Local file path
+	status := ctx.PostForm("status")     // Status code (1 for success)
+	allFiles := ctx.PostForm("allfiles") // All files in the transaction
+
+	// Basic validation
+	if file == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "Missing required parameter 'f' (file path)",
+		})
+		return
+	}
+
+	// Log incoming webhook
+	fmt.Printf("FileCatalyst webhook: file=%s, localFile=%s, status=%s, allFiles=%s\n",
+		file, localFile, status, allFiles)
+
+	// Only proceed if the transfer was successful (status=1)
+	if status != "1" {
+		ctx.JSON(http.StatusOK, gin.H{
+			"message": "Transfer not successful, no signal sent",
+			"status":  status,
+		})
+		return
+	}
+
+	// Convert Windows paths to Linux paths for processing
+	linuxPath := convertWindowsPath(file)
+
+	// Extract just the filename
+	filename := filepath.Base(linuxPath)
+
+	// Get Temporal client
+	wfClient, err := getClient()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	defer wfClient.Close()
+
+	// Send signal to the LIVE-INGEST workflow
+	workflowID := "LIVE-INGEST"
+	signalName := "file_transferred"
+
+	// Send the signal with just the filename
+	err = wfClient.SignalWorkflow(ctx, workflowID, "", signalName, filename)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("Failed to send signal: %s", err.Error()),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message":  "Signal sent successfully",
+		"filename": filename,
+	})
+}
+
+// Helper function to convert Windows file paths to Linux paths
+func convertWindowsPath(windowsPath string) string {
+	// Replace backslashes with forward slashes
+	path := strings.ReplaceAll(windowsPath, "\\", "/")
+
+	// Remove drive letter if present (e.g., E:)
+	if len(path) > 2 && path[1] == ':' {
+		path = path[2:]
+	}
+
+	return path
+}
+
 func main() {
 	r := gin.Default()
 	r.Use(cors.Default())
@@ -241,6 +318,7 @@ func main() {
 	r.GET("/trigger/:job", triggerHandler)
 
 	r.POST("/watchers", watchersHandler)
+	r.POST("/filecatalyst", fileCatalystWebhookHandler)
 
 	r.GET("/trigger", func(ctx *gin.Context) {
 		ctx.Writer.WriteString(html)

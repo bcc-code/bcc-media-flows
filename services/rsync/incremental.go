@@ -17,6 +17,7 @@ type FileInfo struct {
 
 func IncrementalCopy(in, out paths.Path, statCallback func(FileInfo)) error {
 	var fileSize int64
+
 	doCopy := func() (bool, error) {
 		params := []string{
 			"-a",
@@ -51,23 +52,6 @@ func IncrementalCopy(in, out paths.Path, statCallback func(FileInfo)) error {
 		return false, nil
 	}
 
-	doneCount := 0
-	for {
-
-		done, err := doCopy()
-		if err != nil {
-			return err
-		}
-
-		if done {
-			doneCount++
-			if doneCount == 5 {
-				return nil
-			}
-		} else {
-			doneCount = 0
-		}
-
-		time.Sleep(time.Minute * 2)
-	}
+	_, err := doCopy()
+	return err
 }

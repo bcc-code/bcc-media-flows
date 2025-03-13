@@ -94,8 +94,9 @@ func doGrowingFile(ctx context.Context, path string) error {
 		return err
 	}
 
+	// Use the fixed LIVE-INGEST workflow ID
 	workflowOptions := client.StartWorkflowOptions{
-		ID:        uuid.NewString(),
+		ID:        "LIVE-INGEST", // Fixed ID for the incremental workflow
 		TaskQueue: environment.GetWorkerQueue(),
 	}
 

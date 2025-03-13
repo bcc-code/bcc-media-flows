@@ -61,7 +61,9 @@ func (c *Client) GetFormats(itemID string) ([]Format, error) {
 }
 
 func (c *Client) GetMetadata(itemID string) (*ItemMetadata, error) {
-	res, err := c.restyClient.R().SetResult(&ItemMetadata{}).
+	req := c.restyClient.R()
+	req.SetDebug(true)
+	res, err := req.SetResult(&ItemMetadata{}).
 		Get("/API/v2/items/" + itemID + "/")
 
 	if err != nil {
