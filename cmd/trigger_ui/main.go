@@ -337,6 +337,7 @@ func (s *TriggerServer) vxExportPOST(ctx *gin.Context) {
 		"Title":      meta.Get(vscommon.FieldTitle, ""),
 	})
 }
+
 func (s *TriggerServer) vxExportTimedMetadataPOST(ctx *gin.Context) {
 	queue := getQueue()
 	vxID := ctx.PostForm("id")
@@ -407,6 +408,8 @@ func main() {
 	}
 
 	router.GET("/list", server.listGET)
+
+	router.POST("/filecatalyst", server.fileCatalystWebhookHandler)
 
 	router.Group("/vx-export").
 		GET("/", server.vxExportGET).
