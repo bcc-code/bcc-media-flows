@@ -142,7 +142,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	// Keep copying the file until we receive a signal or the copy process completes naturally
 	maxCopyAttempts := 1000 // Limit total number of attempts
 
-	for copyAttempt := 0; copyAttempt < maxCopyAttempts && !signalReceived; copyAttempt++ {
+	for copyAttempt := 0; copyAttempt < maxCopyAttempts; copyAttempt++ {
 		logger.Info(fmt.Sprintf("Starting copy attempt %d", copyAttempt+1))
 
 		copyFuture := wfutils.Execute(ctx, activities.Live.RsyncIncrementalCopy, activities.RsyncIncrementalCopyInput{
@@ -159,6 +159,9 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 			if !signalReceived {
 				logger.Info("Sleeping for 1 minute before next copy attempt")
 				_ = workflow.Sleep(ctx, time.Minute)
+			} else {
+				logger.Info("Received signal, breaking out of copy loop")
+				break
 			}
 		}
 	}
