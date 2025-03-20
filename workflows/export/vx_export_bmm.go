@@ -223,6 +223,7 @@ func makeBMMJSON(
 	jsonData.MediabankenID = fmt.Sprintf("%s-%s", params.ParentParams.VXID, HashTitle(params.ExportData.Title))
 	jsonData.ImportDate = params.ExportData.ImportDate
 	jsonData.TranscriptionFiles = map[string]string{}
+	jsonData.ForceReplaceTranscription = params.ExportData.ForceReplaceTranscription
 
 	if params.ExportData.BmmTitle != nil && *params.ExportData.BmmTitle != "" {
 		jsonData.Title = *params.ExportData.BmmTitle
@@ -284,19 +285,20 @@ func makeBMMJSON(
 }
 
 type BMMData struct {
-	MediabankenID      string                    `json:"mediabanken_id"`
-	StartsAt           float64                   `json:"starts_at"`
-	Title              string                    `json:"title"`
-	Length             int                       `json:"length"`
-	Type               string                    `json:"type"`
-	TrackID            *int                      `json:"track_id"`
-	AudioFiles         map[string][]BMMAudioFile `json:"audio_files"`
-	TranscriptionFiles map[string]string         `json:"transcription_files"`
-	PersonsAppearing   []string                  `json:"persons_appearing"`
-	SongCollection     *string                   `json:"song_collection"`
-	SongNumber         *string                   `json:"song_number"`
-	RecordedAt         *time.Time                `json:"recorded_at"`
-	ImportDate         *time.Time                `json:"import_date"`
+	MediabankenID             string                    `json:"mediabanken_id"`
+	StartsAt                  float64                   `json:"starts_at"`
+	Title                     string                    `json:"title"`
+	Length                    int                       `json:"length"`
+	Type                      string                    `json:"type"`
+	TrackID                   *int                      `json:"track_id"`
+	AudioFiles                map[string][]BMMAudioFile `json:"audio_files"`
+	TranscriptionFiles        map[string]string         `json:"transcription_files"`
+	PersonsAppearing          []string                  `json:"persons_appearing"`
+	SongCollection            *string                   `json:"song_collection"`
+	SongNumber                *string                   `json:"song_number"`
+	RecordedAt                *time.Time                `json:"recorded_at"`
+	ImportDate                *time.Time                `json:"import_date"`
+	ForceReplaceTranscription bool                      `json:"force_replace_transcription"`
 }
 
 type BMMAudioFile struct {

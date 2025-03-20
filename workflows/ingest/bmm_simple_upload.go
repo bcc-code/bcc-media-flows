@@ -122,7 +122,7 @@ func BmmIngestUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 	}
 
 	wfutils.SendTelegramText(ctx, telegram.ChatBMM, fmt.Sprintf("🟦 Successfully created MB asset `%s`, for language `%s`, uploaded by `%s` ", res.AssetID, params.Language, params.UploadedBy))
-	wfutils.SendEmails(ctx, []string{params.UploadedBy}, "BMM Upload succesful", fmt.Sprintf("Uploaded file has been imported into Mediabanken. Asset ID: %s\nUploaded by: %s\nLanguage: %s\n", res.AssetID, params.UploadedBy, params.Language))
+	wfutils.SendEmails(ctx, []string{params.UploadedBy}, "BMM Upload successful", fmt.Sprintf("Uploaded file has been imported into Mediabanken. Asset ID: %s\nUploaded by: %s\nLanguage: %s\n", res.AssetID, params.UploadedBy, params.Language))
 
 	return &BmmSimpleUploadResult{}, nil
 }

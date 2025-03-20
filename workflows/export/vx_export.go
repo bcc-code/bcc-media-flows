@@ -199,9 +199,6 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 
 		ctx = workflow.WithChildOptions(ctx, wfutils.GetVXDefaultWorkflowOptions(params.VXID))
 		future := workflow.ExecuteChildWorkflow(ctx, w, childParams)
-		if err != nil {
-			return nil, err
-		}
 		resultFutures = append(resultFutures, future)
 	}
 
