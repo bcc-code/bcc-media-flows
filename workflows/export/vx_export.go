@@ -35,16 +35,17 @@ var (
 )
 
 type VXExportParams struct {
-	VXID          string
-	WithChapters  bool
-	WatermarkPath string
-	Destinations  []string `jsonschema:"enum=vod,enum=playout,enum=bmm,enum=bmm-integration,enum=isilon"`
-	AudioSource   string
-	Languages     []string
-	Subclip       string
-	IgnoreSilence bool
-	Resolutions   []utils.Resolution
-	SubsAllowAI   bool
+	VXID                      string
+	WithChapters              bool
+	WatermarkPath             string
+	Destinations              []string `jsonschema:"enum=vod,enum=playout,enum=bmm,enum=bmm-integration,enum=isilon"`
+	AudioSource               string
+	Languages                 []string
+	Subclip                   string
+	IgnoreSilence             bool
+	Resolutions               []utils.Resolution
+	SubsAllowAI               bool
+	ForceReplaceTranscription bool
 }
 
 type VXExportResult struct {
@@ -56,14 +57,15 @@ type VXExportResult struct {
 }
 
 type VXExportChildWorkflowParams struct {
-	RunID             string
-	ParentParams      VXExportParams       `json:"parent_params"`
-	ExportData        vidispine.ExportData `json:"export_data"`
-	MergeResult       MergeExportDataResult
-	TempDir           paths.Path
-	OutputDir         paths.Path
-	Upload            bool
-	ExportDestination AssetExportDestination
+	RunID                     string
+	ParentParams              VXExportParams       `json:"parent_params"`
+	ExportData                vidispine.ExportData `json:"export_data"`
+	MergeResult               MergeExportDataResult
+	TempDir                   paths.Path
+	OutputDir                 paths.Path
+	Upload                    bool
+	ExportDestination         AssetExportDestination
+	ForceReplaceTranscription bool
 }
 
 // VXExport is the main workflow for exporting assets from vidispine
@@ -157,14 +159,15 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 	var resultFutures []workflow.Future
 	for _, dest := range destinations {
 		childParams := VXExportChildWorkflowParams{
-			ParentParams:      params,
-			ExportData:        *data,
-			MergeResult:       mergeResult,
-			TempDir:           tempDir,
-			OutputDir:         outputDir.Append(dest.Value),
-			RunID:             workflow.GetInfo(ctx).OriginalRunID,
-			Upload:            true,
-			ExportDestination: *dest,
+			ParentParams:              params,
+			ExportData:                *data,
+			MergeResult:               mergeResult,
+			TempDir:                   tempDir,
+			OutputDir:                 outputDir.Append(dest.Value),
+			RunID:                     workflow.GetInfo(ctx).OriginalRunID,
+			Upload:                    true,
+			ExportDestination:         *dest,
+			ForceReplaceTranscription: params.ForceReplaceTranscription,
 		}
 
 		var w interface{}

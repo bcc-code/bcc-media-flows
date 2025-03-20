@@ -17,12 +17,13 @@ import (
 )
 
 type BmmSimpleUploadParams struct {
-	TrackID             int    `json:"trackId"`
-	UploadedBy          string `json:"uploadedBy"`
-	FilePath            string `json:"filePath"`
-	Title               string `json:"title"`
-	Language            string `json:"language"`
-	BmmTargetEnvionment string `json:"bmmTargetEnvironment"`
+	TrackID                   int    `json:"trackId"`
+	UploadedBy                string `json:"uploadedBy"`
+	FilePath                  string `json:"filePath"`
+	Title                     string `json:"title"`
+	Language                  string `json:"language"`
+	BmmTargetEnvionment       string `json:"bmmTargetEnvironment"`
+	ForceReplaceTranscription bool   `json:"forceReplaceTranscription"`
 }
 
 type BmmSimpleUploadResult struct {
@@ -108,9 +109,10 @@ func BmmIngestUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 	}
 
 	future := workflow.ExecuteChildWorkflow(ctx, export.VXExport, export.VXExportParams{
-		VXID:         res.AssetID,
-		Destinations: destinations,
-		Languages:    []string{params.Language},
+		VXID:                      res.AssetID,
+		Destinations:              destinations,
+		Languages:                 []string{params.Language},
+		ForceReplaceTranscription: params.ForceReplaceTranscription,
 	})
 
 	_ = CreatePreviews(ctx, []string{res.AssetID})

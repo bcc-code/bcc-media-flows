@@ -65,8 +65,7 @@ type ExportData struct {
 	// If there is a recorded language set in the main clip we take that, otherwise we fall back to Norwegian
 	OriginalLanguage string
 
-	TranscribedLanguage       string
-	ForceReplaceTranscription bool
+	TranscribedLanguage string
 }
 
 type ExportAudioSource enum.Member[string]

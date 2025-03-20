@@ -223,7 +223,7 @@ func makeBMMJSON(
 	jsonData.MediabankenID = fmt.Sprintf("%s-%s", params.ParentParams.VXID, HashTitle(params.ExportData.Title))
 	jsonData.ImportDate = params.ExportData.ImportDate
 	jsonData.TranscriptionFiles = map[string]string{}
-	jsonData.ForceReplaceTranscription = params.ExportData.ForceReplaceTranscription
+	jsonData.ForceReplaceTranscription = params.ForceReplaceTranscription
 
 	if params.ExportData.BmmTitle != nil && *params.ExportData.BmmTitle != "" {
 		jsonData.Title = *params.ExportData.BmmTitle
