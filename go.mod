@@ -26,7 +26,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/teamwork/reload v1.4.2
 	github.com/teris-io/shortid v0.0.0-20220617161101-71ec9f2aa569
-	go.temporal.io/api v1.43.0
+	go.temporal.io/api v1.44.1
 	go.temporal.io/sdk v1.32.1
 	go.uber.org/mock v0.4.0
 	gopkg.in/telebot.v3 v3.2.1
