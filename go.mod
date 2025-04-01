@@ -1,7 +1,8 @@
 module github.com/bcc-code/bcc-media-flows
 
-go 1.22
-toolchain go1.23.7
+go 1.23.0
+
+toolchain go1.24.1
 
 require (
 	cloud.google.com/go/pubsub v1.38.0
