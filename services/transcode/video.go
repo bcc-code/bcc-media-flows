@@ -95,7 +95,7 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 
 	err = os.Chmod(outputFilePath, os.ModePerm)
 	if err != nil {
-		return nil, err
+		fmt.Printf("Failed to set permissions on %s: %s", outputFilePath, err)
 	}
 
 	outputPath, err := paths.Parse(outputFilePath)
