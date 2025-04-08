@@ -161,6 +161,7 @@ func (p Path) Baton() string {
 	return ""
 }
 
+// Base returns the base of the path
 func (p Path) Base() string {
 	return filepath.Base(p.Path)
 }

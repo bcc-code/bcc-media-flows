@@ -2,8 +2,9 @@ package wfutils
 
 import (
 	"context"
-	"go.temporal.io/api/enums/v1"
 	"time"
+
+	"go.temporal.io/api/enums/v1"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/environment"
@@ -65,6 +66,7 @@ func Execute[T any, TR any](ctx workflow.Context, activity func(context.Context,
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
+
 	return Task[TR]{
 		workflow.ExecuteActivity(ctx, activity, params),
 	}

@@ -94,6 +94,7 @@ func (c *Client) ListFilesForStorage(
 	q.Set("includeItem", "true")
 	q.Set("first", fmt.Sprintf("%d", offset))
 	q.Set("number", fmt.Sprintf("%d", count))
+	q.Set("state", "CLOSED")
 
 	if len(filter) > 0 {
 		qFilter := lo.Reduce(filter, func(agg string, f ListFilesFilter, _ int) string {

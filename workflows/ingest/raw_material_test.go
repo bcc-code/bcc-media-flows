@@ -59,7 +59,7 @@ func (s *RawMaterialTestSuite) Test_RawMaterialForm_InvalidFilename() {
 	s.True(s.env.IsWorkflowCompleted())
 
 	err = s.env.GetWorkflowError()
-	s.Equal(err.Error(), `workflow execution error (type: RawMaterialForm, workflowID: default-test-workflow-id, runID: default-test-run-id): invalid filename: {{test} v i d e o.mxf}`)
+	s.Equal(err.Error(), `workflow execution error (type: RawMaterialForm, workflowID: default-test-workflow-id, runID: default-test-run-id): invalid filename: {{test} video.mp4}`)
 }
 
 func Test_RawMaterialTestSuite(t *testing.T) {

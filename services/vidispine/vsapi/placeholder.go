@@ -69,9 +69,9 @@ func (c *Client) AddFileToPlaceholder(itemID, fileID, tag string, fileState File
 	if fileState == FileStateOpen {
 		q.Set("growing", "true")
 		q.Set("jobmetadata", "portal_groups:StringArray=Admin")
-		q.Set("overrideFastStart", "true")
-		q.Set("requireFastStart", "true")
-		q.Set("fastStartLength", "7200")
+		//q.Set("overrideFastStart", "true")
+		//q.Set("requireFastStart", "true")
+		//q.Set("fastStartLength", "7200")
 		q.Set("settings", "VX-76")
 	} else {
 		q.Set("growing", "false")
