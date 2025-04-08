@@ -1,15 +1,19 @@
 package transcode
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/environment"
+	"go.temporal.io/sdk/activity"
 
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 )
@@ -17,6 +21,12 @@ import (
 type PreviewInput struct {
 	FilePath  string
 	OutputDir string
+}
+
+type GrowingPreviewInput struct {
+	FilePath        string
+	TempDir         string
+	DestinationFile string
 }
 
 type PreviewResult struct {
@@ -238,4 +248,117 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 		LowResolutionPath: outputPath,
 		AudioOnly:         !hasVideo && hasAudio,
 	}, nil
+}
+
+// GrowingPreview creates a preview for a growing video
+//
+// The preview is created by tailing the video file and piping it to ffmpeg.
+// Since this function does not know when the file is finished, it will continue
+// to tail the file until it's context is cancelled.
+func GrowingPreview(ctx context.Context, input GrowingPreviewInput) error {
+
+	tailCmd := exec.CommandContext(ctx, "tail", "-c", "+1", "-f", input.FilePath)
+
+	ffmpegCmd := exec.Command("ffmpeg",
+		"-i", "pipe:0", // Input from stdin			"-ss", "0.0",
+		"-i", previewWatermarkPath,
+		"-c:v", "libx264", // Video codec: H.264
+		"-c:a", "aac", // Audio codec: AAC
+		"-filter_complex", "sws_flags=bicubic;[0:v]split=1[VIDEO-main-.mp4];[VIDEO-main-.mp4]scale=-2:540,null[temp];[temp][1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4];[0:a]pan=stereo|c0=c0|c1=c0[AUDIO-.mp4-0]",
+		"-map", "[VIDEO-.mp4]",
+		"-map", "[AUDIO-.mp4-0]",
+		"-strict", "experimental", // Allow experimental codecs
+		"-f", "hls", // Format HLS
+		"-hls_time", "60", // 60-second segments
+		"-hls_list_size", "0", // Unlimited entries in the playlist
+		"-hls_segment_filename", filepath.Join(input.TempDir, "segment_%03d.ts"), // Segment file names
+		"-y", filepath.Join(input.TempDir, "playlist.m3u8")) // Output playlist file
+
+	// Create a pipe between the two commands
+	pipe, err := tailCmd.StdoutPipe()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating pipe: %v\n", err)
+		os.Exit(1)
+	}
+	ffmpegCmd.Stdin = pipe
+
+	// Set output for ffmpeg
+	ffmpegCmd.Stdout = os.Stdout
+	ffmpegCmd.Stderr = os.Stderr
+
+	fmt.Printf("Executing tail command: %s\n", strings.Join(tailCmd.Args, " "))
+	fmt.Printf("Executing ffmpeg command: %s\n", strings.Join(ffmpegCmd.Args, " "))
+
+	// Start tail command
+	if err := tailCmd.Start(); err != nil {
+		return fmt.Errorf("Error starting tail: %v\n", err)
+	}
+
+	// Start ffmpeg command
+	if err := ffmpegCmd.Start(); err != nil {
+		return fmt.Errorf("Error starting ffmpeg: %v\nCommand: %s", err, strings.Join(ffmpegCmd.Args, " "))
+	}
+
+	running := true
+	for running {
+		select {
+		case <-time.After(60 * time.Second):
+			//activity.RecordHeartbeat(ctx, "Preview Transcoding is in progress")
+			break
+		case <-ctx.Done():
+			activity.RecordHeartbeat(ctx, "Finished")
+			running = false
+		}
+
+		err = muxFinishedPreview(input.TempDir, input.DestinationFile)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	if err := ffmpegCmd.Wait(); err != nil {
+		fmt.Errorf("Error waiting for ffmpeg: %v\n", err)
+	}
+
+	return err
+}
+
+func muxFinishedPreview(inputFolder, outputFile string) error {
+	// Copy the playlist and append the end tag
+	input, err := os.ReadFile(filepath.Join(inputFolder, "/playlist.m3u8"))
+	if err != nil {
+		return err
+	}
+
+	newPLPath := filepath.Join(inputFolder, "playlist_copy.m3u8")
+
+	// Note that WriteFile truncates the file if it exists
+	err = os.WriteFile(newPLPath, input, 0666)
+	if err != nil {
+		return err
+	}
+
+	// If we do not do this them FFMPEG just waits for new data. Not what we want.
+	f, err := os.OpenFile(newPLPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	_, err = f.WriteString("\n#EXT-X-ENDLIST")
+	if err != nil {
+		return err
+	}
+
+	// FFMPEG mux file
+	ffmpegCmd := exec.Command("ffmpeg",
+		"-i", newPLPath,
+		"-c", "copy",
+		"-movflags", "+faststart",
+		"-bsf:a", "aac_adtstoasc",
+		"-y", outputFile,
+	)
+
+	return ffmpegCmd.Run()
 }

@@ -51,8 +51,25 @@ func (va VideoActivities) TranscodePreview(ctx context.Context, input TranscodeP
 	}
 
 	return &TranscodePreviewResponse{
-		PreviewFilePath: paths.MustParse(result.LowResolutionPath),
-		AudioOnly:       result.AudioOnly,
+		PreviewFilePath:   paths.MustParse(result.LowResolutionPath),
+		AudioOnly:         result.AudioOnly,
 		AudioPreviewFiles: audioPreviews,
 	}, nil
+}
+
+type TranscodeGrowingPreviewParams struct {
+	FilePath           paths.Path
+	DestinationDirPath paths.Path
+	TempFolderPath     paths.Path
+}
+
+func (va VideoActivities) TranscodeGrowingPreview(ctx context.Context, input TranscodeGrowingPreviewParams) (any, error) {
+	activity.RecordHeartbeat(ctx, "Transcode Preview")
+	err := transcode.GrowingPreview(ctx, transcode.GrowingPreviewInput{
+		FilePath:        input.FilePath.Local(),
+		DestinationFile: input.DestinationDirPath.Append(input.FilePath.Base()).Local(),
+		TempDir:         input.TempFolderPath.Local(),
+	})
+
+	return nil, err
 }

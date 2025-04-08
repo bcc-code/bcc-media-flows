@@ -16,13 +16,23 @@ type ImportFileAsShapeParams struct {
 	Replace  bool
 }
 
-func (a Activities) ImportFileAsShapeActivity(ctx context.Context, params ImportFileAsShapeParams) (*JobResult, error) {
+type ImportFileResult struct {
+	JobID  string
+	FileID string
+}
+
+func (a Activities) ImportFileAsShapeActivity(ctx context.Context, params ImportFileAsShapeParams) (*ImportFileResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting ImportFileAsShapeActivity")
 
 	vsClient := GetClient()
 
-	fileID, err := vsClient.RegisterFile(params.FilePath.Local(), vsapi.FileStateClosed)
+	fileState := vsapi.FileStateClosed
+	if params.Growing {
+		fileState = vsapi.FileStateOpen
+	}
+
+	fileID, err := vsClient.RegisterFile(params.FilePath.Local(), fileState)
 	if err != nil {
 		return nil, err
 	}
@@ -43,8 +53,9 @@ func (a Activities) ImportFileAsShapeActivity(ctx context.Context, params Import
 	}
 
 	res, err := vsClient.AddShapeToItem(params.ShapeTag, params.AssetID, fileID)
-	return &JobResult{
-		JobID: res,
+	return &ImportFileResult{
+		JobID:  res,
+		FileID: fileID,
 	}, err
 }
 

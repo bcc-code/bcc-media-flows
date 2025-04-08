@@ -21,6 +21,7 @@ import (
 type MockClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockClientMockRecorder
+	isgomock struct{}
 }
 
 // MockClientMockRecorder is the mock recorder for MockClient.
@@ -41,225 +42,240 @@ func (m *MockClient) EXPECT() *MockClientMockRecorder {
 }
 
 // AddFileToPlaceholder mocks base method.
-func (m *MockClient) AddFileToPlaceholder(arg0, arg1, arg2 string, arg3 vsapi.FileState) (string, error) {
+func (m *MockClient) AddFileToPlaceholder(itemID, fileID, tag string, fileState vsapi.FileState) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddFileToPlaceholder", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "AddFileToPlaceholder", itemID, fileID, tag, fileState)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AddFileToPlaceholder indicates an expected call of AddFileToPlaceholder.
-func (mr *MockClientMockRecorder) AddFileToPlaceholder(arg0, arg1, arg2, arg3 any) *gomock.Call {
+func (mr *MockClientMockRecorder) AddFileToPlaceholder(itemID, fileID, tag, fileState any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFileToPlaceholder", reflect.TypeOf((*MockClient)(nil).AddFileToPlaceholder), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFileToPlaceholder", reflect.TypeOf((*MockClient)(nil).AddFileToPlaceholder), itemID, fileID, tag, fileState)
 }
 
 // AddShapeToItem mocks base method.
-func (m *MockClient) AddShapeToItem(arg0, arg1, arg2 string) (string, error) {
+func (m *MockClient) AddShapeToItem(shapeTag, itemVXID, fileVXID string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddShapeToItem", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "AddShapeToItem", shapeTag, itemVXID, fileVXID)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AddShapeToItem indicates an expected call of AddShapeToItem.
-func (mr *MockClientMockRecorder) AddShapeToItem(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockClientMockRecorder) AddShapeToItem(shapeTag, itemVXID, fileVXID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddShapeToItem", reflect.TypeOf((*MockClient)(nil).AddShapeToItem), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddShapeToItem", reflect.TypeOf((*MockClient)(nil).AddShapeToItem), shapeTag, itemVXID, fileVXID)
 }
 
 // AddSidecarToItem mocks base method.
-func (m *MockClient) AddSidecarToItem(arg0, arg1, arg2 string) (string, error) {
+func (m *MockClient) AddSidecarToItem(itemVXID, filePath, language string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddSidecarToItem", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "AddSidecarToItem", itemVXID, filePath, language)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AddSidecarToItem indicates an expected call of AddSidecarToItem.
-func (mr *MockClientMockRecorder) AddSidecarToItem(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockClientMockRecorder) AddSidecarToItem(itemVXID, filePath, language any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSidecarToItem", reflect.TypeOf((*MockClient)(nil).AddSidecarToItem), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSidecarToItem", reflect.TypeOf((*MockClient)(nil).AddSidecarToItem), itemVXID, filePath, language)
 }
 
 // AddToItemMetadataField mocks base method.
-func (m *MockClient) AddToItemMetadataField(arg0 vsapi.ItemMetadataFieldParams) error {
+func (m *MockClient) AddToItemMetadataField(params vsapi.ItemMetadataFieldParams) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddToItemMetadataField", arg0)
+	ret := m.ctrl.Call(m, "AddToItemMetadataField", params)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddToItemMetadataField indicates an expected call of AddToItemMetadataField.
-func (mr *MockClientMockRecorder) AddToItemMetadataField(arg0 any) *gomock.Call {
+func (mr *MockClientMockRecorder) AddToItemMetadataField(params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddToItemMetadataField", reflect.TypeOf((*MockClient)(nil).AddToItemMetadataField), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddToItemMetadataField", reflect.TypeOf((*MockClient)(nil).AddToItemMetadataField), params)
 }
 
 // CreatePlaceholder mocks base method.
-func (m *MockClient) CreatePlaceholder(arg0 vsapi.PlaceholderType, arg1 string) (string, error) {
+func (m *MockClient) CreatePlaceholder(ingestType vsapi.PlaceholderType, title string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreatePlaceholder", arg0, arg1)
+	ret := m.ctrl.Call(m, "CreatePlaceholder", ingestType, title)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreatePlaceholder indicates an expected call of CreatePlaceholder.
-func (mr *MockClientMockRecorder) CreatePlaceholder(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) CreatePlaceholder(ingestType, title any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePlaceholder", reflect.TypeOf((*MockClient)(nil).CreatePlaceholder), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePlaceholder", reflect.TypeOf((*MockClient)(nil).CreatePlaceholder), ingestType, title)
 }
 
 // CreateThumbnails mocks base method.
-func (m *MockClient) CreateThumbnails(arg0 string, arg1, arg2 int) (string, error) {
+func (m *MockClient) CreateThumbnails(assetID string, width, height int) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateThumbnails", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "CreateThumbnails", assetID, width, height)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateThumbnails indicates an expected call of CreateThumbnails.
-func (mr *MockClientMockRecorder) CreateThumbnails(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockClientMockRecorder) CreateThumbnails(assetID, width, height any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateThumbnails", reflect.TypeOf((*MockClient)(nil).CreateThumbnails), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateThumbnails", reflect.TypeOf((*MockClient)(nil).CreateThumbnails), assetID, width, height)
 }
 
 // DeleteItems mocks base method.
-func (m *MockClient) DeleteItems(arg0 context.Context, arg1 []string, arg2 bool) error {
+func (m *MockClient) DeleteItems(ctx context.Context, itemVXIDs []string, deleteFiles bool) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteItems", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "DeleteItems", ctx, itemVXIDs, deleteFiles)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteItems indicates an expected call of DeleteItems.
-func (mr *MockClientMockRecorder) DeleteItems(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockClientMockRecorder) DeleteItems(ctx, itemVXIDs, deleteFiles any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteItems", reflect.TypeOf((*MockClient)(nil).DeleteItems), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteItems", reflect.TypeOf((*MockClient)(nil).DeleteItems), ctx, itemVXIDs, deleteFiles)
 }
 
 // DeleteShape mocks base method.
-func (m *MockClient) DeleteShape(arg0, arg1 string) error {
+func (m *MockClient) DeleteShape(assetID, shapeID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteShape", arg0, arg1)
+	ret := m.ctrl.Call(m, "DeleteShape", assetID, shapeID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteShape indicates an expected call of DeleteShape.
-func (mr *MockClientMockRecorder) DeleteShape(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) DeleteShape(assetID, shapeID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteShape", reflect.TypeOf((*MockClient)(nil).DeleteShape), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteShape", reflect.TypeOf((*MockClient)(nil).DeleteShape), assetID, shapeID)
+}
+
+// FindJob mocks base method.
+func (m *MockClient) FindJob(itemID, jobType string) (*vsapi.JobDocument, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindJob", itemID, jobType)
+	ret0, _ := ret[0].(*vsapi.JobDocument)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindJob indicates an expected call of FindJob.
+func (mr *MockClientMockRecorder) FindJob(itemID, jobType any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindJob", reflect.TypeOf((*MockClient)(nil).FindJob), itemID, jobType)
 }
 
 // GetChapterMeta mocks base method.
-func (m *MockClient) GetChapterMeta(arg0 string, arg1, arg2 float64) (map[string]*vsapi.MetadataResult, error) {
+func (m *MockClient) GetChapterMeta(itemVXID string, inTc, outTc float64) (map[string]*vsapi.MetadataResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetChapterMeta", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "GetChapterMeta", itemVXID, inTc, outTc)
 	ret0, _ := ret[0].(map[string]*vsapi.MetadataResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetChapterMeta indicates an expected call of GetChapterMeta.
-func (mr *MockClientMockRecorder) GetChapterMeta(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockClientMockRecorder) GetChapterMeta(itemVXID, inTc, outTc any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChapterMeta", reflect.TypeOf((*MockClient)(nil).GetChapterMeta), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChapterMeta", reflect.TypeOf((*MockClient)(nil).GetChapterMeta), itemVXID, inTc, outTc)
 }
 
 // GetJob mocks base method.
-func (m *MockClient) GetJob(arg0 string) (*vsapi.JobDocument, error) {
+func (m *MockClient) GetJob(jobID string) (*vsapi.JobDocument, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetJob", arg0)
+	ret := m.ctrl.Call(m, "GetJob", jobID)
 	ret0, _ := ret[0].(*vsapi.JobDocument)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetJob indicates an expected call of GetJob.
-func (mr *MockClientMockRecorder) GetJob(arg0 any) *gomock.Call {
+func (mr *MockClientMockRecorder) GetJob(jobID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJob", reflect.TypeOf((*MockClient)(nil).GetJob), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJob", reflect.TypeOf((*MockClient)(nil).GetJob), jobID)
 }
 
 // GetMetadata mocks base method.
-func (m *MockClient) GetMetadata(arg0 string) (*vsapi.MetadataResult, error) {
+func (m *MockClient) GetMetadata(vsID string) (*vsapi.MetadataResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMetadata", arg0)
+	ret := m.ctrl.Call(m, "GetMetadata", vsID)
 	ret0, _ := ret[0].(*vsapi.MetadataResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetMetadata indicates an expected call of GetMetadata.
-func (mr *MockClientMockRecorder) GetMetadata(arg0 any) *gomock.Call {
+func (mr *MockClientMockRecorder) GetMetadata(vsID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetadata", reflect.TypeOf((*MockClient)(nil).GetMetadata), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetadata", reflect.TypeOf((*MockClient)(nil).GetMetadata), vsID)
 }
 
 // GetRelations mocks base method.
-func (m *MockClient) GetRelations(arg0 string) ([]vsapi.Relation, error) {
+func (m *MockClient) GetRelations(assetID string) ([]vsapi.Relation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRelations", arg0)
+	ret := m.ctrl.Call(m, "GetRelations", assetID)
 	ret0, _ := ret[0].([]vsapi.Relation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetRelations indicates an expected call of GetRelations.
-func (mr *MockClientMockRecorder) GetRelations(arg0 any) *gomock.Call {
+func (mr *MockClientMockRecorder) GetRelations(assetID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRelations", reflect.TypeOf((*MockClient)(nil).GetRelations), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRelations", reflect.TypeOf((*MockClient)(nil).GetRelations), assetID)
 }
 
 // GetResolutions mocks base method.
-func (m *MockClient) GetResolutions(arg0 string) ([]vsapi.Resolution, error) {
+func (m *MockClient) GetResolutions(itemVXID string) ([]vsapi.Resolution, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetResolutions", arg0)
+	ret := m.ctrl.Call(m, "GetResolutions", itemVXID)
 	ret0, _ := ret[0].([]vsapi.Resolution)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetResolutions indicates an expected call of GetResolutions.
-func (mr *MockClientMockRecorder) GetResolutions(arg0 any) *gomock.Call {
+func (mr *MockClientMockRecorder) GetResolutions(itemVXID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResolutions", reflect.TypeOf((*MockClient)(nil).GetResolutions), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResolutions", reflect.TypeOf((*MockClient)(nil).GetResolutions), itemVXID)
 }
 
 // GetSequence mocks base method.
-func (m *MockClient) GetSequence(arg0 string) (*vsapi.SequenceDocument, error) {
+func (m *MockClient) GetSequence(itemVXID string) (*vsapi.SequenceDocument, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSequence", arg0)
+	ret := m.ctrl.Call(m, "GetSequence", itemVXID)
 	ret0, _ := ret[0].(*vsapi.SequenceDocument)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetSequence indicates an expected call of GetSequence.
-func (mr *MockClientMockRecorder) GetSequence(arg0 any) *gomock.Call {
+func (mr *MockClientMockRecorder) GetSequence(itemVXID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSequence", reflect.TypeOf((*MockClient)(nil).GetSequence), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSequence", reflect.TypeOf((*MockClient)(nil).GetSequence), itemVXID)
 }
 
 // GetShapes mocks base method.
-func (m *MockClient) GetShapes(arg0 string) (*vsapi.ShapeResult, error) {
+func (m *MockClient) GetShapes(itemVXID string) (*vsapi.ShapeResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetShapes", arg0)
+	ret := m.ctrl.Call(m, "GetShapes", itemVXID)
 	ret0, _ := ret[0].(*vsapi.ShapeResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetShapes indicates an expected call of GetShapes.
-func (mr *MockClientMockRecorder) GetShapes(arg0 any) *gomock.Call {
+func (mr *MockClientMockRecorder) GetShapes(itemVXID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetShapes", reflect.TypeOf((*MockClient)(nil).GetShapes), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetShapes", reflect.TypeOf((*MockClient)(nil).GetShapes), itemVXID)
 }
 
 // GetTrash mocks base method.
@@ -278,44 +294,44 @@ func (mr *MockClientMockRecorder) GetTrash() *gomock.Call {
 }
 
 // RegisterFile mocks base method.
-func (m *MockClient) RegisterFile(arg0 string, arg1 vsapi.FileState) (string, error) {
+func (m *MockClient) RegisterFile(filePath string, state vsapi.FileState) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RegisterFile", arg0, arg1)
+	ret := m.ctrl.Call(m, "RegisterFile", filePath, state)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RegisterFile indicates an expected call of RegisterFile.
-func (mr *MockClientMockRecorder) RegisterFile(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) RegisterFile(filePath, state any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterFile", reflect.TypeOf((*MockClient)(nil).RegisterFile), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterFile", reflect.TypeOf((*MockClient)(nil).RegisterFile), filePath, state)
 }
 
 // SetItemMetadataField mocks base method.
-func (m *MockClient) SetItemMetadataField(arg0 vsapi.ItemMetadataFieldParams) error {
+func (m *MockClient) SetItemMetadataField(params vsapi.ItemMetadataFieldParams) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetItemMetadataField", arg0)
+	ret := m.ctrl.Call(m, "SetItemMetadataField", params)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetItemMetadataField indicates an expected call of SetItemMetadataField.
-func (mr *MockClientMockRecorder) SetItemMetadataField(arg0 any) *gomock.Call {
+func (mr *MockClientMockRecorder) SetItemMetadataField(params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetItemMetadataField", reflect.TypeOf((*MockClient)(nil).SetItemMetadataField), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetItemMetadataField", reflect.TypeOf((*MockClient)(nil).SetItemMetadataField), params)
 }
 
 // UpdateFileState mocks base method.
-func (m *MockClient) UpdateFileState(arg0 string, arg1 vsapi.FileState) error {
+func (m *MockClient) UpdateFileState(fileID string, fileState vsapi.FileState) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateFileState", arg0, arg1)
+	ret := m.ctrl.Call(m, "UpdateFileState", fileID, fileState)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateFileState indicates an expected call of UpdateFileState.
-func (mr *MockClientMockRecorder) UpdateFileState(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) UpdateFileState(fileID, fileState any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFileState", reflect.TypeOf((*MockClient)(nil).UpdateFileState), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFileState", reflect.TypeOf((*MockClient)(nil).UpdateFileState), fileID, fileState)
 }

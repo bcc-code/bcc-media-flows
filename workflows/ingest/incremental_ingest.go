@@ -90,7 +90,6 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 		return err
 	}
 
-	// TODO: this value vas empty? Manually set?
 	err = wfutils.SetVidispineMeta(ctx, assetResult.AssetID, vscommon.FieldIngested.Value, workflow.Now(ctx).Format(time.RFC3339))
 	if err != nil {
 		logger.Error("%w", err)
@@ -116,6 +115,37 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	if err != nil {
 		return err
 	}
+
+	previewPath, err := wfutils.GetWorkflowAuxOutputFolder(ctx)
+	if err != nil {
+		logger.Error("%w", err)
+	}
+
+	previewTempPath, err := wfutils.GetWorkflowTempFolder(ctx)
+	if err != nil {
+		logger.Error("%w", err)
+	}
+	previewTempPath.Append("preview")
+
+	previewPath.Append(expectedFilename).SetExt("mp4")
+
+	lowresImportJob, err := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
+		AssetID:  videoVXID,
+		FilePath: previewPath,
+		ShapeTag: "lowres_watermarked",
+		Growing:  true,
+		Replace:  false,
+	}).Result(ctx)
+
+	if err != nil {
+		logger.Error("%w", err)
+	}
+
+	previewFuture := wfutils.Execute(ctx, activities.Video.TranscodeGrowingPreview, activities.TranscodeGrowingPreviewParams{
+		FilePath:           rawPath,
+		DestinationDirPath: previewPath,
+		TempFolderPath:     previewTempPath,
+	})
 
 	signalReceived := false
 
@@ -228,6 +258,11 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	if len(errors) > 0 {
 		return fmt.Errorf("failed to import one or more audio files: %v", errors)
 	}
+
+	_ = previewFuture.Wait(ctx)
+	wfutils.Execute(ctx, activities.Vidispine.CloseFile, vsactivity.CloseFileParams{
+		FileID: lowresImportJob.FileID,
+	})
 
 	return nil
 }
