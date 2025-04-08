@@ -13,8 +13,6 @@ import (
 
 	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/environment"
-	"go.temporal.io/sdk/activity"
-
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 )
 
@@ -255,7 +253,7 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 // The preview is created by tailing the video file and piping it to ffmpeg.
 // Since this function does not know when the file is finished, it will continue
 // to tail the file until it's context is cancelled.
-func GrowingPreview(ctx context.Context, input GrowingPreviewInput) error {
+func GrowingPreview(ctx context.Context, input GrowingPreviewInput, heartbeater func(ctx context.Context, duration time.Duration)) error {
 
 	tailCmd := exec.CommandContext(ctx, "tail", "-c", "+1", "-f", input.FilePath)
 
@@ -277,7 +275,7 @@ func GrowingPreview(ctx context.Context, input GrowingPreviewInput) error {
 	// Create a pipe between the two commands
 	pipe, err := tailCmd.StdoutPipe()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating pipe: %v\n", err)
+		fmt.Printf("Error creating pipe: %v\n", err)
 		os.Exit(1)
 	}
 	ffmpegCmd.Stdin = pipe
@@ -300,15 +298,16 @@ func GrowingPreview(ctx context.Context, input GrowingPreviewInput) error {
 	}
 
 	running := true
+	start := time.Now()
 	for running {
 		select {
 		case <-time.After(60 * time.Second):
-			//activity.RecordHeartbeat(ctx, "Preview Transcoding is in progress")
 			break
 		case <-ctx.Done():
-			activity.RecordHeartbeat(ctx, "Finished")
 			running = false
 		}
+
+		heartbeater(ctx, time.Since(start))
 
 		err = muxFinishedPreview(input.TempDir, input.DestinationFile)
 		if err != nil {
@@ -316,11 +315,7 @@ func GrowingPreview(ctx context.Context, input GrowingPreviewInput) error {
 		}
 	}
 
-	if err := ffmpegCmd.Wait(); err != nil {
-		fmt.Errorf("Error waiting for ffmpeg: %v\n", err)
-	}
-
-	return err
+	return ffmpegCmd.Wait()
 }
 
 func muxFinishedPreview(inputFolder, outputFile string) error {

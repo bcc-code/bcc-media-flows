@@ -3,6 +3,7 @@ package activities
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/transcode"
@@ -69,7 +70,11 @@ func (va VideoActivities) TranscodeGrowingPreview(ctx context.Context, input Tra
 		FilePath:        input.FilePath.Local(),
 		DestinationFile: input.DestinationDirPath.Append(input.FilePath.Base()).Local(),
 		TempDir:         input.TempFolderPath.Local(),
-	})
+	},
+		func(ctx context.Context, duration time.Duration) {
+			activity.RecordHeartbeat(ctx, "Transcode Growing Preview", duration)
+		},
+	)
 
 	return nil, err
 }
