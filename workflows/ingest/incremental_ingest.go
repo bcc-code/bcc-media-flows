@@ -142,10 +142,11 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	}
 
 	var previewFuture wfutils.Task[string]
+	previewCtx, stopPreviewFunc := workflow.WithCancel(ctx)
 
 	workflow.Go(ctx, func(ctx workflow.Context) {
 		workflow.Sleep(ctx, 2*time.Minute)
-		wfutils.Execute(ctx, activities.Video.TranscodeGrowingPreview, activities.TranscodeGrowingPreviewParams{
+		wfutils.Execute(previewCtx, activities.Video.TranscodeGrowingPreview, activities.TranscodeGrowingPreviewParams{
 			OriginalFilePath:    rawPath,
 			DestinationFilePath: previewPath,
 			TempFolderPath:      previewTempPath,
@@ -264,6 +265,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 		return fmt.Errorf("failed to import one or more audio files: %v", errors)
 	}
 
+	stopPreviewFunc()
 	_ = previewFuture.Wait(ctx)
 	wfutils.Execute(ctx, activities.Vidispine.CloseFile, vsactivity.CloseFileParams{
 		FileID: lowresImportJob.FileID,
