@@ -141,10 +141,15 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 		logger.Error("%w", err)
 	}
 
-	previewFuture := wfutils.Execute(ctx, activities.Video.TranscodeGrowingPreview, activities.TranscodeGrowingPreviewParams{
-		FilePath:           rawPath,
-		DestinationDirPath: previewPath,
-		TempFolderPath:     previewTempPath,
+	var previewFuture wfutils.Task[string]
+
+	workflow.Go(ctx, func(ctx workflow.Context) {
+		workflow.Sleep(ctx, 2*time.Minute)
+		wfutils.Execute(ctx, activities.Video.TranscodeGrowingPreview, activities.TranscodeGrowingPreviewParams{
+			FilePath:           rawPath,
+			DestinationDirPath: previewPath,
+			TempFolderPath:     previewTempPath,
+		})
 	})
 
 	signalReceived := false
