@@ -68,7 +68,7 @@ func (va VideoActivities) TranscodeGrowingPreview(ctx context.Context, input Tra
 	activity.RecordHeartbeat(ctx, "Transcode Preview")
 	err := transcode.GrowingPreview(ctx, transcode.GrowingPreviewInput{
 		FilePath:        input.OriginalFilePath.Local(),
-		DestinationFile: input.DestinationFilePath.Append(input.FilePath.Base()).Local(),
+		DestinationFile: input.DestinationFilePath.Local(),
 		TempDir:         input.TempFolderPath.Local(),
 	},
 		func(ctx context.Context, duration time.Duration) {
