@@ -65,7 +65,7 @@ type TranscodeGrowingPreviewParams struct {
 }
 
 func (va VideoActivities) TranscodeGrowingPreview(ctx context.Context, input TranscodeGrowingPreviewParams) (any, error) {
-	activity.RecordHeartbeat(ctx, "Transcode Preview")
+	activity.RecordHeartbeat(ctx, "Transcode Preview", input)
 	err := transcode.GrowingPreview(ctx, transcode.GrowingPreviewInput{
 		FilePath:        input.OriginalFilePath.Local(),
 		DestinationFile: input.DestinationFilePath.Local(),
