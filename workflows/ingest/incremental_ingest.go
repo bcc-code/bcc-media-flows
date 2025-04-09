@@ -127,7 +127,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	}
 	previewTempPath.Append("preview")
 
-	previewPath.Append(expectedFilename).SetExt("mp4")
+	previewPath = previewPath.Append(rawPath.Base()).SetExt("mp4")
 
 	lowresImportJob, err := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
 		AssetID:  videoVXID,
@@ -146,9 +146,9 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	workflow.Go(ctx, func(ctx workflow.Context) {
 		workflow.Sleep(ctx, 2*time.Minute)
 		wfutils.Execute(ctx, activities.Video.TranscodeGrowingPreview, activities.TranscodeGrowingPreviewParams{
-			FilePath:           rawPath,
-			DestinationDirPath: previewPath,
-			TempFolderPath:     previewTempPath,
+			OriginalFilePath:    rawPath,
+			DestinationFilePath: previewPath,
+			TempFolderPath:      previewTempPath,
 		})
 	})
 
