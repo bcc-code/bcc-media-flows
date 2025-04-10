@@ -254,7 +254,6 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 // Since this function does not know when the file is finished, it will continue
 // to tail the file until it's context is cancelled.
 func GrowingPreview(ctx context.Context, input GrowingPreviewInput, heartbeater func(ctx context.Context, duration time.Duration)) error {
-
 	tailCmd := exec.CommandContext(ctx, "tail", "-c", "+1", "-f", input.FilePath)
 
 	ffmpegCmd := exec.Command("ffmpeg",

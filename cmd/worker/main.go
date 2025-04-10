@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"log"
 	"os"
@@ -58,6 +59,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	go func() {
+		for {
+			time.Sleep(5 * time.Minute)
+			err := update(Version)
+			if err != nil {
+				log.Printf("Error updating worker: %v", err)
+			}
+		}
+	}()
 
 	c, err := client.Dial(client.Options{
 		HostPort:  os.Getenv("TEMPORAL_HOST_PORT"),
@@ -167,6 +178,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		registerActivitiesInStruct(w, activities.Live)
 
 	}
+
 	fmt.Println("STARTING")
 	err := w.Run(worker.InterruptCh())
 
@@ -178,6 +190,9 @@ func update(version string) error {
 	if version == "development" {
 		return nil
 	}
+
+	// Prevent worker from restarting if there are activities executing
+	wfutils.ActivityWG.Wait()
 
 	ctx := context.Background()
 

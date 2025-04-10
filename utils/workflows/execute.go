@@ -2,6 +2,7 @@ package wfutils
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"go.temporal.io/api/enums/v1"
@@ -23,6 +24,8 @@ var StrictRetryPolicy = temporal.RetryPolicy{
 	InitialInterval: 30 * time.Second,
 	MaximumInterval: 30 * time.Second,
 }
+
+var ActivityWG = sync.WaitGroup{}
 
 type Task[TR any] struct {
 	Future workflow.Future
@@ -67,9 +70,15 @@ func Execute[T any, TR any](ctx workflow.Context, activity func(context.Context,
 
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	return Task[TR]{
-		workflow.ExecuteActivity(ctx, activity, params),
-	}
+	future := workflow.ExecuteActivity(ctx, activity, params)
+
+	ActivityWG.Add(1)
+	workflow.Go(ctx, func(ctx workflow.Context) {
+		_ = future.Get(ctx, nil)
+		ActivityWG.Done()
+	})
+
+	return Task[TR]{Future: future}
 }
 
 // ExecuteIndependently executes the specified activity in such a way that it continues even if the parent workflow completes before it finishes

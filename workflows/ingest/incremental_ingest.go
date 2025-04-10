@@ -129,28 +129,30 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	previewPath = previewPath.Append(rawPath.Base()).SetExt("mp4")
 
-	lowresImportJob, err := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
-		AssetID:  videoVXID,
-		FilePath: previewPath,
-		ShapeTag: "lowres_watermarked",
-		Growing:  true,
-		Replace:  false,
-	}).Result(ctx)
-
-	if err != nil {
-		logger.Error("%w", err)
-	}
-
-	var previewFuture wfutils.Task[string]
+	var previewFuture wfutils.Task[any]
+	var lowresImportJob *vsactivity.ImportFileResult
 	previewCtx, stopPreviewFunc := workflow.WithCancel(ctx)
 
 	workflow.Go(ctx, func(ctx workflow.Context) {
-		workflow.Sleep(ctx, 2*time.Minute)
-		wfutils.Execute(previewCtx, activities.Video.TranscodeGrowingPreview, activities.TranscodeGrowingPreviewParams{
+		_ = workflow.Sleep(ctx, 1*time.Minute)
+		previewFuture = wfutils.Execute(previewCtx, activities.Video.TranscodeGrowingPreview, activities.TranscodeGrowingPreviewParams{
 			OriginalFilePath:    rawPath,
 			DestinationFilePath: previewPath,
 			TempFolderPath:      previewTempPath,
 		})
+
+		_ = workflow.Sleep(ctx, 2*time.Minute)
+		lowresImportJob, _ = wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
+			AssetID:  videoVXID,
+			FilePath: previewPath,
+			ShapeTag: "lowres_watermarked",
+			Growing:  true,
+			Replace:  false,
+		}).Result(ctx)
+
+		if err != nil {
+			logger.Error("%w", err)
+		}
 	})
 
 	signalReceived := false
