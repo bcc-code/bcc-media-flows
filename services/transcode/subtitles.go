@@ -56,7 +56,9 @@ func CreateBurninASSFile(subtitleHeader, subtitleFile paths.Path) (*paths.Path, 
 
 	// This intercepts the special case where we need to fix the distance between lines
 	if subtitleHeader.Base() == "03-brunstad-to-linjer.ass" {
-		return &out, specialASSConverter(string(headerData), subtitleFile.Local(), out.Local())
+		return &out, specialASSConverter(string(headerData), subtitleFile.Local(), out.Local(), 0.00011)
+	} else if subtitleHeader.Base() == "03-brunstad-led-pc25.ass" {
+		return &out, specialASSConverter(string(headerData), subtitleFile.Local(), out.Local(), 0.00005)
 	}
 
 	_, err = ffmpeg.Do([]string{
@@ -93,7 +95,7 @@ func CreateBurninASSFile(subtitleHeader, subtitleFile paths.Path) (*paths.Path, 
 }
 
 // specialASSConverter converts a .srt file to an .ass file, and assures enough spacing between lines
-func specialASSConverter(header, inputFile, outputFile string) error {
+func specialASSConverter(header, inputFile, outputFile string, offset float64) error {
 	file, err := os.Open(inputFile)
 	if err != nil {
 		return err
@@ -131,7 +133,7 @@ func specialASSConverter(header, inputFile, outputFile string) error {
 
 		if line == "" {
 			if len(textLines) > 0 {
-				writeEvent(outFile, startTime, endTime, textLines)
+				writeEvent(outFile, startTime, endTime, textLines, offset)
 				textLines = nil
 			}
 			lineCount = 0
@@ -142,7 +144,7 @@ func specialASSConverter(header, inputFile, outputFile string) error {
 
 	// Write the last event if the file doesn't end with a blank line
 	if len(textLines) > 0 {
-		writeEvent(outFile, startTime, endTime, textLines)
+		writeEvent(outFile, startTime, endTime, textLines, offset)
 	}
 
 	return err
@@ -177,7 +179,7 @@ func convertTimestamp(input string) string {
 	return fmt.Sprintf("%s:%s:%s%s", hours, timeParts[1], secondsParts[0], secondsRounded)
 }
 
-func writeEvent(outFile *os.File, startTime, endTime string, textLines []string) {
+func writeEvent(outFile *os.File, startTime, endTime string, textLines []string, offset float64) {
 	startTime = convertTimeFormat(startTime)
 	endTime = convertTimeFormat(endTime)
 
@@ -185,7 +187,7 @@ func writeEvent(outFile *os.File, startTime, endTime string, textLines []string)
 	if len(textLines) == 1 {
 		text = textLines[0]
 	} else if len(textLines) == 2 {
-		text = fmt.Sprintf(`{\org(-2000000,0)\fr0.00011}%s{\r}\N%s`, textLines[0], textLines[1])
+		text = fmt.Sprintf(`{\org(-2000000,0)\fr%f}%s{\r}\N%s`, offset, textLines[0], textLines[1])
 	} else {
 		text = strings.Join(textLines, `\N`)
 	}
