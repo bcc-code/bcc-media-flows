@@ -153,6 +153,15 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 		if err != nil {
 			logger.Error("%w", err)
 		}
+
+		err := previewFuture.Wait(ctx)
+		wfutils.Execute(ctx, activities.Vidispine.CloseFile, vsactivity.CloseFileParams{
+			FileID: lowresImportJob.FileID,
+		})
+
+		if err != nil {
+			logger.Error("%w", err)
+		}
 	})
 
 	signalReceived := false
@@ -205,6 +214,8 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	}
 
 	wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Video ingest ended: https://vault.bcc.media/item/%s\n\nImporting reaper files.", assetResult.AssetID))
+
+	stopPreviewFunc()
 
 	// List Reaper files
 	reaperResult := &activities.ReaperResult{}
@@ -266,12 +277,6 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	if len(errors) > 0 {
 		return fmt.Errorf("failed to import one or more audio files: %v", errors)
 	}
-
-	stopPreviewFunc()
-	_ = previewFuture.Wait(ctx)
-	wfutils.Execute(ctx, activities.Vidispine.CloseFile, vsactivity.CloseFileParams{
-		FileID: lowresImportJob.FileID,
-	})
 
 	return nil
 }
