@@ -204,8 +204,8 @@ func AudioWav(input common.WavAudioInput, cb ffmpeg.ProgressCallback) (*common.A
 	params := []string{
 		"-progress", "pipe:1",
 		"-hide_banner",
-		"-codec:a", "pcm_s24le",
 		"-i", input.Path.Local(),
+		"-codec:a", "pcm_s24le",
 	}
 
 	if input.Timecode != "" {
