@@ -12,10 +12,10 @@ import (
 
 const reaperBaseUrl = "http://100.123.200.12:8081"
 
-func (l LiveActivities) StartReaper(ctx context.Context, _ any) (any, error) {
+func (l LiveActivities) StartReaper(ctx context.Context, _ any) (string, error) {
 	resp, err := http.Get(reaperBaseUrl + "/start")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	defer resp.Body.Close()
 
@@ -23,7 +23,13 @@ func (l LiveActivities) StartReaper(ctx context.Context, _ any) (any, error) {
 		telegram.SendText(telegram.ChatOther, fmt.Sprintf("❗❗unable to start reaper. Response: %s\nIngest of video is not impacted.", resp.Status))
 	}
 
-	return nil, nil
+	var response map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		return "", err
+	}
+
+	return response["session_id"].(string), nil
 }
 
 type ReaperResult struct {
@@ -53,8 +59,12 @@ func (l LiveActivities) StopReaper(_ context.Context, _ any) (*ReaperResult, err
 	}, err
 }
 
-func (l LiveActivities) ListReaperFiles(_ context.Context, _ any) (*ReaperResult, error) {
-	resp, err := http.Get(reaperBaseUrl + "/files")
+type ListReaperFilesParams struct {
+	SessionID string
+}
+
+func (l LiveActivities) ListReaperFiles(_ context.Context, params *ListReaperFilesParams) (*ReaperResult, error) {
+	resp, err := http.Get(reaperBaseUrl + "/files?session_id=" + params.SessionID)
 	if err != nil {
 		return nil, err
 	}

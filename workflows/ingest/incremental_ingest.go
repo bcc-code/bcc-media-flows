@@ -97,9 +97,10 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	videoVXID := assetResult.AssetID
 
-	var p any
 	// REAPER: Start recording
-	err = wfutils.Execute(ctx, activities.Live.StartReaper, p).Get(ctx, nil)
+	var reaperSessionID string
+
+	err = wfutils.Execute(ctx, activities.Live.StartReaper, nil).Get(ctx, reaperSessionID)
 	if err != nil {
 		return err
 	}
@@ -219,7 +220,10 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	// List Reaper files
 	reaperResult := &activities.ReaperResult{}
-	err = wfutils.Execute(ctx, activities.Live.ListReaperFiles, nil).Get(ctx, reaperResult)
+	listReaperFilesParams := activities.ListReaperFilesParams{
+		SessionID: reaperSessionID,
+	}
+	err = wfutils.Execute(ctx, activities.Live.ListReaperFiles, &listReaperFilesParams).Get(ctx, reaperResult)
 	if err != nil {
 		return err
 	}
