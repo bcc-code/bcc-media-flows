@@ -100,7 +100,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	// REAPER: Start recording
 	var reaperSessionID string
 
-	err = wfutils.Execute(ctx, activities.Live.StartReaper, nil).Get(ctx, reaperSessionID)
+	err = wfutils.Execute(ctx, activities.Live.StartReaper, nil).Get(ctx, &reaperSessionID)
 	if err != nil {
 		return err
 	}
