@@ -262,3 +262,48 @@ func (c *Client) GetTask(taskID string) (*Task, error) {
 	}
 	return res.Result().(*Task), nil
 }
+
+// ACLInheritanceExtraData represents the extra_data field in ACL inheritance
+// (extracted to a named type)
+type ACLInheritanceExtraData struct {
+	CollectionName string `json:"collection_name"`
+}
+
+// ACLInheritance represents the inherited_from field in ACL
+// (extracted to a named type)
+type ACLInheritance struct {
+	ID        string                 `json:"id"`
+	Type      string                 `json:"type"`
+	ExtraData ACLInheritanceExtraData `json:"extra_data"`
+}
+
+// ACL represents an access control list entry for a Cantemo item
+type ACL struct {
+	Source               string           `json:"source"`
+	SourceName           string           `json:"source_name"`
+	SourceFullName       *string          `json:"source_full_name"`
+	Permission           string           `json:"permission"`
+	PermissionTranslated string           `json:"permission_translated"`
+	Recursive            bool             `json:"recursive"`
+	Grantor              string           `json:"grantor"`
+	GrantorFullName      *string          `json:"grantor_full_name"`
+	ID                   string           `json:"id"`
+	Priority             string           `json:"priority"`
+	PriorityTranslated   string           `json:"priority_translated"`
+	InheritedFrom        *ACLInheritance  `json:"inherited_from"`
+}
+
+// ACLResponse remains unchanged
+type ACLResponse struct {
+	ACLs  []ACL `json:"acls"`
+	Total int   `json:"total"`
+}
+
+// GetACL fetches the ACL for a given item ID
+func (c *Client) GetACL(itemID string) (*ACLResponse, error) {
+	res, err := c.restyClient.R().SetResult(&ACLResponse{}).Get("/API/v2/items/" + itemID + "/acl")
+	if err != nil {
+		return nil, err
+	}
+	return res.Result().(*ACLResponse), nil
+}
