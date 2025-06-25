@@ -59,6 +59,7 @@ var WorkerWorkflows = []any{
 	ingestworkflows.ExtractAudioFromMU1MU2,
 	ingestworkflows.IngestSyncFix,
 	ingestworkflows.Multitrack,
+	ingestworkflows.ImportSubtitles,
 	miscworkflows.NormalizeAudioLevelWorkflow,
 	vb_export.VBExport,
 	vb_export.VBExportToAbekas,
