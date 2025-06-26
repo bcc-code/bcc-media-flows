@@ -164,11 +164,15 @@ func ImportSubtitles(ctx workflow.Context, input ImportSubtitlesInput) error {
 	}
 
 	// Import SRT as sidecar independently (non-blocking, fire-and-forget)
-	wfutils.ExecuteIndependently(ctx, vsactivity.Vidispine.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
+	err = wfutils.Execute(ctx, vsactivity.Vidispine.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
 		FilePath: srtFilePath,
 		Language: input.Language,
 		AssetID:  input.VXID,
-	})
+	}).Wait(ctx)
+
+	if err != nil {
+		return fmt.Errorf("importing of SRT file as sidecar failed: %v", err)
+	}
 
 	logger.Info("Subtitle SRT and JSON imported as shapes; SRT as sidecar (async)", "vxid", input.VXID)
 	return nil
