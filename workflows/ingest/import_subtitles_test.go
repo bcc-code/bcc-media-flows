@@ -139,9 +139,8 @@ func (s *ImportSubtitlesTestSuite) Test_ImportSubtitlesWorkflow() {
 		Data: []byte("1\n00:00:00,000 --> 00:00:01,000\nHello\n\n2\n00:00:01,500 --> 00:00:02,500\nWorld\n\n"),
 	}).Return("", nil).Once()
 
+	s.env.OnActivity(activities.Vidispine.ImportFileAsSidecarActivity, mock.Anything, mock.Anything).Return(nil, nil)
 	s.env.OnActivity(activities.Vidispine.JobCompleteOrErr, mock.Anything, mock.Anything).Return(true, nil)
-
-	//s.env.OnWorkflow("ImportFileAsSidecarActivity", mock.Anything, mock.Anything).Return(&vsactivity.ImportFileAsSidecarResult{}, nil)
 
 	s.env.ExecuteWorkflow(ImportSubtitles, input)
 	s.True(s.env.IsWorkflowCompleted())

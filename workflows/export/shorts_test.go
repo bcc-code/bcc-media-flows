@@ -1,43 +1,15 @@
 package export
 
 import (
+	"testing"
+
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-	"go.temporal.io/sdk/testsuite"
-	"testing"
 )
 
-type testCase struct {
-	Name      string
-	Items     []vsapi.MetadataResult
-	CSVRows   []ShortsCsvRow
-	Expected  []ShortLanguageUpdate
-	ExpectErr bool
-}
-
-type ShortsTestSuite struct {
-	suite.Suite
-	testsuite.WorkflowTestSuite
-
-	env *testsuite.TestWorkflowEnvironment
-}
-
-func (s *ShortsTestSuite) SetupTest() {
-	s.env = s.NewTestWorkflowEnvironment()
-}
-
-func TestShortsSuite(t *testing.T) {
-	suite.Run(t, new(ShortsTestSuite))
-}
-
-type MapAndFilterTestSuite struct {
-	suite.Suite
-}
-
-func (s *MapAndFilterTestSuite) createMetadataResult(id, title string) *vsapi.MetadataResult {
+func createMetadataResult(id, title string) *vsapi.MetadataResult {
 	return &vsapi.MetadataResult{
 		ID: id,
 		Terse: map[string][]*vsapi.MetadataField{
@@ -48,14 +20,23 @@ func (s *MapAndFilterTestSuite) createMetadataResult(id, title string) *vsapi.Me
 	}
 }
 
-func (s *MapAndFilterTestSuite) createCSVRow(label, editorialStatus string) *ShortsCsvRow {
+func createCSVRow(label, editorialStatus string) *ShortsCsvRow {
 	return &ShortsCsvRow{
 		Label:           label,
 		EditorialStatus: editorialStatus,
+		Status:          "", // Default empty status
 	}
 }
 
-func (s *MapAndFilterTestSuite) TestMapAndFilterShortsData() {
+func createCSVRowWithStatus(label, editorialStatus, status string) *ShortsCsvRow {
+	return &ShortsCsvRow{
+		Label:           label,
+		EditorialStatus: editorialStatus,
+		Status:          status,
+	}
+}
+
+func TestMapAndFilterShortsData(t *testing.T) {
 	tests := []struct {
 		name          string
 		csvRows       []*ShortsCsvRow
@@ -68,14 +49,14 @@ func (s *MapAndFilterTestSuite) TestMapAndFilterShortsData() {
 		{
 			name: "basic matching",
 			csvRows: []*ShortsCsvRow{
-				s.createCSVRow("test1", "Ready in MB"),
-				s.createCSVRow("test2", "Ready in MB"),
-				s.createCSVRow("test3", "Not Ready"),
+				createCSVRow("test1", "Ready in MB"),
+				createCSVRow("test2", "Ready in MB"),
+				createCSVRow("test3", "Not Ready"),
 			},
 			mbItems: []*vsapi.MetadataResult{
-				s.createMetadataResult("id1", "test1"),
-				s.createMetadataResult("id2", "test2"),
-				s.createMetadataResult("id3", "test3"),
+				createMetadataResult("id1", "test1"),
+				createMetadataResult("id2", "test2"),
+				createMetadataResult("id3", "test3"),
 			},
 			expectedLen:   2,
 			expectedIDs:   []string{"id1", "id2"},
@@ -85,10 +66,10 @@ func (s *MapAndFilterTestSuite) TestMapAndFilterShortsData() {
 		{
 			name: "no matches",
 			csvRows: []*ShortsCsvRow{
-				s.createCSVRow("test1", "Ready in MB"),
+				createCSVRow("test1", "Ready in MB"),
 			},
 			mbItems: []*vsapi.MetadataResult{
-				s.createMetadataResult("id1", "different"),
+				createMetadataResult("id1", "different"),
 			},
 			expectedLen:   0,
 			expectedIDs:   []string{},
@@ -107,10 +88,38 @@ func (s *MapAndFilterTestSuite) TestMapAndFilterShortsData() {
 		{
 			name: "title with dot suffix",
 			csvRows: []*ShortsCsvRow{
-				s.createCSVRow("test1", "Ready in MB"),
+				createCSVRow("test1", "Ready in MB"),
 			},
 			mbItems: []*vsapi.MetadataResult{
-				s.createMetadataResult("id1", "test1.suffix"),
+				createMetadataResult("id1", "test1.suffix"),
+			},
+			expectedLen:   1,
+			expectedIDs:   []string{"id1"},
+			expectLabels:  []string{"test1"},
+			expectNoError: true,
+		},
+		{
+			name: "filter out done status",
+			csvRows: []*ShortsCsvRow{
+				createCSVRowWithStatus("test1", "Ready in MB", "Done"),
+				createCSVRowWithStatus("test2", "Ready in MB", "In Progress"),
+			},
+			mbItems: []*vsapi.MetadataResult{
+				createMetadataResult("id1", "test1"),
+				createMetadataResult("id2", "test2"),
+			},
+			expectedLen:   1,
+			expectedIDs:   []string{"id2"},
+			expectLabels:  []string{"test2"},
+			expectNoError: true,
+		},
+		{
+			name: "empty status is allowed",
+			csvRows: []*ShortsCsvRow{
+				createCSVRowWithStatus("test1", "Ready in MB", ""),
+			},
+			mbItems: []*vsapi.MetadataResult{
+				createMetadataResult("id1", "test1"),
 			},
 			expectedLen:   1,
 			expectedIDs:   []string{"id1"},
@@ -120,11 +129,11 @@ func (s *MapAndFilterTestSuite) TestMapAndFilterShortsData() {
 	}
 
 	for _, tt := range tests {
-		s.Run(tt.name, func() {
+		t.Run(tt.name, func(t *testing.T) {
 			result := MapAndFilterShortsData(tt.csvRows, tt.mbItems)
 
 			if tt.expectNoError {
-				require.Len(s.T(), result, tt.expectedLen, "unexpected result length")
+				require.Len(t, result, tt.expectedLen, "unexpected result length")
 
 				// Extract IDs and labels for comparison
 				resultIDs := make([]string, 0, len(result))
@@ -135,13 +144,9 @@ func (s *MapAndFilterTestSuite) TestMapAndFilterShortsData() {
 					resultLabels = append(resultLabels, item.CSV.Label)
 				}
 
-				assert.ElementsMatch(s.T(), tt.expectedIDs, resultIDs, "unexpected IDs in result")
-				assert.ElementsMatch(s.T(), tt.expectLabels, resultLabels, "unexpected labels in result")
+				assert.ElementsMatch(t, tt.expectedIDs, resultIDs, "unexpected IDs in result")
+				assert.ElementsMatch(t, tt.expectLabels, resultLabels, "unexpected labels in result")
 			}
 		})
 	}
-}
-
-func TestMapAndFilterSuite(t *testing.T) {
-	suite.Run(t, new(MapAndFilterTestSuite))
 }
