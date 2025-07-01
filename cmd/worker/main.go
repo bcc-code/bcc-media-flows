@@ -16,13 +16,13 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"github.com/bcc-code/bcc-media-flows/workflows"
 
+	"github.com/bcc-code/bcc-media-flows/activities"
 	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
 	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
+	"github.com/bcc-code/bcc-media-flows/directus"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/teamwork/reload"
 	"go.temporal.io/sdk/activity"
-
-	"github.com/bcc-code/bcc-media-flows/activities"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
@@ -136,6 +136,11 @@ func main() {
 func registerWorker(c client.Client, queue string, options worker.Options) {
 	w := worker.New(c, queue, options)
 
+	directusBaseURL := os.Getenv("DIRECTUS_BASE_URL")
+	directusAPIKey := os.Getenv("DIRECTUS_API_KEY")
+	directusClient := directus.NewClient(directusBaseURL, directusAPIKey)
+	activities.Directus = &activities.DirectusActivities{Client: directusClient}
+
 	switch queue {
 	case environment.QueueDebug:
 		registerActivitiesInStruct(w, activities.Util)
@@ -152,6 +157,8 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 
 		registerActivitiesInStruct(w, activities.Audio)
 
+		registerActivitiesInStruct(w, activities.Directus)
+
 		for _, wf := range workflows.WorkerWorkflows {
 			w.RegisterWorkflow(wf)
 		}
@@ -166,6 +173,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 
 		registerActivitiesInStruct(w, activities.Platform)
 		registerActivitiesInStruct(w, activities.Vidispine)
+		registerActivitiesInStruct(w, activities.Directus)
 
 		for _, wf := range workflows.WorkerWorkflows {
 			w.RegisterWorkflow(wf)
