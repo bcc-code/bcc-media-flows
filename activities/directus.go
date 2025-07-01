@@ -13,6 +13,32 @@ type DirectusActivities struct {
 	Client *directus.Client
 }
 
+type GetTagByCodeInput struct {
+	Code string
+}
+
+type GetTagByCodeResult struct {
+	Tag *directus.Tag
+}
+
+type CreateTagInput struct {
+	Code string
+	Name string
+}
+
+type CreateTagResult struct {
+	Tag *directus.Tag
+}
+
+type CreateMediaItemTagInput struct {
+	MediaItemID string
+	TagID       string
+}
+
+type CreateMediaItemTagResult struct {
+	MediaItemTag *directus.MediaItemTag
+}
+
 type GetAssetByMediabankenIDInput struct {
 	MediabankenID string
 }
@@ -117,7 +143,33 @@ func (a *DirectusActivities) CreateMediaItem(ctx context.Context, input CreateMe
 	return &CreateMediaItemResult{MediaItem: mediaItem}, nil
 }
 
-// CreateShort creates a new short in Directus
+// GetTagByCode finds a tag by its code
+func (a *DirectusActivities) GetTagByCode(ctx context.Context, input GetTagByCodeInput) (*GetTagByCodeResult, error) {
+	tag, err := a.Client.GetTagByCode(input.Code)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tag by code: %w", err)
+	}
+	return &GetTagByCodeResult{Tag: tag}, nil
+}
+
+// CreateMediaItemTag creates a relationship between a media item and a tag
+func (a *DirectusActivities) CreateMediaItemTag(ctx context.Context, input CreateMediaItemTagInput) (*CreateMediaItemTagResult, error) {
+	mediaItemTag, err := a.Client.CreateMediaItemTag(input.MediaItemID, input.TagID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create media item tag: %w", err)
+	}
+	return &CreateMediaItemTagResult{MediaItemTag: mediaItemTag}, nil
+}
+
+// CreateTag creates a new tag in Directus
+func (a *DirectusActivities) CreateTag(ctx context.Context, input CreateTagInput) (*CreateTagResult, error) {
+	tag, err := a.Client.CreateTag(input.Code, input.Name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create tag: %w", err)
+	}
+	return &CreateTagResult{Tag: tag}, nil
+}
+
 func (a *DirectusActivities) CreateShort(ctx context.Context, input CreateShortInput) (*CreateShortResult, error) {
 	short, err := a.Client.CreateShort(directus.ShortCreate{
 		MediaItemID: input.MediaItemID,

@@ -128,6 +128,21 @@ type StyledImageCreate struct {
 	File     string `json:"file"`
 }
 
+// Tag represents a tag in Directus
+type Tag struct {
+	ID          string `json:"id"`
+	Code        string `json:"code"`
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+}
+
+// MediaItemTag represents the relationship between a media item and a tag
+type MediaItemTag struct {
+	ID          string `json:"id,omitempty"`
+	MediaItemID string `json:"mediaitems_id"`
+	TagID       string `json:"tags_id"`
+}
+
 // GetAssetByMediabankenID retrieves an asset by its mediabanken_id
 func (c *Client) GetAssetByMediabankenID(mediabankenID string) (*Asset, error) {
 	endpoint := fmt.Sprintf("%s/items/assets", c.BaseURL)
@@ -342,6 +357,92 @@ func (c *Client) CreateMediaItem(mediaItem MediaItemCreate) (*MediaItem, error) 
 }
 
 // UploadFile uploads a file to Directus and returns the file information
+// GetTagByCode finds a tag by its code
+func (c *Client) GetTagByCode(code string) (*Tag, error) {
+	endpoint := fmt.Sprintf("%s/items/tags", c.BaseURL)
+	result := &struct {
+		Data []Tag `json:"data"`
+	}{}
+
+	resp, err := c.client.R().
+		SetQueryParams(map[string]string{
+			"filter[code][_eq]": code,
+			"limit":              "1",
+		}).
+		SetResult(result).
+		Get(endpoint)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch tag: %w", err)
+	}
+
+	if resp.StatusCode() != 200 {
+		return nil, fmt.Errorf("Directus API error: %s", resp.Status())
+	}
+
+	if len(result.Data) == 0 {
+		return nil, nil
+	}
+
+	return &result.Data[0], nil
+}
+
+// CreateTag creates a new tag in Directus
+// CreateMediaItemTag creates a relationship between a media item and a tag
+func (c *Client) CreateMediaItemTag(mediaItemID, tagID string) (*MediaItemTag, error) {
+	endpoint := fmt.Sprintf("%s/items/mediaitems_tags", c.BaseURL)
+	result := &struct {
+		Data MediaItemTag `json:"data"`
+	}{}
+
+	tagData := map[string]interface{}{
+		"mediaitems_id": mediaItemID,
+		"tags_id":      tagID,
+	}
+
+	resp, err := c.client.R().
+		SetResult(result).
+		SetBody(tagData).
+		Post(endpoint)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to create media item tag: %w", err)
+	}
+
+	if resp.StatusCode() != 200 {
+		return nil, fmt.Errorf("Directus API error: %s - %s", resp.Status(), resp.String())
+	}
+
+	return &result.Data, nil
+}
+
+func (c *Client) CreateTag(code, name string) (*Tag, error) {
+	endpoint := fmt.Sprintf("%s/items/tags", c.BaseURL)
+	result := &struct {
+		Data Tag `json:"data"`
+	}{}
+
+	tagData := map[string]interface{}{
+		"code": code,
+		"name": name,
+	}
+
+	resp, err := c.client.R().
+		SetResult(result).
+		SetBody(tagData).
+		Post(endpoint)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to create tag: %w", err)
+	}
+
+	if resp.StatusCode() != 200 {
+		return nil, fmt.Errorf("Directus API error: %s - %s", resp.Status(), resp.String())
+	}
+
+	return &result.Data, nil
+}
+
 func (c *Client) UploadFile(filePath string) (*File, error) {
 	fileBytes, err := os.ReadFile(filePath)
 	if err != nil {

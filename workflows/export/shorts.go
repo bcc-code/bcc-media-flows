@@ -10,6 +10,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/gocarina/gocsv"
 	"go.temporal.io/sdk/workflow"
 	"os"
@@ -20,11 +21,6 @@ import (
 type BulkExportShortsInput struct {
 	CSV            string `json:"csv"`
 	CollectionVXID string `json:"collectionVXID"`
-}
-
-type DirectusAPI interface {
-	AssetExists(id string) (bool, error)
-	CreateMediaItemStyledImage(mediaItemID, styledImageID string) error
 }
 
 func triggerShortExport(ctx workflow.Context, short *ShortsData) error {
@@ -257,32 +253,38 @@ func importShort(ctx workflow.Context, short *ShortsData, styledImage *directus.
 		return fmt.Errorf("failed to create media item: no data in response")
 	}
 
-	/*
-		TODO: Add tags
-		// some of the columns should be added as tags, e.g. "edification"
-		tagCodes := []string{
-			short.CSV.Source,
-			short.CSV.Type,
-			short.CSV.Purpose,
+	// some of the columns should be added as tags, e.g. "edification"
+	tagCodes := []string{
+		short.CSV.Source,
+		short.CSV.Type,
+		short.CSV.Purpose,
+	}
+
+	for _, raw := range tagCodes {
+		code := strings.ToLower(strings.TrimSpace(raw))
+		if code == "" {
+			continue
 		}
 
-		for _, raw := range tagCodes {
-			code := strings.ToLower(strings.TrimSpace(raw))
-			if code == "" {
-				continue
-			}
-			tagId, err := utils.GetOrCreateTag(db, code)
-			if err != nil {
-				return err
-			}
-			// insert into mediaitems_tags id, mediaitems_id, tags_id
-			query := "INSERT INTO mediaitems_tags (mediaitems_id, tags_id) VALUES ($1, $2)"
-			_, err = db.Exec(query, mediaItemID, tagId)
-			if err != nil {
-				fmt.Printf("Error: inserting into mediaitems_tags: %s\n", err)
-			}
+		tagId, err := GetOrCreateTag(ctx, code)
+		if err != nil {
+			return err
 		}
-	*/
+		spew.Dump(tagId)
+
+		// Create relationship between media item and tag
+		_, err = wfutils.Execute(ctx, activities.Directus.CreateMediaItemTag, activities.CreateMediaItemTagInput{
+			MediaItemID: mediaItemResult.MediaItem.ID,
+			TagID:       tagId,
+		}).Result(ctx)
+		if err != nil {
+			workflow.GetLogger(ctx).Error("Error creating media item tag relationship",
+				"error", err,
+				"mediaItemID", mediaItemResult.MediaItem.ID,
+				"tagId", tagId,
+			)
+		}
+	}
 
 	// Create short
 	shortResult, err := wfutils.Execute(ctx, activities.Directus.CreateShort, activities.CreateShortInput{
@@ -299,6 +301,28 @@ func importShort(ctx workflow.Context, short *ShortsData, styledImage *directus.
 	}
 
 	return nil
+}
+
+// GetOrCreateTag checks if a tag exists with the given code, creates it if it doesn't exist, and returns its ID
+func GetOrCreateTag(ctx workflow.Context, code string) (string, error) {
+	tag, err := wfutils.Execute(ctx, activities.Directus.GetTagByCode, activities.GetTagByCodeInput{
+		Code: code,
+	}).Result(ctx)
+
+	if err == nil && tag.Tag != nil {
+		return tag.Tag.ID, nil
+	}
+
+	createTagResult, err := wfutils.Execute(ctx, activities.Directus.CreateTag, activities.CreateTagInput{
+		Code: code,
+		Name: code,
+	}).Result(ctx)
+
+	if err != nil {
+		workflow.GetLogger(ctx).Error("Error creating tag", "error", err, "code", code)
+		return "", fmt.Errorf("failed to create tag: %w", err)
+	}
+	return createTagResult.Tag.ID, nil
 }
 
 func getInOutTime(short *ShortsData) (*int64, *int64, error) {
