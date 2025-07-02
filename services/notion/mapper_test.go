@@ -50,7 +50,7 @@ const exampleOutput = `[
         ],
         "type": "multi_select"
       },
-      "Name": {
+      "String field": {
         "id": "title",
         "title": [
           {
@@ -135,7 +135,7 @@ const exampleOutput = `[
         ],
         "type": "multi_select"
       },
-      "Name": {
+      "String field": {
         "id": "title",
         "title": [
           {
@@ -170,6 +170,14 @@ const exampleOutput = `[
 ]
 `
 
+type TestStruct struct {
+	StringField string   `notion:"String field"`
+	Thing       int      `notion:"Thing"`
+	Blah        float64  `notion:"Blah"`
+	Checkbox    bool     `notion:"Checkbox"`
+	MultiSelect []string `notion:"Multi-select"`
+}
+
 func TestNotionToStruct(t *testing.T) {
 	var rows []map[string]interface{}
 	if err := json.Unmarshal([]byte(exampleOutput), &rows); err != nil {
@@ -178,14 +186,14 @@ func TestNotionToStruct(t *testing.T) {
 
 	expected := []TestStruct{
 		{
-			Name:        "BB",
+			StringField: "BB",
 			Thing:       777,
 			Blah:        -3323.323,
 			Checkbox:    false,
 			MultiSelect: []string{"S"},
 		},
 		{
-			Name:        "AA",
+			StringField: "AA",
 			Thing:       2,
 			Blah:        33.44,
 			Checkbox:    true,
@@ -199,7 +207,7 @@ func TestNotionToStruct(t *testing.T) {
 
 	for i, exp := range expected {
 		act := actual[i]
-		assert.Equal(t, exp.Name, act.Name)
+		assert.Equal(t, exp.StringField, act.StringField)
 		assert.Equal(t, exp.Thing, act.Thing)
 		assert.InDelta(t, exp.Blah, act.Blah, 0.00001)
 		assert.Equal(t, exp.Checkbox, act.Checkbox)

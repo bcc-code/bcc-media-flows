@@ -1,17 +1,21 @@
 package export
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/directus"
+	"github.com/bcc-code/bcc-media-flows/services/notion"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/gin-gonic/gin"
 	"github.com/gocarina/gocsv"
+	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 	"os"
 	"strconv"
@@ -19,30 +23,23 @@ import (
 )
 
 type BulkExportShortsInput struct {
-	CSV            string `json:"csv"`
 	CollectionVXID string `json:"collectionVXID"`
 }
 
 type ShortsCsvRow struct {
-	Title             string `csv:"Title"`
-	Language          string `csv:"Language"`
-	Label             string `csv:"Label"`
-	EditorialApproved string `csv:"Editorial approved"`
-	Publishing        string `csv:"Publishing"`
-	EpisodeID         int    `csv:"Episode ID"`
-	InHm              string `csv:"In"`
-	OutHm             string `csv:"Out"`
-	InNum             string `csv:"In Sec"`
-	OutNum            string `csv:"Out Sec"`
-	LanguageCheck     string `csv:"Language check"`
-	Comments          string `csv:"Comments"`
-	Platform          string `csv:"Platform"`
-	Status            string `csv:"Asset status"`
-	Source            string `csv:"Source"`
-	Type              string `csv:"Type"`
-	Purpose           string `csv:"Purpose"`
-	Quality           string `csv:"Quality"`
-	EditorialStatus   string `csv:"Editorial status"`
+	Title           string   `csv:"Title" notion:"Title"`
+	Language        string   `csv:"Language" notion:"Language"`
+	Label           string   `csv:"Label" notion:"Label"`
+	Publishing      string   `csv:"Publish" notion:"Publish"`
+	EpisodeID       string   `csv:"Episode ID" notion:"Episode ID"`
+	InHm            string   `csv:"In" notion:"In"`
+	OutHm           string   `csv:"Out" notion:"Out"`
+	Status          string   `csv:"Asset status" notion:"Asset status"`
+	Source          string   `csv:"Source" notion:"Source"`
+	Type            []string `csv:"Type" notion:"Type"`
+	Purpose         string   `csv:"Purpose" notion:"Purpose"`
+	Quality         string   `csv:"Quality" notion:"Quality"`
+	EditorialStatus string   `csv:"Editorial status" notion:"Editorial status"`
 }
 
 func triggerShortExport(ctx workflow.Context, short *ShortsData) error {
@@ -138,12 +135,42 @@ func BulkExportShorts(ctx workflow.Context, input BulkExportShortsInput) error {
 		return fmt.Errorf("collection VXID is required")
 	}
 
-	if input.CSV == "" {
-		return fmt.Errorf("CSV data is required")
-	}
-
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting BulkExportShorts %s", input.CollectionVXID)
+
+	shortsNotionDBID := "6656b0ef3b384b04993e144ed6e7feac"
+
+	notionFilter, _ := json.Marshal(gin.H{
+		"and": []gin.H{
+			{
+				"property": "Editorial status",
+				"status": gin.H{
+					"equals": "Ready in MB",
+				},
+			}, {
+				"property": "Asset status",
+				"status": gin.H{
+					"does_not_equal": "Done",
+				},
+			},
+		},
+	})
+
+	spew.Dump(string(notionFilter))
+
+	rawNotionData, err := wfutils.Execute(ctx, activities.Notion.QueryDatabase, activities.QueryDatabaseArgs{
+		DatabaseID: shortsNotionDBID,
+		Filter:     string(notionFilter),
+	}).Result(ctx)
+
+	if err != nil {
+		return fmt.Errorf("failed to get notion data: %w", err)
+	}
+
+	data, err := notion.NotionToStruct[ShortsCsvRow](rawNotionData)
+	if err != nil {
+		return fmt.Errorf("failed to parse notion data: %w", err)
+	}
 
 	items, err := wfutils.Execute(ctx, activities.Vidispine.GetItemsInCollection, vsactivity.GetItemsInCollectionParams{
 		CollectionID: input.CollectionVXID,
@@ -153,12 +180,9 @@ func BulkExportShorts(ctx workflow.Context, input BulkExportShortsInput) error {
 		return fmt.Errorf("failed to get items from collection: %w", err)
 	}
 
-	csvRows, err := ParseShortsCsvRows([]byte(input.CSV))
-	if err != nil {
-		return err
-	}
+	dataPtrs := lo.Map(data, func(row ShortsCsvRow, _ int) *ShortsCsvRow { return &row })
 
-	shortsData := MapAndFilterShortsData(csvRows, items)
+	shortsData := MapAndFilterShortsData(dataPtrs, items)
 
 	wfs := make([]workflow.Future, len(shortsData))
 	for i, short := range shortsData {
@@ -242,11 +266,11 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 		return fmt.Errorf("no asset found for mediabanken_id: %s", short.MBMetadata.ID)
 	}
 
-	assetID := assetResult.ID
+	assetID := strconv.Itoa(int(assetResult.ID))
 
-	var episodeID *int
-	if short.CSV.EpisodeID != 0 {
-		episodeID = &short.CSV.EpisodeID
+	var episodeID string
+	if short.CSV.EpisodeID == "" {
+		episodeID = short.CSV.EpisodeID
 	} else {
 		fmt.Printf("WARN: EpisodeID is empty for %s, %s\n", short.MBMetadata.ID, short.CSV.Label)
 	}
@@ -279,9 +303,9 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 	// some of the columns should be added as tags, e.g. "edification"
 	tagCodes := []string{
 		short.CSV.Source,
-		short.CSV.Type,
 		short.CSV.Purpose,
 	}
+	tagCodes = append(tagCodes, short.CSV.Type...)
 
 	for _, raw := range tagCodes {
 		code := strings.ToLower(strings.TrimSpace(raw))
@@ -344,35 +368,19 @@ func getInOutTime(short *ShortsData) (*int64, *int64, error) {
 	var parentStartsAt *int64
 	var parentEndsAt *int64
 
-	if strings.TrimSpace(short.CSV.InNum) != "" {
-		inNum, err := strconv.ParseInt(short.CSV.InNum, 10, 64)
-		parentStartsAt = &inNum
+	if strings.TrimSpace(short.CSV.InHm) != "" {
+		inNum, err := convertToSeconds(short.CSV.InHm)
+		parentStartsAt = inNum
 		if err != nil {
 			return nil, nil, err
-		}
-	} else {
-		if strings.TrimSpace(short.CSV.InHm) != "" {
-			inNum, err := convertToSeconds(short.CSV.InHm)
-			parentStartsAt = inNum
-			if err != nil {
-				return nil, nil, err
-			}
 		}
 	}
 
-	if strings.TrimSpace(short.CSV.OutNum) != "" {
-		outNum, err := strconv.ParseInt(short.CSV.OutNum, 10, 64)
-		parentEndsAt = &outNum
+	if strings.TrimSpace(short.CSV.OutHm) != "" {
+		n, err := convertToSeconds(short.CSV.OutHm)
+		parentEndsAt = n
 		if err != nil {
 			return nil, nil, err
-		}
-	} else {
-		if strings.TrimSpace(short.CSV.OutHm) != "" {
-			n, err := convertToSeconds(short.CSV.OutHm)
-			parentEndsAt = n
-			if err != nil {
-				return nil, nil, err
-			}
 		}
 	}
 

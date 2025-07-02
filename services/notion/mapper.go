@@ -5,14 +5,6 @@ import (
 	"reflect"
 )
 
-type TestStruct struct {
-	Name        string   `notion:"Name"`
-	Thing       int      `notion:"Thing"`
-	Blah        float64  `notion:"Blah"`
-	Checkbox    bool     `notion:"Checkbox"`
-	MultiSelect []string `notion:"Multi-select"`
-}
-
 func mapNotionRowToStruct[T any](data map[string]interface{}) (*T, error) {
 	props, ok := data["properties"].(map[string]interface{})
 	if !ok {
@@ -27,21 +19,56 @@ func mapNotionRowToStruct[T any](data map[string]interface{}) (*T, error) {
 		if tag == "" {
 			continue
 		}
+
 		prop, ok := props[tag].(map[string]interface{})
 		if !ok {
 			continue
 		}
+
+		propType, ok := prop["type"].(string)
+		if !ok {
+			continue
+		}
+
 		switch field.Type.Kind() {
 		case reflect.String:
-			if tag == "Name" {
-				titles, ok := prop["title"].([]interface{})
-				if ok && len(titles) > 0 {
-					title, ok := titles[0].(map[string]interface{})
-					if ok {
-						plain, _ := title["plain_text"].(string)
-						structVal.Field(j).SetString(plain)
-					}
+			// Use the Notion "title" property for string fields if present, otherwise fallback to rich_text or plain string
+			titles, ok := prop["title"].([]interface{})
+			if ok && len(titles) > 0 {
+				title, ok := titles[0].(map[string]interface{})
+				if ok {
+					plain, _ := title["plain_text"].(string)
+					structVal.Field(j).SetString(plain)
 				}
+				continue
+			}
+			status, ok := prop["status"].(map[string]interface{})
+			if ok {
+				status, ok := status["name"].(string)
+				if ok {
+					structVal.Field(j).SetString(status)
+				}
+				continue
+			}
+			// Fallback for rich_text
+			rich, ok := prop["rich_text"].([]interface{})
+			if ok && len(rich) > 0 {
+				rt, ok := rich[0].(map[string]interface{})
+				if ok {
+					plain, _ := rt["plain_text"].(string)
+					structVal.Field(j).SetString(plain)
+				}
+				continue
+			}
+			if propType == "select" {
+				sel, ok := prop["select"].(map[string]interface{})
+				if ok {
+					structVal.Field(j).SetString(sel["name"].(string))
+				}
+			}
+			// Fallback for string
+			if s, ok := prop["name"].(string); ok {
+				structVal.Field(j).SetString(s)
 			}
 		case reflect.Int, reflect.Int64:
 			if num, ok := prop["number"].(float64); ok {
@@ -56,19 +83,17 @@ func mapNotionRowToStruct[T any](data map[string]interface{}) (*T, error) {
 				structVal.Field(j).SetBool(b)
 			}
 		case reflect.Slice:
-			if tag == "Multi-select" {
-				multi, ok := prop["multi_select"].([]interface{})
-				if ok {
-					var arr []string
-					for _, m := range multi {
-						mmap, ok := m.(map[string]interface{})
-						if ok {
-							name, _ := mmap["name"].(string)
-							arr = append(arr, name)
-						}
+			multi, ok := prop["multi_select"].([]interface{})
+			if ok {
+				var arr []string
+				for _, m := range multi {
+					mmap, ok := m.(map[string]interface{})
+					if ok {
+						name, _ := mmap["name"].(string)
+						arr = append(arr, name)
 					}
-					structVal.Field(j).Set(reflect.ValueOf(arr))
 				}
+				structVal.Field(j).Set(reflect.ValueOf(arr))
 			}
 		}
 	}

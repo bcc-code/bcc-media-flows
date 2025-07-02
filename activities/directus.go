@@ -25,9 +25,9 @@ type CreateMediaItemTagInput struct {
 type CreateMediaItemInput struct {
 	Label           string
 	Type            string
-	AssetID         int64
+	AssetID         string
 	Title           string
-	ParentEpisodeID *int
+	ParentEpisodeID string
 	ParentStartsAt  *int64
 	ParentEndsAt    *int64
 	StyledImageID   string

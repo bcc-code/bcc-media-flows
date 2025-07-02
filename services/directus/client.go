@@ -101,9 +101,9 @@ type MediaItem struct {
 type MediaItemCreate struct {
 	Label           string                   `json:"label"`
 	Type            string                   `json:"type"`
-	AssetID         int64                    `json:"asset_id"`
+	AssetID         string                   `json:"asset_id"`
 	Title           string                   `json:"title"`
-	ParentEpisodeID *int                     `json:"parent_episode_id"`
+	ParentEpisodeID string                   `json:"parent_episode_id"`
 	ParentStartsAt  *int64                   `json:"parent_starts_at"`
 	ParentEndsAt    *int64                   `json:"parent_ends_at"`
 	Images          MediaItemStyledImageCRUD `json:"images"`
@@ -323,9 +323,9 @@ func (c *Client) CreateMediaItem(mediaItem MediaItemCreate) (*MediaItem, error) 
 	type mediaItemCreatePayload struct {
 		Label           string `json:"label"`
 		Type            string `json:"type"`
-		AssetID         int64  `json:"asset_id"`
+		AssetID         string `json:"asset_id"`
 		Title           string `json:"title"`
-		ParentEpisodeID *int   `json:"parent_episode_id,omitempty"`
+		ParentEpisodeID string `json:"parent_episode_id,omitempty"`
 		ParentStartsAt  *int64 `json:"parent_starts_at,omitempty"`
 		ParentEndsAt    *int64 `json:"parent_ends_at,omitempty"`
 	}

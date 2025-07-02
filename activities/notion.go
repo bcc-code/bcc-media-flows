@@ -11,9 +11,14 @@ type NotionActivities struct {
 	Client *notion.Client
 }
 
+type QueryDatabaseArgs struct {
+	DatabaseID string
+	Filter     string
+}
+
 // QueryDatabase queries a database in Notion
 //
 // Filtering is not implemented yet
-func (a *NotionActivities) QueryDatabase(ctx context.Context, databaseID string) ([]map[string]interface{}, error) {
-	return a.Client.QueryDatabase(databaseID)
+func (a *NotionActivities) QueryDatabase(ctx context.Context, args QueryDatabaseArgs) ([]map[string]interface{}, error) {
+	return a.Client.QueryDatabase(args.DatabaseID, args.Filter)
 }
