@@ -92,6 +92,15 @@ type CreateStyledImageInput struct {
 	Style   string
 }
 
+type GetOrCreateTagInput struct {
+	Code string
+	Name string // optional, fallback to Code
+}
+
+type GetOrCreateTagResult struct {
+	Tag *directus.Tag
+}
+
 func (a *DirectusActivities) CheckDirectusAssetExists(ctx context.Context, input CheckDirectusAssetExistsInput) (bool, error) {
 	return a.Client.AssetExists(input.MediabankenID)
 }
@@ -168,6 +177,26 @@ func (a *DirectusActivities) CreateTag(ctx context.Context, input CreateTagInput
 		return nil, fmt.Errorf("failed to create tag: %w", err)
 	}
 	return &CreateTagResult{Tag: tag}, nil
+}
+
+// GetOrCreateTag checks if a tag exists with the given code, creates it if it doesn't exist, and returns its ID
+func (a *DirectusActivities) GetOrCreateTag(ctx context.Context, input GetOrCreateTagInput) (*GetOrCreateTagResult, error) {
+	// Try to get the tag by code
+	tagResult, err := a.GetTagByCode(ctx, GetTagByCodeInput{Code: input.Code})
+	if err == nil && tagResult.Tag != nil {
+		return &GetOrCreateTagResult{Tag: tagResult.Tag}, nil
+	}
+
+	// Create tag if not found
+	name := input.Name
+	if name == "" {
+		name = input.Code
+	}
+	createTagResult, err := a.CreateTag(ctx, CreateTagInput{Code: input.Code, Name: name})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create tag: %w", err)
+	}
+	return &GetOrCreateTagResult{Tag: createTagResult.Tag}, nil
 }
 
 func (a *DirectusActivities) CreateShort(ctx context.Context, input CreateShortInput) (*CreateShortResult, error) {

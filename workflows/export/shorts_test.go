@@ -150,3 +150,40 @@ func TestMapAndFilterShortsData(t *testing.T) {
 		})
 	}
 }
+
+func TestConvertToSeconds(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected *int64
+		hasError bool
+	}{
+		{"00:00:00", ptrInt64(0), false},
+		{"12:34:56", ptrInt64(45296), false},
+		{"5:00", ptrInt64(300), false},
+		{"1:02:03", ptrInt64(3723), false},
+		{"99:59:59", ptrInt64(359999), false},
+		{"00:01:02", ptrInt64(62), false},
+		{"bad", nil, true},
+		{"12:34", ptrInt64(754), false},
+		{"1:2:3", ptrInt64(3723), false},
+		{"1", nil, true},
+		{"", nil, true},
+		{"12:34:56:78", nil, true},
+	}
+
+	for _, tc := range tests {
+		result, err := convertToSeconds(tc.input)
+		if tc.hasError {
+			assert.Error(t, err, "input: %s", tc.input)
+			assert.Nil(t, result, "input: %s", tc.input)
+		} else {
+			assert.NoError(t, err, "input: %s", tc.input)
+			assert.NotNil(t, result, "input: %s", tc.input)
+			assert.Equal(t, *tc.expected, *result, "input: %s", tc.input)
+		}
+	}
+}
+
+func ptrInt64(v int64) *int64 {
+	return &v
+}

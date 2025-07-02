@@ -23,6 +23,28 @@ type BulkExportShortsInput struct {
 	CollectionVXID string `json:"collectionVXID"`
 }
 
+type ShortsCsvRow struct {
+	Title             string `csv:"Title"`
+	Language          string `csv:"Language"`
+	Label             string `csv:"Label"`
+	EditorialApproved string `csv:"Editorial approved"`
+	Publishing        string `csv:"Publishing"`
+	EpisodeID         int    `csv:"Episode ID"`
+	InHm              string `csv:"In"`
+	OutHm             string `csv:"Out"`
+	InNum             string `csv:"In Sec"`
+	OutNum            string `csv:"Out Sec"`
+	LanguageCheck     string `csv:"Language check"`
+	Comments          string `csv:"Comments"`
+	Platform          string `csv:"Platform"`
+	Status            string `csv:"Asset status"`
+	Source            string `csv:"Source"`
+	Type              string `csv:"Type"`
+	Purpose           string `csv:"Purpose"`
+	Quality           string `csv:"Quality"`
+	EditorialStatus   string `csv:"Editorial status"`
+}
+
 func triggerShortExport(ctx workflow.Context, short *ShortsData) error {
 	watermarkPath := ""
 
@@ -109,6 +131,10 @@ func MapAndFilterShortsData(csvRows []*ShortsCsvRow, mbItems []*vsapi.MetadataRe
 	return out
 }
 
+// BulkExportShorts exports all shorts in a collection
+//
+// They must be in the CSV file, and have the editorial status of "Ready in MB" as well as a status of !"Done"
+// The separate shorts are exported in parallel using the ExportShort workflow
 func BulkExportShorts(ctx workflow.Context, input BulkExportShortsInput) error {
 	if input.CollectionVXID == "" {
 		return fmt.Errorf("collection VXID is required")
@@ -157,6 +183,7 @@ func BulkExportShorts(ctx workflow.Context, input BulkExportShortsInput) error {
 	return nil
 }
 
+// ExportShort exports a single short to BCCM Platform
 func ExportShort(ctx workflow.Context, short *ShortsData) error {
 	logger := workflow.GetLogger(ctx)
 	logger.Debug("Starting export for %s", short.MBMetadata.ID)
@@ -191,10 +218,10 @@ func ExportShort(ctx workflow.Context, short *ShortsData) error {
 		return fmt.Errorf("failed to upload thumbnail: %w", err)
 	}
 
-	return importShort(ctx, short, styledImage)
+	return createShortInPlatform(ctx, short, styledImage)
 }
 
-func importShort(ctx workflow.Context, short *ShortsData, styledImage *directus.StyledImage) error {
+func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage *directus.StyledImage) error {
 
 	// Create mediaitem
 	language := short.CSV.Language
@@ -305,24 +332,16 @@ func importShort(ctx workflow.Context, short *ShortsData, styledImage *directus.
 
 // GetOrCreateTag checks if a tag exists with the given code, creates it if it doesn't exist, and returns its ID
 func GetOrCreateTag(ctx workflow.Context, code string) (string, error) {
-	tag, err := wfutils.Execute(ctx, activities.Directus.GetTagByCode, activities.GetTagByCodeInput{
-		Code: code,
-	}).Result(ctx)
-
-	if err == nil && tag.Tag != nil {
-		return tag.Tag.ID, nil
-	}
-
-	createTagResult, err := wfutils.Execute(ctx, activities.Directus.CreateTag, activities.CreateTagInput{
+	res, err := wfutils.Execute(ctx, activities.Directus.GetOrCreateTag, activities.GetOrCreateTagInput{
 		Code: code,
 		Name: code,
 	}).Result(ctx)
 
 	if err != nil {
-		workflow.GetLogger(ctx).Error("Error creating tag", "error", err, "code", code)
-		return "", fmt.Errorf("failed to create tag: %w", err)
+		return "", err
 	}
-	return createTagResult.Tag.ID, nil
+
+	return res.Tag.ID, nil
 }
 
 func getInOutTime(short *ShortsData) (*int64, *int64, error) {
@@ -448,35 +467,6 @@ func generateThumbnailForShort(ctx workflow.Context, destFolder paths.Path, shor
 
 	err = wfutils.Execute(ctx, activities.Video.ExecuteFFmpeg, activities.ExecuteFFmpegInput{Arguments: ffmpegArgs}).Wait(ctx)
 	return outputFilePath, err
-}
-
-type ShortsCsvRow struct {
-	Title             string `csv:"Title"`
-	Language          string `csv:"Language"`
-	Label             string `csv:"Label"`
-	EditorialApproved string `csv:"Editorial approved"`
-	Publishing        string `csv:"Publishing"`
-	EpisodeID         int    `csv:"Episode ID"`
-	InHm              string `csv:"In"`
-	OutHm             string `csv:"Out"`
-	InNum             string `csv:"In Sec"`
-	OutNum            string `csv:"Out Sec"`
-	LanguageCheck     string `csv:"Language check"`
-	Comments          string `csv:"Comments"`
-	Platform          string `csv:"Platform"`
-	Status            string `csv:"Asset status"`
-	Source            string `csv:"Source"`
-	Type              string `csv:"Type"`
-	Purpose           string `csv:"Purpose"`
-	Quality           string `csv:"Quality"`
-	EditorialStatus   string `csv:"Editorial status"`
-}
-
-// ShortLanguageUpdate holds info for later processing
-type ShortLanguageUpdate struct {
-	VXID     string
-	Title    string
-	Language string
 }
 
 // ParseShortsCsvRows parses ShortsCsvRow from CSV data
