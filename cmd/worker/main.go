@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/services/directus"
+	"github.com/bcc-code/bcc-media-flows/services/notion"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"log"
@@ -141,6 +142,13 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 	directusClient := directus.NewClient(directusBaseURL, directusAPIKey)
 	activities.Directus = &activities.DirectusActivities{Client: directusClient}
 
+	notionAPIKey := os.Getenv("NOTION_API_KEY")
+	notionClient, err := notion.NewClient(notionAPIKey)
+	if err != nil {
+		log.Printf("Error creating notion client: %v", err)
+	}
+	activities.Notion = &activities.NotionActivities{Client: notionClient}
+
 	switch queue {
 	case environment.QueueDebug:
 		registerActivitiesInStruct(w, activities.Util)
@@ -159,6 +167,8 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 
 		registerActivitiesInStruct(w, activities.Directus)
 
+		registerActivitiesInStruct(w, activities.Notion)
+
 		for _, wf := range workflows.WorkerWorkflows {
 			w.RegisterWorkflow(wf)
 		}
@@ -174,6 +184,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		registerActivitiesInStruct(w, activities.Platform)
 		registerActivitiesInStruct(w, activities.Vidispine)
 		registerActivitiesInStruct(w, activities.Directus)
+		registerActivitiesInStruct(w, activities.Notion)
 
 		for _, wf := range workflows.WorkerWorkflows {
 			w.RegisterWorkflow(wf)
@@ -188,7 +199,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 	}
 
 	fmt.Println("STARTING")
-	err := w.Run(worker.InterruptCh())
+	err = w.Run(worker.InterruptCh())
 
 	log.Printf("Worker finished: %v", err)
 
