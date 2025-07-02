@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/directus"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"log"
@@ -19,7 +20,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/activities"
 	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
 	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
-	"github.com/bcc-code/bcc-media-flows/directus"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/teamwork/reload"
 	"go.temporal.io/sdk/activity"

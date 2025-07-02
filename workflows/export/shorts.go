@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/activities/vidispine"
-	"github.com/bcc-code/bcc-media-flows/directus"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/directus"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bcc-media-flows/utils"
@@ -48,9 +48,7 @@ type ShortsCsvRow struct {
 func triggerShortExport(ctx workflow.Context, short *ShortsData) error {
 	watermarkPath := ""
 
-	exists, err := wfutils.Execute(ctx, activities.Directus.CheckDirectusAssetExists, activities.CheckDirectusAssetExistsInput{
-		MediabankenID: short.MBMetadata.ID,
-	}).Result(ctx)
+	exists, err := wfutils.Execute(ctx, activities.Directus.CheckDirectusAssetExists, short.MBMetadata.ID).Result(ctx)
 
 	if err != nil {
 		return err
@@ -235,18 +233,16 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 	}
 
 	// Get asset for item
-	assetResult, err := wfutils.Execute(ctx, activities.Directus.GetAssetByMediabankenID, activities.GetAssetByMediabankenIDInput{
-		MediabankenID: short.MBMetadata.ID,
-	}).Result(ctx)
+	assetResult, err := wfutils.Execute(ctx, activities.Directus.GetAssetByMediabankenID, short.MBMetadata.ID).Result(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get asset: %w", err)
 	}
 
-	if assetResult.Asset == nil {
+	if assetResult == nil {
 		return fmt.Errorf("no asset found for mediabanken_id: %s", short.MBMetadata.ID)
 	}
 
-	assetID := assetResult.Asset.ID
+	assetID := assetResult.ID
 
 	var episodeID *int
 	if short.CSV.EpisodeID != 0 {
@@ -276,7 +272,7 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 		return fmt.Errorf("failed to create media item: %w", err)
 	}
 
-	if mediaItemResult.MediaItem == nil {
+	if mediaItemResult == nil {
 		return fmt.Errorf("failed to create media item: no data in response")
 	}
 
@@ -301,13 +297,13 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 
 		// Create relationship between media item and tag
 		_, err = wfutils.Execute(ctx, activities.Directus.CreateMediaItemTag, activities.CreateMediaItemTagInput{
-			MediaItemID: mediaItemResult.MediaItem.ID,
+			MediaItemID: mediaItemResult.ID,
 			TagID:       tagId,
 		}).Result(ctx)
 		if err != nil {
 			workflow.GetLogger(ctx).Error("Error creating media item tag relationship",
 				"error", err,
-				"mediaItemID", mediaItemResult.MediaItem.ID,
+				"mediaItemID", mediaItemResult.ID,
 				"tagId", tagId,
 			)
 		}
@@ -315,7 +311,7 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 
 	// Create short
 	shortResult, err := wfutils.Execute(ctx, activities.Directus.CreateShort, activities.CreateShortInput{
-		MediaItemID: mediaItemResult.MediaItem.ID,
+		MediaItemID: mediaItemResult.ID,
 		Status:      "draft",
 	}).Result(ctx)
 
@@ -323,7 +319,7 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 		return fmt.Errorf("failed to create short: %w", err)
 	}
 
-	if shortResult.Short == nil {
+	if shortResult == nil {
 		return fmt.Errorf("failed to create short: no data in response")
 	}
 
@@ -341,7 +337,7 @@ func GetOrCreateTag(ctx workflow.Context, code string) (string, error) {
 		return "", err
 	}
 
-	return res.Tag.ID, nil
+	return res.ID, nil
 }
 
 func getInOutTime(short *ShortsData) (*int64, *int64, error) {
@@ -432,9 +428,7 @@ func uploadImage(ctx workflow.Context, createStyledImages bool, imageStyle strin
 		return nil, nil, fmt.Errorf("invalid image extension: %s", image.Ext())
 	}
 
-	res, err := wfutils.Execute(ctx, activities.Directus.UploadFile, activities.UploadFileInput{
-		FilePath: image.Local(),
-	}).Result(ctx)
+	res, err := wfutils.Execute(ctx, activities.Directus.UploadFile, image.Local()).Result(ctx)
 
 	if err != nil {
 		return nil, nil, err

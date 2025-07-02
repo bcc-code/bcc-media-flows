@@ -367,7 +367,7 @@ func (c *Client) GetTagByCode(code string) (*Tag, error) {
 	resp, err := c.client.R().
 		SetQueryParams(map[string]string{
 			"filter[code][_eq]": code,
-			"limit":              "1",
+			"limit":             "1",
 		}).
 		SetResult(result).
 		Get(endpoint)
@@ -397,7 +397,7 @@ func (c *Client) CreateMediaItemTag(mediaItemID, tagID string) (*MediaItemTag, e
 
 	tagData := map[string]interface{}{
 		"mediaitems_id": mediaItemID,
-		"tags_id":      tagID,
+		"tags_id":       tagID,
 	}
 
 	resp, err := c.client.R().
