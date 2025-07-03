@@ -188,6 +188,21 @@ func (mr *MockClientMockRecorder) GetChapterMeta(itemVXID, inTc, outTc any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChapterMeta", reflect.TypeOf((*MockClient)(nil).GetChapterMeta), itemVXID, inTc, outTc)
 }
 
+// GetItemsInCollection mocks base method.
+func (m *MockClient) GetItemsInCollection(collectionVxId string, number int) (*vsapi.CollectionItemsResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetItemsInCollection", collectionVxId, number)
+	ret0, _ := ret[0].(*vsapi.CollectionItemsResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetItemsInCollection indicates an expected call of GetItemsInCollection.
+func (mr *MockClientMockRecorder) GetItemsInCollection(collectionVxId, number any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetItemsInCollection", reflect.TypeOf((*MockClient)(nil).GetItemsInCollection), collectionVxId, number)
+}
+
 // GetJob mocks base method.
 func (m *MockClient) GetJob(jobID string) (*vsapi.JobDocument, error) {
 	m.ctrl.T.Helper()

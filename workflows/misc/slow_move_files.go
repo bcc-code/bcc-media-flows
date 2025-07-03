@@ -7,7 +7,6 @@ import (
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"github.com/davecgh/go-spew/spew"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
@@ -207,7 +206,6 @@ func MoveFilesWorkerFlow(ctx workflow.Context) error {
 				DestinatinStorage: dstStorage.VXID,
 				NewPath:           newPath,
 			}
-			spew.Dump(renameParams)
 
 			err := wfutils.Execute(ctx, cantemo.MoveFileWait, &renameParams).Wait(ctx)
 			if err != nil {

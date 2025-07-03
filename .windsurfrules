@@ -1,0 +1,2 @@
+You should use the `testify` package for writing tests.
+Avoid using test suites unless you have a good reason to do so, such as when testing temporal workflows.
