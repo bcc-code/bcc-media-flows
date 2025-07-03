@@ -147,7 +147,10 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 	if err != nil {
 		log.Printf("Error creating notion client: %v", err)
 	}
-	activities.Notion = &activities.NotionActivities{Client: notionClient}
+	activities.Notion = &activities.NotionActivities{
+		Client:           notionClient,
+		ShortsDatabaseID: os.Getenv("NOTION_SHORTS_DATABASE_ID"),
+	}
 
 	switch queue {
 	case environment.QueueDebug:

@@ -12,7 +12,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
 	"github.com/gocarina/gocsv"
 	"github.com/samber/lo"
@@ -27,7 +26,7 @@ type BulkExportShortsInput struct {
 }
 
 type ShortsCsvRow struct {
-	NotionPageID     string   `csv:"-" notion:"rowId"`
+	NotionPageID    string   `csv:"-" notion:"rowId"`
 	Title           string   `csv:"Title" notion:"Title"`
 	Language        string   `csv:"Language" notion:"Language"`
 	Label           string   `csv:"Label" notion:"Label"`
@@ -139,8 +138,6 @@ func BulkExportShorts(ctx workflow.Context, input BulkExportShortsInput) error {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting BulkExportShorts %s", input.CollectionVXID)
 
-	shortsNotionDBID := "6656b0ef3b384b04993e144ed6e7feac"
-
 	notionFilter, _ := json.Marshal(gin.H{
 		"and": []gin.H{
 			{
@@ -157,10 +154,8 @@ func BulkExportShorts(ctx workflow.Context, input BulkExportShortsInput) error {
 		},
 	})
 
-	spew.Dump(string(notionFilter))
-
 	rawNotionData, err := wfutils.Execute(ctx, activities.Notion.QueryDatabase, activities.QueryDatabaseArgs{
-		DatabaseID: shortsNotionDBID,
+		DatabaseID: activities.Notion.ShortsDatabaseID,
 		Filter:     string(notionFilter),
 	}).Result(ctx)
 
@@ -336,7 +331,6 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 		if err != nil {
 			return err
 		}
-		spew.Dump(tagId)
 
 		// Create relationship between media item and tag
 		_, err = wfutils.Execute(ctx, activities.Directus.CreateMediaItemTag, activities.CreateMediaItemTagInput{

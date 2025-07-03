@@ -8,7 +8,8 @@ import (
 var Notion *NotionActivities
 
 type NotionActivities struct {
-	Client *notion.Client
+	Client           *notion.Client
+	ShortsDatabaseID string
 }
 
 type QueryDatabaseArgs struct {
