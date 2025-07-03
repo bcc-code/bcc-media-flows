@@ -176,6 +176,7 @@ type TestStruct struct {
 	Blah        float64  `notion:"Blah"`
 	Checkbox    bool     `notion:"Checkbox"`
 	MultiSelect []string `notion:"Multi-select"`
+	RowID       string   `notion:"rowId"`
 }
 
 func TestNotionToStruct(t *testing.T) {
@@ -191,6 +192,7 @@ func TestNotionToStruct(t *testing.T) {
 			Blah:        -3323.323,
 			Checkbox:    false,
 			MultiSelect: []string{"S"},
+			RowID:       "224563c0-cccf-80c9-a190-ecfc7a51f6f1",
 		},
 		{
 			StringField: "AA",
@@ -198,6 +200,7 @@ func TestNotionToStruct(t *testing.T) {
 			Blah:        33.44,
 			Checkbox:    true,
 			MultiSelect: []string{"A", "F", "G"},
+			RowID:       "224563c0-cccf-801a-9615-d78100241faf",
 		},
 	}
 
@@ -212,5 +215,6 @@ func TestNotionToStruct(t *testing.T) {
 		assert.InDelta(t, exp.Blah, act.Blah, 0.00001)
 		assert.Equal(t, exp.Checkbox, act.Checkbox)
 		assert.Equal(t, exp.MultiSelect, act.MultiSelect)
+		assert.Equal(t, exp.RowID, act.RowID)
 	}
 }

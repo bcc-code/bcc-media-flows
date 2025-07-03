@@ -20,6 +20,13 @@ func mapNotionRowToStruct[T any](data map[string]interface{}) (*T, error) {
 			continue
 		}
 
+		// Special handling for rowId tag
+		if tag == "rowId" && field.Type.Kind() == reflect.String {
+			id, _ := data["id"].(string)
+			structVal.Field(j).SetString(id)
+			continue
+		}
+
 		prop, ok := props[tag].(map[string]interface{})
 		if !ok {
 			continue
@@ -42,21 +49,19 @@ func mapNotionRowToStruct[T any](data map[string]interface{}) (*T, error) {
 				}
 				continue
 			}
+			richTexts, ok := prop["rich_text"].([]interface{})
+			if ok && len(richTexts) > 0 {
+				richText, ok := richTexts[0].(map[string]interface{})
+				if ok {
+					plain, _ := richText["plain_text"].(string)
+					structVal.Field(j).SetString(plain)
+				}
+			}
 			status, ok := prop["status"].(map[string]interface{})
 			if ok {
 				status, ok := status["name"].(string)
 				if ok {
 					structVal.Field(j).SetString(status)
-				}
-				continue
-			}
-			// Fallback for rich_text
-			rich, ok := prop["rich_text"].([]interface{})
-			if ok && len(rich) > 0 {
-				rt, ok := rich[0].(map[string]interface{})
-				if ok {
-					plain, _ := rt["plain_text"].(string)
-					structVal.Field(j).SetString(plain)
 				}
 				continue
 			}

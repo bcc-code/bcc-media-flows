@@ -61,3 +61,27 @@ func (c *Client) QueryDatabase(databaseID string, filter string) ([]map[string]i
 	}
 	return result.Results, nil
 }
+
+// UpdateAssetStatus updates the "Asset Status" property for a given Notion page (row).
+// rowId: Notion page ID
+// status: new value for the "Asset Status" select property (e.g., "Done")
+func (c *Client) UpdateAssetStatus(rowId string, status string) error {
+	url := "https://api.notion.com/v1/pages/" + rowId
+	payload := map[string]interface{}{
+		"properties": map[string]interface{}{
+			"Asset Status": map[string]interface{}{
+				"status": map[string]interface{}{
+					"name": status,
+				},
+			},
+		},
+	}
+	resp, err := c.client.R().SetBody(payload).Patch(url)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		return fmt.Errorf("failed to update Notion page: %s, body: %s", resp.Status(), resp.String())
+	}
+	return nil
+}

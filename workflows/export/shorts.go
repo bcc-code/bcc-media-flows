@@ -27,6 +27,7 @@ type BulkExportShortsInput struct {
 }
 
 type ShortsCsvRow struct {
+	NotionPageID     string   `csv:"-" notion:"rowId"`
 	Title           string   `csv:"Title" notion:"Title"`
 	Language        string   `csv:"Language" notion:"Language"`
 	Label           string   `csv:"Label" notion:"Label"`
@@ -240,7 +241,25 @@ func ExportShort(ctx workflow.Context, short *ShortsData) error {
 		return fmt.Errorf("failed to upload thumbnail: %w", err)
 	}
 
-	return createShortInPlatform(ctx, short, styledImage)
+	err = createShortInPlatform(ctx, short, styledImage)
+	if err != nil {
+		return err
+	}
+
+	// Update Notion status to "Done" via activity
+	if short.CSV.NotionPageID != "" {
+		err = wfutils.Execute(ctx, activities.Notion.UpdateAssetStatus, activities.UpdateAssetStatusArgs{
+			RowID:  short.CSV.NotionPageID,
+			Status: "Done",
+		}).Get(ctx, nil)
+		if err != nil {
+			logger.Error("Failed to update Notion status via activity", "error", err, "rowId", short.CSV.NotionPageID)
+		}
+	} else {
+		logger.Error("No NotionPageID present for short, skipping Notion status update", "mb_id", short.MBMetadata.ID)
+	}
+
+	return nil
 }
 
 func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage *directus.StyledImage) error {
