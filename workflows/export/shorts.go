@@ -13,8 +13,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/utils"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/gin-gonic/gin"
-	"github.com/gocarina/gocsv"
-	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 	"os"
 	"strconv"
@@ -25,105 +23,24 @@ type BulkExportShortsInput struct {
 	CollectionVXID string `json:"collectionVXID"`
 }
 
-type ShortsCsvRow struct {
-	NotionPageID    string   `csv:"-" notion:"rowId"`
-	Title           string   `csv:"Title" notion:"Title"`
-	Language        string   `csv:"Language" notion:"Language"`
-	Label           string   `csv:"Label" notion:"Label"`
-	Publishing      string   `csv:"Publish" notion:"Publish"`
-	EpisodeID       string   `csv:"Episode ID" notion:"Episode ID"`
-	InHm            string   `csv:"In" notion:"In"`
-	OutHm           string   `csv:"Out" notion:"Out"`
-	Status          string   `csv:"Asset status" notion:"Asset status"`
-	Source          string   `csv:"Source" notion:"Source"`
-	Type            []string `csv:"Type" notion:"Type"`
-	Purpose         string   `csv:"Purpose" notion:"Purpose"`
-	Quality         string   `csv:"Quality" notion:"Quality"`
-	EditorialStatus string   `csv:"Editorial status" notion:"Editorial status"`
-}
-
-func triggerShortExport(ctx workflow.Context, short *ShortsData) error {
-	watermarkPath := ""
-
-	exists, err := wfutils.Execute(ctx, activities.Directus.CheckDirectusAssetExists, short.MBMetadata.ID).Result(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	if exists {
-		return nil
-	}
-
-	resolutions := []utils.Resolution{
-		{Width: 320, Height: 180},
-		{Width: 480, Height: 270},
-		{Width: 640, Height: 360},
-		{Width: 960, Height: 540},
-		{Width: 1280, Height: 720},
-		{Width: 1920, Height: 1080},
-	}
-
-	wf := workflow.ExecuteChildWorkflow(ctx, VXExport, VXExportParams{
-		VXID:          short.MBMetadata.ID,
-		Destinations:  []string{"vod"},
-		WatermarkPath: watermarkPath,
-		Resolutions:   resolutions,
-		AudioSource:   "embedded",
-	})
-
-	return wf.Get(ctx, nil)
-}
-
 type ShortsData struct {
-	CSV          *ShortsCsvRow
+	NotionPageID    string   `notion:"rowId"`
+	Title           string   `notion:"Title"`
+	Language        string   `notion:"Language"`
+	Label           string   `notion:"Label"`
+	Publishing      string   `notion:"Publish"`
+	EpisodeID       string   `notion:"Episode ID"`
+	InHm            string   `notion:"In"`
+	OutHm           string   `notion:"Out"`
+	Status          string   `notion:"Asset status"`
+	Source          string   `notion:"Source"`
+	Type            []string `notion:"Type"`
+	Purpose         string   `notion:"Purpose"`
+	Quality         string   `notion:"Quality"`
+	EditorialStatus string   `notion:"Editorial status"`
+
 	MBMetadata   *vsapi.MetadataResult
 	OriginalPath *paths.Path
-}
-
-// MapAndFilterShortsData matches csv rows with vx items and returns a filtered list of matched items.
-// Only editorial status "Ready in MB" is allowed
-func MapAndFilterShortsData(csvRows []*ShortsCsvRow, mbItems []*vsapi.MetadataResult) []*ShortsData {
-	var out []*ShortsData
-
-	mbItemMap := make(map[string]*vsapi.MetadataResult, len(mbItems))
-	for _, item := range mbItems {
-		title := item.Get(vscommon.FieldTitle, "")
-		if title == "" {
-			continue
-		}
-
-		baseTitle := title
-		if dotIdx := strings.IndexByte(title, '.'); dotIdx > 0 {
-			baseTitle = title[:dotIdx]
-		}
-
-		mbItemMap[baseTitle] = item
-	}
-
-	for _, csvRow := range csvRows {
-		if csvRow.EditorialStatus != "Ready in MB" {
-			continue
-		}
-
-		if csvRow.Status == "Done" {
-			continue
-		}
-
-		if item, ok := mbItemMap[csvRow.Label]; ok {
-
-			if csvRow.Language == "" {
-				csvRow.Language = "nor"
-			}
-
-			out = append(out, &ShortsData{
-				CSV:        csvRow,
-				MBMetadata: item,
-			})
-		}
-	}
-
-	return out
 }
 
 // BulkExportShorts exports all shorts in a collection
@@ -163,12 +80,12 @@ func BulkExportShorts(ctx workflow.Context, input BulkExportShortsInput) error {
 		return fmt.Errorf("failed to get notion data: %w", err)
 	}
 
-	data, err := notion.NotionToStruct[ShortsCsvRow](rawNotionData)
+	data, err := notion.NotionToStruct[ShortsData](rawNotionData)
 	if err != nil {
 		return fmt.Errorf("failed to parse notion data: %w", err)
 	}
 
-	items, err := wfutils.Execute(ctx, activities.Vidispine.GetItemsInCollection, vsactivity.GetItemsInCollectionParams{
+	vsCollectionItems, err := wfutils.Execute(ctx, activities.Vidispine.GetItemsInCollection, vsactivity.GetItemsInCollectionParams{
 		CollectionID: input.CollectionVXID,
 		Limit:        1000,
 	}).Result(ctx)
@@ -176,9 +93,7 @@ func BulkExportShorts(ctx workflow.Context, input BulkExportShortsInput) error {
 		return fmt.Errorf("failed to get items from collection: %w", err)
 	}
 
-	dataPtrs := lo.Map(data, func(row ShortsCsvRow, _ int) *ShortsCsvRow { return &row })
-
-	shortsData := MapAndFilterShortsData(dataPtrs, items)
+	shortsData := mapAndFilterShortsData(data, vsCollectionItems)
 
 	wfs := make([]workflow.Future, len(shortsData))
 	for i, short := range shortsData {
@@ -242,13 +157,13 @@ func ExportShort(ctx workflow.Context, short *ShortsData) error {
 	}
 
 	// Update Notion status to "Done" via activity
-	if short.CSV.NotionPageID != "" {
+	if short.NotionPageID != "" {
 		err = wfutils.Execute(ctx, activities.Notion.UpdateAssetStatus, activities.UpdateAssetStatusArgs{
-			RowID:  short.CSV.NotionPageID,
+			RowID:  short.NotionPageID,
 			Status: "Done",
 		}).Get(ctx, nil)
 		if err != nil {
-			logger.Error("Failed to update Notion status via activity", "error", err, "rowId", short.CSV.NotionPageID)
+			logger.Error("Failed to update Notion status via activity", "error", err, "rowId", short.NotionPageID)
 		}
 	} else {
 		logger.Error("No NotionPageID present for short, skipping Notion status update", "mb_id", short.MBMetadata.ID)
@@ -257,10 +172,93 @@ func ExportShort(ctx workflow.Context, short *ShortsData) error {
 	return nil
 }
 
+// triggerShortExport triggers the export of the video from MB to the VOD platform
+func triggerShortExport(ctx workflow.Context, short *ShortsData) error {
+	watermarkPath := ""
+
+	exists, err := wfutils.Execute(ctx, activities.Directus.CheckDirectusAssetExists, short.MBMetadata.ID).Result(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		return nil
+	}
+
+	resolutions := []utils.Resolution{
+		{Width: 320, Height: 180},
+		{Width: 480, Height: 270},
+		{Width: 640, Height: 360},
+		{Width: 960, Height: 540},
+		{Width: 1280, Height: 720},
+		{Width: 1920, Height: 1080},
+	}
+
+	wf := workflow.ExecuteChildWorkflow(ctx, VXExport, VXExportParams{
+		VXID:          short.MBMetadata.ID,
+		Destinations:  []string{"vod"},
+		WatermarkPath: watermarkPath,
+		Resolutions:   resolutions,
+		AudioSource:   "embedded",
+	})
+
+	return wf.Get(ctx, nil)
+}
+
+// mapAndFilterShortsData matches shorts data with vx items and returns a filtered list of matched items.
+// Only editorial status "Ready in MB" is allowed, and the short must be present in both datasets
+func mapAndFilterShortsData(shorts []*ShortsData, mbItems []*vsapi.MetadataResult) []*ShortsData {
+	var out []*ShortsData
+
+	mbItemMap := make(map[string]*vsapi.MetadataResult, len(mbItems))
+	for _, item := range mbItems {
+		title := item.Get(vscommon.FieldTitle, "")
+		if title == "" {
+			continue
+		}
+
+		baseTitle := title
+		if dotIdx := strings.IndexByte(title, '.'); dotIdx > 0 {
+			baseTitle = title[:dotIdx]
+		}
+
+		mbItemMap[baseTitle] = item
+	}
+
+	for _, short := range shorts {
+		if short.EditorialStatus != "Ready in MB" {
+			continue
+		}
+
+		if short.Status == "Done" {
+			continue
+		}
+
+		if item, ok := mbItemMap[short.Label]; ok {
+
+			if short.Language == "" {
+				short.Language = "nor"
+			}
+
+			short.MBMetadata = item
+
+			out = append(out, short)
+		}
+	}
+
+	return out
+}
+
+// createShortInPlatform creates a mediaitem, and a short in the VOD platform
+//
+// It also adds:
+// - a poster image to the item
+// - tags to the mediaitem
 func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage *directus.StyledImage) error {
 
 	// Create mediaitem
-	language := short.CSV.Language
+	language := short.Language
 	if language == "" {
 		language = "no"
 	}
@@ -283,13 +281,13 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 	assetID := strconv.Itoa(int(assetResult.ID))
 
 	var episodeID string
-	if short.CSV.EpisodeID == "" {
-		episodeID = short.CSV.EpisodeID
+	if short.EpisodeID == "" {
+		episodeID = short.EpisodeID
 	} else {
-		fmt.Printf("WARN: EpisodeID is empty for %s, %s\n", short.MBMetadata.ID, short.CSV.Label)
+		fmt.Printf("WARN: EpisodeID is empty for %s, %s\n", short.MBMetadata.ID, short.Label)
 	}
 
-	label := short.CSV.Label
+	label := short.Label
 	if label == "" {
 		label = short.MBMetadata.Get(vscommon.FieldTitle, "<NO TITLE>")
 	}
@@ -316,10 +314,10 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 
 	// some of the columns should be added as tags, e.g. "edification"
 	tagCodes := []string{
-		short.CSV.Source,
-		short.CSV.Purpose,
+		short.Source,
+		short.Purpose,
 	}
-	tagCodes = append(tagCodes, short.CSV.Type...)
+	tagCodes = append(tagCodes, short.Type...)
 
 	for _, raw := range tagCodes {
 		code := strings.ToLower(strings.TrimSpace(raw))
@@ -327,7 +325,11 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 			continue
 		}
 
-		tagId, err := GetOrCreateTag(ctx, code)
+		tag, err := wfutils.Execute(ctx, activities.Directus.GetOrCreateTag, activities.GetOrCreateTagInput{
+			Code: code,
+			Name: code,
+		}).Result(ctx)
+
 		if err != nil {
 			return err
 		}
@@ -335,13 +337,13 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 		// Create relationship between media item and tag
 		_, err = wfutils.Execute(ctx, activities.Directus.CreateMediaItemTag, activities.CreateMediaItemTagInput{
 			MediaItemID: mediaItemResult.ID,
-			TagID:       tagId,
+			TagID:       tag.ID,
 		}).Result(ctx)
 		if err != nil {
 			workflow.GetLogger(ctx).Error("Error creating media item tag relationship",
 				"error", err,
 				"mediaItemID", mediaItemResult.ID,
-				"tagId", tagId,
+				"tagId", tag.ID,
 			)
 		}
 	}
@@ -363,34 +365,20 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 	return nil
 }
 
-// GetOrCreateTag checks if a tag exists with the given code, creates it if it doesn't exist, and returns its ID
-func GetOrCreateTag(ctx workflow.Context, code string) (string, error) {
-	res, err := wfutils.Execute(ctx, activities.Directus.GetOrCreateTag, activities.GetOrCreateTagInput{
-		Code: code,
-		Name: code,
-	}).Result(ctx)
-
-	if err != nil {
-		return "", err
-	}
-
-	return res.ID, nil
-}
-
 func getInOutTime(short *ShortsData) (*int64, *int64, error) {
 	var parentStartsAt *int64
 	var parentEndsAt *int64
 
-	if strings.TrimSpace(short.CSV.InHm) != "" {
-		inNum, err := convertToSeconds(short.CSV.InHm)
+	if strings.TrimSpace(short.InHm) != "" {
+		inNum, err := convertToSeconds(short.InHm)
 		parentStartsAt = inNum
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
-	if strings.TrimSpace(short.CSV.OutHm) != "" {
-		n, err := convertToSeconds(short.CSV.OutHm)
+	if strings.TrimSpace(short.OutHm) != "" {
+		n, err := convertToSeconds(short.OutHm)
 		parentEndsAt = n
 		if err != nil {
 			return nil, nil, err
@@ -398,7 +386,7 @@ func getInOutTime(short *ShortsData) (*int64, *int64, error) {
 	}
 
 	if parentStartsAt != nil && parentEndsAt != nil && *parentStartsAt > *parentEndsAt {
-		fmt.Printf("ERROR: csvRow InNum is greater than OutNum. Skipping %s, %s\n", short.MBMetadata.ID, short.CSV.Label)
+		fmt.Printf("WARNING: In > Out for %s, %s\n", short.MBMetadata.ID, short.Label)
 		return nil, nil, nil
 	}
 	if parentStartsAt == nil || parentEndsAt == nil {
@@ -406,7 +394,7 @@ func getInOutTime(short *ShortsData) (*int64, *int64, error) {
 		*parentStartsAt = int64(0)
 		parentEndsAt = new(int64)
 		*parentEndsAt = int64(0)
-		fmt.Printf("WARNING: In/Out was not found for %s, %s\n", short.MBMetadata.ID, short.CSV.Label)
+		fmt.Printf("WARNING: In/Out was not found for %s, %s\n", short.MBMetadata.ID, short.Label)
 		//return nil
 	}
 	return parentStartsAt, parentEndsAt, nil
@@ -482,13 +470,4 @@ func generateThumbnailForShort(ctx workflow.Context, destFolder paths.Path, shor
 
 	err = wfutils.Execute(ctx, activities.Video.ExecuteFFmpeg, activities.ExecuteFFmpegInput{Arguments: ffmpegArgs}).Wait(ctx)
 	return outputFilePath, err
-}
-
-// ParseShortsCsvRows parses ShortsCsvRow from CSV data
-func ParseShortsCsvRows(csvData []byte) ([]*ShortsCsvRow, error) {
-	csvRows := []*ShortsCsvRow{}
-	if err := gocsv.UnmarshalBytes(csvData, &csvRows); err != nil {
-		return nil, err
-	}
-	return csvRows, nil
 }

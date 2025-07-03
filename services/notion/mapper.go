@@ -106,14 +106,14 @@ func mapNotionRowToStruct[T any](data map[string]interface{}) (*T, error) {
 }
 
 // NotionToStruct maps a slice of Notion rows to a slice of structs using `notion` tags
-func NotionToStruct[T any](rows []map[string]interface{}) ([]T, error) {
-	result := make([]T, 0, len(rows))
+func NotionToStruct[T any](rows []map[string]interface{}) ([]*T, error) {
+	result := make([]*T, 0, len(rows))
 	for _, row := range rows {
 		item, err := mapNotionRowToStruct[T](row)
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, *item)
+		result = append(result, item)
 	}
 	return result, nil
 }

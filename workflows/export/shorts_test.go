@@ -20,16 +20,8 @@ func createMetadataResult(id, title string) *vsapi.MetadataResult {
 	}
 }
 
-func createCSVRow(label, editorialStatus string) *ShortsCsvRow {
-	return &ShortsCsvRow{
-		Label:           label,
-		EditorialStatus: editorialStatus,
-		Status:          "", // Default empty status
-	}
-}
-
-func createCSVRowWithStatus(label, editorialStatus, status string) *ShortsCsvRow {
-	return &ShortsCsvRow{
+func createRow(label, editorialStatus, status string) *ShortsData {
+	return &ShortsData{
 		Label:           label,
 		EditorialStatus: editorialStatus,
 		Status:          status,
@@ -39,7 +31,7 @@ func createCSVRowWithStatus(label, editorialStatus, status string) *ShortsCsvRow
 func TestMapAndFilterShortsData(t *testing.T) {
 	tests := []struct {
 		name          string
-		csvRows       []*ShortsCsvRow
+		data          []*ShortsData
 		mbItems       []*vsapi.MetadataResult
 		expectedLen   int
 		expectedIDs   []string
@@ -48,10 +40,10 @@ func TestMapAndFilterShortsData(t *testing.T) {
 	}{
 		{
 			name: "basic matching",
-			csvRows: []*ShortsCsvRow{
-				createCSVRow("test1", "Ready in MB"),
-				createCSVRow("test2", "Ready in MB"),
-				createCSVRow("test3", "Not Ready"),
+			data: []*ShortsData{
+				createRow("test1", "Ready in MB", ""),
+				createRow("test2", "Ready in MB", ""),
+				createRow("test3", "Not Ready", ""),
 			},
 			mbItems: []*vsapi.MetadataResult{
 				createMetadataResult("id1", "test1"),
@@ -65,8 +57,8 @@ func TestMapAndFilterShortsData(t *testing.T) {
 		},
 		{
 			name: "no matches",
-			csvRows: []*ShortsCsvRow{
-				createCSVRow("test1", "Ready in MB"),
+			data: []*ShortsData{
+				createRow("test1", "Ready in MB", ""),
 			},
 			mbItems: []*vsapi.MetadataResult{
 				createMetadataResult("id1", "different"),
@@ -78,7 +70,7 @@ func TestMapAndFilterShortsData(t *testing.T) {
 		},
 		{
 			name:          "empty inputs",
-			csvRows:       []*ShortsCsvRow{},
+			data:          []*ShortsData{},
 			mbItems:       []*vsapi.MetadataResult{},
 			expectedLen:   0,
 			expectedIDs:   []string{},
@@ -87,8 +79,8 @@ func TestMapAndFilterShortsData(t *testing.T) {
 		},
 		{
 			name: "title with dot suffix",
-			csvRows: []*ShortsCsvRow{
-				createCSVRow("test1", "Ready in MB"),
+			data: []*ShortsData{
+				createRow("test1", "Ready in MB", ""),
 			},
 			mbItems: []*vsapi.MetadataResult{
 				createMetadataResult("id1", "test1.suffix"),
@@ -100,9 +92,9 @@ func TestMapAndFilterShortsData(t *testing.T) {
 		},
 		{
 			name: "filter out done status",
-			csvRows: []*ShortsCsvRow{
-				createCSVRowWithStatus("test1", "Ready in MB", "Done"),
-				createCSVRowWithStatus("test2", "Ready in MB", "In Progress"),
+			data: []*ShortsData{
+				createRow("test1", "Ready in MB", "Done"),
+				createRow("test2", "Ready in MB", "In Progress"),
 			},
 			mbItems: []*vsapi.MetadataResult{
 				createMetadataResult("id1", "test1"),
@@ -115,8 +107,8 @@ func TestMapAndFilterShortsData(t *testing.T) {
 		},
 		{
 			name: "empty status is allowed",
-			csvRows: []*ShortsCsvRow{
-				createCSVRowWithStatus("test1", "Ready in MB", ""),
+			data: []*ShortsData{
+				createRow("test1", "Ready in MB", ""),
 			},
 			mbItems: []*vsapi.MetadataResult{
 				createMetadataResult("id1", "test1"),
@@ -130,7 +122,7 @@ func TestMapAndFilterShortsData(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := MapAndFilterShortsData(tt.csvRows, tt.mbItems)
+			result := mapAndFilterShortsData(tt.data, tt.mbItems)
 
 			if tt.expectNoError {
 				require.Len(t, result, tt.expectedLen, "unexpected result length")
@@ -141,7 +133,7 @@ func TestMapAndFilterShortsData(t *testing.T) {
 
 				for _, item := range result {
 					resultIDs = append(resultIDs, item.MBMetadata.ID)
-					resultLabels = append(resultLabels, item.CSV.Label)
+					resultLabels = append(resultLabels, item.Label)
 				}
 
 				assert.ElementsMatch(t, tt.expectedIDs, resultIDs, "unexpected IDs in result")
