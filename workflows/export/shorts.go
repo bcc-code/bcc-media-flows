@@ -146,7 +146,7 @@ func ExportShort(ctx workflow.Context, short *ShortsData) error {
 		return fmt.Errorf("failed to generate thumbnail: %w", err)
 	}
 
-	_, styledImage, err := uploadImage(ctx, true, "poster", thumb)
+	_, styledImage, err := uploadImage(ctx, activities.Directus.ShortsFolderID, true, "poster", thumb)
 	if err != nil {
 		return fmt.Errorf("failed to upload thumbnail: %w", err)
 	}
@@ -432,12 +432,16 @@ func convertToSeconds(timeStr string) (*int64, error) {
 	return &totalSeconds, nil
 }
 
-func uploadImage(ctx workflow.Context, createStyledImages bool, imageStyle string, image paths.Path) (*directus.File, *directus.StyledImage, error) {
+func uploadImage(ctx workflow.Context, directusFolderID string, createStyledImages bool, imageStyle string, image paths.Path) (*directus.File, *directus.StyledImage, error) {
 	if !strings.HasSuffix(image.Ext(), ".jpg") {
 		return nil, nil, fmt.Errorf("invalid image extension: %s", image.Ext())
 	}
 
-	res, err := wfutils.Execute(ctx, activities.Directus.UploadFile, image.Local()).Result(ctx)
+	res, err := wfutils.Execute(ctx, activities.Directus.UploadFile,
+		activities.UploadFileInput{
+			DirectusFolderID: directusFolderID,
+			File:             image.Local(),
+		}).Result(ctx)
 
 	if err != nil {
 		return nil, nil, err

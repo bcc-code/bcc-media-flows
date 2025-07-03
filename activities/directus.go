@@ -9,7 +9,8 @@ import (
 var Directus *DirectusActivities
 
 type DirectusActivities struct {
-	Client *directus.Client
+	Client         *directus.Client
+	ShortsFolderID string
 }
 
 type CreateTagInput struct {
@@ -45,23 +46,26 @@ type CreateStyledImageInput struct {
 
 type GetOrCreateTagInput struct {
 	Code string
-	Name string // optional, fallback to Code
+	Name string
+}
+
+type UploadFileInput struct {
+	File             string
+	DirectusFolderID string
 }
 
 func (a *DirectusActivities) CheckDirectusAssetExists(ctx context.Context, mediabankenID string) (bool, error) {
 	return a.Client.AssetExists(mediabankenID)
 }
 
-func (a *DirectusActivities) UploadFile(ctx context.Context, file string) (*directus.File, error) {
-	return a.Client.UploadFile(file)
+func (a *DirectusActivities) UploadFile(ctx context.Context, args UploadFileInput) (*directus.File, error) {
+	return a.Client.UploadFile(args.DirectusFolderID, args.File)
 }
 
-// CreateStyledImage creates a styled image in Directus
 func (a *DirectusActivities) CreateStyledImage(ctx context.Context, input CreateStyledImageInput) (*directus.StyledImage, error) {
 	return a.Client.CreateStyledImage(input.ImageID, input.Style)
 }
 
-// GetAssetByMediabankenID retrieves an asset by its mediabanken_id
 func (a *DirectusActivities) GetAssetByMediabankenID(ctx context.Context, mediabankenID string) (*directus.Asset, error) {
 	asset, err := a.Client.GetAssetByMediabankenID(mediabankenID)
 	if err != nil {
@@ -70,7 +74,6 @@ func (a *DirectusActivities) GetAssetByMediabankenID(ctx context.Context, mediab
 	return asset, nil
 }
 
-// CreateMediaItem creates a new media item in Directus
 func (a *DirectusActivities) CreateMediaItem(ctx context.Context, input CreateMediaItemInput) (*directus.MediaItem, error) {
 	mediaItem, err := a.Client.CreateMediaItem(directus.MediaItemCreate{
 		Label:           input.Label,
@@ -99,7 +102,6 @@ func (a *DirectusActivities) CreateMediaItem(ctx context.Context, input CreateMe
 	return mediaItem, nil
 }
 
-// GetTagByCode finds a tag by its code
 func (a *DirectusActivities) GetTagByCode(ctx context.Context, input string) (*directus.Tag, error) {
 	tag, err := a.Client.GetTagByCode(input)
 	if err != nil {
@@ -117,7 +119,6 @@ func (a *DirectusActivities) CreateMediaItemTag(ctx context.Context, input Creat
 	return mediaItemTag, nil
 }
 
-// CreateTag creates a new tag in Directus
 func (a *DirectusActivities) CreateTag(ctx context.Context, input CreateTagInput) (*directus.Tag, error) {
 	tag, err := a.Client.CreateTag(input.Code, input.Name)
 	if err != nil {
@@ -126,7 +127,6 @@ func (a *DirectusActivities) CreateTag(ctx context.Context, input CreateTagInput
 	return tag, nil
 }
 
-// GetOrCreateTag checks if a tag exists with the given code, creates it if it doesn't exist, and returns its ID
 func (a *DirectusActivities) GetOrCreateTag(ctx context.Context, input GetOrCreateTagInput) (*directus.Tag, error) {
 	// Try to get the tag by code
 	tagResult, err := a.GetTagByCode(ctx, input.Code)

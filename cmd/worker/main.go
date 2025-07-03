@@ -140,7 +140,10 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 	directusBaseURL := os.Getenv("DIRECTUS_BASE_URL")
 	directusAPIKey := os.Getenv("DIRECTUS_API_KEY")
 	directusClient := directus.NewClient(directusBaseURL, directusAPIKey)
-	activities.Directus = &activities.DirectusActivities{Client: directusClient}
+	activities.Directus = &activities.DirectusActivities{
+		Client:         directusClient,
+		ShortsFolderID: os.Getenv("DIRECTUS_SHORTS_FOLDER_ID"),
+	}
 
 	notionAPIKey := os.Getenv("NOTION_API_KEY")
 	notionClient, err := notion.NewClient(notionAPIKey)

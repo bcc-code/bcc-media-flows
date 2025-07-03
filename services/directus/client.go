@@ -387,7 +387,6 @@ func (c *Client) GetTagByCode(code string) (*Tag, error) {
 	return &result.Data[0], nil
 }
 
-// CreateTag creates a new tag in Directus
 // CreateMediaItemTag creates a relationship between a media item and a tag
 func (c *Client) CreateMediaItemTag(mediaItemID, tagID string) (*MediaItemTag, error) {
 	endpoint := fmt.Sprintf("%s/items/mediaitems_tags", c.BaseURL)
@@ -443,7 +442,7 @@ func (c *Client) CreateTag(code, name string) (*Tag, error) {
 	return &result.Data, nil
 }
 
-func (c *Client) UploadFile(filePath string) (*File, error) {
+func (c *Client) UploadFile(directusFolderID string, filePath string) (*File, error) {
 	fileBytes, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
@@ -459,7 +458,7 @@ func (c *Client) UploadFile(filePath string) (*File, error) {
 		SetFileReader("file", filename, bytes.NewReader(fileBytes)).
 		SetMultipartFormData(map[string]string{
 			"type":   "image/jpeg",
-			"folder": "4a8eb774-62ed-404d-9ab1-295797f6383f", /// TODO: get this from env config or from a call
+			"folder": directusFolderID,
 		}).
 		Post(fmt.Sprintf("%s/files", c.BaseURL))
 

@@ -23,13 +23,13 @@ type UpdateAssetStatusArgs struct {
 }
 
 // QueryDatabase queries a database in Notion
-//
-// Filtering is not implemented yet
 func (a *NotionActivities) QueryDatabase(ctx context.Context, args QueryDatabaseArgs) ([]map[string]interface{}, error) {
 	return a.Client.QueryDatabase(args.DatabaseID, args.Filter)
 }
 
 // UpdateAssetStatus updates the "Asset Status" property for a Notion page (row)
+//
+// This is very specific to the Shorts export workflow, and should not be used for any other purpose
 func (a *NotionActivities) UpdateAssetStatus(ctx context.Context, args UpdateAssetStatusArgs) (any, error) {
 	return nil, a.Client.UpdateAssetStatus(args.RowID, args.Status)
 }

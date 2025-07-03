@@ -39,7 +39,6 @@ func mapNotionRowToStruct[T any](data map[string]interface{}) (*T, error) {
 
 		switch field.Type.Kind() {
 		case reflect.String:
-			// Use the Notion "title" property for string fields if present, otherwise fallback to rich_text or plain string
 			titles, ok := prop["title"].([]interface{})
 			if ok && len(titles) > 0 {
 				title, ok := titles[0].(map[string]interface{})
