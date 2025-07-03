@@ -69,7 +69,7 @@ func (c *Client) UpdateAssetStatus(rowId string, status string) error {
 	url := "https://api.notion.com/v1/pages/" + rowId
 	payload := map[string]interface{}{
 		"properties": map[string]interface{}{
-			"Asset Status": map[string]interface{}{
+			"Asset status": map[string]interface{}{
 				"status": map[string]interface{}{
 					"name": status,
 				},
