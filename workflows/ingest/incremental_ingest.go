@@ -196,6 +196,9 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	// Initialize slice to store transfer samples
 	samples := []transferSample{}
 
+	// alertState tracks whether we are currently in alert mode
+	alert := &alertState{}
+
 	// Keep copying the file until we receive a signal or the copy process completes naturally
 	maxCopyAttempts := 1000 // Limit total number of attempts
 
@@ -217,7 +220,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 			// Use the function to calculate rate and prune samples
 			rate, pruned := CalculateRollingTransferRate(samples, workflow.Now(ctx), windowDuration)
 			samples = pruned
-			checkTransferRateAndAlert(ctx, rate)
+			checkTransferRateAndAlert(ctx, rate, pruned, alert)
 		}
 
 		if !signalReceived {
@@ -305,6 +308,11 @@ const (
 	minTransferRate = 1.0 // Mbps
 )
 
+// alertState tracks whether we are currently in alert mode
+type alertState struct {
+	InAlert bool
+}
+
 // CalculateRollingTransferRate returns the transfer rate (Mbps) over the last window, always using at least 4 samples if available.
 // It also returns the pruned sample slice for efficient memory usage.
 func CalculateRollingTransferRate(samples []transferSample, now time.Time, window time.Duration) (rate float64, pruned []transferSample) {
@@ -331,13 +339,23 @@ func CalculateRollingTransferRate(samples []transferSample, now time.Time, windo
 	return float64(deltaBytes) * 8 / deltaSecs / 1_000_000, pruned
 }
 
-// Accepts the transfer rate as argument for easier testing
-func checkTransferRateAndAlert(ctx workflow.Context, rateMbps float64) {
+// checkTransferRateAndAlert manages alert state and sends recovery/alert messages
+func checkTransferRateAndAlert(ctx workflow.Context, rateMbps float64, pruned []transferSample, state *alertState) {
 	logger := workflow.GetLogger(ctx)
-	logger.Info("Rolling transfer rate", "rateMbps", rateMbps)
+	logger.Info("Rolling transfer rate", "rateMbps", rateMbps, "inAlert", state.InAlert)
+	if len(pruned) < 2 {
+		return
+	}
+	first, last := pruned[0], pruned[len(pruned)-1]
+	actualWindow := last.time.Sub(first.time)
 	if rateMbps < minTransferRate {
-		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟥 ALERT: Ingest transfer rate below %.2f Mbps (%.2f Mbps) for at least %v", minTransferRate, rateMbps, windowDuration))
+		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟥 ALERT: Ingest transfer rate below %.2f Mbps (%.2f Mbps) for at least %v", minTransferRate, rateMbps, actualWindow))
+		state.InAlert = true
 	} else {
-		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟩 Ingest transfer rate above %.2f Mbps (%.2f Mbps) for at least %v", minTransferRate, rateMbps, windowDuration))
+		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟩 STATUS: Ingest transfer rate above %.2f Mbps (%.2f Mbps) for at least %v", minTransferRate, rateMbps, actualWindow))
+		if state.InAlert {
+			wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟩 RECOVERY: Ingest transfer rate above %.2f Mbps (%.2f Mbps) for at least %v", minTransferRate, rateMbps, actualWindow))
+			state.InAlert = false
+		}
 	}
 }
