@@ -201,6 +201,7 @@ func triggerShortExport(ctx workflow.Context, short *ShortsData) error {
 		WatermarkPath: watermarkPath,
 		Resolutions:   resolutions,
 		AudioSource:   "embedded",
+		Languages:     []string{short.Language},
 	})
 
 	return wf.Get(ctx, nil)
