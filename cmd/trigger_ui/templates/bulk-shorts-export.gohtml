@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Bulk Shorts Export</title>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center">
+    <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+        <h2 class="text-2xl font-bold mb-6">Bulk Shorts Export</h2>
+        {{if .Error}}
+        <div class="bg-red-100 text-red-700 px-4 py-2 rounded mb-4">{{.Error}}</div>
+        {{end}}
+        {{if .Success}}
+        <div class="bg-green-100 text-green-700 px-4 py-2 rounded mb-4">Bulk Shorts Export triggered successfully!</div>
+        {{end}}
+        <form method="POST" autocomplete="off" id="bulkExportForm">
+            <div class="mb-4">
+                <label class="block mb-2 font-semibold" for="collectionVXID">Collection VXID</label>
+                <input class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" type="text" name="collectionVXID" id="collectionVXID" placeholder="VX-123456" value="{{.Entered}}" required>
+                <p id="vxidError" class="text-red-600 text-sm mt-2 hidden">Collection VXID must be in format VX-&#60;NUMBERS&#62;.</p>
+            </div>
+            <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded flex items-center justify-center">
+                <span id="submitText">Trigger Export</span>
+                <svg id="loadingSpinner" class="animate-spin ml-2 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+            </button>
+        </form>
+    </div>
+    <script>
+        const form = document.getElementById('bulkExportForm');
+        const vxidInput = document.getElementById('collectionVXID');
+        const vxidError = document.getElementById('vxidError');
+        const submitBtn = document.getElementById('submitBtn');
+        const submitText = document.getElementById('submitText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        form.addEventListener('submit', function(e) {
+            let vxid = vxidInput.value.replace(/\s+/g, '');
+            vxidInput.value = vxid;
+            if (!/^VX-\d+$/.test(vxid)) {
+                vxidError.classList.remove('hidden');
+                e.preventDefault();
+            } else {
+                vxidError.classList.add('hidden');
+                // Disable UI and show loading
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                submitText.textContent = 'Submitting...';
+                loadingSpinner.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

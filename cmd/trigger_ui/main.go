@@ -436,6 +436,14 @@ func main() {
 		GET("/sync", server.ingestSyncFixGET).
 		POST("/sync", server.ingestSyncFixPOST)
 
+	router.Group("/bulk-shorts-export").
+		GET("/", server.bulkShortsExportGET).
+		POST("/", server.bulkShortsExportPOST)
+
+	router.GET("/", func(ctx *gin.Context) {
+		ctx.HTML(http.StatusOK, "index.gohtml", nil)
+	})
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8083"
