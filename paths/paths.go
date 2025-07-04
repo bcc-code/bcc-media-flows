@@ -3,6 +3,7 @@ package paths
 import (
 	"encoding/json"
 	"go.temporal.io/sdk/temporal"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -195,6 +196,10 @@ func (p Path) SetExt(newExt string) Path {
 	newExt = "." + strings.TrimPrefix(newExt, ".")
 	p.Path = strings.TrimSuffix(p.Path, filepath.Ext(p.Path)) + newExt
 	return p
+}
+
+func (p Path) Stat() (os.FileInfo, error) {
+	return os.Stat(p.Local())
 }
 
 type prefix struct {

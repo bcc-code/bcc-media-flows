@@ -13,7 +13,9 @@ type RsyncIncrementalCopyInput struct {
 	Out paths.Path
 }
 
-type RsyncIncrementalCopyResult struct{}
+type RsyncIncrementalCopyResult struct {
+	Size int64
+}
 
 func (l LiveActivities) RsyncIncrementalCopy(ctx context.Context, input RsyncIncrementalCopyInput) (*RsyncIncrementalCopyResult, error) {
 	logger := activity.GetLogger(ctx)
@@ -27,5 +29,12 @@ func (l LiveActivities) RsyncIncrementalCopy(ctx context.Context, input RsyncInc
 		return nil, err
 	}
 
-	return &RsyncIncrementalCopyResult{}, nil
+	// Stat the destination file to get its size
+	fileInfo, statErr := input.Out.Stat()
+	if statErr != nil {
+		logger.Error("Failed to stat destination file after copy", "error", statErr)
+		return &RsyncIncrementalCopyResult{Size: 0}, nil
+	}
+
+	return &RsyncIncrementalCopyResult{Size: fileInfo.Size()}, nil
 }

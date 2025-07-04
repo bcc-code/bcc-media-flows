@@ -17,6 +17,12 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
+// Sample holds a timestamp and bytes transferred
+type transferSample struct {
+	time  time.Time
+	bytes int64
+}
+
 type IncrementalParams struct {
 	Path string
 }
@@ -187,6 +193,9 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 		}
 	})
 
+	// Initialize slice to store transfer samples
+	samples := []transferSample{}
+
 	// Keep copying the file until we receive a signal or the copy process completes naturally
 	maxCopyAttempts := 1000 // Limit total number of attempts
 
@@ -198,19 +207,25 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 			Out: rawPath,
 		})
 
-		err := copyFuture.Wait(ctx)
+		copyResult, err := copyFuture.Result(ctx)
 		if err != nil {
 			logger.Error("Copy operation failed", "error", err)
 		} else {
-			logger.Info("Copy operation completed successfully")
+			sample := transferSample{time: workflow.Now(ctx), bytes: copyResult.Size}
+			samples = append(samples, sample)
 
-			if !signalReceived {
-				logger.Info("Sleeping for 1 minute before next copy attempt")
-				_ = workflow.Sleep(ctx, time.Minute)
-			} else {
-				logger.Info("Received signal, breaking out of copy loop")
-				break
-			}
+			// Use the function to calculate rate and prune samples
+			rate, pruned := CalculateRollingTransferRate(samples, workflow.Now(ctx), windowDuration)
+			samples = pruned
+			checkTransferRateAndAlert(ctx, rate)
+		}
+
+		if !signalReceived {
+			logger.Info("Sleeping for 1 minute before next copy attempt")
+			_ = workflow.Sleep(ctx, time.Minute)
+		} else {
+			logger.Info("Received signal, breaking out of copy loop")
+			break
 		}
 	}
 
@@ -283,4 +298,46 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	}
 
 	return nil
+}
+
+const (
+	windowDuration  = time.Duration(5) * time.Minute
+	minTransferRate = 1.0 // Mbps
+)
+
+// CalculateRollingTransferRate returns the transfer rate (Mbps) over the last window, always using at least 4 samples if available.
+// It also returns the pruned sample slice for efficient memory usage.
+func CalculateRollingTransferRate(samples []transferSample, now time.Time, window time.Duration) (rate float64, pruned []transferSample) {
+	// Prune samples to only keep those within the window, or the last 4 if fewer
+	pruned = samples[:0]
+	cutoff := now.Add(-window)
+	for _, s := range samples {
+		if s.time.After(cutoff) {
+			pruned = append(pruned, s)
+		}
+	}
+	if len(pruned) < 4 && len(samples) >= 4 {
+		pruned = samples[len(samples)-4:]
+	}
+	if len(pruned) < 2 {
+		return 0, pruned
+	}
+	first, last := pruned[0], pruned[len(pruned)-1]
+	deltaBytes := last.bytes - first.bytes
+	deltaSecs := last.time.Sub(first.time).Seconds()
+	if deltaSecs <= 0 {
+		return 0, pruned
+	}
+	return float64(deltaBytes) * 8 / deltaSecs / 1_000_000, pruned
+}
+
+// Accepts the transfer rate as argument for easier testing
+func checkTransferRateAndAlert(ctx workflow.Context, rateMbps float64) {
+	logger := workflow.GetLogger(ctx)
+	logger.Info("Rolling transfer rate", "rateMbps", rateMbps)
+	if rateMbps < minTransferRate {
+		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟥 ALERT: Ingest transfer rate below %.2f Mbps (%.2f Mbps) for at least %v", minTransferRate, rateMbps, windowDuration))
+	} else {
+		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟩 Ingest transfer rate above %.2f Mbps (%.2f Mbps) for at least %v", minTransferRate, rateMbps, windowDuration))
+	}
 }
