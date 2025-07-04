@@ -238,6 +238,8 @@ func mapAndFilterShortsData(shorts []*ShortsData, mbItems []*vsapi.MetadataResul
 
 		if item, ok := mbItemMap[short.Label]; ok {
 
+			short.Language = strings.ToLower(short.Language)
+
 			if short.Language == "" {
 				short.Language = "nor"
 			}
