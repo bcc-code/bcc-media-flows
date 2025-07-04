@@ -2,19 +2,15 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
-	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
-	"github.com/bcc-code/bcc-media-flows/workflows/export"
 	"github.com/gin-gonic/gin"
-	"go.temporal.io/api/history/v1"
-	"go.temporal.io/api/workflowservice/v1"
+	workflowservice "go.temporal.io/api/workflowservice/v1"
+	common "go.temporal.io/api/common/v1"
 )
 
 type WorkflowListParams struct {
@@ -30,21 +26,7 @@ type WorkflowDetails struct {
 	Start      string
 }
 
-// Helper function to convert Windows file paths to Linux paths
-func convertWindowsPath(windowsPath string) string {
-	// Replace backslashes with forward slashes
-	path := strings.ReplaceAll(windowsPath, "\\", "/")
-
-	// Remove drive letter if present (e.g., E:)
-	if len(path) > 2 && path[1] == ':' {
-		path = path[2:]
-	}
-
-	return path
-}
-
 func (s *TriggerServer) fileCatalystWebhookHandler(ctx *gin.Context) {
-	// Extract form parameters from FileCatalyst webhook
 	file := ctx.PostForm("f")            // Remote file path
 	localFile := ctx.PostForm("lf")      // Local file path
 	status := ctx.PostForm("status")     // Status code (1 for success)
@@ -52,9 +34,7 @@ func (s *TriggerServer) fileCatalystWebhookHandler(ctx *gin.Context) {
 
 	// Basic validation
 	if file == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "Missing required parameter 'f' (file path)",
-		})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Missing file parameter"})
 		return
 	}
 
@@ -65,8 +45,8 @@ func (s *TriggerServer) fileCatalystWebhookHandler(ctx *gin.Context) {
 	// Only proceed if the transfer was successful (status=1)
 	if status != "1" {
 		ctx.JSON(http.StatusOK, gin.H{
-			"message": "Transfer not successful, no signal sent",
-			"status":  status,
+			"message":  "Transfer not successful, signal not sent",
+			"filename": file,
 		})
 		return
 	}
@@ -96,6 +76,19 @@ func (s *TriggerServer) fileCatalystWebhookHandler(ctx *gin.Context) {
 	})
 }
 
+// Helper function to convert Windows file paths to Linux paths
+func convertWindowsPath(windowsPath string) string {
+	// Replace backslashes with forward slashes
+	path := strings.ReplaceAll(windowsPath, "\\", "/")
+
+	// Remove drive letter if present (e.g., E:)
+	if len(path) > 2 && path[1] == ':' {
+		path = path[2:]
+	}
+
+	return path
+}
+
 func (s *TriggerServer) listGET(ctx *gin.Context) {
 	var workflowList []WorkflowDetails
 
@@ -109,7 +102,7 @@ func (s *TriggerServer) listGET(ctx *gin.Context) {
 
 	for _, exec := range workflows.Executions {
 		workflowList = append(workflowList, WorkflowDetails{
-			VxID:       "", // VXID can be filled if available in SearchAttributes or Memo
+			VxID:       "", 
 			Name:       exec.Type.GetName(),
 			Status:     exec.GetStatus().String(),
 			WorkflowID: exec.Execution.GetWorkflowId(),
