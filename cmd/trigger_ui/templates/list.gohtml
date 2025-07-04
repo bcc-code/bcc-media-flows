@@ -36,6 +36,9 @@
                                 <th class="px-5 py-3">
                                     Status
                                 </th>
+                                <th class="px-5 py-3">
+                                    Details
+                                </th>
                             </tr>
                         </thead>
 
@@ -66,6 +69,9 @@
                                     </span>
                                     {{end}}
                                     {{end}}
+                                </td>
+                                <td class="p-5">
+                                    <a href="/workflow/{{ $element.WorkflowID }}" class="text-blue-600 hover:underline">Details</a>
                                 </td>
                             </tr>
                             {{end}}

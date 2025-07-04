@@ -100,55 +100,21 @@ func (s *TriggerServer) listGET(ctx *gin.Context) {
 	var workflowList []WorkflowDetails
 
 	workflows, err := s.wfClient.ListWorkflow(ctx, &workflowservice.ListWorkflowExecutionsRequest{
-		Query: "WorkflowType = 'VXExport'",
+		Query: "",
 	})
 	if err != nil {
 		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	for i := 0; i < len(workflows.Executions); i++ {
-		res, err := s.wfClient.WorkflowService().GetWorkflowExecutionHistory(ctx, &workflowservice.GetWorkflowExecutionHistoryRequest{
-			Execution: workflows.Executions[i].GetExecution(),
-			Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
-		})
-
-		if err != nil {
-			renderErrorPage(ctx, http.StatusInternalServerError, err)
-			return
-		}
-		attributes, ok := res.History.Events[0].Attributes.(*history.HistoryEvent_WorkflowExecutionStartedEventAttributes)
-		if !ok {
-			renderErrorPage(ctx, 500, errors.New("unexpected attribute type on first workflow event. Was not HistoryEvent_WorkflowExecutionStartedEventAttributes"))
-			break
-		}
-
-		data := export.VXExportParams{}
-		err = json.Unmarshal(attributes.WorkflowExecutionStartedEventAttributes.Input.Payloads[0].Data, &data)
-
-		if err != nil {
-			renderErrorPage(ctx, http.StatusInternalServerError, err)
-			return
-		}
-
-		meta, err := s.vidispine.GetMetadata(data.VXID)
-		if err != nil {
-			renderErrorPage(ctx, http.StatusInternalServerError, err)
-			return
-		}
-		name := meta.Get(vscommon.FieldTitle, "")
-
-		loc, _ := time.LoadLocation("Europe/Oslo")
-		startTime := workflows.Executions[i].StartTime.AsTime().In(loc).Format("Mon, 02 Jan 2006 15:04:05 MST")
-
+	for _, exec := range workflows.Executions {
 		workflowList = append(workflowList, WorkflowDetails{
-			VxID:       data.VXID,
-			Name:       name,
-			Status:     workflows.Executions[i].GetStatus().String(),
-			WorkflowID: workflows.Executions[i].Execution.WorkflowId,
-			Start:      startTime,
+			VxID:       "", // VXID can be filled if available in SearchAttributes or Memo
+			Name:       exec.Type.GetName(),
+			Status:     exec.GetStatus().String(),
+			WorkflowID: exec.Execution.GetWorkflowId(),
+			Start:      exec.GetStartTime().AsTime().Format("2006-01-02 15:04:05"),
 		})
-
 	}
 
 	workflowStatuses := map[string]string{
@@ -163,5 +129,60 @@ func (s *TriggerServer) listGET(ctx *gin.Context) {
 	ctx.HTML(http.StatusOK, "list.gohtml", WorkflowListParams{
 		WorkflowList:     workflowList,
 		WorkflowStatuses: workflowStatuses,
+	})
+}
+
+func (s *TriggerServer) workflowDetailsGET(ctx *gin.Context) {
+	workflowID := ctx.Param("id")
+	namespace := os.Getenv("TEMPORAL_NAMESPACE")
+	resp, err := s.wfClient.WorkflowService().GetWorkflowExecutionHistory(ctx, &workflowservice.GetWorkflowExecutionHistoryRequest{
+		Execution: &common.WorkflowExecution{
+			WorkflowId: workflowID,
+		},
+		Namespace: namespace,
+	})
+	if err != nil {
+		ctx.HTML(http.StatusOK, "workflow-details.gohtml", gin.H{"Error": err.Error()})
+		return
+	}
+
+	// Extract status, start time, and type from history/events if possible
+	var status, start, wfType string
+	if len(resp.History.Events) > 0 {
+		for _, event := range resp.History.Events {
+			if event.GetEventType().String() == "EVENT_TYPE_WORKFLOW_EXECUTION_STARTED" {
+				start = event.GetEventTime().AsTime().Format("2006-01-02 15:04:05")
+				if attr := event.GetWorkflowExecutionStartedEventAttributes(); attr != nil {
+					wfType = attr.WorkflowType.GetName()
+				}
+			}
+			if event.GetEventType().String() == "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED" {
+				status = "Completed"
+			}
+			if event.GetEventType().String() == "EVENT_TYPE_WORKFLOW_EXECUTION_FAILED" {
+				status = "Failed"
+			}
+			if event.GetEventType().String() == "EVENT_TYPE_WORKFLOW_EXECUTION_CANCELED" {
+				status = "Canceled"
+			}
+			if event.GetEventType().String() == "EVENT_TYPE_WORKFLOW_EXECUTION_TERMINATED" {
+				status = "Terminated"
+			}
+			if event.GetEventType().String() == "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" {
+				status = "Timed out"
+			}
+		}
+	}
+	if status == "" {
+		status = "Running"
+	}
+
+	historyJson, _ := json.MarshalIndent(resp.History, "", "  ")
+	ctx.HTML(http.StatusOK, "workflow-details.gohtml", gin.H{
+		"WorkflowID": workflowID,
+		"Status":     status,
+		"Start":      start,
+		"Type":       wfType,
+		"History":    string(historyJson),
 	})
 }

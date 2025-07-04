@@ -440,6 +440,8 @@ func main() {
 		GET("/", server.bulkShortsExportGET).
 		POST("/", server.bulkShortsExportPOST)
 
+	router.GET("/workflow/:id", server.workflowDetailsGET)
+
 	router.GET("/", func(ctx *gin.Context) {
 		ctx.HTML(http.StatusOK, "index.gohtml", nil)
 	})
