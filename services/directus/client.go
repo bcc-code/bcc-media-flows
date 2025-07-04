@@ -319,30 +319,9 @@ func (c *Client) CreateMediaItem(mediaItem MediaItemCreate) (*MediaItem, error) 
 		Data MediaItem `json:"data"`
 	}{}
 
-	// Remove the Images field before sending to avoid the one-to-many update issue
-	type mediaItemCreatePayload struct {
-		Label           string `json:"label"`
-		Type            string `json:"type"`
-		AssetID         string `json:"asset_id"`
-		Title           string `json:"title"`
-		ParentEpisodeID string `json:"parent_episode_id,omitempty"`
-		ParentStartsAt  *int64 `json:"parent_starts_at,omitempty"`
-		ParentEndsAt    *int64 `json:"parent_ends_at,omitempty"`
-	}
-
-	payload := mediaItemCreatePayload{
-		Label:           mediaItem.Label,
-		Type:            mediaItem.Type,
-		AssetID:         mediaItem.AssetID,
-		Title:           mediaItem.Title,
-		ParentEpisodeID: mediaItem.ParentEpisodeID,
-		ParentStartsAt:  mediaItem.ParentStartsAt,
-		ParentEndsAt:    mediaItem.ParentEndsAt,
-	}
-
 	resp, err := c.client.R().
 		SetResult(result).
-		SetBody(payload).
+		SetBody(mediaItem).
 		Post(endpoint)
 
 	if err != nil {
@@ -353,21 +332,9 @@ func (c *Client) CreateMediaItem(mediaItem MediaItemCreate) (*MediaItem, error) 
 		return nil, fmt.Errorf("Directus API error: %s - %s", resp.Status(), string(resp.Body()))
 	}
 
-	mediaItemID := result.Data.ID
-	// Associate styled images if specified
-	for _, rel := range mediaItem.Images.Create {
-		if rel.StyledImagesID != "" {
-			err := c.CreateMediaItemStyledImage(mediaItemID, rel.StyledImagesID)
-			if err != nil {
-				return nil, fmt.Errorf("failed to associate styled image: %w", err)
-			}
-		}
-	}
-
 	return &result.Data, nil
 }
 
-// UploadFile uploads a file to Directus and returns the file information
 // GetTagByCode finds a tag by its code
 func (c *Client) GetTagByCode(code string) (*Tag, error) {
 	endpoint := fmt.Sprintf("%s/items/tags", c.BaseURL)
