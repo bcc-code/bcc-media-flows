@@ -28,6 +28,18 @@
             <span class="font-semibold">History:</span>
             <pre class="bg-gray-100 p-2 rounded overflow-x-auto text-xs">{{.History}}</pre>
         </div>
+        {{if .Children}}
+        <div class="mb-4">
+            <span class="font-semibold">Child Workflows:</span>
+            <ul class="list-disc ml-6">
+                {{range .Children}}
+                <li>
+                    <span class="font-mono">{{.WorkflowID}}</span> — <span>{{.Name}}</span> — <span class="font-semibold">{{.Status}}</span> — <span>{{.Start}}</span>
+                </li>
+                {{end}}
+            </ul>
+        </div>
+        {{end}}
         {{end}}
         <div class="mt-8 text-center">
             <a href="/list" class="text-blue-600 hover:underline">Back to Workflow List</a>

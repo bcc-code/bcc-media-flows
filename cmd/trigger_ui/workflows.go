@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	workflowservice "go.temporal.io/api/workflowservice/v1"
 	common "go.temporal.io/api/common/v1"
+	workflowservice "go.temporal.io/api/workflowservice/v1"
 )
 
 type WorkflowListParams struct {
@@ -101,8 +101,12 @@ func (s *TriggerServer) listGET(ctx *gin.Context) {
 	}
 
 	for _, exec := range workflows.Executions {
+		// Only include workflows with no parent (parentless)
+		if exec.ParentExecution != nil {
+			continue
+		}
 		workflowList = append(workflowList, WorkflowDetails{
-			VxID:       "", 
+			VxID:       "",
 			Name:       exec.Type.GetName(),
 			Status:     exec.GetStatus().String(),
 			WorkflowID: exec.Execution.GetWorkflowId(),
@@ -170,6 +174,23 @@ func (s *TriggerServer) workflowDetailsGET(ctx *gin.Context) {
 		status = "Running"
 	}
 
+	// Query for all workflows whose ParentExecution.WorkflowId == workflowID
+	childrenResp, err := s.wfClient.ListWorkflow(ctx, &workflowservice.ListWorkflowExecutionsRequest{
+		Query: fmt.Sprintf("ParentWorkflowId='%s'", workflowID),
+	})
+	var children []WorkflowDetails
+	if err == nil {
+		for _, child := range childrenResp.Executions {
+			children = append(children, WorkflowDetails{
+				VxID:       "",
+				Name:       child.Type.GetName(),
+				Status:     child.GetStatus().String(),
+				WorkflowID: child.Execution.GetWorkflowId(),
+				Start:      child.GetStartTime().AsTime().Format("2006-01-02 15:04:05"),
+			})
+		}
+	}
+
 	historyJson, _ := json.MarshalIndent(resp.History, "", "  ")
 	ctx.HTML(http.StatusOK, "workflow-details.gohtml", gin.H{
 		"WorkflowID": workflowID,
@@ -177,5 +198,6 @@ func (s *TriggerServer) workflowDetailsGET(ctx *gin.Context) {
 		"Start":      start,
 		"Type":       wfType,
 		"History":    string(historyJson),
+		"Children":   children,
 	})
 }
