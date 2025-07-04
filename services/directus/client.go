@@ -353,6 +353,17 @@ func (c *Client) CreateMediaItem(mediaItem MediaItemCreate) (*MediaItem, error) 
 		return nil, fmt.Errorf("Directus API error: %s - %s", resp.Status(), string(resp.Body()))
 	}
 
+	mediaItemID := result.Data.ID
+	// Associate styled images if specified
+	for _, rel := range mediaItem.Images.Create {
+		if rel.StyledImagesID != "" {
+			err := c.CreateMediaItemStyledImage(mediaItemID, rel.StyledImagesID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to associate styled image: %w", err)
+			}
+		}
+	}
+
 	return &result.Data, nil
 }
 
