@@ -304,8 +304,8 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 }
 
 const (
-	windowDuration  = time.Duration(5) * time.Minute
-	minTransferRate = 1.0 // Mbps
+	windowDuration  = time.Duration(3) * time.Minute
+	minTransferRate = 5.0 // Mbps
 )
 
 // alertState tracks whether we are currently in alert mode
@@ -351,11 +351,8 @@ func checkTransferRateAndAlert(ctx workflow.Context, rateMbps float64, pruned []
 	if rateMbps < minTransferRate {
 		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟥 ALERT: Ingest transfer rate below %.2f Mbps (%.2f Mbps) for at least %v", minTransferRate, rateMbps, actualWindow))
 		state.InAlert = true
-	} else {
-		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟩 STATUS: Ingest transfer rate above %.2f Mbps (%.2f Mbps) for at least %v", minTransferRate, rateMbps, actualWindow))
-		if state.InAlert {
-			wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟩 RECOVERY: Ingest transfer rate above %.2f Mbps (%.2f Mbps) for at least %v", minTransferRate, rateMbps, actualWindow))
-			state.InAlert = false
-		}
+	} else if state.InAlert {
+		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟩 RECOVERY: Ingest transfer rate above %.2f Mbps (%.2f Mbps) for at least %v", minTransferRate, rateMbps, actualWindow))
+		state.InAlert = false
 	}
 }
