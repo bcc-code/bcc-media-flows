@@ -3,6 +3,7 @@ package activities
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"github.com/bcc-code/bcc-media-flows/services/directus"
 )
 
@@ -74,13 +75,25 @@ func (a *DirectusActivities) GetAssetByMediabankenID(ctx context.Context, mediab
 	return asset, nil
 }
 
+// parseInt64Ptr converts a string to *int64, returns nil if empty or invalid
+func parseInt64Ptr(s string) *int64 {
+	if s == "" {
+		return nil
+	}
+	v, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return nil
+	}
+	return &v
+}
+
 func (a *DirectusActivities) CreateMediaItem(ctx context.Context, input CreateMediaItemInput) (*directus.MediaItem, error) {
 	mediaItem, err := a.Client.CreateMediaItem(directus.MediaItemCreate{
 		Label:           input.Label,
 		Type:            input.Type,
-		AssetID:         input.AssetID,
+		AssetID:         parseInt64Ptr(input.AssetID),
 		Title:           input.Title,
-		ParentEpisodeID: input.ParentEpisodeID,
+		ParentEpisodeID: parseInt64Ptr(input.ParentEpisodeID),
 		ParentStartsAt:  input.ParentStartsAt,
 		ParentEndsAt:    input.ParentEndsAt,
 		Images: directus.MediaItemStyledImageCRUD{

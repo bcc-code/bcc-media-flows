@@ -98,15 +98,19 @@ type MediaItem struct {
 }
 
 // MediaItemCreate is used when creating a new media item
+// Fields that are integers in the DB are now *int64 and omitempty
+// AssetID and ParentEpisodeID are *int64, not string
+// This prevents sending empty strings for integer fields
+//
 type MediaItemCreate struct {
 	Label           string                   `json:"label"`
 	Type            string                   `json:"type"`
-	AssetID         string                   `json:"asset_id"`
+	AssetID         *int64                   `json:"asset_id,omitempty"`
 	Title           string                   `json:"title"`
-	ParentEpisodeID string                   `json:"parent_episode_id"`
-	ParentStartsAt  *int64                   `json:"parent_starts_at"`
-	ParentEndsAt    *int64                   `json:"parent_ends_at"`
-	Images          MediaItemStyledImageCRUD `json:"images"`
+	ParentEpisodeID *int64                   `json:"parent_episode_id,omitempty"`
+	ParentStartsAt  *int64                   `json:"parent_starts_at,omitempty"`
+	ParentEndsAt    *int64                   `json:"parent_ends_at,omitempty"`
+	Images          MediaItemStyledImageCRUD `json:"images,omitempty"`
 }
 
 // MediaItemStyledImageRelation represents the relationship between a media item and a styled image
