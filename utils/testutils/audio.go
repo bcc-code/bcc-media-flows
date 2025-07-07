@@ -14,9 +14,9 @@ func GenerateDualMonoAudioFile(outFile paths.Path, length float64) paths.Path {
 
 	args := []string{
 		"-f", "lavfi",
-		"-i", fmt.Sprintf("sine=frequency=300:duration=%f:sample_rate=48000", length),
+		"-i", fmt.Sprintf("sine=frequency=300:duration=%f:sample_rate=48000:amplitude=0.5+0.5*sin(mul(PI,t)/%f)", length, length),
 		"-f", "lavfi",
-		"-i", fmt.Sprintf("sine=frequency=800:duration=%f:sample_rate=48000", length),
+		"-i", fmt.Sprintf("sine=frequency=800:duration=%f:sample_rate=48000:amplitude=0.5+0.5*sin(mul(PI,t)/%f)", length, length),
 		"-map", "0:a",
 		"-map", "1:a",
 		"-ac", "1",
@@ -40,7 +40,7 @@ func GenerateMultichannelAudioFile(outFile paths.Path, chCount int, length float
 	for i := 0; i < chCount; i++ {
 		args = append(args,
 			"-f", "lavfi",
-			"-i", fmt.Sprintf("sine=frequency=%.f:duration=%f:sample_rate=48000", 100*length, length),
+			"-i", fmt.Sprintf("sine=frequency=%.f:duration=%f:sample_rate=48000:amplitude=0.5+0.5*sin(mul(PI,t)/%f)", 100*float64(i+1), length, length),
 		)
 	}
 
@@ -61,8 +61,8 @@ func GenerateSoftronTestFile(outFile paths.Path, chCount int, length float64) pa
 	os.MkdirAll(outFile.Dir().Local(), 0755)
 
 	args := []string{}
-	// Add audio inputs
-	for i := 0; i < chCount; i++ {
+	// Add audio inputs (start at 1, go one longer)
+	for i := 1; i <= chCount; i++ {
 		args = append(args,
 			"-f", "lavfi",
 			"-i", fmt.Sprintf("sine=frequency=%d:duration=%f:sample_rate=48000", 100*i, length),

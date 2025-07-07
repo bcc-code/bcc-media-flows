@@ -43,6 +43,25 @@ type audioPreviewData struct {
 	LanguageMap  map[string]string
 }
 
+// buildVUMeterFilters generates ffmpeg filter steps for compact VU meters for each audio track.
+func buildVUMeterFilters(audioTracks int) (string, string) {
+	meterW := 200
+	meterH := 20
+	meterAlpha := 0.5
+	spacing := 10
+	parts := []string{"[0:v]scale=1280:720[vmain]"}
+	lastVid := "[vmain]"
+	for i := 0; i < audioTracks; i++ {
+		y := 10 + i*(meterH+spacing)
+		parts = append(parts, 
+			fmt.Sprintf("[0:a:%d]showvolume=w=%d:h=%d:p=%.2f:t=1,format=rgba[vum%d]", i, meterW, meterH, meterAlpha, i),
+			fmt.Sprintf("%s[vum%d]overlay=x=10:y=%d[tmp%d]", lastVid, i, y, i),
+		)
+		lastVid = fmt.Sprintf("[tmp%d]", i)
+	}
+	return strings.Join(parts, ";"), lastVid
+}
+
 func prepareAudioPreview(isMU1, isMU2 bool, fileInfo *ffmpeg.FFProbeResult, inputFile, outputDir string) (*audioPreviewData, error) {
 	audioStreams := []ffmpeg.FFProbeStream{}
 	for _, stream := range fileInfo.Streams {
@@ -165,13 +184,14 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 		return nil, err
 	}
 
-	var hasVideo bool
-	var hasAudio bool
+	var hasVideo, hasAudio bool
+	var audioTracks int
 	for _, stream := range info.Streams {
 		if stream.CodecType == "video" {
 			hasVideo = true
 		} else if stream.CodecType == "audio" {
 			hasAudio = true
+			audioTracks++
 		}
 	}
 
@@ -203,14 +223,23 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 			"-map", "[VIDEO-.mp4]",
 			"-c:v", encoder,
 		)
-	} else if hasVideo {
+	} else if hasVideo && hasAudio {
+		// VU meters + watermark
 		params = append(params,
 			"-ac", "2",
 			"-ss", "0.0",
 			"-i", input.FilePath,
 			"-ss", "0.0",
 			"-i", previewWatermarkPath,
-			"-filter_complex", "sws_flags=bicubic;[0:v]split=1[VIDEO-main-.mp4];[VIDEO-main-.mp4]scale=-2:540,null[temp];[temp][1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4];[0:a]pan=stereo|c0=c0|c1=c1[AUDIO-.mp4-0]",
+		)
+		vuFilters, lastVid := buildVUMeterFilters(audioTracks)
+		// Compose filter graph: scale, vumeters, watermark, stereo audio
+		filter := fmt.Sprintf(
+			"sws_flags=bicubic;%s;[1:v]scale=1280:720[wm];%s[wm]overlay=0:0:eof_action=repeat[VIDEO-.mp4];[0:a]pan=stereo|c0=c0|c1=c1[AUDIO-.mp4-0]",
+			vuFilters, lastVid,
+		)
+		params = append(params,
+			"-filter_complex", filter,
 			"-map", "[VIDEO-.mp4]",
 			"-map", "[AUDIO-.mp4-0]",
 			"-c:v", encoder,
