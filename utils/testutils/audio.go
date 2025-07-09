@@ -14,9 +14,9 @@ func GenerateDualMonoAudioFile(outFile paths.Path, length float64) paths.Path {
 
 	args := []string{
 		"-f", "lavfi",
-		"-i", fmt.Sprintf("sine=frequency=300:duration=%f:sample_rate=48000:amplitude=0.5+0.5*sin(mul(PI,t)/%f)", length, length),
+		"-i", fmt.Sprintf("sine=frequency=300:duration=%f:sample_rate=48000", length),
 		"-f", "lavfi",
-		"-i", fmt.Sprintf("sine=frequency=800:duration=%f:sample_rate=48000:amplitude=0.5+0.5*sin(mul(PI,t)/%f)", length, length),
+		"-i", fmt.Sprintf("sine=frequency=800:duration=%f:sample_rate=48000", length),
 		"-map", "0:a",
 		"-map", "1:a",
 		"-ac", "1",
@@ -24,8 +24,9 @@ func GenerateDualMonoAudioFile(outFile paths.Path, length float64) paths.Path {
 	}
 
 	cmd := exec.Command("ffmpeg", args...)
-	err := cmd.Run()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
+		fmt.Printf("FFmpeg command failed: %s\nOutput: %s\n", strings.Join(args, " "), string(output))
 		panic(err)
 	}
 
@@ -40,7 +41,7 @@ func GenerateMultichannelAudioFile(outFile paths.Path, chCount int, length float
 	for i := 0; i < chCount; i++ {
 		args = append(args,
 			"-f", "lavfi",
-			"-i", fmt.Sprintf("sine=frequency=%.f:duration=%f:sample_rate=48000:amplitude=0.5+0.5*sin(mul(PI,t)/%f)", 100*float64(i+1), length, length),
+			"-i", fmt.Sprintf("sine=frequency=%d:duration=%f:sample_rate=48000", 100*(i+1), length),
 		)
 	}
 
@@ -49,8 +50,9 @@ func GenerateMultichannelAudioFile(outFile paths.Path, chCount int, length float
 		"-y", outFile.Local())
 
 	cmd := exec.Command("ffmpeg", args...)
-	err := cmd.Run()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
+		fmt.Printf("FFmpeg command failed: %s\nOutput: %s\n", strings.Join(args, " "), string(output))
 		panic(err)
 	}
 

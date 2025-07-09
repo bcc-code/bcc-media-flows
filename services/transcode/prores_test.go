@@ -1,6 +1,9 @@
 package transcode_test
 
 import (
+	"os"
+	"testing"
+
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 	"github.com/bcc-code/bcc-media-flows/services/transcode"
@@ -8,12 +11,14 @@ import (
 	"github.com/bcc-code/bcc-media-flows/utils/testutils"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func Test_ProRes(t *testing.T) {
 	testFile := paths.MustParse("./testdata/generated/prores_1080_1.mov")
 	outputFile := paths.MustParse("./testdata/generated/results/" + testFile.Base())
+
+	// Create output directory
+	os.MkdirAll(outputFile.Dir().Local(), 0755)
 
 	testutils.GenerateVideoFile(testFile, testutils.VideoGeneratorParams{
 		DAR:       "16/9",
@@ -40,7 +45,9 @@ func Test_ProRes(t *testing.T) {
 	}, progressCallback)
 
 	assert.NoError(t, err)
-	assert.NotNil(t, r)
+	if !assert.NotNil(t, r) {
+		return // Exit early if r is nil to avoid panic
+	}
 
 	streamInfo, err := ffmpeg.GetStreamInfo(r.OutputPath)
 	assert.NoError(t, err)
@@ -65,6 +72,9 @@ func Test_ProRes(t *testing.T) {
 func Test_ProResHyperdeck(t *testing.T) {
 	testFile := paths.MustParse("./testdata/generated/prores_1080_2.mov")
 	outputFile := paths.MustParse("./testdata/generated/results/" + testFile.Base())
+
+	// Create output directory
+	os.MkdirAll(outputFile.Dir().Local(), 0755)
 
 	testutils.GenerateVideoFile(testFile, testutils.VideoGeneratorParams{
 		DAR:       "16/9",
@@ -92,7 +102,9 @@ func Test_ProResHyperdeck(t *testing.T) {
 	}, progressCallback)
 
 	assert.NoError(t, err)
-	assert.NotNil(t, r)
+	if !assert.NotNil(t, r) {
+		return // Exit early if r is nil to avoid panic
+	}
 
 	streamInfo, err := ffmpeg.GetStreamInfo(r.OutputPath)
 	assert.NoError(t, err)

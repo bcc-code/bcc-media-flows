@@ -234,9 +234,20 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 		)
 		vuFilters, lastVid := buildVUMeterFilters(audioTracks)
 		// Compose filter graph: scale, vumeters, watermark, stereo audio
+		var audioFilter string
+		if audioTracks == 1 {
+			// Single stream: duplicate to both channels
+			audioFilter = "[0:a:0]aformat=channel_layouts=stereo[AUDIO-.mp4-0]"
+		} else if audioTracks >= 2 {
+			// Multiple streams: stream 1 to left, stream 2 to right
+			audioFilter = "[0:a:0][0:a:1]amerge=inputs=2,pan=stereo|c0<c0|c1<c1[AUDIO-.mp4-0]"
+		} else {
+			// Fallback for edge cases
+			audioFilter = "[0:a]aformat=channel_layouts=stereo[AUDIO-.mp4-0]"
+		}
 		filter := fmt.Sprintf(
-			"sws_flags=bicubic;%s;[1:v]scale=1280:720[wm];%s[wm]overlay=0:0:eof_action=repeat[VIDEO-.mp4];[0:a]pan=stereo|c0=c0|c1=c1[AUDIO-.mp4-0]",
-			vuFilters, lastVid,
+			"sws_flags=bicubic;%s;[1:v]scale=1280:720[wm];%s[wm]overlay=0:0:eof_action=repeat[VIDEO-.mp4];%s",
+			vuFilters, lastVid, audioFilter,
 		)
 		params = append(params,
 			"-filter_complex", filter,
@@ -290,7 +301,7 @@ func GrowingPreview(ctx context.Context, input GrowingPreviewInput, heartbeater 
 		"-i", previewWatermarkPath,
 		"-c:v", "libx264", // Video codec: H.264
 		"-c:a", "aac", // Audio codec: AAC
-		"-filter_complex", "sws_flags=bicubic;[0:v]split=1[VIDEO-main-.mp4];[VIDEO-main-.mp4]scale=-2:540,null[temp];[temp][1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4];[0:a]pan=stereo|c0=c0|c1=c0[AUDIO-.mp4-0]",
+		"-filter_complex", "sws_flags=bicubic;[0:v]split=1[VIDEO-main-.mp4];[VIDEO-main-.mp4]scale=-2:540,null[temp];[temp][1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4];[0:a]aformat=channel_layouts=stereo[AUDIO-.mp4-0]",
 		"-map", "[VIDEO-.mp4]",
 		"-map", "[AUDIO-.mp4-0]",
 		"-strict", "experimental", // Allow experimental codecs

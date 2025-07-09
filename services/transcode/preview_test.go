@@ -95,3 +95,36 @@ func TestPreview_VUMeters_MultipleAudioTracks(t *testing.T) {
 		})
 	}
 }
+
+func TestPreview_VUMeters_SeparateAudioStreams(t *testing.T) {
+	t.Parallel()
+	trackCounts := []int{1, 2, 4, 8}
+	os.MkdirAll("testdata/generated", 0755)
+
+	// Override the watermark path for testing
+	oldWatermarkPath := previewWatermarkPath
+	previewWatermarkPath = "testdata/test_overlay.png"
+	defer func() { previewWatermarkPath = oldWatermarkPath }()
+
+	for _, n := range trackCounts {
+		t.Run(fmt.Sprintf("separate_streams_%d", n), func(t *testing.T) {
+			inputFile := filepath.Join("testdata/generated", fmt.Sprintf("testsrc_separate_%dstreams.mov", n))
+			outputDir := "testdata/generated"
+			p, err := paths.Parse(inputFile)
+			require.NoError(t, err)
+			testutils.GenerateSeparateAudioStreamsTestFile(p, n, 2.0)
+
+			previewInput := PreviewInput{
+				FilePath:  inputFile,
+				OutputDir: outputDir,
+			}
+
+			result, err := Preview(previewInput, nil)
+			require.NoError(t, err, "Preview should succeed for %d separate streams", n)
+			require.NotNil(t, result)
+			stat, err := os.Stat(result.LowResolutionPath)
+			require.NoError(t, err)
+			require.True(t, stat.Size() > 1000, "Preview output should not be empty for %d separate streams", n)
+		})
+	}
+}
