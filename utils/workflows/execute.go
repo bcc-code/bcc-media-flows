@@ -2,12 +2,15 @@ package wfutils
 
 import (
 	"context"
+	"reflect"
+	"runtime"
 	"sync"
 	"time"
 
 	"go.temporal.io/api/enums/v1"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
+	"github.com/bcc-code/bcc-media-flows/analytics"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
@@ -49,6 +52,8 @@ func (f Task[TR]) Wait(ctx workflow.Context) error {
 
 // Execute executes the specified activity with the correct task queue
 func Execute[T any, TR any](ctx workflow.Context, activity func(context.Context, T) (TR, error), params T) Task[TR] {
+	analyticsService := analytics.GetService()
+
 	options := workflow.GetActivityOptions(ctx)
 	options.TaskQueue = activities.GetQueueForActivity(activity)
 
@@ -70,15 +75,33 @@ func Execute[T any, TR any](ctx workflow.Context, activity func(context.Context,
 
 	ctx = workflow.WithActivityOptions(ctx, options)
 
+	info := workflow.GetInfo(ctx)
+	activityName := GetFunctionName(activity)
+	workerID := info.WorkflowExecution.ID
+	queue := options.TaskQueue
+
+	analyticsService.ActivityStarted(activityName, workerID, queue)
+
 	future := workflow.ExecuteActivity(ctx, activity, params)
 
 	ActivityWG.Add(1)
 	workflow.Go(ctx, func(ctx workflow.Context) {
-		_ = future.Get(ctx, nil)
+		startTime := workflow.Now(ctx)
+		err := future.Get(ctx, nil)
+		endTime := workflow.Now(ctx)
+		duration := endTime.Sub(startTime)
+		succeeded := err == nil
+		executionTime := duration.Milliseconds()
+		analyticsService.ActivityFinished(activityName, workerID, queue, succeeded, executionTime)
+
 		ActivityWG.Done()
 	})
 
 	return Task[TR]{Future: future}
+}
+
+func GetFunctionName(i interface{}) string {
+	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 }
 
 // ExecuteIndependently executes the specified activity in such a way that it continues even if the parent workflow completes before it finishes
