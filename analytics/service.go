@@ -82,13 +82,13 @@ func (s *Service) ActivityStarted(activityName string, queue string, parentWorkf
 	}
 }
 
-func (s *Service) ActivityFinished(activityName string, workerId string, queue string, parentWorkflow string, succeeded bool, executionTime int64) {
+func (s *Service) ActivityFinished(activityName string, workerId string, queue string, parentWorkflow string, status bool, executionTime int64) {
 	properties := map[string]interface{}{
 		"activityName":   activityName,
 		"workerId":       workerId,
 		"queue":          queue,
 		"parentWorkflow": parentWorkflow,
-		"succeeded":      succeeded,
+		"status":         status,
 		"executionTime":  executionTime,
 	}
 
@@ -121,13 +121,13 @@ func (s *Service) WorkflowStarted(workflowName string, workflowId string, parent
 	}
 }
 
-func (s *Service) WorkflowFinished(workflowName string, workflowId string, parentWorkflow string, status string, duration int64) {
+func (s *Service) WorkflowFinished(workflowName string, workflowId string, parentWorkflow string, status string, executionTime int64) {
 	properties := map[string]interface{}{
 		"workflowName":   workflowName,
 		"workflowId":     workflowId,
 		"parentWorkflow": parentWorkflow,
 		"status":         status,
-		"duration":       duration,
+		"executionTime":  executionTime,
 	}
 
 	err := s.rudderClient.Enqueue(r.Track{
