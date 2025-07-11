@@ -74,7 +74,6 @@ func Execute[T any, TR any](ctx workflow.Context, activity func(context.Context,
 
 	ActivityWG.Add(1)
 	workflow.Go(ctx, func(ctx workflow.Context) {
-		_ = future.Get(ctx, nil)
 		ActivityWG.Done()
 	})
 
