@@ -2,6 +2,7 @@ package analytics
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -57,11 +58,17 @@ func newService(config Config) *Service {
 	}
 }
 
-func (s *Service) ActivityStarted(activityName string, workerId string, queue string) {
+func (s *Service) ActivityStarted(activityName string, queue string, parentWorkflow string) {
+	identity := os.Getenv("IDENTITY")
+	if identity == "" {
+		identity = "worker"
+	}
+
 	properties := map[string]interface{}{
-		"activityName": activityName,
-		"workerId":     workerId,
-		"queue":        queue,
+		"activityName":   activityName,
+		"workerId":       identity,
+		"queue":          queue,
+		"parentWorkflow": parentWorkflow,
 	}
 
 	err := s.rudderClient.Enqueue(r.Track{
@@ -75,13 +82,14 @@ func (s *Service) ActivityStarted(activityName string, workerId string, queue st
 	}
 }
 
-func (s *Service) ActivityFinished(activityName string, workerId string, queue string, succeeded bool, executionTime int64) {
+func (s *Service) ActivityFinished(activityName string, workerId string, queue string, parentWorkflow string, succeeded bool, executionTime int64) {
 	properties := map[string]interface{}{
-		"activityName":  activityName,
-		"workerId":      workerId,
-		"queue":         queue,
-		"succeeded":     succeeded,
-		"executionTime": executionTime,
+		"activityName":   activityName,
+		"workerId":       workerId,
+		"queue":          queue,
+		"parentWorkflow": parentWorkflow,
+		"succeeded":      succeeded,
+		"executionTime":  executionTime,
 	}
 
 	err := s.rudderClient.Enqueue(r.Track{
@@ -92,5 +100,43 @@ func (s *Service) ActivityFinished(activityName string, workerId string, queue s
 
 	if err != nil {
 		fmt.Printf("WARN: Failed to enqueue ActivityFinished event: %v\n", err)
+	}
+}
+
+func (s *Service) WorkflowStarted(workflowName string, workflowId string, parentWorkflow string) {
+	properties := map[string]interface{}{
+		"workflowName":   workflowName,
+		"workflowId":     workflowId,
+		"parentWorkflow": parentWorkflow,
+	}
+
+	err := s.rudderClient.Enqueue(r.Track{
+		Event:      "WorkflowStarted",
+		UserId:     "analytics",
+		Properties: properties,
+	})
+
+	if err != nil {
+		fmt.Printf("WARN: Failed to enqueue WorkflowStarted event: %v\n", err)
+	}
+}
+
+func (s *Service) WorkflowFinished(workflowName string, workflowId string, parentWorkflow string, status string, duration int64) {
+	properties := map[string]interface{}{
+		"workflowName":   workflowName,
+		"workflowId":     workflowId,
+		"parentWorkflow": parentWorkflow,
+		"status":         status,
+		"duration":       duration,
+	}
+
+	err := s.rudderClient.Enqueue(r.Track{
+		Event:      "WorkflowFinished",
+		UserId:     "analytics",
+		Properties: properties,
+	})
+
+	if err != nil {
+		fmt.Printf("WARN: Failed to enqueue WorkflowFinished event: %v\n", err)
 	}
 }

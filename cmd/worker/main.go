@@ -27,6 +27,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/teamwork/reload"
 	"go.temporal.io/sdk/activity"
+	"go.temporal.io/sdk/interceptor"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
@@ -97,8 +98,8 @@ func main() {
 	defer c.Close()
 
 	config := analytics.Config{
-		WriteKey:  os.Getenv("WRITE_KEY"),
-		DataPlane: os.Getenv("DATA_PLANE_URL"),
+		WriteKey:  os.Getenv("RUDDERSTACK_WRITE_KEY"),
+		DataPlane: os.Getenv("RUDDERSTACK_DATA_PLANE_URL"),
 		Verbose:   false,
 	}
 
@@ -147,6 +148,9 @@ func main() {
 		LocalActivityWorkerOnly:            false,
 		MaxConcurrentActivityExecutionSize: activityCount, // Doesn't make sense to have more than one activity running at a time
 		BackgroundActivityContext:          context.WithValue(ctx, miscworkflows.ClientContextKey, c),
+		Interceptors: []interceptor.WorkerInterceptor{
+			&wfutils.AnalyticsWorkerInterceptor{},
+		},
 	}
 
 	if os.Getenv("RCLONE_PASSWORD") != "" {
