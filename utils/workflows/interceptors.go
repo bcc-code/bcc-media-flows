@@ -108,7 +108,7 @@ func (c *AnalyticsActivityInboundInterceptor) ExecuteActivity(
 		workerIdentity,
 		info.TaskQueue,
 		info.WorkflowExecution.ID,
-		status == "Success",
+		status,
 		executionTime,
 	)
 

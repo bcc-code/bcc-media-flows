@@ -97,13 +97,11 @@ func main() {
 
 	defer c.Close()
 
-	config := analytics.Config{
+	analytics.Init(analytics.Config{
 		WriteKey:  os.Getenv("RUDDERSTACK_WRITE_KEY"),
 		DataPlane: os.Getenv("RUDDERSTACK_DATA_PLANE_URL"),
 		Verbose:   false,
-	}
-
-	analytics.Init(config)
+	})
 
 	identity := os.Getenv("IDENTITY")
 	if identity == "" {

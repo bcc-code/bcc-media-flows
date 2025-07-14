@@ -50,7 +50,6 @@ func newService(config Config) *Service {
 
 	if err != nil {
 		fmt.Printf("FATAL: Failed to create rudderstack client: %v", err)
-		panic(err)
 	}
 
 	return &Service{
@@ -59,6 +58,10 @@ func newService(config Config) *Service {
 }
 
 func (s *Service) ActivityStarted(activityName string, queue string, parentWorkflow string) {
+	if s.rudderClient == nil {
+		fmt.Printf("DEBUG: rudderstack client is nil")
+	}
+
 	identity := os.Getenv("IDENTITY")
 	if identity == "" {
 		identity = "worker"
@@ -82,7 +85,11 @@ func (s *Service) ActivityStarted(activityName string, queue string, parentWorkf
 	}
 }
 
-func (s *Service) ActivityFinished(activityName string, workerId string, queue string, parentWorkflow string, status bool, executionTime int64) {
+func (s *Service) ActivityFinished(activityName string, workerId string, queue string, parentWorkflow string, status string, executionTime int64) {
+	if s.rudderClient == nil {
+		fmt.Printf("DEBUG: rudderstack client is nil")
+	}
+
 	properties := map[string]interface{}{
 		"activityName":   activityName,
 		"workerId":       workerId,
@@ -104,6 +111,10 @@ func (s *Service) ActivityFinished(activityName string, workerId string, queue s
 }
 
 func (s *Service) WorkflowStarted(workflowName string, workflowId string, parentWorkflow string) {
+	if s.rudderClient == nil {
+		fmt.Printf("DEBUG: rudderstack client is nil")
+	}
+
 	properties := map[string]interface{}{
 		"workflowName":   workflowName,
 		"workflowId":     workflowId,
@@ -122,6 +133,10 @@ func (s *Service) WorkflowStarted(workflowName string, workflowId string, parent
 }
 
 func (s *Service) WorkflowFinished(workflowName string, workflowId string, parentWorkflow string, status string, executionTime int64) {
+	if s.rudderClient == nil {
+		fmt.Printf("DEBUG: rudderstack client is nil")
+	}
+
 	properties := map[string]interface{}{
 		"workflowName":   workflowName,
 		"workflowId":     workflowId,
