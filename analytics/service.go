@@ -60,6 +60,7 @@ func newService(config Config) *Service {
 func (s *Service) ActivityStarted(activityName string, queue string, parentWorkflow string) {
 	if s.rudderClient == nil {
 		fmt.Printf("DEBUG: rudderstack client is nil")
+		return
 	}
 
 	identity := os.Getenv("IDENTITY")
