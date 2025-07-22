@@ -37,6 +37,7 @@ type Config struct {
 func newService(config Config) *Service {
 	if config.WriteKey == "" || config.DataPlane == "" {
 		fmt.Printf("WARN: Rudderstack is not configured, data will not be sent to Rudderstack")
+		return &Service{}
 	}
 
 	c, err := r.NewWithConfig(config.WriteKey,
@@ -89,6 +90,7 @@ func (s *Service) ActivityStarted(activityName string, queue string, parentWorkf
 func (s *Service) ActivityFinished(activityName string, workerId string, queue string, parentWorkflow string, status string, executionTime int64) {
 	if s.rudderClient == nil {
 		fmt.Printf("DEBUG: rudderstack client is nil")
+		return
 	}
 
 	properties := map[string]interface{}{
@@ -114,6 +116,7 @@ func (s *Service) ActivityFinished(activityName string, workerId string, queue s
 func (s *Service) WorkflowStarted(workflowName string, workflowId string, parentWorkflow string) {
 	if s.rudderClient == nil {
 		fmt.Printf("DEBUG: rudderstack client is nil")
+		return
 	}
 
 	properties := map[string]interface{}{
@@ -136,6 +139,7 @@ func (s *Service) WorkflowStarted(workflowName string, workflowId string, parent
 func (s *Service) WorkflowFinished(workflowName string, workflowId string, parentWorkflow string, status string, executionTime int64) {
 	if s.rudderClient == nil {
 		fmt.Printf("DEBUG: rudderstack client is nil")
+		return
 	}
 
 	properties := map[string]interface{}{
