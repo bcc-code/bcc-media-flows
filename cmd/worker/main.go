@@ -3,10 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/services/directus"
-	"github.com/bcc-code/bcc-media-flows/services/notion"
-	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"log"
 	"os"
 	"os/exec"
@@ -14,6 +10,13 @@ import (
 	"runtime"
 	"strconv"
 	"time"
+
+	"github.com/bcc-code/bcc-media-flows/analytics"
+	"github.com/bcc-code/bcc-media-flows/services/directus"
+	"github.com/bcc-code/bcc-media-flows/services/notion"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
+	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
+	"github.com/joho/godotenv"
 
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"github.com/bcc-code/bcc-media-flows/workflows"
@@ -24,6 +27,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/teamwork/reload"
 	"go.temporal.io/sdk/activity"
+	"go.temporal.io/sdk/interceptor"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
@@ -53,10 +57,21 @@ func registerActivitiesInStruct(w worker.Worker, activityStruct any) {
 	}
 }
 
+var analyticsSvc *analytics.Service
+
+func GetAnalyticsService() *analytics.Service {
+	return analyticsSvc
+}
+
 var Version = "development"
 
 func main() {
-	err := update(Version)
+	err := godotenv.Load(".env")
+	if err == nil {
+		fmt.Println("Env file loaded")
+	}
+
+	err = update(Version)
 	if err != nil {
 		panic(err)
 	}
@@ -81,6 +96,12 @@ func main() {
 	}
 
 	defer c.Close()
+
+	analytics.Init(analytics.Config{
+		WriteKey:  os.Getenv("RUDDERSTACK_WRITE_KEY"),
+		DataPlane: os.Getenv("RUDDERSTACK_DATA_PLANE_URL"),
+		Verbose:   false,
+	})
 
 	identity := os.Getenv("IDENTITY")
 	if identity == "" {
@@ -125,6 +146,9 @@ func main() {
 		LocalActivityWorkerOnly:            false,
 		MaxConcurrentActivityExecutionSize: activityCount, // Doesn't make sense to have more than one activity running at a time
 		BackgroundActivityContext:          context.WithValue(ctx, miscworkflows.ClientContextKey, c),
+		Interceptors: []interceptor.WorkerInterceptor{
+			&wfutils.AnalyticsWorkerInterceptor{},
+		},
 	}
 
 	if os.Getenv("RCLONE_PASSWORD") != "" {

@@ -32,7 +32,16 @@ require (
 	gopkg.in/telebot.v3 v3.2.1
 )
 
-require github.com/nexus-rpc/sdk-go v0.1.0 // indirect
+require (
+	github.com/joho/godotenv v1.5.1 // indirect
+	github.com/nexus-rpc/sdk-go v0.1.0 // indirect
+	github.com/rudderlabs/analytics-go v3.3.3+incompatible // indirect
+	github.com/segmentio/backo-go v1.1.0 // indirect
+	github.com/tidwall/gjson v1.18.0 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.1 // indirect
+	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
+)
 
 require (
 	cloud.google.com/go/auth v0.5.0 // indirect
@@ -133,6 +142,7 @@ require (
 	github.com/redis/go-redis/v9 v9.2.1 // indirect
 	github.com/robfig/cron v1.2.0 // indirect
 	github.com/rs/zerolog v1.31.0
+	github.com/rudderlabs/analytics-go/v4 v4.2.1
 	github.com/sendgrid/rest v2.6.9+incompatible // indirect
 	github.com/sony/gobreaker v0.5.0 // indirect
 	github.com/sqlc-dev/pqtype v0.3.0 // indirect
