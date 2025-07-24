@@ -47,7 +47,7 @@ type AnalyticsWorkflowInboundInterceptor struct {
 func (c *AnalyticsWorkflowInboundInterceptor) ExecuteWorkflow(
 	ctx workflow.Context,
 	in *interceptor.ExecuteWorkflowInput,
-) (interface{}, error) {
+) (any, error) {
 	info := workflow.GetInfo(ctx)
 
 	parent := ""
@@ -82,7 +82,7 @@ type AnalyticsActivityInboundInterceptor struct {
 
 func (c *AnalyticsActivityInboundInterceptor) ExecuteActivity(
 	ctx context.Context, in *interceptor.ExecuteActivityInput,
-) (interface{}, error) {
+) (any, error) {
 	info := activity.GetInfo(ctx)
 	startTime := time.Now()
 	workerIdentity, _ := ctx.Value("WorkerIdentity").(string)

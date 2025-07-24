@@ -24,7 +24,8 @@ type transferSample struct {
 }
 
 type IncrementalParams struct {
-	Path string
+	Path            string
+	ReaperSessionID string
 }
 
 // Constants for workflow and signal
@@ -104,11 +105,15 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	videoVXID := assetResult.AssetID
 
 	// REAPER: Start recording
-	var reaperSessionID string
+	reaperSessionID := params.ReaperSessionID
 
-	err = wfutils.Execute(ctx, activities.Live.StartReaper, nil).Get(ctx, &reaperSessionID)
-	if err != nil {
-		return err
+	if reaperSessionID == "" {
+		err = wfutils.Execute(ctx, activities.Live.StartReaper, nil).Get(ctx, &reaperSessionID)
+		if err != nil {
+			wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Unable to start reaper. Start it manually and notify Matjaz!\n\n```%s```", err.Error()))
+		}
+	} else {
+		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 ASSUMING REAPER SESSION: %s", reaperSessionID))
 	}
 
 	wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Starting live ingest: https://vault.bcc.media/item/%s", assetResult.AssetID))
