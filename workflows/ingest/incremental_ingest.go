@@ -353,9 +353,10 @@ func checkTransferRateAndAlert(ctx workflow.Context, rateMbps float64, pruned []
 	}
 	first, last := pruned[0], pruned[len(pruned)-1]
 	actualWindow := last.time.Sub(first.time)
-	if rateMbps < minTransferRate {
+	if rateMbps < minTransferRate && !state.InAlert {
 		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟥 ALERT: Ingest transfer rate below %.2f Mbps (%.2f Mbps) for at least %v", minTransferRate, rateMbps, actualWindow))
 		state.InAlert = true
+		_ = wfutils.Execute(ctx, activities.Util.PokeFileCatalyst, nil).Wait(ctx)
 	} else if state.InAlert {
 		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟩 RECOVERY: Ingest transfer rate above %.2f Mbps (%.2f Mbps) for at least %v", minTransferRate, rateMbps, actualWindow))
 		state.InAlert = false
