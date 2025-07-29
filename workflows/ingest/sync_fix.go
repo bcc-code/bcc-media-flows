@@ -2,6 +2,8 @@ package ingestworkflows
 
 import (
 	"fmt"
+	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 
@@ -36,6 +38,54 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 	outputFolder, err := wfutils.GetWorkflowTempFolder(ctx)
 	if err != nil {
 		return err
+	}
+
+	if params.Adjustment == 0 {
+		wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟦 `%s`\n\nCalculating automatic adjustments to audio files.", params.VXID))
+		// Attempt to calculate the adjustment automatically
+		shapes, err := wfutils.Execute(ctx, activities.Vidispine.GetShapes, vsactivity.VXOnlyParam{
+			VXID: params.VXID,
+		}).Result(ctx)
+
+		if err != nil {
+			return err
+		}
+
+		originalShape := shapes.GetShape("original")
+		if originalShape == nil {
+			return fmt.Errorf("original shape not found")
+		}
+
+		if len(originalShape.AudioComponent) == 0 {
+			return fmt.Errorf("original shape has no audio")
+		}
+
+		originalAudio := originalShape.AudioComponent[0]
+		originalPath, err := paths.Parse(originalAudio.File[0].Path)
+		if err != nil {
+			return err
+		}
+
+		reaperAudioPath := ""
+		if p, ok := audioPaths["nor"]; ok {
+			reaperAudioPath = p.Linux()
+		} else {
+			return fmt.Errorf("nor audio not found")
+		}
+
+		diff, err := wfutils.Execute(ctx, activities.Util.GetAudioDiff, activities.GetAudioDiffParams{
+			ReferenceFile: originalPath.Linux(),
+			TargetFile:    reaperAudioPath,
+		}).Result(ctx)
+
+		if err != nil {
+			return err
+		}
+
+		params.Adjustment = diff.Difference
+
+		wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟦 `%s`\n\nAutomatic adjustment calculated: %dms", params.VXID, params.Adjustment))
+		return nil
 	}
 
 	var errs []error
