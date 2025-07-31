@@ -24,8 +24,6 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟦 `%s`\n\nApplying adjustments to audio files.\n%dms", params.VXID, params.Adjustment))
-
 	audioPaths, err := wfutils.Execute(ctx, activities.Vidispine.GetRelatedAudioFiles, params.VXID).Result(ctx)
 	if err != nil {
 		return err
@@ -97,8 +95,9 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 		params.Adjustment = diff.Difference
 
 		wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟦 `%s`\n\nAutomatic adjustment calculated: %dms", params.VXID, params.Adjustment))
-		return nil
 	}
+
+	wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟦 `%s`\n\nApplying adjustments to audio files.\n%dms", params.VXID, params.Adjustment))
 
 	var errs []error
 	selector := workflow.NewSelector(ctx)
