@@ -61,8 +61,7 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 			return fmt.Errorf("original shape has no audio")
 		}
 
-		originalAudio := originalShape.AudioComponent[0]
-		originalPath, err := paths.Parse(originalAudio.File[0].Path)
+		originalPath, err := paths.Parse(originalShape.GetPath())
 		if err != nil {
 			return err
 		}
