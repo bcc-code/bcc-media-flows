@@ -3,6 +3,7 @@ package ingestworkflows
 import (
 	"fmt"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
@@ -66,6 +67,18 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 			return err
 		}
 
+		tempFolder, err := wfutils.GetWorkflowTempFolder(ctx)
+		if err != nil {
+			return err
+		}
+		prepareResult, err := wfutils.Execute(ctx, activities.Audio.PrepareForTranscription, common.AudioInput{
+			Path:            originalPath,
+			DestinationPath: tempFolder,
+		}).Result(ctx)
+		if err != nil {
+			return err
+		}
+
 		reaperAudioPath := ""
 		if p, ok := audioPaths["nor"]; ok {
 			reaperAudioPath = p.Linux()
@@ -74,7 +87,7 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 		}
 
 		diff, err := wfutils.Execute(ctx, activities.Util.GetAudioDiff, activities.GetAudioDiffParams{
-			ReferenceFile: originalPath.Linux(),
+			ReferenceFile: prepareResult.OutputPath.Linux(),
 			TargetFile:    reaperAudioPath,
 		}).Result(ctx)
 
