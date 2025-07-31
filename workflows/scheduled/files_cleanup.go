@@ -30,11 +30,11 @@ func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 		"/mnt/isilon/Input/Rawmaterial":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
 
 		// Transcoding folders
-		"/mnt/isilon/Transcoding/AVCintra100_HD/error":       workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/AVCintra100_HD/out":         workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/AVCintra100_HD/processed":   workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/AVCintra100_HD/processing":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/AVCintra100_HD/tmp":         workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		"/mnt/isilon/Transcoding/AVCintra100_HD/error":      workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		"/mnt/isilon/Transcoding/AVCintra100_HD/out":        workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		"/mnt/isilon/Transcoding/AVCintra100_HD/processed":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		"/mnt/isilon/Transcoding/AVCintra100_HD/processing": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		"/mnt/isilon/Transcoding/AVCintra100_HD/tmp":        workflow.Now(ctx).Add(-14 * 24 * time.Hour),
 
 		"/mnt/isilon/Transcoding/AVCIntra100_TCSet/In":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
 		"/mnt/isilon/Transcoding/AVCIntra100_TCSet/Out": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
@@ -96,6 +96,8 @@ func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 
 		"/mnt/isilon/Transcoding/XDCAMHD422/In":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
 		"/mnt/isilon/Transcoding/XDCAMHD422/Out": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+
+		"/mnt/isilon/Export": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
 	}
 
 	deletedFiles := []string{}
