@@ -34,6 +34,12 @@ var mp3Bitrates = []string{"256k"}
 // This is based on what Spotify uses
 const targetLufs = -14.0
 
+// broken languages will be skipped during export
+var brokenTranscription = map[string]struct{}{
+	"kha": {},
+	"mal": {},
+}
+
 type bmmConfig struct {
 	Bucket  string
 	BaseURL string
@@ -238,6 +244,11 @@ func makeBMMJSON(
 		// in order to be uniform with the audio languages
 		if val, ok := bccmflows.LanguagesByISOTwoLetter[lang]; ok {
 			bmmTextLang = val.ISO6391
+		}
+
+		// skip broken transcriptions
+		if _, skip := brokenTranscription[bmmTextLang]; skip {
+			continue
 		}
 
 		transcript := params.MergeResult.JSONTranscript[lang]
