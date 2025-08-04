@@ -76,6 +76,12 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
+	telegramChat := telegram.ChatVOD
+	if len(params.Destinations) == 1 &&
+		(params.Destinations[0] == AssetExportDestinationBMM.Value || params.Destinations[0] == AssetExportDestinationBMMIntegration.Value) {
+		telegramChat = telegram.ChatBMM
+	}
+
 	var destinations []*AssetExportDestination
 	for _, dest := range params.Destinations {
 		d := AssetExportDestinations.Parse(dest)
@@ -99,7 +105,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 	}
 
 	wfutils.SendTelegramText(ctx,
-		telegram.ChatVOD,
+		telegramChat,
 		fmt.Sprintf(
 			"🟦 Export of `%s` started.\nTitle: `%s`\nDestinations: `%s`\n\nRunID: `%s`",
 			params.VXID,
@@ -145,7 +151,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		OriginalLanguage: data.OriginalLanguage,
 	}).Get(ctx, &mergeResult)
 	if err != nil {
-		wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
+		wfutils.SendTelegramText(ctx, telegramChat, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
 		return nil, err
 	}
 
@@ -215,7 +221,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		})
 		if err != nil {
 			errs = append(errs, err)
-			wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
+			wfutils.SendTelegramText(ctx, telegramChat, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
 		}
 	}
 	err = nil
