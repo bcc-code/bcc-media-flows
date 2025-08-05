@@ -2,15 +2,17 @@ package export
 
 import (
 	"encoding/json"
+	"os"
+	"testing"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
 	pcommon "github.com/bcc-code/bcc-media-platform/backend/common"
 	"github.com/stretchr/testify/suite"
 	"go.temporal.io/sdk/testsuite"
-	"os"
-	"testing"
 )
 
 type BMMExportTestSuite struct {
@@ -166,6 +168,43 @@ func (s *BMMExportTestSuite) Test_GenerateJSON_SingAlong() {
 		ExpectedSongCollection:   aws.String("HV"),
 	}
 	s.doTestGenerateJson(t)
+}
+func (s *BMMExportTestSuite) Test_MakeBMMJSON_SkipsBrokenTranscriptions() {
+	s.params.MergeResult.JSONTranscript = map[string]paths.Path{
+		"en":  paths.New(paths.TestDrive, "english.srt"),
+		"kha": paths.New(paths.TestDrive, "khasi.srt"),     // should be skipped
+		"mal": paths.New(paths.TestDrive, "malayalam.srt"), // should be skipped
+		"de":  paths.New(paths.TestDrive, "german.srt"),
+	}
+
+	chapters := []asset.TimedMetadata{
+		{
+			ContentType: pcommon.ContentTypeSpeech.Value,
+		},
+	}
+
+	s.env.ExecuteWorkflow(makeBMMJSON, s.params, s.audioResults, s.normalizedResults, chapters)
+	s.True(s.env.IsWorkflowCompleted())
+	err := s.env.GetWorkflowError()
+	s.NoError(err)
+
+	res := []byte{}
+	s.env.GetWorkflowResult(&res)
+	s.NotEmpty(res)
+
+	output := BMMData{}
+	err = json.Unmarshal(res, &output)
+	s.NoError(err)
+
+	_, hasKha := output.TranscriptionFiles["kha"]
+	_, hasMal := output.TranscriptionFiles["mal"]
+	_, hasEng := output.TranscriptionFiles["eng"]
+	_, hasDeu := output.TranscriptionFiles["deu"]
+
+	s.False(hasKha, "kha should be skipped")
+	s.False(hasMal, "mal should be skipped")
+	s.True(hasEng, "eng should be present")
+	s.True(hasDeu, "deu should be present")
 }
 
 func TestBMMExport(t *testing.T) {
