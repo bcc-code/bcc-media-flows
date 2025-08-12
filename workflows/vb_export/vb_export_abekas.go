@@ -141,27 +141,6 @@ func VBExportToAbekasAudioOnly(ctx workflow.Context, params VBExportChildWorkflo
 
 	fileToTranscode := params.InputFile
 
-	// loudness normalization
-	normalizedPath := abekasOutputDir.Append(params.InputFile.BaseNoExt() + "_normalized" + params.InputFile.Ext())
-
-	normalizeResult, err := wfutils.Execute(ctx, activities.Audio.NormalizeAudioActivity,
-		activities.NormalizeAudioParams{
-			FilePath:              params.InputFile,
-			OutputPath:            normalizedPath,
-			TargetLUFS:            -23.0,
-			PerformOutputAnalysis: false,
-		}).Result(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if !normalizeResult.IsSilent && normalizeResult.FilePath.Local() != params.InputFile.Local() {
-		fileToTranscode = normalizeResult.FilePath
-	} else {
-		logger.Info("Audio normalization skipped")
-	}
-
 	// Convert to WAV PCM 48kHz 24bit
 	transcodeInput := common.WavAudioInput{
 		Path:            fileToTranscode,
