@@ -2,6 +2,8 @@ package vb_export
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
@@ -9,7 +11,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/utils"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
-	"strings"
 )
 
 /*
@@ -42,6 +43,10 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 	}).Result(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(analyzeResult.VideoStreams) == 0 && len(analyzeResult.AudioStreams) > 0 {
+		return VBExportToAbekasAudioOnly(ctx, params)
 	}
 
 	if analyzeResult.HasAlpha {
@@ -118,6 +123,70 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 	}
 
 	notifyExportDone(ctx, params, "abekas", videoResult.OutputPath)
+
+	return &VBExportResult{
+		ID: params.ParentParams.VXID,
+	}, nil
+}
+
+func VBExportToAbekasAudioOnly(ctx workflow.Context, params VBExportChildWorkflowParams) (*VBExportResult, error) {
+	logger := workflow.GetLogger(ctx)
+	logger.Info("Starting audio-only export to Abekas")
+
+	abekasOutputDir := params.TempDir.Append("abekas_audio_output")
+	err := wfutils.CreateFolder(ctx, abekasOutputDir)
+	if err != nil {
+		return nil, err
+	}
+
+	fileToTranscode := params.InputFile
+
+	// loudness normalization
+	normalizedPath := abekasOutputDir.Append(params.InputFile.BaseNoExt() + "_normalized" + params.InputFile.Ext())
+
+	normalizeResult, err := wfutils.Execute(ctx, activities.Audio.NormalizeAudioActivity,
+		activities.NormalizeAudioParams{
+			FilePath:              params.InputFile,
+			OutputPath:            normalizedPath,
+			TargetLUFS:            -23.0,
+			PerformOutputAnalysis: false,
+		}).Result(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !normalizeResult.IsSilent && normalizeResult.FilePath.Local() != params.InputFile.Local() {
+		fileToTranscode = normalizeResult.FilePath
+	} else {
+		logger.Info("Audio normalization skipped")
+	}
+
+	// Convert to WAV PCM 48kHz 24bit
+	transcodeInput := common.WavAudioInput{
+		Path:            fileToTranscode,
+		DestinationPath: abekasOutputDir,
+	}
+
+	var audioRes *common.AudioResult
+	err = wfutils.Execute(ctx, activities.Audio.TranscodeToAudioWav, transcodeInput).Get(ctx, &audioRes)
+	if err != nil {
+		return nil, err
+	}
+
+	rcloneDestination := deliveryFolder.Append("Abekas-WAV", params.OriginalFilenameWithoutExt+".wav")
+
+	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
+	if err != nil {
+		return nil, err
+	}
+
+	err = wfutils.RcloneCopyFileWithNotifications(ctx, audioRes.OutputPath, rcloneDestination, rclone.PriorityHigh, rcloneNotificationOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	notifyExportDone(ctx, params, "abekas", audioRes.OutputPath)
 
 	return &VBExportResult{
 		ID: params.ParentParams.VXID,
