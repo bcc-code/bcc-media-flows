@@ -10,14 +10,16 @@ import (
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
+	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"github.com/davecgh/go-spew/spew"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
 type GenerateShortResult struct {
-	VideoFile *paths.Path
-	Keyframes []activities.Keyframe
+	VideoFile      *paths.Path
+	ShortVideoFile *paths.Path
+	Keyframes      []activities.Keyframe
 }
 
 type GenerateShortDataParams struct {
@@ -97,7 +99,6 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		return nil, err
 	}
 
-	// Submit the job
 	submitJobParams := activities.SubmitShortJobInput{
 		URL:        params.ShortServiceURL,
 		InputPath:  clipResult.VideoFile.Local(),
@@ -107,7 +108,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	}
 
 	var jobResult *activities.SubmitShortJobResult
-	err = workflow.ExecuteActivity(ctx, activities.UtilActivities{}.SubmitShortJob, submitJobParams).Get(ctx, &jobResult)
+	err = workflow.ExecuteActivity(ctx, activities.UtilActivities{}.SubmitShortJobActivity, submitJobParams).Get(ctx, &jobResult)
 	if err != nil {
 		logger.Error("Failed to submit job: " + err.Error())
 		return nil, err
@@ -115,15 +116,15 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 
 	logger.Info("Job submitted with ID: " + jobResult.JobID)
 
-	// Poll for completion
 	checkStatusParams := activities.CheckJobStatusInput{
 		URL:   params.ShortServiceURL,
 		JobID: jobResult.JobID,
 	}
 
+	var keyframes []activities.Keyframe
 	for {
 		var statusResult *activities.GenerateShortRequestResult
-		err = workflow.ExecuteActivity(ctx, activities.UtilActivities{}.CheckJobStatus, checkStatusParams).Get(ctx, &statusResult)
+		err = workflow.ExecuteActivity(ctx, activities.UtilActivities{}.CheckJobStatusActivity, checkStatusParams).Get(ctx, &statusResult)
 		if err != nil {
 			logger.Error("Failed to check job status: " + err.Error())
 			return nil, err
@@ -131,20 +132,74 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 
 		if statusResult.Status == "completed" {
 			logger.Info("Job completed successfully")
-			return &GenerateShortResult{
-				VideoFile: clipResult.VideoFile,
-				Keyframes: statusResult.Keyframes,
-			}, nil
+			keyframes = statusResult.Keyframes
+			break
 		}
 
 		if statusResult.Status == "failed" || statusResult.Status == "error" {
 			return nil, fmt.Errorf("job failed with status: %s", statusResult.Status)
 		}
 
-		// Wait before polling again
 		err = workflow.Sleep(ctx, time.Second*5)
 		if err != nil {
 			return nil, err
 		}
 	}
+
+	shortVideoPath := outputDir.Append(titleWithShort + "_cropped.mp4")
+	cropFilter := buildCropFilter(keyframes)
+
+	ffmpegArgs := []string{
+		"-i", clipResult.VideoFile.Local(),
+		"-filter_complex", cropFilter,
+		"-map", "[out]",
+		"-c:a", "copy",
+		"-y",
+		shortVideoPath.Local(),
+	}
+
+	ffmpegParams := miscworkflows.ExecuteFFmpegInput{
+		Arguments: ffmpegArgs,
+	}
+
+	err = workflow.ExecuteChildWorkflow(ctx, miscworkflows.ExecuteFFmpeg, ffmpegParams).Get(ctx, nil)
+	if err != nil {
+		logger.Error("Failed to execute FFmpeg: " + err.Error())
+		return nil, err
+	}
+
+	return &GenerateShortResult{
+		VideoFile:      clipResult.VideoFile,
+		ShortVideoFile: &shortVideoPath,
+		Keyframes:      keyframes,
+	}, nil
+}
+
+func buildCropFilter(keyframes []activities.Keyframe) string {
+	if len(keyframes) == 0 {
+		return "crop=303:540:489:29"
+	}
+
+	if len(keyframes) == 1 {
+		kf := keyframes[0]
+		return fmt.Sprintf("crop=%d:%d:%d:%d", kf.W, kf.H, kf.X, kf.Y)
+	}
+
+	var segments []string
+
+	for i, kf := range keyframes {
+		duration := kf.EndTimestamp - kf.StartTimestamp
+		segments = append(segments, fmt.Sprintf("[0:v]trim=start=%.1f:duration=%.1f,setpts=PTS-STARTPTS,crop=%d:%d:%d:%d[v%d]",
+			kf.StartTimestamp, duration, kf.W, kf.H, kf.X, kf.Y, i))
+	}
+
+	// Create concat filter
+	concatInputs := ""
+	for i := range keyframes {
+		concatInputs += fmt.Sprintf("[v%d]", i)
+	}
+	concatFilter := fmt.Sprintf("%sconcat=n=%d:v=1:a=0[out]", concatInputs, len(keyframes))
+
+	allFilters := append(segments, concatFilter)
+	return strings.Join(allFilters, ";")
 }

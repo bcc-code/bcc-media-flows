@@ -39,7 +39,7 @@ type SubmitShortJobResult struct {
 	JobID string `json:"job_id"`
 }
 
-func (ua UtilActivities) SubmitShortJob(ctx context.Context, params SubmitShortJobInput) (*SubmitShortJobResult, error) {
+func (ua UtilActivities) SubmitShortJobActivity(ctx context.Context, params SubmitShortJobInput) (*SubmitShortJobResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "SubmitShortJob")
 	log.Info("Starting SubmitShortJob activity")
@@ -93,8 +93,7 @@ type CheckJobStatusInput struct {
 	JobID string `json:"job_id"`
 }
 
-func (ua UtilActivities) CheckJobStatus(ctx context.Context, params CheckJobStatusInput) (*GenerateShortRequestResult, error) {
-	// log := activity.GetLogger(ctx)
+func (ua UtilActivities) CheckJobStatusActivity(ctx context.Context, params CheckJobStatusInput) (*GenerateShortRequestResult, error) {
 	activity.RecordHeartbeat(ctx, "CheckJobStatus")
 
 	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/job_status/%s", params.URL, params.JobID), nil)
