@@ -152,7 +152,6 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	ffmpegArgs := []string{
 		"-i", clipResult.VideoFile.Local(),
 		"-filter_complex", cropFilter,
-		"-map", "[out]",
 		"-c:a", "copy",
 		"-y",
 		shortVideoPath.Local(),
@@ -177,7 +176,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 
 func buildCropFilter(keyframes []activities.Keyframe) string {
 	if len(keyframes) == 0 {
-		return "crop=303:540:489:29"
+		return "crop=960:540:489:29" // fallback
 	}
 
 	if len(keyframes) == 1 {
@@ -185,21 +184,77 @@ func buildCropFilter(keyframes []activities.Keyframe) string {
 		return fmt.Sprintf("crop=%d:%d:%d:%d", kf.W, kf.H, kf.X, kf.Y)
 	}
 
-	var segments []string
+	cropW := keyframes[0].W
+	cropH := keyframes[0].H
 
-	for i, kf := range keyframes {
-		duration := kf.EndTimestamp - kf.StartTimestamp
-		segments = append(segments, fmt.Sprintf("[0:v]trim=start=%.1f:duration=%.1f,setpts=PTS-STARTPTS,crop=%d:%d:%d:%d[v%d]",
-			kf.StartTimestamp, duration, kf.W, kf.H, kf.X, kf.Y, i))
+	xExpr := buildSmoothTransitionExpression(keyframes, "X")
+	yExpr := buildSmoothTransitionExpression(keyframes, "Y")
+
+	return fmt.Sprintf("crop=%d:%d:x='%s':y='%s'", cropW, cropH, xExpr, yExpr)
+}
+
+func buildSmoothTransitionExpression(keyframes []activities.Keyframe, param string) string {
+	if len(keyframes) == 0 {
+		return "489" // fallback value
 	}
 
-	// Create concat filter
-	concatInputs := ""
-	for i := range keyframes {
-		concatInputs += fmt.Sprintf("[v%d]", i)
+	if len(keyframes) == 1 {
+		value := getParamValue(keyframes[0], param)
+		return fmt.Sprintf("%d", value)
 	}
-	concatFilter := fmt.Sprintf("%sconcat=n=%d:v=1:a=0[out]", concatInputs, len(keyframes))
 
-	allFilters := append(segments, concatFilter)
-	return strings.Join(allFilters, ";")
+	var conditions []string
+
+	// process keyframes in reverse order (for nested if structure)
+	for i := len(keyframes) - 1; i >= 1; i-- {
+		currentKf := keyframes[i]
+
+		if currentKf.JumpCut {
+			// jump cut
+			targetValue := getParamValue(currentKf, param)
+			condition := fmt.Sprintf("if(gte(t,%.3f),%d,", currentKf.StartTimestamp, targetValue)
+			conditions = append(conditions, condition)
+		} else {
+			// smooth pan
+			prevValue := getParamValue(keyframes[i-1], param)
+			targetValue := getParamValue(currentKf, param)
+
+			panDuration := 1.0 // You can make this configurable
+			endTime := currentKf.StartTimestamp + panDuration
+
+			// smooth transition expression
+			smoothExpr := fmt.Sprintf("if(lte(t,%.3f),%d+(%d-%d)*(t-%.3f)/%.3f,%d)",
+				endTime,
+				prevValue, targetValue, prevValue,
+				currentKf.StartTimestamp, panDuration,
+				targetValue)
+
+			condition := fmt.Sprintf("if(gte(t,%.3f),%s,", currentKf.StartTimestamp, smoothExpr)
+			conditions = append(conditions, condition)
+		}
+	}
+
+	result := strings.Join(conditions, "")
+
+	firstValue := getParamValue(keyframes[0], param)
+	result += fmt.Sprintf("%d", firstValue)
+
+	result += strings.Repeat(")", len(conditions))
+
+	return result
+}
+
+func getParamValue(kf activities.Keyframe, param string) int {
+	switch param {
+	case "X":
+		return kf.X
+	case "Y":
+		return kf.Y
+	case "W":
+		return kf.W
+	case "H":
+		return kf.H
+	default:
+		return 0
+	}
 }
