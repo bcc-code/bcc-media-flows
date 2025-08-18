@@ -2,6 +2,7 @@ package export
 
 import (
 	"fmt"
+	"math"
 	"path/filepath"
 	"strings"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
-	"github.com/davecgh/go-spew/spew"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -41,8 +41,6 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		},
 	}
 	ctx = workflow.WithActivityOptions(ctx, activityOptions)
-
-	spew.Dump(params, "SUS")
 
 	outputDir := paths.MustParse(params.OutputDirPath)
 
@@ -90,8 +88,6 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		Languages:        nil,
 		OriginalLanguage: data.OriginalLanguage,
 	}
-
-	spew.Dump(mergeExportDataParams)
 
 	var clipResult MergeExportDataResult
 	err = workflow.ExecuteChildWorkflow(ctx, MergeExportData, mergeExportDataParams).Get(ctx, &clipResult)
@@ -152,7 +148,13 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	ffmpegArgs := []string{
 		"-i", clipResult.VideoFile.Local(),
 		"-filter_complex", cropFilter,
-		"-c:a", "copy",
+		"-c:v", "libx264",
+		"-profile:v", "main",
+		"-level", "3.1",
+		"-pix_fmt", "yuv420p",
+		"-c:a", "aac",
+		"-b:a", "128k",
+		"-movflags", "+faststart",
 		"-y",
 		shortVideoPath.Local(),
 	}
@@ -194,39 +196,30 @@ func buildCropFilter(keyframes []activities.Keyframe) string {
 }
 
 func buildSmoothTransitionExpression(keyframes []activities.Keyframe, param string) string {
-	if len(keyframes) == 0 {
-		return "489" // fallback value
-	}
-
-	if len(keyframes) == 1 {
-		value := getParamValue(keyframes[0], param)
-		return fmt.Sprintf("%d", value)
-	}
-
 	var conditions []string
 
-	// process keyframes in reverse order (for nested if structure)
 	for i := len(keyframes) - 1; i >= 1; i-- {
 		currentKf := keyframes[i]
 
 		if currentKf.JumpCut {
-			// jump cut
 			targetValue := getParamValue(currentKf, param)
 			condition := fmt.Sprintf("if(gte(t,%.3f),%d,", currentKf.StartTimestamp, targetValue)
 			conditions = append(conditions, condition)
 		} else {
-			// smooth pan
 			prevValue := getParamValue(keyframes[i-1], param)
 			targetValue := getParamValue(currentKf, param)
 
-			panDuration := 1.0 // You can make this configurable
+			distance := calculateDistance(keyframes[i-1], currentKf)
+			panDuration := calculatePanDuration(distance)
 			endTime := currentKf.StartTimestamp + panDuration
 
-			// smooth transition expression
-			smoothExpr := fmt.Sprintf("if(lte(t,%.3f),%d+(%d-%d)*(t-%.3f)/%.3f,%d)",
+			normalizedTime := fmt.Sprintf("(t-%.3f)/%.3f", currentKf.StartTimestamp, panDuration)
+			easingFactor := fmt.Sprintf("(1-pow(1-(%s),2))", normalizedTime)
+
+			smoothExpr := fmt.Sprintf("if(lte(t,%.3f),%d+(%d-%d)*%s,%d)",
 				endTime,
 				prevValue, targetValue, prevValue,
-				currentKf.StartTimestamp, panDuration,
+				easingFactor,
 				targetValue)
 
 			condition := fmt.Sprintf("if(gte(t,%.3f),%s,", currentKf.StartTimestamp, smoothExpr)
@@ -235,13 +228,35 @@ func buildSmoothTransitionExpression(keyframes []activities.Keyframe, param stri
 	}
 
 	result := strings.Join(conditions, "")
-
 	firstValue := getParamValue(keyframes[0], param)
 	result += fmt.Sprintf("%d", firstValue)
-
 	result += strings.Repeat(")", len(conditions))
 
 	return result
+}
+
+func calculateDistance(kf1, kf2 activities.Keyframe) float64 {
+	dx := float64(kf2.X - kf1.X)
+	dy := float64(kf2.Y - kf1.Y)
+	return math.Sqrt(dx*dx + dy*dy)
+}
+
+func calculatePanDuration(distance float64) float64 {
+	const (
+		minDuration = 0.1
+		maxDuration = 3.0
+		speedFactor = 200.0
+	)
+
+	duration := distance / speedFactor
+	if duration < minDuration {
+		duration = minDuration
+	}
+	if duration > maxDuration {
+		duration = maxDuration
+	}
+
+	return duration
 }
 
 func getParamValue(kf activities.Keyframe, param string) int {
