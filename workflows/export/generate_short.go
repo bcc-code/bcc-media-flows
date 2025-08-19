@@ -2,7 +2,6 @@ package export
 
 import (
 	"fmt"
-	"math"
 	"strings"
 	"time"
 
@@ -161,27 +160,25 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	}
 
 	shortVideoPath := outputDir.Append(titleWithShort + "_cropped.mp4")
-	cropFilter := buildCropFilter(keyframes)
 
-	ffmpegArgs := []string{
-		"-i", clipResult.VideoFile.Local(),
-		"-i", params.VideoFilePath,
-		"-filter_complex",
-		fmt.Sprintf(
-			"[0:v]%s[v]; [1:a]atrim=start=%.3f:end=%.3f,asetpts=PTS-STARTPTS[a]",
-			cropFilter, params.InSeconds, params.OutSeconds,
-		),
-		"-map", "[v]",
-		"-map", "[a]",
-		"-c:v", "libx264",
-		"-c:a", "aac",
-		"-pix_fmt", "yuv420p",
-		"-y",
-		shortVideoPath.Local(),
+	var cropRes activities.CropShortResult
+	err = wfutils.Execute(ctx,
+		activities.UtilActivities{}.CropShortActivity,
+		activities.CropShortInput{
+			InputVideoPath:  clipResult.VideoFile.Local(),
+			AudioVideoPath:  params.VideoFilePath,
+			OutputVideoPath: shortVideoPath.Local(),
+			KeyFrames:       keyframes,
+			InSeconds:       params.InSeconds,
+			OutSeconds:      params.OutSeconds,
+		}).Get(ctx, &cropRes)
+	if err != nil {
+		logger.Error("CropShortActivity failed: " + err.Error())
+		return nil, err
 	}
 
 	ffmpegParams := miscworkflows.ExecuteFFmpegInput{
-		Arguments: ffmpegArgs,
+		Arguments: cropRes.Arguments,
 	}
 
 	err = workflow.ExecuteChildWorkflow(ctx, miscworkflows.ExecuteFFmpeg, ffmpegParams).Get(ctx, nil)
@@ -195,102 +192,4 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		ShortVideoFile: &shortVideoPath,
 		Keyframes:      keyframes,
 	}, nil
-}
-
-func buildCropFilter(keyframes []activities.Keyframe) string {
-	if len(keyframes) == 0 {
-		return "crop=960:540:489:29" // fallback
-	}
-
-	if len(keyframes) == 1 {
-		kf := keyframes[0]
-		return fmt.Sprintf("crop=%d:%d:%d:%d", kf.W, kf.H, kf.X, kf.Y)
-	}
-
-	cropW := keyframes[0].W
-	cropH := keyframes[0].H
-
-	xExpr := buildSmoothTransitionExpression(keyframes, "X")
-	yExpr := buildSmoothTransitionExpression(keyframes, "Y")
-
-	return fmt.Sprintf("crop=%d:%d:x='%s':y='%s'", cropW, cropH, xExpr, yExpr)
-}
-
-func buildSmoothTransitionExpression(keyframes []activities.Keyframe, param string) string {
-	var conditions []string
-
-	for i := len(keyframes) - 1; i >= 1; i-- {
-		currentKf := keyframes[i]
-
-		if currentKf.JumpCut {
-			targetValue := getParamValue(currentKf, param)
-			condition := fmt.Sprintf("if(gte(t,%.3f),%d,", currentKf.StartTimestamp, targetValue)
-			conditions = append(conditions, condition)
-		} else {
-			prevValue := getParamValue(keyframes[i-1], param)
-			targetValue := getParamValue(currentKf, param)
-
-			distance := calculateDistance(keyframes[i-1], currentKf)
-			panDuration := calculatePanDuration(distance)
-			endTime := currentKf.StartTimestamp + panDuration
-
-			normalizedTime := fmt.Sprintf("(t-%.3f)/%.3f", currentKf.StartTimestamp, panDuration)
-			easingFactor := fmt.Sprintf("(1-pow(1-(%s),2))", normalizedTime)
-
-			smoothExpr := fmt.Sprintf("if(lte(t,%.3f),%d+(%d-%d)*%s,%d)",
-				endTime,
-				prevValue, targetValue, prevValue,
-				easingFactor,
-				targetValue)
-
-			condition := fmt.Sprintf("if(gte(t,%.3f),%s,", currentKf.StartTimestamp, smoothExpr)
-			conditions = append(conditions, condition)
-		}
-	}
-
-	result := strings.Join(conditions, "")
-	firstValue := getParamValue(keyframes[0], param)
-	result += fmt.Sprintf("%d", firstValue)
-	result += strings.Repeat(")", len(conditions))
-
-	return result
-}
-
-func calculateDistance(kf1, kf2 activities.Keyframe) float64 {
-	dx := float64(kf2.X - kf1.X)
-	dy := float64(kf2.Y - kf1.Y)
-	return math.Sqrt(dx*dx + dy*dy)
-}
-
-func calculatePanDuration(distance float64) float64 {
-	const (
-		minDuration = 0.1
-		maxDuration = 3.0
-		speedFactor = 200.0
-	)
-
-	duration := distance / speedFactor
-	if duration < minDuration {
-		duration = minDuration
-	}
-	if duration > maxDuration {
-		duration = maxDuration
-	}
-
-	return duration
-}
-
-func getParamValue(kf activities.Keyframe, param string) int {
-	switch param {
-	case "X":
-		return kf.X
-	case "Y":
-		return kf.Y
-	case "W":
-		return kf.W
-	case "H":
-		return kf.H
-	default:
-		return 0
-	}
 }
