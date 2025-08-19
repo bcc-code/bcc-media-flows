@@ -148,13 +148,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	ffmpegArgs := []string{
 		"-i", clipResult.VideoFile.Local(),
 		"-filter_complex", cropFilter,
-		"-c:v", "libx264",
-		"-profile:v", "main",
-		"-level", "3.1",
 		"-pix_fmt", "yuv420p",
-		"-c:a", "aac",
-		"-b:a", "128k",
-		"-movflags", "+faststart",
 		"-y",
 		shortVideoPath.Local(),
 	}
