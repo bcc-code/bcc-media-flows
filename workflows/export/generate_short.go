@@ -3,6 +3,7 @@ package export
 import (
 	"fmt"
 	"math"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -16,6 +17,8 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
+var shortServiceURL = os.Getenv("SHORTS_SERVICE_URL")
+
 type GenerateShortResult struct {
 	VideoFile      *paths.Path
 	ShortVideoFile *paths.Path
@@ -23,11 +26,10 @@ type GenerateShortResult struct {
 }
 
 type GenerateShortDataParams struct {
-	VideoFilePath   string  `json:"VideoFile"`
-	OutputDirPath   string  `json:"OutputDir"`
-	InSeconds       float64 `json:"InSeconds"`
-	OutSeconds      float64 `json:"OutSeconds"`
-	ShortServiceURL string  `json:"ShortServiceURL"`
+	VideoFilePath string  `json:"VideoFile"`
+	OutputDirPath string  `json:"OutputDir"`
+	InSeconds     float64 `json:"InSeconds"`
+	OutSeconds    float64 `json:"OutSeconds"`
 }
 
 func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*GenerateShortResult, error) {
@@ -82,10 +84,10 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		TempDir:          outputDir,
 		SubtitlesDir:     subtitlesOutputDir,
 		MakeVideo:        true,
-		MakeAudio:        true,
-		MakeSubtitles:    false,
-		MakeTranscript:   false,
-		Languages:        nil,
+		MakeAudio:        false,
+		MakeSubtitles:    true,
+		MakeTranscript:   true,
+		Languages:        []string{"no"},
 		OriginalLanguage: data.OriginalLanguage,
 	}
 
@@ -96,7 +98,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	}
 
 	submitJobParams := activities.SubmitShortJobInput{
-		URL:        params.ShortServiceURL,
+		URL:        shortServiceURL,
 		InputPath:  clipResult.VideoFile.Local(),
 		OutputPath: outputDir.Local(),
 		Model:      "n",
@@ -113,7 +115,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	logger.Info("Job submitted with ID: " + jobResult.JobID)
 
 	checkStatusParams := activities.CheckJobStatusInput{
-		URL:   params.ShortServiceURL,
+		URL:   shortServiceURL,
 		JobID: jobResult.JobID,
 	}
 
@@ -147,7 +149,16 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 
 	ffmpegArgs := []string{
 		"-i", clipResult.VideoFile.Local(),
-		"-filter_complex", cropFilter,
+		"-i", params.VideoFilePath,
+		"-filter_complex",
+		fmt.Sprintf(
+			"[0:v]%s[v]; [1:a]atrim=start=%.3f:end=%.3f,asetpts=PTS-STARTPTS[a]",
+			cropFilter, params.InSeconds, params.OutSeconds,
+		),
+		"-map", "[v]",
+		"-map", "[a]",
+		"-c:v", "libx264",
+		"-c:a", "aac",
 		"-pix_fmt", "yuv420p",
 		"-y",
 		shortVideoPath.Local(),
