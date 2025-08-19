@@ -3,7 +3,6 @@ package export
 import (
 	"fmt"
 	"math"
-	"os"
 	"strings"
 	"time"
 
@@ -15,8 +14,6 @@ import (
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
-
-var shortServiceURL = os.Getenv("SHORTS_SERVICE_URL")
 
 type GenerateShortResult struct {
 	VideoFile      *paths.Path
@@ -115,7 +112,6 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	}
 
 	submitJobParams := activities.SubmitShortJobInput{
-		URL:        shortServiceURL,
 		InputPath:  clipResult.VideoFile.Local(),
 		OutputPath: outputDir.Local(),
 		Model:      "n",
@@ -132,7 +128,6 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	logger.Info("Job submitted with ID: " + jobResult.JobID)
 
 	checkStatusParams := activities.CheckJobStatusInput{
-		URL:   shortServiceURL,
 		JobID: jobResult.JobID,
 	}
 
