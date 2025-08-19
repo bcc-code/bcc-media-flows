@@ -32,9 +32,29 @@ type GenerateShortDataParams struct {
 	OutSeconds    float64 `json:"OutSeconds"`
 }
 
+func validationError(msg string) error {
+	return temporal.NewApplicationError(msg, "ValidationError", nil)
+}
+
 func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*GenerateShortResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting GenerateShort")
+
+	if strings.TrimSpace(params.VideoFilePath) == "" {
+		return nil, validationError("VideoFilePath is empty")
+	}
+	if strings.TrimSpace(params.OutputDirPath) == "" {
+		return nil, validationError("OutputDirPath is empty")
+	}
+	if params.InSeconds < 0 {
+		return nil, validationError("InSeconds must be >= 0")
+	}
+	if params.OutSeconds < 0 {
+		return nil, validationError("OutSeconds must be >= 0")
+	}
+	if params.InSeconds >= params.OutSeconds {
+		return nil, validationError("InSeconds must be < OutSeconds")
+	}
 
 	activityOptions := workflow.ActivityOptions{
 		StartToCloseTimeout: time.Minute * 10,
