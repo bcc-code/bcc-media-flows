@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -33,7 +32,7 @@ type GenerateShortDataParams struct {
 }
 
 func validationError(msg string) error {
-	return temporal.NewApplicationError(msg, "ValidationError", nil)
+	return temporal.NewApplicationError(msg, "ValidationError")
 }
 
 func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*GenerateShortResult, error) {
@@ -56,12 +55,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		return nil, validationError("InSeconds must be < OutSeconds")
 	}
 
-	activityOptions := workflow.ActivityOptions{
-		StartToCloseTimeout: time.Minute * 10,
-		RetryPolicy: &temporal.RetryPolicy{
-			MaximumAttempts: 3,
-		},
-	}
+	activityOptions := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, activityOptions)
 
 	outputDir := paths.MustParse(params.OutputDirPath)
@@ -72,12 +66,15 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		return nil, err
 	}
 
-	originalFileName := filepath.Base(params.VideoFilePath)
-	fileNameWithoutExt := strings.TrimSuffix(originalFileName, filepath.Ext(originalFileName))
+	originalFileName, err := paths.Parse(params.VideoFilePath)
+	if err != nil {
+		return nil, err
+	}
+	fileNameWithoutExt := originalFileName.BaseNoExt()
 	titleWithShort := fileNameWithoutExt + "_short"
 
 	clip := vidispine.Clip{
-		VideoFile:          params.VideoFilePath,
+		VideoFile:          originalFileName.Linux(),
 		InSeconds:          params.InSeconds,
 		OutSeconds:         params.OutSeconds,
 		SequenceIn:         0,
@@ -126,7 +123,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	}
 
 	var jobResult *activities.SubmitShortJobResult
-	err = workflow.ExecuteActivity(ctx, activities.UtilActivities{}.SubmitShortJobActivity, submitJobParams).Get(ctx, &jobResult)
+	err = wfutils.Execute(ctx, activities.UtilActivities{}.SubmitShortJobActivity, submitJobParams).Get(ctx, &jobResult)
 	if err != nil {
 		logger.Error("Failed to submit job: " + err.Error())
 		return nil, err
@@ -142,7 +139,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	var keyframes []activities.Keyframe
 	for {
 		var statusResult *activities.GenerateShortRequestResult
-		err = workflow.ExecuteActivity(ctx, activities.UtilActivities{}.CheckJobStatusActivity, checkStatusParams).Get(ctx, &statusResult)
+		err = wfutils.Execute(ctx, activities.UtilActivities{}.CheckJobStatusActivity, checkStatusParams).Get(ctx, &statusResult)
 		if err != nil {
 			logger.Error("Failed to check job status: " + err.Error())
 			return nil, err
@@ -155,6 +152,10 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		}
 
 		if statusResult.Status == "failed" || statusResult.Status == "error" {
+			return nil, fmt.Errorf("job failed with status: %s", statusResult.Status)
+		}
+
+		if statusResult.Status != "in_progress" {
 			return nil, fmt.Errorf("job failed with status: %s", statusResult.Status)
 		}
 
