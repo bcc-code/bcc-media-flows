@@ -17,6 +17,8 @@ import (
 
 type GenerateShortResult struct {
 	VideoFile      *paths.Path
+	AudioFiles     map[string]paths.Path
+	SubtitleFiles  map[string]paths.Path
 	ShortVideoFile *paths.Path
 	Keyframes      []activities.Keyframe
 }
@@ -52,13 +54,20 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		return nil, validationError("InSeconds must be < OutSeconds")
 	}
 
-	originalFile, err := wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
-		VXID: params.VXID,
-		Tags: []string{"original"},
+	exportData, err := wfutils.Execute(ctx, activities.Vidispine.GetExportDataActivity, vsactivity.GetExportDataParams{
+		VXID:        params.VXID,
+		Languages:   []string{"no", "de", "en"},
+		AudioSource: vidispine.ExportAudioSourceEmbedded.Value,
+		Subclip:     "",
+		SubsAllowAI: true,
 	}).Result(ctx)
 
 	if err != nil {
 		return nil, err
+	}
+
+	if len(exportData.Clips) != 1 {
+		return nil, fmt.Errorf("only one clip supported, got %d", len(exportData.Clips))
 	}
 
 	activityOptions := wfutils.GetDefaultActivityOptions()
@@ -75,43 +84,21 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		return nil, err
 	}
 
-	originalFileName := originalFile.FilePath
-	fileNameWithoutExt := originalFileName.BaseNoExt()
-	titleWithShort := fileNameWithoutExt + "_short"
-
-	clip := vidispine.Clip{
-		VideoFile:          originalFileName.Linux(),
-		InSeconds:          params.InSeconds,
-		OutSeconds:         params.OutSeconds,
-		SequenceIn:         0,
-		SequenceOut:        params.OutSeconds - params.InSeconds,
-		AudioFiles:         nil,
-		SubtitleFiles:      nil,
-		JSONTranscriptFile: "",
-		VXID:               "",
-	}
-
-	data := vidispine.ExportData{
-		Clips:               []*vidispine.Clip{&clip},
-		SafeTitle:           titleWithShort,
-		Title:               titleWithShort,
-		ImportDate:          nil,
-		BmmTitle:            nil,
-		BmmTrackID:          nil,
-		OriginalLanguage:    "no",
-		TranscribedLanguage: "",
-	}
+	titleWithShort := exportData.Title + "_short"
+	clip := exportData.Clips[0]
+	clip.InSeconds = params.InSeconds
+	clip.OutSeconds = params.OutSeconds
 
 	mergeExportDataParams := MergeExportDataParams{
-		ExportData:       &data,
+		ExportData:       exportData,
 		TempDir:          tempFolder,
 		SubtitlesDir:     subtitlesOutputDir,
 		MakeVideo:        true,
-		MakeAudio:        false,
+		MakeAudio:        true,
 		MakeSubtitles:    true,
 		MakeTranscript:   true,
-		Languages:        []string{"no"},
-		OriginalLanguage: data.OriginalLanguage,
+		Languages:        []string{"no", "de", "en"},
+		OriginalLanguage: exportData.OriginalLanguage,
 	}
 
 	var clipResult MergeExportDataResult
@@ -163,14 +150,13 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		}
 	}
 
-	shortVideoPath := tempFolder.Append(titleWithShort + "_cropped.mp4")
+	shortVideoPath := tempFolder.Append(titleWithShort + "_cropped.mov")
 
 	var cropRes activities.CropShortResult
 	err = wfutils.Execute(ctx,
 		activities.Util.CropShortActivity,
 		activities.CropShortInput{
 			InputVideoPath:  clipResult.VideoFile.Local(),
-			AudioVideoPath:  originalFileName.Linux(),
 			OutputVideoPath: shortVideoPath.Local(),
 			KeyFrames:       keyframes,
 			InSeconds:       params.InSeconds,
@@ -195,5 +181,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		VideoFile:      clipResult.VideoFile,
 		ShortVideoFile: &shortVideoPath,
 		Keyframes:      keyframes,
+		AudioFiles:     clipResult.AudioFiles,
+		SubtitleFiles:  clipResult.SubtitleFiles,
 	}, nil
 }

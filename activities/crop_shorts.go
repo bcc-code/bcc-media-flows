@@ -12,7 +12,6 @@ import (
 
 type CropShortInput struct {
 	InputVideoPath  string
-	AudioVideoPath  string
 	OutputVideoPath string
 	KeyFrames       []Keyframe
 	InSeconds       float64
@@ -34,17 +33,12 @@ func (ua UtilActivities) CropShortActivity(ctx context.Context, params CropShort
 
 	args := []string{
 		"-i", params.InputVideoPath,
-		"-i", params.AudioVideoPath,
 		"-progress", "pipe:1",
 		"-hide_banner",
 		"-strict", "unofficial",
 		"-filter_complex",
-		fmt.Sprintf(
-			"[0:v]%s[v]; [1:a]atrim=start=%.3f:end=%.3f,asetpts=PTS-STARTPTS[a]",
-			cropFilter, params.InSeconds, params.OutSeconds,
-		),
+		fmt.Sprintf("[0:v]%s[v]", cropFilter),
 		"-map", "[v]",
-		"-map", "[a]",
 		"-c:v", "prores",
 		"-profile:v", "3",
 		"-vendor", "ap10",
@@ -54,7 +48,6 @@ func (ua UtilActivities) CropShortActivity(ctx context.Context, params CropShort
 		"-color_primaries", "bt709",
 		"-color_trc", "bt709",
 		"-colorspace", "bt709",
-		"-c:a", "aac",
 		"-y",
 		params.OutputVideoPath,
 	}
@@ -63,7 +56,10 @@ func (ua UtilActivities) CropShortActivity(ctx context.Context, params CropShort
 
 func buildCropFilter(keyframes []Keyframe) string {
 	if len(keyframes) == 0 {
-		return "crop=960:540:489:29"
+		// Default: portrait 9:16 crop, centered horizontally, full frame height.
+		// Ensure even dimensions for codec compatibility.
+		// width = floor(in_h*9/16) rounded to even, height = in_h, x = centered even, y = 0
+		return "crop=floor(in_h*9/16/2)*2:in_h:floor((in_w-out_w)/2/2)*2:0"
 	}
 	if len(keyframes) == 1 {
 		kf := keyframes[0]
