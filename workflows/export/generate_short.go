@@ -64,9 +64,12 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	activityOptions := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, activityOptions)
 
-	outputDir := paths.MustParse(params.OutputDirPath)
+	tempFolder, err := wfutils.GetWorkflowTempFolder(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	subtitlesOutputDir := outputDir.Append("subtitles")
+	subtitlesOutputDir := tempFolder.Append("subtitles")
 	err = wfutils.CreateFolder(ctx, subtitlesOutputDir)
 	if err != nil {
 		return nil, err
@@ -101,7 +104,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 
 	mergeExportDataParams := MergeExportDataParams{
 		ExportData:       &data,
-		TempDir:          outputDir,
+		TempDir:          tempFolder,
 		SubtitlesDir:     subtitlesOutputDir,
 		MakeVideo:        true,
 		MakeAudio:        false,
@@ -118,8 +121,8 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	}
 
 	submitJobParams := activities.SubmitShortJobInput{
-		InputPath:  clipResult.VideoFile.Local(),
-		OutputPath: outputDir.Local(),
+		InputPath:  clipResult.VideoFile.Linux(),
+		OutputPath: tempFolder.Linux(),
 		Model:      "n",
 		Debug:      true,
 	}
@@ -160,7 +163,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		}
 	}
 
-	shortVideoPath := outputDir.Append(titleWithShort + "_cropped.mp4")
+	shortVideoPath := tempFolder.Append(titleWithShort + "_cropped.mp4")
 
 	var cropRes activities.CropShortResult
 	err = wfutils.Execute(ctx,
