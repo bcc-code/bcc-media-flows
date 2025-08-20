@@ -6,6 +6,8 @@ import (
 	"math"
 	"strconv"
 	"strings"
+
+	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 )
 
 type CropShortInput struct {
@@ -24,9 +26,18 @@ type CropShortResult struct {
 func (ua UtilActivities) CropShortActivity(ctx context.Context, params CropShortInput) (*CropShortResult, error) {
 	cropFilter := buildCropFilter(params.KeyFrames)
 
+	info, err := ffmpeg.GetStreamInfo(params.InputVideoPath)
+	rate := 25
+	if err == nil && info.FrameRate > 40 {
+		rate = 50
+	}
+
 	args := []string{
 		"-i", params.InputVideoPath,
 		"-i", params.AudioVideoPath,
+		"-progress", "pipe:1",
+		"-hide_banner",
+		"-strict", "unofficial",
 		"-filter_complex",
 		fmt.Sprintf(
 			"[0:v]%s[v]; [1:a]atrim=start=%.3f:end=%.3f,asetpts=PTS-STARTPTS[a]",
@@ -34,9 +45,16 @@ func (ua UtilActivities) CropShortActivity(ctx context.Context, params CropShort
 		),
 		"-map", "[v]",
 		"-map", "[a]",
-		"-c:v", "libx264",
+		"-c:v", "prores",
+		"-profile:v", "3",
+		"-vendor", "ap10",
+		"-bits_per_mb", "8000",
+		"-r", strconv.Itoa(rate),
+		"-pix_fmt", "yuv422p10le",
+		"-color_primaries", "bt709",
+		"-color_trc", "bt709",
+		"-colorspace", "bt709",
 		"-c:a", "aac",
-		"-pix_fmt", "yuv420p",
 		"-y",
 		params.OutputVideoPath,
 	}
