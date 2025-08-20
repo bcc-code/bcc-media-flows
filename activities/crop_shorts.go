@@ -14,7 +14,7 @@ import (
 type CropShortInput struct {
 	InputVideoPath  paths.Path
 	OutputVideoPath paths.Path
-	SubtitlePath    paths.Path
+	SubtitlePath    *paths.Path
 	KeyFrames       []Keyframe
 	InSeconds       float64
 	OutSeconds      float64
@@ -35,7 +35,7 @@ func (ua UtilActivities) CropShortActivity(ctx context.Context, params CropShort
 
 	// Build filter: crop, then optional subtitle burn-in, then label as [v]
 	filter := fmt.Sprintf("[0:v]%s", cropFilter)
-	if params.SubtitlePath.Local() != "" {
+	if params.SubtitlePath != nil {
 		filter += ",subtitles=" + params.SubtitlePath.Local()
 	}
 	filter += "[v]"

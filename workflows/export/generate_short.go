@@ -154,13 +154,20 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 
 	shortVideoPath := tempFolder.Append(titleWithShort + "_cropped.mov")
 
+	var subtitlePaths *paths.Path
+	if s, ok := clipResult.SubtitleFiles["no"]; ok {
+		subtitlePaths = &s
+	} else if s, ok := clipResult.SubtitleFiles["und"]; ok {
+		subtitlePaths = &s
+	}
+
 	var cropRes activities.CropShortResult
 	err = wfutils.Execute(ctx,
 		activities.Util.CropShortActivity,
 		activities.CropShortInput{
 			InputVideoPath:  *clipResult.VideoFile,
 			OutputVideoPath: shortVideoPath,
-			SubtitlePath:    clipResult.SubtitleFiles["no"],
+			SubtitlePath:    subtitlePaths,
 			KeyFrames:       keyframes,
 			InSeconds:       params.InSeconds,
 			OutSeconds:      params.OutSeconds,
