@@ -2,6 +2,7 @@ package export
 
 import (
 	"fmt"
+	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"strings"
 	"time"
 
@@ -21,7 +22,7 @@ type GenerateShortResult struct {
 }
 
 type GenerateShortDataParams struct {
-	VideoFilePath string  `json:"VideoFile"`
+	VXID          string  `json:"VXID"`
 	OutputDirPath string  `json:"OutputDir"`
 	InSeconds     float64 `json:"InSeconds"`
 	OutSeconds    float64 `json:"OutSeconds"`
@@ -35,8 +36,8 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting GenerateShort")
 
-	if strings.TrimSpace(params.VideoFilePath) == "" {
-		return nil, validationError("VideoFilePath is empty")
+	if strings.TrimSpace(params.VXID) == "" {
+		return nil, validationError("VXID is empty")
 	}
 	if strings.TrimSpace(params.OutputDirPath) == "" {
 		return nil, validationError("OutputDirPath is empty")
@@ -51,21 +52,27 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		return nil, validationError("InSeconds must be < OutSeconds")
 	}
 
+	originalFile, err := wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
+		VXID: params.VXID,
+		Tags: []string{"original"},
+	}).Result(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
 	activityOptions := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, activityOptions)
 
 	outputDir := paths.MustParse(params.OutputDirPath)
 
 	subtitlesOutputDir := outputDir.Append("subtitles")
-	err := wfutils.CreateFolder(ctx, subtitlesOutputDir)
+	err = wfutils.CreateFolder(ctx, subtitlesOutputDir)
 	if err != nil {
 		return nil, err
 	}
 
-	originalFileName, err := paths.Parse(params.VideoFilePath)
-	if err != nil {
-		return nil, err
-	}
+	originalFileName := originalFile.FilePath
 	fileNameWithoutExt := originalFileName.BaseNoExt()
 	titleWithShort := fileNameWithoutExt + "_short"
 
@@ -160,7 +167,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		activities.Util.CropShortActivity,
 		activities.CropShortInput{
 			InputVideoPath:  clipResult.VideoFile.Local(),
-			AudioVideoPath:  params.VideoFilePath,
+			AudioVideoPath:  originalFileName.Linux(),
 			OutputVideoPath: shortVideoPath.Local(),
 			KeyFrames:       keyframes,
 			InSeconds:       params.InSeconds,
