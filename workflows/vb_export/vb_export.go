@@ -136,10 +136,9 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	videoFilePath := paths.MustParse(videoShape.GetPath())
 
 	originalFilenameWithoutExt := videoFilePath.Base()[0 : len(videoFilePath.Base())-len(videoFilePath.Ext())]
-	var analyzeResult *ffmpeg.StreamInfo
-	err = wfutils.Execute(ctx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
+	analyzeResult, err := wfutils.Execute(ctx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
 		FilePath: videoFilePath,
-	}).Get(ctx, &analyzeResult)
+	}).Result(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -21,7 +21,7 @@ func SendTelegramText(ctx workflow.Context, channel telegram.Chat, message strin
 		return
 	}
 
-	err = Execute(ctx, activities.Util.SendTelegramMessage, msg).Get(ctx, nil)
+	err = Execute(ctx, activities.Util.SendTelegramMessage, msg).Wait(ctx)
 
 	if err != nil {
 		workflow.GetLogger(ctx).Error("Failed to send telegram message", "error", err)
@@ -49,7 +49,7 @@ func SendEmails(ctx workflow.Context, targets []string, subject, message string)
 		return
 	}
 
-	err = Execute(ctx, activities.Util.SendEmail, msg).Get(ctx, nil)
+	err = Execute(ctx, activities.Util.SendEmail, msg).Wait(ctx)
 
 	if err != nil {
 		workflow.GetLogger(ctx).Error("Failed to send email", "error", err)

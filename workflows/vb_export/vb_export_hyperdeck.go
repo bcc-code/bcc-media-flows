@@ -45,7 +45,7 @@ func VBExportToHyperdeck(ctx workflow.Context, params VBExportChildWorkflowParam
 		err = wfutils.Execute(ctx, activities.Audio.Convert51to4Mono, common.AudioInput{
 			Path:            params.InputFile,
 			DestinationPath: fileToTranscode,
-		}).Get(ctx, nil)
+		}).Wait(ctx)
 		if err != nil {
 			return nil, err
 		}

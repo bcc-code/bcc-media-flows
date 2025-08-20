@@ -117,8 +117,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		Debug:      true,
 	}
 
-	var jobResult *activities.SubmitShortJobResult
-	err = wfutils.Execute(ctx, activities.UtilActivities{}.SubmitShortJobActivity, submitJobParams).Get(ctx, &jobResult)
+	jobResult, err := wfutils.Execute(ctx, activities.Util.SubmitShortJobActivity, submitJobParams).Result(ctx)
 	if err != nil {
 		logger.Error("Failed to submit job: " + err.Error())
 		return nil, err
@@ -132,8 +131,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 
 	var keyframes []activities.Keyframe
 	for {
-		var statusResult *activities.GenerateShortRequestResult
-		err = wfutils.Execute(ctx, activities.UtilActivities{}.CheckJobStatusActivity, checkStatusParams).Get(ctx, &statusResult)
+		statusResult, err := wfutils.Execute(ctx, activities.Util.CheckJobStatusActivity, checkStatusParams).Result(ctx)
 		if err != nil {
 			logger.Error("Failed to check job status: " + err.Error())
 			return nil, err
@@ -159,7 +157,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 
 	var cropRes activities.CropShortResult
 	err = wfutils.Execute(ctx,
-		activities.UtilActivities{}.CropShortActivity,
+		activities.Util.CropShortActivity,
 		activities.CropShortInput{
 			InputVideoPath:  clipResult.VideoFile.Local(),
 			AudioVideoPath:  params.VideoFilePath,

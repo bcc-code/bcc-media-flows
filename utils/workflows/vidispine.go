@@ -21,7 +21,7 @@ func WaitForVidispineJob(ctx workflow.Context, jobID string) error {
 	ctx = workflow.WithActivityOptions(ctx, options)
 	return Execute(ctx, activities.Vidispine.JobCompleteOrErr, vsactivity.WaitForJobCompletionParams{
 		JobID: jobID,
-	}).Get(ctx, nil)
+	}).Wait(ctx)
 }
 
 func SetVidispineMeta(ctx workflow.Context, assetID, key, value string) error {
@@ -29,7 +29,7 @@ func SetVidispineMeta(ctx workflow.Context, assetID, key, value string) error {
 		ItemID: assetID,
 		Key:    key,
 		Value:  value,
-	}).Get(ctx, nil)
+	}).Wait(ctx)
 }
 
 func SetVidispineMetaInGroup(ctx workflow.Context, assetID, key, value, group string) error {
@@ -38,7 +38,7 @@ func SetVidispineMetaInGroup(ctx workflow.Context, assetID, key, value, group st
 		Key:     key,
 		Value:   value,
 		GroupID: group,
-	}).Get(ctx, nil)
+	}).Wait(ctx)
 }
 
 func AddVidispineMetaValue(ctx workflow.Context, assetID, key, value string) error {
@@ -46,5 +46,5 @@ func AddVidispineMetaValue(ctx workflow.Context, assetID, key, value string) err
 		ItemID: assetID,
 		Key:    key,
 		Value:  value,
-	}).Get(ctx, nil)
+	}).Wait(ctx)
 }

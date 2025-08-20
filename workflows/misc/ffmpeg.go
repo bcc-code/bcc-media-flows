@@ -23,7 +23,7 @@ func ExecuteFFmpeg(
 
 	err := wfutils.Execute(ctx, activities.Video.ExecuteFFmpeg, activities.ExecuteFFmpegInput{
 		Arguments: params.Arguments,
-	}).Get(ctx, nil)
+	}).Wait(ctx)
 
 	if err != nil {
 		return err

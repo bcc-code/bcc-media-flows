@@ -26,15 +26,8 @@ func TranscodePreviewFile(
 
 	filePath := paths.MustParse(params.FilePath)
 
-	previewResponse := &activities.TranscodePreviewResponse{}
-	err := wfutils.Execute(ctx, activities.Video.TranscodePreview, activities.TranscodePreviewParams{
+	return wfutils.Execute(ctx, activities.Video.TranscodePreview, activities.TranscodePreviewParams{
 		FilePath:           filePath,
 		DestinationDirPath: filePath.Dir(),
-	}).Get(ctx, previewResponse)
-
-	if err != nil {
-		return err
-	}
-
-	return err
+	}).Wait(ctx)
 }

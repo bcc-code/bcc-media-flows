@@ -21,5 +21,5 @@ func PublishEvent[T any](ctx workflow.Context, eventName string, data T) error {
 		return err
 	}
 
-	return Execute[any, any](ctx, activities.Util.PubsubPublish, event).Get(ctx, nil)
+	return Execute[any, any](ctx, activities.Util.PubsubPublish, event).Wait(ctx)
 }

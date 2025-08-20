@@ -3,7 +3,6 @@ package vb_export
 import (
 	"github.com/ansel1/merry/v2"
 	"github.com/bcc-code/bcc-media-flows/activities"
-	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
@@ -67,15 +66,14 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		currentVideoFile := params.InputFile
 		if params.SubtitleFile != nil {
 			// Burn in subtitle
-			var videoResult common.VideoResult
-			err = wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
+			videoResult, err := wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
 				FilePath:       currentVideoFile,
 				OutputDir:      hippoOutputDir,
 				Interlace:      false,
 				BurnInSubtitle: params.SubtitleFile,
 				SubtitleStyle:  params.SubtitleStyle,
 				Alpha:          params.AnalyzeResult.HasAlpha,
-			}).Get(ctx, &videoResult)
+			}).Result(ctx)
 			if err != nil {
 				return nil, err
 			}
@@ -93,15 +91,14 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		err = wfutils.Execute(ctx, activities.Util.CopyFile, activities.MoveFileInput{
 			Source:      currentVideoFile,
 			Destination: inputFolder.Append(params.InputFile.Base()),
-		}).Get(ctx, nil)
+		}).Wait(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		success = false
-		err = wfutils.Execute(ctx, activities.Util.WaitForFile, activities.FileInput{
+		success, err = wfutils.Execute(ctx, activities.Util.WaitForFile, activities.FileInput{
 			Path: outputFile,
-		}).Get(ctx, &success)
+		}).Result(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -125,7 +122,7 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 
 	err = wfutils.Execute(ctx, activities.Util.DeletePath, activities.DeletePathInput{
 		Path: outputFile,
-	}).Get(ctx, nil)
+	}).Wait(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -110,11 +110,10 @@ func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 	for _, folder := range folders {
 		olderThan := foldersToCleanup[folder]
 
-		deletedFilesLoop := []string{}
-		err := wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.DeleteOldFiles, activities.CleanupInput{
+		deletedFilesLoop, err := wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.DeleteOldFiles, activities.CleanupInput{
 			Root:      paths.MustParse(folder),
 			OlderThan: olderThan,
-		}).Get(ctx, &deletedFilesLoop)
+		}).Result(ctx)
 
 		logger.Info("Deleted files", "count", len(deletedFiles))
 
@@ -127,7 +126,7 @@ func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 
 		err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.DeleteEmptyDirectories, activities.CleanupInput{
 			Root: paths.MustParse(folder),
-		}).Get(ctx, nil)
+		}).Wait(ctx)
 
 		if err != nil {
 			return nil, err

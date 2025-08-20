@@ -82,7 +82,7 @@ func HandleMultitrackFile(
 	err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.MoveFile, activities.MoveFileInput{
 		Source:      path,
 		Destination: isilonArchivePath,
-	}).Get(ctx, nil)
+	}).Wait(ctx)
 
 	return err
 }

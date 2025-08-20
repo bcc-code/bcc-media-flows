@@ -21,14 +21,16 @@ import (
 func CreateFolder(ctx workflow.Context, destination paths.Path) error {
 	return Execute(ctx, activities.Util.CreateFolder, activities.CreateFolderInput{
 		Destination: destination,
-	}).Get(ctx, nil)
+	}).Wait(ctx)
 }
 
 func StandardizeFileName(ctx workflow.Context, file paths.Path) (paths.Path, error) {
-	var result activities.FileResult
-	err := Execute(ctx, activities.Util.StandardizeFileName, activities.FileInput{
+	result, err := Execute(ctx, activities.Util.StandardizeFileName, activities.FileInput{
 		Path: file,
-	}).Get(ctx, &result)
+	}).Result(ctx)
+	if err != nil {
+		return file, err
+	}
 	return result.Path, err
 }
 
@@ -41,7 +43,7 @@ func MoveFile(ctx workflow.Context, source, destination paths.Path, priority rcl
 		return Execute(ctx, activities.Util.MoveFile, activities.MoveFileInput{
 			Source:      source,
 			Destination: destination,
-		}).Get(ctx, nil)
+		}).Wait(ctx)
 	}
 }
 
@@ -49,7 +51,7 @@ func CopyFile(ctx workflow.Context, source, destination paths.Path) error {
 	return Execute(ctx, activities.Util.CopyFile, activities.MoveFileInput{
 		Source:      source,
 		Destination: destination,
-	}).Get(ctx, nil)
+	}).Wait(ctx)
 }
 
 func CopyToFolder(ctx workflow.Context, file, folder paths.Path, priority rclone.Priority) (paths.Path, error) {
@@ -68,23 +70,19 @@ func WriteFile(ctx workflow.Context, file paths.Path, data []byte) error {
 	return Execute(ctx, activities.Util.WriteFile, activities.WriteFileInput{
 		Path: file,
 		Data: data,
-	}).Get(ctx, nil)
+	}).Wait(ctx)
 }
 
 func ReadFile(ctx workflow.Context, file paths.Path) ([]byte, error) {
-	var res []byte
-	err := Execute(ctx, activities.Util.ReadFile, activities.FileInput{
+	return Execute(ctx, activities.Util.ReadFile, activities.FileInput{
 		Path: file,
-	}).Get(ctx, &res)
-	return res, err
+	}).Result(ctx)
 }
 
 func ListFiles(ctx workflow.Context, path paths.Path) (paths.Files, error) {
-	var res []paths.Path
-	err := Execute(ctx, activities.Util.ListFiles, activities.FileInput{
+	return Execute(ctx, activities.Util.ListFiles, activities.FileInput{
 		Path: path,
-	}).Get(ctx, &res)
-	return res, err
+	}).Result(ctx)
 }
 
 func UnmarshalXMLFile[T any](ctx workflow.Context, file paths.Path) (*T, error) {
@@ -110,14 +108,14 @@ func UnmarshalXMLFile[T any](ctx workflow.Context, file paths.Path) (*T, error) 
 func DeletePath(ctx workflow.Context, path paths.Path) error {
 	return Execute(ctx, activities.Util.DeletePath, activities.DeletePathInput{
 		Path: path,
-	}).Get(ctx, nil)
+	}).Wait(ctx)
 }
 
 func DeletePathRecursively(ctx workflow.Context, path paths.Path) error {
 	return Execute(ctx, activities.Util.DeletePath, activities.DeletePathInput{
 		RemoveAll: true,
 		Path:      path,
-	}).Get(ctx, nil)
+	}).Wait(ctx)
 }
 
 func GetWorkflowLucidLinkOutputFolder(ctx workflow.Context, root string) paths.Path {

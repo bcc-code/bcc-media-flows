@@ -41,11 +41,10 @@ func TranscodePreviewVX(
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	shapes := &vsactivity.GetFileFromVXResult{}
-	err := wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
+	shapes, err := wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		Tags: []string{"original"},
 		VXID: params.VXID,
-	}).Get(ctx, shapes)
+	}).Result(ctx)
 
 	if err != nil {
 		return err
@@ -61,11 +60,10 @@ func TranscodePreviewVX(
 		return fmt.Errorf("unsupported file extension: %s", filepath.Ext(shapes.FilePath.Path))
 	}
 
-	previewResponse := &activities.TranscodePreviewResponse{}
-	err = wfutils.Execute(ctx, activities.Video.TranscodePreview, activities.TranscodePreviewParams{
+	previewResponse, err := wfutils.Execute(ctx, activities.Video.TranscodePreview, activities.TranscodePreviewParams{
 		FilePath:           shapes.FilePath,
 		DestinationDirPath: destinationPath,
-	}).Get(ctx, previewResponse)
+	}).Result(ctx)
 
 	if err != nil {
 		return err
@@ -83,7 +81,11 @@ func TranscodePreviewVX(
 			AssetID:  params.VXID,
 			FilePath: previewResponse.PreviewFilePath,
 			ShapeTag: shapeTag,
-		}).Get(ctx, nil)
+		}).Wait(ctx)
+
+	if err != nil {
+		return err
+	}
 
 	for l, p := range previewResponse.AudioPreviewFiles {
 		tag := bccmflows.LanguagesByISO[l].MBPreviewTag
@@ -92,7 +94,7 @@ func TranscodePreviewVX(
 				AssetID:  params.VXID,
 				FilePath: p,
 				ShapeTag: tag,
-			}).Get(ctx, nil)
+			}).Wait(ctx)
 		if err != nil {
 			log.L.Log().Err(err).Msg("Error importing audio preview")
 		}

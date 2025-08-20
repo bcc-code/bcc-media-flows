@@ -32,11 +32,10 @@ func TranscribeVX(
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	shapes := &vsactivity.GetFileFromVXResult{}
-	err := wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
+	shapes, err := wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		Tags: []string{"lowres", "lowres_watermarked", "lowaudio", "original"},
 		VXID: params.VXID,
-	}).Get(ctx, shapes)
+	}).Result(ctx)
 
 	if err != nil {
 		return err
@@ -64,12 +63,11 @@ func TranscribeVX(
 		return err
 	}
 
-	transcriptionJob := &activities.TranscribeResponse{}
-	err = wfutils.Execute(ctx, activities.Util.Transcribe, activities.TranscribeParams{
+	transcriptionJob, err := wfutils.Execute(ctx, activities.Util.Transcribe, activities.TranscribeParams{
 		Language:        params.Language,
 		File:            prepareResult.OutputPath,
 		DestinationPath: destinationPath,
-	}).Get(ctx, transcriptionJob)
+	}).Result(ctx)
 
 	if err != nil {
 		return err
@@ -125,14 +123,9 @@ func TranscribeVX(
 		return err
 	}
 
-	err = wfutils.Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.VXMetadataFieldParams{
+	return wfutils.Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.VXMetadataFieldParams{
 		ItemID: params.VXID,
 		Key:    transcriptionMetadataFieldName,
 		Value:  string(txtValue),
-	}).Get(ctx, nil)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	}).Wait(ctx)
 }

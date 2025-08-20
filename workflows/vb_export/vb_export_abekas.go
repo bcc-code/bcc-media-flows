@@ -82,7 +82,7 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		err = wfutils.Execute(ctx, activities.Audio.Convert51to4Mono, common.AudioInput{
 			Path:            params.InputFile,
 			DestinationPath: fileToTranscode,
-		}).Get(ctx, nil)
+		}).Wait(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -147,8 +147,7 @@ func VBExportToAbekasAudioOnly(ctx workflow.Context, params VBExportChildWorkflo
 		DestinationPath: abekasOutputDir,
 	}
 
-	var audioRes *common.AudioResult
-	err = wfutils.Execute(ctx, activities.Audio.TranscodeToAudioWav, transcodeInput).Get(ctx, &audioRes)
+	audioRes, err := wfutils.Execute(ctx, activities.Audio.TranscodeToAudioWav, transcodeInput).Result(ctx)
 	if err != nil {
 		return nil, err
 	}
