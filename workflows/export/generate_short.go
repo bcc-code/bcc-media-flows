@@ -56,7 +56,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 
 	exportData, err := wfutils.Execute(ctx, activities.Vidispine.GetExportDataActivity, vsactivity.GetExportDataParams{
 		VXID:        params.VXID,
-		Languages:   []string{"no", "de", "en"},
+		Languages:   []string{"nor", "deu", "eng"},
 		AudioSource: vidispine.ExportAudioSourceEmbedded.Value,
 		Subclip:     "",
 		SubsAllowAI: true,
@@ -99,7 +99,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		MakeAudio:        true,
 		MakeSubtitles:    true,
 		MakeTranscript:   true,
-		Languages:        []string{"no", "de", "en"},
+		Languages:        []string{"nor", "deu", "eng"},
 		OriginalLanguage: exportData.OriginalLanguage,
 	}
 
