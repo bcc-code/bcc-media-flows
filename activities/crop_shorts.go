@@ -3,6 +3,7 @@ package activities
 import (
 	"context"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"math"
 	"strconv"
 	"strings"
@@ -11,8 +12,9 @@ import (
 )
 
 type CropShortInput struct {
-	InputVideoPath  string
-	OutputVideoPath string
+	InputVideoPath  paths.Path
+	OutputVideoPath paths.Path
+	SubtitlePath    paths.Path
 	KeyFrames       []Keyframe
 	InSeconds       float64
 	OutSeconds      float64
@@ -25,19 +27,26 @@ type CropShortResult struct {
 func (ua UtilActivities) CropShortActivity(ctx context.Context, params CropShortInput) (*CropShortResult, error) {
 	cropFilter := buildCropFilter(params.KeyFrames)
 
-	info, err := ffmpeg.GetStreamInfo(params.InputVideoPath)
+	info, err := ffmpeg.GetStreamInfo(params.InputVideoPath.Local())
 	rate := 25
 	if err == nil && info.FrameRate > 40 {
 		rate = 50
 	}
 
+	// Build filter: crop, then optional subtitle burn-in, then label as [v]
+	filter := fmt.Sprintf("[0:v]%s", cropFilter)
+	if params.SubtitlePath.Local() != "" {
+		filter += ",subtitles=" + params.SubtitlePath.Local()
+	}
+	filter += "[v]"
+
 	args := []string{
-		"-i", params.InputVideoPath,
+		"-i", params.InputVideoPath.Local(),
 		"-progress", "pipe:1",
 		"-hide_banner",
 		"-strict", "unofficial",
 		"-filter_complex",
-		fmt.Sprintf("[0:v]%s[v]", cropFilter),
+		filter,
 		"-map", "[v]",
 		"-c:v", "prores",
 		"-profile:v", "3",
@@ -49,7 +58,7 @@ func (ua UtilActivities) CropShortActivity(ctx context.Context, params CropShort
 		"-color_trc", "bt709",
 		"-colorspace", "bt709",
 		"-y",
-		params.OutputVideoPath,
+		params.OutputVideoPath.Local(),
 	}
 	return &CropShortResult{Arguments: args}, nil
 }

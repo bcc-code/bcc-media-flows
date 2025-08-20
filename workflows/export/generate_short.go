@@ -70,6 +70,8 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		return nil, fmt.Errorf("only one clip supported, got %d", len(exportData.Clips))
 	}
 
+	// transcriptFile := exportData.Clips[0].JSONTranscriptFile
+
 	activityOptions := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, activityOptions)
 
@@ -156,8 +158,9 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	err = wfutils.Execute(ctx,
 		activities.Util.CropShortActivity,
 		activities.CropShortInput{
-			InputVideoPath:  clipResult.VideoFile.Local(),
-			OutputVideoPath: shortVideoPath.Local(),
+			InputVideoPath:  *clipResult.VideoFile,
+			OutputVideoPath: shortVideoPath,
+			SubtitlePath:    clipResult.SubtitleFiles["no"],
 			KeyFrames:       keyframes,
 			InSeconds:       params.InSeconds,
 			OutSeconds:      params.OutSeconds,
