@@ -88,7 +88,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		ImportDate:          nil,
 		BmmTitle:            nil,
 		BmmTrackID:          nil,
-		OriginalLanguage:    "",
+		OriginalLanguage:    "no",
 		TranscribedLanguage: "",
 	}
 
@@ -143,10 +143,6 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 			logger.Info("Job completed successfully")
 			keyframes = statusResult.Keyframes
 			break
-		}
-
-		if statusResult.Status == "failed" || statusResult.Status == "error" {
-			return nil, fmt.Errorf("job failed with status: %s", statusResult.Status)
 		}
 
 		if statusResult.Status != "in_progress" {

@@ -21,7 +21,7 @@ type CropShortResult struct {
 	Arguments []string
 }
 
-func (ua UtilActivities) CropShortActivity(_ context.Context, params CropShortInput) (*CropShortResult, error) {
+func (ua UtilActivities) CropShortActivity(ctx context.Context, params CropShortInput) (*CropShortResult, error) {
 	cropFilter := buildCropFilter(params.KeyFrames)
 
 	args := []string{
@@ -120,10 +120,6 @@ func getParamValue(kf Keyframe, param string) int {
 		return kf.X
 	case "Y":
 		return kf.Y
-	case "W":
-		return kf.W
-	case "H":
-		return kf.H
 	}
 	return 0
 }
