@@ -345,6 +345,7 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 		if err != nil {
 			return nil, err
 		}
+
 		if fileInfo.Size() == 0 {
 			contents := fmt.Sprintf("1\n%s --> %s\n\n", formatDuration(item.Start), formatDuration(item.End))
 			err = os.WriteFile(file,
@@ -358,7 +359,7 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 
 		cmd = exec.Command("ffmpeg",
 			"-hide_banner",
-			"-itsoffset", fmt.Sprintf("%f", startAt),
+			"-itsoffset", fmt.Sprintf("%f", -item.Start+startAt),
 			"-i", file,
 			"-y", fileOut,
 		)

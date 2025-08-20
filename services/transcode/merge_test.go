@@ -166,3 +166,31 @@ func Test_MergeSubtitlesByOffset(t *testing.T) {
 
 	assert.Equal(t, expected, actual)
 }
+
+func Test_MergeSubtitles2(t *testing.T) {
+	output := paths.MustParse("./testdata/generated/")
+	subPath := paths.MustParse("./testdata/sub1.srt")
+
+	input := common.MergeInput{
+		OutputDir: output,
+		WorkDir:   output,
+		Title:     t.Name(),
+		Items: []common.MergeInputItem{
+			common.MergeInputItem{
+				Path:  subPath,
+				Start: 8,
+				End:   15,
+			},
+		},
+	}
+
+	res, err := MergeSubtitles(input, nil)
+	assert.NoError(t, err)
+	assert.Equal(t, paths.MustParse("./testdata/generated/Test_MergeSubtitles2.srt"), res.Path)
+	assert.FileExists(t, res.Path.Local())
+
+	actual, _ := os.ReadFile(res.Path.Local())
+	expected, _ := os.ReadFile("./testdata/Test_MergeSubtitles2.srt")
+
+	assert.Equal(t, expected, actual)
+}

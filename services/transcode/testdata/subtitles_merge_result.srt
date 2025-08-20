@@ -10,7 +10,7 @@ It can also have multiple lines
 And even more lines
 
 3
-00:00:18,000 --> 00:00:20,500
+00:00:08,000 --> 00:00:10,500
 - Multiple speakers can be shown
 - Using dashes like this
 
