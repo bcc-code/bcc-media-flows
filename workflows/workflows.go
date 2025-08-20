@@ -47,6 +47,7 @@ var WorkerWorkflows = []any{
 	export.ExportTimedMetadata,
 	export.BulkExportShorts,
 	export.ExportShort,
+	export.GenerateShort,
 	miscworkflows.ExecuteFFmpeg,
 	miscworkflows.ImportSubtitlesFromSubtrans,
 	miscworkflows.MergeAndImportSubtitlesFromCSV,
