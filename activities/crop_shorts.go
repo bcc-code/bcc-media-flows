@@ -3,15 +3,18 @@ package activities
 import (
 	"context"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"math"
 	"strconv"
 	"strings"
+
+	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 )
 
 type CropShortInput struct {
-	InputVideoPath  string
-	AudioVideoPath  string
-	OutputVideoPath string
+	InputVideoPath  paths.Path
+	OutputVideoPath paths.Path
+	SubtitlePath    paths.Path
 	KeyFrames       []Keyframe
 	InSeconds       float64
 	OutSeconds      float64
@@ -24,28 +27,48 @@ type CropShortResult struct {
 func (ua UtilActivities) CropShortActivity(ctx context.Context, params CropShortInput) (*CropShortResult, error) {
 	cropFilter := buildCropFilter(params.KeyFrames)
 
+	info, err := ffmpeg.GetStreamInfo(params.InputVideoPath.Local())
+	rate := 25
+	if err == nil && info.FrameRate > 40 {
+		rate = 50
+	}
+
+	// Build filter: crop, then optional subtitle burn-in, then label as [v]
+	filter := fmt.Sprintf("[0:v]%s", cropFilter)
+	if params.SubtitlePath.Local() != "" {
+		filter += ",subtitles=" + params.SubtitlePath.Local()
+	}
+	filter += "[v]"
+
 	args := []string{
-		"-i", params.InputVideoPath,
-		"-i", params.AudioVideoPath,
+		"-i", params.InputVideoPath.Local(),
+		"-progress", "pipe:1",
+		"-hide_banner",
+		"-strict", "unofficial",
 		"-filter_complex",
-		fmt.Sprintf(
-			"[0:v]%s[v]; [1:a]atrim=start=%.3f:end=%.3f,asetpts=PTS-STARTPTS[a]",
-			cropFilter, params.InSeconds, params.OutSeconds,
-		),
+		filter,
 		"-map", "[v]",
-		"-map", "[a]",
-		"-c:v", "libx264",
-		"-c:a", "aac",
-		"-pix_fmt", "yuv420p",
+		"-c:v", "prores",
+		"-profile:v", "3",
+		"-vendor", "ap10",
+		"-bits_per_mb", "8000",
+		"-r", strconv.Itoa(rate),
+		"-pix_fmt", "yuv422p10le",
+		"-color_primaries", "bt709",
+		"-color_trc", "bt709",
+		"-colorspace", "bt709",
 		"-y",
-		params.OutputVideoPath,
+		params.OutputVideoPath.Local(),
 	}
 	return &CropShortResult{Arguments: args}, nil
 }
 
 func buildCropFilter(keyframes []Keyframe) string {
 	if len(keyframes) == 0 {
-		return "crop=960:540:489:29"
+		// Default: portrait 9:16 crop, centered horizontally, full frame height.
+		// Ensure even dimensions for codec compatibility.
+		// width = floor(in_h*9/16) rounded to even, height = in_h, x = centered even, y = 0
+		return "crop=floor(in_h*9/16/2)*2:in_h:floor((in_w-out_w)/2/2)*2:0"
 	}
 	if len(keyframes) == 1 {
 		kf := keyframes[0]
