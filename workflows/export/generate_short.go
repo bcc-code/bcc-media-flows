@@ -2,9 +2,10 @@ package export
 
 import (
 	"fmt"
-	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"strings"
 	"time"
+
+	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -28,6 +29,8 @@ type GenerateShortDataParams struct {
 	OutputDirPath string  `json:"OutputDir"`
 	InSeconds     float64 `json:"InSeconds"`
 	OutSeconds    float64 `json:"OutSeconds"`
+	ModelSize     string  `json:"ModelSize"`
+	DebugMode     bool    `json:"DebugMode"`
 }
 
 func validationError(msg string) error {
@@ -109,11 +112,27 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		return nil, err
 	}
 
+	sceneDetectArgs := []string{
+		"-i", clipResult.VideoFile.Local(),
+		"-filter_complex", "select='gt(scene,0.1)',metadata=print:file=-",
+		"-f", "null", "-",
+	}
+
+	sceneResult, err := wfutils.Execute(ctx,
+		activities.Video.ExecuteFFmpegDump,
+		activities.ExecuteFFmpegInput{Arguments: sceneDetectArgs},
+	).Result(ctx)
+	if err != nil {
+		logger.Error("Scene-detect FFmpeg failed: " + err.Error())
+		return nil, err
+	}
+
 	submitJobParams := activities.SubmitShortJobInput{
-		InputPath:  clipResult.VideoFile.Linux(),
-		OutputPath: tempFolder.Linux(),
-		Model:      "n",
-		Debug:      true,
+		InputPath:    clipResult.VideoFile.Linux(),
+		OutputPath:   tempFolder.Linux(),
+		Model:        params.ModelSize,
+		Debug:        params.DebugMode,
+		SceneChanges: sceneResult,
 	}
 
 	jobResult, err := wfutils.Execute(ctx, activities.Util.SubmitShortJobActivity, submitJobParams).Result(ctx)
