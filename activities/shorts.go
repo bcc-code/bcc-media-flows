@@ -4,7 +4,11 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
+	"strconv"
 
+	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 	"github.com/go-resty/resty/v2"
 	"go.temporal.io/sdk/activity"
 )
@@ -82,4 +86,37 @@ func (ua UtilActivities) CheckJobStatusActivity(ctx context.Context, params Chec
 	}
 
 	return &result, nil
+}
+
+func (va VideoActivities) FFmpegGetSceneChanges(
+	ctx context.Context,
+	videoFile *paths.Path,
+) ([]float64, error) {
+
+	stopChan, progressCallback := registerProgressCallback(ctx)
+	defer close(stopChan)
+
+	sceneDetectArgs := []string{
+		"-i", videoFile.Local(),
+		"-filter_complex", "select='gt(scene,0.1)',metadata=print:file=-",
+		"-f", "null", "-",
+	}
+
+	out, err := ffmpeg.Do(sceneDetectArgs, ffmpeg.StreamInfo{}, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+
+	raw := string(out)
+	re := regexp.MustCompile(`(?m)pts_time:([\d.]+)`)
+	matches := re.FindAllStringSubmatch(raw, -1)
+
+	var changes []float64
+	for _, m := range matches {
+		if len(m) >= 2 {
+			t, _ := strconv.ParseFloat(m[1], 64)
+			changes = append(changes, t)
+		}
+	}
+	return changes, nil
 }
