@@ -325,15 +325,21 @@ func (va VideoActivities) ExecuteFFmpeg(ctx context.Context, input ExecuteFFmpeg
 	return nil, err
 }
 
-func (va VideoActivities) ExecuteFFmpegDump(
+func (va VideoActivities) FFmpegGetSceneChanges(
 	ctx context.Context,
-	input ExecuteFFmpegInput,
+	videoFile *paths.Path,
 ) ([]float64, error) {
 
 	stopChan, progressCallback := registerProgressCallback(ctx)
 	defer close(stopChan)
 
-	out, err := ffmpeg.Do(input.Arguments, ffmpeg.StreamInfo{}, progressCallback)
+	sceneDetectArgs := []string{
+		"-i", videoFile.Local(),
+		"-filter_complex", "select='gt(scene,0.1)',metadata=print:file=-",
+		"-f", "null", "-",
+	}
+
+	out, err := ffmpeg.Do(sceneDetectArgs, ffmpeg.StreamInfo{}, progressCallback)
 	if err != nil {
 		return nil, err
 	}
