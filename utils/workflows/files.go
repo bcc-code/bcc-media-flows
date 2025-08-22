@@ -3,13 +3,14 @@ package wfutils
 import (
 	"encoding/xml"
 	"fmt"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"github.com/bcc-code/bcc-media-flows/services/notifications"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"go.temporal.io/sdk/temporal"
-	"path/filepath"
-	"strings"
-	"time"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/environment"

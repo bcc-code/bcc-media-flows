@@ -12,10 +12,11 @@ import (
 var shortServiceURL = os.Getenv("SHORTS_SERVICE_URL")
 
 type SubmitShortJobInput struct {
-	InputPath  string `json:"input_path"`
-	OutputPath string `json:"output_path"`
-	Model      string `json:"model"`
-	Debug      bool   `json:"debug"`
+	InputPath    string    `json:"input_path"`
+	OutputPath   string    `json:"output_path"`
+	Model        string    `json:"model"`
+	Debug        bool      `json:"debug"`
+	SceneChanges []float64 `json:"scene_changes"`
 }
 
 type Square struct {

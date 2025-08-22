@@ -25,9 +25,22 @@ func ExecuteFFmpeg(
 		Arguments: params.Arguments,
 	}).Wait(ctx)
 
-	if err != nil {
-		return err
-	}
-
 	return err
+}
+
+func ExecuteFFmpegDump(
+	ctx workflow.Context,
+	params ExecuteFFmpegInput,
+) (string, error) {
+	logger := workflow.GetLogger(ctx)
+	logger.Info("Starting ExecuteFFmpegDump")
+
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+
+	var out string
+	err := wfutils.Execute(ctx, activities.Video.ExecuteFFmpegDump,
+		activities.ExecuteFFmpegInput{Arguments: params.Arguments},
+	).Get(ctx, &out)
+
+	return out, err
 }
