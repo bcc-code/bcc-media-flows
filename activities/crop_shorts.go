@@ -3,10 +3,11 @@ package activities
 import (
 	"context"
 	"fmt"
-	"github.com/bcc-code/bcc-media-flows/paths"
 	"math"
 	"strconv"
 	"strings"
+
+	"github.com/bcc-code/bcc-media-flows/paths"
 
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 )
@@ -125,7 +126,7 @@ func calculatePanDuration(distance float64) float64 {
 	const (
 		minDur = 0.1
 		maxDur = 3.0
-		speed  = 200.0
+		speed  = 100.0
 	)
 	d := distance / speed
 	if d < minDur {
