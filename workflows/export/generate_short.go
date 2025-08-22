@@ -184,6 +184,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 			KeyFrames:       keyframes,
 			InSeconds:       params.InSeconds,
 			OutSeconds:      params.OutSeconds,
+			SceneChanges:    sceneResult,
 		}).Get(ctx, &cropRes)
 	if err != nil {
 		logger.Error("CropShortActivity failed: " + err.Error())
