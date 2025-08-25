@@ -19,6 +19,7 @@ type CropShortInput struct {
 	KeyFrames       []Keyframe
 	InSeconds       float64
 	OutSeconds      float64
+	SceneChanges    []float64
 }
 
 type CropShortResult struct {
@@ -36,6 +37,15 @@ func (ua UtilActivities) CropShortActivity(ctx context.Context, params CropShort
 
 	// Build filter: crop, then optional subtitle burn-in, then label as [v]
 	filter := fmt.Sprintf("[0:v]%s", cropFilter)
+
+	if len(params.SceneChanges) > 0 {
+		var selects []string
+		for _, ts := range params.SceneChanges {
+			selects = append(selects, fmt.Sprintf("between(t,%.3f,%.3f)", ts, ts+0.02))
+		}
+		filter += fmt.Sprintf(",select='not(%s)',setpts=N/FRAME_RATE/TB", strings.Join(selects, "+"))
+	}
+
 	if params.SubtitlePath != nil {
 		filter += ",subtitles=" + params.SubtitlePath.Local()
 	}

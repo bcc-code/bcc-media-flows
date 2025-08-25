@@ -3,8 +3,6 @@ package activities
 import (
 	"context"
 	"fmt"
-	"regexp"
-	"strconv"
 
 	"github.com/bcc-code/bcc-media-flows/utils"
 
@@ -323,33 +321,6 @@ func (va VideoActivities) ExecuteFFmpeg(ctx context.Context, input ExecuteFFmpeg
 
 	_, err := ffmpeg.Do(input.Arguments, ffmpeg.StreamInfo{}, progressCallback)
 	return nil, err
-}
-
-func (va VideoActivities) ExecuteFFmpegDump(
-	ctx context.Context,
-	input ExecuteFFmpegInput,
-) ([]float64, error) {
-
-	stopChan, progressCallback := registerProgressCallback(ctx)
-	defer close(stopChan)
-
-	out, err := ffmpeg.Do(input.Arguments, ffmpeg.StreamInfo{}, progressCallback)
-	if err != nil {
-		return nil, err
-	}
-
-	raw := string(out)
-	re := regexp.MustCompile(`(?m)pts_time:([\d.]+)`)
-	matches := re.FindAllStringSubmatch(raw, -1)
-
-	var changes []float64
-	for _, m := range matches {
-		if len(m) >= 2 {
-			t, _ := strconv.ParseFloat(m[1], 64)
-			changes = append(changes, t)
-		}
-	}
-	return changes, nil
 }
 
 type SplitAudioChannelsInput struct {

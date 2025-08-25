@@ -112,15 +112,9 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		return nil, err
 	}
 
-	sceneDetectArgs := []string{
-		"-i", clipResult.VideoFile.Local(),
-		"-filter_complex", "select='gt(scene,0.1)',metadata=print:file=-",
-		"-f", "null", "-",
-	}
-
 	sceneResult, err := wfutils.Execute(ctx,
-		activities.Video.ExecuteFFmpegDump,
-		activities.ExecuteFFmpegInput{Arguments: sceneDetectArgs},
+		activities.Video.FFmpegGetSceneChanges,
+		clipResult.VideoFile,
 	).Result(ctx)
 	if err != nil {
 		logger.Error("Scene-detect FFmpeg failed: " + err.Error())
@@ -190,6 +184,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 			KeyFrames:       keyframes,
 			InSeconds:       params.InSeconds,
 			OutSeconds:      params.OutSeconds,
+			SceneChanges:    sceneResult,
 		}).Get(ctx, &cropRes)
 	if err != nil {
 		logger.Error("CropShortActivity failed: " + err.Error())
