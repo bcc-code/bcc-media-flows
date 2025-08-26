@@ -3,19 +3,97 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
+	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	common "go.temporal.io/api/common/v1"
 	workflowservice "go.temporal.io/api/workflowservice/v1"
+	"go.temporal.io/sdk/client"
 )
 
 type WorkflowListParams struct {
 	WorkflowList     []WorkflowDetails
 	WorkflowStatuses map[string]string
+}
+
+// Massive.app webhook handler
+// Expects:
+//   - Header: api-key (must match MASSIVE_WEBHOOK_API_KEY env var if set)
+//   - JSON body similar to:
+//     {
+//     "event_type": "package.finalized",
+//     "object": {"id": "...", "name": "...", "sender": "...", "total_files": 1}
+//     }
+func (s *TriggerServer) massiveWebhookHandler(ctx *gin.Context) {
+	// Validate API key if configured
+	expectedKey := os.Getenv("MASSIVE_WEBHOOK_API_KEY")
+	if expectedKey != "" {
+		if ctx.GetHeader("api-key") != expectedKey {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid api-key"})
+			return
+		}
+	}
+
+	// Parse JSON body
+	type massiveObject struct {
+		ID         string `json:"id"`
+		Name       string `json:"name"`
+		Sender     string `json:"sender"`
+		TotalFiles int    `json:"total_files"`
+		State      string `json:"state"`
+		Type       string `json:"type"`
+	}
+	type massivePayload struct {
+		EventID   string        `json:"event_id"`
+		EventTime string        `json:"event_time"`
+		EventType string        `json:"event_type"`
+		Object    massiveObject `json:"object"`
+	}
+
+	var payload massivePayload
+	if err := ctx.ShouldBindJSON(&payload); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON payload", "details": err.Error()})
+		return
+	}
+
+	// Log incoming webhook
+	fmt.Printf("Massive.app webhook: type=%s, id=%s, name=%s, sender=%s, total_files=%d, state=%s\n",
+		payload.EventType, payload.Object.ID, payload.Object.Name, payload.Object.Sender, payload.Object.TotalFiles, payload.Object.State)
+
+	// Only act on finalized packages
+	if payload.EventType != "package.finalized" {
+		ctx.JSON(http.StatusOK, gin.H{"message": "event ignored", "event_type": payload.EventType})
+		return
+	}
+
+	// Start MASVImport workflow
+	queue := getQueue()
+	options := client.StartWorkflowOptions{TaskQueue: queue}
+	options.ID = uuid.NewString() + "-" + payload.Object.ID
+
+	params := miscworkflows.MASVImportParams{
+		ID:         payload.Object.ID,
+		Name:       payload.Object.Name,
+		Sender:     payload.Object.Sender,
+		TotalFiles: payload.Object.TotalFiles,
+		EventID:    payload.EventID,
+		EventTime:  payload.EventTime,
+	}
+
+	_, err := s.wfClient.ExecuteWorkflow(ctx, options, miscworkflows.MASVImport, params)
+	if err != nil {
+		log.Default().Println(err)
+		ctx.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	ctx.Status(http.StatusAccepted)
 }
 
 type WorkflowDetails struct {

@@ -73,4 +73,6 @@ var WorkerWorkflows = []any{
 	vb_export.VBExportToHyperdeck,
 	scheduled.CleanupTemp,
 	scheduled.MediabankenPurgeTrash,
+	// Massive.app import workflow
+	miscworkflows.MASVImport,
 }
