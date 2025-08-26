@@ -22,6 +22,22 @@ type WorkflowListParams struct {
 	WorkflowStatuses map[string]string
 }
 
+// Parse JSON body
+type massiveObject struct {
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	Sender     string `json:"sender"`
+	TotalFiles int    `json:"total_files"`
+	State      string `json:"state"`
+	Type       string `json:"type"`
+}
+type massivePayload struct {
+	EventID   string        `json:"event_id"`
+	EventTime string        `json:"event_time"`
+	EventType string        `json:"event_type"`
+	Object    massiveObject `json:"object"`
+}
+
 // Massive.app webhook handler
 // Expects:
 //   - Header: api-key (must match MASSIVE_WEBHOOK_API_KEY env var if set)
@@ -39,23 +55,6 @@ func (s *TriggerServer) massiveWebhookHandler(ctx *gin.Context) {
 			return
 		}
 	}
-
-	// Parse JSON body
-	type massiveObject struct {
-		ID         string `json:"id"`
-		Name       string `json:"name"`
-		Sender     string `json:"sender"`
-		TotalFiles int    `json:"total_files"`
-		State      string `json:"state"`
-		Type       string `json:"type"`
-	}
-	type massivePayload struct {
-		EventID   string        `json:"event_id"`
-		EventTime string        `json:"event_time"`
-		EventType string        `json:"event_type"`
-		Object    massiveObject `json:"object"`
-	}
-
 	var payload massivePayload
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON payload", "details": err.Error()})
