@@ -409,7 +409,12 @@ func main() {
 
 	router.GET("/list", server.listGET)
 
+	// MD: This is a legacy route, it should be removed in the future.
 	router.POST("/filecatalyst", server.fileCatalystWebhookHandler)
+
+	router.Group("/webhook").
+		POST("/massive", server.massiveWebhookHandler).
+		POST("/filecatalyst", server.fileCatalystWebhookHandler)
 
 	router.Group("/vx-export").
 		GET("/", server.vxExportGET).
