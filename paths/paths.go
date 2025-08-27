@@ -60,7 +60,7 @@ var (
 	FileCatalystDrive  = Drive{Value: "filecatalyst"}
 	TestDrive          = Drive{Value: "test"}
 	MassiveIngestDrive = Drive{Value: "massive_ingest"}
-	Drives             = enum.New(IsilonDrive, FileCatalystDrive, TempDrive, AssetIngestDrive, BrunstadDrive, LucidLinkDrive, TestDrive)
+	Drives             = enum.New(IsilonDrive, FileCatalystDrive, TempDrive, AssetIngestDrive, BrunstadDrive, LucidLinkDrive, TestDrive, MassiveIngestDrive)
 	ErrDriveNotFound   = merry.Sentinel("drive not found")
 	ErrPathNotValid    = merry.Sentinel("path not valid")
 )

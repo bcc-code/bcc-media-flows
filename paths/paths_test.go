@@ -1,6 +1,7 @@
 package paths
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -83,4 +84,19 @@ func Test_Massive(t *testing.T) {
 	a, b := path.RcloneFsRemote()
 	assert.Equal(t, "s3prod", a)
 	assert.Equal(t, "massiveio-bccm/upload/PACE - 202508251231", b)
+}
+
+func Test_MassiveJSON(t *testing.T) {
+	pathString := "s3prod:/massiveio-bccm/upload/PACE - 202508251231"
+	path, err := Parse(pathString)
+
+	assert.Nil(t, err)
+	jsonBytes, err := json.Marshal(path)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "{\"Drive\":\"massive_ingest\",\"Path\":\"upload/PACE - 202508251231\"}", string(jsonBytes))
+
+	path2 := &Path{}
+	err = json.Unmarshal(jsonBytes, path2)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, MassiveIngestDrive, path2.Drive)
 }
