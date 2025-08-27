@@ -49,10 +49,15 @@ func MoveFile(ctx workflow.Context, source, destination paths.Path, priority rcl
 }
 
 func CopyFile(ctx workflow.Context, source, destination paths.Path) error {
-	return Execute(ctx, activities.Util.CopyFile, activities.MoveFileInput{
-		Source:      source,
-		Destination: destination,
-	}).Wait(ctx)
+	external := source.OnExternalDrive() || destination.OnExternalDrive()
+	if external {
+		return RcloneCopyFile(ctx, source, destination, rclone.PriorityNormal)
+	} else {
+		return Execute(ctx, activities.Util.CopyFile, activities.MoveFileInput{
+			Source:      source,
+			Destination: destination,
+		}).Wait(ctx)
+	}
 }
 
 func CopyToFolder(ctx workflow.Context, file, folder paths.Path, priority rclone.Priority) (paths.Path, error) {
@@ -197,6 +202,27 @@ func RcloneCheckFileExists(ctx workflow.Context, file paths.Path) (bool, error) 
 	return Execute(ctx, activities.Util.RcloneCheckFileExists, activities.RcloneSingleFileInput{
 		File: file,
 	}).Result(ctx)
+}
+
+func RcloneWaitForFileExists(ctx workflow.Context, file paths.Path, retries int) error {
+	for i := 0; i < retries; i++ {
+		exists, err := RcloneCheckFileExists(ctx, file)
+		if err != nil {
+			return err
+		}
+
+		if exists {
+			return nil
+		}
+
+		err = workflow.Sleep(ctx, time.Second*30)
+		if err != nil {
+			return err
+		}
+	}
+
+	return fmt.Errorf("could not find file %s with retries %d", file, retries)
+
 }
 
 func RcloneWaitForFileGone(ctx workflow.Context, file paths.Path, notificationChannel telegram.Chat, retries int) error {
