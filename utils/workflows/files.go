@@ -296,3 +296,9 @@ func RcloneCopyDir(ctx workflow.Context, source, destination string, priority rc
 	}
 	return nil
 }
+
+func RcloneListFiles(ctx workflow.Context, folder paths.Path) ([]rclone.RcloneFile, error) {
+	return Execute(ctx, activities.Util.RcloneListFiles, activities.RcloneListFilesInput{
+		Folder: folder,
+	}).Result(ctx)
+}

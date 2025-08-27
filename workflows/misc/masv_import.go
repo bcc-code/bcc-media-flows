@@ -2,11 +2,12 @@ package miscworkflows
 
 import (
 	"fmt"
-
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
+	"time"
 )
 
 // MASVImportParams contains the info received from Massive.app webhook
@@ -41,6 +42,33 @@ func MASVImport(ctx workflow.Context, params MASVImportParams) error {
 	dst := tmpRoot.Append("masv", params.ID)
 	if err := wfutils.CreateFolder(ctx, dst); err != nil {
 		return err
+	}
+
+	fileAvailable := false
+	for i := 0; i < 60; i++ {
+		srcFolder, err := paths.Parse(src)
+		if err != nil {
+			return err
+		}
+
+		files, err := wfutils.RcloneListFiles(ctx, srcFolder)
+		if err != nil {
+			return err
+		}
+
+		if len(files) > 0 {
+			fileAvailable = true
+			break
+		}
+
+		err = workflow.Sleep(ctx, 30*time.Second)
+		if err != nil {
+			return err
+		}
+	}
+
+	if !fileAvailable {
+		return fmt.Errorf("could not find masv file in %s", src)
 	}
 
 	// Copy the directory contents from s3 to temp using rclone

@@ -115,6 +115,18 @@ func (ua UtilActivities) RcloneCopyDir(ctx context.Context, input RcloneCopyDirI
 	return res.JobID, nil
 }
 
+type RcloneListFilesInput struct {
+	Folder paths.Path
+}
+
+func (ua UtilActivities) RcloneListFiles(ctx context.Context, input RcloneListFilesInput) ([]rclone.RcloneFile, error) {
+	activity.RecordHeartbeat(ctx, "Rclone ListFiles")
+	activity.GetLogger(ctx).Debug(fmt.Sprintf("Rclone list dir: %s", input.Folder))
+
+	remote, path := input.Folder.RcloneFsRemote()
+	return rclone.ListFiles(remote, path)
+}
+
 type RcloneFileInput struct {
 	Source      paths.Path
 	Destination paths.Path
