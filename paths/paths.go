@@ -52,16 +52,17 @@ func (d *Drive) UnmarshalJSON(value []byte) error {
 }
 
 var (
-	IsilonDrive       = Drive{Value: "isilon"}
-	TempDrive         = Drive{Value: "temp"}
-	BrunstadDrive     = Drive{Value: "brunstad"}
-	AssetIngestDrive  = Drive{Value: "asset_ingest"}
-	LucidLinkDrive    = Drive{Value: "lucid"}
-	FileCatalystDrive = Drive{Value: "filecatalyst"}
-	TestDrive         = Drive{Value: "test"}
-	Drives            = enum.New(IsilonDrive, FileCatalystDrive, TempDrive, AssetIngestDrive, BrunstadDrive, LucidLinkDrive, TestDrive)
-	ErrDriveNotFound  = merry.Sentinel("drive not found")
-	ErrPathNotValid   = merry.Sentinel("path not valid")
+	IsilonDrive        = Drive{Value: "isilon"}
+	TempDrive          = Drive{Value: "temp"}
+	BrunstadDrive      = Drive{Value: "brunstad"}
+	AssetIngestDrive   = Drive{Value: "asset_ingest"}
+	LucidLinkDrive     = Drive{Value: "lucid"}
+	FileCatalystDrive  = Drive{Value: "filecatalyst"}
+	TestDrive          = Drive{Value: "test"}
+	MassiveIngestDrive = Drive{Value: "massive_ingest"}
+	Drives             = enum.New(IsilonDrive, FileCatalystDrive, TempDrive, AssetIngestDrive, BrunstadDrive, LucidLinkDrive, TestDrive)
+	ErrDriveNotFound   = merry.Sentinel("drive not found")
+	ErrPathNotValid    = merry.Sentinel("path not valid")
 )
 
 //goland:noinspection GoMixedReceiverTypes
@@ -209,13 +210,14 @@ type prefix struct {
 }
 
 var drivePrefixes = map[Drive]prefix{
-	IsilonDrive:       {"/mnt/isilon/", environment.GetIsilonPrefix(), "isilon:isilon/"},
-	FileCatalystDrive: {"/mnt/filecatalyst/", environment.GetFileCatalystMountPrefix(), "isilon:filecatalyst/"},
-	TempDrive:         {"/mnt/temp/", environment.GetTempMountPrefix(), "isilon:temp/"},
-	AssetIngestDrive:  {"/dev/null/", "/dev/null/", "s3prod:vod-asset-ingest-prod/"},
-	BrunstadDrive:     {"/dev/null/", "/dev/null/", "brunstad:/"},
-	LucidLinkDrive:    {"/dev/null/", "/dev/null/", "lucid:lucidlink/"},
-	TestDrive:         {"./testdata/", "testdata/", "/dev/null/"},
+	IsilonDrive:        {"/mnt/isilon/", environment.GetIsilonPrefix(), "isilon:isilon/"},
+	FileCatalystDrive:  {"/mnt/filecatalyst/", environment.GetFileCatalystMountPrefix(), "isilon:filecatalyst/"},
+	TempDrive:          {"/mnt/temp/", environment.GetTempMountPrefix(), "isilon:temp/"},
+	AssetIngestDrive:   {"/dev/null/", "/dev/null/", "s3prod:vod-asset-ingest-prod/"},
+	MassiveIngestDrive: {"/dev/null/", "/dev/null/", "s3prod:/massiveio-bccm/"},
+	BrunstadDrive:      {"/dev/null/", "/dev/null/", "brunstad:/"},
+	LucidLinkDrive:     {"/dev/null/", "/dev/null/", "lucid:lucidlink/"},
+	TestDrive:          {"./testdata/", "testdata/", "/dev/null/"},
 }
 
 // Parse parses a path string into a Path struct

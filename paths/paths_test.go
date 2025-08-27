@@ -72,3 +72,12 @@ func Test_InvalidPath(t *testing.T) {
 	assert.Empty(t, pathRes)
 	assert.Error(t, err)
 }
+
+func Test_Massive(t *testing.T) {
+	pathString := "s3prod:/massiveio-bccm/upload/PACE - 202508251231"
+	path, err := Parse(pathString)
+
+	assert.Nil(t, err)
+	assert.Equal(t, MassiveIngestDrive, path.Drive)
+	assert.Equal(t, "upload/PACE - 202508251231", path.Path)
+}
