@@ -38,7 +38,7 @@ func MASVImport(ctx workflow.Context, params MASVImportParams) error {
 	if err != nil {
 		return err
 	}
-	dst := tmpRoot.Append("masv", params.Name)
+	dst := tmpRoot.Append("masv", params.ID)
 	if err := wfutils.CreateFolder(ctx, dst); err != nil {
 		return err
 	}
@@ -48,8 +48,8 @@ func MASVImport(ctx workflow.Context, params MASVImportParams) error {
 		return err
 	}
 
-    // Notify completion
-    wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("✅ Copied MASV package '%s' to %s", params.Name, dst.Rclone()))
+	// Notify completion
+	wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("✅ Copied MASV package '%s' to %s", params.Name, dst.Rclone()))
 
 	return nil
 }
