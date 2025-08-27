@@ -136,7 +136,7 @@ func (p Path) Ext() string {
 func (p Path) RcloneFsRemote() (string, string) {
 	switch p.Drive {
 	case MassiveIngestDrive:
-		return "s3prod", filepath.Join("massiveio-bccm", p.Path)
+		return "s3prod:", filepath.Join("massiveio-bccm", p.Path)
 	case TempDrive:
 		return "isilon:", filepath.Join("temp", p.Path)
 	case IsilonDrive:
