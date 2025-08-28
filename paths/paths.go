@@ -76,6 +76,8 @@ func (d Drive) RcloneName() string {
 		return "brunstad"
 	case LucidLinkDrive:
 		return "lucid"
+	case MassiveIngestDrive:
+		return "massive_ingest"
 	}
 	return ""
 }
@@ -93,6 +95,8 @@ func (d Drive) RclonePath() string {
 		return "brunstad:"
 	case LucidLinkDrive:
 		return "lucid:lucidlink"
+	case MassiveIngestDrive:
+		return "s3prod:/massiveio-bccm/"
 	}
 	return ""
 }
@@ -111,7 +115,7 @@ func (p Path) Dir() Path {
 
 func (p Path) OnExternalDrive() bool {
 	switch p.Drive {
-	case BrunstadDrive, AssetIngestDrive, LucidLinkDrive:
+	case BrunstadDrive, AssetIngestDrive, LucidLinkDrive, MassiveIngestDrive:
 		return true
 	}
 	return false
