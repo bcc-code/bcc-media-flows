@@ -3,10 +3,12 @@ package miscworkflows
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
+	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 	"strings"
 	"time"
@@ -61,6 +63,8 @@ func MASVImport(ctx workflow.Context, params MASVImportParams) error {
 	logger.Info("Starting MASVImport workflow", "id", params.ID, "name", params.Name)
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+
+	outputDestination := paths.MustParse("/mnt/isilon/Input/FromMASV").Append(params.ID)
 
 	message := fmt.Sprintf("📦 MASV package finalized\nID: %s\nName: %s\nSender: %s\nFiles: %d\nEvent: %s @ %s",
 		params.ID, params.Name, params.Sender, params.TotalFiles, params.EventID, params.EventTime)
@@ -137,6 +141,7 @@ func MASVImport(ctx workflow.Context, params MASVImportParams) error {
 		return err
 	}
 
+	var transcodeJobs []wfutils.Task[*activities.EncodeResult]
 	for _, f := range masvMeta.Package.Files {
 		fpath := fmt.Sprintf("s3prod:/massiveio-bccm/upload/%s/%s", params.Name, f.Path)
 		parsedPath, err := paths.Parse(fpath)
@@ -148,11 +153,35 @@ func MASVImport(ctx workflow.Context, params MASVImportParams) error {
 		if err != nil {
 			return err
 		}
+
+		tempFilePath := tmpRoot.Append(parsedPath.Base())
+		err = wfutils.RcloneCopyFile(ctx, parsedPath, tempFilePath, rclone.PriorityNormal)
+		if err != nil {
+			return err
+		}
+
+		if lo.Contains([]string{"mov", "avi", "mxf", "mp4"}, parsedPath.Ext()) {
+			// Transcode to ProRes
+			job := wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
+				FilePath:  tempFilePath,
+				OutputDir: outputDestination,
+			})
+			transcodeJobs = append(transcodeJobs, job)
+			err = wfutils.RcloneCopyFile(ctx, tempFilePath, outputDestination.Append("originals").Append(tempFilePath.Base()), rclone.PriorityNormal)
+		} else {
+			err = wfutils.RcloneCopyFile(ctx, tempFilePath, outputDestination.Append(tempFilePath.Base()), rclone.PriorityNormal)
+		}
+
+		if err != nil {
+			return err
+		}
 	}
 
-	// Copy the directory contents from s3 to temp using rclone
-	if err := wfutils.RcloneCopyDir(ctx, src, dst.Rclone(), rclone.PriorityNormal); err != nil {
-		return err
+	for _, j := range transcodeJobs {
+		err := j.Wait(ctx)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Notify completion
