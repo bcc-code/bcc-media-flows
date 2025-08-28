@@ -115,7 +115,7 @@ func MASVImport(ctx workflow.Context, params MASVImportParams) error {
 		return fmt.Errorf("could not find metadata file for package %s", params.ID)
 	}
 
-	metaRemotePath, err := paths.Parse("s3prod:" + metaFileInfo.Path)
+	metaRemotePath, err := paths.Parse("s3prod:/" + metaFileInfo.Path)
 	if err != nil {
 		return err
 	}
