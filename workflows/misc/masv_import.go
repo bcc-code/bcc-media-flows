@@ -143,11 +143,7 @@ func MASVImport(ctx workflow.Context, params MASVImportParams) error {
 
 	var transcodeJobs []wfutils.Task[*activities.EncodeResult]
 	for _, f := range masvMeta.Package.Files {
-		fpath := fmt.Sprintf("s3prod:/massiveio-bccm/upload/%s/%s", params.Name, f.Path)
-		parsedPath, err := paths.Parse(fpath)
-		if err != nil {
-			return err
-		}
+		parsedPath := srcFolder.Append(f.Path, f.Name)
 
 		err = wfutils.RcloneWaitForFileExists(ctx, parsedPath, 30)
 		if err != nil {
