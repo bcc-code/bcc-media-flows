@@ -100,3 +100,26 @@ func Test_MassiveJSON(t *testing.T) {
 	assert.Equal(t, nil, err)
 	assert.Equal(t, MassiveIngestDrive, path2.Drive)
 }
+
+func Test_PathExt(t *testing.T) {
+	cases := []struct {
+		name string
+		p    string
+		want string
+	}{
+		{name: "no extension", p: "video", want: ""},
+		{name: "single extension", p: "clip.mov", want: ".mov"},
+		{name: "multi dot extension", p: "archive.tar.gz", want: ".gz"},
+		{name: "dotfile", p: ".env", want: ".env"},
+		{name: "trailing dot", p: "file.", want: "."},
+		{name: "dotted directory no file ext", p: "dir.with.dots/file", want: ""},
+		{name: "with directories and ext", p: "a/b/c.mov", want: ".mov"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			p := Path{Drive: IsilonDrive, Path: tc.p}
+			assert.Equal(t, tc.want, p.Ext())
+		})
+	}
+}
