@@ -160,7 +160,7 @@ func MASVImport(ctx workflow.Context, params MASVImportParams) error {
 			return err
 		}
 
-		if lo.Contains([]string{"mov", "avi", "mxf", "mp4"}, parsedPath.Ext()) {
+		if lo.Contains([]string{".mov", ".avi", ".mxf", ".mp4"}, parsedPath.Ext()) {
 			// Transcode to ProRes
 			job := wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
 				FilePath:  tempFilePath,
