@@ -20,6 +20,7 @@ require (
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
 	github.com/google/uuid v1.6.0
 	github.com/jlaffaye/ftp v0.2.0
+	github.com/joho/godotenv v1.5.1
 	github.com/orsinium-labs/enum v1.3.0
 	github.com/samber/lo v1.38.1
 	github.com/sendgrid/sendgrid-go v3.14.0+incompatible
@@ -33,14 +34,11 @@ require (
 )
 
 require (
-	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/nexus-rpc/sdk-go v0.1.0 // indirect
-	github.com/rudderlabs/analytics-go v3.3.3+incompatible // indirect
 	github.com/segmentio/backo-go v1.1.0 // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
-	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 )
 
 require (
@@ -149,7 +147,7 @@ require (
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
-	github.com/ulikunitz/xz v0.5.11 // indirect
+	github.com/ulikunitz/xz v0.5.14 // indirect
 	github.com/uptrace/uptrace-go v1.20.0 // indirect
 	github.com/xanzy/go-gitlab v0.95.2 // indirect
 	go.opencensus.io v0.24.0 // indirect
