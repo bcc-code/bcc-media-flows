@@ -100,7 +100,7 @@ func MASVImport(ctx workflow.Context, params MASVImportParams) error {
 
 		for _, file := range files {
 
-			if !strings.HasSuffix(file.Name, "metadata.json") {
+			if !strings.HasSuffix(file.Name, "transfer-manifest.json") {
 				continue
 			}
 
@@ -124,7 +124,7 @@ func MASVImport(ctx workflow.Context, params MASVImportParams) error {
 		return err
 	}
 
-	metaFilePath := tmpRoot.Append("masv_meta.json")
+	metaFilePath := tmpRoot.Append("manifest.json")
 	err = wfutils.CopyFile(ctx, metaRemotePath, metaFilePath)
 	if err != nil {
 		return err
