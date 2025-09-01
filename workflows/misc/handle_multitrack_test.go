@@ -30,7 +30,7 @@ func (s *HandleMultitrackTestSuite) AfterTest(suiteName, testName string) {
 func (s *HandleMultitrackTestSuite) Test_makeLucidPath() {
 	s.env.OnActivity(activities.Util.RcloneCopyFile, mock.Anything, activities.RcloneFileInput{
 		Source:      paths.Path{Drive: paths.Drive{Value: "test"}, Path: "testing.wav"},
-		Destination: paths.Path{Drive: paths.Drive{Value: "lucid"}, Path: "/01 Liveopptak fra Brunstad/01 RAW/" + time.Now().Format("2006-01-02")},
+		Destination: paths.Path{Drive: paths.Drive{Value: "lucid"}, Path: "/01 Liveopptak fra Brunstad/01 RAW/" + time.Now().Format("2006-01-02") + "/testing.wav"},
 		Priority:    rclone.Priority{Value: "low"},
 	}).Return(3, nil)
 
@@ -40,7 +40,7 @@ func (s *HandleMultitrackTestSuite) Test_makeLucidPath() {
 
 	s.env.OnActivity(activities.Util.MoveFile, mock.Anything, activities.MoveFileInput{
 		Source:      paths.Path{Drive: paths.Drive{Value: "test"}, Path: "testing.wav"},
-		Destination: paths.Path{Drive: paths.Drive{Value: "isilon"}, Path: "/AudioArchive/" + time.Now().Format("2006/01/02")},
+		Destination: paths.Path{Drive: paths.Drive{Value: "isilon"}, Path: "/AudioArchive/" + time.Now().Format("2006/01/02") + "/testing.wav"},
 	}).Return(nil, nil)
 
 	s.env.ExecuteWorkflow(HandleMultitrackFile, HandleMultitrackFileInput{

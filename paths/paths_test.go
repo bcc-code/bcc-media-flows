@@ -82,7 +82,7 @@ func Test_Massive(t *testing.T) {
 	assert.Equal(t, MassiveIngestDrive, path.Drive)
 	assert.Equal(t, "upload/PACE - 202508251231", path.Path)
 	a, b := path.RcloneFsRemote()
-	assert.Equal(t, "s3prod", a)
+	assert.Equal(t, "s3prod:", a)
 	assert.Equal(t, "massiveio-bccm/upload/PACE - 202508251231", b)
 }
 
