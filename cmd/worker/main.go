@@ -14,6 +14,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/analytics"
 	"github.com/bcc-code/bcc-media-flows/services/directus"
 	"github.com/bcc-code/bcc-media-flows/services/notion"
+	"github.com/bcc-code/bcc-media-flows/services/vizualizer"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"github.com/joho/godotenv"
@@ -179,6 +180,19 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		ShortsDatabaseID: os.Getenv("NOTION_SHORTS_DATABASE_ID"),
 	}
 
+	// Vizualizer client initialization
+	vizBaseURL := os.Getenv("VIZUALIZER_BASE_URL")
+	if vizBaseURL == "" {
+		vizBaseURL = "http://vizualizer.lan.bcc.media"
+	}
+	vizClient, err := vizualizer.NewClient(vizBaseURL)
+	if err != nil {
+		log.Printf("Error creating vizualizer client: %v", err)
+	}
+	activities.Vizualizer = &activities.VizualizerActivities{
+		Client: vizClient,
+	}
+
 	switch queue {
 	case environment.QueueDebug:
 		registerActivitiesInStruct(w, activities.Util)
@@ -199,6 +213,8 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 
 		registerActivitiesInStruct(w, activities.Notion)
 
+		registerActivitiesInStruct(w, activities.Vizualizer)
+
 		for _, wf := range workflows.WorkerWorkflows {
 			w.RegisterWorkflow(wf)
 		}
@@ -215,6 +231,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		registerActivitiesInStruct(w, activities.Vidispine)
 		registerActivitiesInStruct(w, activities.Directus)
 		registerActivitiesInStruct(w, activities.Notion)
+		registerActivitiesInStruct(w, activities.Vizualizer)
 
 		for _, wf := range workflows.WorkerWorkflows {
 			w.RegisterWorkflow(wf)

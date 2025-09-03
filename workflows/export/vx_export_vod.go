@@ -5,6 +5,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/bcc-code/bcc-media-flows/utils"
 
@@ -76,6 +77,59 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		wm = &path
 	}
 
+	// Determine base video source: if none from merge, generate using vizualizer
+	var baseVideo paths.Path
+	primaryMediaType := "video"
+	if params.MergeResult.VideoFile == nil {
+		primaryMediaType = "audio"
+		// pick an audio to visualize: prefer original language, else any available
+		chosenLang := params.ExportData.OriginalLanguage
+		if chosenLang == "" || audioFiles[chosenLang].Path == "" {
+			if len(audioKeys) == 0 {
+				return nil, fmt.Errorf("no audio available to generate visualization video")
+			}
+			chosenLang = audioKeys[0]
+		}
+		audioPath := audioFiles[chosenLang]
+
+		// decide render size based on the largest requested resolution
+		maxW, maxH := 1920, 1080
+		for _, r := range params.ParentParams.Resolutions {
+			if r.Width*r.Height > maxW*maxH {
+				maxW, maxH = r.Width, r.Height
+			}
+		}
+
+		outPath := params.TempDir.Append("viz_source.mp4")
+
+		// submit job
+		jobID, err := wfutils.Execute(ctx, activities.Vizualizer.SubmitVisualization, activities.SubmitVisualizationArgs{
+			AudioPath:    audioPath,
+			OutputPath:   outPath,
+			Width:        maxW,
+			Height:       maxH,
+			FPS:          50,
+			IncludeAudio: false,
+		}).Result(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("submit vizualizer job: %w", err)
+		}
+
+		// wait for completion
+		_, err = wfutils.Execute(ctx, activities.Vizualizer.WaitForVisualization, activities.WaitForVisualizationArgs{
+			JobID:        jobID,
+			PollInterval: 5 * time.Second,
+			Timeout:      2 * time.Hour,
+		}).Result(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("vizualizer job failed: %w", err)
+		}
+
+		baseVideo = outPath
+	} else {
+		baseVideo = *params.MergeResult.VideoFile
+	}
+
 	service := &vxExportVodService{
 		ingestFolder:           params.ExportData.SafeTitle + "_" + params.RunID,
 		params:                 params,
@@ -121,7 +175,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		}
 	}
 
-	videosByQuality := getVideosByQuality(*params.MergeResult.VideoFile, params.TempDir, wm, params.ParentParams.Resolutions)
+	videosByQuality := getVideosByQuality(baseVideo, params.TempDir, wm, params.ParentParams.Resolutions)
 	videoKeys, err := doVideoTasks(ctx, service.filesSelector, videosByQuality, onVideoCreated)
 	if err != nil {
 		return nil, err
@@ -156,7 +210,9 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	return service.setMetadataAndPublishToVOD(
 		ctx,
 		chapterDataWF,
-		params.OutputDir)
+		params.OutputDir,
+		primaryMediaType,
+	)
 }
 
 func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, tempDir paths.Path, normalizeAudio, ignoreSilence bool) (map[string]paths.Path, error) {
@@ -239,11 +295,13 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 	ctx workflow.Context,
 	chapterDataWF workflow.Future,
 	outputDir paths.Path,
+	primaryMediaType string,
 ) (*VXExportResult, error) {
 	ingestData := asset.IngestJSONMeta{
-		Title:    v.params.ExportData.SafeTitle,
-		ID:       v.params.ParentParams.VXID,
-		Duration: formatSecondsToTimestamp(v.params.MergeResult.Duration),
+		Title:            v.params.ExportData.SafeTitle,
+		ID:               v.params.ParentParams.VXID,
+		Duration:         formatSecondsToTimestamp(v.params.MergeResult.Duration),
+		PrimaryMediaType: primaryMediaType,
 	}
 	var smilData smil.Smil
 	smilData.XMLName.Local = "smil"
