@@ -10,9 +10,13 @@ import (
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
+	"regexp"
 	"strings"
 	"time"
 )
+
+// Precompiled regex to sanitize church names
+var churchSanitizer = regexp.MustCompile(`[^a-zA-Z0-9-]`)
 
 // MASVImportParams contains the info received from Massive.app webhook
 type MASVImportParams struct {
@@ -171,7 +175,8 @@ func MASVImport(ctx workflow.Context, params MASVImportParams) error {
 				return err
 			}
 
-			church = metadata.Church
+			// Sanitize church: keep only a-Z, A-Z, 0-9 and '-' ; replace others with '_'
+			church = churchSanitizer.ReplaceAllString(metadata.Church, "_")
 		}
 
 		filesToCopy = append(filesToCopy, tempFilePath)
