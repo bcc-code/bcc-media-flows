@@ -64,8 +64,6 @@ func MASVImport(ctx workflow.Context, params MASVImportParams) error {
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	outputDestination := paths.MustParse("/mnt/isilon/Input/FromMASV").Append(params.ID)
-
 	message := fmt.Sprintf("📦 MASV package finalized\nID: %s\nName: %s\nSender: %s\nFiles: %d\nEvent: %s @ %s",
 		params.ID, params.Name, params.Sender, params.TotalFiles, params.EventID, params.EventTime)
 
@@ -142,9 +140,10 @@ func MASVImport(ctx workflow.Context, params MASVImportParams) error {
 	}
 
 	var transcodeJobs []wfutils.Task[*activities.EncodeResult]
+	church := "unknown"
+	filesToCopy := []paths.Path{}
 	for _, f := range masvMeta.Package.Files {
-		fpath := fmt.Sprintf("s3prod:/massiveio-bccm/%s/%s", f.Path, f.Name)
-		parsedPath, err := paths.Parse(fpath)
+		parsedPath, err := paths.Parse(fmt.Sprintf("s3prod:/massiveio-bccm/%s/%s", f.Path, f.Name))
 		if err != nil {
 			return err
 		}
@@ -160,6 +159,26 @@ func MASVImport(ctx workflow.Context, params MASVImportParams) error {
 			return err
 		}
 
+		if strings.HasSuffix(tempFilePath.Base(), "metadata.json") {
+			metaBytes, err := wfutils.ReadFile(ctx, tempFilePath)
+			if err != nil {
+				return err
+			}
+
+			metadata := &Metadata{}
+			err = json.Unmarshal(metaBytes, metadata)
+			if err != nil {
+				return err
+			}
+
+			church = metadata.Church
+		}
+
+		filesToCopy = append(filesToCopy, tempFilePath)
+	}
+
+	for _, tempFilePath := range filesToCopy {
+		outputDestination := paths.MustParse("/mnt/isilon/Input/FromMASV").Append(church).Append(params.ID)
 		if lo.Contains([]string{".mov", ".avi", ".mxf", ".mp4"}, tempFilePath.Ext()) {
 			// Transcode to ProRes
 			job := wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
