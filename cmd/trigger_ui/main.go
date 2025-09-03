@@ -132,6 +132,16 @@ func ratio(w, h int) string {
 	return fmt.Sprintf("%d:%d", w/a, h/a)
 }
 
+func defaultResolutions() []vsapi.Resolution {
+	return []vsapi.Resolution{
+		{Width: 1920, Height: 1080},
+		{Width: 1280, Height: 720},
+		{Width: 854, Height: 480},
+		{Width: 640, Height: 360},
+		{Width: 426, Height: 240},
+	}
+}
+
 func (s *TriggerServer) vxExportGET(ctx *gin.Context) {
 	vxID := ctx.Query("id")
 	meta, err := s.vidispine.GetMetadata(vxID)
@@ -144,6 +154,11 @@ func (s *TriggerServer) vxExportGET(ctx *gin.Context) {
 	if err != nil {
 		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
+	}
+
+	// Fallback to defaults if none provided by Vidispine
+	if len(resolutions) == 0 {
+		resolutions = defaultResolutions()
 	}
 
 	clips := meta.SplitByClips()
