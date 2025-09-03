@@ -79,7 +79,9 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 
 	// Determine base video source: if none from merge, generate using vizualizer
 	var baseVideo paths.Path
+	primaryMediaType := "video"
 	if params.MergeResult.VideoFile == nil {
+		primaryMediaType = "audio"
 		// pick an audio to visualize: prefer original language, else any available
 		chosenLang := params.ExportData.OriginalLanguage
 		if chosenLang == "" || audioFiles[chosenLang].Path == "" {
@@ -208,7 +210,9 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	return service.setMetadataAndPublishToVOD(
 		ctx,
 		chapterDataWF,
-		params.OutputDir)
+		params.OutputDir,
+		primaryMediaType,
+	)
 }
 
 func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, tempDir paths.Path, normalizeAudio, ignoreSilence bool) (map[string]paths.Path, error) {
@@ -291,11 +295,13 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 	ctx workflow.Context,
 	chapterDataWF workflow.Future,
 	outputDir paths.Path,
+	primaryMediaType string,
 ) (*VXExportResult, error) {
 	ingestData := asset.IngestJSONMeta{
-		Title:    v.params.ExportData.SafeTitle,
-		ID:       v.params.ParentParams.VXID,
-		Duration: formatSecondsToTimestamp(v.params.MergeResult.Duration),
+		Title:            v.params.ExportData.SafeTitle,
+		ID:               v.params.ParentParams.VXID,
+		Duration:         formatSecondsToTimestamp(v.params.MergeResult.Duration),
+		PrimaryMediaType: primaryMediaType,
 	}
 	var smilData smil.Smil
 	smilData.XMLName.Local = "smil"
