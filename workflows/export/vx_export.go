@@ -2,6 +2,7 @@ package export
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/activities"
 	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/utils"
@@ -104,6 +105,17 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
+	if len(data.Clips) == 0 {
+		wfutils.SendTelegramText(ctx, telegramChat,
+			fmt.Sprintf("No clips found for `%s`.\nTitle: `%s`\nDestinations: `%s`\n\nRunID: `%s`",
+				params.VXID,
+				data.Title,
+				strings.Join(params.Destinations, ", "),
+				workflow.GetInfo(ctx).OriginalRunID,
+			),
+		)
+	}
+
 	wfutils.SendTelegramText(ctx,
 		telegramChat,
 		fmt.Sprintf(
@@ -134,18 +146,29 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
+	firstClip, err := paths.Parse(data.Clips[0].VideoFile)
+	if err != nil {
+		return nil, err
+	}
+
+	fileInfo, err := wfutils.Execute(ctx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
+		FilePath: firstClip,
+	}).Result(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
 	ctx = workflow.WithChildOptions(ctx, wfutils.GetVXDefaultWorkflowOptions(params.VXID))
 
 	bmmOnly := len(params.Destinations) == 1 && (params.Destinations[0] == AssetExportDestinationBMM.Value || params.Destinations[0] == AssetExportDestinationBMMIntegration.Value)
-
-	audioOnly := (len(data.Clips) > 0 && data.Clips[0].VideoFile == "") || bmmOnly
 
 	var mergeResult MergeExportDataResult
 	err = workflow.ExecuteChildWorkflow(ctx, MergeExportData, MergeExportDataParams{
 		ExportData:       data,
 		TempDir:          tempDir,
 		SubtitlesDir:     subtitlesOutputDir,
-		MakeVideo:        !audioOnly,
+		MakeVideo:        !bmmOnly && fileInfo.HasVideo,
 		MakeAudio:        true,
 		MakeSubtitles:    true,
 		MakeTranscript:   true,
