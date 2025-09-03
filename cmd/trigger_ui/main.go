@@ -292,6 +292,11 @@ func (s *TriggerServer) vxExportPOST(ctx *gin.Context) {
 		return
 	}
 
+	// Fallback to defaults if none provided by Vidispine
+	if len(vsresolutions) == 0 {
+		vsresolutions = defaultResolutions()
+	}
+
 	var selectedResolutions []utils.Resolution
 	for _, i := range resolutionIndexes {
 		r := vsresolutions[i]
