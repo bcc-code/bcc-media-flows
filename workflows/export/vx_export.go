@@ -138,12 +138,14 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 
 	bmmOnly := len(params.Destinations) == 1 && (params.Destinations[0] == AssetExportDestinationBMM.Value || params.Destinations[0] == AssetExportDestinationBMMIntegration.Value)
 
+	audioOnly := (len(data.Clips) > 0 && data.Clips[0].VideoFile == "") || bmmOnly
+
 	var mergeResult MergeExportDataResult
 	err = workflow.ExecuteChildWorkflow(ctx, MergeExportData, MergeExportDataParams{
 		ExportData:       data,
 		TempDir:          tempDir,
 		SubtitlesDir:     subtitlesOutputDir,
-		MakeVideo:        !bmmOnly,
+		MakeVideo:        !audioOnly,
 		MakeAudio:        true,
 		MakeSubtitles:    true,
 		MakeTranscript:   true,
