@@ -2,6 +2,7 @@ package export
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -33,6 +34,8 @@ type GenerateShortDataParams struct {
 	DebugMode     bool    `json:"DebugMode"`
 }
 
+var badChars = regexp.MustCompile(`[^a-zA-Z0-9-]`)
+
 func validationError(msg string) error {
 	return temporal.NewApplicationError(msg, "ValidationError")
 }
@@ -55,6 +58,11 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	}
 	if params.InSeconds >= params.OutSeconds {
 		return nil, validationError("InSeconds must be < OutSeconds")
+	}
+
+	outputPath, err := paths.Parse(params.OutputDirPath)
+	if err != nil {
+		return nil, err
 	}
 
 	exportData, err := wfutils.Execute(ctx, activities.Vidispine.GetExportDataActivity, vsactivity.GetExportDataParams{
@@ -89,7 +97,8 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		return nil, err
 	}
 
-	titleWithShort := exportData.Title + "_short"
+	titleWithShort := badChars.ReplaceAllString(exportData.Title, "_") + "_short"
+
 	clip := exportData.Clips[0]
 	clip.InSeconds = params.InSeconds
 	clip.OutSeconds = params.OutSeconds
@@ -165,7 +174,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		}
 	}
 
-	shortVideoPath := tempFolder.Append(titleWithShort + "_cropped.mov")
+	shortVideoPath := outputPath.Append(titleWithShort + "_cropped.mov")
 
 	var subtitlePaths *paths.Path
 	if s, ok := clipResult.SubtitleFiles["no"]; ok {
