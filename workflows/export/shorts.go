@@ -284,7 +284,7 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 	assetID := strconv.Itoa(int(assetResult.ID))
 
 	var episodeID string
-	if short.EpisodeID == "" {
+	if short.EpisodeID != "" {
 		episodeID = short.EpisodeID
 	} else {
 		fmt.Printf("WARN: EpisodeID is empty for %s, %s\n", short.MBMetadata.ID, short.Label)
