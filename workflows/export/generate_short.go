@@ -97,7 +97,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		return nil, err
 	}
 
-	titleWithShort := badChars.ReplaceAllString(exportData.Title, "_") + "_short_" + time.Now().Format("2006-01-02")
+	titleWithShort := badChars.ReplaceAllString(exportData.Title, "_") + "_short_" + time.Now().Format("20060102150405")
 
 	clip := exportData.Clips[0]
 	clip.InSeconds = params.InSeconds
