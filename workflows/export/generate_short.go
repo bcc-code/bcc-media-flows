@@ -183,6 +183,12 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		subtitlePaths = &s
 	}
 
+	// Get Norwegian audio file if available
+	var norwegianAudioPath *paths.Path
+	if audioPath, ok := clipResult.AudioFiles["nor"]; ok {
+		norwegianAudioPath = &audioPath
+	}
+
 	var cropRes activities.CropShortResult
 	err = wfutils.Execute(ctx,
 		activities.Util.CropShortActivity,
@@ -190,6 +196,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 			InputVideoPath:  *clipResult.VideoFile,
 			OutputVideoPath: shortVideoPath,
 			SubtitlePath:    subtitlePaths,
+			AudioPath:       norwegianAudioPath,
 			KeyFrames:       keyframes,
 			InSeconds:       params.InSeconds,
 			OutSeconds:      params.OutSeconds,
