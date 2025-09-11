@@ -195,12 +195,12 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		activities.CropShortInput{
 			InputVideoPath:  *clipResult.VideoFile,
 			OutputVideoPath: shortVideoPath,
-			SubtitlePath:    subtitlePaths,
-			AudioPath:       norwegianAudioPath,
-			KeyFrames:       keyframes,
-			InSeconds:       params.InSeconds,
-			OutSeconds:      params.OutSeconds,
-			SceneChanges:    sceneResult,
+			//SubtitlePath:    subtitlePaths, // For now disable subtitle burn-in
+			AudioPath:    norwegianAudioPath,
+			KeyFrames:    keyframes,
+			InSeconds:    params.InSeconds,
+			OutSeconds:   params.OutSeconds,
+			SceneChanges: sceneResult,
 		}).Get(ctx, &cropRes)
 	if err != nil {
 		logger.Error("CropShortActivity failed: " + err.Error())

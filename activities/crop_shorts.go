@@ -50,6 +50,7 @@ func (ua UtilActivities) CropShortActivity(ctx context.Context, params CropShort
 	if params.SubtitlePath != nil {
 		filter += ",subtitles=" + params.SubtitlePath.Local()
 	}
+
 	filter += "[v]"
 
 	args := []string{
