@@ -16,6 +16,7 @@ type CropShortInput struct {
 	InputVideoPath  paths.Path
 	OutputVideoPath paths.Path
 	SubtitlePath    *paths.Path
+	AudioPath       *paths.Path
 	KeyFrames       []Keyframe
 	InSeconds       float64
 	OutSeconds      float64
@@ -53,12 +54,28 @@ func (ua UtilActivities) CropShortActivity(ctx context.Context, params CropShort
 
 	args := []string{
 		"-i", params.InputVideoPath.Local(),
+	}
+
+	// Add Norwegian audio input if available
+	if params.AudioPath != nil {
+		args = append(args, "-i", params.AudioPath.Local())
+	}
+
+	args = append(args,
 		"-progress", "pipe:1",
 		"-hide_banner",
 		"-strict", "unofficial",
 		"-filter_complex",
 		filter,
 		"-map", "[v]",
+	)
+
+	// Map Norwegian audio if available
+	if params.AudioPath != nil {
+		args = append(args, "-map", "1:a")
+	}
+
+	args = append(args,
 		"-c:v", "prores",
 		"-profile:v", "3",
 		"-vendor", "ap10",
@@ -68,9 +85,14 @@ func (ua UtilActivities) CropShortActivity(ctx context.Context, params CropShort
 		"-color_primaries", "bt709",
 		"-color_trc", "bt709",
 		"-colorspace", "bt709",
-		"-y",
-		params.OutputVideoPath.Local(),
+	)
+
+	// Add audio codec if Norwegian audio is present
+	if params.AudioPath != nil {
+		args = append(args, "-c:a", "pcm_s24le")
 	}
+
+	args = append(args, "-y", params.OutputVideoPath.Local())
 	return &CropShortResult{Arguments: args}, nil
 }
 
