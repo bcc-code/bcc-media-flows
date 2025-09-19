@@ -438,3 +438,33 @@ func (aa AudioActivities) TrimFile(ctx context.Context, input TrimInput) (*TrimR
 		OutputPath: input.Output,
 	}, nil
 }
+
+type HAPInput struct {
+	FilePath  paths.Path
+	OutputDir paths.Path
+}
+
+type HAPResult struct {
+	OutputPath paths.Path
+}
+
+func (va VideoActivities) TranscodeToHAPActivity(ctx context.Context, input HAPInput) (*HAPResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "TranscodeToHAP")
+	log.Info("Starting TranscodeToHAPActivity")
+
+	stop, progressCallback := registerProgressCallback(ctx)
+	defer close(stop)
+
+	transcodeResult, err := transcode.HAP(transcode.HAPInput{
+		FilePath:  input.FilePath.Local(),
+		OutputDir: input.OutputDir.Local(),
+	}, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+
+	return &HAPResult{
+		OutputPath: paths.MustParse(transcodeResult.OutputPath),
+	}, nil
+}

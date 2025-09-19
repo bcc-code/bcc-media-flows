@@ -14,6 +14,7 @@ var TriggerableWorkflows = []any{
 	ingestworkflows.BmmIngestUpload,
 	miscworkflows.TranscodePreviewVX,
 	miscworkflows.TranscodePreviewFile,
+	miscworkflows.TranscodeHAP,
 	miscworkflows.TranscribeFile,
 	miscworkflows.TranscribeVX,
 	miscworkflows.HandleMultitrackFile,
@@ -31,6 +32,7 @@ var TriggerableWorkflows = []any{
 var WorkerWorkflows = []any{
 	miscworkflows.TranscodePreviewVX,
 	miscworkflows.TranscodePreviewFile,
+	miscworkflows.TranscodeHAP,
 	miscworkflows.TranscribeFile,
 	miscworkflows.TranscribeVX,
 	miscworkflows.WatchFolderTranscode,
