@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Move Files</title>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center">
+    <div class="bg-white p-8 rounded shadow-md w-full max-w-2xl">
+        <h2 class="text-2xl font-bold mb-6">Move Files</h2>
+        <p class="text-gray-600 mb-6">Move files with "original" shape from VX items to a destination storage.</p>
+        
+        {{if .Error}}
+        <div class="bg-red-100 text-red-700 px-4 py-2 rounded mb-4">{{.Error}}</div>
+        {{end}}
+        {{if .Success}}
+        <div class="bg-green-100 text-green-700 px-4 py-2 rounded mb-4">{{.Success}}</div>
+        {{end}}
+        
+        <form method="POST" autocomplete="off" id="moveFilesForm">
+            <div class="mb-6">
+                <label class="block mb-2 font-semibold" for="vxids">VX IDs</label>
+                <textarea 
+                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 h-32" 
+                    name="vxids" 
+                    id="vxids" 
+                    placeholder="Enter VX IDs (one per line or comma-separated)&#10;Example:&#10;VX-123456&#10;VX-789012&#10;VX-345678"
+                    required></textarea>
+                <p class="text-gray-500 text-sm mt-2">Enter VX IDs one per line or separated by commas. Format: VX-NUMBERS</p>
+                <p id="vxidError" class="text-red-600 text-sm mt-2 hidden">Please enter valid VX IDs in format VX-&#60;NUMBERS&#62;.</p>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block mb-2 font-semibold" for="destinationStorage">Destination Storage</label>
+                <select 
+                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                    name="destinationStorage" 
+                    id="destinationStorage" 
+                    required>
+                    <option value="">Select destination storage...</option>
+                    {{range .Storages}}
+                    <option value="{{.VXID}}">{{.Name}} ({{.VXID}})</option>
+                    {{end}}
+                </select>
+                <p class="text-gray-500 text-sm mt-2">Select the storage where files should be moved to</p>
+            </div>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded p-4 mb-6">
+                <h3 class="font-semibold text-blue-800 mb-2">What this does:</h3>
+                <ul class="text-blue-700 text-sm space-y-1">
+                    <li>• Moves files with "original" shape from each VX item</li>
+                    <li>• Files are moved to the selected destination storage</li>
+                    <li>• Each VX ID will trigger a separate workflow</li>
+                    <li>• You can monitor progress in the workflow history</li>
+                </ul>
+            </div>
+            
+            <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded flex items-center justify-center">
+                <span id="submitText">Start Move Operations</span>
+                <svg id="loadingSpinner" class="animate-spin ml-2 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+            </button>
+        </form>
+        
+        <div class="mt-6 text-center">
+            <a href="/" class="text-blue-600 hover:text-blue-800 underline">← Back to Main Menu</a>
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('moveFilesForm');
+        const vxidsInput = document.getElementById('vxids');
+        const vxidError = document.getElementById('vxidError');
+        const submitBtn = document.getElementById('submitBtn');
+        const submitText = document.getElementById('submitText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        
+        form.addEventListener('submit', function(e) {
+            const vxidsValue = vxidsInput.value.trim();
+            let hasValidVXID = false;
+            
+            // Check if we have at least one valid VX ID
+            const lines = vxidsValue.split(/[\n,]+/);
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (/^VX-\d+$/.test(trimmed)) {
+                    hasValidVXID = true;
+                    break;
+                }
+            }
+            
+            if (!hasValidVXID) {
+                vxidError.classList.remove('hidden');
+                e.preventDefault();
+                return;
+            } else {
+                vxidError.classList.add('hidden');
+            }
+            
+            // Disable UI and show loading
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            submitText.textContent = 'Processing...';
+            loadingSpinner.classList.remove('hidden');
+        });
+        
+        // Clear error when user starts typing
+        vxidsInput.addEventListener('input', function() {
+            vxidError.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>
