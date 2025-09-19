@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/utils"
 
@@ -24,6 +25,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bcc-media-flows/workflows/export"
+	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"github.com/gin-gonic/gin"
 	"go.temporal.io/sdk/client"
 )
@@ -385,6 +387,107 @@ func (s *TriggerServer) vxExportTimedMetadataPOST(ctx *gin.Context) {
 	})
 }
 
+type MoveFilesGETParams struct {
+	Storages []miscworkflows.MBStorage
+	Error    string
+	Success  string
+}
+
+func (s *TriggerServer) moveFilesGET(ctx *gin.Context) {
+	ctx.HTML(http.StatusOK, "move-files.gohtml", MoveFilesGETParams{
+		Storages: miscworkflows.Storages,
+	})
+}
+
+func (s *TriggerServer) moveFilesPOST(ctx *gin.Context) {
+	vxIDs := ctx.PostForm("vxids")
+	destinationStorage := ctx.PostForm("destinationStorage")
+
+	if vxIDs == "" {
+		ctx.HTML(http.StatusOK, "move-files.gohtml", MoveFilesGETParams{
+			Storages: miscworkflows.Storages,
+			Error:    "VX IDs are required",
+		})
+		return
+	}
+
+	if destinationStorage == "" {
+		ctx.HTML(http.StatusOK, "move-files.gohtml", MoveFilesGETParams{
+			Storages: miscworkflows.Storages,
+			Error:    "Destination storage is required",
+		})
+		return
+	}
+
+	// Parse VX IDs (split by newlines and commas, trim whitespace)
+	vxIDList := []string{}
+	lines := strings.Split(vxIDs, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		// Also split by commas in case user enters comma-separated values
+		ids := strings.Split(line, ",")
+		for _, id := range ids {
+			id = strings.TrimSpace(id)
+			if id != "" {
+				vxIDList = append(vxIDList, id)
+			}
+		}
+	}
+
+	if len(vxIDList) == 0 {
+		ctx.HTML(http.StatusOK, "move-files.gohtml", MoveFilesGETParams{
+			Storages: miscworkflows.Storages,
+			Error:    "No valid VX IDs found",
+		})
+		return
+	}
+
+	queue := getQueue()
+	workflowOptions := client.StartWorkflowOptions{
+		TaskQueue: queue,
+	}
+
+	// Process each VX ID
+	successCount := 0
+	for _, vxID := range vxIDList {
+		params := miscworkflows.MoveMBFileParams{
+			VXID:               vxID,
+			Shapes:             []string{"original"}, // Use "original" shape as requested
+			DestinationStorage: destinationStorage,
+		}
+
+		if os.Getenv("DEBUG") == "" {
+			workflowOptions.SearchAttributes = map[string]any{
+				"CustomStringField": vxID,
+			}
+		}
+
+		workflowOptions.ID = uuid.NewString()
+		_, err := s.wfClient.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.MoveMBFile, params)
+		if err != nil {
+			log.Default().Printf("Failed to start workflow for VX ID %s: %v", vxID, err)
+			continue
+		}
+		successCount++
+	}
+
+	if successCount == 0 {
+		ctx.HTML(http.StatusOK, "move-files.gohtml", MoveFilesGETParams{
+			Storages: miscworkflows.Storages,
+			Error:    "Failed to start workflows for any VX IDs",
+		})
+		return
+	}
+
+	ctx.HTML(http.StatusOK, "move-files.gohtml", MoveFilesGETParams{
+		Storages: miscworkflows.Storages,
+		Success:  fmt.Sprintf("Successfully started move workflows for %d out of %d VX IDs", successCount, len(vxIDList)),
+	})
+}
+
 func main() {
 	router := gin.Default()
 
@@ -464,6 +567,10 @@ func main() {
 	router.Group("/bulk-shorts-export").
 		GET("/", server.bulkShortsExportGET).
 		POST("/", server.bulkShortsExportPOST)
+
+	router.Group("/move-files").
+		GET("/", server.moveFilesGET).
+		POST("/", server.moveFilesPOST)
 
 	router.GET("/workflow/:id", server.workflowDetailsGET)
 
