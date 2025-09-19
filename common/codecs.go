@@ -8,4 +8,5 @@ const (
 	FolderAVCIntra100HD          = "AVCintra100_HD"
 	FolderXDCAMHD422             = "XDCAMHD422"
 	FolderTranscribe             = "Transcribe"
+	FolderHAP50FPS               = "HAP_50FPS"
 )

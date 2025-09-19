@@ -112,6 +112,17 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 			File:            path.Linux(),
 			DestinationPath: outFolder.Linux(),
 		}).Get(ctx, nil)
+	case common.FolderHAP50FPS:
+		var hapResult *activities.HAPResult
+		hapResult, err = wfutils.Execute(ctx, activities.Video.TranscodeToHAPActivity, activities.HAPInput{
+			FilePath:  path,
+			OutputDir: tmpFolder,
+		}).Result(ctx)
+		if err == nil && hapResult != nil {
+			transcodeOutput = &activities.EncodeResult{
+				OutputPath: hapResult.OutputPath,
+			}
+		}
 	default:
 		err = fmt.Errorf("codec not supported: %s", params.FolderName)
 	}
