@@ -181,6 +181,11 @@ func MoveFilesWorkerFlow(ctx workflow.Context) error {
 			shapePath := s.GetPath()
 			storage := FindStorageForPath(shapePath)
 
+			if storage == nil {
+				workflow.GetLogger(ctx).Error("Failed to find storage for path, skipping", "path", shapePath, "vxid", msg.VXID)
+				continue
+			}
+
 			if storage.Name == "Archive" {
 				workflow.GetLogger(ctx).Debug("Skipping archive path", "path", shapePath)
 				continue
