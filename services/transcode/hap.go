@@ -41,7 +41,7 @@ func HAP(input HAPInput, progressCallback ffmpeg.ProgressCallback) (*HAPResult, 
 	}
 
 	if info.HasAudio {
-		params = append(params, "-c:a", "pcm_s24le", "-map", "0:a")
+		params = append(params, "-c:a", "pcm_s32le", "-map", "0:a")
 	}
 
 	outputPath := filepath.Join(input.OutputDir, filename)
