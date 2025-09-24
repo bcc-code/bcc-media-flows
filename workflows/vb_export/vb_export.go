@@ -119,7 +119,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	}
 
 	wfutils.SendTelegramText(ctx, telegram.ChatOslofjord,
-		fmt.Sprintf("🟦 VB Export of %s - `%s` started.\nDestination(s): %s\n\nRunID: %s",
+		fmt.Sprintf("🟦 VB Export of %s: `%s` started.\nDestination(s): %s\n\nRunID: %s",
 			params.VXID, filepath.Base(videoShape.GetPath()), strings.Join(params.Destinations, ", "), workflow.GetInfo(ctx).OriginalRunID,
 		),
 	)

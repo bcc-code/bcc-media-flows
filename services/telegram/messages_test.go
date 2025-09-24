@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 
@@ -53,4 +54,48 @@ func TestInvalidMarkdown(t *testing.T) {
 	_, err = Send(&message)
 	assert.Error(t, err)
 	assert.NotContains(t, err.Error(), "can't parse entities: Can't find end of the entity starting at byte offset")
+}
+
+// TestVBExportMarkdownIssue tests the specific VB export message format that causes parsing issues
+//
+// This reproduces the exact error from the Temporal workflow where backticks around filenames
+// cause Telegram's markdown parser to fail at byte offset 94
+func TestVBExportMarkdownIssue(t *testing.T) {
+	if os.Getenv("TELEGRAM_BOT_TOKEN") == "" {
+		t.Skip("TELEGRAM_BOT_TOKEN is not set")
+	}
+
+	// Recreate the exact message format that's failing
+	vxid := "VX-510604"
+	filename := "MEET_20170717_FILM1_SHRT_02.mov"
+	destinations := "hippo_v2"
+	runID := "01997b29-4d04-75d9-ae5a-c3271df1024a"
+
+	// This is the problematic message format from vb_export.go:122
+	problematicMarkdown := fmt.Sprintf("🟦 VB Export of %s - `%s` started.\nDestination(s): %s\n\nRunID: %s",
+		vxid, filename, destinations, runID)
+
+	chat := Chat{Value: 0}
+	message := Message{
+		Markdown: problematicMarkdown,
+		Chat:     chat,
+	}
+
+	// This should fail with the "can't parse entities" error at byte offset 94
+	_, err := Send(&message)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "can't parse entities: Can't find end of the entity starting at byte offset 94")
+
+	// Test the fix using bold formatting instead of backticks
+	fixedMarkdown := fmt.Sprintf("🟦 VB Export of %s `%s` started.\nDestination(s): %s\n\nRunID: %s",
+		vxid, filename, destinations, runID)
+
+	message.Markdown = fixedMarkdown
+
+	// This should work without parsing errors
+	_, err2 := Send(&message)
+	if err2 != nil {
+		// The fixed version should not have the same parsing error
+		assert.NotContains(t, err2.Error(), "can't parse entities: Can't find end of the entity starting at byte offset 94")
+	}
 }
