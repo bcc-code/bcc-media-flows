@@ -71,6 +71,7 @@ var WorkerWorkflows = []any{
 	vb_export.VBExportToBStage,
 	vb_export.VBExportToGfx,
 	vb_export.VBExportToHippo,
+	vb_export.VBExportToHippoV2,
 	vb_export.VBExportToDubbing,
 	vb_export.VBExportToHyperdeck,
 	scheduled.CleanupTemp,

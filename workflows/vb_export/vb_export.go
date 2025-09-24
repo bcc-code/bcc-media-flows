@@ -29,12 +29,14 @@ var (
 	DestinationHyperdeck = Destination{Value: "hyperdeck"}
 	DestinationGfx       = Destination{Value: "gfx"}
 	DestinationHippo     = Destination{Value: "hippo"}
+	DestinationHippoV2   = Destination{Value: "hippo_v2"}
 	DestinationDubbing   = Destination{Value: "dubbing"}
 	Destinations         = enum.New(
 		DestinationAbekas,
 		DestinationBStage,
 		DestinationGfx,
 		DestinationHippo,
+		DestinationHippoV2,
 		DestinationDubbing,
 		DestinationHyperdeck,
 	)
@@ -206,6 +208,8 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 			w = VBExportToGfx
 		case DestinationHippo:
 			w = VBExportToHippo
+		case DestinationHippoV2:
+			w = VBExportToHippoV2
 		case DestinationDubbing:
 			w = VBExportToDubbing
 
