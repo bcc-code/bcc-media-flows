@@ -118,7 +118,7 @@ func (aa AudioActivities) NormalizeAudioActivity(ctx context.Context, params Nor
 	}
 
 	// Bail if the input is already within the target range
-	if r128Result.SuggestedAdjustment < 0.8 {
+	if math.Abs(r128Result.SuggestedAdjustment) < 0.8 {
 		return &NormalizeAudioResult{
 			FilePath: params.FilePath,
 			IsSilent: false,
