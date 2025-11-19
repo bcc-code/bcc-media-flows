@@ -84,7 +84,7 @@ func VBExportToDubbing(ctx workflow.Context, params VBExportChildWorkflowParams)
 		return nil, err
 	}
 
-	for transcodeSelector.HasPending() {
+	for i := 0; i < len(langs); i++ {
 		transcodeSelector.Select(ctx)
 	}
 
