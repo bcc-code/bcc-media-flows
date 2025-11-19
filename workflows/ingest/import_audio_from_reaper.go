@@ -25,6 +25,7 @@ type RelateAudioToVideoParams struct {
 	VideoVXID    string
 	AudioList    map[string]paths.Path
 	PreviewDelay time.Duration
+	SkipPreview  bool
 }
 
 func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) error {
@@ -63,10 +64,12 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 		}
 
 		// We dow *not* wait for preview to be ready
-		workflow.ExecuteChildWorkflow(previewCtx, miscworkflows.TranscodePreviewVX, miscworkflows.TranscodePreviewVXInput{
-			VXID:  assetResult.AssetID,
-			Delay: params.PreviewDelay,
-		})
+		if !params.SkipPreview {
+			workflow.ExecuteChildWorkflow(previewCtx, miscworkflows.TranscodePreviewVX, miscworkflows.TranscodePreviewVXInput{
+				VXID:  assetResult.AssetID,
+				Delay: params.PreviewDelay,
+			})
+		}
 
 		// Add relation
 		err = wfutils.Execute(ctx, cantemo.AddRelation, cantemo.AddRelationParams{
@@ -197,5 +200,6 @@ func doImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFro
 		},
 		PreviewDelay: 2 * time.Hour,
 		VideoVXID:    params.VideoVXID,
+		SkipPreview:  true,
 	})
 }
