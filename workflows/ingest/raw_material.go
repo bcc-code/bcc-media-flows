@@ -155,10 +155,8 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 		}
 	}
 
-	err = CreatePreviews(ctx, audioAssetIDs)
-	if err != nil {
-		return imported, err
-	}
+	createPreviewsAsync(ctx, audioAssetIDs)
+	createPreviewsAsync(ctx, videoAssetIDs)
 
 	err = transcribe(ctx, mediaAssetIDs, params.Language)
 	return imported, err
