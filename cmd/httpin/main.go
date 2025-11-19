@@ -114,6 +114,18 @@ func triggerHandler(ctx *gin.Context) {
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.TranscodePreviewFile, miscworkflows.TranscodePreviewFileInput{
 			FilePath: file,
 		})
+	case "CreateThumbnailsVX":
+		if vxID == "" {
+			ctx.Status(http.StatusBadRequest)
+			return
+		}
+		width, _ := strconv.Atoi(getParamFromCtx(ctx, "width"))
+		height, _ := strconv.Atoi(getParamFromCtx(ctx, "height"))
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.CreateThumbnailsVX, miscworkflows.CreateThumbnailsVXInput{
+			VXID:   vxID,
+			Width:  width,
+			Height: height,
+		})
 	case "ExportTimedMetadata":
 		if vxID == "" {
 			ctx.Status(http.StatusBadRequest)
