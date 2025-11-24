@@ -45,6 +45,11 @@ func (c *Client) AddShapeToItem(tag, itemID, fileID string) (string, error) {
 		return "", err
 	}
 
+	jobID := result.Result().(*JobDocument).JobID
+	if jobID == "" {
+		return "", fmt.Errorf("No job id Returned. Body: %s", string(result.Body()))
+	}
+
 	spew.Dump(result.Result())
 
 	return result.Result().(*JobDocument).JobID, nil
