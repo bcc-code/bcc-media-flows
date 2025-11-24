@@ -2,8 +2,10 @@ package vsapi
 
 import (
 	"fmt"
-	"github.com/bcc-code/mediabank-bridge/log"
 	"net/url"
+
+	"github.com/bcc-code/mediabank-bridge/log"
+	"github.com/davecgh/go-spew/spew"
 
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/samber/lo"
@@ -42,6 +44,8 @@ func (c *Client) AddShapeToItem(tag, itemID, fileID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	spew.Dump(result.Result())
 
 	return result.Result().(*JobDocument).JobID, nil
 }
