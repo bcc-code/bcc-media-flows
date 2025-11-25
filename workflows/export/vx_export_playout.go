@@ -4,7 +4,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"github.com/bcc-code/bcc-media-flows/utils"
-	"path/filepath"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
@@ -12,11 +11,9 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-// VXExportToPlayout is a workflow that exports a VX to the playout system
-// It transcodes the video to XDCAM HD 50Mbit/s and muxes it with the audio and subtitle files
-func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams) (*VXExportResult, error) {
+func VXExportToXDCAM(ctx workflow.Context, params VXExportChildWorkflowParams) (*VXExportResult, error) {
 	logger := workflow.GetLogger(ctx)
-	logger.Info("Starting ExportToPlayout")
+	logger.Info("Starting ExportToXDCAM")
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
@@ -53,25 +50,13 @@ func VXExportToPlayout(ctx workflow.Context, params VXExportChildWorkflowParams)
 		return nil, err
 	}
 
-	// Rclone to playout
-	destination := "playout:/tmp"
-	if err != nil {
-		return nil, err
-	}
+	destination := "brunstad:/Delivery/XDCAM"
 	err = wfutils.RcloneCopyDir(ctx, params.OutputDir.Rclone(), destination, rclone.PriorityNormal)
 	if err != nil {
 		return nil, err
 	}
 
-	err = wfutils.Execute(ctx, activities.Util.FtpPlayoutRename, activities.FtpPlayoutRenameParams{
-		From: filepath.Join("/tmp/", muxResult.Path.Base()),
-		To:   filepath.Join("/dropbox/", muxResult.Path.Base()),
-	}).Get(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	notifyExportDone(ctx, telegram.ChatOslofjord, params, "playout", '🟩')
+	notifyExportDone(ctx, telegram.ChatOslofjord, params, "xdcam", '🟩')
 
 	return &VXExportResult{
 		ID:       params.ParentParams.VXID,

@@ -21,13 +21,13 @@ import (
 type AssetExportDestination enum.Member[string]
 
 var (
-	AssetExportDestinationPlayout        = AssetExportDestination{Value: "playout"}
+	AssetExportDestinationXDCAM          = AssetExportDestination{Value: "xdcam"}
 	AssetExportDestinationVOD            = AssetExportDestination{Value: "vod"}
 	AssetExportDestinationBMM            = AssetExportDestination{Value: "bmm"}
 	AssetExportDestinationBMMIntegration = AssetExportDestination{Value: "bmm-integration"}
 	AssetExportDestinationIsilon         = AssetExportDestination{Value: "isilon"}
 	AssetExportDestinations              = enum.New(
-		AssetExportDestinationPlayout,
+		AssetExportDestinationXDCAM,
 		AssetExportDestinationVOD,
 		AssetExportDestinationBMM,
 		AssetExportDestinationBMMIntegration,
@@ -39,7 +39,7 @@ type VXExportParams struct {
 	VXID                      string
 	WithChapters              bool
 	WatermarkPath             string
-	Destinations              []string `jsonschema:"enum=vod,enum=playout,enum=bmm,enum=bmm-integration,enum=isilon"`
+	Destinations              []string `jsonschema:"enum=vod,enum=xdcam,enum=bmm,enum=bmm-integration,enum=isilon"`
 	AudioSource               string
 	Languages                 []string
 	Subclip                   string
@@ -218,8 +218,8 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 			fallthrough
 		case AssetExportDestinationVOD:
 			w = VXExportToVOD
-		case AssetExportDestinationPlayout:
-			w = VXExportToPlayout
+		case AssetExportDestinationXDCAM:
+			w = VXExportToXDCAM
 		case AssetExportDestinationBMM, AssetExportDestinationBMMIntegration:
 			w = VXExportToBMM
 		default:

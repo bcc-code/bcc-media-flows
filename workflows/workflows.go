@@ -44,7 +44,7 @@ var WorkerWorkflows = []any{
 	ingestworkflows.BmmIngestUpload,
 	export.VXExport,
 	export.VXExportToVOD,
-	export.VXExportToPlayout,
+	export.VXExportToXDCAM,
 	export.MergeExportData,
 	export.VXExportToBMM,
 	export.IsilonExport,
@@ -76,6 +76,7 @@ var WorkerWorkflows = []any{
 	vb_export.VBExportToHippoV2,
 	vb_export.VBExportToDubbing,
 	vb_export.VBExportToHyperdeck,
+	vb_export.VBExportToXDCAM,
 	scheduled.CleanupTemp,
 	scheduled.MediabankenPurgeTrash,
 	// Massive.app import workflow
