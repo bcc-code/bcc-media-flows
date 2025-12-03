@@ -66,6 +66,9 @@ type ExportData struct {
 	OriginalLanguage string
 
 	TranscribedLanguage string
+
+	// Warnings contains non-fatal issues encountered during export data preparation
+	Warnings []string
 }
 
 type ExportAudioSource enum.Member[string]
@@ -212,22 +215,40 @@ func enrichClipWithRelatedAudios(client Client, clip *Clip, oLanguagesToExport [
 // enrichClipWithEmbeddedAudio modifies the clip in-place with embedded audio
 //
 // TODO: return audiofiles instead of modifying original
-func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) error {
+func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []string) ([]string, error) {
 	shapes, err := client.GetShapes(clip.VXID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	shape := shapes.GetShape("original")
+	var warnings []string
 
-	if len(shape.AudioComponent) != 16 && len(shape.AudioComponent) != 8 && len(shape.AudioComponent) > 2 {
-		return fmt.Errorf("found %d audio components, expected 1, 2 or 16 on item %s", len(shape.AudioComponent), clip.VXID)
+	// Handle unexpected audio component counts by falling back to first 2 tracks
+	if len(shape.AudioComponent) > 2 && len(shape.AudioComponent) != 8 && len(shape.AudioComponent) != 16 {
+		warnings = append(warnings, fmt.Sprintf(
+			"Found %d audio components on item %s. Using first 2 tracks as Norwegian L+R for all languages.",
+			len(shape.AudioComponent), clip.VXID))
+
+		streams := []AudioStream{
+			{StreamID: uint(shape.AudioComponent[0].EssenceStreamID), ChannelID: 0},
+			{StreamID: uint(shape.AudioComponent[1].EssenceStreamID), ChannelID: 0},
+		}
+
+		for _, lang := range languagesToExport {
+			clip.AudioFiles[lang] = &AudioFile{
+				VXID:    clip.VXID,
+				File:    shape.GetPath(),
+				Streams: streams,
+			}
+		}
+		return warnings, nil
 	}
 
 	if len(shape.AudioComponent) == 0 {
 		// We have no audio, so we fall back to silence
 		streams := []AudioStream{
-			AudioStream{
+			{
 				ChannelID: 0,
 				StreamID:  0,
 			},
@@ -239,7 +260,7 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 			}
 		}
 
-		return nil
+		return nil, nil
 	}
 
 	if len(shape.AudioComponent) == 1 && shape.AudioComponent[0].ChannelCount == 64 {
@@ -250,28 +271,28 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 				clip.AudioFiles[lang] = &AudioFile{
 					File: shape.GetPath(),
 					Streams: []AudioStream{
-						AudioStream{
+						{
 							StreamID:  2,
 							ChannelID: uint(langInfo.SoftronStartCh),
 						},
-						AudioStream{
+						{
 							StreamID:  2,
 							ChannelID: uint(langInfo.SoftronStartCh) + 1,
 						},
 					},
 				}
 			} else {
-				return fmt.Errorf("unknown language %s", lang)
+				return nil, fmt.Errorf("unknown language %s", lang)
 			}
 		}
 
-		return nil
+		return nil, nil
 	}
 
 	if len(shape.AudioComponent) == 1 {
 		// We have stereo or mono audio, so we copy it to all languages
 		for _, lang := range languagesToExport {
-			streams := []AudioStream{}
+			var streams []AudioStream
 			for i := 0; shape.AudioComponent[0].ChannelCount > i; i++ {
 				streams = append(streams, AudioStream{
 					StreamID:  uint(shape.AudioComponent[0].EssenceStreamID),
@@ -286,14 +307,14 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 			}
 		}
 
-		return nil
+		return nil, nil
 	}
 
 	if len(shape.AudioComponent) == 2 {
 		var streams []AudioStream
 		for _, c := range shape.AudioComponent {
 			if c.ChannelCount != 1 {
-				return fmt.Errorf("found %d channels in audio component, expected 1", c.ChannelCount)
+				return nil, fmt.Errorf("found %d channels in audio component, expected 1", c.ChannelCount)
 			}
 			streams = append(streams, AudioStream{
 				StreamID:  uint(c.EssenceStreamID),
@@ -308,17 +329,22 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 				Streams: streams,
 			}
 		}
+		return nil, nil
 	}
 
 	if len(shape.AudioComponent) == 8 {
+		// When there are 8 audio components but multiple languages requested,
+		// fall back to using first 2 tracks as Norwegian L+R for all languages
 		if len(languagesToExport) > 1 {
-			return fmt.Errorf("found 8 audio components, expected 16")
+			warnings = append(warnings, fmt.Sprintf(
+				"Found 8 audio components on item %s but %d languages requested. Using first 2 tracks as Norwegian L+R for all languages.",
+				clip.VXID, len(languagesToExport)))
 		}
 
 		var streams []AudioStream
 		for _, c := range shape.AudioComponent[:2] {
 			if c.ChannelCount != 1 {
-				return fmt.Errorf("found %d channels in audio component, expected 1", c.ChannelCount)
+				return nil, fmt.Errorf("found %d channels in audio component, expected 1", c.ChannelCount)
 			}
 
 			streams = append(streams, AudioStream{
@@ -334,12 +360,12 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 				Streams: streams,
 			}
 		}
+		return warnings, nil
 	}
 
+	// We have an actual 16 channel audio file, so we need to figure out which channels to use
+	// and assign them to the correct language
 	for _, lang := range languagesToExport {
-		// We have an actual 16 channel audio file, so we need to figure out which channels to use
-		// and assign them to the correct language
-
 		if l, ok := bccmflows.LanguagesByISO[lang]; ok {
 			var streams []AudioStream
 			for i := 0; i < l.MU1ChannelCount; i++ {
@@ -355,11 +381,11 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 				Streams: streams,
 			}
 		} else if lang != "" {
-			return errors.New("No language " + lang + " found in bccmflows.LanguagesByISO")
+			return nil, errors.New("No language " + lang + " found in bccmflows.LanguagesByISO")
 		}
 	}
 
-	return nil
+	return nil, nil
 }
 
 // GetSubclipNames returns the names of all the subclips
@@ -492,7 +518,9 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 		if *audioSource == ExportAudioSourceRelated {
 			err = enrichClipWithRelatedAudios(client, clip, languagesToExport)
 		} else if *audioSource == ExportAudioSourceEmbedded {
-			err = enrichClipWithEmbeddedAudio(client, clip, languagesToExport)
+			var clipWarnings []string
+			clipWarnings, err = enrichClipWithEmbeddedAudio(client, clip, languagesToExport)
+			out.Warnings = append(out.Warnings, clipWarnings...)
 		}
 
 		if err != nil {

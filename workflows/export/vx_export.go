@@ -105,6 +105,12 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
+	// Send warnings to Telegram
+	for _, warning := range data.Warnings {
+		wfutils.SendTelegramText(ctx, telegramChat,
+			fmt.Sprintf("Warning during export of `%s`:\n%s", params.VXID, warning))
+	}
+
 	if len(data.Clips) == 0 {
 		wfutils.SendTelegramText(ctx, telegramChat,
 			fmt.Sprintf("No clips found for `%s`.\nTitle: `%s`\nDestinations: `%s`\n\nRunID: `%s`",
