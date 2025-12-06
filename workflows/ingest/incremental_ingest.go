@@ -282,6 +282,19 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 		NotificationChannel: &telegram.ChatOther,
 	})
 
+	// Fix duration metadata issues
+	fixDurationFuture := workflow.ExecuteChildWorkflow(ctx, miscworkflows.FixDurationVX, miscworkflows.FixDurationVXInput{
+		VXID: videoVXID,
+	})
+
+	// Handle errors in background
+	workflow.Go(ctx, func(ctx workflow.Context) {
+		err := fixDurationFuture.Get(ctx, nil)
+		if err != nil {
+			wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟥 Duration fix failed for %s: %v", videoVXID, err))
+		}
+	})
+
 	_ = wfutils.Execute(ctx, activities.Vidispine.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
 		AssetID: videoVXID,
 	}).Get(ctx, nil)

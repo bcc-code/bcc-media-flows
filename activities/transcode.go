@@ -468,3 +468,38 @@ func (va VideoActivities) TranscodeToHAPActivity(ctx context.Context, input HAPI
 		OutputPath: paths.MustParse(transcodeResult.OutputPath),
 	}, nil
 }
+
+type FixDurationInput struct {
+	InputPath  paths.Path
+	OutputPath paths.Path
+}
+
+type FixDurationResult struct {
+	OutputPath paths.Path
+}
+
+func (va VideoActivities) FixDurationActivity(ctx context.Context, input FixDurationInput) (*FixDurationResult, error) {
+	log := activity.GetLogger(ctx)
+	activity.RecordHeartbeat(ctx, "FixDuration")
+	log.Info("Starting FixDurationActivity")
+
+	stop, progressCallback := registerProgressCallback(ctx)
+	defer close(stop)
+
+	args := []string{
+		"-i", input.InputPath.Local(),
+		"-c:v", "copy",
+		"-c:a", "copy",
+		"-map", "0",
+		input.OutputPath.Local(),
+	}
+
+	_, err := ffmpeg.Do(args, ffmpeg.StreamInfo{}, progressCallback)
+	if err != nil {
+		return nil, err
+	}
+
+	return &FixDurationResult{
+		OutputPath: input.OutputPath,
+	}, nil
+}
