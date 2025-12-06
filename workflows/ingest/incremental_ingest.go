@@ -318,6 +318,8 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 		return fmt.Errorf("failed to import one or more audio files: %v", errors)
 	}
 
+	_ = fixDurationFuture.Get(ctx, nil)
+
 	return nil
 }
 
