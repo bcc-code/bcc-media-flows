@@ -55,9 +55,18 @@ func (s *TriggerServer) vbExportGET(ctx *gin.Context) {
 		return
 	}
 
+	// Filter out hippo (v1) from UI, keep hippo_v2
+	allDestinations := vb_export.Destinations.Values()
+	uiDestinations := []string{}
+	for _, dest := range allDestinations {
+		if dest != "hippo" {
+			uiDestinations = append(uiDestinations, dest)
+		}
+	}
+
 	ctx.HTML(http.StatusOK, "vb-export.gohtml", VBTriggerGETParams{
 		Title:          title,
-		Destinations:   vb_export.Destinations.Values(),
+		Destinations:   uiDestinations,
 		SubtitleShapes: subtitleShapes,
 		SubtitleStyles: subStyles,
 	})
