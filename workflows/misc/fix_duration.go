@@ -33,14 +33,8 @@ func FixDurationVX(
 		return fmt.Errorf("failed to get original file: %w", err)
 	}
 
-	// Get temp folder for processing
-	tempFolder, err := wfutils.GetWorkflowTempFolder(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get temp folder: %w", err)
-	}
-
-	// Create output path in temp folder
-	outputPath := tempFolder.Append(originalFile.FilePath.Base()).SetExt(originalFile.FilePath.Ext())
+	// Create output path in same directory as original with .tmp suffix
+	outputPath := originalFile.FilePath.Dir().Append(originalFile.FilePath.Base() + ".tmp")
 
 	// Run FFmpeg to fix duration
 	_, err = wfutils.Execute(ctx, activities.Video.FixDurationActivity, activities.FixDurationInput{
