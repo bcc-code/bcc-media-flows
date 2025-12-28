@@ -179,7 +179,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 			return acc + err.Error() + "\n"
 		}, "")
 
-		return nil, fmt.Errorf(errText)
+		return nil, fmt.Errorf("%s", errText)
 	}
 
 	parentAbandonOptions := workflow.GetChildWorkflowOptions(ctx)

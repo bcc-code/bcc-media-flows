@@ -72,6 +72,7 @@ var WorkerWorkflows = []any{
 	miscworkflows.FixDurationVX,
 	vb_export.VBExport,
 	vb_export.VBExportToAbekas,
+	vb_export.VBExportToRawAbekas,
 	vb_export.VBExportToBStage,
 	vb_export.VBExportToGfx,
 	vb_export.VBExportToHippo,

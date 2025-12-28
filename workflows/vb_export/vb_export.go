@@ -25,6 +25,7 @@ type Destination enum.Member[string]
 
 var (
 	DestinationAbekas    = Destination{Value: "abekas"}
+	DestinationRawAbekas = Destination{Value: "raw-abekas"}
 	DestinationBStage    = Destination{Value: "b-stage"}
 	DestinationHyperdeck = Destination{Value: "hyperdeck"}
 	DestinationGfx       = Destination{Value: "gfx"}
@@ -34,6 +35,7 @@ var (
 	DestinationXDCAM     = Destination{Value: "xdcam"}
 	Destinations         = enum.New(
 		DestinationAbekas,
+		DestinationRawAbekas,
 		DestinationBStage,
 		DestinationGfx,
 		DestinationHippo,
@@ -202,6 +204,8 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		switch *dest {
 		case DestinationAbekas:
 			w = VBExportToAbekas
+		case DestinationRawAbekas:
+			w = VBExportToRawAbekas
 		case DestinationBStage:
 			w = VBExportToBStage
 		case DestinationHyperdeck:
