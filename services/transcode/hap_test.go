@@ -62,6 +62,64 @@ func Test_HAP(t *testing.T) {
 	spew.Dump(r)
 }
 
+func Test_HAP_WithAlpha(t *testing.T) {
+	testFile := paths.MustParse("./testdata/generated/hap_test_alpha.mov")
+	outputFile := paths.MustParse("./testdata/generated/results/" + testFile.Base())
+
+	os.MkdirAll(testFile.Dir().Local(), 0755)
+	os.MkdirAll(outputFile.Dir().Local(), 0755)
+
+	// Generate a test video with alpha channel using ProRes 4444
+	cmd := exec.Command("ffmpeg",
+		"-f", "lavfi",
+		"-i", "testsrc=size=1920x1080:rate=25:duration=2",
+		"-vf", "format=yuva444p",
+		"-c:v", "prores_ks",
+		"-profile:v", "4444",
+		"-y", testFile.Local(),
+	)
+	err := cmd.Run()
+	if err != nil {
+		t.Skip("ffmpeg not available for test generation")
+	}
+
+	// Verify input has alpha
+	inputInfo, err := ffmpeg.GetStreamInfo(testFile.Local())
+	assert.NoError(t, err)
+	assert.True(t, inputInfo.HasAlpha, "test input should have alpha channel")
+
+	progressCallback := func(i ffmpeg.Progress) {
+		spew.Dump(i)
+	}
+
+	r, err := transcode.HAP(transcode.HAPInput{
+		FilePath:  testFile.Local(),
+		OutputDir: outputFile.Dir().Local(),
+	}, progressCallback)
+
+	assert.NoError(t, err)
+	if !assert.NotNil(t, r) {
+		return
+	}
+
+	streamInfo, err := ffmpeg.GetStreamInfo(r.OutputPath)
+	assert.NoError(t, err)
+
+	assert.True(t, streamInfo.HasVideo)
+	assert.True(t, streamInfo.HasAlpha, "output should preserve alpha channel")
+	assert.Equal(t, 2.0, streamInfo.TotalSeconds)
+	assert.Len(t, streamInfo.VideoStreams, 1)
+
+	vs := streamInfo.VideoStreams[0]
+
+	assert.Equal(t, "hap", vs.CodecName)
+	assert.Equal(t, 1920, vs.Width)
+	assert.Equal(t, 1080, vs.Height)
+	assert.Equal(t, "50/1", vs.RFrameRate)
+
+	spew.Dump(r)
+}
+
 func Test_HAP_WithAudio(t *testing.T) {
 	testFile := paths.MustParse("./testdata/generated/hap_test_audio.mp4")
 	outputFile := paths.MustParse("./testdata/generated/results/" + testFile.Base())

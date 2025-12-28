@@ -78,12 +78,18 @@ func HAP(input HAPInput, progressCallback ffmpeg.ProgressCallback) (*HAPResult, 
 	}
 
 	// Step 2: Encode video without audio
+	// Use hap_alpha format for files with alpha channel, otherwise hap_q
+	format := "hap_q"
+	if info.HasAlpha {
+		format = "hap_alpha"
+	}
+
 	videoParams := []string{
 		"-progress", "pipe:1",
 		"-hide_banner",
 		"-i", input.FilePath,
 		"-c:v", "hap",
-		"-format", "hap_q",
+		"-format", format,
 		"-r", "50",
 		"-map", "0:v:0",
 		"-an", // Explicitly exclude audio
