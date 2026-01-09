@@ -50,6 +50,11 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 			fmt.Sprintf("Warning: `%s` has %d FPS (expected 25 or 50 FPS)", params.InputFile.Base(), analyzeResult.FrameRate))
 	}
 
+	if analyzeResult.Width != 1920 || analyzeResult.Height != 1080 {
+		wfutils.SendTelegramText(ctx, telegram.ChatOslofjord,
+			fmt.Sprintf("⚠️ Warning: `%s` has %dx%d resolution (expected 1920x1080)", params.InputFile.Base(), analyzeResult.Width, analyzeResult.Height))
+	}
+
 	if len(analyzeResult.VideoStreams) == 0 && len(analyzeResult.AudioStreams) > 0 {
 		return VBExportToAbekasAudioOnly(ctx, params)
 	}
