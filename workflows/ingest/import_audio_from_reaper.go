@@ -44,9 +44,21 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 
 	for _, lang := range langs {
 		path := params.AudioList[lang]
+
+		// Wait for file to be available on storage
+		fileOK, err := wfutils.Execute(ctx, activities.Util.WaitForFile, activities.FileInput{
+			Path: path,
+		}).Result(ctx)
+		if err != nil {
+			return err
+		}
+		if !fileOK {
+			return fmt.Errorf("file %s is reported not OK by the system", path)
+		}
+
 		// Create placeholder
 		var assetResult vsactivity.CreatePlaceholderResult
-		err := wfutils.Execute(ctx, activities.Vidispine.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
+		err = wfutils.Execute(ctx, activities.Vidispine.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
 			Title: path.Base(),
 		}).Get(ctx, &assetResult)
 		if err != nil {
