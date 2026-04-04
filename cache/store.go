@@ -28,6 +28,8 @@ func (j *janitor) start() {
 }
 
 func (j *janitor) clear() {
+	lock.Lock()
+	defer lock.Unlock()
 	var deleteKeys []string
 	for k, v := range store {
 		if v.Expiry.Before(time.Now()) {
@@ -47,7 +49,9 @@ func init() {
 }
 
 func Get[T any](key string) *T {
+	lock.Lock()
 	i, ok := store[key]
+	lock.Unlock()
 	if ok && i.Expiry.After(time.Now()) {
 		return i.Value.(*T)
 	}

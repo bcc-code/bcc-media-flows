@@ -17,8 +17,9 @@ import (
 )
 
 type PreviewInput struct {
-	FilePath  string
-	OutputDir string
+	FilePath      string
+	OutputDir     string
+	WatermarkPath string
 }
 
 type GrowingPreviewInput struct {
@@ -179,6 +180,11 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 		encoder = "libx264"
 	}
 
+	watermark := input.WatermarkPath
+	if watermark == "" {
+		watermark = previewWatermarkPath
+	}
+
 	info, err := ffmpeg.ProbeFile(input.FilePath)
 	if err != nil {
 		return nil, err
@@ -218,7 +224,7 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 		params = append(params,
 			"-i", input.FilePath,
 			"-ss", "0.0",
-			"-i", previewWatermarkPath,
+			"-i", watermark,
 			"-filter_complex", "sws_flags=bicubic;[0:v]split=1[VIDEO-main-.mp4];[VIDEO-main-.mp4]scale=-2:540,null[temp];[temp][1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4]",
 			"-map", "[VIDEO-.mp4]",
 			"-c:v", encoder,
@@ -230,7 +236,7 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 			"-ss", "0.0",
 			"-i", input.FilePath,
 			"-ss", "0.0",
-			"-i", previewWatermarkPath,
+			"-i", watermark,
 		)
 		vuFilters, lastVid := buildVUMeterFilters(audioTracks)
 		// Compose filter graph: scale, vumeters, watermark, stereo audio

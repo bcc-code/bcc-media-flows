@@ -68,11 +68,6 @@ func TestPreview_VUMeters_MultipleAudioTracks(t *testing.T) {
 	trackCounts := []int{1, 2, 4, 16}
 	os.MkdirAll("testdata/generated", 0755)
 
-	// Override the watermark path for testing
-	oldWatermarkPath := previewWatermarkPath
-	previewWatermarkPath = "testdata/test_overlay.png"
-	defer func() { previewWatermarkPath = oldWatermarkPath }()
-
 	for _, n := range trackCounts {
 		t.Run("audio_tracks_"+string(rune(n)), func(t *testing.T) {
 			inputFile := filepath.Join("testdata/generated", fmt.Sprintf("testsrc_%dtracks.mov", n))
@@ -82,8 +77,9 @@ func TestPreview_VUMeters_MultipleAudioTracks(t *testing.T) {
 			testutils.GenerateSoftronTestFile(p, n, 2.0)
 
 			previewInput := PreviewInput{
-				FilePath:  inputFile,
-				OutputDir: outputDir,
+				FilePath:      inputFile,
+				OutputDir:     outputDir,
+				WatermarkPath: "testdata/test_overlay.png",
 			}
 
 			result, err := Preview(previewInput, nil)
@@ -101,11 +97,6 @@ func TestPreview_VUMeters_SeparateAudioStreams(t *testing.T) {
 	trackCounts := []int{1, 2, 4, 8}
 	os.MkdirAll("testdata/generated", 0755)
 
-	// Override the watermark path for testing
-	oldWatermarkPath := previewWatermarkPath
-	previewWatermarkPath = "testdata/test_overlay.png"
-	defer func() { previewWatermarkPath = oldWatermarkPath }()
-
 	for _, n := range trackCounts {
 		t.Run(fmt.Sprintf("separate_streams_%d", n), func(t *testing.T) {
 			inputFile := filepath.Join("testdata/generated", fmt.Sprintf("testsrc_separate_%dstreams.mov", n))
@@ -115,8 +106,9 @@ func TestPreview_VUMeters_SeparateAudioStreams(t *testing.T) {
 			testutils.GenerateSeparateAudioStreamsTestFile(p, n, 2.0)
 
 			previewInput := PreviewInput{
-				FilePath:  inputFile,
-				OutputDir: outputDir,
+				FilePath:      inputFile,
+				OutputDir:     outputDir,
+				WatermarkPath: "testdata/test_overlay.png",
 			}
 
 			result, err := Preview(previewInput, nil)
