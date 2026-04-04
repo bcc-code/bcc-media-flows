@@ -29,6 +29,7 @@ type Client interface {
 	GetItemsInCollection(collectionVxId string, number int) (*vsapi.CollectionItemsResult, error)
 	GetJob(jobID string) (*vsapi.JobDocument, error)
 	GetMetadata(vsID string) (*vsapi.MetadataResult, error)
+	GetMetadataFields(vsID string, fields []string) (*vsapi.MetadataResult, error)
 	GetRelations(assetID string) ([]vsapi.Relation, error)
 	GetResolutions(itemVXID string) ([]vsapi.Resolution, error)
 	GetSequence(itemVXID string) (*vsapi.SequenceDocument, error)

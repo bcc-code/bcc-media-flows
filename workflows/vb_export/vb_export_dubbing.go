@@ -38,7 +38,10 @@ func VBExportToDubbing(ctx workflow.Context, params VBExportChildWorkflowParams)
 		return nil, fmt.Errorf("no related audio files found for VXID %s", vxID)
 	}
 
-	vxMeta, err := wfutils.Execute(ctx, activities.Vidispine.GetVXMetadata, vsactivity.VXOnlyParam{VXID: vxID}).Result(ctx)
+	vxMeta, err := wfutils.Execute(ctx, activities.Vidispine.GetVXMetadataFields, vsactivity.GetVXMetadataFieldsParams{
+		VXID:   vxID,
+		Fields: []vscommon.FieldType{vscommon.FieldExportTCOverride},
+	}).Result(ctx)
 	if err != nil {
 		return nil, err
 	}

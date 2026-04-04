@@ -233,6 +233,21 @@ func (mr *MockClientMockRecorder) GetMetadata(vsID any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetadata", reflect.TypeOf((*MockClient)(nil).GetMetadata), vsID)
 }
 
+// GetMetadataFields mocks base method.
+func (m *MockClient) GetMetadataFields(vsID string, fields []string) (*vsapi.MetadataResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMetadataFields", vsID, fields)
+	ret0, _ := ret[0].(*vsapi.MetadataResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMetadataFields indicates an expected call of GetMetadataFields.
+func (mr *MockClientMockRecorder) GetMetadataFields(vsID, fields any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetadataFields", reflect.TypeOf((*MockClient)(nil).GetMetadataFields), vsID, fields)
+}
+
 // GetRelations mocks base method.
 func (m *MockClient) GetRelations(assetID string) ([]vsapi.Relation, error) {
 	m.ctrl.T.Helper()

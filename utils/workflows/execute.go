@@ -2,6 +2,7 @@ package wfutils
 
 import (
 	"context"
+	"reflect"
 	"sync"
 	"time"
 
@@ -34,7 +35,16 @@ type Task[TR any] struct {
 // Result returns the result of the future
 func (f Task[TR]) Result(ctx workflow.Context) (TR, error) {
 	var result TR
-	err := f.Future.Get(ctx, &result)
+	rv := reflect.ValueOf(&result).Elem()
+	var valuePtr interface{}
+	if rv.Kind() == reflect.Ptr {
+		inner := reflect.New(rv.Type().Elem())
+		rv.Set(inner)
+		valuePtr = inner.Interface()
+	} else {
+		valuePtr = &result
+	}
+	err := f.Future.Get(ctx, valuePtr)
 	return result, err
 }
 

@@ -144,6 +144,9 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	var previewFuture wfutils.Task[any]
 	var lowresImportJob *vsactivity.ImportFileResult
 	previewCtx, stopPreviewFunc := workflow.WithCancel(ctx)
+	previewActivityOpts := wfutils.GetDefaultActivityOptions()
+	previewActivityOpts.StartToCloseTimeout = time.Hour * 8
+	previewCtx = workflow.WithActivityOptions(previewCtx, previewActivityOpts)
 
 	workflow.Go(ctx, func(ctx workflow.Context) {
 		_ = workflow.Sleep(ctx, 1*time.Minute)

@@ -59,6 +59,23 @@ func (c *Client) GetMetadata(vsID string) (*MetadataResult, error) {
 	return resp.Result().(*MetadataResult), nil
 }
 
+func (c *Client) GetMetadataFields(vsID string, fields []string) (*MetadataResult, error) {
+	reqURL := c.baseURL + "/item/" + vsID + "?content=metadata&terse=true"
+	for _, f := range fields {
+		reqURL += "&field=" + f
+	}
+
+	resp, err := c.restyClient.R().
+		SetResult(&MetadataResult{}).
+		Get(reqURL)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Result().(*MetadataResult), nil
+}
+
 type GetMetadataAdvancedParams struct {
 	ItemID string
 	Group  string

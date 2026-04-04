@@ -55,7 +55,22 @@ func (a Activities) GetFileFromVXActivity(ctx context.Context, params GetFileFro
 
 func (a Activities) GetVXMetadata(_ context.Context, params VXOnlyParam) (*vsapi.MetadataResult, error) {
 	vsClient := GetClient()
-	return vsClient.GetMetadata(params.VXID)
+	data, err := vsClient.GetMetadata(params.VXID)
+	return data, err
+}
+
+type GetVXMetadataFieldsParams struct {
+	VXID   string
+	Fields []vscommon.FieldType
+}
+
+func (a Activities) GetVXMetadataFields(_ context.Context, params GetVXMetadataFieldsParams) (*vsapi.MetadataResult, error) {
+	vsClient := GetClient()
+	fields := make([]string, len(params.Fields))
+	for i, f := range params.Fields {
+		fields[i] = f.Value
+	}
+	return vsClient.GetMetadataFields(params.VXID, fields)
 }
 
 type VXMetadataFieldParams = vsapi.ItemMetadataFieldParams
