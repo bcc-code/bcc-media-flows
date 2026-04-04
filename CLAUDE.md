@@ -1,0 +1,3 @@
+- Remember that you need to register workflows and workers for them to be useful.
+- Do not use .Get to retrieve the result of an activity. Use .Result(ctx)
+- When creating enums always use     "github.com/orsinium-labs/enum"
