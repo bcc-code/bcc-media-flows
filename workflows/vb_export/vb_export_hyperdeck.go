@@ -18,8 +18,20 @@ func VBExportToHyperdeck(ctx workflow.Context, params VBExportChildWorkflowParam
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
+	extraFileName := ""
+	if params.SubtitleFile != nil {
+		extraFileName += "_SUB_NOR"
+	}
+
+	rcloneDestination := deliveryFolder.Append("Hyperdeck-ProRes", params.OriginalFilenameWithoutExt+extraFileName+".mov")
+
+	err := wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
+	if err != nil {
+		return nil, err
+	}
+
 	outputDir := params.TempDir.Append("hyperdeck_output")
-	err := wfutils.CreateFolder(ctx, outputDir)
+	err = wfutils.CreateFolder(ctx, outputDir)
 	if err != nil {
 		return nil, err
 	}
@@ -66,18 +78,6 @@ func VBExportToHyperdeck(ctx workflow.Context, params VBExportChildWorkflowParam
 
 	if videoResult.OutputPath.Ext() != ".mov" {
 		return nil, fmt.Errorf("expected Hyperdeck ProRes output to be .mov, got %s", videoResult.OutputPath.Ext())
-	}
-
-	extraFileName := ""
-	if params.SubtitleFile != nil {
-		extraFileName += "_SUB_NOR"
-	}
-
-	rcloneDestination := deliveryFolder.Append("Hyperdeck-ProRes", params.OriginalFilenameWithoutExt+extraFileName+videoResult.OutputPath.Ext())
-
-	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
-	if err != nil {
-		return nil, err
 	}
 
 	err = wfutils.RcloneCopyFileWithNotifications(ctx, videoResult.OutputPath, rcloneDestination, rclone.PriorityHigh, rcloneNotificationOptions)

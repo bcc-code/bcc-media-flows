@@ -28,18 +28,31 @@ func VBExportToGfx(ctx workflow.Context, params VBExportChildWorkflowParams) (*V
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
+	isImage, err := wfutils.IsImage(ctx, params.InputFile)
+	if err != nil {
+		return nil, err
+	}
+
+	destExt := params.InputFile.Ext()
+	if !isImage {
+		destExt = ".mov"
+	}
+
+	rcloneDestination := deliveryFolder.Append("GFX", params.OriginalFilenameWithoutExt+destExt)
+
+	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
+	if err != nil {
+		return nil, err
+	}
+
 	gfxOutputDir := params.TempDir.Append("gfx_output")
-	err := wfutils.CreateFolder(ctx, gfxOutputDir)
+	err = wfutils.CreateFolder(ctx, gfxOutputDir)
 	if err != nil {
 		return nil, err
 	}
 
 	filePath := params.InputFile
 
-	isImage, err := wfutils.IsImage(ctx, params.InputFile)
-	if err != nil {
-		return nil, err
-	}
 	if !isImage {
 		videoResult, err := wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:       params.InputFile,
@@ -55,13 +68,6 @@ func VBExportToGfx(ctx workflow.Context, params VBExportChildWorkflowParams) (*V
 			return nil, err
 		}
 		filePath = videoResult.OutputPath
-	}
-
-	rcloneDestination := deliveryFolder.Append("GFX", params.OriginalFilenameWithoutExt+filePath.Ext())
-
-	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
-	if err != nil {
-		return nil, err
 	}
 
 	err = wfutils.RcloneCopyFileWithNotifications(ctx, filePath, rcloneDestination, rclone.PriorityHigh, rcloneNotificationOptions)

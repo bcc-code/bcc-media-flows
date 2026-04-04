@@ -62,13 +62,13 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 	if analyzeResult.HasAlpha {
 		rcloneDestination := deliveryFolder.Append("Abekas-AVCI", params.InputFile.Base())
 
-		message := fmt.Sprintf("ℹ️ `%s` has alpha channel, copying directly delivery folder with no transoding", params.InputFile.Base())
-		wfutils.SendTelegramText(ctx, telegram.ChatOslofjord, message)
-
 		err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
 		if err != nil {
 			return nil, err
 		}
+
+		message := fmt.Sprintf("ℹ️ `%s` has alpha channel, copying directly delivery folder with no transoding", params.InputFile.Base())
+		wfutils.SendTelegramText(ctx, telegram.ChatOslofjord, message)
 
 		err = wfutils.RcloneCopyFileWithNotifications(ctx, params.InputFile, rcloneDestination, rclone.PriorityHigh, rcloneNotificationOptions)
 		if err != nil {
@@ -80,6 +80,18 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 			ID:    params.ParentParams.VXID,
 			Title: params.OriginalFilenameWithoutExt,
 		}, nil
+	}
+
+	extraFileName := ""
+	if params.SubtitleFile != nil {
+		extraFileName += "_SUB_NOR"
+	}
+
+	rcloneDestination := deliveryFolder.Append("Abekas-AVCI", params.OriginalFilenameWithoutExt+extraFileName+".mxf")
+
+	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
+	if err != nil {
+		return nil, err
 	}
 
 	fileToTranscode := params.InputFile
@@ -115,18 +127,6 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		return nil, fmt.Errorf("expected avc intra output to be .mxf, got %s", videoResult.OutputPath.Ext())
 	}
 
-	extraFileName := ""
-	if params.SubtitleFile != nil {
-		extraFileName += "_SUB_NOR"
-	}
-
-	rcloneDestination := deliveryFolder.Append("Abekas-AVCI", params.OriginalFilenameWithoutExt+extraFileName+videoResult.OutputPath.Ext())
-
-	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
-	if err != nil {
-		return nil, err
-	}
-
 	err = wfutils.RcloneCopyFileWithNotifications(ctx, videoResult.OutputPath, rcloneDestination, rclone.PriorityHigh, rcloneNotificationOptions)
 	if err != nil {
 		return nil, err
@@ -149,6 +149,13 @@ func VBExportToAbekasAudioOnly(ctx workflow.Context, params VBExportChildWorkflo
 		return nil, err
 	}
 
+	rcloneDestination := deliveryFolder.Append("Abekas-WAV", params.OriginalFilenameWithoutExt+".wav")
+
+	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
+	if err != nil {
+		return nil, err
+	}
+
 	fileToTranscode := params.InputFile
 
 	// Convert to WAV PCM 48kHz 24bit
@@ -158,13 +165,6 @@ func VBExportToAbekasAudioOnly(ctx workflow.Context, params VBExportChildWorkflo
 	}
 
 	audioRes, err := wfutils.Execute(ctx, activities.Audio.TranscodeToAudioWav, transcodeInput).Result(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	rcloneDestination := deliveryFolder.Append("Abekas-WAV", params.OriginalFilenameWithoutExt+".wav")
-
-	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
 	if err != nil {
 		return nil, err
 	}

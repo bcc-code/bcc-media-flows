@@ -15,8 +15,20 @@ func VBExportToXDCAM(ctx workflow.Context, params VBExportChildWorkflowParams) (
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
+	extraFileName := ""
+	if params.SubtitleFile != nil {
+		extraFileName += "_SUB_NOR"
+	}
+
+	rcloneDestination := deliveryFolder.Append("XDCAM", params.OriginalFilenameWithoutExt+extraFileName+".mxf")
+
+	err := wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
+	if err != nil {
+		return nil, err
+	}
+
 	outputDir := params.TempDir.Append("xdcam_output")
-	err := wfutils.CreateFolder(ctx, outputDir)
+	err = wfutils.CreateFolder(ctx, outputDir)
 	if err != nil {
 		return nil, err
 	}
@@ -31,18 +43,6 @@ func VBExportToXDCAM(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		BurnInSubtitle: params.SubtitleFile,
 		SubtitleStyle:  params.SubtitleStyle,
 	}).Result(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	extraFileName := ""
-	if params.SubtitleFile != nil {
-		extraFileName += "_SUB_NOR"
-	}
-
-	rcloneDestination := deliveryFolder.Append("XDCAM", params.OriginalFilenameWithoutExt+extraFileName+videoResult.OutputPath.Ext())
-
-	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
 	if err != nil {
 		return nil, err
 	}

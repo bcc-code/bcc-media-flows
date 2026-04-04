@@ -43,13 +43,25 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	hippoOutputDir := params.TempDir.Append("hippo_output")
-	err := wfutils.CreateFolder(ctx, hippoOutputDir)
+	isImage, err := wfutils.IsImage(ctx, params.InputFile)
 	if err != nil {
 		return nil, err
 	}
 
-	isImage, err := wfutils.IsImage(ctx, params.InputFile)
+	destExt := params.InputFile.Ext()
+	if !isImage {
+		destExt = ".mov"
+	}
+
+	rcloneDestination := deliveryFolder.Append("Hippo", params.OriginalFilenameWithoutExt+destExt)
+
+	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
+	if err != nil {
+		return nil, err
+	}
+
+	hippoOutputDir := params.TempDir.Append("hippo_output")
+	err = wfutils.CreateFolder(ctx, hippoOutputDir)
 	if err != nil {
 		return nil, err
 	}
@@ -107,12 +119,6 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		}
 	} else {
 		_ = wfutils.CopyFile(ctx, params.InputFile, outputFile)
-	}
-	rcloneDestination := deliveryFolder.Append("Hippo", params.OriginalFilenameWithoutExt+outputFile.Ext())
-
-	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
-	if err != nil {
-		return nil, err
 	}
 
 	err = wfutils.RcloneCopyFileWithNotifications(ctx, outputFile, rcloneDestination, rclone.PriorityHigh, rcloneNotificationOptions)
