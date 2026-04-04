@@ -9,7 +9,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 	"github.com/bcc-code/bcc-media-flows/services/transcode"
 	"github.com/bcc-code/bcc-media-flows/utils/testutils"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,14 +30,10 @@ func Test_HAP(t *testing.T) {
 		t.Skip("ffmpeg not available for test generation")
 	}
 
-	progressCallback := func(i ffmpeg.Progress) {
-		spew.Dump(i)
-	}
-
 	r, err := transcode.HAP(transcode.HAPInput{
 		FilePath:  testFile.Local(),
 		OutputDir: outputFile.Dir().Local(),
-	}, progressCallback)
+	}, func(i ffmpeg.Progress) {})
 
 	assert.NoError(t, err)
 	if !assert.NotNil(t, r) {
@@ -58,8 +53,6 @@ func Test_HAP(t *testing.T) {
 	assert.Equal(t, 1920, vs.Width)
 	assert.Equal(t, 1080, vs.Height)
 	assert.Equal(t, "50/1", vs.RFrameRate)
-
-	spew.Dump(r)
 }
 
 func Test_HAP_WithAlpha(t *testing.T) {
@@ -88,14 +81,10 @@ func Test_HAP_WithAlpha(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, inputInfo.HasAlpha, "test input should have alpha channel")
 
-	progressCallback := func(i ffmpeg.Progress) {
-		spew.Dump(i)
-	}
-
 	r, err := transcode.HAP(transcode.HAPInput{
 		FilePath:  testFile.Local(),
 		OutputDir: outputFile.Dir().Local(),
-	}, progressCallback)
+	}, func(i ffmpeg.Progress) {})
 
 	assert.NoError(t, err)
 	if !assert.NotNil(t, r) {
@@ -116,8 +105,6 @@ func Test_HAP_WithAlpha(t *testing.T) {
 	assert.Equal(t, 1920, vs.Width)
 	assert.Equal(t, 1080, vs.Height)
 	assert.Equal(t, "50/1", vs.RFrameRate)
-
-	spew.Dump(r)
 }
 
 func Test_HAP_WithAudio(t *testing.T) {
@@ -128,14 +115,10 @@ func Test_HAP_WithAudio(t *testing.T) {
 
 	testutils.GenerateSeparateAudioStreamsTestFile(testFile, 1, 2.0)
 
-	progressCallback := func(i ffmpeg.Progress) {
-		spew.Dump(i)
-	}
-
 	r, err := transcode.HAP(transcode.HAPInput{
 		FilePath:  testFile.Local(),
 		OutputDir: outputFile.Dir().Local(),
-	}, progressCallback)
+	}, func(i ffmpeg.Progress) {})
 
 	assert.NoError(t, err)
 	if !assert.NotNil(t, r) {
@@ -156,6 +139,4 @@ func Test_HAP_WithAudio(t *testing.T) {
 	assert.Equal(t, 1920, vs.Width)
 	assert.Equal(t, 1080, vs.Height)
 	assert.Equal(t, "50/1", vs.RFrameRate)
-
-	spew.Dump(vs)
 }

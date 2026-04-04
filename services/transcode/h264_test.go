@@ -8,7 +8,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/transcode"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	"github.com/bcc-code/bcc-media-flows/utils/testutils"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,10 +24,6 @@ func Test_H264_WeirdResolutions(t *testing.T) {
 		Profile:   "2",
 	})
 
-	progressCallback := func(i ffmpeg.Progress) {
-		spew.Dump(i)
-	}
-
 	r, err := transcode.H264(transcode.H264EncodeInput{
 		Bitrate: "320k",
 		Resolution: &utils.Resolution{
@@ -38,9 +33,8 @@ func Test_H264_WeirdResolutions(t *testing.T) {
 		FrameRate: 0,
 		FilePath:  testFile.Local(),
 		OutputDir: testFile.Dir().Local(),
-	}, progressCallback)
+	}, func(i ffmpeg.Progress) {})
 
 	assert.NoError(t, err)
 	assert.NotNil(t, r)
-	spew.Dump(r)
 }

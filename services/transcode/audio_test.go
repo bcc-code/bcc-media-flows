@@ -24,7 +24,7 @@ func Test_AACEncode(t *testing.T) {
 		DestinationPath: tempDstPath.Dir(),
 		Bitrate:         "128k",
 	}, p)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, res)
 
 	info, err := ffmpeg.GetStreamInfo(res.OutputPath.Local())
@@ -49,7 +49,7 @@ func Test_MP3Encode_VBR(t *testing.T) {
 		Bitrate:         "128k",
 		ForceCBR:        false,
 	}, p)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, res)
 
 	info, err := ffmpeg.GetStreamInfo(res.OutputPath.Local())
@@ -75,7 +75,7 @@ func Test_MP3Encode_CBR(t *testing.T) {
 		Bitrate:         "128k",
 		ForceCBR:        true,
 	}, p)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, res)
 
 	info, err := ffmpeg.GetStreamInfo(res.OutputPath.Local())
@@ -96,13 +96,13 @@ func Test_AudioSplit_Stereo(t *testing.T) {
 	defer close(stop)
 	files, err := SplitAudioChannels(tempDstPath, tempDstPath.Dir(), p)
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Len(t, files, 2)
 }
 
 func Test_AudioSilence(t *testing.T) {
 	isSilent, err := AudioIsSilent(paths.MustParse("./testdata/silence_test_mono.wav"))
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	assert.True(t, isSilent)
 }
@@ -110,19 +110,19 @@ func Test_AudioSilence(t *testing.T) {
 func Test_AudioChannelSilence(t *testing.T) {
 	// One channel should be silent
 	isSilent, err := AudioStreamIsSilent(paths.MustParse("./testdata/silence_test_4ch_1silent.wav"), 0, 1, 1)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.True(t, isSilent)
 
 	// If we check all channels, it should be false
 	isSilent, err = AudioStreamIsSilent(paths.MustParse("./testdata/silence_test_4ch_1silent.wav"), 0, 1, 4)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.False(t, isSilent)
 }
 
 func Test_ToneGenerator(t *testing.T) {
 	tempDstPath := paths.MustParse("./testdata/test.wav")
 	err := GenerateToneFile(1000, 5, 48000, "01:00:00:00", tempDstPath)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.FileExistsf(t, tempDstPath.Local(), "File should exist")
 	fileCanBeDeleted := true
 	_, err = os.Stat(tempDstPath.Local())

@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/bcc-code/bcc-media-flows/utils"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,10 +28,4 @@ func TestTCToSamples(t *testing.T) {
 		assert.Equal(t, tt.expected, res)
 		assert.Equal(t, tt.expectedErr, err)
 	}
-}
-
-func TestT(t *testing.T) {
-	wavSamples := 2748165413
-	mfxSamples := 2641753158
-	spew.Dump(wavSamples - mfxSamples)
 }

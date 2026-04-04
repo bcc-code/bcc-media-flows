@@ -9,7 +9,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/transcode"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	"github.com/bcc-code/bcc-media-flows/utils/testutils"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,10 +29,6 @@ func Test_ProRes(t *testing.T) {
 		Profile:   "3",
 	})
 
-	progressCallback := func(i ffmpeg.Progress) {
-		spew.Dump(i)
-	}
-
 	r, err := transcode.ProRes(transcode.ProResInput{
 		Resolution: &utils.Resolution{
 			Width:  1920,
@@ -42,7 +37,7 @@ func Test_ProRes(t *testing.T) {
 		FrameRate: 0,
 		FilePath:  testFile.Local(),
 		OutputDir: outputFile.Dir().Local(),
-	}, progressCallback)
+	}, func(i ffmpeg.Progress) {})
 
 	assert.NoError(t, err)
 	if !assert.NotNil(t, r) {
@@ -65,8 +60,6 @@ func Test_ProRes(t *testing.T) {
 	assert.Equal(t, "1:1", vs.SampleAspectRatio)
 	assert.Equal(t, "16:9", vs.DisplayAspectRatio)
 	assert.Equal(t, "yuv444p10le", vs.PixFmt)
-
-	spew.Dump(r)
 }
 
 func Test_ProResHyperdeck(t *testing.T) {
@@ -86,10 +79,6 @@ func Test_ProResHyperdeck(t *testing.T) {
 		Profile:   "3",
 	})
 
-	progressCallback := func(i ffmpeg.Progress) {
-		spew.Dump(i)
-	}
-
 	r, err := transcode.ProRes(transcode.ProResInput{
 		Resolution: &utils.Resolution{
 			Width:  1920,
@@ -99,7 +88,7 @@ func Test_ProResHyperdeck(t *testing.T) {
 		FilePath:     testFile.Local(),
 		OutputDir:    outputFile.Dir().Local(),
 		ForHyperdeck: true,
-	}, progressCallback)
+	}, func(i ffmpeg.Progress) {})
 
 	assert.NoError(t, err)
 	if !assert.NotNil(t, r) {
@@ -122,6 +111,4 @@ func Test_ProResHyperdeck(t *testing.T) {
 	assert.Equal(t, "1:1", vs.SampleAspectRatio)
 	assert.Equal(t, "16:9", vs.DisplayAspectRatio)
 	assert.Equal(t, "yuv422p10le", vs.PixFmt)
-
-	spew.Dump(vs)
 }

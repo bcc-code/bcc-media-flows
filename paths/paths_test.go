@@ -15,7 +15,7 @@ func Test_GetSiblingFolder(t *testing.T) {
 
 	path, err := GetSiblingFolder(path, "sibling")
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/mnt/isilon/Transcoding/ProRes422HQ_Native/sibling", path)
 }
 
@@ -24,7 +24,7 @@ func Test_ParsePath(t *testing.T) {
 
 	path, err := Parse(pathString)
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, IsilonDrive, path.Drive)
 	assert.Equal(t, "test.xml", path.Path)
@@ -37,7 +37,7 @@ func Test_Lucid(t *testing.T) {
 
 	path, err := Parse(pathString)
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, IsilonDrive, path.Drive)
 	assert.Equal(t, "system/multitrack/Ingest/tempFraBrunstad/Felles/Opptak1/lkajhdwid-323.wav", path.Path)
@@ -59,7 +59,7 @@ func Test_FileCatalyst(t *testing.T) {
 
 	path, err := Parse(pathString)
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, FileCatalystDrive, path.Drive)
 	assert.Equal(t, "ingestgrow/MDTES01_MU1.mxf", path.Path)
@@ -78,7 +78,7 @@ func Test_Massive(t *testing.T) {
 	pathString := "s3prod:/massiveio-bccm/upload/PACE - 202508251231"
 	path, err := Parse(pathString)
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, MassiveIngestDrive, path.Drive)
 	assert.Equal(t, "upload/PACE - 202508251231", path.Path)
 	a, b := path.RcloneFsRemote()
@@ -90,14 +90,14 @@ func Test_MassiveJSON(t *testing.T) {
 	pathString := "s3prod:/massiveio-bccm/upload/PACE - 202508251231"
 	path, err := Parse(pathString)
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	jsonBytes, err := json.Marshal(path)
-	assert.Equal(t, nil, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "{\"Drive\":\"massive_ingest\",\"Path\":\"upload/PACE - 202508251231\"}", string(jsonBytes))
 
 	path2 := &Path{}
 	err = json.Unmarshal(jsonBytes, path2)
-	assert.Equal(t, nil, err)
+	assert.NoError(t, err)
 	assert.Equal(t, MassiveIngestDrive, path2.Drive)
 }
 

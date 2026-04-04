@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-const root = "/Users/fredrikvedvik/Desktop/Transcoding/sotm7/"
-
 func printProgress() (ffmpeg.ProgressCallback, chan struct{}) {
 	var progress ffmpeg.Progress
 

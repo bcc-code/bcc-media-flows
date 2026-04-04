@@ -4,7 +4,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.temporal.io/sdk/testsuite"
@@ -58,10 +57,9 @@ func (s *TranscodeTestSuite) TestAThing() {
 
 	aa := AudioActivities{}
 	s.env.RegisterActivity(aa.TranscodeMergeAudio)
-	res, err := s.env.ExecuteActivity(aa.TranscodeMergeAudio, input)
+	_, err := s.env.ExecuteActivity(aa.TranscodeMergeAudio, input)
 
 	assert.NoError(t, err)
-	spew.Dump(res)
 }
 
 func TestTranscodeTestSuite(t *testing.T) {
