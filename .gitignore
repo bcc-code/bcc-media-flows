@@ -10,3 +10,6 @@ __debug_bin*
 
 *.db
 .aider*
+
+coverage.out
+coverage.html
