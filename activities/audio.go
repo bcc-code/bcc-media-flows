@@ -28,7 +28,7 @@ func (aa AudioActivities) TranscodeToAudioAac(ctx context.Context, input common.
 func (aa AudioActivities) TranscodeToAudioWav(ctx context.Context, input common.WavAudioInput) (*common.AudioResult, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "TranscodeToAudioWav")
-	log.Info("Starting TranscodeToAudioAacActivity")
+	log.Info("Starting TranscodeToAudioWavActivity")
 
 	stopChan, progressCallback := registerProgressCallback(ctx)
 	defer close(stopChan)
@@ -43,8 +43,8 @@ type PrepareTranscriptionResult struct {
 
 func (aa AudioActivities) PrepareForTranscription(ctx context.Context, input common.AudioInput) (*PrepareTranscriptionResult, error) {
 	log := activity.GetLogger(ctx)
-	activity.RecordHeartbeat(ctx, "TranscodeToAudioWav")
-	log.Info("Starting TranscodeToAudioAacActivity")
+	activity.RecordHeartbeat(ctx, "PrepareForTranscription")
+	log.Info("Starting PrepareForTranscriptionActivity")
 
 	stopChan, progressCallback := registerProgressCallback(ctx)
 	defer close(stopChan)
@@ -60,7 +60,7 @@ func (aa AudioActivities) PrepareForTranscription(ctx context.Context, input com
 		}, nil
 	}
 
-	res, err := transcode.PrepareForTranscriptoion(input, progressCallback)
+	res, err := transcode.PrepareForTranscription(input, progressCallback)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (aa AudioActivities) AdjustAudioToVideoStart(ctx context.Context, input Adj
 			Input:  input.AudioFile,
 			Start:  float64(-samplesToAdd) / float64(48000),
 		})
-		return nil, err
+		return &common.AudioResult{OutputPath: input.OutputFile}, err
 	}
 
 	_, err = aa.PrependSilence(ctx, PrependSilenceInput{
@@ -123,7 +123,7 @@ func (aa AudioActivities) AdjustAudioToVideoStart(ctx context.Context, input Adj
 		Samples:    samplesToAdd,
 	})
 
-	return &common.AudioResult{}, nil
+	return &common.AudioResult{OutputPath: input.OutputFile}, err
 }
 
 func (aa AudioActivities) DetectSilence(ctx context.Context, input common.DetectSilenceInput) (bool, error) {

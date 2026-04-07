@@ -150,8 +150,8 @@ func AudioAac(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 	}, nil
 }
 
-// PrepareForTranscriptoion prepares the audio file for transcription by converting it to a mono wav file
-func PrepareForTranscriptoion(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.AudioResult, error) {
+// PrepareForTranscription prepares the audio file for transcription by converting it to a mono wav file
+func PrepareForTranscription(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.AudioResult, error) {
 	outputFilePath := filepath.Join(input.DestinationPath.Local(), input.Path.Base())
 	outputFilePath = fmt.Sprintf("%s-%s.wav", outputFilePath[:len(outputFilePath)-len(filepath.Ext(outputFilePath))], input.Bitrate)
 
