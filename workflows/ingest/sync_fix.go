@@ -76,25 +76,27 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 			return err
 		}
 
-		reaperAudioPath := ""
-		if p, ok := audioPaths["nor"]; ok {
-			reaperAudioPath = p.Linux()
-		} else {
-			return fmt.Errorf("nor audio not found")
+		if prepareResult.HasAudio {
+			reaperAudioPath := ""
+			if p, ok := audioPaths["nor"]; ok {
+				reaperAudioPath = p.Linux()
+			} else {
+				return fmt.Errorf("nor audio not found")
+			}
+
+			diff, err := wfutils.Execute(ctx, activities.Util.GetAudioDiff, activities.GetAudioDiffParams{
+				ReferenceFile: prepareResult.OutputPath.Linux(),
+				TargetFile:    reaperAudioPath,
+			}).Result(ctx)
+
+			if err != nil {
+				return err
+			}
+
+			params.Adjustment = diff.Difference
+
+			wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟦 `%s`\n\nAutomatic adjustment calculated: %dms", params.VXID, params.Adjustment))
 		}
-
-		diff, err := wfutils.Execute(ctx, activities.Util.GetAudioDiff, activities.GetAudioDiffParams{
-			ReferenceFile: prepareResult.OutputPath.Linux(),
-			TargetFile:    reaperAudioPath,
-		}).Result(ctx)
-
-		if err != nil {
-			return err
-		}
-
-		params.Adjustment = diff.Difference
-
-		wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟦 `%s`\n\nAutomatic adjustment calculated: %dms", params.VXID, params.Adjustment))
 	}
 
 	wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟦 `%s`\n\nApplying adjustments to audio files.\n%dms", params.VXID, params.Adjustment))

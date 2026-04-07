@@ -37,7 +37,7 @@ func (aa AudioActivities) TranscodeToAudioWav(ctx context.Context, input common.
 }
 
 type PrepareTranscriptionResult struct {
-	OutputPath paths.Path
+	OutputPath *paths.Path
 	HasAudio   bool
 }
 
@@ -66,7 +66,7 @@ func (aa AudioActivities) PrepareForTranscription(ctx context.Context, input com
 	}
 
 	return &PrepareTranscriptionResult{
-		OutputPath: res.OutputPath,
+		OutputPath: &res.OutputPath,
 		HasAudio:   true,
 	}, err
 }

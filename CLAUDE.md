@@ -1,3 +1,4 @@
 - Remember that you need to register workflows and workers for them to be useful.
 - Do not use .Get to retrieve the result of an activity. Use .Result(ctx)
 - When creating enums always use     "github.com/orsinium-labs/enum"
+- When reading the code, if you notice things that could be improved, append them to `potential_improvements.md` and notify the user that you found new things. This is so we can look into potential improvements later.

@@ -50,7 +50,7 @@ func TranscribeFile(
 
 	transcribeOutput, err := wfutils.Execute(ctx, activities.Util.Transcribe, activities.TranscribeParams{
 		Language:        params.Language,
-		File:            prepareResult.OutputPath,
+		File:            *prepareResult.OutputPath,
 		DestinationPath: tempFolder,
 	}).Result(ctx)
 	if err != nil || transcribeOutput == nil {

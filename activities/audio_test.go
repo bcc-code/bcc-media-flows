@@ -119,7 +119,7 @@ func (s *AudioTestSuite) TestPrepareForTranscription_WithAudio() {
 	err = res.Get(result)
 	assert.NoError(t, err)
 	assert.True(t, result.HasAudio)
-	assert.NotEmpty(t, result.OutputPath)
+	assert.NotNil(t, result.OutputPath)
 }
 
 func (s *AudioTestSuite) TestPrepareForTranscription_NoAudio() {
@@ -142,10 +142,6 @@ func (s *AudioTestSuite) TestPrepareForTranscription_NoAudio() {
 	s.env.RegisterActivity(aa.PrepareForTranscription)
 	s.env.RegisterActivity(aa.AnalyzeFile)
 
-	// NOTE: This test documents a bug: PrepareForTranscription returns a zero-value
-	// paths.Path in OutputPath when HasAudio is false. The zero-value Drive cannot be
-	// deserialized by paths.Drive.UnmarshalJSON, causing a "drive not found" error
-	// when decoding the result. See potential_improvements.md for details.
 	res, err := s.env.ExecuteActivity(aa.PrepareForTranscription, common.AudioInput{
 		Path:            testFile,
 		DestinationPath: outputDir,
@@ -154,8 +150,9 @@ func (s *AudioTestSuite) TestPrepareForTranscription_NoAudio() {
 
 	result := &PrepareTranscriptionResult{}
 	err = res.Get(result)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "drive not found")
+	assert.NoError(t, err)
+	assert.False(t, result.HasAudio)
+	assert.Nil(t, result.OutputPath)
 }
 
 func (s *AudioTestSuite) TestDetectSilence_NotSilent() {
