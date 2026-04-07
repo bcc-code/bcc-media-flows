@@ -11,10 +11,10 @@ on:
 jobs:
   version:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.PAT }}
+      - uses: actions/checkout@v6
       - name: Bump version
         run: |
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
@@ -36,7 +36,7 @@ jobs:
       matrix:
         goosarch: [ linux/amd64, darwin/arm64 ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: master
       - uses: actions/setup-go@v4
