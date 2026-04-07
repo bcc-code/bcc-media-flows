@@ -3,7 +3,6 @@ package miscworkflows
 import (
 	"fmt"
 	bccmflows "github.com/bcc-code/bcc-media-flows"
-	"github.com/bcc-code/mediabank-bridge/log"
 	"github.com/samber/lo"
 	"path/filepath"
 	"strings"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 
 	"go.temporal.io/sdk/workflow"
@@ -87,18 +87,33 @@ func TranscodePreviewVX(
 		return err
 	}
 
-	for l, p := range previewResponse.AudioPreviewFiles {
+	audioLangs, err := wfutils.GetMapKeysSafely(ctx, previewResponse.AudioPreviewFiles)
+	if err != nil {
+		return err
+	}
+
+	for _, l := range audioLangs {
+		p := previewResponse.AudioPreviewFiles[l]
 		tag := bccmflows.LanguagesByISO[l].MBPreviewTag
-		err = wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity,
+		if tag == "" {
+			logger.Info("Skipping audio preview with empty MBPreviewTag", "language", l)
+			continue
+		}
+
+		iterErr := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity,
 			vsactivity.ImportFileAsShapeParams{
 				AssetID:  params.VXID,
 				FilePath: p,
 				ShapeTag: tag,
 			}).Wait(ctx)
-		if err != nil {
-			log.L.Log().Err(err).Msg("Error importing audio preview")
+		if iterErr != nil {
+			logger.Error("Failed to import audio preview shape",
+				"language", l, "tag", tag, "vxid", params.VXID, "error", iterErr.Error())
+			wfutils.SendTelegramText(ctx, telegram.ChatOther,
+				fmt.Sprintf("🟧 Failed to import audio preview for `%s` (tag `%s`) on `%s`: ```%s```",
+					l, tag, params.VXID, iterErr.Error()))
 		}
 	}
 
-	return err
+	return nil
 }

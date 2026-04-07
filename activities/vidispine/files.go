@@ -2,10 +2,12 @@ package vsactivity
 
 import (
 	"context"
+	"errors"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"go.temporal.io/sdk/activity"
+	"go.temporal.io/sdk/temporal"
 )
 
 type ImportFileAsShapeParams struct {
@@ -53,6 +55,9 @@ func (a Activities) ImportFileAsShapeActivity(ctx context.Context, params Import
 	}
 
 	res, err := vsClient.AddShapeToItem(params.ShapeTag, params.AssetID, fileID)
+	if err != nil && errors.Is(err, vsapi.ErrShapeTagNotFound) {
+		err = temporal.NewNonRetryableApplicationError(err.Error(), "VS_SHAPE_TAG_NOT_FOUND", err)
+	}
 	return &ImportFileResult{
 		JobID:  res,
 		FileID: fileID,

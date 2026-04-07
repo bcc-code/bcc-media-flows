@@ -1,6 +1,8 @@
 package vsapi
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 
@@ -10,6 +12,31 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/samber/lo"
 )
+
+// ErrShapeTagNotFound is returned by AddShapeToItem when Vidispine reports
+// that the requested shape-tag is not configured. Wrap-aware: callers can
+// detect this with errors.Is and treat it as a configuration error rather
+// than a transient failure.
+var ErrShapeTagNotFound = errors.New("shape-tag not found in Vidispine")
+
+// vsErrorBody mirrors the structured error envelope Vidispine returns on
+// non-2xx responses. Only the fields we need are populated; the rest are
+// kept as raw messages so unknown failure modes still surface in the error
+// string.
+type vsErrorBody struct {
+	NotFound *struct {
+		Type string `json:"type"`
+		ID   string `json:"id"`
+	} `json:"notFound"`
+	InternalServer  json.RawMessage `json:"internalServer"`
+	Forbidden       json.RawMessage `json:"forbidden"`
+	NotYetImpl      json.RawMessage `json:"notYetImplemented"`
+	Conflict        json.RawMessage `json:"conflict"`
+	InvalidInput    json.RawMessage `json:"invalidInput"`
+	LicenseFault    json.RawMessage `json:"licenseFault"`
+	FileExists      json.RawMessage `json:"fileAlreadyExists"`
+	NotAuthorized   json.RawMessage `json:"notAuthorized"`
+}
 
 func (c *Client) GetShapes(vsID string) (*ShapeResult, error) {
 	url := c.baseURL + "/item/" + vsID + "?content=shape&terse=true"
@@ -45,14 +72,34 @@ func (c *Client) AddShapeToItem(tag, itemID, fileID string) (string, error) {
 		return "", err
 	}
 
+	if result.IsError() {
+		return "", parseVSError(result.Body(), result.StatusCode(), tag, itemID)
+	}
+
 	jobID := result.Result().(*JobDocument).JobID
 	if jobID == "" {
-		return "", fmt.Errorf("No job id Returned. Body: %s", string(result.Body()))
+		return "", parseVSError(result.Body(), result.StatusCode(), tag, itemID)
 	}
 
 	spew.Dump(result.Result())
 
-	return result.Result().(*JobDocument).JobID, nil
+	return jobID, nil
+}
+
+// parseVSError turns a Vidispine error envelope into a descriptive error.
+// Shape-tag-not-found is returned wrapped around ErrShapeTagNotFound so
+// callers can detect it with errors.Is and avoid wasteful retries.
+func parseVSError(body []byte, statusCode int, tag, itemID string) error {
+	var e vsErrorBody
+	if jsonErr := json.Unmarshal(body, &e); jsonErr != nil {
+		return fmt.Errorf("vidispine request failed (status %d): %s", statusCode, string(body))
+	}
+
+	if e.NotFound != nil && e.NotFound.Type == "shape-tag" {
+		return fmt.Errorf("shape-tag %q not configured in Vidispine (item %s): %w", e.NotFound.ID, itemID, ErrShapeTagNotFound)
+	}
+
+	return fmt.Errorf("vidispine request failed (status %d) for tag %q on item %s: %s", statusCode, tag, itemID, string(body))
 }
 
 func (c *Client) DeleteShape(assetID, shapeID string) error {
