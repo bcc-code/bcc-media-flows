@@ -33,6 +33,8 @@ type Task[TR any] struct {
 }
 
 // Result returns the result of the future
+//
+//workflowcheck:ignore
 func (f Task[TR]) Result(ctx workflow.Context) (TR, error) {
 	var result TR
 	rv := reflect.ValueOf(&result).Elem()

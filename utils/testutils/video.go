@@ -40,6 +40,29 @@ func GenerateVideoFile(outFile paths.Path, videoParams VideoGeneratorParams) pat
 
 // GenerateSeparateAudioStreamsTestFile generates a test file with separate audio streams
 // instead of merged tracks in one stream
+// GenerateVideoFileWithTimecode generates a video file (MXF) with an embedded timecode.
+// This is useful for testing activities that read timecodes from video files.
+func GenerateVideoFileWithTimecode(outFile paths.Path, timecode string, duration float64, fps int) paths.Path {
+	os.MkdirAll(outFile.Dir().Local(), 0755)
+
+	args := []string{
+		"-f", "lavfi",
+		"-i", fmt.Sprintf("testsrc=size=320x240:rate=%d:duration=%f", fps, duration),
+		"-timecode", timecode,
+		"-c:v", "mpeg2video",
+		"-y", outFile.Local(),
+	}
+
+	cmd := exec.Command("ffmpeg", args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Printf("FFmpeg command failed: %v\nOutput: %s\n", err, string(output))
+		panic(err)
+	}
+
+	return outFile
+}
+
 func GenerateSeparateAudioStreamsTestFile(outFile paths.Path, audioTracks int, duration float64) paths.Path {
 	os.MkdirAll(outFile.Dir().Local(), 0755)
 	
