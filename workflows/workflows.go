@@ -42,6 +42,7 @@ var WorkerWorkflows = []any{
 	miscworkflows.HandleMultitrackFile,
 	miscworkflows.MoveMBFile,
 	miscworkflows.MoveFilesWorkerFlow,
+	miscworkflows.CopyFile,
 	ingestworkflows.BmmIngestUpload,
 	export.VXExport,
 	export.VXExportToVOD,

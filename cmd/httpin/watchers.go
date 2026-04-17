@@ -48,6 +48,7 @@ func watchersHandler(ctx *gin.Context) {
 	growingPath := strings.HasPrefix(result.Path, "/mnt/filecatalyst/ingestgrow/")
 	rawImportIsilon := strings.HasPrefix(result.Path, "/mnt/isilon/Input/Rawmaterial/")
 	rawImportFileCatalyst := strings.HasPrefix(result.Path, "/mnt/filecatalyst/Rawmaterial/")
+	fileboxSimpleUpload := strings.HasPrefix(result.Path, "/mnt/filecatalyst/delivery2/simple")
 
 	if xmlPath {
 		err = doIngest(ctx, result.Path)
@@ -57,6 +58,8 @@ func watchersHandler(ctx *gin.Context) {
 		err = doGrowingFile(ctx, result.Path)
 	} else if rawImportIsilon || rawImportFileCatalyst {
 		err = doRawImport(ctx, result.Path)
+	} else if fileboxSimpleUpload {
+		err = doSimpleCopy(ctx, result.Path)
 	} else {
 		err = doTranscode(ctx, result.Path)
 	}
@@ -68,6 +71,32 @@ func watchersHandler(ctx *gin.Context) {
 	}
 
 	ctx.Status(200)
+}
+
+func doSimpleCopy(ctx context.Context, path string) error {
+	c, err := getClient()
+	if err != nil {
+		return err
+	}
+
+	now := time.Now()
+	destination := filepath.Join(
+		"/mnt/isilon/Input/FromDelivery",
+		now.Format("2006/01/02"),
+		filepath.Base(path),
+	)
+
+	workflowOptions := client.StartWorkflowOptions{
+		ID:        uuid.NewString(),
+		TaskQueue: environment.GetWorkerQueue(),
+	}
+
+	_, err = c.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.CopyFile, miscworkflows.CopyFileInput{
+		Source:      path,
+		Destination: destination,
+	})
+
+	return err
 }
 
 func doMultitrackCopy(ctx context.Context, path string) error {
