@@ -46,7 +46,7 @@ jobs:
           ref: master
       - uses: actions/setup-go@v6
         with:
-          go-version: 1.22
+          go-version: '1.25'
       - name: Get OS and arch info
         run: |
           GOOSARCH=${{matrix.goosarch}}
