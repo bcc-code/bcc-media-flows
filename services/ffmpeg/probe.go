@@ -10,6 +10,7 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/cache"
 	"github.com/bcc-code/bcc-media-flows/utils"
+	"github.com/samber/lo"
 )
 
 type FFProbeStream struct {
@@ -99,6 +100,19 @@ type FFProbeResult struct {
 			CreationTime     string `json:"creation_time"`
 		} `json:"tags"`
 	} `json:"format"`
+}
+
+// AudioStreams returns the subset of streams whose codec_type is "audio".
+// Useful when matching stream indices against identifiers that may not line
+// up with ffmpeg's full 0-based Index (e.g. Vidispine's EssenceStreamID on
+// containers where a non-audio stream precedes audio).
+func (r *FFProbeResult) AudioStreams() []FFProbeStream {
+	if r == nil {
+		return nil
+	}
+	return lo.Filter(r.Streams, func(s FFProbeStream, _ int) bool {
+		return s.CodecType == "audio"
+	})
 }
 
 func doProbe(path string) (*FFProbeResult, error) {

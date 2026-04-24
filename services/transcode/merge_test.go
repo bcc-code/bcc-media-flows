@@ -2,6 +2,7 @@ package transcode
 
 import (
 	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/bcc-code/bcc-media-flows/common"
@@ -78,6 +79,49 @@ func Test_mergeItemsToStereoStream_stereo(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, "[0:0]aselect[a0]", str)
+}
+
+// Test_mergeItemsToStereoStream_videoFirstStereoAudio reproduces the
+// MEET_..._PGM_NOR.mov failure: a single stereo audio track sits behind a
+// video (and optionally data) stream, so Vidispine's reported StreamID does
+// not line up with ffmpeg's 0-based audio Index. The lookup must ignore
+// non-audio streams and fall back to the 2-channel audio stream.
+func Test_mergeItemsToStereoStream_videoFirstStereoAudio(t *testing.T) {
+	outFile := paths.MustParse("./testdata/generated/1s_video_then_stereo.mov")
+	_ = os.MkdirAll(outFile.Dir().Local(), 0755)
+
+	ffArgs := []string{
+		"-f", "lavfi",
+		"-i", "testsrc=duration=1:size=320x240:rate=25",
+		"-f", "lavfi",
+		"-i", "sine=frequency=500:duration=1:sample_rate=48000",
+		"-map", "0:v",
+		"-map", "1:a",
+		"-ac", "2",
+		"-c:v", "mpeg2video",
+		"-c:a", "pcm_s24le",
+		"-y", outFile.Local(),
+	}
+	if output, err := exec.Command("ffmpeg", ffArgs...).CombinedOutput(); err != nil {
+		t.Fatalf("ffmpeg generation failed: %v\n%s", err, string(output))
+	}
+
+	// Simulate Vidispine reporting StreamID=1 for the audio component (it
+	// does not match any audio stream's ffmpeg Index because the only audio
+	// stream sits at Index 1 but the lookup is gated on audio-only streams,
+	// whose 0-based indexing differs from the container-level numbering).
+	str, err := mergeItemToStereoStream(0, "a0", common.MergeInputItem{
+		Path: outFile,
+		Streams: []vidispine.AudioStream{
+			{StreamID: 1, ChannelID: 0},
+			{StreamID: 1, ChannelID: 1},
+		},
+	})
+
+	assert.NoError(t, err)
+	// The stereo shortcut must reference the actual audio stream (Index 1),
+	// not the video stream at Index 0.
+	assert.Equal(t, "[0:1]aselect[a0]", str)
 }
 
 func Test_mergeItemsToStereoStream_64Chan(t *testing.T) {

@@ -126,10 +126,16 @@ func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) 
 		return fmt.Sprintf("anullsrc=channel_layout=stereo[%s]", tag), nil
 	}
 
+	// Restrict stream lookup to audio streams. Vidispine's EssenceStreamID
+	// does not always line up with ffmpeg's 0-based stream Index when
+	// non-audio streams precede audio in the container, so matching against
+	// info.Streams directly can pick up a video or data stream.
+	audioStreams := info.AudioStreams()
+
 	var streams []ffmpeg.FFProbeStream
 
 	for _, stream := range item.Streams {
-		s, found := lo.Find(info.Streams, func(s ffmpeg.FFProbeStream) bool {
+		s, found := lo.Find(audioStreams, func(s ffmpeg.FFProbeStream) bool {
 			return s.Index == int(stream.StreamID)
 		})
 		if found {
@@ -138,7 +144,7 @@ func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) 
 	}
 
 	if len(streams) == 0 {
-		s, found := lo.Find(info.Streams, func(s ffmpeg.FFProbeStream) bool {
+		s, found := lo.Find(audioStreams, func(s ffmpeg.FFProbeStream) bool {
 			return s.Channels == 2
 		})
 		if found {
