@@ -54,9 +54,19 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 
 	var filterComplex string
 
-	if input.WatermarkPath != nil {
+	var trcFix string
+	if len(info.VideoStreams) > 0 {
+		trcFix = ffmpeg.NormalizeColorTRCFilter(info.VideoStreams[0])
+	}
+
+	switch {
+	case input.WatermarkPath != nil && trcFix != "":
+		filterComplex += fmt.Sprintf("[0:0]%s[v0];[v0][1:0]overlay=main_w-overlay_w:0[main];", trcFix)
+	case input.WatermarkPath != nil:
 		filterComplex += "[0:0][1:0]overlay=main_w-overlay_w:0[main];"
-	} else {
+	case trcFix != "":
+		filterComplex += fmt.Sprintf("[0:0]%s[main];", trcFix)
+	default:
 		filterComplex += "[0:0]copy[main];"
 	}
 

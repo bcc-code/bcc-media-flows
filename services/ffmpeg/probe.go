@@ -102,6 +102,22 @@ type FFProbeResult struct {
 	} `json:"format"`
 }
 
+// NormalizeColorTRCFilter returns a setparams filter clause when the source
+// stream's color_transfer is unset/unknown/reserved, or "" when the existing
+// tag is already valid.
+//
+// Why: ProRes files written with reserved/unknown trc make swscaler refuse
+// pix_fmt conversions ("Operation not supported"), which breaks the
+// scale->libx264 pipeline in VideoH264. bt709 is a safe SDR default for the
+// content this repo handles.
+func NormalizeColorTRCFilter(s FFProbeStream) string {
+	switch strings.ToLower(strings.TrimSpace(s.ColorTransfer)) {
+	case "", "unknown", "reserved":
+		return "setparams=color_trc=bt709"
+	}
+	return ""
+}
+
 // AudioStreams returns the subset of streams whose codec_type is "audio".
 // Useful when matching stream indices against identifiers that may not line
 // up with ffmpeg's full 0-based Index (e.g. Vidispine's EssenceStreamID on

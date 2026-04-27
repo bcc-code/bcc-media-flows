@@ -39,3 +39,4 @@ func Test_H264Video_WeirdResolutions(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, r)
 }
+
