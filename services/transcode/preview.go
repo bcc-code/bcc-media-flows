@@ -45,12 +45,12 @@ type audioPreviewData struct {
 }
 
 // buildVUMeterFilters generates ffmpeg filter steps for compact VU meters for each audio track.
-func buildVUMeterFilters(audioTracks int) (string, string) {
+func buildVUMeterFilters(audioTracks int, trcPrefix string) (string, string) {
 	meterW := 200
 	meterH := 20
 	meterAlpha := 0.5
 	spacing := 10
-	parts := []string{"[0:v]scale=1280:720[vmain]"}
+	parts := []string{fmt.Sprintf("[0:v]%sscale=1280:720[vmain]", trcPrefix)}
 	lastVid := "[vmain]"
 	for i := 0; i < audioTracks; i++ {
 		y := 10 + i*(meterH+spacing)
@@ -201,6 +201,11 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 		}
 	}
 
+	var trcPrefix string
+	if trcFix := ffmpeg.NormalizeColorTRCFilter(ffmpeg.ProbeResultToInfo(info)); trcFix != "" {
+		trcPrefix = trcFix + ","
+	}
+
 	filename := filepath.Base(input.FilePath)[:len(filepath.Base(input.FilePath))-len(filepath.Ext(input.FilePath))]
 	if hasVideo {
 		filename += "_lowres.mp4"
@@ -225,7 +230,7 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 			"-i", input.FilePath,
 			"-ss", "0.0",
 			"-i", watermark,
-			"-filter_complex", "sws_flags=bicubic;[0:v]split=1[VIDEO-main-.mp4];[VIDEO-main-.mp4]scale=-2:540,null[temp];[temp][1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4]",
+			"-filter_complex", fmt.Sprintf("sws_flags=bicubic;[0:v]%ssplit=1[VIDEO-main-.mp4];[VIDEO-main-.mp4]scale=-2:540,null[temp];[temp][1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4]", trcPrefix),
 			"-map", "[VIDEO-.mp4]",
 			"-c:v", encoder,
 		)
@@ -238,7 +243,7 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 			"-ss", "0.0",
 			"-i", watermark,
 		)
-		vuFilters, lastVid := buildVUMeterFilters(audioTracks)
+		vuFilters, lastVid := buildVUMeterFilters(audioTracks, trcPrefix)
 		// Compose filter graph: scale, vumeters, watermark, stereo audio
 		var audioFilter string
 		if audioTracks == 1 {

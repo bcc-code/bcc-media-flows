@@ -25,8 +25,13 @@ func TestNormalizeColorTRCFilter(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := NormalizeColorTRCFilter(FFProbeStream{ColorTransfer: tc.trc})
+			info := StreamInfo{VideoStreams: []FFProbeStream{{ColorTransfer: tc.trc}}}
+			got := NormalizeColorTRCFilter(info)
 			assert.Equal(t, tc.expected, got)
 		})
 	}
+
+	t.Run("no video stream returns empty", func(t *testing.T) {
+		assert.Equal(t, "", NormalizeColorTRCFilter(StreamInfo{}))
+	})
 }

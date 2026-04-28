@@ -54,10 +54,7 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 
 	var filterComplex string
 
-	var trcFix string
-	if len(info.VideoStreams) > 0 {
-		trcFix = ffmpeg.NormalizeColorTRCFilter(info.VideoStreams[0])
-	}
+	trcFix := ffmpeg.NormalizeColorTRCFilter(info)
 
 	switch {
 	case input.WatermarkPath != nil && trcFix != "":

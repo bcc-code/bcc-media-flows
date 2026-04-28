@@ -63,6 +63,15 @@ func Test_AudioAdioPreviewGenerator(t *testing.T) {
 
 }
 
+func TestBuildVUMeterFilters_TRCPrefix(t *testing.T) {
+	head, _ := buildVUMeterFilters(2, "setparams=color_trc=bt709,")
+	assert.Contains(t, head, "[0:v]setparams=color_trc=bt709,scale=1280:720[vmain]")
+
+	head2, _ := buildVUMeterFilters(2, "")
+	assert.Contains(t, head2, "[0:v]scale=1280:720[vmain]")
+	assert.NotContains(t, head2, "setparams")
+}
+
 func TestPreview_VUMeters_MultipleAudioTracks(t *testing.T) {
 	t.Parallel()
 	trackCounts := []int{1, 2, 4, 16}
