@@ -48,6 +48,7 @@ func watchersHandler(ctx *gin.Context) {
 	growingPath := strings.HasPrefix(result.Path, "/mnt/filecatalyst/ingestgrow/")
 	rawImportIsilon := strings.HasPrefix(result.Path, "/mnt/isilon/Input/Rawmaterial/")
 	rawImportFileCatalyst := strings.HasPrefix(result.Path, "/mnt/filecatalyst/Rawmaterial/")
+	rawImportFileCatalystDelivery2 := strings.HasPrefix(result.Path, "/mnt/filecatalyst/delivery2/RawMaterial/")
 	fileboxSimpleUpload := strings.HasPrefix(result.Path, "/mnt/filecatalyst/delivery2/simple")
 
 	if xmlPath {
@@ -56,7 +57,7 @@ func watchersHandler(ctx *gin.Context) {
 		err = doMultitrackCopy(ctx, result.Path)
 	} else if growingPath {
 		err = doGrowingFile(ctx, result.Path)
-	} else if rawImportIsilon || rawImportFileCatalyst {
+	} else if rawImportIsilon || rawImportFileCatalyst || rawImportFileCatalystDelivery2 {
 		err = doRawImport(ctx, result.Path)
 	} else if fileboxSimpleUpload {
 		err = doSimpleCopy(ctx, result.Path)
