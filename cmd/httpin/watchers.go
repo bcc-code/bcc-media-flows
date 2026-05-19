@@ -36,6 +36,8 @@ func watchersHandler(ctx *gin.Context) {
 		return
 	}
 
+	fmt.Printf("watcher event: path=%q size=%d updatedAt=%s\n", result.Path, result.Size, result.UpdatedAt.Format(time.RFC3339))
+
 	xmlPath, err := filepath.Match("/mnt/filecatalyst/workflow/xml/*", result.Path)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -51,19 +53,27 @@ func watchersHandler(ctx *gin.Context) {
 	rawImportFileCatalystDelivery2 := strings.HasPrefix(result.Path, "/mnt/filecatalyst/delivery2/RawMaterial/")
 	fileboxSimpleUpload := strings.HasPrefix(result.Path, "/mnt/filecatalyst/delivery2/simple")
 
+	var branch string
 	if xmlPath {
+		branch = "ingest"
 		err = doIngest(ctx, result.Path)
 	} else if multitrackPath {
+		branch = "multitrack"
 		err = doMultitrackCopy(ctx, result.Path)
 	} else if growingPath {
+		branch = "growing"
 		err = doGrowingFile(ctx, result.Path)
 	} else if rawImportIsilon || rawImportFileCatalyst || rawImportFileCatalystDelivery2 {
+		branch = "raw-import"
 		err = doRawImport(ctx, result.Path)
 	} else if fileboxSimpleUpload {
+		branch = "simple-copy"
 		err = doSimpleCopy(ctx, result.Path)
 	} else {
+		branch = "transcode"
 		err = doTranscode(ctx, result.Path)
 	}
+	fmt.Printf("watcher dispatched: path=%q branch=%s\n", result.Path, branch)
 
 	if err != nil {
 		fmt.Println(err.Error())
