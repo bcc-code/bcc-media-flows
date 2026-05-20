@@ -41,6 +41,28 @@ func SetVidispineMetaInGroup(ctx workflow.Context, assetID, key, value, group st
 	}).Wait(ctx)
 }
 
+// FindVidispineItemByMetadataField returns the asset ID of the single item whose
+// metadata field `name` equals `value`. Returns "" if no item matches. If
+// multiple items match, returns the first ID and logs a warning — duplicates
+// exist in the wild and we don't want to fail the workflow over them.
+func FindVidispineItemByMetadataField(ctx workflow.Context, name, value string) (string, error) {
+	ids, err := Execute(ctx, activities.Vidispine.SearchItemsByMetadataField, vsactivity.SearchByMetadataFieldParams{
+		Name:  name,
+		Value: value,
+	}).Result(ctx)
+	if err != nil {
+		return "", err
+	}
+	if len(ids) == 0 {
+		return "", nil
+	}
+	if len(ids) > 1 {
+		workflow.GetLogger(ctx).Warn("multiple Vidispine items found for metadata field; using the first",
+			"name", name, "value", value, "matches", ids)
+	}
+	return ids[0], nil
+}
+
 func AddVidispineMetaValue(ctx workflow.Context, assetID, key, value string) error {
 	return Execute(ctx, activities.Vidispine.AddToVXMetadataFieldActivity, vsactivity.VXMetadataFieldParams{
 		ItemID: assetID,

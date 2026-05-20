@@ -129,6 +129,18 @@ func (a Activities) GetTrashedItems(ctx context.Context, _ any) ([]string, error
 	return vsClient.GetTrash()
 }
 
+type SearchByMetadataFieldParams struct {
+	Name  string
+	Value string
+}
+
+func (a Activities) SearchItemsByMetadataField(ctx context.Context, params SearchByMetadataFieldParams) ([]string, error) {
+	log := activity.GetLogger(ctx)
+	log.Info("Starting SearchItemsByMetadataField", "name", params.Name, "value", params.Value)
+
+	return GetClient().SearchByMetadataField(params.Name, params.Value)
+}
+
 // UpdateAssetRelations attempts to find languages of related audio files and update the metadata
 // of this asset with the link
 func (a Activities) UpdateAssetRelations(ctx context.Context, params VXOnlyParam) ([]string, error) {

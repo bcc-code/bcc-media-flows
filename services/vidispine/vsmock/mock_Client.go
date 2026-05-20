@@ -338,6 +338,21 @@ func (mr *MockClientMockRecorder) RegisterFile(filePath, state any) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterFile", reflect.TypeOf((*MockClient)(nil).RegisterFile), filePath, state)
 }
 
+// SearchByMetadataField mocks base method.
+func (m *MockClient) SearchByMetadataField(name, value string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SearchByMetadataField", name, value)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SearchByMetadataField indicates an expected call of SearchByMetadataField.
+func (mr *MockClientMockRecorder) SearchByMetadataField(name, value any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchByMetadataField", reflect.TypeOf((*MockClient)(nil).SearchByMetadataField), name, value)
+}
+
 // SetItemMetadataField mocks base method.
 func (m *MockClient) SetItemMetadataField(params vsapi.ItemMetadataFieldParams) error {
 	m.ctrl.T.Helper()

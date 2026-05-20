@@ -87,6 +87,18 @@ func BmmTrackMetadata(ctx workflow.Context, params BmmTrackMetadataParams) (*Bmm
 	ingested := false
 
 	if assetID == "" {
+		existing, err := wfutils.FindVidispineItemByMetadataField(ctx, vscommon.FieldBmmTrackID.Value, strconv.Itoa(params.BmmTrackID))
+		if err != nil {
+			return nil, fmt.Errorf("failed to search for existing VX item: %w", err)
+		}
+		if existing != "" {
+			logger.Info("found existing VX item for BMM track; skipping import",
+				"bmmTrackId", params.BmmTrackID, "assetId", existing)
+			assetID = existing
+		}
+	}
+
+	if assetID == "" {
 		wfutils.SendTelegramText(ctx, telegram.ChatBMM, fmt.Sprintf("🟦 Importing BMM track to MB: `%d-%s`", params.BmmTrackID, params.Language))
 
 		outputDir, err := wfutils.GetWorkflowRawOutputFolder(ctx)

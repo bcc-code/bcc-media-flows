@@ -38,6 +38,7 @@ type Client interface {
 
 	RegisterFile(filePath string, state vsapi.FileState) (string, error)
 
+	SearchByMetadataField(name, value string) ([]string, error)
 	SetItemMetadataField(params vsapi.ItemMetadataFieldParams) error
 
 	UpdateFileState(fileID string, fileState vsapi.FileState) error
