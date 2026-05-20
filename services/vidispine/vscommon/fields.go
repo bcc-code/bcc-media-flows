@@ -37,6 +37,7 @@ var (
 	FieldDialogPercentage      = FieldType{"portal_mf350671"}
 	FieldBmmTrackID            = FieldType{"portal_mf468702"}
 	FieldBmmTitle              = FieldType{"portal_mf671560"}
+	FieldBmmTrackMetadataJSON  = FieldType{"portal_mf830807"}
 	FieldExportTCOverride      = FieldType{"portal_mf523169"}
 	FieldSubclipExportTitle    = FieldType{"portal_mf236346"}
 	FieldAssetAudioCodec       = FieldType{"ASSET_AUDIO_CODEC"}
@@ -47,5 +48,5 @@ var (
 		FieldSource, FieldExportAsChapter, FieldSubtransStoryID, FieldOriginalURI, FieldUploadedBy, FieldUploadJob,
 		FieldLanguagesRecorded, FieldGeneralTags, FieldOriginalFileName, FieldOriginalFileNameField,
 		FieldEpisodeDescription, FieldSeason, FieldProgram, FieldEpisode, FieldStlText, FieldIngested, FieldDialogLoudness,
-		FieldDialogPercentage, FieldBmmTrackID, FieldBmmTitle, FieldAssetAudioCodec, FieldOriginalAudioCodec, FieldExportTCOverride, FieldSubclipExportTitle, FieldTranscribedLanguage)
+		FieldDialogPercentage, FieldBmmTrackID, FieldBmmTitle, FieldBmmTrackMetadataJSON, FieldAssetAudioCodec, FieldOriginalAudioCodec, FieldExportTCOverride, FieldSubclipExportTitle, FieldTranscribedLanguage)
 )
