@@ -32,8 +32,10 @@ type BmmTrackMetadataParams struct {
 	Title         string           `json:"title"`
 	Language      string           `json:"language"`
 	PublishedDate string           `json:"publishedDate"`
+	RecordedAt    string           `json:"recordedAt,omitempty"`
 	Copyright     string           `json:"copyright"`
 	Album         BmmAlbum         `json:"album"`
+	Tags          []string         `json:"tags"`
 	VXSource      string           `json:"vxSource,omitempty"`
 	FileURL       string           `json:"fileUrl,omitempty"`
 }
@@ -49,8 +51,10 @@ type bmmTrackMetadataPayload struct {
 	Title         string           `json:"title"`
 	Language      string           `json:"language"`
 	PublishedDate string           `json:"publishedDate"`
+	RecordedAt    string           `json:"recordedAt,omitempty"`
 	Copyright     string           `json:"copyright"`
 	Album         BmmAlbum         `json:"album"`
+	Tags          []string         `json:"tags"`
 }
 
 func BmmTrackMetadata(ctx workflow.Context, params BmmTrackMetadataParams) (*BmmTrackMetadataResult, error) {
@@ -70,8 +74,10 @@ func BmmTrackMetadata(ctx workflow.Context, params BmmTrackMetadataParams) (*Bmm
 		Title:         params.Title,
 		Language:      params.Language,
 		PublishedDate: params.PublishedDate,
+		RecordedAt:    params.RecordedAt,
 		Copyright:     params.Copyright,
 		Album:         params.Album,
+		Tags:          params.Tags,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal metadata JSON: %w", err)
