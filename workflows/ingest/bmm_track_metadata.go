@@ -27,7 +27,7 @@ type BmmAlbum struct {
 
 type BmmTrackMetadataParams struct {
 	BmmTrackID    int              `json:"bmmTrackId"`
-	SongNumbers   []int            `json:"songNumbers"`
+	SongNumbers   []string         `json:"songNumbers"`
 	Contributors  []BmmContributor `json:"contributors"`
 	Title         string           `json:"title"`
 	Language      string           `json:"language"`
@@ -44,7 +44,7 @@ type BmmTrackMetadataResult struct {
 
 type bmmTrackMetadataPayload struct {
 	BmmTrackID    int              `json:"bmmTrackId"`
-	SongNumbers   []int            `json:"songNumbers"`
+	SongNumbers   []string         `json:"songNumbers"`
 	Contributors  []BmmContributor `json:"contributors"`
 	Title         string           `json:"title"`
 	Language      string           `json:"language"`
