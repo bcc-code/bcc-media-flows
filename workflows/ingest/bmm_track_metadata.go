@@ -25,19 +25,25 @@ type BmmAlbum struct {
 	Name string `json:"name"`
 }
 
+type BmmCuratedPlaylist struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 type BmmTrackMetadataParams struct {
-	BmmTrackID    int              `json:"bmmTrackId"`
-	SongNumbers   []string         `json:"songNumbers"`
-	Contributors  []BmmContributor `json:"contributors"`
-	Title         string           `json:"title"`
-	Language      string           `json:"language"`
-	PublishedDate string           `json:"publishedDate"`
-	RecordedAt    string           `json:"recordedAt,omitempty"`
-	Copyright     string           `json:"copyright"`
-	Album         BmmAlbum         `json:"album"`
-	Tags          []string         `json:"tags"`
-	VXSource      string           `json:"vxSource,omitempty"`
-	FileURL       string           `json:"fileUrl,omitempty"`
+	BmmTrackID      int                 `json:"bmmTrackId"`
+	SongNumbers     []string            `json:"songNumbers"`
+	Contributors    []BmmContributor    `json:"contributors"`
+	Title           string              `json:"title"`
+	Language        string              `json:"language"`
+	PublishedDate   string              `json:"publishedDate"`
+	RecordedAt      string              `json:"recordedAt,omitempty"`
+	Copyright       string              `json:"copyright"`
+	Album           BmmAlbum            `json:"album"`
+	CuratedPlaylist *BmmCuratedPlaylist `json:"curatedPlaylist,omitempty"`
+	Tags            []string            `json:"tags"`
+	VXSource        string              `json:"vxSource,omitempty"`
+	FileURL         string              `json:"fileUrl,omitempty"`
 }
 
 type BmmTrackMetadataResult struct {
@@ -45,16 +51,17 @@ type BmmTrackMetadataResult struct {
 }
 
 type bmmTrackMetadataPayload struct {
-	BmmTrackID    int              `json:"bmmTrackId"`
-	SongNumbers   []string         `json:"songNumbers"`
-	Contributors  []BmmContributor `json:"contributors"`
-	Title         string           `json:"title"`
-	Language      string           `json:"language"`
-	PublishedDate string           `json:"publishedDate"`
-	RecordedAt    string           `json:"recordedAt,omitempty"`
-	Copyright     string           `json:"copyright"`
-	Album         BmmAlbum         `json:"album"`
-	Tags          []string         `json:"tags"`
+	BmmTrackID      int                 `json:"bmmTrackId"`
+	SongNumbers     []string            `json:"songNumbers"`
+	Contributors    []BmmContributor    `json:"contributors"`
+	Title           string              `json:"title"`
+	Language        string              `json:"language"`
+	PublishedDate   string              `json:"publishedDate"`
+	RecordedAt      string              `json:"recordedAt,omitempty"`
+	Copyright       string              `json:"copyright"`
+	Album           BmmAlbum            `json:"album"`
+	CuratedPlaylist *BmmCuratedPlaylist `json:"curatedPlaylist,omitempty"`
+	Tags            []string            `json:"tags"`
 }
 
 func BmmTrackMetadata(ctx workflow.Context, params BmmTrackMetadataParams) (*BmmTrackMetadataResult, error) {
@@ -68,16 +75,17 @@ func BmmTrackMetadata(ctx workflow.Context, params BmmTrackMetadataParams) (*Bmm
 	}
 
 	metadataJSON, err := wfutils.MarshalJson(ctx, bmmTrackMetadataPayload{
-		BmmTrackID:    params.BmmTrackID,
-		SongNumbers:   params.SongNumbers,
-		Contributors:  params.Contributors,
-		Title:         params.Title,
-		Language:      params.Language,
-		PublishedDate: params.PublishedDate,
-		RecordedAt:    params.RecordedAt,
-		Copyright:     params.Copyright,
-		Album:         params.Album,
-		Tags:          params.Tags,
+		BmmTrackID:      params.BmmTrackID,
+		SongNumbers:     params.SongNumbers,
+		Contributors:    params.Contributors,
+		Title:           params.Title,
+		Language:        params.Language,
+		PublishedDate:   params.PublishedDate,
+		RecordedAt:      params.RecordedAt,
+		Copyright:       params.Copyright,
+		Album:           params.Album,
+		CuratedPlaylist: params.CuratedPlaylist,
+		Tags:            params.Tags,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal metadata JSON: %w", err)

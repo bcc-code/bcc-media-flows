@@ -17,6 +17,10 @@ type MappingOptions struct {
 	VXSourceOverride string
 	// FileURLOverride replaces the computed file URL. Empty = use the computed value.
 	FileURLOverride string
+	// CuratedPlaylist, when set, records that this track is being imported as part of a
+	// curated playlist; the value is forwarded verbatim into BmmTrackMetadataParams so it
+	// lands in the asset's metadata JSON. Nil = no playlist provenance.
+	CuratedPlaylist *ingestworkflows.BmmCuratedPlaylist
 }
 
 // ToWorkflowParams converts a RavenTrack into the BmmTrackMetadataParams expected by the workflow.
@@ -85,9 +89,10 @@ func ToWorkflowParams(t *RavenTrack, opts MappingOptions) (ingestworkflows.BmmTr
 			ID:   strconv.Itoa(t.ParentID),
 			Name: tr.Meta.Album,
 		},
-		Tags:     tags,
-		VXSource: vxSource,
-		FileURL:  fileURL,
+		CuratedPlaylist: opts.CuratedPlaylist,
+		Tags:            tags,
+		VXSource:        vxSource,
+		FileURL:         fileURL,
 	}, nil
 }
 
