@@ -33,6 +33,7 @@ var (
 	DestinationHippoV2   = Destination{Value: "hippo_v2"}
 	DestinationDubbing   = Destination{Value: "dubbing"}
 	DestinationXDCAM     = Destination{Value: "xdcam"}
+	DestinationCasparCG  = Destination{Value: "caspar-cg"}
 	Destinations         = enum.New(
 		DestinationAbekas,
 		DestinationRawAbekas,
@@ -43,6 +44,7 @@ var (
 		DestinationDubbing,
 		DestinationHyperdeck,
 		DestinationXDCAM,
+		DestinationCasparCG,
 	)
 	deliveryFolder = paths.New(paths.BrunstadDrive, "/Delivery/FraMB/")
 )
@@ -220,6 +222,8 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 			w = VBExportToDubbing
 		case DestinationXDCAM:
 			w = VBExportToXDCAM
+		case DestinationCasparCG:
+			w = VBExportToCasparCG
 
 		default:
 			return nil, fmt.Errorf("destination not implemented: %s", dest)

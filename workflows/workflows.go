@@ -83,6 +83,7 @@ var WorkerWorkflows = []any{
 	vb_export.VBExportToDubbing,
 	vb_export.VBExportToHyperdeck,
 	vb_export.VBExportToXDCAM,
+	vb_export.VBExportToCasparCG,
 	scheduled.CleanupTemp,
 	scheduled.MediabankenPurgeTrash,
 	// Massive.app import workflow
