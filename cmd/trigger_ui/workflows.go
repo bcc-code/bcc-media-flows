@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"github.com/gin-gonic/gin"
@@ -101,6 +102,37 @@ type WorkflowDetails struct {
 	Status     string
 	WorkflowID string
 	Start      string
+}
+
+type ActivityItem struct {
+	Name      string
+	Status    string // "Completed", "Failed", "TimedOut", "Canceled", "Running"
+	Attempt   int32
+	StartedAt string    // formatted "15:04:05", empty if not yet started
+	Duration  string    // e.g. "0.06s", "1m23s", "~4s" for running
+	started   time.Time // intermediate, used to compute Duration; not rendered
+}
+
+// formatShortDuration formats a duration compactly for the activity list:
+// sub-second → "0.06s", sub-minute → "12.3s", sub-hour → "1m23s", else "1h23m".
+func formatShortDuration(d time.Duration) string {
+	if d < 0 {
+		d = 0
+	}
+	switch {
+	case d < time.Second:
+		return fmt.Sprintf("%.2fs", d.Seconds())
+	case d < time.Minute:
+		return fmt.Sprintf("%.1fs", d.Seconds())
+	case d < time.Hour:
+		m := int(d / time.Minute)
+		s := int((d % time.Minute) / time.Second)
+		return fmt.Sprintf("%dm%02ds", m, s)
+	default:
+		h := int(d / time.Hour)
+		m := int((d % time.Hour) / time.Minute)
+		return fmt.Sprintf("%dh%02dm", h, m)
+	}
 }
 
 func (s *TriggerServer) fileCatalystWebhookHandler(ctx *gin.Context) {
@@ -220,35 +252,106 @@ func (s *TriggerServer) workflowDetailsGET(ctx *gin.Context) {
 		return
 	}
 
-	// Extract status, start time, and type from history/events if possible
+	// Extract status, start time, type, and an activity timeline from history/events.
 	var status, start, wfType string
-	if len(resp.History.Events) > 0 {
-		for _, event := range resp.History.Events {
-			if event.GetEventType().String() == "EVENT_TYPE_WORKFLOW_EXECUTION_STARTED" {
-				start = event.GetEventTime().AsTime().Format("2006-01-02 15:04:05")
-				if attr := event.GetWorkflowExecutionStartedEventAttributes(); attr != nil {
-					wfType = attr.WorkflowType.GetName()
-				}
+	var startTime, endTime time.Time
+	var activities []ActivityItem
+	// activityIdx maps an ActivityTaskScheduled event_id to its index in `activities`,
+	// so subsequent Started/Completed/Failed/TimedOut/Canceled events can update the same row.
+	activityIdx := map[int64]int{}
+
+	finish := func(scheduledID int64, t time.Time, newStatus string) {
+		i, ok := activityIdx[scheduledID]
+		if !ok {
+			return
+		}
+		activities[i].Status = newStatus
+		ref := activities[i].started
+		if ref.IsZero() {
+			ref = t // shouldn't happen, but keeps Duration sensible
+		}
+		activities[i].Duration = formatShortDuration(t.Sub(ref))
+	}
+
+	for _, event := range resp.History.Events {
+		et := event.GetEventType().String()
+		switch et {
+		case "EVENT_TYPE_WORKFLOW_EXECUTION_STARTED":
+			startTime = event.GetEventTime().AsTime()
+			start = startTime.Format("2006-01-02 15:04:05")
+			if attr := event.GetWorkflowExecutionStartedEventAttributes(); attr != nil {
+				wfType = attr.WorkflowType.GetName()
 			}
-			if event.GetEventType().String() == "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED" {
-				status = "Completed"
+		case "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED":
+			status = "Completed"
+			endTime = event.GetEventTime().AsTime()
+		case "EVENT_TYPE_WORKFLOW_EXECUTION_FAILED":
+			status = "Failed"
+			endTime = event.GetEventTime().AsTime()
+		case "EVENT_TYPE_WORKFLOW_EXECUTION_CANCELED":
+			status = "Canceled"
+			endTime = event.GetEventTime().AsTime()
+		case "EVENT_TYPE_WORKFLOW_EXECUTION_TERMINATED":
+			status = "Terminated"
+			endTime = event.GetEventTime().AsTime()
+		case "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT":
+			status = "Timed out"
+			endTime = event.GetEventTime().AsTime()
+
+		case "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED":
+			attrs := event.GetActivityTaskScheduledEventAttributes()
+			activities = append(activities, ActivityItem{
+				Name:   attrs.GetActivityType().GetName(),
+				Status: "Running", // upgraded once we see a terminal event
+			})
+			activityIdx[event.GetEventId()] = len(activities) - 1
+		case "EVENT_TYPE_ACTIVITY_TASK_STARTED":
+			attrs := event.GetActivityTaskStartedEventAttributes()
+			if i, ok := activityIdx[attrs.GetScheduledEventId()]; ok {
+				t := event.GetEventTime().AsTime()
+				activities[i].started = t
+				activities[i].StartedAt = t.Format("15:04:05")
+				activities[i].Attempt = attrs.GetAttempt()
 			}
-			if event.GetEventType().String() == "EVENT_TYPE_WORKFLOW_EXECUTION_FAILED" {
-				status = "Failed"
-			}
-			if event.GetEventType().String() == "EVENT_TYPE_WORKFLOW_EXECUTION_CANCELED" {
-				status = "Canceled"
-			}
-			if event.GetEventType().String() == "EVENT_TYPE_WORKFLOW_EXECUTION_TERMINATED" {
-				status = "Terminated"
-			}
-			if event.GetEventType().String() == "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" {
-				status = "Timed out"
-			}
+		case "EVENT_TYPE_ACTIVITY_TASK_COMPLETED":
+			finish(event.GetActivityTaskCompletedEventAttributes().GetScheduledEventId(), event.GetEventTime().AsTime(), "Completed")
+		case "EVENT_TYPE_ACTIVITY_TASK_FAILED":
+			finish(event.GetActivityTaskFailedEventAttributes().GetScheduledEventId(), event.GetEventTime().AsTime(), "Failed")
+		case "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT":
+			finish(event.GetActivityTaskTimedOutEventAttributes().GetScheduledEventId(), event.GetEventTime().AsTime(), "TimedOut")
+		case "EVENT_TYPE_ACTIVITY_TASK_CANCELED":
+			finish(event.GetActivityTaskCanceledEventAttributes().GetScheduledEventId(), event.GetEventTime().AsTime(), "Canceled")
 		}
 	}
 	if status == "" {
 		status = "Running"
+	}
+
+	// Fill in durations for activities still marked Running (and pick Current step).
+	now := time.Now()
+	var currentStep string
+	for i := range activities {
+		if activities[i].Status != "Running" {
+			continue
+		}
+		if currentStep == "" {
+			currentStep = activities[i].Name
+		}
+		if !activities[i].started.IsZero() {
+			activities[i].Duration = "~" + formatShortDuration(now.Sub(activities[i].started))
+		}
+	}
+
+	// Compute Elapsed: wall-clock duration of the workflow so far (or total, if finished).
+	var elapsed string
+	if !startTime.IsZero() {
+		var d time.Duration
+		if !endTime.IsZero() {
+			d = endTime.Sub(startTime)
+		} else {
+			d = now.Sub(startTime)
+		}
+		elapsed = formatShortDuration(d)
 	}
 
 	// Query for all workflows whose ParentExecution.WorkflowId == workflowID
@@ -270,11 +373,14 @@ func (s *TriggerServer) workflowDetailsGET(ctx *gin.Context) {
 
 	historyJson, _ := json.MarshalIndent(resp.History, "", "  ")
 	ctx.HTML(http.StatusOK, "workflow-details.gohtml", gin.H{
-		"WorkflowID": workflowID,
-		"Status":     status,
-		"Start":      start,
-		"Type":       wfType,
-		"History":    string(historyJson),
-		"Children":   children,
+		"WorkflowID":  workflowID,
+		"Status":      status,
+		"Start":       start,
+		"Type":        wfType,
+		"Elapsed":     elapsed,
+		"CurrentStep": currentStep,
+		"Activities":  activities,
+		"History":     string(historyJson),
+		"Children":    children,
 	})
 }

@@ -6,40 +6,64 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <title>Workflow Details</title>
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center">
-    <main class="bg-white p-8 rounded shadow-md w-full max-w-2xl mt-12">
+<body class="bg-gray-50 min-h-screen flex flex-col items-center">
+    <main class="bg-white p-8 rounded shadow-md w-full max-w-4xl mt-12">
         <h1 class="text-2xl font-bold mb-6 text-center">Workflow Details</h1>
         {{if .Error}}
             <div class="bg-red-100 text-red-700 p-4 rounded mb-4">{{.Error}}</div>
         {{else}}
-        <div class="mb-4">
-            <span class="font-semibold">Workflow ID:</span> {{.WorkflowID}}
+        <div class="grid grid-cols-2 gap-x-6 gap-y-2 mb-6">
+            <div><span class="font-semibold">Type:</span> {{.Type}}</div>
+            <div>
+                <span class="font-semibold">Status:</span>
+                <span class="px-2 py-0.5 rounded text-sm font-semibold
+                    {{if eq .Status "Completed"}}bg-green-100 text-green-800
+                    {{else if eq .Status "Running"}}bg-yellow-100 text-yellow-800
+                    {{else if eq .Status "Canceled"}}bg-gray-200 text-gray-700
+                    {{else}}bg-red-100 text-red-800{{end}}">{{.Status}}</span>
+            </div>
+            <div><span class="font-semibold">Workflow ID:</span> <span class="font-mono text-sm">{{.WorkflowID}}</span></div>
+            <div><span class="font-semibold">Started:</span> {{.Start}}</div>
+            {{if .Elapsed}}<div><span class="font-semibold">Elapsed:</span> {{.Elapsed}}</div>{{end}}
+            {{if .CurrentStep}}<div><span class="font-semibold">Current step:</span> <span class="font-mono">{{.CurrentStep}}</span></div>{{end}}
         </div>
-        <div class="mb-4">
-            <span class="font-semibold">Status:</span> {{.Status}}
-        </div>
-        <div class="mb-4">
-            <span class="font-semibold">Start Time:</span> {{.Start}}
-        </div>
-        <div class="mb-4">
-            <span class="font-semibold">Type:</span> {{.Type}}
-        </div>
-        <div class="mb-4">
-            <span class="font-semibold">History:</span>
-            <pre class="bg-gray-100 p-2 rounded overflow-x-auto text-xs">{{.History}}</pre>
-        </div>
-        {{if .Children}}
-        <div class="mb-4">
-            <span class="font-semibold">Child Workflows:</span>
-            <ul class="list-disc ml-6">
-                {{range .Children}}
-                <li>
-                    <span class="font-mono">{{.WorkflowID}}</span> — <span>{{.Name}}</span> — <span class="font-semibold">{{.Status}}</span> — <span>{{.Start}}</span>
-                </li>
-                {{end}}
-            </ul>
-        </div>
+
+        <h2 class="font-semibold mt-6 mb-2">Activities</h2>
+        {{if .Activities}}
+        <ol class="divide-y divide-gray-200 border rounded">
+            {{range .Activities}}
+            <li class="flex items-center gap-3 px-3 py-2">
+                <span class="text-xs font-bold px-2 py-0.5 rounded w-24 text-center
+                    {{if eq .Status "Completed"}}bg-green-100 text-green-800
+                    {{else if eq .Status "Running"}}bg-yellow-100 text-yellow-800
+                    {{else if eq .Status "Canceled"}}bg-gray-200 text-gray-700
+                    {{else}}bg-red-100 text-red-800{{end}}">{{.Status}}</span>
+                <span class="font-mono flex-1 truncate">{{.Name}}</span>
+                {{if gt .Attempt 1}}<span class="text-xs text-gray-500">attempt {{.Attempt}}</span>{{end}}
+                {{if .StartedAt}}<span class="text-xs text-gray-400 tabular-nums">{{.StartedAt}}</span>{{end}}
+                <span class="text-sm text-gray-600 tabular-nums w-20 text-right">{{.Duration}}</span>
+            </li>
+            {{end}}
+        </ol>
+        {{else}}
+        <p class="text-sm text-gray-500">No activities yet.</p>
         {{end}}
+
+        {{if .Children}}
+        <h2 class="font-semibold mt-6 mb-2">Child workflows</h2>
+        <ul class="list-disc ml-6">
+            {{range .Children}}
+            <li>
+                <a href="/workflow/{{.WorkflowID}}" class="text-blue-600 hover:underline font-mono">{{.WorkflowID}}</a> — <span>{{.Name}}</span> — <span class="font-semibold">{{.Status}}</span> — <span>{{.Start}}</span>
+            </li>
+            {{end}}
+        </ul>
+        {{end}}
+
+        <details class="mt-8">
+            <summary class="cursor-pointer text-sm text-gray-600">Raw history JSON</summary>
+            <pre class="bg-gray-100 p-2 rounded overflow-x-auto text-xs mt-2">{{.History}}</pre>
+        </details>
         {{end}}
         <div class="mt-8 text-center">
             <a href="/list" class="text-blue-600 hover:underline">Back to Workflow List</a>
