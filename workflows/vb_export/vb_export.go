@@ -75,6 +75,7 @@ type VBExportChildWorkflowParams struct {
 	RunID                      string
 	ParentParams               VBExportParams `json:"parent_params"`
 	InputFile                  paths.Path
+	OriginalFile               paths.Path
 	OriginalFilenameWithoutExt string
 	SubtitleFile               *paths.Path
 	SubtitleStyle              *paths.Path
@@ -142,6 +143,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	}
 
 	videoFilePath := paths.MustParse(videoShape.GetPath())
+	originalVideoFilePath := videoFilePath
 
 	originalFilenameWithoutExt := videoFilePath.Base()[0 : len(videoFilePath.Base())-len(videoFilePath.Ext())]
 	analyzeResult, err := wfutils.Execute(ctx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
@@ -152,7 +154,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	}
 
 	destinationsWithAudioOutput := lo.Filter(destinations, func(dest *Destination, _ int) bool {
-		return *dest != DestinationHippo
+		return *dest != DestinationHippo && *dest != DestinationCasparCG
 	})
 
 	if len(destinationsWithAudioOutput) > 0 && analyzeResult.HasAudio && len(analyzeResult.AudioStreams) <= 2 {
@@ -194,6 +196,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 			ParentParams:               params,
 			OriginalFilenameWithoutExt: originalFilenameWithoutExt,
 			InputFile:                  videoFilePath,
+			OriginalFile:               originalVideoFilePath,
 			SubtitleFile:               subtitleFile,
 			SubtitleStyle:              subtitleStyle,
 			TempDir:                    tempDir,

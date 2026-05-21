@@ -14,19 +14,19 @@ func VBExportToCasparCG(ctx workflow.Context, params VBExportChildWorkflowParams
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	rcloneDestination := deliveryFolder.Append("CasparCG", params.InputFile.Base())
+	rcloneDestination := deliveryFolder.Append("CasparCG", params.OriginalFile.Base())
 
 	err := wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
 	if err != nil {
 		return nil, err
 	}
 
-	err = wfutils.RcloneCopyFileWithNotifications(ctx, params.InputFile, rcloneDestination, rclone.PriorityHigh, rcloneNotificationOptions)
+	err = wfutils.RcloneCopyFileWithNotifications(ctx, params.OriginalFile, rcloneDestination, rclone.PriorityHigh, rcloneNotificationOptions)
 	if err != nil {
 		return nil, err
 	}
 
-	notifyExportDone(ctx, params, "caspar-cg", params.InputFile)
+	notifyExportDone(ctx, params, "caspar-cg", params.OriginalFile)
 
 	return &VBExportResult{
 		ID:    params.ParentParams.VXID,
