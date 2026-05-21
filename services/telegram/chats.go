@@ -27,25 +27,25 @@ var (
 func init() {
 	chat, err := strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID_VOD"), 10, 64)
 	if err != nil {
-		fmt.Printf("Error parsing TELEGRAM_CHAT_ID_VOD: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error parsing TELEGRAM_CHAT_ID_VOD: %v\n", err)
 	}
 	ChatVOD.Value = chat
 
 	chat, err = strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID_OSLOFJORD"), 10, 64)
 	if err != nil {
-		fmt.Printf("Error parsing TELEGRAM_CHAT_ID_OSLOFJORD: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error parsing TELEGRAM_CHAT_ID_OSLOFJORD: %v\n", err)
 	}
 	ChatOslofjord.Value = chat
 
 	chat, err = strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID_OTHER"), 10, 64)
 	if err != nil {
-		fmt.Printf("Error parsing TELEGRAM_CHAT_ID_OTHER: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error parsing TELEGRAM_CHAT_ID_OTHER: %v\n", err)
 	}
 	ChatOther.Value = chat
 
 	chat, err = strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID_BMM"), 10, 64)
 	if err != nil {
-		fmt.Printf("Error parsing TELEGRAM_CHAT_ID_BMM: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error parsing TELEGRAM_CHAT_ID_BMM: %v\n", err)
 	}
 	ChatBMM.Value = chat
 }
