@@ -32,6 +32,12 @@ func ImportFileAsTag(ctx workflow.Context, tag string, path paths.Path, title st
 	if err != nil {
 		return nil, err
 	}
+	// Mediabanken mounts the storage separately from the worker host and can
+	// lag behind by minutes due to NFS metadata caching. Wait until Vidispine
+	// can see the file from its own mount before kicking off the import job.
+	if err = wfutils.WaitForFileVisibleInVidispineStorage(ctx, path); err != nil {
+		return nil, err
+	}
 	var job vsactivity.JobResult
 	err = wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
 		AssetID:  result.AssetID,

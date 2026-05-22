@@ -159,6 +159,9 @@ func (s *UnitTestSuite) Test_VBBulk_MasterFlow() {
 		Once().
 		Return(&vsactivity.CreatePlaceholderResult{AssetID: "VBBulk2"}, nil)
 
+	s.env.OnActivity(activities.Vidispine.WaitForFileVisibleInStorageActivity, mock.Anything, mock.Anything).
+		Return(nil, nil)
+
 	s.env.OnActivity(activities.Vidispine.ImportFileAsShapeActivity, mock.Anything, vsactivity.ImportFileAsShapeParams{
 		AssetID:  "VBBulk1",
 		FilePath: paths.MustParse("./testdata/generated/VBBulk_output/VBBulk1.mxf"),

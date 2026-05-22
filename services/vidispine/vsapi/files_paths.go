@@ -115,6 +115,41 @@ func (c *Client) ListFilesForStorage(
 	return result.Result().(*FileSearchResult), nil
 }
 
+// FileExistsInStorage returns true if Vidispine knows about a file at
+// absoluteFilePath on the given storage. It is used to gate operations on the
+// fact that Mediabanken has stat'd the file from its own mount of the storage,
+// since NFS metadata caching can lag the worker host's view by minutes.
+func (c *Client) FileExistsInStorage(storageID, absoluteFilePath string) (bool, error) {
+	storagePath, err := c.GetAbsoluteStoragePath(storageID)
+	if err != nil {
+		return false, err
+	}
+	relPath := strings.TrimPrefix(absoluteFilePath, storagePath)
+
+	requestURL, _ := url.Parse(c.baseURL)
+	requestURL.Path += "/storage/" + url.PathEscape(storageID) + "/file"
+	q := requestURL.Query()
+	q.Set("path", relPath)
+	q.Set("recursive", "false")
+	q.Set("number", "10")
+	requestURL.RawQuery = q.Encode()
+
+	result, err := c.restyClient.R().
+		SetResult(&FileSearchResult{}).
+		Get(requestURL.String())
+	if err != nil {
+		return false, err
+	}
+
+	res := result.Result().(*FileSearchResult)
+	for _, f := range res.Files {
+		if f.Path == relPath {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (c *Client) MoveFile(fileID string, newStorageID string, newName string) (*JobDocument, error) {
 	fileID = url.PathEscape(fileID)
 	newStorageID = url.PathEscape(newStorageID)
