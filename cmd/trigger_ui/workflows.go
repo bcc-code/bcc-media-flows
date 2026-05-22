@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	common "go.temporal.io/api/common/v1"
+	"go.temporal.io/api/enums/v1"
 	workflowservice "go.temporal.io/api/workflowservice/v1"
 	"go.temporal.io/sdk/client"
 )
@@ -274,38 +275,37 @@ func (s *TriggerServer) workflowDetailsGET(ctx *gin.Context) {
 	}
 
 	for _, event := range resp.History.Events {
-		et := event.GetEventType().String()
-		switch et {
-		case "EVENT_TYPE_WORKFLOW_EXECUTION_STARTED":
+		switch event.GetEventType() {
+		case enums.EVENT_TYPE_WORKFLOW_EXECUTION_STARTED:
 			startTime = event.GetEventTime().AsTime()
 			start = startTime.Format("2006-01-02 15:04:05")
 			if attr := event.GetWorkflowExecutionStartedEventAttributes(); attr != nil {
 				wfType = attr.WorkflowType.GetName()
 			}
-		case "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED":
+		case enums.EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED:
 			status = "Completed"
 			endTime = event.GetEventTime().AsTime()
-		case "EVENT_TYPE_WORKFLOW_EXECUTION_FAILED":
+		case enums.EVENT_TYPE_WORKFLOW_EXECUTION_FAILED:
 			status = "Failed"
 			endTime = event.GetEventTime().AsTime()
-		case "EVENT_TYPE_WORKFLOW_EXECUTION_CANCELED":
+		case enums.EVENT_TYPE_WORKFLOW_EXECUTION_CANCELED:
 			status = "Canceled"
 			endTime = event.GetEventTime().AsTime()
-		case "EVENT_TYPE_WORKFLOW_EXECUTION_TERMINATED":
+		case enums.EVENT_TYPE_WORKFLOW_EXECUTION_TERMINATED:
 			status = "Terminated"
 			endTime = event.GetEventTime().AsTime()
-		case "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT":
+		case enums.EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT:
 			status = "Timed out"
 			endTime = event.GetEventTime().AsTime()
 
-		case "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED":
+		case enums.EVENT_TYPE_ACTIVITY_TASK_SCHEDULED:
 			attrs := event.GetActivityTaskScheduledEventAttributes()
 			activities = append(activities, ActivityItem{
 				Name:   attrs.GetActivityType().GetName(),
 				Status: "Running", // upgraded once we see a terminal event
 			})
 			activityIdx[event.GetEventId()] = len(activities) - 1
-		case "EVENT_TYPE_ACTIVITY_TASK_STARTED":
+		case enums.EVENT_TYPE_ACTIVITY_TASK_STARTED:
 			attrs := event.GetActivityTaskStartedEventAttributes()
 			if i, ok := activityIdx[attrs.GetScheduledEventId()]; ok {
 				t := event.GetEventTime().AsTime()
@@ -313,13 +313,13 @@ func (s *TriggerServer) workflowDetailsGET(ctx *gin.Context) {
 				activities[i].StartedAt = t.Format("15:04:05")
 				activities[i].Attempt = attrs.GetAttempt()
 			}
-		case "EVENT_TYPE_ACTIVITY_TASK_COMPLETED":
+		case enums.EVENT_TYPE_ACTIVITY_TASK_COMPLETED:
 			finish(event.GetActivityTaskCompletedEventAttributes().GetScheduledEventId(), event.GetEventTime().AsTime(), "Completed")
-		case "EVENT_TYPE_ACTIVITY_TASK_FAILED":
+		case enums.EVENT_TYPE_ACTIVITY_TASK_FAILED:
 			finish(event.GetActivityTaskFailedEventAttributes().GetScheduledEventId(), event.GetEventTime().AsTime(), "Failed")
-		case "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT":
+		case enums.EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT:
 			finish(event.GetActivityTaskTimedOutEventAttributes().GetScheduledEventId(), event.GetEventTime().AsTime(), "TimedOut")
-		case "EVENT_TYPE_ACTIVITY_TASK_CANCELED":
+		case enums.EVENT_TYPE_ACTIVITY_TASK_CANCELED:
 			finish(event.GetActivityTaskCanceledEventAttributes().GetScheduledEventId(), event.GetEventTime().AsTime(), "Canceled")
 		}
 	}
