@@ -41,8 +41,8 @@ func TestMapAndFilterShortsData(t *testing.T) {
 		{
 			name: "basic matching",
 			data: []*ShortsData{
-				createRow("test1", "Ready in MB", ""),
-				createRow("test2", "Ready in MB", ""),
+				createRow("test1", "Ready in Mediabanken", ""),
+				createRow("test2", "Ready in Mediabanken", ""),
 				createRow("test3", "Not Ready", ""),
 			},
 			mbItems: []*vsapi.MetadataResult{
@@ -58,7 +58,7 @@ func TestMapAndFilterShortsData(t *testing.T) {
 		{
 			name: "no matches",
 			data: []*ShortsData{
-				createRow("test1", "Ready in MB", ""),
+				createRow("test1", "Ready in Mediabanken", ""),
 			},
 			mbItems: []*vsapi.MetadataResult{
 				createMetadataResult("id1", "different"),
@@ -80,7 +80,7 @@ func TestMapAndFilterShortsData(t *testing.T) {
 		{
 			name: "title with dot suffix",
 			data: []*ShortsData{
-				createRow("test1", "Ready in MB", ""),
+				createRow("test1", "Ready in Mediabanken", ""),
 			},
 			mbItems: []*vsapi.MetadataResult{
 				createMetadataResult("id1", "test1.suffix"),
@@ -93,8 +93,8 @@ func TestMapAndFilterShortsData(t *testing.T) {
 		{
 			name: "filter out done status",
 			data: []*ShortsData{
-				createRow("test1", "Ready in MB", "Done"),
-				createRow("test2", "Ready in MB", "In Progress"),
+				createRow("test1", "Ready in Mediabanken", "Done"),
+				createRow("test2", "Ready in Mediabanken", "In Progress"),
 			},
 			mbItems: []*vsapi.MetadataResult{
 				createMetadataResult("id1", "test1"),
@@ -108,7 +108,7 @@ func TestMapAndFilterShortsData(t *testing.T) {
 		{
 			name: "empty status is allowed",
 			data: []*ShortsData{
-				createRow("test1", "Ready in MB", ""),
+				createRow("test1", "Ready in Mediabanken", ""),
 			},
 			mbItems: []*vsapi.MetadataResult{
 				createMetadataResult("id1", "test1"),

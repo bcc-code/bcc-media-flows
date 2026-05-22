@@ -1,18 +1,16 @@
 package export
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/clickup"
 	"github.com/bcc-code/bcc-media-flows/services/directus"
-	"github.com/bcc-code/bcc-media-flows/services/notion"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"github.com/gin-gonic/gin"
 	"go.temporal.io/sdk/workflow"
 	"os"
 	"strconv"
@@ -24,23 +22,31 @@ type BulkExportShortsInput struct {
 }
 
 type ShortsData struct {
-	NotionPageID    string   `notion:"rowId"`
-	Title           string   `notion:"Title"`
-	Language        string   `notion:"Language"`
-	Label           string   `notion:"Label"`
-	Publishing      string   `notion:"Publish"`
-	EpisodeID       string   `notion:"Episode ID"`
-	InHm            string   `notion:"In"`
-	OutHm           string   `notion:"Out"`
-	Status          string   `notion:"Asset status"`
-	Source          string   `notion:"Source"`
-	Type            []string `notion:"Type"`
-	Purpose         string   `notion:"Purpose"`
-	Quality         string   `notion:"Quality"`
-	EditorialStatus string   `notion:"Editorial status"`
+	ClickUpTaskID   string
+	Label           string
+	EpisodeID       string
+	InHm            string
+	OutHm           string
+	Status          string
+	EditorialStatus string
 
 	MBMetadata   *vsapi.MetadataResult
 	OriginalPath *paths.Path
+}
+
+// shortsDataFromClickUpTask converts a ClickUp task from the "Shorts Export"
+// list into the workflow's ShortsData struct. The task's name is treated as
+// the MB Label used to match against a Vidispine item.
+func shortsDataFromClickUpTask(t clickup.Task) *ShortsData {
+	return &ShortsData{
+		ClickUpTaskID:   t.ID,
+		Label:           t.Name,
+		EpisodeID:       t.Field(clickup.FieldEpisodeID).ShortText(),
+		InHm:            t.Field(clickup.FieldInID).ShortText(),
+		OutHm:           t.Field(clickup.FieldOutID).ShortText(),
+		Status:          t.Field(clickup.FieldAssetStatusID).DropDownName(),
+		EditorialStatus: t.Field(clickup.FieldEditorialStatusID).DropDownName(),
+	}
 }
 
 // BulkExportShorts exports all shorts in a collection
@@ -55,34 +61,14 @@ func BulkExportShorts(ctx workflow.Context, input BulkExportShortsInput) error {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting BulkExportShorts %s", input.CollectionVXID)
 
-	notionFilter, _ := json.Marshal(gin.H{
-		"and": []gin.H{
-			{
-				"property": "Editorial status",
-				"status": gin.H{
-					"equals": "Ready in MB",
-				},
-			}, {
-				"property": "Asset status",
-				"status": gin.H{
-					"does_not_equal": "Done",
-				},
-			},
-		},
-	})
-
-	rawNotionData, err := wfutils.Execute(ctx, activities.Notion.QueryDatabase, activities.QueryDatabaseArgs{
-		DatabaseID: activities.Notion.ShortsDatabaseID,
-		Filter:     string(notionFilter),
-	}).Result(ctx)
-
+	tasks, err := wfutils.Execute(ctx, activities.ClickUp.QueryShorts, activities.QueryShortsArgs{}).Result(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get notion data: %w", err)
+		return fmt.Errorf("failed to get ClickUp shorts: %w", err)
 	}
 
-	data, err := notion.NotionToStruct[ShortsData](rawNotionData)
-	if err != nil {
-		return fmt.Errorf("failed to parse notion data: %w", err)
+	data := make([]*ShortsData, 0, len(tasks))
+	for _, t := range tasks {
+		data = append(data, shortsDataFromClickUpTask(t))
 	}
 
 	vsCollectionItems, err := wfutils.Execute(ctx, activities.Vidispine.GetItemsInCollection, vsactivity.GetItemsInCollectionParams{
@@ -156,17 +142,17 @@ func ExportShort(ctx workflow.Context, short *ShortsData) error {
 		return err
 	}
 
-	// Update Notion status to "Done" via activity
-	if short.NotionPageID != "" {
-		err = wfutils.Execute(ctx, activities.Notion.UpdateAssetStatus, activities.UpdateAssetStatusArgs{
-			RowID:  short.NotionPageID,
-			Status: "Done",
+	// Update ClickUp Asset status to "Done" via activity
+	if short.ClickUpTaskID != "" {
+		err = wfutils.Execute(ctx, activities.ClickUp.UpdateAssetStatus, activities.UpdateAssetStatusArgs{
+			TaskID:   short.ClickUpTaskID,
+			OptionID: clickup.OptionAssetStatusDone,
 		}).Get(ctx, nil)
 		if err != nil {
-			logger.Error("Failed to update Notion status via activity", "error", err, "rowId", short.NotionPageID)
+			logger.Error("Failed to update ClickUp Asset status via activity", "error", err, "taskId", short.ClickUpTaskID)
 		}
 	} else {
-		logger.Error("No NotionPageID present for short, skipping Notion status update", "mb_id", short.MBMetadata.ID)
+		logger.Error("No ClickUpTaskID present for short, skipping Asset status update", "mb_id", short.MBMetadata.ID)
 	}
 
 	return nil
@@ -201,14 +187,14 @@ func triggerShortExport(ctx workflow.Context, short *ShortsData) error {
 		WatermarkPath: watermarkPath,
 		Resolutions:   resolutions,
 		AudioSource:   "embedded",
-		Languages:     []string{short.Language},
+		Languages:     []string{"nor"},
 	})
 
 	return wf.Get(ctx, nil)
 }
 
 // mapAndFilterShortsData matches shorts data with vx items and returns a filtered list of matched items.
-// Only editorial status "Ready in MB" is allowed, and the short must be present in both datasets
+// Only editorial status "Ready in Mediabanken" is allowed, and the short must be present in both datasets
 func mapAndFilterShortsData(shorts []*ShortsData, mbItems []*vsapi.MetadataResult) []*ShortsData {
 	var out []*ShortsData
 
@@ -228,24 +214,16 @@ func mapAndFilterShortsData(shorts []*ShortsData, mbItems []*vsapi.MetadataResul
 	}
 
 	for _, short := range shorts {
-		if short.EditorialStatus != "Ready in MB" {
+		if short.EditorialStatus != clickup.EditorialReadyInMediabanken {
 			continue
 		}
 
-		if short.Status == "Done" {
+		if short.Status == clickup.AssetStatusDone {
 			continue
 		}
 
 		if item, ok := mbItemMap[short.Label]; ok {
-
-			short.Language = strings.ToLower(short.Language)
-
-			if short.Language == "" {
-				short.Language = "nor"
-			}
-
 			short.MBMetadata = item
-
 			out = append(out, short)
 		}
 	}
@@ -259,13 +237,6 @@ func mapAndFilterShortsData(shorts []*ShortsData, mbItems []*vsapi.MetadataResul
 // - a poster image to the item
 // - tags to the mediaitem
 func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage *directus.StyledImage) error {
-
-	// Create mediaitem
-	language := short.Language
-	if language == "" {
-		language = "no"
-	}
-
 	parentStartsAt, parentEndsAt, err := getInOutTime(short)
 	if err != nil {
 		return err
@@ -315,12 +286,9 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 		return fmt.Errorf("failed to create media item: no data in response")
 	}
 
-	// some of the columns should be added as tags, e.g. "edification"
-	tagCodes := []string{
-		short.Source,
-		short.Purpose,
-	}
-	tagCodes = append(tagCodes, short.Type...)
+	// Tag codes will be sourced from ClickUp custom fields once those are added.
+	// The loop below already no-ops on empty values.
+	var tagCodes []string
 
 	for _, raw := range tagCodes {
 		code := strings.ToLower(strings.TrimSpace(raw))
