@@ -43,6 +43,10 @@ func Mux(input common.MuxInput, progressCallback ffmpeg.ProgressCallback) (*comm
 
 	outputFilePath := filepath.Join(input.DestinationPath.Local(), input.FileName+".mp4")
 
+	if err := os.MkdirAll(filepath.Dir(outputFilePath), os.ModePerm); err != nil {
+		return nil, err
+	}
+
 	params := []string{
 		"-progress", "pipe:1",
 		"-hide_banner",
