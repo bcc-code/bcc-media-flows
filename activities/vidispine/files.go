@@ -3,6 +3,7 @@ package vsactivity
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
@@ -188,4 +189,42 @@ func (a Activities) CloseFile(ctx context.Context, params CloseFileParams) (any,
 	vsClient := GetClient()
 
 	return nil, vsClient.UpdateFileState(params.FileID, vsapi.FileStateClosed)
+}
+
+type WaitForFileVisibleInStorageParams struct {
+	FilePath  paths.Path
+	StorageID string
+}
+
+// WaitForFileVisibleInStorageActivity polls Vidispine until it can see a file
+// at params.FilePath on the given storage. This gates the import job on
+// Mediabanken having stat'd the file from its own NFS mount, since the
+// bccm-flows worker's view of the storage can be ahead of Mediabanken's.
+//
+// The caller bounds the wait via the activity's StartToCloseTimeout.
+func (a Activities) WaitForFileVisibleInStorageActivity(ctx context.Context, params WaitForFileVisibleInStorageParams) (any, error) {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Starting WaitForFileVisibleInStorageActivity")
+
+	storageID := params.StorageID
+	if storageID == "" {
+		storageID = vsapi.DefaultStorageID
+	}
+
+	vsClient := GetClient()
+	for {
+		exists, err := vsClient.FileExistsInStorage(storageID, params.FilePath.Local())
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return nil, nil
+		}
+		activity.RecordHeartbeat(ctx, nil)
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(15 * time.Second):
+		}
+	}
 }

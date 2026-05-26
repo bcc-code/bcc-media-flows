@@ -37,6 +37,7 @@ type Client interface {
 	GetTrash() ([]string, error)
 
 	RegisterFile(filePath string, state vsapi.FileState) (string, error)
+	FileExistsInStorage(storageID, absoluteFilePath string) (bool, error)
 
 	SearchByMetadataField(name, value string) ([]string, error)
 	SetItemMetadataField(params vsapi.ItemMetadataFieldParams) error

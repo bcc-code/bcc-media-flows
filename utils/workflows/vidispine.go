@@ -5,6 +5,7 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -21,6 +22,20 @@ func WaitForVidispineJob(ctx workflow.Context, jobID string) error {
 	ctx = workflow.WithActivityOptions(ctx, options)
 	return Execute(ctx, activities.Vidispine.JobCompleteOrErr, vsactivity.WaitForJobCompletionParams{
 		JobID: jobID,
+	}).Wait(ctx)
+}
+
+// WaitForFileVisibleInVidispineStorage blocks until Vidispine can see the file
+// on its default storage (i.e. Mediabanken has stat'd it through its own NFS
+// mount). Use after writing to Isilon and before kicking off a Vidispine import
+// job, to avoid the worker-host vs. Mediabanken-host visibility race.
+func WaitForFileVisibleInVidispineStorage(ctx workflow.Context, file paths.Path) error {
+	options := GetDefaultActivityOptions()
+	options.StartToCloseTimeout = 10 * time.Minute
+	options.HeartbeatTimeout = 1 * time.Minute
+	ctx = workflow.WithActivityOptions(ctx, options)
+	return Execute(ctx, activities.Vidispine.WaitForFileVisibleInStorageActivity, vsactivity.WaitForFileVisibleInStorageParams{
+		FilePath: file,
 	}).Wait(ctx)
 }
 
