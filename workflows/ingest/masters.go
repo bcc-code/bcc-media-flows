@@ -73,7 +73,7 @@ func processMaster(ctx workflow.Context, sourceFile paths.Path, destinationFile 
 		return "", err
 	}
 
-	err = wfutils.WaitForVidispineJob(ctx, result.ImportJobID)
+	err = WaitForImportTag(ctx, result)
 	if err != nil {
 		return "", err
 	}

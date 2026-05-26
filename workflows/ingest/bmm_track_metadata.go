@@ -133,7 +133,7 @@ func BmmTrackMetadata(ctx workflow.Context, params BmmTrackMetadataParams) (*Bmm
 			return nil, err
 		}
 
-		err = wfutils.WaitForVidispineJob(ctx, res.ImportJobID)
+		err = WaitForImportTag(ctx, res)
 		if err != nil {
 			wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
 			return nil, err

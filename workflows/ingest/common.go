@@ -1,6 +1,7 @@
 package ingestworkflows
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/bcc-code/bcc-media-flows/services/emails"
@@ -16,12 +17,17 @@ import (
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/samber/lo"
 	"go.temporal.io/api/enums/v1"
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
 type ImportTagResult struct {
 	AssetID     string
 	ImportJobID string
+	// FilePath and ShapeTag are retained so WaitForImportTag can re-trigger the
+	// import on JOB_FAILED.
+	FilePath paths.Path
+	ShapeTag string
 }
 
 func ImportFileAsTag(ctx workflow.Context, tag string, path paths.Path, title string) (*ImportTagResult, error) {
@@ -32,13 +38,11 @@ func ImportFileAsTag(ctx workflow.Context, tag string, path paths.Path, title st
 	if err != nil {
 		return nil, err
 	}
-	// Mediabanken mounts the storage separately from the worker host and can
-	// lag behind by minutes due to NFS metadata caching. Wait until Vidispine
-	// can see the file from its own mount before kicking off the import job.
-	if err = wfutils.WaitForFileVisibleInVidispineStorage(ctx, path); err != nil {
-		return nil, err
-	}
-	var job vsactivity.JobResult
+	// Mediabanken (which mounts the storage separately from the worker host)
+	// can lag the worker's view by minutes due to NFS metadata caching. We
+	// optimistically kick off the import without waiting and let
+	// WaitForImportTag handle the visibility wait + retry on JOB_FAILED.
+	var job vsactivity.ImportFileResult
 	err = wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
 		AssetID:  result.AssetID,
 		FilePath: path,
@@ -50,7 +54,42 @@ func ImportFileAsTag(ctx workflow.Context, tag string, path paths.Path, title st
 	return &ImportTagResult{
 		AssetID:     result.AssetID,
 		ImportJobID: job.JobID,
+		FilePath:    path,
+		ShapeTag:    tag,
 	}, nil
+}
+
+// WaitForImportTag waits for the import job triggered by ImportFileAsTag. If
+// the job fails (JOB_FAILED), it waits for Mediabanken to see the file and
+// re-runs the import once. result.ImportJobID is updated to the new job ID
+// on retry so downstream code sees the job that actually finished.
+func WaitForImportTag(ctx workflow.Context, result *ImportTagResult) error {
+	err := wfutils.WaitForVidispineJob(ctx, result.ImportJobID)
+	if err == nil {
+		return nil
+	}
+
+	var appErr *temporal.ApplicationError
+	if !errors.As(err, &appErr) || appErr.Type() != "JOB_FAILED" {
+		return err
+	}
+
+	if vErr := wfutils.WaitForFileVisibleInVidispineStorage(ctx, result.FilePath); vErr != nil {
+		return vErr
+	}
+
+	var newJob vsactivity.ImportFileResult
+	if iErr := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
+		AssetID:  result.AssetID,
+		FilePath: result.FilePath,
+		ShapeTag: result.ShapeTag,
+		Replace:  true,
+	}).Get(ctx, &newJob); iErr != nil {
+		return iErr
+	}
+
+	result.ImportJobID = newJob.JobID
+	return wfutils.WaitForVidispineJob(ctx, newJob.JobID)
 }
 
 func CreatePreviews(ctx workflow.Context, assetIDs []string) error {
