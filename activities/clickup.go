@@ -9,37 +9,15 @@ import (
 var ClickUp *ClickUpActivities
 
 type ClickUpActivities struct {
-	Client       *clickup.Client
-	ShortsListID string
+	Client *clickup.Client
 }
 
 type QueryShortsArgs struct{}
 
-type UpdateAssetStatusArgs struct {
-	TaskID   string
-	OptionID string
-}
-
-// QueryShorts returns every task in the configured shorts list whose
-// Editorial status is "Ready in Mediabanken" and whose Asset status is not "Done".
+// QueryShorts returns every task in the configured public shorts view. Filtering
+// to Editorial status "Ready in Mediabanken" and Asset status != "Done" is done
+// downstream in mapAndFilterShortsData (the public view can't take arbitrary
+// server-side filters).
 func (a *ClickUpActivities) QueryShorts(_ context.Context, _ QueryShortsArgs) ([]clickup.Task, error) {
-	filters := []clickup.CustomFieldFilter{
-		{
-			FieldID:  clickup.FieldEditorialStatusID,
-			Operator: "=",
-			Value:    clickup.OptionEditorialReadyInMediabanken,
-		},
-		{
-			FieldID:  clickup.FieldAssetStatusID,
-			Operator: "!=",
-			Value:    clickup.OptionAssetStatusDone,
-		},
-	}
-	return a.Client.ListTasks(a.ShortsListID, filters, false)
-}
-
-// UpdateAssetStatus sets the "Asset status" drop-down field on a ClickUp task
-// to the given option (e.g. clickup.OptionAssetStatusDone).
-func (a *ClickUpActivities) UpdateAssetStatus(_ context.Context, args UpdateAssetStatusArgs) (any, error) {
-	return nil, a.Client.SetCustomFieldDropDown(args.TaskID, clickup.FieldAssetStatusID, args.OptionID)
+	return a.Client.ListTasks()
 }

@@ -12,12 +12,6 @@ const (
 	FieldOutID             = "32402e82-acfe-4af9-a19c-4dcb4cf975c8"
 )
 
-// Drop-down option IDs we need to recognise or write.
-const (
-	OptionAssetStatusDone             = "b77e8099-a8da-4f51-9e14-b328a023d54a"
-	OptionEditorialReadyInMediabanken = "13becc99-ccbf-436a-a892-58709acbe6c7"
-)
-
 // Drop-down option names — the human-readable values stored on the
 // ShortsData struct after mapping.
 const (
@@ -48,18 +42,19 @@ func (cf *CustomField) ShortText() string {
 }
 
 // DropDownName returns the human-readable name of the selected option on a
-// `drop_down` custom field, or "" if unset. ClickUp stores the value as the
-// option's orderindex (0-based integer), so we resolve via type_config.options.
+// `drop_down` custom field, or "" if unset. The public view stores the value as
+// the selected option's UUID, so we resolve it against the view's option
+// definitions (type_config.options).
 func (cf *CustomField) DropDownName() string {
 	if cf == nil || len(cf.Value) == 0 || string(cf.Value) == "null" {
 		return ""
 	}
-	var idx int
-	if err := json.Unmarshal(cf.Value, &idx); err != nil {
+	var optionID string
+	if err := json.Unmarshal(cf.Value, &optionID); err != nil {
 		return ""
 	}
 	for _, opt := range cf.TypeConfig.Options {
-		if opt.OrderIndex == idx {
+		if opt.ID == optionID {
 			return opt.Name
 		}
 	}

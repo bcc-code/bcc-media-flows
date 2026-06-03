@@ -170,14 +170,17 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		ShortsFolderID: os.Getenv("DIRECTUS_SHORTS_FOLDER_ID"),
 	}
 
-	clickUpAPIKey := os.Getenv("CLICKUP_API_KEY")
-	clickUpClient, err := clickup.NewClient(clickUpAPIKey)
+	clickUpClient, err := clickup.NewClient(
+		os.Getenv("CLICKUP_FRONTDOOR_BASE_URL"),
+		os.Getenv("CLICKUP_WORKSPACE_ID"),
+		os.Getenv("CLICKUP_SHORTS_VIEW_ID"),
+		os.Getenv("CLICKUP_SHORTS_VIEW_TOKEN"),
+	)
 	if err != nil {
 		log.Printf("Error creating ClickUp client: %v", err)
 	}
 	activities.ClickUp = &activities.ClickUpActivities{
-		Client:       clickUpClient,
-		ShortsListID: os.Getenv("CLICKUP_SHORTS_LIST_ID"),
+		Client: clickUpClient,
 	}
 
 	// Vizualizer client initialization

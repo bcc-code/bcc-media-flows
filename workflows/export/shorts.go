@@ -142,18 +142,9 @@ func ExportShort(ctx workflow.Context, short *ShortsData) error {
 		return err
 	}
 
-	// Update ClickUp Asset status to "Done" via activity
-	if short.ClickUpTaskID != "" {
-		err = wfutils.Execute(ctx, activities.ClickUp.UpdateAssetStatus, activities.UpdateAssetStatusArgs{
-			TaskID:   short.ClickUpTaskID,
-			OptionID: clickup.OptionAssetStatusDone,
-		}).Get(ctx, nil)
-		if err != nil {
-			logger.Error("Failed to update ClickUp Asset status via activity", "error", err, "taskId", short.ClickUpTaskID)
-		}
-	} else {
-		logger.Error("No ClickUpTaskID present for short, skipping Asset status update", "mb_id", short.MBMetadata.ID)
-	}
+	// No write-back to ClickUp: the public-view share is read-only. Re-processing
+	// is prevented by triggerShortExport short-circuiting when the asset already
+	// exists in Directus.
 
 	return nil
 }
