@@ -6,7 +6,6 @@ import (
 )
 
 // Client is a lightweight REST client for the Music Vizualizer service.
-// It mirrors the minimal pattern used in services/notion.
 //
 // BaseURL example: "http://vizualizer.lan.bcc.media"
 // If the service requires auth in the future, extend this with headers.

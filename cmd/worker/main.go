@@ -13,7 +13,7 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/analytics"
 	"github.com/bcc-code/bcc-media-flows/services/directus"
-	"github.com/bcc-code/bcc-media-flows/services/notion"
+	"github.com/bcc-code/bcc-media-flows/services/clickup"
 	"github.com/bcc-code/bcc-media-flows/services/vizualizer"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
@@ -170,14 +170,17 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		ShortsFolderID: os.Getenv("DIRECTUS_SHORTS_FOLDER_ID"),
 	}
 
-	notionAPIKey := os.Getenv("NOTION_API_KEY")
-	notionClient, err := notion.NewClient(notionAPIKey)
+	clickUpClient, err := clickup.NewClient(
+		os.Getenv("CLICKUP_FRONTDOOR_BASE_URL"),
+		os.Getenv("CLICKUP_WORKSPACE_ID"),
+		os.Getenv("CLICKUP_SHORTS_VIEW_ID"),
+		os.Getenv("CLICKUP_SHORTS_VIEW_TOKEN"),
+	)
 	if err != nil {
-		log.Printf("Error creating notion client: %v", err)
+		log.Printf("Error creating ClickUp client: %v", err)
 	}
-	activities.Notion = &activities.NotionActivities{
-		Client:           notionClient,
-		ShortsDatabaseID: os.Getenv("NOTION_SHORTS_DATABASE_ID"),
+	activities.ClickUp = &activities.ClickUpActivities{
+		Client: clickUpClient,
 	}
 
 	// Vizualizer client initialization
@@ -211,7 +214,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 
 		registerActivitiesInStruct(w, activities.Directus)
 
-		registerActivitiesInStruct(w, activities.Notion)
+		registerActivitiesInStruct(w, activities.ClickUp)
 
 		registerActivitiesInStruct(w, activities.Vizualizer)
 
@@ -230,7 +233,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		registerActivitiesInStruct(w, activities.Platform)
 		registerActivitiesInStruct(w, activities.Vidispine)
 		registerActivitiesInStruct(w, activities.Directus)
-		registerActivitiesInStruct(w, activities.Notion)
+		registerActivitiesInStruct(w, activities.ClickUp)
 		registerActivitiesInStruct(w, activities.Vizualizer)
 
 		for _, wf := range workflows.WorkerWorkflows {
