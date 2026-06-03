@@ -158,6 +158,21 @@ func (mr *MockClientMockRecorder) DeleteShape(assetID, shapeID any) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteShape", reflect.TypeOf((*MockClient)(nil).DeleteShape), assetID, shapeID)
 }
 
+// FileExistsInStorage mocks base method.
+func (m *MockClient) FileExistsInStorage(storageID, absoluteFilePath string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FileExistsInStorage", storageID, absoluteFilePath)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FileExistsInStorage indicates an expected call of FileExistsInStorage.
+func (mr *MockClientMockRecorder) FileExistsInStorage(storageID, absoluteFilePath any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FileExistsInStorage", reflect.TypeOf((*MockClient)(nil).FileExistsInStorage), storageID, absoluteFilePath)
+}
+
 // FindJob mocks base method.
 func (m *MockClient) FindJob(itemID, jobType string) (*vsapi.JobDocument, error) {
 	m.ctrl.T.Helper()

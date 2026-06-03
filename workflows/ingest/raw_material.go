@@ -88,7 +88,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 
 	var fileByAssetID = map[string]paths.Path{}
 	var mediaAnalyzeTasks = map[string]wfutils.Task[*ffmpeg.StreamInfo]{}
-	var vidispineJobIDs = map[string]string{}
+	var importResults = map[string]*ImportTagResult{}
 
 	imported := map[string]paths.Path{}
 	for _, file := range files {
@@ -108,7 +108,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 		}
 
 		fileByAssetID[result.AssetID] = file
-		vidispineJobIDs[result.AssetID] = result.ImportJobID
+		importResults[result.AssetID] = result
 
 		if utils.IsMedia(file.Local()) {
 			mediaAnalyzeTasks[result.AssetID] = wfutils.Execute(ctx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
@@ -134,7 +134,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 		}
 
 		// need to wait for vidispine to import the file before we can create thumbnails
-		err = wfutils.WaitForVidispineJob(ctx, vidispineJobIDs[id])
+		err = WaitForImportTag(ctx, importResults[id])
 		if err != nil {
 			return imported, err
 		}

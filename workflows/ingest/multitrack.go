@@ -85,7 +85,7 @@ func Multitrack(ctx workflow.Context, params MasterParams) (*MasterResult, error
 		return nil, err
 	}
 
-	err = wfutils.WaitForVidispineJob(ctx, result.ImportJobID)
+	err = WaitForImportTag(ctx, result)
 	if err != nil {
 		return nil, err
 	}
