@@ -61,7 +61,7 @@ func BulkExportShorts(ctx workflow.Context, input BulkExportShortsInput) error {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting BulkExportShorts %s", input.CollectionVXID)
 
-	tasks, err := wfutils.Execute(ctx, activities.ClickUp.QueryShorts, activities.QueryShortsArgs{}).Result(ctx)
+	tasks, err := wfutils.Execute(ctx, activities.ClickUp.QueryShorts, nil).Result(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get ClickUp shorts: %w", err)
 	}
