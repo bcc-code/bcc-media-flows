@@ -7,12 +7,21 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
+// Defaults for the public "Shorts Export" view. These are deliberately
+// hardcoded: a public share exposes all of this in its share URL, so there is
+// nothing secret to protect, and baking them in keeps the worker working
+// without extra configuration. Any of them can still be overridden via env vars.
+//
 // defaultBaseURL is ClickUp's internal "frontdoor" host that backs the public
 // share UI. It is NOT the documented public API (api.clickup.com/api/v2) and
 // carries no stability guarantees, but it serves public-view data authenticated
-// only by a share token — no API key required. The region segment (`-3`) can
-// vary, so the base URL is configurable.
-const defaultBaseURL = "https://frontdoor-prod-eu-west-1-3.clickup.com"
+// only by a share token — no API key required. The region segment (`-3`) can vary.
+const (
+	defaultBaseURL     = "https://frontdoor-prod-eu-west-1-3.clickup.com"
+	defaultWorkspaceID = "9004075864"
+	defaultViewID      = "8cayjur-533995"
+	defaultToken       = "ddef98b0bd69a81"
+)
 
 // Client reads tasks from a single public ClickUp view using its share token.
 // It is read-only: a public share grants no write access.
@@ -24,15 +33,21 @@ type Client struct {
 	client      *resty.Client
 }
 
-// NewClient builds a read-only client for one public view. workspaceID, viewID
-// and token are all required (token is the public-share token from the view's
-// share URL).
+// NewClient builds a read-only client for one public view. Any empty argument
+// falls back to the hardcoded default for the public "Shorts Export" view, so
+// the client works out of the box; pass non-empty values to override.
 func NewClient(baseURL, workspaceID, viewID, token string) (*Client, error) {
 	if baseURL == "" {
 		baseURL = defaultBaseURL
 	}
-	if workspaceID == "" || viewID == "" || token == "" {
-		return nil, fmt.Errorf("clickup public view requires workspaceID, viewID and token")
+	if workspaceID == "" {
+		workspaceID = defaultWorkspaceID
+	}
+	if viewID == "" {
+		viewID = defaultViewID
+	}
+	if token == "" {
+		token = defaultToken
 	}
 
 	client := resty.New()
