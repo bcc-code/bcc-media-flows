@@ -35,12 +35,13 @@ type ShortsData struct {
 }
 
 // shortsDataFromClickUpTask converts a ClickUp task from the "Shorts Export"
-// list into the workflow's ShortsData struct. The task's name is treated as
-// the MB Label used to match against a Vidispine item.
+// list into the workflow's ShortsData struct. The "Filename new shortfilm"
+// field is used as the MB Label to match against a Vidispine item — the task
+// name is the parent programme and is shared across shorts, so it can't match.
 func shortsDataFromClickUpTask(t clickup.Task) *ShortsData {
 	return &ShortsData{
 		ClickUpTaskID:   t.ID,
-		Label:           t.Name,
+		Label:           t.Field(clickup.FieldFilenameNewShortfilm).ShortText(),
 		EpisodeID:       t.Field(clickup.FieldEpisodeID).ShortText(),
 		InHm:            t.Field(clickup.FieldInID).ShortText(),
 		OutHm:           t.Field(clickup.FieldOutID).ShortText(),

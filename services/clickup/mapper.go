@@ -10,6 +10,11 @@ const (
 	FieldEpisodeID         = "ecdd2ba7-1007-4568-ae27-a5a5c51492d8"
 	FieldInID              = "9a21b3ae-9503-4653-a6de-2c82b4f7ed11"
 	FieldOutID             = "32402e82-acfe-4af9-a19c-4dcb4cf975c8"
+	// FieldFilenameNewShortfilm holds the short's own filename (e.g.
+	// "PI26_20260523_1900_SHRT_01"), which matches the Vidispine item title.
+	// The task Name is the parent programme and is shared across shorts, so it
+	// can't be used to match.
+	FieldFilenameNewShortfilm = "45b71fe3-267d-4ad6-b174-245b0db40015"
 )
 
 // Drop-down option names — the human-readable values stored on the
