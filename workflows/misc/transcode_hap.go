@@ -3,6 +3,7 @@ package miscworkflows
 import (
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/transcode"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 
 	"go.temporal.io/sdk/workflow"
@@ -28,5 +29,6 @@ func TranscodeHAP(
 	return wfutils.Execute(ctx, activities.Video.TranscodeToHAPActivity, activities.HAPInput{
 		FilePath:  filePath,
 		OutputDir: outputDir,
+		Format:    transcode.HAPFormatHAPQ,
 	}).Result(ctx)
 }

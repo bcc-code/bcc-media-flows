@@ -7,11 +7,22 @@ import (
 	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
+	"github.com/orsinium-labs/enum"
+)
+
+type HAPFormat enum.Member[string]
+
+var (
+	HAPFormatHAP      = HAPFormat{Value: "hap"}
+	HAPFormatHAPQ     = HAPFormat{Value: "hap_q"}
+	HAPFormatHAPAlpha = HAPFormat{Value: "hap_alpha"}
+	HAPFormats        = enum.New(HAPFormatHAP, HAPFormatHAPQ, HAPFormatHAPAlpha)
 )
 
 type HAPInput struct {
 	FilePath  string
 	OutputDir string
+	Format    HAPFormat
 }
 
 type HAPResult struct {
@@ -78,10 +89,13 @@ func HAP(input HAPInput, progressCallback ffmpeg.ProgressCallback) (*HAPResult, 
 	}
 
 	// Step 2: Encode video without audio
-	// Use hap_alpha format for files with alpha channel, otherwise hap_q
-	format := "hap_q"
+	format := input.Format
+	if HAPFormats.Parse(format.Value) == nil {
+		format = HAPFormatHAPQ
+	}
+	// hap_alpha is the only format that carries an alpha channel
 	if info.HasAlpha {
-		format = "hap_alpha"
+		format = HAPFormatHAPAlpha
 	}
 
 	videoParams := []string{
@@ -89,7 +103,7 @@ func HAP(input HAPInput, progressCallback ffmpeg.ProgressCallback) (*HAPResult, 
 		"-hide_banner",
 		"-i", input.FilePath,
 		"-c:v", "hap",
-		"-format", format,
+		"-format", format.Value,
 		"-r", "50",
 		"-map", "0:v:0",
 		"-an", // Explicitly exclude audio

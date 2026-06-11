@@ -50,9 +50,51 @@ func Test_HAP(t *testing.T) {
 	vs := streamInfo.VideoStreams[0]
 
 	assert.Equal(t, "hap", vs.CodecName)
+	assert.Equal(t, "HapY", vs.CodecTagString, "default format should be hap_q")
 	assert.Equal(t, 1920, vs.Width)
 	assert.Equal(t, 1080, vs.Height)
 	assert.Equal(t, "50/1", vs.RFrameRate)
+}
+
+func Test_HAP_PlainFormat(t *testing.T) {
+	testFile := paths.MustParse("./testdata/generated/hap_test_plain.mp4")
+	outputFile := paths.MustParse("./testdata/generated/results/" + testFile.Base())
+
+	os.MkdirAll(testFile.Dir().Local(), 0755)
+	os.MkdirAll(outputFile.Dir().Local(), 0755)
+
+	cmd := exec.Command("ffmpeg",
+		"-f", "lavfi",
+		"-i", "testsrc=size=1920x1080:rate=25:duration=3",
+		"-c:v", "libx264",
+		"-y", testFile.Local(),
+	)
+	err := cmd.Run()
+	if err != nil {
+		t.Skip("ffmpeg not available for test generation")
+	}
+
+	r, err := transcode.HAP(transcode.HAPInput{
+		FilePath:  testFile.Local(),
+		OutputDir: outputFile.Dir().Local(),
+		Format:    transcode.HAPFormatHAP,
+	}, func(i ffmpeg.Progress) {})
+
+	assert.NoError(t, err)
+	if !assert.NotNil(t, r) {
+		return
+	}
+
+	streamInfo, err := ffmpeg.GetStreamInfo(r.OutputPath)
+	assert.NoError(t, err)
+
+	assert.True(t, streamInfo.HasVideo)
+	assert.Len(t, streamInfo.VideoStreams, 1)
+
+	vs := streamInfo.VideoStreams[0]
+
+	assert.Equal(t, "hap", vs.CodecName)
+	assert.Equal(t, "Hap1", vs.CodecTagString, "requested format should be plain hap")
 }
 
 func Test_HAP_WithAlpha(t *testing.T) {

@@ -31,6 +31,7 @@ var (
 	DestinationGfx       = Destination{Value: "gfx"}
 	DestinationHippo     = Destination{Value: "hippo"}
 	DestinationHippoV2   = Destination{Value: "hippo_v2"}
+	DestinationHippoHap  = Destination{Value: "hippo_hap"}
 	DestinationDubbing   = Destination{Value: "dubbing"}
 	DestinationXDCAM     = Destination{Value: "xdcam"}
 	DestinationCasparCG  = Destination{Value: "caspar-cg"}
@@ -41,6 +42,7 @@ var (
 		DestinationGfx,
 		DestinationHippo,
 		DestinationHippoV2,
+		DestinationHippoHap,
 		DestinationDubbing,
 		DestinationHyperdeck,
 		DestinationXDCAM,
@@ -221,6 +223,8 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 			w = VBExportToHippo
 		case DestinationHippoV2:
 			w = VBExportToHippoV2
+		case DestinationHippoHap:
+			w = VBExportToHippoHap
 		case DestinationDubbing:
 			w = VBExportToDubbing
 		case DestinationXDCAM:
