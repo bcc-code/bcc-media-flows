@@ -442,6 +442,7 @@ func (aa AudioActivities) TrimFile(ctx context.Context, input TrimInput) (*TrimR
 type HAPInput struct {
 	FilePath  paths.Path
 	OutputDir paths.Path
+	Format    transcode.HAPFormat
 }
 
 type HAPResult struct {
@@ -459,6 +460,7 @@ func (va VideoActivities) TranscodeToHAPActivity(ctx context.Context, input HAPI
 	transcodeResult, err := transcode.HAP(transcode.HAPInput{
 		FilePath:  input.FilePath.Local(),
 		OutputDir: input.OutputDir.Local(),
+		Format:    input.Format,
 	}, progressCallback)
 	if err != nil {
 		return nil, err

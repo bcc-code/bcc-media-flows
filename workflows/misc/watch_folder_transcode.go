@@ -9,6 +9,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
+	"github.com/bcc-code/bcc-media-flows/services/transcode"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -117,6 +118,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 		hapResult, err = wfutils.Execute(ctx, activities.Video.TranscodeToHAPActivity, activities.HAPInput{
 			FilePath:  path,
 			OutputDir: tmpFolder,
+			Format:    transcode.HAPFormatHAPQ,
 		}).Result(ctx)
 		if err == nil && hapResult != nil {
 			transcodeOutput = &activities.EncodeResult{
