@@ -26,6 +26,7 @@ type GrowingPreviewInput struct {
 	FilePath        string
 	TempDir         string
 	DestinationFile string
+	WatermarkPath   string
 }
 
 type PreviewResult struct {
@@ -45,12 +46,12 @@ type audioPreviewData struct {
 }
 
 // buildVUMeterFilters generates ffmpeg filter steps for compact VU meters for each audio track.
-func buildVUMeterFilters(audioTracks int, trcPrefix string) (string, string) {
+func buildVUMeterFilters(audioTracks int, trcPrefix string, scaleFilter string) (string, string) {
 	meterW := 200
 	meterH := 20
 	meterAlpha := 0.5
 	spacing := 10
-	parts := []string{fmt.Sprintf("[0:v]%sscale=1280:720[vmain]", trcPrefix)}
+	parts := []string{fmt.Sprintf("[0:v]%s%s[vmain]", trcPrefix, scaleFilter)}
 	lastVid := "[vmain]"
 	for i := 0; i < audioTracks; i++ {
 		y := 10 + i*(meterH+spacing)
@@ -61,6 +62,32 @@ func buildVUMeterFilters(audioTracks int, trcPrefix string) (string, string) {
 		lastVid = fmt.Sprintf("[tmp%d]", i)
 	}
 	return strings.Join(parts, ";"), lastVid
+}
+
+// buildPreviewAudioFilter returns the stereo downmix filter labeled [AUDIO-.mp4-0].
+func buildPreviewAudioFilter(audioTracks int) string {
+	if audioTracks == 1 {
+		// Single stream: duplicate to both channels
+		return "[0:a:0]aformat=channel_layouts=stereo[AUDIO-.mp4-0]"
+	} else if audioTracks >= 2 {
+		// Multiple streams: stream 1 to left, stream 2 to right
+		return "[0:a:0][0:a:1]amerge=inputs=2,pan=stereo|c0<c0|c1<c1[AUDIO-.mp4-0]"
+	}
+	// Fallback for edge cases
+	return "[0:a]aformat=channel_layouts=stereo[AUDIO-.mp4-0]"
+}
+
+// buildGrowingPreviewFilter returns the full -filter_complex for GrowingPreview.
+// audioTracks <= 0 (probe failed / no audio detected) yields the legacy filter without VU meters.
+func buildGrowingPreviewFilter(audioTracks int, trcPrefix string) string {
+	if audioTracks <= 0 {
+		return "sws_flags=bicubic;[0:v]split=1[VIDEO-main-.mp4];[VIDEO-main-.mp4]scale=-2:540,null[temp];[temp][1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4];[0:a]aformat=channel_layouts=stereo[AUDIO-.mp4-0]"
+	}
+	vuFilters, lastVid := buildVUMeterFilters(audioTracks, trcPrefix, "scale=-2:540")
+	return fmt.Sprintf(
+		"sws_flags=bicubic;%s;%s[1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4];%s",
+		vuFilters, lastVid, buildPreviewAudioFilter(audioTracks),
+	)
 }
 
 func prepareAudioPreview(isMU1, isMU2 bool, fileInfo *ffmpeg.FFProbeResult, inputFile, outputDir string) (*audioPreviewData, error) {
@@ -243,22 +270,11 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 			"-ss", "0.0",
 			"-i", watermark,
 		)
-		vuFilters, lastVid := buildVUMeterFilters(audioTracks, trcPrefix)
+		vuFilters, lastVid := buildVUMeterFilters(audioTracks, trcPrefix, "scale=1280:720")
 		// Compose filter graph: scale, vumeters, watermark, stereo audio
-		var audioFilter string
-		if audioTracks == 1 {
-			// Single stream: duplicate to both channels
-			audioFilter = "[0:a:0]aformat=channel_layouts=stereo[AUDIO-.mp4-0]"
-		} else if audioTracks >= 2 {
-			// Multiple streams: stream 1 to left, stream 2 to right
-			audioFilter = "[0:a:0][0:a:1]amerge=inputs=2,pan=stereo|c0<c0|c1<c1[AUDIO-.mp4-0]"
-		} else {
-			// Fallback for edge cases
-			audioFilter = "[0:a]aformat=channel_layouts=stereo[AUDIO-.mp4-0]"
-		}
 		filter := fmt.Sprintf(
 			"sws_flags=bicubic;%s;[1:v]scale=1280:720[wm];%s[wm]overlay=0:0:eof_action=repeat[VIDEO-.mp4];%s",
-			vuFilters, lastVid, audioFilter,
+			vuFilters, lastVid, buildPreviewAudioFilter(audioTracks),
 		)
 		params = append(params,
 			"-filter_complex", filter,
@@ -305,14 +321,38 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 // Since this function does not know when the file is finished, it will continue
 // to tail the file until it's context is cancelled.
 func GrowingPreview(ctx context.Context, input GrowingPreviewInput, heartbeater func(ctx context.Context, duration time.Duration)) error {
+	watermark := input.WatermarkPath
+	if watermark == "" {
+		watermark = previewWatermarkPath
+	}
+
+	// Probe the growing file to determine the audio track count for the VU meters.
+	// The stream layout lives in the file header, so probing a partial file works.
+	// On failure we fall back to the legacy filter without VU meters rather than
+	// failing the live ingest.
+	audioTracks := 0
+	trcPrefix := ""
+	if info, err := ffmpeg.ProbeFile(input.FilePath); err != nil {
+		fmt.Printf("growing preview: probe failed, falling back to filter without VU meters: %v\n", err)
+	} else {
+		for _, stream := range info.Streams {
+			if stream.CodecType == "audio" {
+				audioTracks++
+			}
+		}
+		if trcFix := ffmpeg.NormalizeColorTRCFilter(ffmpeg.ProbeResultToInfo(info)); trcFix != "" {
+			trcPrefix = trcFix + ","
+		}
+	}
+
 	tailCmd := exec.CommandContext(ctx, "tail", "-c", "+1", "-f", input.FilePath)
 
 	ffmpegCmd := exec.Command("ffmpeg",
-		"-i", "pipe:0", // Input from stdin			"-ss", "0.0",
-		"-i", previewWatermarkPath,
+		"-i", "pipe:0", // Input from stdin
+		"-i", watermark,
 		"-c:v", "libx264", // Video codec: H.264
 		"-c:a", "aac", // Audio codec: AAC
-		"-filter_complex", "sws_flags=bicubic;[0:v]split=1[VIDEO-main-.mp4];[VIDEO-main-.mp4]scale=-2:540,null[temp];[temp][1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4];[0:a]aformat=channel_layouts=stereo[AUDIO-.mp4-0]",
+		"-filter_complex", buildGrowingPreviewFilter(audioTracks, trcPrefix),
 		"-map", "[VIDEO-.mp4]",
 		"-map", "[AUDIO-.mp4-0]",
 		"-strict", "experimental", // Allow experimental codecs
@@ -365,7 +405,15 @@ func GrowingPreview(ctx context.Context, input GrowingPreviewInput, heartbeater 
 		}
 	}
 
-	return ffmpegCmd.Wait()
+	waitErr := ffmpegCmd.Wait()
+
+	// Mux once more after ffmpeg has exited so the final HLS segment is included.
+	err = muxFinishedPreview(input.TempDir, input.DestinationFile)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return waitErr
 }
 
 func muxFinishedPreview(inputFolder, outputFile string) error {

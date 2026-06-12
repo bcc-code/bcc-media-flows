@@ -63,6 +63,49 @@ func GenerateVideoFileWithTimecode(outFile paths.Path, timecode string, duration
 	return outFile
 }
 
+// GenerateStreamableMXFTestFile generates an MXF test file with one video stream
+// followed by separate mono audio streams, mirroring the layout of live-ingested
+// growing files. MXF stores the stream layout in the header partition, so the
+// file can be probed while partial and piped to ffmpeg without seeking.
+func GenerateStreamableMXFTestFile(outFile paths.Path, audioTracks int, duration float64) paths.Path {
+	os.MkdirAll(outFile.Dir().Local(), 0755)
+
+	args := []string{
+		"-f", "lavfi",
+		"-i", fmt.Sprintf("testsrc=duration=%f:size=1920x1080:rate=25", duration),
+	}
+
+	for i := 0; i < audioTracks; i++ {
+		freq := 100 + (i * 100) // Different frequency for each track
+		args = append(args,
+			"-f", "lavfi",
+			"-i", fmt.Sprintf("sine=frequency=%d:duration=%f:sample_rate=48000", freq, duration),
+		)
+	}
+
+	// MXF requires the video stream to be the first one
+	args = append(args, "-map", "0:v")
+	for i := 0; i < audioTracks; i++ {
+		args = append(args, "-map", fmt.Sprintf("%d:a", i+1))
+	}
+
+	args = append(args,
+		"-c:v", "mpeg2video",
+		"-b:v", "5M",
+		"-c:a", "pcm_s24le",
+		"-y", outFile.Local(),
+	)
+
+	cmd := exec.Command("ffmpeg", args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Printf("FFmpeg command failed: %v\nOutput: %s\n", err, string(output))
+		panic(err)
+	}
+
+	return outFile
+}
+
 func GenerateSeparateAudioStreamsTestFile(outFile paths.Path, audioTracks int, duration float64) paths.Path {
 	os.MkdirAll(outFile.Dir().Local(), 0755)
 	

@@ -1,10 +1,13 @@
 package transcode
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -64,12 +67,95 @@ func Test_AudioAdioPreviewGenerator(t *testing.T) {
 }
 
 func TestBuildVUMeterFilters_TRCPrefix(t *testing.T) {
-	head, _ := buildVUMeterFilters(2, "setparams=color_trc=bt709,")
+	head, _ := buildVUMeterFilters(2, "setparams=color_trc=bt709,", "scale=1280:720")
 	assert.Contains(t, head, "[0:v]setparams=color_trc=bt709,scale=1280:720[vmain]")
 
-	head2, _ := buildVUMeterFilters(2, "")
+	head2, _ := buildVUMeterFilters(2, "", "scale=1280:720")
 	assert.Contains(t, head2, "[0:v]scale=1280:720[vmain]")
 	assert.NotContains(t, head2, "setparams")
+
+	head3, _ := buildVUMeterFilters(2, "", "scale=-2:540")
+	assert.Contains(t, head3, "[0:v]scale=-2:540[vmain]")
+}
+
+func TestBuildGrowingPreviewFilter(t *testing.T) {
+	// No audio (or probe failure) falls back to the legacy filter without VU meters
+	assert.Equal(t,
+		"sws_flags=bicubic;[0:v]split=1[VIDEO-main-.mp4];[VIDEO-main-.mp4]scale=-2:540,null[temp];[temp][1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4];[0:a]aformat=channel_layouts=stereo[AUDIO-.mp4-0]",
+		buildGrowingPreviewFilter(0, ""),
+	)
+
+	single := buildGrowingPreviewFilter(1, "")
+	assert.Contains(t, single, "[0:a:0]showvolume=w=200:h=20:p=0.50:t=1,format=rgba[vum0]")
+	assert.Contains(t, single, "[0:a:0]aformat=channel_layouts=stereo[AUDIO-.mp4-0]")
+
+	assert.Equal(t,
+		"sws_flags=bicubic;"+
+			"[0:v]setparams=color_trc=bt709,scale=-2:540[vmain];"+
+			"[0:a:0]showvolume=w=200:h=20:p=0.50:t=1,format=rgba[vum0];"+
+			"[vmain][vum0]overlay=x=10:y=10[tmp0];"+
+			"[0:a:1]showvolume=w=200:h=20:p=0.50:t=1,format=rgba[vum1];"+
+			"[tmp0][vum1]overlay=x=10:y=40[tmp1];"+
+			"[tmp1][1:v]overlay=0:0:eof_action=repeat[VIDEO-.mp4];"+
+			"[0:a:0][0:a:1]amerge=inputs=2,pan=stereo|c0<c0|c1<c1[AUDIO-.mp4-0]",
+		buildGrowingPreviewFilter(2, "setparams=color_trc=bt709,"),
+	)
+
+	many := buildGrowingPreviewFilter(16, "")
+	assert.Equal(t, 16, strings.Count(many, "showvolume"))
+	assert.Contains(t, many, "overlay=x=10:y=460[tmp15]")
+	assert.Contains(t, many, "[0:a:0][0:a:1]amerge=inputs=2,pan=stereo|c0<c0|c1<c1[AUDIO-.mp4-0]")
+}
+
+func TestGrowingPreview_VUMeters(t *testing.T) {
+	os.MkdirAll("testdata/generated", 0755)
+
+	inputFile := "testdata/generated/testsrc_growing_4streams.mxf"
+	p, err := paths.Parse(inputFile)
+	require.NoError(t, err)
+	testutils.GenerateStreamableMXFTestFile(p, 4, 5.0)
+
+	tempDir := t.TempDir()
+	destFile := filepath.Join(tempDir, "growing_preview.mp4")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		done <- GrowingPreview(ctx, GrowingPreviewInput{
+			FilePath:        inputFile,
+			TempDir:         tempDir,
+			DestinationFile: destFile,
+			WatermarkPath:   "testdata/test_overlay.png",
+		}, func(ctx context.Context, duration time.Duration) {})
+	}()
+
+	// Give ffmpeg time to consume the static file, then stop the tail
+	time.Sleep(10 * time.Second)
+	cancel()
+
+	select {
+	case <-done:
+	case <-time.After(60 * time.Second):
+		t.Fatal("GrowingPreview did not exit after context cancellation")
+	}
+
+	stat, err := os.Stat(destFile)
+	require.NoError(t, err, "destination file should exist")
+	require.True(t, stat.Size() > 1000, "destination file should not be empty")
+
+	info, err := ffmpeg.ProbeFile(destFile)
+	require.NoError(t, err)
+	var videoStreams, audioStreams int
+	for _, stream := range info.Streams {
+		switch stream.CodecType {
+		case "video":
+			videoStreams++
+		case "audio":
+			audioStreams++
+		}
+	}
+	assert.Equal(t, 1, videoStreams)
+	assert.Equal(t, 1, audioStreams)
 }
 
 func TestPreview_VUMeters_MultipleAudioTracks(t *testing.T) {
