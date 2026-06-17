@@ -138,6 +138,15 @@ func enrichClipWithRelatedAudios(client Client, clip *Clip, oLanguagesToExport [
 			continue
 		}
 
+		// "zxx" (no linguistic content / music) has no related field, so fall back
+		// to the clip's own embedded audio to still export the music track.
+		if lang == "zxx" {
+			if _, err := enrichClipWithEmbeddedAudio(client, clip, []string{lang}); err != nil {
+				return err
+			}
+			continue
+		}
+
 		// Figure out which field holds the related id
 		relatedField := bccmflows.LanguagesByISO[lang].RelatedMBFieldID
 		if relatedField == "" {
