@@ -111,6 +111,15 @@ func UnmarshalXMLFile[T any](ctx workflow.Context, file paths.Path) (*T, error) 
 	return &data, err
 }
 
+func UnmarshalJSONFile[T any](ctx workflow.Context, file paths.Path) (*T, error) {
+	res, err := ReadFile(ctx, file)
+	if err != nil {
+		return nil, err
+	}
+
+	return UnmarshalJson[T](ctx, res)
+}
+
 func DeletePath(ctx workflow.Context, path paths.Path) error {
 	return Execute(ctx, activities.Util.DeletePath, activities.DeletePathInput{
 		Path: path,

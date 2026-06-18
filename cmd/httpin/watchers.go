@@ -214,3 +214,53 @@ func doIngest(ctx context.Context, path string) error {
 	})
 	return err
 }
+
+type sidecarIngestRequest struct {
+	Sidecar string `json:"sidecar"`
+	Path    string `json:"path"`
+}
+
+// jsonIngestHandler handles the dedicated JSON ingest endpoint. The body is a
+// JSON object naming a JSON sidecar file via `path`; the path is passed
+// straight through to the AssetJSON workflow, which resolves and parses it.
+func jsonIngestHandler(ctx *gin.Context) {
+	var req sidecarIngestRequest
+	if err := ctx.BindJSON(&req); err != nil {
+		fmt.Println(err.Error())
+		ctx.String(400, err.Error())
+		return
+	}
+
+	if req.Path == "" {
+		ctx.String(400, "missing path")
+		return
+	}
+
+	fmt.Printf("json ingest: sidecar=%q path=%q\n", req.Sidecar, req.Path)
+
+	err := doIngestJSON(ctx, req.Path)
+	if err != nil {
+		fmt.Println(err.Error())
+		ctx.String(500, err.Error())
+		return
+	}
+
+	ctx.Status(200)
+}
+
+func doIngestJSON(ctx context.Context, jsonPath string) error {
+	c, err := getClient()
+	if err != nil {
+		return err
+	}
+
+	workflowOptions := client.StartWorkflowOptions{
+		ID:        uuid.NewString(),
+		TaskQueue: environment.GetWorkerQueue(),
+	}
+
+	_, err = c.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.AssetJSON, ingestworkflows.AssetJSONParams{
+		JSONPath: jsonPath,
+	})
+	return err
+}
