@@ -65,11 +65,12 @@ func AssetJSON(ctx workflow.Context, params AssetJSONParams) (*AssetResult, erro
 			return nil, err
 		}
 		err = workflow.ExecuteChildWorkflow(ctx, Masters, MasterParams{
-			Targets:    targets,
-			Metadata:   metadata,
-			OrderForm:  orderForm,
-			SourceFile: &mediaPath,
-			OutputDir:  outputDir,
+			Targets:              targets,
+			Metadata:             metadata,
+			OrderForm:            orderForm,
+			SourceFile:           &mediaPath,
+			OutputDir:            outputDir,
+			KeepOriginalFilename: true,
 		}).Get(ctx, nil)
 		if err != nil {
 			return nil, err
