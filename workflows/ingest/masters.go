@@ -28,8 +28,10 @@ type MasterParams struct {
 	Targets  []string
 	Metadata *ingest.Metadata
 
-	OrderForm  OrderForm
-	Directory  paths.Path
+	OrderForm OrderForm
+	// Directory is the source folder to import from. It is optional and only
+	// used when SourceFile is nil; leave it nil when providing SourceFile.
+	Directory  *paths.Path
 	OutputDir  paths.Path
 	SourceFile *paths.Path
 
@@ -144,17 +146,21 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	if params.SourceFile != nil {
 		sourceFiles = append(sourceFiles, *params.SourceFile)
 	} else {
-		files, err := wfutils.ListFiles(ctx, params.Directory)
+		if params.Directory == nil {
+			return nil, fmt.Errorf("neither SourceFile nor Directory provided")
+		}
+
+		files, err := wfutils.ListFiles(ctx, *params.Directory)
 		if err != nil {
 			return nil, err
 		}
 
 		if len(files) == 0 {
-			return nil, fmt.Errorf("no files in directory: %s", params.Directory)
+			return nil, fmt.Errorf("no files in directory: %s", *params.Directory)
 		}
 
 		if len(files) > 1 && params.OrderForm != OrderFormVBMasterBulk {
-			return nil, fmt.Errorf("too many files in directory: %s", params.Directory)
+			return nil, fmt.Errorf("too many files in directory: %s", *params.Directory)
 		}
 
 		sourceFiles = files

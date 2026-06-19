@@ -98,7 +98,7 @@ func (s *UnitTestSuite) Test_VBBulk_AssetFlow() {
 	// See continuation in Test_VBBulk_MasterFlow
 	s.env.OnWorkflow(Masters, mock.Anything, MasterParams{
 		OrderForm: OrderFormVBMasterBulk,
-		Directory: paths.Path{Path: "workflows/fc", Drive: paths.TempDrive},
+		Directory: &paths.Path{Path: "workflows/fc", Drive: paths.TempDrive},
 		OutputDir: paths.Path{Path: "Production/masters/" + time.Now().Format("2006/01/02"), Drive: paths.IsilonDrive},
 		Targets: []string{
 			"test@example.com",
@@ -139,9 +139,10 @@ func (s *UnitTestSuite) Test_VBBulk_MasterFlow() {
 	s.NoError(err)
 	xmlData := sanitizeOrderForm(&xmlDataDirty)
 
+	bulkDir := paths.MustParse("./testdata/generated/VBBulk")
 	params := MasterParams{
 		OrderForm: OrderFormVBMasterBulk,
-		Directory: paths.MustParse("./testdata/generated/VBBulk"),
+		Directory: &bulkDir,
 		OutputDir: paths.MustParse("./testdata/generated/VBBulk_output"),
 		Targets: []string{
 			"test@example.com",

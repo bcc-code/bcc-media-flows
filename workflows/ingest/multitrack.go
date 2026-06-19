@@ -1,6 +1,7 @@
 package ingestworkflows
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -40,7 +41,11 @@ func Multitrack(ctx workflow.Context, params MasterParams) (*MasterResult, error
 		return nil, err
 	}
 
-	files, err := wfutils.ListFiles(ctx, params.Directory)
+	if params.Directory == nil {
+		return nil, fmt.Errorf("Directory is required for Multitrack")
+	}
+
+	files, err := wfutils.ListFiles(ctx, *params.Directory)
 	if err != nil {
 		return nil, err
 	}

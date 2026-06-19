@@ -164,7 +164,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			Targets:   targets,
 			Metadata:  metadata,
 			OrderForm: *orderForm,
-			Directory: fcOutputDir,
+			Directory: &fcOutputDir,
 			OutputDir: outputDir,
 		}).Get(ctx, nil)
 	case OrderFormMultitrackPB:
@@ -177,7 +177,7 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			Targets:   targets,
 			Metadata:  metadata,
 			OrderForm: *orderForm,
-			Directory: fcOutputDir,
+			Directory: &fcOutputDir,
 			OutputDir: outputDir,
 		}).Get(ctx, nil)
 	case OrderFormUpload:
