@@ -52,9 +52,13 @@ func AssetJSON(ctx workflow.Context, params AssetJSONParams) (*AssetResult, erro
 	// The media file sits next to the JSON sidecar.
 	mediaPath := jsonPath.Dir().Append(form.Filename)
 
-	targets := lo.Map(strings.Split(metadata.JobProperty.SenderEmail, ","), func(s string, _ int) string {
-		return strings.TrimSpace(s)
+	targets := lo.FilterMap(strings.Split(metadata.JobProperty.SenderEmail, ","), func(s string, _ int) (string, bool) {
+		s = strings.TrimSpace(s)
+		return s, s != ""
 	})
+	if len(targets) == 0 {
+		logger.Warn("No recipient email for JSON ingest; skipping notification", "orderForm", metadata.JobProperty.OrderForm)
+	}
 
 	if notification, ok := importTriggeredNotification(*form, metadata.JobProperty); ok {
 		wfutils.SendEmailTemplate(ctx, targets, notification)
