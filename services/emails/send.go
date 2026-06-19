@@ -3,6 +3,7 @@ package emails
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/services/notifications"
 	"github.com/sendgrid/sendgrid-go"
@@ -10,6 +11,10 @@ import (
 )
 
 func Send(email string, subject string, messagePlainText string, messageHTML string) error {
+	if strings.TrimSpace(email) == "" {
+		return fmt.Errorf("recipient email is empty")
+	}
+
 	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
 	from := mail.NewEmail("Workflows", "workflows@em5370.brunstad.tv")
 	to := mail.NewEmail(email, email)
