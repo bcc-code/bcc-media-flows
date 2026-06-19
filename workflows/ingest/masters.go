@@ -317,8 +317,14 @@ func addMetaTags(ctx workflow.Context, assetID string, metadata *ingest.Metadata
 
 	program := ""
 	if metadata.JobProperty.ProgramID != "" {
-		// let workflow panic if the format is invalid?
-		program = strings.Split(metadata.JobProperty.ProgramID, " - ")[1]
+		// XML ProgramIDs are formatted "<code> - <program name>"; take the name.
+		// JSON ingest forms provide the program directly with no separator.
+		parts := strings.Split(metadata.JobProperty.ProgramID, " - ")
+		if len(parts) > 1 {
+			program = parts[1]
+		} else {
+			program = parts[0]
+		}
 		if program != "" {
 			err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldProgram.Value, program)
 			if err != nil {
