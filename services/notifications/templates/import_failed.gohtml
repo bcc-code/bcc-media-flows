@@ -1,40 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
-{{- /*gotype: github.com/bcc-code/bcc-media-flows/services/notifications.ImportFailed */}}
+{{- /*gotype: github.com/bcc-code/bcc-media-flows/services/notifications.ImportFailed */ -}}
+{{template "header" .}}
+                            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
+                                <tr>
+                                    <td style="background-color:#fdecec; color:#b3261e; font-size:13px; font-weight:600; padding:6px 14px; border-radius:14px;">&#10007; Failed</td>
+                                </tr>
+                            </table>
 
-<head>
-    <title>Home</title>
-</head>
+                            <p style="margin:0 0 16px; font-size:15px; line-height:1.5;">
+                                The import did not complete. Details are below.
+                            </p>
 
-<body>
-    <div>
-        <h2>{{.Title}}</h2>
-        <p>{{.JobID}}</p>
-        <h2 color="red">Error</h2>
-        <p>{{.Error}}</p>
-        <div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>VX-ID</th>
-                        <th>Name</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{ range $file := .Files }}
-                    <tr>
-                        <td>
-                            {{$file.VXID}}
-                        </td>
-                        <td>
-                            {{$file.Name}}
-                        </td>
-                    </tr>
-                    {{ end }}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</body>
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                                <tr>
+                                    <td style="padding:10px 0; border-bottom:1px solid #edf0f3; font-size:13px; color:#7b8794; width:40%;">Job ID</td>
+                                    <td style="padding:10px 0; border-bottom:1px solid #edf0f3; font-size:14px; color:#1f2933;">{{.JobID}}</td>
+                                </tr>
+                            </table>
 
-</html>
+                            <p style="margin:24px 0 8px; font-size:13px; color:#7b8794; text-transform:uppercase; letter-spacing:0.06em;">Error</p>
+                            <div style="background-color:#fdecec; border:1px solid #f5c2c0; border-radius:6px; padding:14px 16px; font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace; font-size:13px; color:#b3261e; white-space:pre-wrap; word-break:break-word;">{{.Error}}</div>
+
+                            {{if .Files}}
+                            <p style="margin:24px 0 8px; font-size:13px; color:#7b8794; text-transform:uppercase; letter-spacing:0.06em;">Files</p>
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                                {{range .Files}}
+                                <tr>
+                                    <td style="padding:10px 0; border-bottom:1px solid #edf0f3; font-size:14px; color:#1f2933;">{{.Name}}</td>
+                                </tr>
+                                {{end}}
+                            </table>
+                            {{end}}
+{{template "footer" .}}

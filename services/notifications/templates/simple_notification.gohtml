@@ -1,14 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-{{- /*gotype: github.com/bcc-code/bcc-media-flows/services/notifications.SimpleNotification */}}
-
-<head>
-    <meta charset="UTF-8">
-    <title>{{.Title}}</title>
-</head>
-
-<body>
-    <p>{{.Message}}</p>
-</body>
-
-</html>
+{{- /*gotype: github.com/bcc-code/bcc-media-flows/services/notifications.Simple */ -}}
+{{template "header" .}}
+                            <div style="margin:0; font-size:15px; line-height:1.6; white-space:pre-line;">{{.Message}}</div>
+{{template "footer" .}}

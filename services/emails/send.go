@@ -9,12 +9,26 @@ import (
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
-func Send(email string, subject string, messageHTML string) error {
+func Send(email string, subject string, messagePlainText string, messageHTML string) error {
 	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
 	from := mail.NewEmail("Workflows", "workflows@em5370.brunstad.tv")
 	to := mail.NewEmail(email, email)
 
-	m := mail.NewV3MailInit(from, subject, to, mail.NewContent("text/html", messageHTML))
+	m := mail.NewV3Mail()
+	m.SetFrom(from)
+	m.Subject = subject
+
+	p := mail.NewPersonalization()
+	p.AddTos(to)
+	m.AddPersonalizations(p)
+
+	// Order matters: per RFC 2046 the plain text alternative must come before
+	// the HTML one so clients pick the richest part they support.
+	if messagePlainText != "" {
+		m.AddContent(mail.NewContent("text/plain", messagePlainText))
+	}
+	m.AddContent(mail.NewContent("text/html", messageHTML))
+
 	res, err := client.Send(m)
 	if err != nil {
 		return err
