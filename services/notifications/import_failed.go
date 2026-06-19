@@ -3,13 +3,12 @@ package notifications
 import (
 	_ "embed"
 	"fmt"
-	"html/template"
 )
 
 var (
 	//go:embed templates/import_failed.gohtml
 	importFailedTemplateString string
-	importFailedTemplate       = template.Must(template.New("import_failed").Parse(importFailedTemplateString))
+	importFailedTemplate       = mustEmailTemplate("import_failed", importFailedTemplateString)
 )
 
 type ImportFailed struct {

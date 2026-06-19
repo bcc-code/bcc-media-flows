@@ -56,7 +56,11 @@ func AssetJSON(ctx workflow.Context, params AssetJSONParams) (*AssetResult, erro
 		return strings.TrimSpace(s)
 	})
 
-	wfutils.SendEmails(ctx, targets, "Import triggered", "Order form: "+metadata.JobProperty.OrderForm)
+	if notification, ok := importTriggeredNotification(*form, metadata.JobProperty); ok {
+		wfutils.SendEmailTemplate(ctx, targets, notification)
+	} else {
+		wfutils.SendEmails(ctx, targets, "Import triggered", "Order form: "+metadata.JobProperty.OrderForm)
+	}
 
 	switch orderForm {
 	case OrderFormVBMaster, OrderFormLEDMaterial:

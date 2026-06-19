@@ -2,13 +2,12 @@ package notifications
 
 import (
 	_ "embed"
-	"html/template"
 )
 
 var (
 	//go:embed templates/simple_notification.gohtml
 	simpleNotificationTemplateFS string
-	simpleNotificationTemplate   = template.Must(template.New("simple_notification").Parse(simpleNotificationTemplateFS))
+	simpleNotificationTemplate   = mustEmailTemplate("simple_notification", simpleNotificationTemplateFS)
 )
 
 type Simple struct {
@@ -27,7 +26,7 @@ func (t Simple) Subject() string {
 func (t Simple) RenderMarkdown() (string, error) {
 	var markdown string
 	if t.Title != "" {
-		markdown += "#" + t.Title + "\n\n"
+		markdown += "# " + t.Title + "\n\n"
 	}
 	if t.Message != "" {
 		markdown += t.Message

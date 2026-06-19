@@ -9,7 +9,7 @@ import (
 func (ua UtilActivities) SendEmail(_ context.Context, msg emails.Message) (any, error) {
 	var errors []error
 	for _, email := range msg.To {
-		err := emails.Send(email, msg.Subject, msg.HTML)
+		err := emails.Send(email, msg.Subject, msg.PlainText, msg.HTML)
 		if err != nil {
 			errors = append(errors, err)
 		}

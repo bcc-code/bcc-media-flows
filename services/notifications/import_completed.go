@@ -3,13 +3,12 @@ package notifications
 import (
 	_ "embed"
 	"fmt"
-	"html/template"
 )
 
 var (
 	//go:embed templates/import_completed.gohtml
 	importCompletedTemplateString string
-	importCompletedTemplate       = template.Must(template.New("import_completed").Parse(importCompletedTemplateString))
+	importCompletedTemplate       = mustEmailTemplate("import_completed", importCompletedTemplateString)
 )
 
 type ImportCompleted struct {

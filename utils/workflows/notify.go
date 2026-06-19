@@ -39,10 +39,16 @@ func SendTelegramMessage(ctx workflow.Context, channel telegram.Chat, msg *teleg
 }
 
 func SendEmails(ctx workflow.Context, targets []string, subject, message string) {
-	msg, err := emails.NewMessage(notifications.Simple{
+	SendEmailTemplate(ctx, targets, notifications.Simple{
 		Title:   subject,
 		Message: message,
-	}, targets, nil, nil)
+	})
+}
+
+// SendEmailTemplate sends a rendered notification template (HTML + plain text)
+// to the given recipients.
+func SendEmailTemplate(ctx workflow.Context, targets []string, content notifications.Template) {
+	msg, err := emails.NewMessage(content, targets, nil, nil)
 
 	if err != nil {
 		workflow.GetLogger(ctx).Error("Failed to create email message", "error", err)

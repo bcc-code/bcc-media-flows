@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/bcc-code/bcc-media-flows/services/ingest"
+	"github.com/bcc-code/bcc-media-flows/services/notifications"
 )
 
 // jsonFormSpec describes how a single JSON form (identified by formKey) maps
@@ -13,6 +14,9 @@ type jsonFormSpec struct {
 	// fields maps a JSON `fields` key to a pointer to the JobProperty field it
 	// populates. Keys absent from the payload are simply left empty.
 	fields func(jp *ingest.JobProperty) map[string]*string
+	// details returns the human-readable label/value rows shown in the
+	// "import started" email for this form, in display order.
+	details func(jp ingest.JobProperty) []notifications.DetailRow
 }
 
 // jsonFormSpecs is the static registry of supported JSON form keys. Add new
@@ -28,6 +32,14 @@ var jsonFormSpecs = map[string]jsonFormSpec{
 				"title":   &jp.EpisodeTitle,
 			}
 		},
+		details: func(jp ingest.JobProperty) []notifications.DetailRow {
+			return []notifications.DetailRow{
+				{Label: "Title", Value: jp.EpisodeTitle},
+				{Label: "Project", Value: jp.ProgramID},
+				{Label: "Season", Value: jp.Season},
+				{Label: "Episode", Value: jp.Episode},
+			}
+		},
 	},
 	"oslofjord_delivery": {
 		orderForm: OrderFormLEDMaterial,
@@ -38,6 +50,15 @@ var jsonFormSpecs = map[string]jsonFormSpec{
 				"type":        &jp.AssetType,
 				"subEvent":    &jp.Episode,
 				"navn":        &jp.EpisodeTitle,
+			}
+		},
+		details: func(jp ingest.JobProperty) []notifications.DetailRow {
+			return []notifications.DetailRow{
+				{Label: "Name", Value: jp.EpisodeTitle},
+				{Label: "Event", Value: jp.ProgramID},
+				{Label: "Sub-event", Value: jp.Episode},
+				{Label: "Post", Value: jp.ProgramPost},
+				{Label: "Type", Value: jp.AssetType},
 			}
 		},
 	},
@@ -66,4 +87,26 @@ func translateJSONForm(form ingest.JSONForm) (*ingest.Metadata, OrderForm, error
 	}
 
 	return &ingest.Metadata{JobProperty: jp}, spec.orderForm, nil
+}
+
+// importTriggeredNotification builds the "import started" email content for a
+// parsed JSON form. It returns false if the form key is unknown.
+func importTriggeredNotification(form ingest.JSONForm, jp ingest.JobProperty) (notifications.ImportTriggered, bool) {
+	spec, ok := jsonFormSpecs[form.FormKey]
+	if !ok {
+		return notifications.ImportTriggered{}, false
+	}
+
+	var details []notifications.DetailRow
+	if spec.details != nil {
+		details = spec.details(jp)
+	}
+
+	return notifications.ImportTriggered{
+		OrderForm:  spec.orderForm.Value,
+		Filename:   form.OriginalFilename,
+		UploadedBy: form.UploaderEmail,
+		UploadedAt: form.UploadedAt,
+		Details:    details,
+	}, true
 }
