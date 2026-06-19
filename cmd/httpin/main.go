@@ -193,6 +193,15 @@ func triggerHandler(ctx *gin.Context) {
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.Asset, ingestworkflows.AssetParams{
 			XMLPath: xmlPath,
 		})
+	case "AssetIngestJSON":
+		jsonPath := getParamFromCtx(ctx, "jsonPath")
+		if jsonPath == "" {
+			ctx.Status(http.StatusBadRequest)
+			return
+		}
+		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.AssetJSON, ingestworkflows.AssetJSONParams{
+			JSONPath: jsonPath,
+		})
 	case "ImportSubtitlesFromSubtrans":
 		if vxID == "" {
 			ctx.Status(http.StatusBadRequest)
@@ -253,6 +262,8 @@ func main() {
 	r.GET("/trigger/:job", triggerHandler)
 
 	r.POST("/watchers", watchersHandler)
+
+	r.POST("/ingest/json", jsonIngestHandler)
 
 	r.GET("/trigger", func(ctx *gin.Context) {
 		ctx.Writer.WriteString(html)

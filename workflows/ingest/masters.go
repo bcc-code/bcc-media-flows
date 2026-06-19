@@ -32,6 +32,10 @@ type MasterParams struct {
 	Directory  paths.Path
 	OutputDir  paths.Path
 	SourceFile *paths.Path
+
+	// KeepOriginalFilename skips the masterFilename() rename and imports the
+	// file under its original name. Used by the JSON ingest path.
+	KeepOriginalFilename bool
 }
 
 type MasterResult struct {
@@ -122,7 +126,9 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	var err error
 	switch params.OrderForm {
 	case OrderFormOtherMaster, OrderFormVBMaster, OrderFormSeriesMaster, OrderFormLEDMaterial, OrderFormPodcast:
-		filename, err = masterFilename(params.Metadata.JobProperty)
+		if !params.KeepOriginalFilename {
+			filename, err = masterFilename(params.Metadata.JobProperty)
+		}
 	case OrderFormVBMasterBulk:
 		break
 	default:
