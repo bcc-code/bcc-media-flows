@@ -207,7 +207,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 			AnalyzeResult:              *analyzeResult,
 		}
 
-		var w interface{}
+		var w any
 		switch *dest {
 		case DestinationAbekas:
 			w = VBExportToAbekas
@@ -243,9 +243,6 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 
 		ctx = workflow.WithChildOptions(ctx, wfutils.GetVXDefaultWorkflowOptions(params.VXID))
 		future := workflow.ExecuteChildWorkflow(ctx, w, childParams)
-		if err != nil {
-			return nil, err
-		}
 		resultFutures = append(resultFutures, future)
 	}
 
@@ -260,9 +257,6 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		if err != nil {
 			errs = append(errs, err)
 			wfutils.SendTelegramText(ctx, telegram.ChatOslofjord, fmt.Sprintf("🟥 VB Export of %s failed: ```%s```", params.VXID, err.Error()))
-			if err != nil {
-				errs = append(errs, err)
-			}
 		}
 	}
 	err = nil
