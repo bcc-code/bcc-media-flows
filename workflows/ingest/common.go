@@ -93,7 +93,10 @@ func WaitForImportTag(ctx workflow.Context, result *ImportTagResult) error {
 }
 
 func CreatePreviews(ctx workflow.Context, assetIDs []string) error {
-	wfFutures := createPreviewsAsync(ctx, assetIDs)
+	wfFutures, err := createPreviewsAsync(ctx, assetIDs)
+	if err != nil {
+		return err
+	}
 
 	for _, f := range wfFutures {
 		err := f.Get(ctx, nil)
@@ -105,7 +108,7 @@ func CreatePreviews(ctx workflow.Context, assetIDs []string) error {
 	return nil
 }
 
-func createPreviewsAsync(ctx workflow.Context, assetIDs []string) []workflow.ChildWorkflowFuture {
+func createPreviewsAsync(ctx workflow.Context, assetIDs []string) ([]workflow.ChildWorkflowFuture, error) {
 	var wfFutures []workflow.ChildWorkflowFuture
 	opts := workflow.GetChildWorkflowOptions(ctx)
 	opts.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
@@ -116,13 +119,23 @@ func createPreviewsAsync(ctx workflow.Context, assetIDs []string) []workflow.Chi
 		}))
 	}
 
-	return wfFutures
+	// Wait for each child to actually START (not finish) before returning. The children use
+	// ParentClosePolicy ABANDON, so if the parent closes in the same workflow task that initiates
+	// them — before the start is processed — the child is dropped and never runs.
+	for _, f := range wfFutures {
+		if err := f.GetChildWorkflowExecution().Get(ctx, nil); err != nil {
+			return wfFutures, err
+		}
+	}
+
+	return wfFutures, nil
 }
 
 func transcribe(ctx workflow.Context, assetIDs []string, language string) error {
 	var wfFutures []workflow.ChildWorkflowFuture
 	opts := workflow.GetChildWorkflowOptions(ctx)
 	opts.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
+	ctx = workflow.WithChildOptions(ctx, opts)
 	for _, id := range assetIDs {
 		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, miscworkflows.TranscribeVX, miscworkflows.TranscribeVXInput{
 			VXID:     id,

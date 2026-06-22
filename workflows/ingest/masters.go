@@ -107,18 +107,25 @@ func processMaster(ctx workflow.Context, sourceFile paths.Path, destinationFile 
 	parentAbandonOptions.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
 	asyncCtx := workflow.WithChildOptions(ctx, parentAbandonOptions)
 
-	// Trigger transcribe and create previews but don't wait for them to finish
-	workflow.ExecuteChildWorkflow(asyncCtx, miscworkflows.TranscribeVX, miscworkflows.TranscribeVXInput{
+	// Trigger transcribe and create previews but don't wait for them to finish. We must still
+	// wait for the child to actually START — it uses ParentClosePolicy ABANDON, so if the parent
+	// closes before the start is processed the child is dropped and never runs.
+	transcribeFuture := workflow.ExecuteChildWorkflow(asyncCtx, miscworkflows.TranscribeVX, miscworkflows.TranscribeVXInput{
 		VXID:     result.AssetID,
 		Language: "no",
 	})
+	if err = transcribeFuture.GetChildWorkflowExecution().Get(ctx, nil); err != nil {
+		return "", err
+	}
 
 	// This just triggers the task, the actual work is done in the background by Vidispine
 	_ = wfutils.Execute(ctx, activities.Vidispine.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
 		AssetID: result.AssetID,
 	}).Get(ctx, nil)
 
-	createPreviewsAsync(ctx, []string{result.AssetID})
+	if _, err := createPreviewsAsync(ctx, []string{result.AssetID}); err != nil {
+		return "", err
+	}
 
 	return result.AssetID, nil
 }
