@@ -75,12 +75,17 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 			return err
 		}
 
-		// We dow *not* wait for preview to be ready
+		// We do *not* wait for the preview to be ready, but we must wait for the child to
+		// actually start. It uses ParentClosePolicy ABANDON, so if the parent closes before
+		// the start is processed the child is dropped and never runs.
 		if !params.SkipPreview {
-			workflow.ExecuteChildWorkflow(previewCtx, miscworkflows.TranscodePreviewVX, miscworkflows.TranscodePreviewVXInput{
+			previewFuture := workflow.ExecuteChildWorkflow(previewCtx, miscworkflows.TranscodePreviewVX, miscworkflows.TranscodePreviewVXInput{
 				VXID:  assetResult.AssetID,
 				Delay: params.PreviewDelay,
 			})
+			if err = previewFuture.GetChildWorkflowExecution().Get(ctx, nil); err != nil {
+				return err
+			}
 		}
 
 		// Add relation
