@@ -108,12 +108,7 @@ func exportToHippoHAP(ctx workflow.Context, params VBExportChildWorkflowParams, 
 		return nil, err
 	}
 
-	err = wfutils.Execute(ctx, activities.Util.DeletePath, activities.DeletePathInput{
-		Path: outputFile,
-	}).Wait(ctx)
-	if err != nil {
-		return nil, err
-	}
+	// Intentionally keep the HAP export file in temp storage; it is not deleted after upload.
 
 	notifyExportDone(ctx, params, flowName, outputFile)
 
