@@ -36,7 +36,7 @@ func (t ImportTriggered) RenderHTML() (string, error) {
 func (t ImportTriggered) RenderMarkdown() (string, error) {
 	var b strings.Builder
 
-	fmt.Fprintf(&b, "Import started: %s\n\n", t.OrderForm)
+	b.WriteString("Import started\n\n")
 	b.WriteString("Your upload has been received and an import has been started.\n\n")
 
 	if t.Filename != "" {
@@ -63,5 +63,5 @@ func (t ImportTriggered) RenderMarkdown() (string, error) {
 }
 
 func (t ImportTriggered) Subject() string {
-	return fmt.Sprintf("Import started: %s", t.OrderForm)
+	return "Import started"
 }

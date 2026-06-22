@@ -22,7 +22,7 @@ func sampleOslofjord() ImportTriggered {
 }
 
 func TestImportTriggered_Subject(t *testing.T) {
-	if got, want := sampleOslofjord().Subject(), "Import started: LED-Material"; got != want {
+	if got, want := sampleOslofjord().Subject(), "Import started"; got != want {
 		t.Errorf("Subject() = %q, want %q", got, want)
 	}
 }
@@ -34,7 +34,7 @@ func TestImportTriggered_RenderMarkdown(t *testing.T) {
 	}
 
 	for _, want := range []string{
-		"Import started: LED-Material",
+		"Import started",
 		"File: wallhaven-3lok9v.png",
 		"Uploaded by: uploader@example.com",
 		"- Name: Sommerstevne 2026",
