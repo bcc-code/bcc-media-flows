@@ -312,6 +312,22 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	wfutils.SendTelegramText(ctx, telegram.ChatOther, "🟩 Audio import finished")
 
+	if len(importAudioFuture) > 0 {
+		audioFiles, err := wfutils.Execute(ctx, activities.Vidispine.GetRelatedAudioFiles, videoVXID).Result(ctx)
+		if err != nil {
+			wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟥 Audio/video sync skipped for %s, failed to get related audio files: %v", videoVXID, err))
+		} else if _, ok := audioFiles["nor"]; ok {
+			err = workflow.ExecuteChildWorkflow(ctx, IngestSyncFix, IngestSyncFixParams{
+				VXID: videoVXID,
+			}).Get(ctx, nil)
+			if err != nil {
+				wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟥 Audio/video sync failed for %s: %v", videoVXID, err))
+			}
+		} else {
+			wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟧 Audio/video sync skipped for %s: nor audio not found", videoVXID))
+		}
+	}
+
 	err = transcribeFuture.Get(ctx, nil)
 	if err != nil {
 		errors = append(errors, err)
