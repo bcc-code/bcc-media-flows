@@ -51,6 +51,24 @@ var (
 	deliveryFolder = paths.New(paths.BrunstadDrive, "/Delivery/FraMB/")
 )
 
+var destinationDescriptions = map[Destination]string{
+	DestinationAbekas:    "Videoavspilling i bussen",
+	DestinationRawAbekas: "Videoavspilling i bussen (originalfil overføres)",
+	DestinationBStage:    "Avspilling utenfor plenumsalen (festsalen, arenaen, etc)",
+	DestinationGfx:       "",
+	DestinationHippo:     "",
+	DestinationHippoV2:   "For LED (stor fil)",
+	DestinationHippoHap:  "For LED (litt mindre fil)",
+	DestinationDubbing:   "For multispråk avspilling",
+	DestinationHyperdeck: "Brukes hvis spesifikt etterspurt",
+	DestinationXDCAM:     "",
+	DestinationCasparCG:  "Brukes hvis spesifikt etterspurt",
+}
+
+func (d Destination) Description() string {
+	return destinationDescriptions[d]
+}
+
 var (
 	rcloneNotificationOptions = &activities.TelegramNotificationOptions{
 		ChatID:               telegram.ChatOslofjord,
