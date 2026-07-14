@@ -53,7 +53,12 @@ func VBExportToHippo(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		destExt = ".mov"
 	}
 
-	rcloneDestination := deliveryFolder.Append("Hippo", params.OriginalFilenameWithoutExt+destExt)
+	extraFileName := ""
+	if params.SubtitleFile != nil && !isImage {
+		extraFileName = "_SUB_NOR"
+	}
+
+	rcloneDestination := deliveryFolder.Append("Hippo", params.OriginalFilenameWithoutExt+extraFileName+destExt)
 
 	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
 	if err != nil {
