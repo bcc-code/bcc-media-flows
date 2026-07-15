@@ -106,11 +106,7 @@ func metaToChapter(meta *vsapi.MetadataResult, subclipTypeNames map[string]strin
 	return out, true
 }
 
-var SongExtract = regexp.MustCompile("(FMB|HV) ?-? ?([0-9]+)")
-var SongCollectionMap = map[string]string{
-	"FMB": "AB",
-	"HV":  "WOTL",
-}
+var SongExtract = regexp.MustCompile(`\b(FMB|NHV|HV) ?-? ?([0-9]+)`)
 var (
 	chapterTypeMap = map[string]pcommon.ContentType{
 		"sang":        pcommon.ContentTypeSong,

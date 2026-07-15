@@ -106,7 +106,11 @@ func findTranslation(translations []RavenTranslation, language string) *RavenTra
 }
 
 // songbookPrefixes is the BMM-convention abbreviation per known songbook slug.
-// Slugs not listed fall through to the initials heuristic.
+// Only the two legacy songbooks use lowercase slugs as rel names; newer ones
+// (NHV, NFMB, RB, SOS — see availableSongbooks in the BMM-Website admin) store
+// the uppercase abbreviation directly and are handled by the uppercase
+// pass-through in songbookPrefix. Slugs not covered by either fall through to
+// the initials heuristic.
 var songbookPrefixes = map[string]string{
 	"herrens_veier":  "HV",
 	"mandelblomsten": "FMB",
