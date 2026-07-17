@@ -1,6 +1,7 @@
 package miscworkflows
 
 import (
+	"errors"
 	"fmt"
 	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/samber/lo"
@@ -13,6 +14,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -107,6 +109,15 @@ func TranscodePreviewVX(
 				ShapeTag: tag,
 			}).Wait(ctx)
 		if iterErr != nil {
+			// A shape-tag that isn't configured in Vidispine is expected for some
+			// languages; skip it quietly and continue with the rest instead of
+			// treating it as a failure that alerts.
+			var appErr *temporal.ApplicationError
+			if errors.As(iterErr, &appErr) && appErr.Type() == "VS_SHAPE_TAG_NOT_FOUND" {
+				logger.Info("Skipping audio preview for unconfigured shape-tag",
+					"language", l, "tag", tag, "vxid", params.VXID)
+				continue
+			}
 			logger.Error("Failed to import audio preview shape",
 				"language", l, "tag", tag, "vxid", params.VXID, "error", iterErr.Error())
 			wfutils.SendTelegramText(ctx, telegram.ChatOther,
