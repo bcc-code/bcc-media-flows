@@ -40,6 +40,11 @@ type AudioPreviewResult struct {
 
 var previewWatermarkPath = environment.GetIsilonPrefix() + "/system/graphics/LOGO_BTV_Preview_960-540.mov"
 
+// ErrUnknownAudioChannelFormat means the audio-channel layout wasn't recognized (not MU1/MU2),
+// so per-language audio previews can't be built. Callers should skip audio preview but may still
+// produce the video preview.
+var ErrUnknownAudioChannelFormat = errors.New("unknown format of audio channels")
+
 type audioPreviewData struct {
 	FFMPEGParams []string
 	LanguageMap  map[string]string
@@ -139,7 +144,7 @@ func prepareAudioPreview(isMU1, isMU2 bool, fileInfo *ffmpeg.FFProbeResult, inpu
 				fileMap[l.ISO6391] = fileName
 			}
 		} else {
-			return nil, fmt.Errorf("unknown format of audio channels. Not generating preview")
+			return nil, ErrUnknownAudioChannelFormat
 		}
 
 	} else if len(audioStreams) == 1 && audioStreams[0].Channels == 64 {

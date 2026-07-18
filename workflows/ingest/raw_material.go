@@ -123,7 +123,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 	}
 
 	audioAssetIDs := []string{}
-	videoAssetIDs := []string{}
+	previewAssetIDs := []string{}
 
 	for _, id := range mediaAssetIDs {
 		task := mediaAnalyzeTasks[id]
@@ -140,8 +140,6 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 		}
 		// Only create thumbnails if the file has video
 		if result.HasVideo {
-			videoAssetIDs = append(videoAssetIDs, id)
-
 			err = wfutils.Execute(ctx, activities.Vidispine.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
 				AssetID: id,
 			}).Get(ctx, nil)
@@ -153,12 +151,16 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 		if result.HasAudio {
 			audioAssetIDs = append(audioAssetIDs, id)
 		}
+
+		// TranscodePreviewVX generates both the video and audio previews in a single
+		// pass, so run it once per asset. Each id is processed once here, so the list
+		// is inherently duplicate-free and deterministic for Temporal replay.
+		if result.HasVideo || result.HasAudio {
+			previewAssetIDs = append(previewAssetIDs, id)
+		}
 	}
 
-	if _, err = createPreviewsAsync(ctx, audioAssetIDs); err != nil {
-		return imported, err
-	}
-	if _, err = createPreviewsAsync(ctx, videoAssetIDs); err != nil {
+	if _, err = createPreviewsAsync(ctx, previewAssetIDs); err != nil {
 		return imported, err
 	}
 

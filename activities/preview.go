@@ -2,6 +2,7 @@ package activities
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -41,8 +42,16 @@ func (va VideoActivities) TranscodePreview(ctx context.Context, input TranscodeP
 
 	result2, err := transcode.AudioPreview(inputParams, progressCallback)
 	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
+		if errors.Is(err, transcode.ErrUnknownAudioChannelFormat) {
+			// Unknown audio-channel layout: skip only the per-language audio previews
+			// but still return the standard video preview from `result`.
+			activity.GetLogger(ctx).Info("Skipping audio preview: unknown audio channel format",
+				"filePath", input.FilePath.Local())
+			result2 = &transcode.AudioPreviewResult{}
+		} else {
+			fmt.Println(err.Error())
+			return nil, err
+		}
 	}
 
 	audioPreviews := map[string]paths.Path{}

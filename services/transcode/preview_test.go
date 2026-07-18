@@ -66,6 +66,19 @@ func Test_AudioAdioPreviewGenerator(t *testing.T) {
 
 }
 
+func Test_AudioPreview_UnknownChannelFormat(t *testing.T) {
+	fileInfo := &ffmpeg.FFProbeResult{}
+	err := json.Unmarshal([]byte(jData), fileInfo)
+	assert.NoError(t, err)
+
+	// 16 audio streams but neither MU1 nor MU2: audio preview can't be built.
+	// It must surface the sentinel so callers can skip audio preview while still
+	// producing the video preview.
+	out, err := prepareAudioPreview(false, false, fileInfo, fileInfo.Format.Filename, "./temp/")
+	assert.Nil(t, out)
+	assert.ErrorIs(t, err, ErrUnknownAudioChannelFormat)
+}
+
 func TestBuildVUMeterFilters_TRCPrefix(t *testing.T) {
 	head, _ := buildVUMeterFilters(2, "setparams=color_trc=bt709,", "scale=1280:720")
 	assert.Contains(t, head, "[0:v]setparams=color_trc=bt709,scale=1280:720[vmain]")
