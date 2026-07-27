@@ -52,8 +52,9 @@ func StartFilesWorkerFlow(ctx context.Context, params MoveMBFileParams) error {
 		MoveMBFileSignalName,
 		params,
 		client.StartWorkflowOptions{
-			ID:        "move_mb_file",
-			TaskQueue: environment.GetQueue(),
+			ID:                    "move_mb_file",
+			TaskQueue:             environment.GetQueue(),
+			TypedSearchAttributes: wfutils.TypedSearchAttributes("", "system"),
 			RetryPolicy: &temporal.RetryPolicy{
 				InitialInterval:    time.Second,
 				BackoffCoefficient: 2.0,

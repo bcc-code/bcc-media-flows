@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"strings"
 
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/bcc-code/bcc-media-flows/workflows/export"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"go.temporal.io/sdk/client"
 )
 
 type BulkShortsExportParams struct {
@@ -36,11 +36,8 @@ func (s *TriggerServer) bulkShortsExportPOST(ctx *gin.Context) {
 
 	input := export.BulkExportShortsInput{CollectionVXID: collectionVXID}
 
-	queue := getQueue()
-	workflowOptions := client.StartWorkflowOptions{
-		ID:        collectionVXID + "-bulk-shorts-" + uuid.NewString(),
-		TaskQueue: queue,
-	}
+	workflowOptions := wfutils.NewWorkflowOptions(getQueue(), collectionVXID, getTriggeredBy(ctx))
+	workflowOptions.ID = collectionVXID + "-bulk-shorts-" + uuid.NewString()
 
 	res, err := s.wfClient.ExecuteWorkflow(ctx, workflowOptions, export.BulkExportShorts, input)
 	if err != nil {

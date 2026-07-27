@@ -64,6 +64,7 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 		if err != nil {
 			return err
 		}
+		wfutils.UpsertVXID(ctx, assetResult.AssetID)
 
 		// Ingest to placeholder
 		err = wfutils.Execute(ctx, activities.Vidispine.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{

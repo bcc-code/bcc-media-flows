@@ -8,10 +8,9 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/bcc-code/bcc-media-flows/workflows/vb_export"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"go.temporal.io/sdk/client"
 )
 
 type VBTriggerGETParams struct {
@@ -75,16 +74,7 @@ func (s *TriggerServer) vbExportGET(ctx *gin.Context) {
 func (s *TriggerServer) vbExportPOST(ctx *gin.Context) {
 	vxID := ctx.Query("id")
 
-	queue := getQueue()
-	workflowOptions := client.StartWorkflowOptions{
-		TaskQueue: queue,
-	}
-
-	if os.Getenv("DEBUG") == "" {
-		workflowOptions.SearchAttributes = map[string]any{
-			"CustomStringField": vxID,
-		}
-	}
+	workflowOptions := wfutils.NewWorkflowOptions(getQueue(), vxID, getTriggeredBy(ctx))
 
 	params := vb_export.VBExportParams{
 		VXID:             vxID,
@@ -94,7 +84,6 @@ func (s *TriggerServer) vbExportPOST(ctx *gin.Context) {
 	}
 
 	var wfID string
-	workflowOptions.ID = uuid.NewString()
 	res, err := s.wfClient.ExecuteWorkflow(ctx, workflowOptions, vb_export.VBExport, params)
 
 	if err != nil {

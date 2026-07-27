@@ -85,6 +85,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 
 	activityOptions := wfutils.GetDefaultActivityOptions()
 	ctx = workflow.WithActivityOptions(ctx, activityOptions)
+	ctx = wfutils.WithChildSearchAttributes(ctx, params.VXID)
 
 	tempFolder, err := wfutils.GetWorkflowTempFolder(ctx)
 	if err != nil {

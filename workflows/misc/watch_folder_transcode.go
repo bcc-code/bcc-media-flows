@@ -108,6 +108,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 		}).Get(ctx, &transcodeOutput)
 	case common.FolderTranscribe:
 		ctx = workflow.WithTaskQueue(ctx, environment.GetWorkerQueue())
+		ctx = wfutils.WithChildSearchAttributes(ctx, "")
 		err = workflow.ExecuteChildWorkflow(ctx, TranscribeFile, TranscribeFileInput{
 			Language:        "auto",
 			File:            path.Linux(),

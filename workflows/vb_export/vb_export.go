@@ -259,7 +259,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 			return nil, err
 		}
 
-		ctx = workflow.WithChildOptions(ctx, wfutils.GetVXDefaultWorkflowOptions(params.VXID))
+		ctx = workflow.WithChildOptions(ctx, wfutils.GetVXDefaultWorkflowOptions(ctx, params.VXID))
 		future := workflow.ExecuteChildWorkflow(ctx, w, childParams)
 		resultFutures = append(resultFutures, future)
 	}

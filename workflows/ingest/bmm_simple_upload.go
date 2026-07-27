@@ -95,6 +95,8 @@ func BmmIngestUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 		return nil, err
 	}
 
+	ctx = wfutils.WithChildSearchAttributes(ctx, res.AssetID)
+
 	err = workflow.ExecuteChildWorkflow(ctx, miscworkflows.TranscribeVX, miscworkflows.TranscribeVXInput{
 		VXID:     res.AssetID,
 		Language: params.Language,

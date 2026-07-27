@@ -7,11 +7,10 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ingest"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/google/uuid"
-	"go.temporal.io/sdk/client"
 )
 
 func (s *TriggerServer) getPersons() ([]string, error) {
@@ -136,11 +135,8 @@ func (s *TriggerServer) uploadMasterPOST(ctx *gin.Context) {
 		return
 	}
 
-	queue := getQueue()
-	workflowOptions := client.StartWorkflowOptions{
-		ID:        uuid.NewString(),
-		TaskQueue: queue,
-	}
+	// No VXID yet — the asset is created mid-workflow and upserted there.
+	workflowOptions := wfutils.NewWorkflowOptions(getQueue(), "", getTriggeredBy(ctx))
 
 	for _, tag := range params.Tags {
 		err := s.addTag(tag)

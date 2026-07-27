@@ -4,11 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/google/uuid"
-	"go.temporal.io/sdk/client"
 )
 
 func (s *TriggerServer) ingestFixGET(ctx *gin.Context) {
@@ -28,14 +27,9 @@ func (s *TriggerServer) mu1mu2ExtractPOST(ctx *gin.Context) {
 		return
 	}
 
-	queue := getQueue()
-	workflowOptions := client.StartWorkflowOptions{
-		ID:        uuid.NewString(),
-		TaskQueue: queue,
-	}
+	workflowOptions := wfutils.NewWorkflowOptions(getQueue(), form.VX1ID, getTriggeredBy(ctx))
 
 	var wfID string
-	workflowOptions.ID = uuid.NewString()
 	_, err = s.wfClient.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.ExtractAudioFromMU1MU2, ingestworkflows.ExtractAudioFromMU1MU2Input{
 		MU1ID: form.VX1ID,
 		MU2ID: form.VX2ID,
@@ -69,11 +63,7 @@ func (s *TriggerServer) ingestSyncFixPOST(ctx *gin.Context) {
 		return
 	}
 
-	queue := getQueue()
-	workflowOptions := client.StartWorkflowOptions{
-		ID:        uuid.NewString(),
-		TaskQueue: queue,
-	}
+	workflowOptions := wfutils.NewWorkflowOptions(getQueue(), form.VXID, getTriggeredBy(ctx))
 
 	adjustment, err := strconv.ParseInt(form.Adjustment, 10, 64)
 	if err != nil {

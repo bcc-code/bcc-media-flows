@@ -96,6 +96,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	if err != nil {
 		return err
 	}
+	wfutils.UpsertVXID(ctx, assetResult.AssetID)
 
 	err = wfutils.SetVidispineMeta(ctx, assetResult.AssetID, vscommon.FieldIngested.Value, workflow.Now(ctx).Format(time.RFC3339))
 	if err != nil {
@@ -262,6 +263,8 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	}
 
 	baseName := strings.TrimSuffix(in.Base(), "_MU1.mxf")
+
+	ctx = wfutils.WithChildSearchAttributes(ctx, videoVXID)
 
 	// Wait for all reaper files to be imported
 	var importAudioFuture []workflow.ChildWorkflowFuture

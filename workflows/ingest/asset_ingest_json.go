@@ -66,6 +66,9 @@ func AssetJSON(ctx workflow.Context, params AssetJSONParams) (*AssetResult, erro
 		wfutils.SendEmails(ctx, targets, "Import triggered", "Order form: "+metadata.JobProperty.OrderForm)
 	}
 
+	// No VXID yet — the asset is created inside the child workflow.
+	ctx = wfutils.WithChildSearchAttributes(ctx, "")
+
 	switch orderForm {
 	case OrderFormVBMaster, OrderFormLEDMaterial:
 		outputDir, err := wfutils.GetWorkflowMastersOutputFolder(ctx)

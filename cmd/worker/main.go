@@ -98,6 +98,11 @@ func main() {
 
 	defer c.Close()
 
+	err = wfutils.EnsureSearchAttributes(context.Background(), c)
+	if err != nil {
+		log.Printf("Error registering search attributes: %v", err)
+	}
+
 	analytics.Init(analytics.Config{
 		WriteKey:  os.Getenv("RUDDERSTACK_WRITE_KEY"),
 		DataPlane: os.Getenv("RUDDERSTACK_DATA_PLANE_URL"),

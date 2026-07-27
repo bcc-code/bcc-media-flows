@@ -6,13 +6,12 @@ import (
 	"net/http"
 	"reflect"
 
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/bcc-code/bcc-media-flows/workflows"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/google/uuid"
 	"github.com/invopop/jsonschema"
 	"github.com/samber/lo"
-	"go.temporal.io/sdk/client"
 )
 
 type WorkflowSchema struct {
@@ -61,10 +60,8 @@ func triggerDynamicHandler(ctx *gin.Context) {
 	defer wfClient.Close()
 
 	queue := getQueue()
-	workflowOptions := client.StartWorkflowOptions{
-		ID:        uuid.NewString(),
-		TaskQueue: queue,
-	}
+	vxID := getParamFromCtx(ctx, "vxID")
+	workflowOptions := wfutils.NewWorkflowOptions(queue, vxID, getTriggeredBy(ctx))
 
 	// use reflection to trigger an aribtrary workflow
 	workflowName := getParamFromCtx(ctx, "workflow")

@@ -1,7 +1,6 @@
 package wfutils
 
 import (
-	"os"
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
@@ -28,17 +27,13 @@ func GetDefaultActivityOptions() workflow.ActivityOptions {
 	}
 }
 
-func GetVXDefaultWorkflowOptions(vxID string) workflow.ChildWorkflowOptions {
-	opts := workflow.ChildWorkflowOptions{
-		RetryPolicy: &StrictRetryPolicy,
-		TaskQueue:   environment.GetWorkerQueue(),
+func GetVXDefaultWorkflowOptions(ctx workflow.Context, vxID string) workflow.ChildWorkflowOptions {
+	// Children do not inherit the parent's search attributes, so propagate
+	// TriggeredBy explicitly.
+	triggeredBy, _ := workflow.GetTypedSearchAttributes(ctx).GetKeyword(TriggeredByKey)
+	return workflow.ChildWorkflowOptions{
+		RetryPolicy:           &StrictRetryPolicy,
+		TaskQueue:             environment.GetWorkerQueue(),
+		TypedSearchAttributes: TypedSearchAttributes(vxID, triggeredBy),
 	}
-
-	if os.Getenv("DEBUG") == "" {
-		opts.SearchAttributes = map[string]interface{}{
-			"CustomStringField": vxID,
-		}
-	}
-
-	return opts
 }

@@ -84,7 +84,8 @@ func BulkExportShorts(ctx workflow.Context, input BulkExportShortsInput) error {
 
 	wfs := make([]workflow.Future, len(shortsData))
 	for i, short := range shortsData {
-		wf := workflow.ExecuteChildWorkflow(ctx, ExportShort, short)
+		childCtx := wfutils.WithChildSearchAttributes(ctx, short.MBMetadata.ID)
+		wf := workflow.ExecuteChildWorkflow(childCtx, ExportShort, short)
 		wfs[i] = wf
 	}
 
@@ -173,7 +174,7 @@ func triggerShortExport(ctx workflow.Context, short *ShortsData) error {
 		{Width: 1920, Height: 1080},
 	}
 
-	wf := workflow.ExecuteChildWorkflow(ctx, VXExport, VXExportParams{
+	wf := workflow.ExecuteChildWorkflow(wfutils.WithChildSearchAttributes(ctx, short.MBMetadata.ID), VXExport, VXExportParams{
 		VXID:          short.MBMetadata.ID,
 		Destinations:  []string{"vod"},
 		WatermarkPath: watermarkPath,

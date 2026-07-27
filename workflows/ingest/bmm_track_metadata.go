@@ -166,6 +166,7 @@ func BmmTrackMetadata(ctx workflow.Context, params BmmTrackMetadataParams) (*Bmm
 	}
 
 	if ingested {
+		ctx := wfutils.WithChildSearchAttributes(ctx, assetID)
 		err = workflow.ExecuteChildWorkflow(ctx, miscworkflows.TranscribeVX, miscworkflows.TranscribeVXInput{
 			VXID:     assetID,
 			Language: params.Language,

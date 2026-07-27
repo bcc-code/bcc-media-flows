@@ -2,18 +2,17 @@ package main
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/bcc-code/bcc-media-flows/utils"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/bcc-code/bcc-media-flows/workflows/export"
 	bccmUtils "github.com/bcc-code/bcc-media-platform/backend/utils"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
 	"github.com/teris-io/shortid"
-	"go.temporal.io/sdk/client"
 )
 
 func (s *TriggerServer) isilonExportGET(ctx *gin.Context) {
@@ -62,16 +61,7 @@ func (s *TriggerServer) isilonExportGET(ctx *gin.Context) {
 func (s *TriggerServer) isilonExportPOST(ctx *gin.Context) {
 	vxID := ctx.Query("id")
 
-	queue := getQueue()
-	workflowOptions := client.StartWorkflowOptions{
-		TaskQueue: queue,
-	}
-
-	if os.Getenv("DEBUG") == "" {
-		workflowOptions.SearchAttributes = map[string]any{
-			"CustomStringField": vxID,
-		}
-	}
+	workflowOptions := wfutils.NewWorkflowOptions(getQueue(), vxID, getTriggeredBy(ctx))
 
 	resolutionIndex := bccmUtils.AsInt(ctx.PostForm("resolutions"))
 	vsResolutions, err := s.vidispine.GetResolutions(vxID)

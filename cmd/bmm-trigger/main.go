@@ -194,7 +194,7 @@ func processTrack(ctx context.Context, tc client.Client, track *bmm.RavenTrack, 
 		return nil
 	}
 
-	res, err := bmm.TriggerBmmTrackMetadata(ctx, tc, params, doWait)
+	res, err := bmm.TriggerBmmTrackMetadata(ctx, tc, params, doWait, "")
 	if res != nil {
 		fmt.Printf("workflow_id=%s run_id=%s\n", res.WorkflowID, res.RunID)
 	}

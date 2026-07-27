@@ -24,6 +24,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/bcc-code/bcc-media-flows/workflows/export"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"github.com/gin-gonic/gin"
@@ -47,6 +48,19 @@ func getQueue() string {
 
 var overlaysDir = os.Getenv("OVERLAYS_DIR")
 var masterTriggerDir = os.Getenv("MASTER_TRIGGER_DIR")
+
+// triggeredByHeader names a request header set by an identity-aware proxy in
+// front of the UI, e.g. "X-Forwarded-User".
+var triggeredByHeader = os.Getenv("TRIGGERED_BY_HEADER")
+
+func getTriggeredBy(ctx *gin.Context) string {
+	if triggeredByHeader != "" {
+		if v := ctx.GetHeader(triggeredByHeader); v != "" {
+			return v
+		}
+	}
+	return "trigger-ui"
+}
 
 func getFilenames(dir string) ([]string, error) {
 	files, err := os.ReadDir(dir)
@@ -233,16 +247,7 @@ func (s *TriggerServer) vxExportPOST(ctx *gin.Context) {
 	languages := ctx.PostFormArray("languages[]")
 	audioSource := ctx.PostForm("audioSource")
 
-	queue := getQueue()
-	workflowOptions := client.StartWorkflowOptions{
-		TaskQueue: queue,
-	}
-
-	if os.Getenv("DEBUG") == "" {
-		workflowOptions.SearchAttributes = map[string]any{
-			"CustomStringField": vxID,
-		}
-	}
+	workflowOptions := wfutils.NewWorkflowOptions(getQueue(), vxID, getTriggeredBy(ctx))
 
 	go func() {
 		err := s.vidispine.SetItemMetadataField(vsapi.ItemMetadataFieldParams{
@@ -361,18 +366,8 @@ func (s *TriggerServer) vxExportPOST(ctx *gin.Context) {
 }
 
 func (s *TriggerServer) vxExportTimedMetadataPOST(ctx *gin.Context) {
-	queue := getQueue()
 	vxID := ctx.PostForm("id")
-	workflowOptions := client.StartWorkflowOptions{
-		TaskQueue: queue,
-	}
-
-	if os.Getenv("DEBUG") == "" {
-		workflowOptions.SearchAttributes = map[string]any{
-			"CustomStringField": vxID,
-		}
-	}
-	workflowOptions.ID = uuid.NewString()
+	workflowOptions := wfutils.NewWorkflowOptions(getQueue(), vxID, getTriggeredBy(ctx))
 	res, err := s.wfClient.ExecuteWorkflow(ctx, workflowOptions, export.ExportTimedMetadata, export.ExportTimedMetadataParams{
 		VXID: vxID,
 	})
@@ -445,11 +440,6 @@ func (s *TriggerServer) moveFilesPOST(ctx *gin.Context) {
 		return
 	}
 
-	queue := getQueue()
-	workflowOptions := client.StartWorkflowOptions{
-		TaskQueue: queue,
-	}
-
 	// Process each VX ID
 	successCount := 0
 	for _, vxID := range vxIDList {
@@ -459,13 +449,7 @@ func (s *TriggerServer) moveFilesPOST(ctx *gin.Context) {
 			DestinationStorage: destinationStorage,
 		}
 
-		if os.Getenv("DEBUG") == "" {
-			workflowOptions.SearchAttributes = map[string]any{
-				"CustomStringField": vxID,
-			}
-		}
-
-		workflowOptions.ID = uuid.NewString()
+		workflowOptions := wfutils.NewWorkflowOptions(getQueue(), vxID, getTriggeredBy(ctx))
 		_, err := s.wfClient.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.MoveMBFile, params)
 		if err != nil {
 			log.Default().Printf("Failed to start workflow for VX ID %s: %v", vxID, err)

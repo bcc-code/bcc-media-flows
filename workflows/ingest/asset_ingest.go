@@ -146,6 +146,9 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 
 	wfutils.SendEmails(ctx, targets, "Import triggered", "Order form: "+metadata.JobProperty.OrderForm)
 
+	// No VXID yet — assets are created inside the child workflows.
+	ctx = wfutils.WithChildSearchAttributes(ctx, "")
+
 	switch *orderForm {
 	case OrderFormRawMaterial:
 		err = workflow.ExecuteChildWorkflow(ctx, RawMaterialForm, RawMaterialFormParams{

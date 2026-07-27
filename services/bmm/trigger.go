@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
-	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"
 )
 
@@ -35,11 +35,11 @@ type TriggerResult struct {
 	Result     *ingestworkflows.BmmTrackMetadataResult
 }
 
-func TriggerBmmTrackMetadata(ctx context.Context, c client.Client, params ingestworkflows.BmmTrackMetadataParams, wait bool) (*TriggerResult, error) {
-	opts := client.StartWorkflowOptions{
-		ID:        uuid.NewString(),
-		TaskQueue: queueFromEnv(),
+func TriggerBmmTrackMetadata(ctx context.Context, c client.Client, params ingestworkflows.BmmTrackMetadataParams, wait bool, triggeredBy string) (*TriggerResult, error) {
+	if triggeredBy == "" {
+		triggeredBy = "bmm-trigger"
 	}
+	opts := wfutils.NewWorkflowOptions(queueFromEnv(), "", triggeredBy)
 
 	run, err := c.ExecuteWorkflow(ctx, opts, ingestworkflows.BmmTrackMetadata, params)
 	if err != nil {

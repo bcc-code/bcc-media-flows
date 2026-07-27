@@ -38,6 +38,7 @@ func ImportFileAsTag(ctx workflow.Context, tag string, path paths.Path, title st
 	if err != nil {
 		return nil, err
 	}
+	wfutils.UpsertVXID(ctx, result.AssetID)
 	// Mediabanken (which mounts the storage separately from the worker host)
 	// can lag the worker's view by minutes due to NFS metadata caching. We
 	// optimistically kick off the import without waiting and let
@@ -114,7 +115,8 @@ func createPreviewsAsync(ctx workflow.Context, assetIDs []string) ([]workflow.Ch
 	opts.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
 	ctx = workflow.WithChildOptions(ctx, opts)
 	for _, id := range assetIDs {
-		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, miscworkflows.TranscodePreviewVX, miscworkflows.TranscodePreviewVXInput{
+		childCtx := wfutils.WithChildSearchAttributes(ctx, id)
+		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(childCtx, miscworkflows.TranscodePreviewVX, miscworkflows.TranscodePreviewVXInput{
 			VXID: id,
 		}))
 	}
@@ -137,7 +139,8 @@ func transcribe(ctx workflow.Context, assetIDs []string, language string) error 
 	opts.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
 	ctx = workflow.WithChildOptions(ctx, opts)
 	for _, id := range assetIDs {
-		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(ctx, miscworkflows.TranscribeVX, miscworkflows.TranscribeVXInput{
+		childCtx := wfutils.WithChildSearchAttributes(ctx, id)
+		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(childCtx, miscworkflows.TranscribeVX, miscworkflows.TranscribeVXInput{
 			VXID:     id,
 			Language: language,
 		}))

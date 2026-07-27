@@ -11,11 +11,11 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"go.temporal.io/sdk/client"
 )
 
 var TranscodeRootPath = os.Getenv("TRANSCODE_ROOT_PATH")
@@ -97,10 +97,7 @@ func doSimpleCopy(ctx context.Context, path string) error {
 		filepath.Base(path),
 	)
 
-	workflowOptions := client.StartWorkflowOptions{
-		ID:        uuid.NewString(),
-		TaskQueue: environment.GetWorkerQueue(),
-	}
+	workflowOptions := wfutils.NewWorkflowOptions(environment.GetWorkerQueue(), "", "watcher")
 
 	_, err = c.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.CopyFile, miscworkflows.CopyFileInput{
 		Source:      path,
@@ -116,10 +113,7 @@ func doMultitrackCopy(ctx context.Context, path string) error {
 		return err
 	}
 
-	workflowOptions := client.StartWorkflowOptions{
-		ID:        uuid.NewString(),
-		TaskQueue: environment.GetWorkerQueue(),
-	}
+	workflowOptions := wfutils.NewWorkflowOptions(environment.GetWorkerQueue(), "", "watcher")
 
 	_, err = c.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.HandleMultitrackFile, miscworkflows.HandleMultitrackFileInput{
 		Path: path,
@@ -134,11 +128,8 @@ func doGrowingFile(ctx context.Context, path string) error {
 		return err
 	}
 
-	// Use the fixed LIVE-INGEST workflow ID
-	workflowOptions := client.StartWorkflowOptions{
-		ID:        "LIVE-INGEST", // Fixed ID for the incremental workflow
-		TaskQueue: environment.GetWorkerQueue(),
-	}
+	workflowOptions := wfutils.NewWorkflowOptions(environment.GetWorkerQueue(), "", "watcher")
+	workflowOptions.ID = "LIVE-INGEST" // Fixed ID for the incremental workflow
 
 	_, err = c.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.Incremental, ingestworkflows.IncrementalParams{
 		Path: path,
@@ -163,10 +154,7 @@ func doTranscode(ctx context.Context, path string) error {
 	matches := exp.FindStringSubmatch(path)
 	t := matches[1]
 
-	workflowOptions := client.StartWorkflowOptions{
-		ID:        uuid.NewString(),
-		TaskQueue: environment.GetWorkerQueue(),
-	}
+	workflowOptions := wfutils.NewWorkflowOptions(environment.GetWorkerQueue(), "", "watcher")
 
 	_, err = c.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.WatchFolderTranscode, miscworkflows.WatchFolderTranscodeInput{
 		Path:       path,
@@ -181,10 +169,8 @@ func doRawImport(ctx context.Context, path string) error {
 		return err
 	}
 
-	workflowOptions := client.StartWorkflowOptions{
-		ID:        "RAWIMPORT-" + uuid.NewString(),
-		TaskQueue: environment.GetWorkerQueue(),
-	}
+	workflowOptions := wfutils.NewWorkflowOptions(environment.GetWorkerQueue(), "", "watcher")
+	workflowOptions.ID = "RAWIMPORT-" + uuid.NewString()
 
 	parsedPath, err := paths.Parse(path)
 	if err != nil {
@@ -204,10 +190,7 @@ func doIngest(ctx context.Context, path string) error {
 		return err
 	}
 
-	workflowOptions := client.StartWorkflowOptions{
-		ID:        uuid.NewString(),
-		TaskQueue: environment.GetWorkerQueue(),
-	}
+	workflowOptions := wfutils.NewWorkflowOptions(environment.GetWorkerQueue(), "", "watcher")
 
 	_, err = c.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.Asset, ingestworkflows.AssetParams{
 		XMLPath: path,
@@ -254,10 +237,7 @@ func doIngestJSON(ctx context.Context, jsonPath string) error {
 		return err
 	}
 
-	workflowOptions := client.StartWorkflowOptions{
-		ID:        uuid.NewString(),
-		TaskQueue: environment.GetWorkerQueue(),
-	}
+	workflowOptions := wfutils.NewWorkflowOptions(environment.GetWorkerQueue(), "", "watcher")
 
 	_, err = c.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.AssetJSON, ingestworkflows.AssetJSONParams{
 		JSONPath: jsonPath,

@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"github.com/gin-contrib/cors"
@@ -21,12 +22,19 @@ import (
 	"github.com/bcc-code/bcc-media-flows/workflows/export"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"
 )
 
 func getParamFromCtx(ctx *gin.Context, key string) string {
 	return ctx.DefaultPostForm(key, ctx.DefaultQuery(key, ""))
+}
+
+func getTriggeredBy(ctx *gin.Context) string {
+	triggeredBy := getParamFromCtx(ctx, "triggeredBy")
+	if triggeredBy == "" {
+		triggeredBy = "httpin"
+	}
+	return triggeredBy
 }
 
 func getClient() (client.Client, error) {
@@ -59,16 +67,7 @@ func triggerHandler(ctx *gin.Context) {
 
 	queue := getQueue()
 	vxID := getParamFromCtx(ctx, "vxID")
-	workflowOptions := client.StartWorkflowOptions{
-		ID:        uuid.NewString(),
-		TaskQueue: queue,
-	}
-
-	if os.Getenv("DEBUG") == "" {
-		workflowOptions.SearchAttributes = map[string]any{
-			"CustomStringField": vxID,
-		}
-	}
+	workflowOptions := wfutils.NewWorkflowOptions(queue, vxID, getTriggeredBy(ctx))
 
 	var res client.WorkflowRun
 

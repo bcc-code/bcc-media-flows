@@ -10,13 +10,13 @@ import (
 	"strings"
 	"time"
 
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	common "go.temporal.io/api/common/v1"
 	"go.temporal.io/api/enums/v1"
 	workflowservice "go.temporal.io/api/workflowservice/v1"
-	"go.temporal.io/sdk/client"
 )
 
 type WorkflowListParams struct {
@@ -74,8 +74,7 @@ func (s *TriggerServer) massiveWebhookHandler(ctx *gin.Context) {
 	}
 
 	// Start MASVImport workflow
-	queue := getQueue()
-	options := client.StartWorkflowOptions{TaskQueue: queue}
+	options := wfutils.NewWorkflowOptions(getQueue(), "", payload.Object.Sender)
 	options.ID = uuid.NewString() + "-" + payload.Object.ID
 
 	params := miscworkflows.MASVImportParams{
@@ -199,6 +198,20 @@ func convertWindowsPath(windowsPath string) string {
 	return path
 }
 
+func vxIDFromSearchAttributes(attrs *common.SearchAttributes) string {
+	for _, key := range []string{wfutils.VXIDKey.GetName(), wfutils.LegacyVXIDKey.GetName()} {
+		payload, ok := attrs.GetIndexedFields()[key]
+		if !ok {
+			continue
+		}
+		var vxID string
+		if err := json.Unmarshal(payload.GetData(), &vxID); err == nil && vxID != "" {
+			return vxID
+		}
+	}
+	return ""
+}
+
 func (s *TriggerServer) listGET(ctx *gin.Context) {
 	var workflowList []WorkflowDetails
 
@@ -216,7 +229,7 @@ func (s *TriggerServer) listGET(ctx *gin.Context) {
 			continue
 		}
 		workflowList = append(workflowList, WorkflowDetails{
-			VxID:       "",
+			VxID:       vxIDFromSearchAttributes(exec.GetSearchAttributes()),
 			Name:       exec.Type.GetName(),
 			Status:     exec.GetStatus().String(),
 			WorkflowID: exec.Execution.GetWorkflowId(),
@@ -362,7 +375,7 @@ func (s *TriggerServer) workflowDetailsGET(ctx *gin.Context) {
 	if err == nil {
 		for _, child := range childrenResp.Executions {
 			children = append(children, WorkflowDetails{
-				VxID:       "",
+				VxID:       vxIDFromSearchAttributes(child.GetSearchAttributes()),
 				Name:       child.Type.GetName(),
 				Status:     child.GetStatus().String(),
 				WorkflowID: child.Execution.GetWorkflowId(),

@@ -82,7 +82,7 @@ func IsilonExport(ctx workflow.Context, params IsilonExportParams) error {
 		return err
 	}
 
-	ctx = workflow.WithChildOptions(ctx, wfutils.GetVXDefaultWorkflowOptions(params.VXID))
+	ctx = workflow.WithChildOptions(ctx, wfutils.GetVXDefaultWorkflowOptions(ctx, params.VXID))
 
 	var mergeResult MergeExportDataResult
 	err = workflow.ExecuteChildWorkflow(ctx, MergeExportData, MergeExportDataParams{
