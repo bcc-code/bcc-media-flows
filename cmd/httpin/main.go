@@ -37,11 +37,11 @@ func getTriggeredBy(ctx *gin.Context) string {
 	return triggeredBy
 }
 
+// temporalClient is dialed once in main and shared by all handlers.
+var temporalClient client.Client
+
 func getClient() (client.Client, error) {
-	return client.Dial(client.Options{
-		HostPort:  os.Getenv("TEMPORAL_HOST_PORT"),
-		Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
-	})
+	return temporalClient, nil
 }
 
 func getQueue() string {
@@ -62,8 +62,6 @@ func triggerHandler(ctx *gin.Context) {
 		})
 		return
 	}
-
-	defer wfClient.Close()
 
 	queue := getQueue()
 	vxID := getParamFromCtx(ctx, "vxID")
@@ -254,6 +252,16 @@ func triggerHandler(ctx *gin.Context) {
 var html string
 
 func main() {
+	var err error
+	temporalClient, err = client.Dial(client.Options{
+		HostPort:  os.Getenv("TEMPORAL_HOST_PORT"),
+		Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
+	})
+	if err != nil {
+		panic(err)
+	}
+	defer temporalClient.Close()
+
 	r := gin.Default()
 	r.Use(cors.Default())
 

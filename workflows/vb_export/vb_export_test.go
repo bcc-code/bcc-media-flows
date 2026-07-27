@@ -172,7 +172,11 @@ func (s *VBExportTestSuite) Test_VBExportToXDCAM() {
 			VXID:         "VX-123",
 			Destinations: []string{"xdcam"},
 		},
-		InputFile:                  paths.MustParse("/mnt/temp/workflows/test_video.mxf"),
+		InputFile: paths.MustParse("/mnt/temp/workflows/test_video.mxf"),
+		// OriginalFile must be set: a zero paths.Path marshals Drive to "",
+		// which Drive.UnmarshalJSON rejects when the test env round-trips the
+		// workflow input payload.
+		OriginalFile:               paths.MustParse("/mnt/isilon/Production/masters/test_video.mxf"),
 		OriginalFilenameWithoutExt: "test_video",
 		TempDir:                    paths.MustParse("/mnt/temp/workflows"),
 		OutputDir:                  paths.MustParse("/mnt/temp/workflows/output/xdcam"),

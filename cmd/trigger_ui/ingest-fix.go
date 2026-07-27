@@ -29,8 +29,7 @@ func (s *TriggerServer) mu1mu2ExtractPOST(ctx *gin.Context) {
 
 	workflowOptions := wfutils.NewWorkflowOptions(getQueue(), form.VX1ID, getTriggeredBy(ctx))
 
-	var wfID string
-	_, err = s.wfClient.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.ExtractAudioFromMU1MU2, ingestworkflows.ExtractAudioFromMU1MU2Input{
+	res, err := s.wfClient.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.ExtractAudioFromMU1MU2, ingestworkflows.ExtractAudioFromMU1MU2Input{
 		MU1ID: form.VX1ID,
 		MU2ID: form.VX2ID,
 	})
@@ -41,7 +40,7 @@ func (s *TriggerServer) mu1mu2ExtractPOST(ctx *gin.Context) {
 	}
 
 	ctx.HTML(http.StatusOK, "success.gohtml", gin.H{
-		"WorkflowID": wfID,
+		"WorkflowID": res.GetID(),
 		"Title":      "Extract audio from MU1 and MU2",
 	})
 }

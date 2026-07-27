@@ -129,7 +129,7 @@ type MasterPostParams struct {
 
 func (s *TriggerServer) uploadMasterPOST(ctx *gin.Context) {
 	var params MasterPostParams
-	err := ctx.BindWith(&params, binding.Form)
+	err := ctx.ShouldBindWith(&params, binding.Form)
 	if err != nil {
 		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
@@ -160,7 +160,7 @@ func (s *TriggerServer) uploadMasterPOST(ctx *gin.Context) {
 		return
 	}
 
-	_, err = s.wfClient.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.Masters, ingestworkflows.MasterParams{
+	res, err := s.wfClient.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.Masters, ingestworkflows.MasterParams{
 		Metadata: &ingest.Metadata{
 			JobProperty: ingest.JobProperty{
 				ProgramID:          params.ProgramID,
@@ -181,4 +181,8 @@ func (s *TriggerServer) uploadMasterPOST(ctx *gin.Context) {
 		return
 	}
 
+	ctx.HTML(http.StatusOK, "success.gohtml", gin.H{
+		"WorkflowID": res.GetID(),
+		"Title":      "Upload master",
+	})
 }

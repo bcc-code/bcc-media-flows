@@ -57,8 +57,6 @@ func triggerDynamicHandler(ctx *gin.Context) {
 		return
 	}
 
-	defer wfClient.Close()
-
 	queue := getQueue()
 	vxID := getParamFromCtx(ctx, "vxID")
 	workflowOptions := wfutils.NewWorkflowOptions(queue, vxID, getTriggeredBy(ctx))
