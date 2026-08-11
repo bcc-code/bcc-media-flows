@@ -149,6 +149,11 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 	// No VXID yet — assets are created inside the child workflows.
 	ctx = wfutils.WithChildSearchAttributes(ctx, "")
 
+	// Each case checks the child workflow's error in its own scope, matching
+	// AssetJSON. Assigning to the function-scope err and checking once after the
+	// switch is what let a failed child be reported as success: the OrderFormUpload
+	// case declared a fresh case-scoped err alongside its outputDir with `:=`, so
+	// the check after the switch read the outer err, which was still nil.
 	switch *orderForm {
 	case OrderFormRawMaterial:
 		err = workflow.ExecuteChildWorkflow(ctx, RawMaterialForm, RawMaterialFormParams{
@@ -157,9 +162,11 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			Metadata:  metadata,
 			Directory: fcOutputDir,
 		}).Get(ctx, nil)
+		if err != nil {
+			return nil, err
+		}
 	case OrderFormSeriesMaster, OrderFormOtherMaster, OrderFormVBMaster, OrderFormVBMasterBulk, OrderFormLEDMaterial, OrderFormPodcast:
-		var outputDir paths.Path
-		outputDir, err = wfutils.GetWorkflowMastersOutputFolder(ctx)
+		outputDir, err := wfutils.GetWorkflowMastersOutputFolder(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -170,9 +177,11 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			Directory: &fcOutputDir,
 			OutputDir: outputDir,
 		}).Get(ctx, nil)
+		if err != nil {
+			return nil, err
+		}
 	case OrderFormMultitrackPB:
-		var outputDir paths.Path
-		outputDir, err = wfutils.GetWorkflowRawOutputFolder(ctx)
+		outputDir, err := wfutils.GetWorkflowRawOutputFolder(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -183,6 +192,9 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			Directory: &fcOutputDir,
 			OutputDir: outputDir,
 		}).Get(ctx, nil)
+		if err != nil {
+			return nil, err
+		}
 	case OrderFormUpload:
 		outputDir, err := wfutils.GetWorkflowIsilonOutputFolder(ctx, "Input/FromDelivery")
 		if err != nil {
@@ -195,6 +207,9 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			Directory: fcOutputDir,
 			OutputDir: outputDir,
 		}).Get(ctx, nil)
+		if err != nil {
+			return nil, err
+		}
 	case OrderFormMusic:
 		outputDir := wfutils.GetWorkflowLucidLinkOutputFolder(ctx, "08 From Delivery")
 
@@ -204,10 +219,14 @@ func Asset(ctx workflow.Context, params AssetParams) (*AssetResult, error) {
 			Directory: fcOutputDir,
 			OutputDir: outputDir,
 		}).Get(ctx, nil)
-	}
-
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+	default:
+		// OrderFormDistribution returns early above; every other member of
+		// OrderForms is handled. Without this, adding a member to the enum would
+		// silently succeed here having only copied the files and sent the emails.
+		return nil, fmt.Errorf("no handler for order form: %s", orderForm.Value)
 	}
 
 	return &AssetResult{}, nil
