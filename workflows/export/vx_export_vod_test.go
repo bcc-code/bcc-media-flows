@@ -3,7 +3,6 @@ package export
 import (
 	"errors"
 	"testing"
-	"time"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
@@ -14,116 +13,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"go.temporal.io/sdk/testsuite"
-	"go.temporal.io/sdk/workflow"
 )
-
-type VODDrainTestSuite struct {
-	suite.Suite
-	testsuite.WorkflowTestSuite
-}
-
-// drainProbeParams describes a fan-out shape to push through
-// vxExportVodService.addFuture and waitForFiles.
-type drainProbeParams struct {
-	// Videos holds one entry per simulated video transcode. true means the
-	// callback schedules follow-up work; false means it returns early without
-	// scheduling anything, the way onVideoCreated does when a transcode fails or
-	// when no language is found for the resolution.
-	Videos []bool
-
-	// FollowUps is how many futures a succeeding callback schedules, standing in
-	// for the stream file plus one translated file per audio language.
-	FollowUps int
-}
-
-type drainProbeResult struct {
-	Callbacks int
-	Pending   int
-}
-
-// drainProbeWorkflow reproduces the scheduling shape of VXExportToVOD: the top
-// level registers one future per video, and each video callback either registers
-// follow-up futures or bails out early.
-//
-// The point of the test is that waitForFiles must terminate for every shape. A drain
-// count derived from the input lists (qualitiesWithLanguages, and Resolutions ×
-// audioKeys) overshoots as soon as any callback returns early, and Select then blocks
-// forever on a future nothing ever scheduled.
-func drainProbeWorkflow(ctx workflow.Context, params drainProbeParams) (drainProbeResult, error) {
-	service := &vxExportVodService{filesSelector: workflow.NewSelector(ctx)}
-	callbacks := 0
-
-	for _, videoSucceeds := range params.Videos {
-		succeeds := videoSucceeds
-		service.addFuture(workflow.NewTimer(ctx, time.Second), func(workflow.Future) {
-			callbacks++
-			if !succeeds {
-				return
-			}
-			for i := 0; i < params.FollowUps; i++ {
-				service.addFuture(workflow.NewTimer(ctx, time.Second), func(workflow.Future) {
-					callbacks++
-				})
-			}
-		})
-	}
-
-	service.waitForFiles(ctx)
-
-	return drainProbeResult{Callbacks: callbacks, Pending: service.pendingFiles}, nil
-}
-
-func (s *VODDrainTestSuite) run(params drainProbeParams) drainProbeResult {
-	env := s.NewTestWorkflowEnvironment()
-	env.ExecuteWorkflow(drainProbeWorkflow, params)
-
-	// The assertion that matters: the drain terminates for every shape.
-	s.True(env.IsWorkflowCompleted(), "workflow did not complete — waitForFiles deadlocked")
-	s.NoError(env.GetWorkflowError())
-
-	var result drainProbeResult
-	s.NoError(env.GetWorkflowResult(&result))
-	s.Zero(result.Pending, "pending count should be fully drained")
-	return result
-}
-
-// Every video succeeds: the baseline, where the drain count and the number of
-// scheduled futures happen to agree.
-func (s *VODDrainTestSuite) Test_AllVideosSucceed() {
-	result := s.run(drainProbeParams{Videos: []bool{true, true, true}, FollowUps: 2})
-	// 3 video callbacks + 3×2 follow-ups.
-	s.Equal(9, result.Callbacks)
-}
-
-// One failed transcode schedules no follow-ups, so a count taken from the input
-// lists overshoots by FollowUps and Select blocks forever.
-func (s *VODDrainTestSuite) Test_OneVideoFails_DoesNotDeadlock() {
-	result := s.run(drainProbeParams{Videos: []bool{true, false, true}, FollowUps: 2})
-	// 3 video callbacks + 2×2 follow-ups from the two that succeeded.
-	s.Equal(7, result.Callbacks)
-}
-
-func (s *VODDrainTestSuite) Test_AllVideosFail_DoesNotDeadlock() {
-	result := s.run(drainProbeParams{Videos: []bool{false, false, false}, FollowUps: 2})
-	s.Equal(3, result.Callbacks)
-}
-
-// A single video with no follow-up work, i.e. no IsFile resolutions and no
-// languages assigned.
-func (s *VODDrainTestSuite) Test_NoFollowUpWork() {
-	result := s.run(drainProbeParams{Videos: []bool{true}, FollowUps: 0})
-	s.Equal(1, result.Callbacks)
-}
-
-// Nothing scheduled at all must not block either.
-func (s *VODDrainTestSuite) Test_NoVideos() {
-	result := s.run(drainProbeParams{FollowUps: 2})
-	s.Equal(0, result.Callbacks)
-}
-
-func TestVODDrainTestSuite(t *testing.T) {
-	suite.Run(t, new(VODDrainTestSuite))
-}
 
 // VODExportTestSuite drives the real VXExportToVOD workflow against mocked
 // activities, so the drain fix is covered end to end and not only on the helper.

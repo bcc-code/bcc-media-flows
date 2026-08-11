@@ -134,7 +134,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	service := &vxExportVodService{
 		ingestFolder:           params.ExportData.SafeTitle + "_" + params.RunID,
 		params:                 params,
-		filesSelector:          workflow.NewSelector(ctx),
+		fileFutures:            wfutils.NewFutureGroup(ctx),
 		qualitiesWithLanguages: assignLanguagesToResolutions(audioKeys, params.ParentParams.Resolutions),
 		smilVideos:             make(map[resolutionString]smil.Video),
 	}
@@ -161,7 +161,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		onFileCreated := func(f workflow.Future) {
 			service.handleStreamWorkflowFuture(ctx, resolutionWithLanguages, f)
 		}
-		service.addFuture(future, onFileCreated)
+		service.fileFutures.Add(future, onFileCreated)
 		if resolution.IsFile {
 			for _, key := range audioKeys {
 				lang := key
@@ -171,20 +171,20 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 				onFileCreated := func(f workflow.Future) {
 					service.handleFileWorkflowFuture(ctx, lang, resolution, f)
 				}
-				service.addFuture(future, onFileCreated)
+				service.fileFutures.Add(future, onFileCreated)
 			}
 		}
 	}
 
 	videosByQuality := getVideosByQuality(baseVideo, params.TempDir, wm, params.ParentParams.Resolutions)
-	err = doVideoTasks(ctx, service.addFuture, videosByQuality, onVideoCreated)
+	err = doVideoTasks(ctx, service.fileFutures.Add, videosByQuality, onVideoCreated)
 	if err != nil {
 		return nil, err
 	}
 
 	// Drains the video futures and, as their callbacks schedule them, the stream
 	// and translated-file futures too (fills slices, etc.).
-	service.waitForFiles(ctx)
+	service.fileFutures.Wait(ctx)
 
 	for _, task := range service.tasks {
 		err = task.Get(ctx, nil)
@@ -273,35 +273,15 @@ type vxExportVodService struct {
 	params                 VXExportChildWorkflowParams
 	ingestFolder           string
 	qualitiesWithLanguages []ResolutionWithLanguages
-	filesSelector          workflow.Selector
-	pendingFiles           int
-	smilVideos             map[resolutionString]smil.Video
-	files                  []asset.IngestFileMeta
-	tasks                  []workflow.Future
-	errs                   []error
-}
-
-// addFuture registers a future on filesSelector and counts it, so that
-// waitForFiles drains exactly the futures that were actually scheduled.
-//
-// Counting is the whole point: the number of futures cannot be derived from the
-// resolution and language lists. onVideoCreated schedules the stream and
-// translated-file futures itself and returns early when a transcode fails, so a
-// count taken from the inputs overshoots on any failure and Select then blocks
-// forever on a future that was never scheduled.
-func (v *vxExportVodService) addFuture(future workflow.Future, callback func(f workflow.Future)) {
-	v.pendingFiles++
-	v.filesSelector.AddFuture(future, callback)
-}
-
-// waitForFiles blocks until every registered future has resolved. Callbacks run
-// during Select and may register further futures; addFuture accounts for those,
-// so the loop keeps going until the whole tree of work is drained.
-func (v *vxExportVodService) waitForFiles(ctx workflow.Context) {
-	for v.pendingFiles > 0 {
-		v.filesSelector.Select(ctx)
-		v.pendingFiles--
-	}
+	// fileFutures tracks the stream and translated-file futures. onVideoCreated
+	// registers them itself and returns early when a transcode fails, so the count
+	// cannot be derived from the resolution and language lists — see
+	// wfutils.FutureGroup.
+	fileFutures *wfutils.FutureGroup
+	smilVideos  map[resolutionString]smil.Video
+	files       []asset.IngestFileMeta
+	tasks       []workflow.Future
+	errs        []error
 }
 
 func (v *vxExportVodService) setMetadataAndPublishToVOD(
