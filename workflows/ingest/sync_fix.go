@@ -1,7 +1,9 @@
 package ingestworkflows
 
 import (
+	"errors"
 	"fmt"
+
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -102,7 +104,11 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 	wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟦 `%s`\n\nApplying adjustments to audio files.\n%dms", params.VXID, params.Adjustment))
 
 	var errs []error
-	selector := workflow.NewSelector(ctx)
+	// A FutureGroup rather than a bare selector: the copy below can fail before a
+	// future is ever registered, and the callback registers its follow-up future
+	// only once the copy is confirmed. Draining a count derived from `languages`
+	// overshot in both cases and blocked forever.
+	group := wfutils.NewFutureGroup(ctx)
 	for _, lang := range languages {
 		path := audioPaths[lang]
 		dest := outputFolder.Append(path.Base())
@@ -117,7 +123,7 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 		}
 
 		f := wfutils.Execute(ctx, activities.Util.RcloneWaitForJob, activities.RcloneWaitForJobInput{JobID: jobID}).Future
-		selector.AddFuture(f, func(future workflow.Future) {
+		group.Add(f, func(future workflow.Future) {
 			var copied bool
 			err := future.Get(ctx, &copied)
 			if err != nil {
@@ -144,7 +150,7 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 					Start:  float64(-samples) / float64(48000),
 				}).Future
 			}
-			selector.AddFuture(f, func(future workflow.Future) {
+			group.Add(f, func(future workflow.Future) {
 				err := future.Get(ctx, nil)
 				if err != nil {
 					errs = append(errs, err)
@@ -153,9 +159,15 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 		})
 	}
 
-	for range languages {
-		selector.Select(ctx)
-		selector.Select(ctx)
+	group.Wait(ctx)
+
+	// Every failure above was collected into errs and then discarded by a bare
+	// `return nil`, so a run in which nothing worked still reported success and
+	// still posted the green notification.
+	if len(errs) > 0 {
+		err := errors.Join(errs...)
+		wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟥 `%s`\n\nFailed to apply adjustments to audio files:\n```\n%s\n```", params.VXID, err.Error()))
+		return err
 	}
 
 	wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟩 `%s`\n\nAdjustments applied to audio files.", params.VXID))
