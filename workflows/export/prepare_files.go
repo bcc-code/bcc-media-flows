@@ -70,22 +70,29 @@ func resolutionFromString(str resolutionString) utils.Resolution {
 	return r
 }
 
-func doVideoTasks(ctx workflow.Context, selector workflow.Selector, qualities map[resolutionString]common.VideoInput, callback func(f workflow.Future, q utils.Resolution)) ([]resolutionString, error) {
+// futureAdder registers a future together with the callback that handles it once
+// it resolves. Passing this instead of a raw workflow.Selector lets the caller
+// keep an exact count of the futures in flight, which is what the drain loop
+// needs: the number of scheduled futures cannot be derived from the input lists,
+// because callbacks schedule follow-up work of their own and may bail out early.
+type futureAdder func(future workflow.Future, callback func(f workflow.Future))
+
+func doVideoTasks(ctx workflow.Context, addFuture futureAdder, qualities map[resolutionString]common.VideoInput, callback func(f workflow.Future, q utils.Resolution)) error {
 	keys, err := wfutils.GetMapKeysSafely(ctx, qualities)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	for _, key := range keys {
 		input := qualities[key]
 		q := key
 
-		selector.AddFuture(wfutils.Execute(ctx, activities.Video.TranscodeToVideoH264, input).Future, func(f workflow.Future) {
+		addFuture(wfutils.Execute(ctx, activities.Video.TranscodeToVideoH264, input).Future, func(f workflow.Future) {
 			callback(f, resolutionFromString(q))
 		})
 	}
 
-	return keys, nil
+	return nil
 }
 
 func startAudioTasks(ctx workflow.Context, selector workflow.Selector, audioFiles map[string]paths.Path, outputPath paths.Path, callback func(f workflow.Future, l string)) ([]string, error) {
