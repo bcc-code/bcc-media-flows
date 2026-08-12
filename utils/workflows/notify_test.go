@@ -50,8 +50,8 @@ func (s *NotifyTestSuite) captureMessage(env *testsuite.TestWorkflowEnvironment)
 	return captured
 }
 
-// The regression: the channel argument was ignored and telegram.ChatOther
-// hardcoded, so every BMM ingest failure was reported to the wrong chat.
+// The channel argument has to reach the message: hardcoding telegram.ChatOther
+// sends every BMM ingest failure to the wrong chat.
 func (s *NotifyTestSuite) Test_SendTelegramError_UsesTheGivenChannel() {
 	env := s.NewTestWorkflowEnvironment()
 	captured := s.captureMessage(env)
