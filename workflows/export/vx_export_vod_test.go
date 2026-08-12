@@ -78,7 +78,7 @@ func (s *VODDrainTestSuite) run(params drainProbeParams) drainProbeResult {
 	env := s.NewTestWorkflowEnvironment()
 	env.ExecuteWorkflow(drainProbeWorkflow, params)
 
-	// The assertion that matters: a shape that used to deadlock now completes.
+	// The assertion that matters: the drain terminates for every shape.
 	s.True(env.IsWorkflowCompleted(), "workflow did not complete — waitForFiles deadlocked")
 	s.NoError(env.GetWorkflowError())
 
@@ -88,7 +88,8 @@ func (s *VODDrainTestSuite) run(params drainProbeParams) drainProbeResult {
 	return result
 }
 
-// Every video succeeds: the baseline that worked before this fix too.
+// Every video succeeds: the baseline, where the drain count and the number of
+// scheduled futures happen to agree.
 func (s *VODDrainTestSuite) Test_AllVideosSucceed() {
 	result := s.run(drainProbeParams{Videos: []bool{true, true, true}, FollowUps: 2})
 	// 3 video callbacks + 3×2 follow-ups.
