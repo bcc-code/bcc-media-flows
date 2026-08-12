@@ -230,7 +230,7 @@ func mapAndFilterShortsData(shorts []*ShortsData, mbItems []*vsapi.MetadataResul
 // - a poster image to the item
 // - tags to the mediaitem
 func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage *directus.StyledImage) error {
-	parentStartsAt, parentEndsAt, err := getInOutTime(short)
+	parentStartsAt, parentEndsAt, err := getInOutTime(ctx, short)
 	if err != nil {
 		return err
 	}
@@ -251,7 +251,7 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 	if short.EpisodeID != "" {
 		episodeID = short.EpisodeID
 	} else {
-		fmt.Printf("WARN: EpisodeID is empty for %s, %s\n", short.MBMetadata.ID, short.Label)
+		workflow.GetLogger(ctx).Warn("EpisodeID is empty", "mediabankenID", short.MBMetadata.ID, "label", short.Label)
 	}
 
 	label := short.Label
@@ -329,7 +329,9 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 	return nil
 }
 
-func getInOutTime(short *ShortsData) (*int64, *int64, error) {
+func getInOutTime(ctx workflow.Context, short *ShortsData) (*int64, *int64, error) {
+	logger := workflow.GetLogger(ctx)
+
 	var parentStartsAt *int64
 	var parentEndsAt *int64
 
@@ -350,7 +352,7 @@ func getInOutTime(short *ShortsData) (*int64, *int64, error) {
 	}
 
 	if parentStartsAt != nil && parentEndsAt != nil && *parentStartsAt > *parentEndsAt {
-		fmt.Printf("WARNING: In > Out for %s, %s\n", short.MBMetadata.ID, short.Label)
+		logger.Warn("In > Out", "mediabankenID", short.MBMetadata.ID, "label", short.Label)
 		return nil, nil, nil
 	}
 	if parentStartsAt == nil || parentEndsAt == nil {
@@ -358,7 +360,7 @@ func getInOutTime(short *ShortsData) (*int64, *int64, error) {
 		*parentStartsAt = int64(0)
 		parentEndsAt = new(int64)
 		*parentEndsAt = int64(0)
-		fmt.Printf("WARNING: In/Out was not found for %s, %s\n", short.MBMetadata.ID, short.Label)
+		logger.Warn("In/Out was not found", "mediabankenID", short.MBMetadata.ID, "label", short.Label)
 		//return nil
 	}
 	return parentStartsAt, parentEndsAt, nil

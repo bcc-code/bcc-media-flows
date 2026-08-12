@@ -1,0 +1,28 @@
+# Configuration for `workflowcheck`, run by `make test`.
+#
+# workflowcheck decides whether a function is deterministic by walking every
+# function it calls, all the way down into the runtime. That walk is
+# deliberately conservative, so a handful of pure standard-library functions
+# come back flagged because something far below them touches a map or the
+# garbage collector. The tool ships with its own list of such overrides
+# (reflect.Value.Interface, runtime.Caller); the entries below are the ones
+# this repository needs.
+#
+# false = treat as deterministic. Only add an entry here for a function whose
+# output genuinely depends on nothing but its arguments. Anything that reads
+# the clock, the filesystem, the network or a global belongs in an activity,
+# not in an override.
+decls:
+  # Flagged via reflect -> runtime.Frames when building the type-encoder cache.
+  # The encoders themselves are pure, and map keys are emitted in sorted order,
+  # so the output is a function of the input alone.
+  #
+  # Note this also stops the checker from looking inside custom MarshalJSON /
+  # UnmarshalJSON implementations reached through these calls. Keep those pure.
+  encoding/json.Marshal: false
+  encoding/json.MarshalIndent: false
+  encoding/json.Unmarshal: false
+
+  # Pure string parsing. Flagged only because net/url.parse allocates, and the
+  # allocator can start a GC goroutine.
+  net/url.Parse: false

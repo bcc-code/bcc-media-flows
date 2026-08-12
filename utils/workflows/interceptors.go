@@ -55,13 +55,22 @@ func (c *AnalyticsWorkflowInboundInterceptor) ExecuteWorkflow(
 		parent = info.ParentWorkflowExecution.ID
 	}
 
-	analytics.GetService().WorkflowStarted(info.WorkflowType.Name, info.WorkflowExecution.ID, parent)
+	// Emitting only outside replay keeps one event per workflow: a replayed task
+	// re-runs this interceptor from the top, so an unguarded call would report the
+	// same workflow started again on every cache eviction.
+	if !workflow.IsReplaying(ctx) {
+		//workflowcheck:ignore analytics writes to stdout/rudderstack, but only outside replay
+		analytics.GetService().WorkflowStarted(info.WorkflowType.Name, info.WorkflowExecution.ID, parent)
+	}
 
-	startTime := time.Now()
+	// workflow.Now, not time.Now: the wall clock differs between the original run
+	// and a replay, and it measures time spent in this worker rather than the
+	// workflow's own elapsed time.
+	startTime := workflow.Now(ctx)
 
 	result, err := c.Next.ExecuteWorkflow(ctx, in)
 
-	duration := time.Since(startTime)
+	duration := workflow.Now(ctx).Sub(startTime)
 	executionTime := duration.Milliseconds()
 
 	status := "Success"
@@ -69,7 +78,10 @@ func (c *AnalyticsWorkflowInboundInterceptor) ExecuteWorkflow(
 		status = "Failure"
 	}
 
-	analytics.GetService().WorkflowFinished(info.WorkflowType.Name, info.WorkflowExecution.ID, parent, status, executionTime)
+	if !workflow.IsReplaying(ctx) {
+		//workflowcheck:ignore analytics writes to stdout/rudderstack, but only outside replay
+		analytics.GetService().WorkflowFinished(info.WorkflowType.Name, info.WorkflowExecution.ID, parent, status, executionTime)
+	}
 
 	return result, err
 }
