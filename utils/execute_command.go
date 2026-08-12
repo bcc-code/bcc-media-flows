@@ -85,12 +85,11 @@ func ExecuteAnalysisCmd(cmd *exec.Cmd, outputCallback func(string)) (string, err
 	// Buffered rather than piped, which is what keeps this from deadlocking.
 	//
 	// Stdout is drained to EOF below, and stdout only reaches EOF once the child
-	// exits. Reading stderr afterwards — as this function used to — means a chatty
-	// child fills the 64 KiB stderr pipe, blocks in write(), therefore never exits,
-	// and therefore never closes stdout, so the drain never finishes either. That is
-	// reachable in practice: ffmpeg stays quiet on a clean file thanks to
-	// -hide_banner and -nostats, but damaged input produces per-frame decode
-	// warnings that run to megabytes.
+	// exits. Stderr therefore cannot be a pipe read after that drain: a chatty child
+	// would fill the 64 KiB stderr pipe, block in write(), never exit, never close
+	// stdout, and the drain would never finish either. That is reachable in practice:
+	// ffmpeg stays quiet on a clean file thanks to -hide_banner and -nostats, but
+	// damaged input produces per-frame decode warnings that run to megabytes.
 	//
 	// Assigning an io.Writer instead makes os/exec copy stderr on its own goroutine,
 	// so it can never fill up. cmd.Wait is what guarantees that copy has finished,

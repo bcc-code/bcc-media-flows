@@ -103,8 +103,8 @@ func TestExecuteAnalysisCmd_ForwardsStdoutToCallback(t *testing.T) {
 	assert.Equal(t, []string{"progress=continue", "progress=end"}, lines)
 }
 
-// A failing command must report why. Previously the stderr content was dropped and
-// callers saw a bare "exit status 1".
+// A failing command must report why: the error carries the stderr tail, not just a
+// bare "exit status 1".
 func TestExecuteAnalysisCmd_FailureIncludesStderr(t *testing.T) {
 	cmd := exec.Command("sh", "-c", `echo "No such file or directory" >&2; exit 1`)
 
