@@ -17,10 +17,9 @@ func mergeInput(items ...common.MergeInputItem) common.MergeInput {
 	return common.MergeInput{Title: "test", Items: items}
 }
 
-// The regression: read failures were appended to an errs slice that was never
-// returned, and the signature had no error at all. An unreadable input silently
-// dropped that whole cut from the merged transcript, and the caller wrote the short
-// result to disk as if it were complete.
+// An unreadable input must be reported rather than skipped. Dropping one cut still
+// produces a plausible-looking transcript, which the caller writes to disk as if it
+// were complete — so the failure has to travel out through the signature.
 func TestMergeTranscripts_UnreadableFileIsReported(t *testing.T) {
 	result, err := MergeTranscripts(mergeInput(
 		common.MergeInputItem{Path: testdataPath("does_not_exist.json"), Start: 0, End: 10},
