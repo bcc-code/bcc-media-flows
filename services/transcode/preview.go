@@ -388,9 +388,9 @@ func GrowingPreview(ctx context.Context, input GrowingPreviewInput, heartbeater 
 	// Create a pipe between the two commands
 	pipe, err := tailCmd.StdoutPipe()
 	if err != nil {
-		// This used to print and call os.Exit(1), which killed the whole transcode
-		// worker: every other activity on the process died without reporting an error,
-		// only failing later via heartbeat timeout.
+		// Must return rather than exit: this runs inside a Temporal activity, so
+		// terminating the process would kill every other activity on the worker without
+		// reporting an error, leaving them to fail later on a heartbeat timeout.
 		return fmt.Errorf("could not create tail stdout pipe: %w", err)
 	}
 	ffmpegCmd.Stdin = pipe
