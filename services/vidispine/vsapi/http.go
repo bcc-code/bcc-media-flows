@@ -65,13 +65,13 @@ func NewClient(baseURL string, username string, password string) *Client {
 	client.SetRetryCount(5)
 
 	// resty leaves err nil for 4xx and 5xx, and because it only unmarshals on 2xx,
-	// resp.Result() then hands back a pointer to a zero-valued struct that callers
-	// cannot tell apart from a genuinely empty answer. Nearly every request in this
-	// package took that path, so a Vidispine outage produced empty shape lists,
-	// fallback metadata, and deletes that reported success having done nothing.
+	// resp.Result() hands back a pointer to a zero-valued struct that callers cannot
+	// tell apart from a genuinely empty answer. Without this hook a Vidispine outage
+	// reads as empty shape lists, fallback metadata, and deletes that succeeded
+	// without deleting anything.
 	//
-	// Converting the status once here rather than at every call site also means a new
-	// call site is safe by default instead of safe only if its author remembered.
+	// Deciding the status here rather than at each call site keeps a new call site
+	// safe by default, instead of safe only if its author remembers to check.
 	client.OnAfterResponse(func(_ *resty.Client, resp *resty.Response) error {
 		if !resp.IsError() {
 			return nil

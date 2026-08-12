@@ -28,9 +28,9 @@ func vsServer(t *testing.T, status int, body string) (*Client, *int) {
 	return NewClient(server.URL, "user", "pass"), &calls
 }
 
-// The core of the fix. resty leaves err nil for 4xx/5xx and only unmarshals on 2xx,
-// so callers used to receive a pointer to a zero-valued struct they could not tell
-// apart from a real empty answer.
+// A server error must reach the caller as an error. resty leaves err nil for 4xx/5xx
+// and only unmarshals on 2xx, so without the hook the caller receives a pointer to a
+// zero-valued struct indistinguishable from a real empty answer.
 func TestClient_ServerErrorIsAnError(t *testing.T) {
 	client, _ := vsServer(t, http.StatusInternalServerError, `{"internalServer":"boom"}`)
 
@@ -53,9 +53,9 @@ func TestClient_GetMetadataDoesNotTolerate404(t *testing.T) {
 	assert.Nil(t, result)
 }
 
-// A failed search used to return an empty slice with a nil error, which
-// utils/workflows/vidispine.go reads as "no item matches" and bmm_track_metadata.go
-// then acts on by importing a duplicate track.
+// A failed search must not read as an empty result set: utils/workflows/vidispine.go
+// treats an empty result as "no item matches", and bmm_track_metadata.go acts on that
+// by importing a new track.
 func TestClient_SearchFailureIsAnError(t *testing.T) {
 	client, _ := vsServer(t, http.StatusBadGateway, `<html>gateway</html>`)
 

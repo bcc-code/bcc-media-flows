@@ -45,11 +45,9 @@ func (c *Client) GetShapes(vsID string) (*ShapeResult, error) {
 		Get(url)
 
 	if err != nil {
-		// The debug line that used to be here dereferenced log.L, which is nil unless
-		// ConfigureGlobalLogger has run — and nothing outside a test calls it. The path
-		// was unreachable while err was only ever a transport failure; now that the
-		// response hook reports 4xx/5xx it is live, and the error already carries the
-		// method, URL and status.
+		// Deliberately not logged here: the error already carries the method, URL and
+		// status, and log.L is a nil *zerolog.Logger unless ConfigureGlobalLogger has
+		// run, which nothing outside a test does.
 		return nil, err
 	}
 
@@ -75,8 +73,9 @@ func (c *Client) AddShapeToItem(tag, itemID, fileID string) (string, error) {
 		return "", err
 	}
 
-	// A non-2xx never reaches here any more: the response hook in NewClient turns it
-	// into an error above, preserving the ErrShapeTagNotFound sentinel.
+	// Only 2xx reaches here; the response hook in NewClient converts any other status
+	// into the error returned above, preserving the ErrShapeTagNotFound sentinel. A 2xx
+	// with no job ID still means the shape was not created.
 	jobID := result.Result().(*JobDocument).JobID
 	if jobID == "" {
 		return "", parseVSError(result.Body(), result.StatusCode(), tag, itemID)
