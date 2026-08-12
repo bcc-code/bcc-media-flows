@@ -61,7 +61,6 @@ var WorkerWorkflows = []any{
 	miscworkflows.ImportSubtitlesFromSubtrans,
 	miscworkflows.MergeAndImportSubtitlesFromCSV,
 	miscworkflows.UpdateAssetRelations,
-	ingestworkflows.Asset,
 	ingestworkflows.AssetJSON,
 	ingestworkflows.RawMaterial,
 	ingestworkflows.RawMaterialForm,

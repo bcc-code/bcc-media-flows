@@ -619,8 +619,8 @@ most if the proxy were ever misconfigured, bypassed, or reached from an already-
   `TRANSCODE_ROOT_PATH` **unescaped** into a package-init `regexp.MustCompile`, so an unset
   variable degrades the pattern to `(?:/)([\w-]*)(?:/in/)` and any regex metacharacter silently
   breaks it; only the `doRawImport` branch calls `paths.Parse`, while the request-supplied path
-  flows unvalidated into `AssetParams.XMLPath` (`:196`), `IncrementalParams.Path` (`:135`),
-  `CopyFileInput.Source` (`:103`) and `AssetJSONParams.JSONPath` (`:243`); and `:132` uses the
+  flows unvalidated into `IncrementalParams.Path`, `CopyFileInput.Source` and
+  `AssetJSONParams.JSONPath`; and `:132` uses the
   fixed workflow ID `"LIVE-INGEST"`, so two concurrent growing-file events collide and the
   resulting `WorkflowExecutionAlreadyStarted` is returned as a 500 with no dedup logic.
 

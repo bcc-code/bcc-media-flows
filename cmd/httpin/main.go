@@ -181,15 +181,6 @@ func triggerHandler(ctx *gin.Context) {
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.ExecuteFFmpeg, miscworkflows.ExecuteFFmpegInput{
 			Arguments: input.Arguments,
 		})
-	case "AssetIngest":
-		xmlPath := getParamFromCtx(ctx, "xmlPath")
-		if xmlPath == "" {
-			ctx.Status(http.StatusBadRequest)
-			return
-		}
-		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.Asset, ingestworkflows.AssetParams{
-			XMLPath: xmlPath,
-		})
 	case "AssetIngestJSON":
 		jsonPath := getParamFromCtx(ctx, "jsonPath")
 		if jsonPath == "" {
