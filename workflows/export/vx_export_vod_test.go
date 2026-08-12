@@ -45,11 +45,10 @@ type drainProbeResult struct {
 // level registers one future per video, and each video callback either registers
 // follow-up futures or bails out early.
 //
-// The point of the test is that waitForFiles must terminate for every shape. The
-// original code drained a count derived from the input lists
-// (qualitiesWithLanguages, and Resolutions × audioKeys), which overshoots as soon
-// as any callback returns early — Select then blocked forever on a future that was
-// never scheduled.
+// The point of the test is that waitForFiles must terminate for every shape. A drain
+// count derived from the input lists (qualitiesWithLanguages, and Resolutions ×
+// audioKeys) overshoots as soon as any callback returns early, and Select then blocks
+// forever on a future nothing ever scheduled.
 func drainProbeWorkflow(ctx workflow.Context, params drainProbeParams) (drainProbeResult, error) {
 	service := &vxExportVodService{filesSelector: workflow.NewSelector(ctx)}
 	callbacks := 0
@@ -96,8 +95,8 @@ func (s *VODDrainTestSuite) Test_AllVideosSucceed() {
 	s.Equal(9, result.Callbacks)
 }
 
-// The regression: one failed transcode schedules no follow-ups, so a count taken
-// from the input lists overshoots by FollowUps and Select blocks forever.
+// One failed transcode schedules no follow-ups, so a count taken from the input
+// lists overshoots by FollowUps and Select blocks forever.
 func (s *VODDrainTestSuite) Test_OneVideoFails_DoesNotDeadlock() {
 	result := s.run(drainProbeParams{Videos: []bool{true, false, true}, FollowUps: 2})
 	// 3 video callbacks + 2×2 follow-ups from the two that succeeded.
