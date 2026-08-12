@@ -32,12 +32,11 @@ func truncateErrorBody(body []byte) string {
 
 // cantemoErrorFromResponse describes a non-2xx response.
 //
-// The status is checked by the caller rather than inferred from resp.Error() being
-// populated. resty only unmarshals an error body for JSON and XML content types, so
-// the previous hook returned nil for an HTML 502 from a proxy or an empty-bodied
-// 404 — leaving callers with a zero-valued result and no error. It also fell back to
-// merry.New("") when the envelope carried no "detail", producing a non-nil error
-// with an empty message.
+// Callers decide on the status directly rather than inferring it from resp.Error()
+// being populated: resty only unmarshals an error body for JSON and XML content
+// types, so an HTML 502 from a proxy or an empty-bodied 404 leaves resp.Error() nil.
+// The message never depends solely on the envelope's "detail" either, since that key
+// is absent from some responses.
 func cantemoErrorFromResponse(resp *resty.Response) error {
 	request := resp.Request.Method + " " + resp.Request.URL
 
@@ -94,9 +93,8 @@ func (c *Client) GetFormats(itemID string) ([]Format, error) {
 }
 
 func (c *Client) GetMetadata(itemID string) (*ItemMetadata, error) {
-	// SetDebug(true) used to be here. resty's debug mode dumps every request header,
-	// including the Auth-Token set in NewClient, plus the full response body — to
-	// stdout, on every metadata fetch.
+	// Debug mode must stay off here: resty dumps every request header, including the
+	// Auth-Token set in NewClient, plus the full response body, to stdout.
 	req := c.restyClient.R()
 	res, err := req.SetResult(&ItemMetadata{}).
 		Get("/API/v2/items/" + itemID + "/")
