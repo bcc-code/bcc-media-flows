@@ -10,8 +10,16 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-func SendTelegramErorr(ctx workflow.Context, channel telegram.Chat, vxid string, err error) {
-	SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", vxid, err.Error()))
+// SendTelegramError reports a failure to the given chat.
+//
+// vxid is optional; omit it for failures that happen before an asset exists.
+func SendTelegramError(ctx workflow.Context, channel telegram.Chat, vxid string, err error) {
+	subject := workflow.GetInfo(ctx).WorkflowType.Name
+	if vxid != "" {
+		subject += fmt.Sprintf(" of `%s`", vxid)
+	}
+
+	SendTelegramText(ctx, channel, fmt.Sprintf("🟥 %s failed:\n```\n%s\n```", subject, err.Error()))
 }
 
 func SendTelegramText(ctx workflow.Context, channel telegram.Chat, message string) {
@@ -28,7 +36,10 @@ func SendTelegramText(ctx workflow.Context, channel telegram.Chat, message strin
 	}
 }
 
-func SendTelegramMessage(ctx workflow.Context, channel telegram.Chat, msg *telegram.Message) *telegram.Message {
+// SendTelegramMessage sends an already-built message. The destination chat is
+// carried on msg itself, set when it was created with telegram.NewMessage, so no
+// channel argument is taken — an earlier signature had one and silently ignored it.
+func SendTelegramMessage(ctx workflow.Context, msg *telegram.Message) *telegram.Message {
 	msg, err := Execute(ctx, activities.Util.SendTelegramMessage, msg).Result(ctx)
 
 	if err != nil {

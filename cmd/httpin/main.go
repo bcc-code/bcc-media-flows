@@ -216,9 +216,12 @@ func triggerHandler(ctx *gin.Context) {
 			AssetID: vxID,
 		})
 	case "NormalizeAudio":
-		target, err := strconv.ParseFloat(getParamFromCtx(ctx, "targetLUFS"), 64)
-		if err != nil {
-			_ = ctx.AbortWithError(http.StatusBadRequest, err)
+		// parseErr, not err: declaring a case-scoped err here shadowed the one the
+		// check after the switch reads, so a failed ExecuteWorkflow below was reported
+		// as 200 OK with a null body.
+		target, parseErr := strconv.ParseFloat(getParamFromCtx(ctx, "targetLUFS"), 64)
+		if parseErr != nil {
+			_ = ctx.AbortWithError(http.StatusBadRequest, parseErr)
 			return
 		}
 
@@ -236,6 +239,14 @@ func triggerHandler(ctx *gin.Context) {
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.Incremental, ingestworkflows.IncrementalParams{
 			Path: path,
 		})
+	default:
+		// Without this, an unknown or renamed job name left res and err both nil and
+		// fell through to the 200 below, so callers — including the FileCatalyst and
+		// watcher integrations — read a typo as success.
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"error": fmt.Sprintf("unknown job: %s", job),
+		})
+		return
 	}
 
 	if err != nil {
@@ -245,6 +256,17 @@ func triggerHandler(ctx *gin.Context) {
 		})
 		return
 	}
+
+	// A case that returns without either starting a workflow or writing a response
+	// would otherwise be reported as success. Cheaper to catch here than to rely on
+	// every future case remembering.
+	if res == nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("job %s did not start a workflow", job),
+		})
+		return
+	}
+
 	ctx.JSON(http.StatusOK, res)
 }
 

@@ -49,49 +49,49 @@ func BmmIngestUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 
 	err = wfutils.MoveFile(ctx, path, newPath, rclone.PriorityNormal)
 	if err != nil {
-		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, "", err)
+		wfutils.SendTelegramError(ctx, telegram.ChatBMM, "", err)
 		return nil, err
 	}
 
 	res, err := ImportFileAsTag(ctx, "original", newPath, "BMM-"+strconv.Itoa(params.TrackID)+" "+params.Language+" - "+params.Title)
 	if err != nil {
-		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, "", err)
+		wfutils.SendTelegramError(ctx, telegram.ChatBMM, "", err)
 		return nil, err
 	}
 
 	err = SetUploadedBy(ctx, res.AssetID, params.UploadedBy)
 	if err != nil {
-		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
+		wfutils.SendTelegramError(ctx, telegram.ChatBMM, res.AssetID, err)
 		return nil, err
 	}
 
 	err = SetUploadJobID(ctx, res.AssetID, workflow.GetInfo(ctx).OriginalRunID)
 	if err != nil {
-		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
+		wfutils.SendTelegramError(ctx, telegram.ChatBMM, res.AssetID, err)
 		return nil, err
 	}
 
 	err = wfutils.SetVidispineMeta(ctx, res.AssetID, vscommon.FieldLanguagesRecorded.Value, params.Language)
 	if err != nil {
-		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
+		wfutils.SendTelegramError(ctx, telegram.ChatBMM, res.AssetID, err)
 		return nil, err
 	}
 
 	err = wfutils.SetVidispineMetaInGroup(ctx, res.AssetID, vscommon.FieldBmmTrackID.Value, strconv.Itoa(params.TrackID), "BMM Metadata")
 	if err != nil {
-		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
+		wfutils.SendTelegramError(ctx, telegram.ChatBMM, res.AssetID, err)
 		return nil, err
 	}
 
 	err = wfutils.SetVidispineMetaInGroup(ctx, res.AssetID, vscommon.FieldBmmTitle.Value, params.Title, "BMM Metadata")
 	if err != nil {
-		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
+		wfutils.SendTelegramError(ctx, telegram.ChatBMM, res.AssetID, err)
 		return nil, err
 	}
 
 	err = WaitForImportTag(ctx, res)
 	if err != nil {
-		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
+		wfutils.SendTelegramError(ctx, telegram.ChatBMM, res.AssetID, err)
 		return nil, err
 	}
 
@@ -102,7 +102,7 @@ func BmmIngestUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 		Language: params.Language,
 	}).Get(ctx, nil)
 	if err != nil {
-		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
+		wfutils.SendTelegramError(ctx, telegram.ChatBMM, res.AssetID, err)
 		// Continue. Just because we failed transcription we should not stop the workflow
 	}
 
@@ -122,14 +122,14 @@ func BmmIngestUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 
 	err = future.Get(ctx, nil)
 	if err != nil {
-		wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
+		wfutils.SendTelegramError(ctx, telegram.ChatBMM, res.AssetID, err)
 		return nil, err
 	}
 
 	if params.IsPodcast {
 		err = deliverToSSF(ctx, res.AssetID, newPath, params)
 		if err != nil {
-			wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
+			wfutils.SendTelegramError(ctx, telegram.ChatBMM, res.AssetID, err)
 			return nil, err
 		}
 	}

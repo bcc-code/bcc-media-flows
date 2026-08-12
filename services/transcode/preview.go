@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -60,7 +61,7 @@ func buildVUMeterFilters(audioTracks int, trcPrefix string, scaleFilter string) 
 	lastVid := "[vmain]"
 	for i := 0; i < audioTracks; i++ {
 		y := 10 + i*(meterH+spacing)
-		parts = append(parts, 
+		parts = append(parts,
 			fmt.Sprintf("[0:a:%d]showvolume=w=%d:h=%d:p=%.2f:t=1,format=rgba[vum%d]", i, meterW, meterH, meterAlpha, i),
 			fmt.Sprintf("%s[vum%d]overlay=x=10:y=%d[tmp%d]", lastVid, i, y, i),
 		)
@@ -352,7 +353,21 @@ func GrowingPreview(ctx context.Context, input GrowingPreviewInput, heartbeater 
 
 	tailCmd := exec.CommandContext(ctx, "tail", "-c", "+1", "-f", input.FilePath)
 
-	ffmpegCmd := exec.Command("ffmpeg",
+	// Context-bound so a cancelled or timed-out activity cannot leave ffmpeg running.
+	// This matters on retry: a new attempt restarts tail from byte 0, and an orphan
+	// from the previous attempt would keep writing into the same TempDir, so two
+	// ffmpegs would be producing the same HLS segments.
+	//
+	// Cancel is deliberately a no-op instead of CommandContext's default SIGKILL.
+	// Cancellation kills tail, ffmpeg then sees EOF on stdin and finalises the HLS
+	// playlist cleanly; killing it outright would risk truncating the final segment.
+	// WaitDelay bounds how long Wait may block after cancellation before force-killing,
+	// so a wedged ffmpeg cannot hang the activity indefinitely.
+	//
+	// Note the documented consequence: because Cancel returns nil rather than
+	// os.ErrProcessDone, Wait reports the context error even when ffmpeg exits
+	// successfully. That is why the cancellation path below ignores Wait's result.
+	ffmpegCmd := exec.CommandContext(ctx, "ffmpeg",
 		"-i", "pipe:0", // Input from stdin
 		"-i", watermark,
 		"-c:v", "libx264", // Video codec: H.264
@@ -367,58 +382,109 @@ func GrowingPreview(ctx context.Context, input GrowingPreviewInput, heartbeater 
 		"-hls_segment_filename", filepath.Join(input.TempDir, "segment_%03d.ts"), // Segment file names
 		"-y", filepath.Join(input.TempDir, "playlist.m3u8")) // Output playlist file
 
+	ffmpegCmd.Cancel = func() error { return nil }
+	ffmpegCmd.WaitDelay = 2 * time.Minute
+
 	// Create a pipe between the two commands
 	pipe, err := tailCmd.StdoutPipe()
 	if err != nil {
-		fmt.Printf("Error creating pipe: %v\n", err)
-		os.Exit(1)
+		// Must return rather than exit: this runs inside a Temporal activity, so
+		// terminating the process would kill every other activity on the worker without
+		// reporting an error, leaving them to fail later on a heartbeat timeout.
+		return fmt.Errorf("could not create tail stdout pipe: %w", err)
 	}
 	ffmpegCmd.Stdin = pipe
 
-	// Set output for ffmpeg
+	// Set output for ffmpeg. Stderr is teed so operators keep seeing it in the worker
+	// log while the tail is also available to quote in an error. Bounded on purpose:
+	// activity errors are stored in the workflow history, and a decode-warning storm on
+	// a multi-hour ingest would otherwise put megabytes there.
 	ffmpegCmd.Stdout = os.Stdout
-	ffmpegCmd.Stderr = os.Stderr
+	stderrTail := &boundedTailWriter{max: maxFFmpegErrorTail}
+	ffmpegCmd.Stderr = io.MultiWriter(os.Stderr, stderrTail)
 
 	fmt.Printf("Executing tail command: %s\n", strings.Join(tailCmd.Args, " "))
 	fmt.Printf("Executing ffmpeg command: %s\n", strings.Join(ffmpegCmd.Args, " "))
 
 	// Start tail command
 	if err := tailCmd.Start(); err != nil {
-		return fmt.Errorf("Error starting tail: %v\n", err)
+		return fmt.Errorf("error starting tail: %w", err)
 	}
+
+	// Reaps tail and closes the pipe's read end. Skipping this leaks a descriptor and
+	// leaves a zombie per call: StdoutPipe registers the read end in
+	// tailCmd.parentIOPipes, which only Wait closes, and handing it to ffmpegCmd.Stdin
+	// does not transfer ownership because exec returns a caller-supplied *os.File as-is.
+	defer func() { _ = tailCmd.Wait() }()
 
 	// Start ffmpeg command
 	if err := ffmpegCmd.Start(); err != nil {
-		return fmt.Errorf("Error starting ffmpeg: %v\nCommand: %s", err, strings.Join(ffmpegCmd.Args, " "))
+		return fmt.Errorf("error starting ffmpeg: %w\nCommand: %s", err, strings.Join(ffmpegCmd.Args, " "))
 	}
 
-	running := true
+	ffmpegDone := make(chan error, 1)
+	go func() { ffmpegDone <- ffmpegCmd.Wait() }()
+
 	start := time.Now()
-	for running {
+	for {
 		select {
-		case <-time.After(60 * time.Second):
-			break
+		case waitErr := <-ffmpegDone:
+			// ffmpeg stopped while the file is still growing, so no more preview is
+			// coming. Without this case the activity would carry on heartbeating and
+			// remuxing a stale playlist until its 8 hour timeout.
+			if muxErr := muxFinishedPreview(input.TempDir, input.DestinationFile); muxErr != nil {
+				fmt.Println(muxErr)
+			}
+			return fmt.Errorf("ffmpeg exited before the ingest finished: %w\nffmpeg stderr:\n%s",
+				waitErr, stderrTail.String())
+
 		case <-ctx.Done():
-			running = false
-		}
+			// Expected path: the workflow cancels this activity once the ingest is
+			// complete. Killing tail closes ffmpeg's stdin, which lets it finalise the
+			// playlist. Bounded by WaitDelay.
+			<-ffmpegDone
 
-		heartbeater(ctx, time.Since(start))
+			// Mux once more after ffmpeg has exited so the final HLS segment is included.
+			if muxErr := muxFinishedPreview(input.TempDir, input.DestinationFile); muxErr != nil {
+				fmt.Println(muxErr)
+			}
 
-		err = muxFinishedPreview(input.TempDir, input.DestinationFile)
-		if err != nil {
-			fmt.Println(err)
+			// ffmpeg's exit status here describes the shutdown, not the outcome — the
+			// deliverable is the muxed file. Returning it would make the normal end of
+			// every live ingest look like a failure.
+			return nil
+
+		case <-time.After(60 * time.Second):
+			heartbeater(ctx, time.Since(start))
+
+			if muxErr := muxFinishedPreview(input.TempDir, input.DestinationFile); muxErr != nil {
+				// Expected mid-ingest: this mux can race ffmpeg rewriting the playlist.
+				fmt.Println(muxErr)
+			}
 		}
 	}
+}
 
-	waitErr := ffmpegCmd.Wait()
+// maxFFmpegErrorTail is how much of ffmpeg's stderr is quoted back in an error.
+const maxFFmpegErrorTail = 4096
 
-	// Mux once more after ffmpeg has exited so the final HLS segment is included.
-	err = muxFinishedPreview(input.TempDir, input.DestinationFile)
-	if err != nil {
-		fmt.Println(err)
+// boundedTailWriter keeps only the last max bytes written to it, so a long-running
+// command's stderr can be quoted in an error without it growing without bound.
+type boundedTailWriter struct {
+	buf []byte
+	max int
+}
+
+func (w *boundedTailWriter) Write(p []byte) (int, error) {
+	w.buf = append(w.buf, p...)
+	if len(w.buf) > w.max {
+		w.buf = w.buf[len(w.buf)-w.max:]
 	}
+	return len(p), nil
+}
 
-	return waitErr
+func (w *boundedTailWriter) String() string {
+	return string(w.buf)
 }
 
 func muxFinishedPreview(inputFolder, outputFile string) error {

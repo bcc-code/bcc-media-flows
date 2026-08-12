@@ -99,12 +99,18 @@ func Multitrack(ctx workflow.Context, params MasterParams) (*MasterResult, error
 		return nil, err
 	}
 
-	err = notifyImportCompleted(ctx, params.Targets, params.Metadata.JobProperty.JobID, map[string]paths.Path{
+	importedVXs := map[string]paths.Path{
 		result.AssetID: muxResult.OutputPath,
-	})
+	}
+
+	err = notifyImportCompleted(ctx, params.Targets, params.Metadata.JobProperty.JobID, importedVXs)
 	if err != nil {
 		return nil, err
 	}
 
-	return nil, nil
+	// Callers need the created asset to tell a successful run from an empty one.
+	// Shaped like what Masters returns.
+	return &MasterResult{
+		ImportedVXs: importedVXs,
+	}, nil
 }

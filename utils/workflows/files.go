@@ -254,7 +254,7 @@ func RcloneWaitForFileGone(ctx workflow.Context, file paths.Path, notificationCh
 
 		template.Message = fmt.Sprintf("⚠️ File ```%s``` still exists, retrying in one minute (%d/%d)", file.Rclone(), i+1, retries)
 		msg.UpdateWithTemplate(template)
-		msg = SendTelegramMessage(ctx, notificationChannel, msg)
+		msg = SendTelegramMessage(ctx, msg)
 
 		workflow.Sleep(ctx, time.Minute)
 	}

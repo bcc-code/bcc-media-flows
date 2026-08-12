@@ -2,6 +2,7 @@ package transcribe
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -277,7 +278,7 @@ type Word struct {
 	Confidence float64 `json:"confidence"`
 }
 
-func MergeTranscripts(input common.MergeInput) *Transcription {
+func MergeTranscripts(input common.MergeInput) (*Transcription, error) {
 	mergedTranscription := &Transcription{
 		Language: "no",
 		Text:     "",
@@ -330,5 +331,12 @@ func MergeTranscripts(input common.MergeInput) *Transcription {
 
 		startAt += mi.End - mi.Start
 	}
-	return mergedTranscription
+
+	// These were collected and then dropped, so an unreadable input file silently
+	// produced a merged transcript missing that whole cut.
+	if len(errs) > 0 {
+		return nil, errors.Join(errs...)
+	}
+
+	return mergedTranscription, nil
 }

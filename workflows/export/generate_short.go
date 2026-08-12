@@ -122,6 +122,15 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		return nil, err
 	}
 
+	// Everything below assumes a video: the scene-detect call takes VideoFile
+	// directly, and both Linux() and the CropShort input dereference it. paths.Path
+	// has value receivers, so even the method calls panic on a nil pointer, which
+	// fails the workflow task into an endless retry.
+	if clipResult.VideoFile == nil {
+		return nil, temporal.NewNonRetryableApplicationError(
+			"cannot generate a short without a video file", "NO_VIDEO_FILE", nil)
+	}
+
 	sceneResult, err := wfutils.Execute(ctx,
 		activities.Video.FFmpegGetSceneChanges,
 		clipResult.VideoFile,

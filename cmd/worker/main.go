@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/analytics"
-	"github.com/bcc-code/bcc-media-flows/services/directus"
 	"github.com/bcc-code/bcc-media-flows/services/clickup"
+	"github.com/bcc-code/bcc-media-flows/services/directus"
 	"github.com/bcc-code/bcc-media-flows/services/vizualizer"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
@@ -23,7 +23,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/workflows"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
-	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
 	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/teamwork/reload"
@@ -37,7 +36,6 @@ import (
 )
 
 var utilActivities = []any{
-	batonactivities.QC,
 	cantemo.AddRelation,
 	cantemo.RenameFile,
 	cantemo.MoveFileWait,

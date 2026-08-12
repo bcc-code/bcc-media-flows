@@ -2,8 +2,6 @@ package ingestworkflows
 
 import (
 	"fmt"
-	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
-	"github.com/bcc-code/bcc-media-flows/utils"
 	"regexp"
 	"strconv"
 	"strings"
@@ -16,11 +14,9 @@ import (
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
-	"github.com/bcc-code/bcc-media-flows/services/baton"
 	"github.com/bcc-code/bcc-media-flows/services/ingest"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -41,7 +37,6 @@ type MasterParams struct {
 }
 
 type MasterResult struct {
-	Report        *baton.QCReport
 	AnalyzeResult *common.AnalyzeEBUR128Result
 	ImportedVXs   map[string]paths.Path
 }
@@ -84,28 +79,7 @@ func processMaster(ctx workflow.Context, sourceFile paths.Path, destinationFile 
 		return "", err
 	}
 
-	// Temporarily disabled, as it does not do anything at the moment
-	var report *baton.QCReport
-	if utils.IsMedia(destinationFile.Local()) {
-		plan := baton.TestPlanBasic
-		if destinationFile.Ext() == ".mxf" {
-			plan = baton.TestPlanMXF
-		}
-		if destinationFile.Ext() == ".mov" {
-			plan = baton.TestPlanMOV
-		}
-		err = wfutils.Execute(ctx, batonactivities.QC, batonactivities.QCParams{
-			Path: destinationFile,
-			Plan: plan,
-		}).Get(ctx, &report)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	parentAbandonOptions := workflow.GetChildWorkflowOptions(ctx)
-	parentAbandonOptions.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
-	asyncCtx := workflow.WithChildOptions(ctx, parentAbandonOptions)
+	asyncCtx := wfutils.WithAbandonChildOptions(ctx)
 
 	// Trigger transcribe and create previews but don't wait for them to finish. We must still
 	// wait for the child to actually START — it uses ParentClosePolicy ABANDON, so if the parent
@@ -201,9 +175,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		return nil, fmt.Errorf("%s", errText)
 	}
 
-	parentAbandonOptions := workflow.GetChildWorkflowOptions(ctx)
-	parentAbandonOptions.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
-	asyncCtx := workflow.WithChildOptions(ctx, parentAbandonOptions)
+	asyncCtx := wfutils.WithAbandonChildOptions(ctx)
 	err = notifyImportCompleted(asyncCtx, params.Targets, params.Metadata.JobProperty.JobID, importedVXs)
 	if err != nil {
 		return nil, err

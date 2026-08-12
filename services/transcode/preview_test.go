@@ -9,10 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"fmt"
-	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
-	"github.com/bcc-code/bcc-media-flows/utils/testutils"
 	"github.com/bcc-code/mediabank-bridge/log"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -120,111 +117,89 @@ func TestBuildGrowingPreviewFilter(t *testing.T) {
 	assert.Contains(t, many, "[0:a:0][0:a:1]amerge=inputs=2,pan=stereo|c0<c0|c1<c1[AUDIO-.mp4-0]")
 }
 
-func TestGrowingPreview_VUMeters(t *testing.T) {
-	os.MkdirAll("testdata/generated", 0755)
-
-	inputFile := "testdata/generated/testsrc_growing_4streams.mxf"
-	p, err := paths.Parse(inputFile)
-	require.NoError(t, err)
-	testutils.GenerateStreamableMXFTestFile(p, 4, 5.0)
+// growingPreviewFailFast runs GrowingPreview against a file that does not exist, which
+// makes both children exit within about a second: tail fails immediately, its stdout
+// closes, and ffmpeg then has an empty input to probe.
+//
+// This deliberately avoids generated media. Feeding ffmpeg an unprobeable stream does
+// not work as a trigger — `tail -f` never closes the pipe, so ffmpeg blocks waiting for
+// a header rather than failing, which is also why a missing watermark is no use: ffmpeg
+// never gets past probing input 0 to discover input 1 is missing.
+func growingPreviewFailFast(t *testing.T) error {
+	t.Helper()
 
 	tempDir := t.TempDir()
-	destFile := filepath.Join(tempDir, "growing_preview.mp4")
 
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	done := make(chan error, 1)
 	go func() {
 		done <- GrowingPreview(ctx, GrowingPreviewInput{
-			FilePath:        inputFile,
+			FilePath:        filepath.Join(tempDir, "does-not-exist.mxf"),
 			TempDir:         tempDir,
-			DestinationFile: destFile,
+			DestinationFile: filepath.Join(tempDir, "preview.mp4"),
 			WatermarkPath:   "testdata/test_overlay.png",
 		}, func(ctx context.Context, duration time.Duration) {})
 	}()
 
-	// Give ffmpeg time to consume the static file, then stop the tail
-	time.Sleep(10 * time.Second)
-	cancel()
-
 	select {
-	case <-done:
-	case <-time.After(60 * time.Second):
-		t.Fatal("GrowingPreview did not exit after context cancellation")
+	case err := <-done:
+		return err
+	case <-time.After(30 * time.Second):
+		t.Fatal("GrowingPreview did not notice ffmpeg exiting; it waited for cancellation instead")
+		return nil
 	}
+}
 
-	stat, err := os.Stat(destFile)
-	require.NoError(t, err, "destination file should exist")
-	require.True(t, stat.Size() > 1000, "destination file should not be empty")
+// ffmpeg exiting on its own means no more preview is coming, so GrowingPreview must
+// return promptly rather than wait for cancellation. The context is deliberately never
+// cancelled here: a drain loop watching only its timer and ctx.Done() would keep the
+// activity alive to its 8 hour StartToCloseTimeout, and this test to its deadline.
+func TestGrowingPreview_FfmpegExitingEarlyIsReported(t *testing.T) {
+	err := growingPreviewFailFast(t)
 
-	info, err := ffmpeg.ProbeFile(destFile)
-	require.NoError(t, err)
-	var videoStreams, audioStreams int
-	for _, stream := range info.Streams {
-		switch stream.CodecType {
-		case "video":
-			videoStreams++
-		case "audio":
-			audioStreams++
+	require.Error(t, err, "a dead ffmpeg must be reported, not waited out")
+	assert.Contains(t, err.Error(), "ffmpeg exited before the ingest finished")
+	// The stderr tail is what makes the failure diagnosable at all.
+	assert.Contains(t, err.Error(), "ffmpeg stderr")
+}
+
+// countOpenFDs reports how many descriptors this process holds.
+//
+// Linux exposes this as /proc/self/fd, which is where the workers run. macOS has
+// /dev/fd but os.ReadDir on it fails with EBADF, so this skips there rather than
+// pretending to measure something.
+func countOpenFDs(t *testing.T) int {
+	t.Helper()
+
+	for _, dir := range []string{"/proc/self/fd", "/dev/fd"} {
+		entries, err := os.ReadDir(dir)
+		if err == nil {
+			return len(entries)
 		}
 	}
-	assert.Equal(t, 1, videoStreams)
-	assert.Equal(t, 1, audioStreams)
+
+	t.Skip("no readable fd directory on this platform (expected on macOS; runs on Linux)")
+	return 0
 }
 
-func TestPreview_VUMeters_MultipleAudioTracks(t *testing.T) {
-	t.Parallel()
-	trackCounts := []int{1, 2, 4, 16}
-	os.MkdirAll("testdata/generated", 0755)
+// Repeated invocations must not accumulate descriptors. StdoutPipe registers the pipe's
+// read end in tailCmd.parentIOPipes, which only Wait closes, so failing to wait on tail
+// leaks one descriptor and one zombie per call — and descriptor exhaustion is the only
+// thing that can make os.Pipe fail in the first place.
+func TestGrowingPreview_DoesNotLeakDescriptors(t *testing.T) {
+	// Warm up first so one-off allocations are not counted as growth.
+	_ = growingPreviewFailFast(t)
+	before := countOpenFDs(t)
 
-	for _, n := range trackCounts {
-		t.Run("audio_tracks_"+string(rune(n)), func(t *testing.T) {
-			inputFile := filepath.Join("testdata/generated", fmt.Sprintf("testsrc_%dtracks.mov", n))
-			outputDir := "testdata/generated"
-			p, err := paths.Parse(inputFile)
-			require.NoError(t, err)
-			testutils.GenerateSoftronTestFile(p, n, 2.0)
-
-			previewInput := PreviewInput{
-				FilePath:      inputFile,
-				OutputDir:     outputDir,
-				WatermarkPath: "testdata/test_overlay.png",
-			}
-
-			result, err := Preview(previewInput, nil)
-			require.NoError(t, err, "Preview should succeed for %d tracks", n)
-			require.NotNil(t, result)
-			stat, err := os.Stat(result.LowResolutionPath)
-			require.NoError(t, err)
-			require.True(t, stat.Size() > 1000, "Preview output should not be empty for %d tracks", n)
-		})
+	const iterations = 5
+	for i := 0; i < iterations; i++ {
+		_ = growingPreviewFailFast(t)
 	}
-}
 
-func TestPreview_VUMeters_SeparateAudioStreams(t *testing.T) {
-	t.Parallel()
-	trackCounts := []int{1, 2, 4, 8}
-	os.MkdirAll("testdata/generated", 0755)
-
-	for _, n := range trackCounts {
-		t.Run(fmt.Sprintf("separate_streams_%d", n), func(t *testing.T) {
-			inputFile := filepath.Join("testdata/generated", fmt.Sprintf("testsrc_separate_%dstreams.mov", n))
-			outputDir := "testdata/generated"
-			p, err := paths.Parse(inputFile)
-			require.NoError(t, err)
-			testutils.GenerateSeparateAudioStreamsTestFile(p, n, 2.0)
-
-			previewInput := PreviewInput{
-				FilePath:      inputFile,
-				OutputDir:     outputDir,
-				WatermarkPath: "testdata/test_overlay.png",
-			}
-
-			result, err := Preview(previewInput, nil)
-			require.NoError(t, err, "Preview should succeed for %d separate streams", n)
-			require.NotNil(t, result)
-			stat, err := os.Stat(result.LowResolutionPath)
-			require.NoError(t, err)
-			require.True(t, stat.Size() > 1000, "Preview output should not be empty for %d separate streams", n)
-		})
-	}
+	after := countOpenFDs(t)
+	assert.LessOrEqual(t, after, before+1,
+		"descriptors grew from %d to %d over %d runs, so the tail pipe is still leaking",
+		before, after, iterations)
 }

@@ -75,6 +75,15 @@ type TranscodeGrowingPreviewParams struct {
 
 func (va VideoActivities) TranscodeGrowingPreview(ctx context.Context, input TranscodeGrowingPreviewParams) (any, error) {
 	activity.RecordHeartbeat(ctx, "Transcode Preview", input)
+
+	// Heartbeat on a background ticker as well as from the callback below. The callback
+	// only fires once every 60s and the loop then runs a full remux of the accumulated
+	// HLS playlist synchronously, which grows with the playlist over a multi-hour
+	// ingest. One slow remux was enough to blow the 10 minute HeartbeatTimeout and have
+	// Temporal retry the whole preview from byte 0.
+	stop := simpleHeartBeater(ctx)
+	defer close(stop)
+
 	err := transcode.GrowingPreview(ctx, transcode.GrowingPreviewInput{
 		FilePath:        input.OriginalFilePath.Local(),
 		DestinationFile: input.DestinationFilePath.Local(),

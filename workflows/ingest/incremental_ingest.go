@@ -143,7 +143,6 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	previewPath = previewPath.Append(rawPath.Base()).SetExt("mp4")
 
 	var previewFuture wfutils.Task[any]
-	var lowresImportJob *vsactivity.ImportFileResult
 	previewCtx, stopPreviewFunc := workflow.WithCancel(ctx)
 	previewActivityOpts := wfutils.GetDefaultActivityOptions()
 	previewActivityOpts.StartToCloseTimeout = time.Hour * 8
@@ -158,25 +157,34 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 		})
 
 		_ = workflow.Sleep(ctx, 2*time.Minute)
-		lowresImportJob, _ = wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
+		lowresImportJob, importErr := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
 			AssetID:  videoVXID,
 			FilePath: previewPath,
 			ShapeTag: "lowres_watermarked",
 			Growing:  true,
 			Replace:  false,
 		}).Result(ctx)
-
-		if err != nil {
-			logger.Error("%w", err)
+		if importErr != nil {
+			// Named separately from the enclosing function's err so the failure cannot
+			// be hidden by a later check reading the wrong variable.
+			logger.Error("Failed to import growing preview as lowres shape", "error", importErr)
 		}
 
-		err := previewFuture.Wait(ctx)
-		wfutils.Execute(ctx, activities.Vidispine.CloseFile, vsactivity.CloseFileParams{
-			FileID: lowresImportJob.FileID,
-		})
+		if previewErr := previewFuture.Wait(ctx); previewErr != nil {
+			logger.Error("Growing preview transcode failed", "error", previewErr)
+		}
 
-		if err != nil {
-			logger.Error("%w", err)
+		// Only close a file the import actually produced. A failed import leaves
+		// lowresImportJob nil, and dereferencing it panics the workflow task — which
+		// Temporal then retries indefinitely.
+		if lowresImportJob == nil {
+			return
+		}
+
+		if closeErr := wfutils.Execute(ctx, activities.Vidispine.CloseFile, vsactivity.CloseFileParams{
+			FileID: lowresImportJob.FileID,
+		}).Wait(ctx); closeErr != nil {
+			logger.Error("Failed to close growing lowres file", "error", closeErr)
 		}
 	})
 

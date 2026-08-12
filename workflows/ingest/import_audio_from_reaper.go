@@ -17,7 +17,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -33,9 +32,7 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 	logger.Info("Starting RelateAudioToVideo activity")
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
-	previewOpts := workflow.GetChildWorkflowOptions(ctx)
-	previewOpts.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
-	previewCtx := workflow.WithChildOptions(ctx, previewOpts)
+	previewCtx := wfutils.WithAbandonChildOptions(ctx)
 
 	langs, err := wfutils.GetMapKeysSafely(ctx, params.AudioList)
 	if err != nil {

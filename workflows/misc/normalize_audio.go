@@ -1,6 +1,8 @@
 package miscworkflows
 
 import (
+	"math"
+
 	"github.com/bcc-code/bcc-media-flows/paths"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -47,8 +49,16 @@ func NormalizeAudioLevelWorkflow(
 		return nil, err
 	}
 
-	// Don't adjust if the suggested adjustment is less than 0.01 Db
-	if r128Result.SuggestedAdjustment <= 0.01 {
+	// Don't adjust if the suggested adjustment is negligible in either direction.
+	//
+	// Guard on the magnitude, not the signed value. SuggestedAdjustment is
+	// TargetLoudness - IntegratedLoudness (see AnalyzeEBUR128Activity), so a
+	// positive value means the audio is too quiet and needs a boost — exactly what
+	// the previous `<= 0.01` skipped, while still re-encoding files the analyzer had
+	// zeroed out. AnalyzeEBUR128Activity already zeroes adjustments it considers not
+	// worth making, so anything non-zero should be applied; NormalizeAudioActivity
+	// guards the same way.
+	if math.Abs(r128Result.SuggestedAdjustment) > 0.01 {
 		adjustResult, err := wfutils.Execute(ctx, activities.Audio.AdjustAudioLevelActivity, activities.AdjustAudioLevelParams{
 			Adjustment:  r128Result.SuggestedAdjustment,
 			InFilePath:  filePath,

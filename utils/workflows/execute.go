@@ -6,8 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"go.temporal.io/api/enums/v1"
-
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"go.temporal.io/sdk/temporal"
@@ -91,15 +89,6 @@ func Execute[T any, TR any](ctx workflow.Context, activity func(context.Context,
 	})
 
 	return Task[TR]{Future: future}
-}
-
-// ExecuteIndependently executes the specified activity in such a way that it continues even if the parent workflow completes before it finishes
-func ExecuteIndependently[T any, TR any](ctx workflow.Context, activity func(context.Context, T) (TR, error), params T) Task[TR] {
-	parentAbandonOptions := workflow.GetChildWorkflowOptions(ctx)
-	parentAbandonOptions.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
-	ctx = workflow.WithChildOptions(ctx, parentAbandonOptions)
-
-	return Execute(ctx, activity, params)
 }
 
 // ExecuteWithLowPrioQueue executes the utility activities with the low priority queue

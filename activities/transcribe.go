@@ -3,6 +3,7 @@ package activities
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"time"
 
@@ -71,7 +72,10 @@ func (ua UtilActivities) MergeTranscriptJSON(
 	log.Info("Starting MergeTranscriptJSON")
 
 	targetFile := input.DestinationPath.Append("merged_transcription.no.json")
-	mergedTranscription := transcribe.MergeTranscripts(input.MergeInput)
+	mergedTranscription, err := transcribe.MergeTranscripts(input.MergeInput)
+	if err != nil {
+		return nil, fmt.Errorf("merging transcripts failed: %w", err)
+	}
 
 	marshalled, err := json.Marshal(mergedTranscription)
 	if err != nil {

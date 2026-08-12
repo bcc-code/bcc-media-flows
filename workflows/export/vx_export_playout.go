@@ -8,6 +8,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -16,6 +17,15 @@ func VXExportToXDCAM(ctx workflow.Context, params VXExportChildWorkflowParams) (
 	logger.Info("Starting ExportToXDCAM")
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+
+	// VXExport sets MakeVideo from fileInfo.HasVideo, so MergeResult.VideoFile is
+	// legitimately nil for audio-only items. Dereferencing it panics the workflow
+	// task, which Temporal retries indefinitely; a non-retryable error fails the
+	// export once with a usable message instead.
+	if params.MergeResult.VideoFile == nil {
+		return nil, temporal.NewNonRetryableApplicationError(
+			"XDCAM export needs a video file, but this item is audio-only", "NO_VIDEO_FILE", nil)
+	}
 
 	xdcamOutputDir := params.TempDir.Append("xdcam_output")
 	err := wfutils.CreateFolder(ctx, xdcamOutputDir)

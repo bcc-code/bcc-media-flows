@@ -14,8 +14,12 @@ import (
 )
 
 func SubtitleBurnIn(videoFile, subtitleFile, subtitleHeader, outputPath paths.Path, progressCallback ffmpeg.ProgressCallback) (*paths.Path, error) {
-	assFile := &subtitleFile
+	// CreateBurninASSFile returns (nil, err) on four paths, and assFile.Local() below
+	// dereferences the result, so this error must be checked.
 	assFile, err := CreateBurninASSFile(subtitleHeader, subtitleFile)
+	if err != nil {
+		return nil, fmt.Errorf("could not create burn-in ASS file for %s: %w", subtitleFile.Local(), err)
+	}
 
 	params := []string{
 		"-i", videoFile.Local(),

@@ -2,8 +2,8 @@ package ingestworkflows
 
 import (
 	"encoding/xml"
+	"errors"
 	"github.com/bcc-code/bcc-media-flows/activities"
-	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ingest"
@@ -194,8 +194,6 @@ func (s *UnitTestSuite) Test_VBBulk_MasterFlow() {
 
 	s.env.OnActivity(activities.Vidispine.JobCompleteOrErr, mock.Anything, mock.Anything).Times(2).Return(true, nil)
 
-	s.env.OnActivity(batonactivities.QC, mock.Anything, mock.Anything).Twice().Return(nil, nil)
-
 	s.env.OnWorkflow(miscworkflows.TranscribeVX, mock.Anything, miscworkflows.TranscribeVXInput{
 		VXID:     "VBBulk1",
 		Language: "no",
@@ -225,4 +223,70 @@ func (s *UnitTestSuite) Test_VBBulk_MasterFlow() {
 
 func TestUnitTestSuite(t *testing.T) {
 	suite.Run(t, new(UnitTestSuite))
+}
+
+// mockAssetUploadDeps mocks everything the Asset workflow needs for an Upload
+// order form except the MoveUploadedFiles child, which each test sets up itself.
+// MoveFile is mocked rather than registered so the fixture is read in place and
+// nothing on disk is touched.
+func (s *UnitTestSuite) mockAssetUploadDeps() {
+	s.env.RegisterActivity(activities.Util.ReadFile)
+
+	s.env.OnActivity(activities.Util.MoveFile, mock.Anything, mock.Anything).Return(nil, nil).Maybe()
+	s.env.OnActivity(activities.Util.DeletePath, mock.Anything, mock.Anything).Return(nil, nil).Maybe()
+	s.env.OnActivity(activities.Util.SendEmail, mock.Anything, mock.Anything).Return(nil, nil).Maybe()
+	s.env.OnActivity(activities.Util.CreateFolder, mock.Anything, mock.Anything).Return("", nil).Maybe()
+	s.env.OnActivity(activities.Util.RcloneCopyDir, mock.Anything, mock.Anything).Return(1234, nil).Maybe()
+	s.env.OnActivity(activities.Util.RcloneWaitForJob, mock.Anything, mock.Anything).Return(true, nil).Maybe()
+}
+
+// A failing MoveUploadedFiles child must fail the workflow. Each switch case binds
+// its own outputDir, so the error has to be checked inside the case — a check placed
+// after the switch reads the outer err, which those cases never assign.
+func (s *UnitTestSuite) Test_Upload_ChildWorkflowFailureIsReported() {
+	s.mockAssetUploadDeps()
+
+	s.env.OnWorkflow(MoveUploadedFiles, mock.Anything, mock.Anything).Once().
+		Return(errors.New("could not move uploaded files"))
+
+	s.env.ExecuteWorkflow(Asset, AssetParams{XMLPath: "./testdata/Upload.xml"})
+	s.True(s.env.IsWorkflowCompleted())
+
+	err := s.env.GetWorkflowError()
+	s.Error(err, "a failed MoveUploadedFiles child must not be reported as success")
+	s.Contains(err.Error(), "could not move uploaded files")
+}
+
+// The same order form must still succeed when the child succeeds.
+func (s *UnitTestSuite) Test_Upload_Success() {
+	s.mockAssetUploadDeps()
+
+	s.env.OnWorkflow(MoveUploadedFiles, mock.Anything, mock.Anything).Once().Return(nil)
+
+	s.env.ExecuteWorkflow(Asset, AssetParams{XMLPath: "./testdata/Upload.xml"})
+	s.True(s.env.IsWorkflowCompleted())
+	s.NoError(s.env.GetWorkflowError())
+}
+
+// Guards the switch in Asset. Every OrderForms member must be handled there, or
+// it falls through to the default branch and is rejected at runtime. Adding a
+// member without adding a case will fail this test instead of shipping an order
+// form that quietly does nothing but copy files and send emails.
+func TestEveryOrderFormIsHandledByAsset(t *testing.T) {
+	handled := []OrderForm{
+		OrderFormDistribution, // returns early, before the switch
+		OrderFormRawMaterial,
+		OrderFormSeriesMaster,
+		OrderFormOtherMaster,
+		OrderFormVBMaster,
+		OrderFormVBMasterBulk,
+		OrderFormLEDMaterial,
+		OrderFormPodcast,
+		OrderFormMultitrackPB,
+		OrderFormUpload,
+		OrderFormMusic,
+	}
+
+	assert.ElementsMatch(t, OrderForms.Members(), handled,
+		"OrderForms changed: add a case to the switch in Asset and update this list")
 }

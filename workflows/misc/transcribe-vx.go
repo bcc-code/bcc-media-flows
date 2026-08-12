@@ -1,6 +1,7 @@
 package miscworkflows
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
@@ -100,19 +101,31 @@ func TranscribeVX(
 		errs = append(errs, err)
 	}
 	if len(errs) > 0 {
-		return fmt.Errorf("failed to import transcription files: %v", errs)
+		return fmt.Errorf("failed to import transcription files: %w", errors.Join(errs...))
 	}
 
 	err = wfutils.WaitForVidispineJob(ctx, importJsonResult.JobID)
 	if err != nil {
-		return fmt.Errorf("importing of JSON file into Mediabanken failed: %v", errs)
+		return fmt.Errorf("importing of JSON file into Mediabanken failed: %w", err)
 	}
 
-	wfutils.ExecuteIndependently(ctx, activities.Vidispine.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
-		FilePath: transcriptionJob.SRTPath,
-		Language: "no",
-		AssetID:  params.VXID,
-	})
+	// Hand the sidecar import off rather than awaiting it. It runs as a detached
+	// child workflow so it survives this workflow completing — an activity would
+	// have been cancelled instead. We wait for the child to START, not to finish,
+	// because an ABANDON child initiated in the same workflow task that closes the
+	// parent is dropped without ever running.
+	sidecarFuture := workflow.ExecuteChildWorkflow(
+		wfutils.WithAbandonChildOptions(ctx),
+		ImportSidecarSubtitle,
+		ImportSidecarSubtitleInput{
+			VXID:     params.VXID,
+			FilePath: transcriptionJob.SRTPath,
+			Language: "no",
+		},
+	)
+	if err := sidecarFuture.GetChildWorkflowExecution().Get(ctx, nil); err != nil {
+		return fmt.Errorf("failed to start sidecar subtitle import: %w", err)
+	}
 
 	if params.NotificationChannel != nil {
 		wfutils.SendTelegramText(ctx, *params.NotificationChannel, fmt.Sprintf("🟦 Transcription import completed for VXID: %s", params.VXID))

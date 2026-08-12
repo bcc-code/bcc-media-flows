@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/bcc-code/mediabank-bridge/log"
 	"github.com/davecgh/go-spew/spew"
 
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
@@ -28,14 +27,14 @@ type vsErrorBody struct {
 		Type string `json:"type"`
 		ID   string `json:"id"`
 	} `json:"notFound"`
-	InternalServer  json.RawMessage `json:"internalServer"`
-	Forbidden       json.RawMessage `json:"forbidden"`
-	NotYetImpl      json.RawMessage `json:"notYetImplemented"`
-	Conflict        json.RawMessage `json:"conflict"`
-	InvalidInput    json.RawMessage `json:"invalidInput"`
-	LicenseFault    json.RawMessage `json:"licenseFault"`
-	FileExists      json.RawMessage `json:"fileAlreadyExists"`
-	NotAuthorized   json.RawMessage `json:"notAuthorized"`
+	InternalServer json.RawMessage `json:"internalServer"`
+	Forbidden      json.RawMessage `json:"forbidden"`
+	NotYetImpl     json.RawMessage `json:"notYetImplemented"`
+	Conflict       json.RawMessage `json:"conflict"`
+	InvalidInput   json.RawMessage `json:"invalidInput"`
+	LicenseFault   json.RawMessage `json:"licenseFault"`
+	FileExists     json.RawMessage `json:"fileAlreadyExists"`
+	NotAuthorized  json.RawMessage `json:"notAuthorized"`
 }
 
 func (c *Client) GetShapes(vsID string) (*ShapeResult, error) {
@@ -46,7 +45,9 @@ func (c *Client) GetShapes(vsID string) (*ShapeResult, error) {
 		Get(url)
 
 	if err != nil {
-		log.L.Debug().Str("error", err.Error()).Str("vsID", vsID).Msg("failed to get shapes")
+		// Deliberately not logged here: the error already carries the method, URL and
+		// status, and log.L is a nil *zerolog.Logger unless ConfigureGlobalLogger has
+		// run, which nothing outside a test does.
 		return nil, err
 	}
 
@@ -72,10 +73,9 @@ func (c *Client) AddShapeToItem(tag, itemID, fileID string) (string, error) {
 		return "", err
 	}
 
-	if result.IsError() {
-		return "", parseVSError(result.Body(), result.StatusCode(), tag, itemID)
-	}
-
+	// Only 2xx reaches here; the response hook in NewClient converts any other status
+	// into the error returned above, preserving the ErrShapeTagNotFound sentinel. A 2xx
+	// with no job ID still means the shape was not created.
 	jobID := result.Result().(*JobDocument).JobID
 	if jobID == "" {
 		return "", parseVSError(result.Body(), result.StatusCode(), tag, itemID)
@@ -113,7 +113,9 @@ func (c *Client) DeleteShape(assetID, shapeID string) error {
 	requestURL.RawQuery = q.Encode()
 	requestURL.Path += fmt.Sprintf("/item/%s/shape/%s", url.PathEscape(assetID), url.PathEscape(shapeID))
 
-	_, err := c.restyClient.R().
+	// Callers gate this on a separate GetShapes request, so a concurrent delete makes
+	// this a 404 — and the shape being gone is the outcome we asked for.
+	_, err := tolerating404(c.restyClient.R()).
 		Delete(requestURL.String())
 
 	return err

@@ -25,7 +25,8 @@ type Relation struct {
 func (c *Client) GetRelations(assetID string) ([]Relation, error) {
 	relations := &RelationResult{}
 	url := c.baseURL + "/item/" + assetID + "/relation"
-	resp, err := c.restyClient.R().SetResult(relations).Get(url)
+	// An item with no relations may answer 404 rather than an empty list.
+	resp, err := tolerating404(c.restyClient.R()).SetResult(relations).Get(url)
 	if err != nil {
 		return nil, err
 	}

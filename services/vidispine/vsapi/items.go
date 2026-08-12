@@ -20,7 +20,9 @@ func (c *Client) DeleteItems(ctx context.Context, id []string, deleteFiles bool)
 		// Param docs https://apidoc.vidispine.com/5.7/ref/item/item.html#delete-an-item
 
 		log.Info("Deleting chunk %d of %d", i+1, len(chunked))
-		req := c.restyClient.R()
+		// A 404 here means the item is already gone, which is what we wanted. GetTrash
+		// and this delete are separate calls, so Cantemo may have purged in between.
+		req := tolerating404(c.restyClient.R())
 		req.QueryParam.Add("id", strings.Join(chunk, ","))
 
 		if !deleteFiles {

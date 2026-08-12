@@ -29,15 +29,17 @@ func (s *NormalizeAudioTestSuite) AfterTest(suiteName, testName string) {
 	s.env.AssertExpectations(s.T())
 }
 
-func (s *NormalizeAudioTestSuite) Test_NormalizeAudio_SmallAdjustment() {
-	// When suggested adjustment is <= 0.01 dB, the workflow still applies it
-	// (the condition in the workflow is: adjust when SuggestedAdjustment <= 0.01)
+// AnalyzeEBUR128Activity zeroes out adjustments it considers not worth making, so
+// a zero suggestion must leave the file untouched. The previous condition
+// (`SuggestedAdjustment <= 0.01`) instead ran a full re-encode with an adjustment
+// of 0.0 dB.
+func (s *NormalizeAudioTestSuite) Test_NormalizeAudio_NegligibleAdjustment_IsNotApplied() {
 	s.env.OnActivity(activities.Util.CreateFolder, mock.Anything, mock.Anything).Maybe().Return(nil, nil)
 
-	outputPath := paths.MustParse("/mnt/temp/workflows/adjusted_test.wav")
+	inputPath := paths.MustParse("/mnt/isilon/test.wav")
 
 	s.env.OnActivity(activities.Audio.AnalyzeEBUR128Activity, mock.Anything, activities.AnalyzeEBUR128Params{
-		FilePath:       paths.MustParse("/mnt/isilon/test.wav"),
+		FilePath:       inputPath,
 		TargetLoudness: -23,
 	}).Return(&common.AnalyzeEBUR128Result{
 		IntegratedLoudness:  -23.1,
@@ -46,27 +48,31 @@ func (s *NormalizeAudioTestSuite) Test_NormalizeAudio_SmallAdjustment() {
 		SuggestedAdjustment: 0.0,
 	}, nil)
 
+	adjustCalls := 0
 	s.env.OnActivity(activities.Audio.AdjustAudioLevelActivity, mock.Anything, mock.Anything).
-		Return(&common.AudioResult{
-			OutputPath: outputPath,
-			FileSize:   1024,
-		}, nil)
+		Run(func(mock.Arguments) { adjustCalls++ }).
+		Return(&common.AudioResult{OutputPath: paths.MustParse("/mnt/temp/workflows/adjusted_test.wav")}, nil).
+		Maybe()
 
 	s.env.ExecuteWorkflow(NormalizeAudioLevelWorkflow, NormalizeAudioParams{
 		FilePath:   "/mnt/isilon/test.wav",
 		TargetLUFS: -23,
 	})
 	s.True(s.env.IsWorkflowCompleted())
-	err := s.env.GetWorkflowError()
-	s.NoError(err)
+	s.NoError(s.env.GetWorkflowError())
+
+	s.Zero(adjustCalls, "a zero adjustment must not trigger a re-encode")
 
 	var result NormalizeAudioResult
 	s.env.GetWorkflowResult(&result)
-	s.Equal(outputPath.Local(), result.FilePath)
+	s.Equal(inputPath.Local(), result.FilePath, "the original file should be returned untouched")
 	s.NotNil(result.InputAnalysis)
 }
 
-func (s *NormalizeAudioTestSuite) Test_NormalizeAudio_WithAdjustment() {
+// A negative suggestion means the audio must be brought down, either because it is
+// above target or because AnalyzeEBUR128Activity clamped it to stay under
+// -0.9 dBTP.
+func (s *NormalizeAudioTestSuite) Test_NormalizeAudio_LoudAudio_IsReduced() {
 	s.env.OnActivity(activities.Util.CreateFolder, mock.Anything, mock.Anything).Maybe().Return(nil, nil)
 
 	inputPath := paths.MustParse("/mnt/isilon/test.wav")
@@ -76,25 +82,28 @@ func (s *NormalizeAudioTestSuite) Test_NormalizeAudio_WithAdjustment() {
 		FilePath:       inputPath,
 		TargetLoudness: -23,
 	}).Return(&common.AnalyzeEBUR128Result{
-		IntegratedLoudness:  -30.0,
-		TruePeak:            -10.0,
+		IntegratedLoudness:  -18.0,
+		TruePeak:            -1.0,
 		LoudnessRange:       5.0,
-		SuggestedAdjustment: -5.0, // Negative = needs adjustment (below threshold of 0.01)
+		SuggestedAdjustment: -5.0, // negative: 5 dB too loud
 	}, nil)
 
-	s.env.OnActivity(activities.Audio.AdjustAudioLevelActivity, mock.Anything, mock.Anything).
-		Return(&common.AudioResult{
-			OutputPath: outputPath,
-			FileSize:   1024,
-		}, nil)
+	var appliedAdjustment float64
+	s.env.OnActivity(activities.Audio.AdjustAudioLevelActivity, mock.Anything, mock.MatchedBy(
+		func(input activities.AdjustAudioLevelParams) bool {
+			appliedAdjustment = input.Adjustment
+			return true
+		},
+	)).Return(&common.AudioResult{OutputPath: outputPath, FileSize: 1024}, nil)
 
 	s.env.ExecuteWorkflow(NormalizeAudioLevelWorkflow, NormalizeAudioParams{
 		FilePath:   "/mnt/isilon/test.wav",
 		TargetLUFS: -23,
 	})
 	s.True(s.env.IsWorkflowCompleted())
-	err := s.env.GetWorkflowError()
-	s.NoError(err)
+	s.NoError(s.env.GetWorkflowError())
+
+	s.InDelta(-5.0, appliedAdjustment, 0.001)
 
 	var result NormalizeAudioResult
 	s.env.GetWorkflowResult(&result)
@@ -152,33 +161,50 @@ func (s *NormalizeAudioTestSuite) Test_NormalizeAudio_WithOutputAnalysis() {
 	s.InDelta(-23.2, result.OutputAnalysis.IntegratedLoudness, 0.01)
 }
 
-func (s *NormalizeAudioTestSuite) Test_NormalizeAudio_SkippedWhenAboveThreshold() {
-	// When SuggestedAdjustment > 0.01, no adjustment is applied
+// SuggestedAdjustment is TargetLoudness - IntegratedLoudness, so a positive value
+// means the audio is too quiet and needs a boost. A skip condition written against
+// the signed value rather than its magnitude excludes exactly these, leaving quiet
+// audio below target.
+func (s *NormalizeAudioTestSuite) Test_NormalizeAudio_QuietAudio_IsBoosted() {
 	s.env.OnActivity(activities.Util.CreateFolder, mock.Anything, mock.Anything).Maybe().Return(nil, nil)
 
+	inputPath := paths.MustParse("/mnt/isilon/test.wav")
+	outputPath := paths.MustParse("/mnt/temp/workflows/adjusted_test.wav")
+
 	s.env.OnActivity(activities.Audio.AnalyzeEBUR128Activity, mock.Anything, activities.AnalyzeEBUR128Params{
-		FilePath:       paths.MustParse("/mnt/isilon/test.wav"),
+		FilePath:       inputPath,
 		TargetLoudness: -23,
 	}).Return(&common.AnalyzeEBUR128Result{
-		IntegratedLoudness:  -23.5,
-		TruePeak:            -1.5,
+		IntegratedLoudness:  -26.0,
+		TruePeak:            -8.0,
 		LoudnessRange:       5.0,
-		SuggestedAdjustment: 0.5, // Above 0.01 threshold, so adjustment is skipped
+		SuggestedAdjustment: 3.0, // positive: 3 dB too quiet
 	}, nil)
+
+	var appliedAdjustment float64
+	adjustCalls := 0
+	s.env.OnActivity(activities.Audio.AdjustAudioLevelActivity, mock.Anything, mock.MatchedBy(
+		func(input activities.AdjustAudioLevelParams) bool {
+			appliedAdjustment = input.Adjustment
+			adjustCalls++
+			return true
+		},
+	)).Return(&common.AudioResult{OutputPath: outputPath, FileSize: 1024}, nil)
 
 	s.env.ExecuteWorkflow(NormalizeAudioLevelWorkflow, NormalizeAudioParams{
 		FilePath:   "/mnt/isilon/test.wav",
 		TargetLUFS: -23,
 	})
 	s.True(s.env.IsWorkflowCompleted())
-	err := s.env.GetWorkflowError()
-	s.NoError(err)
+	s.NoError(s.env.GetWorkflowError())
+
+	s.NotZero(adjustCalls, "quiet audio must be boosted, not skipped")
+	// Passed through with its sign intact, so the boost goes up rather than down.
+	s.InDelta(3.0, appliedAdjustment, 0.001)
 
 	var result NormalizeAudioResult
 	s.env.GetWorkflowResult(&result)
-	// File path should be the original since no adjustment was made
-	expected := paths.MustParse("/mnt/isilon/test.wav")
-	s.Equal(expected.Local(), result.FilePath)
+	s.Equal(outputPath.Local(), result.FilePath)
 }
 
 func (s *NormalizeAudioTestSuite) Test_NormalizeAudio_AnalyzeError() {
