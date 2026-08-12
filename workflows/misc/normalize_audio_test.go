@@ -71,7 +71,7 @@ func (s *NormalizeAudioTestSuite) Test_NormalizeAudio_NegligibleAdjustment_IsNot
 
 // A negative suggestion means the audio must be brought down, either because it is
 // above target or because AnalyzeEBUR128Activity clamped it to stay under
-// -0.9 dBTP. This direction worked before the fix too.
+// -0.9 dBTP.
 func (s *NormalizeAudioTestSuite) Test_NormalizeAudio_LoudAudio_IsReduced() {
 	s.env.OnActivity(activities.Util.CreateFolder, mock.Anything, mock.Anything).Maybe().Return(nil, nil)
 
@@ -161,10 +161,10 @@ func (s *NormalizeAudioTestSuite) Test_NormalizeAudio_WithOutputAnalysis() {
 	s.InDelta(-23.2, result.OutputAnalysis.IntegratedLoudness, 0.01)
 }
 
-// The regression. SuggestedAdjustment is TargetLoudness - IntegratedLoudness, so a
-// positive value means the audio is too quiet and needs a boost. The previous
-// condition (`SuggestedAdjustment <= 0.01`) skipped exactly these, so quiet audio
-// was never brought up to target.
+// SuggestedAdjustment is TargetLoudness - IntegratedLoudness, so a positive value
+// means the audio is too quiet and needs a boost. A skip condition written against
+// the signed value rather than its magnitude excludes exactly these, leaving quiet
+// audio below target.
 func (s *NormalizeAudioTestSuite) Test_NormalizeAudio_QuietAudio_IsBoosted() {
 	s.env.OnActivity(activities.Util.CreateFolder, mock.Anything, mock.Anything).Maybe().Return(nil, nil)
 
