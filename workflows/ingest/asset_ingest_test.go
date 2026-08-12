@@ -243,9 +243,9 @@ func (s *UnitTestSuite) mockAssetUploadDeps() {
 	s.env.OnActivity(activities.Util.RcloneWaitForJob, mock.Anything, mock.Anything).Return(true, nil).Maybe()
 }
 
-// A failing MoveUploadedFiles child used to be reported as success: the
-// OrderFormUpload case declared a case-scoped err with `:=` alongside its
-// outputDir, so the check after the switch read the still-nil outer err.
+// A failing MoveUploadedFiles child must fail the workflow. Each switch case binds
+// its own outputDir, so the error has to be checked inside the case — a check placed
+// after the switch reads the outer err, which those cases never assign.
 func (s *UnitTestSuite) Test_Upload_ChildWorkflowFailureIsReported() {
 	s.mockAssetUploadDeps()
 
