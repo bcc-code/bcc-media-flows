@@ -1,6 +1,7 @@
 package miscworkflows
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
@@ -100,12 +101,12 @@ func TranscribeVX(
 		errs = append(errs, err)
 	}
 	if len(errs) > 0 {
-		return fmt.Errorf("failed to import transcription files: %v", errs)
+		return fmt.Errorf("failed to import transcription files: %w", errors.Join(errs...))
 	}
 
 	err = wfutils.WaitForVidispineJob(ctx, importJsonResult.JobID)
 	if err != nil {
-		return fmt.Errorf("importing of JSON file into Mediabanken failed: %v", errs)
+		return fmt.Errorf("importing of JSON file into Mediabanken failed: %w", err)
 	}
 
 	// Hand the sidecar import off rather than awaiting it. It runs as a detached
