@@ -20,7 +20,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/ingest"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -103,9 +102,7 @@ func processMaster(ctx workflow.Context, sourceFile paths.Path, destinationFile 
 		}
 	}
 
-	parentAbandonOptions := workflow.GetChildWorkflowOptions(ctx)
-	parentAbandonOptions.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
-	asyncCtx := workflow.WithChildOptions(ctx, parentAbandonOptions)
+	asyncCtx := wfutils.WithAbandonChildOptions(ctx)
 
 	// Trigger transcribe and create previews but don't wait for them to finish. We must still
 	// wait for the child to actually START — it uses ParentClosePolicy ABANDON, so if the parent
@@ -201,9 +198,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		return nil, fmt.Errorf("%s", errText)
 	}
 
-	parentAbandonOptions := workflow.GetChildWorkflowOptions(ctx)
-	parentAbandonOptions.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
-	asyncCtx := workflow.WithChildOptions(ctx, parentAbandonOptions)
+	asyncCtx := wfutils.WithAbandonChildOptions(ctx)
 	err = notifyImportCompleted(asyncCtx, params.Targets, params.Metadata.JobProperty.JobID, importedVXs)
 	if err != nil {
 		return nil, err

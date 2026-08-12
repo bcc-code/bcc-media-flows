@@ -16,7 +16,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/notifications"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/samber/lo"
-	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -111,9 +110,7 @@ func CreatePreviews(ctx workflow.Context, assetIDs []string) error {
 
 func createPreviewsAsync(ctx workflow.Context, assetIDs []string) ([]workflow.ChildWorkflowFuture, error) {
 	var wfFutures []workflow.ChildWorkflowFuture
-	opts := workflow.GetChildWorkflowOptions(ctx)
-	opts.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
-	ctx = workflow.WithChildOptions(ctx, opts)
+	ctx = wfutils.WithAbandonChildOptions(ctx)
 	for _, id := range assetIDs {
 		childCtx := wfutils.WithChildSearchAttributes(ctx, id)
 		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(childCtx, miscworkflows.TranscodePreviewVX, miscworkflows.TranscodePreviewVXInput{
@@ -135,9 +132,7 @@ func createPreviewsAsync(ctx workflow.Context, assetIDs []string) ([]workflow.Ch
 
 func transcribe(ctx workflow.Context, assetIDs []string, language string) error {
 	var wfFutures []workflow.ChildWorkflowFuture
-	opts := workflow.GetChildWorkflowOptions(ctx)
-	opts.ParentClosePolicy = enums.PARENT_CLOSE_POLICY_ABANDON
-	ctx = workflow.WithChildOptions(ctx, opts)
+	ctx = wfutils.WithAbandonChildOptions(ctx)
 	for _, id := range assetIDs {
 		childCtx := wfutils.WithChildSearchAttributes(ctx, id)
 		wfFutures = append(wfFutures, workflow.ExecuteChildWorkflow(childCtx, miscworkflows.TranscribeVX, miscworkflows.TranscribeVXInput{

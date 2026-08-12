@@ -33,6 +33,7 @@ var TriggerableWorkflows = []any{
 }
 
 var WorkerWorkflows = []any{
+	miscworkflows.ImportSidecarSubtitle,
 	miscworkflows.TranscodePreviewVX,
 	miscworkflows.TranscodePreviewFile,
 	miscworkflows.CreateThumbnailsVX,
