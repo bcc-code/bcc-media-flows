@@ -263,9 +263,6 @@ func update(version string) error {
 		return nil
 	}
 
-	// Prevent worker from restarting if there are activities executing
-	wfutils.ActivityWG.Wait()
-
 	ctx := context.Background()
 
 	latest, found, err := selfupdate.DetectLatest(ctx, selfupdate.ParseSlug("bcc-code/bcc-media-flows"))
@@ -278,6 +275,14 @@ func update(version string) error {
 
 	if latest.LessOrEqual(version) {
 		log.Printf("Current version (%s) is the latest", version)
+		return nil
+	}
+
+	// There is an update to install, and installing it restarts the process.
+	// Leave it for the next tick if this worker is in the middle of something;
+	// the caller runs this every five minutes.
+	if running := wfutils.RunningActivities.Running(); running > 0 {
+		log.Printf("Version %s is available, deferring update: %d activities running", latest.Version(), running)
 		return nil
 	}
 

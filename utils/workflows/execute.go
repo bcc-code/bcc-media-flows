@@ -3,7 +3,6 @@ package wfutils
 import (
 	"context"
 	"reflect"
-	"sync"
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -23,8 +22,6 @@ var StrictRetryPolicy = temporal.RetryPolicy{
 	InitialInterval: 30 * time.Second,
 	MaximumInterval: 30 * time.Second,
 }
-
-var ActivityWG = sync.WaitGroup{}
 
 type Task[TR any] struct {
 	Future workflow.Future
@@ -80,15 +77,7 @@ func Execute[T any, TR any](ctx workflow.Context, activity func(context.Context,
 
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	future := workflow.ExecuteActivity(ctx, activity, params)
-
-	ActivityWG.Add(1)
-	workflow.Go(ctx, func(ctx workflow.Context) {
-		_ = future.Get(ctx, nil)
-		ActivityWG.Done()
-	})
-
-	return Task[TR]{Future: future}
+	return Task[TR]{Future: workflow.ExecuteActivity(ctx, activity, params)}
 }
 
 // ExecuteWithLowPrioQueue executes the utility activities with the low priority queue

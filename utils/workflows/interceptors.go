@@ -95,6 +95,11 @@ type AnalyticsActivityInboundInterceptor struct {
 func (c *AnalyticsActivityInboundInterceptor) ExecuteActivity(
 	ctx context.Context, in *interceptor.ExecuteActivityInput,
 ) (any, error) {
+	// Counted here rather than where the activity was scheduled: this runs in
+	// the process actually executing it, and the deferred call cannot be
+	// skipped the way a workflow coroutine can.
+	defer RunningActivities.Started()()
+
 	info := activity.GetInfo(ctx)
 	startTime := time.Now()
 	workerIdentity, _ := ctx.Value("WorkerIdentity").(string)
