@@ -161,14 +161,6 @@ func (p Path) Rclone() string {
 	return filepath.Join(drivePrefixes[p.Drive].Rclone, p.Path)
 }
 
-func (p Path) Baton() string {
-	switch p.Drive {
-	case IsilonDrive:
-		return filepath.Join("\\\\10.12.130.61\\isilon", strings.ReplaceAll(p.Path, "/", "\\"))
-	}
-	return ""
-}
-
 // Base returns the base of the path
 func (p Path) Base() string {
 	return filepath.Base(p.Path)

@@ -2,8 +2,6 @@ package ingestworkflows
 
 import (
 	"fmt"
-	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
-	"github.com/bcc-code/bcc-media-flows/utils"
 	"regexp"
 	"strconv"
 	"strings"
@@ -16,7 +14,6 @@ import (
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
-	"github.com/bcc-code/bcc-media-flows/services/baton"
 	"github.com/bcc-code/bcc-media-flows/services/ingest"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
@@ -40,7 +37,6 @@ type MasterParams struct {
 }
 
 type MasterResult struct {
-	Report        *baton.QCReport
 	AnalyzeResult *common.AnalyzeEBUR128Result
 	ImportedVXs   map[string]paths.Path
 }
@@ -81,25 +77,6 @@ func processMaster(ctx workflow.Context, sourceFile paths.Path, destinationFile 
 	err = WaitForImportTag(ctx, result)
 	if err != nil {
 		return "", err
-	}
-
-	// Temporarily disabled, as it does not do anything at the moment
-	var report *baton.QCReport
-	if utils.IsMedia(destinationFile.Local()) {
-		plan := baton.TestPlanBasic
-		if destinationFile.Ext() == ".mxf" {
-			plan = baton.TestPlanMXF
-		}
-		if destinationFile.Ext() == ".mov" {
-			plan = baton.TestPlanMOV
-		}
-		err = wfutils.Execute(ctx, batonactivities.QC, batonactivities.QCParams{
-			Path: destinationFile,
-			Plan: plan,
-		}).Get(ctx, &report)
-		if err != nil {
-			return "", err
-		}
 	}
 
 	asyncCtx := wfutils.WithAbandonChildOptions(ctx)

@@ -4,7 +4,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"github.com/bcc-code/bcc-media-flows/activities"
-	batonactivities "github.com/bcc-code/bcc-media-flows/activities/baton"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ingest"
@@ -194,8 +193,6 @@ func (s *UnitTestSuite) Test_VBBulk_MasterFlow() {
 	}
 
 	s.env.OnActivity(activities.Vidispine.JobCompleteOrErr, mock.Anything, mock.Anything).Times(2).Return(true, nil)
-
-	s.env.OnActivity(batonactivities.QC, mock.Anything, mock.Anything).Twice().Return(nil, nil)
 
 	s.env.OnWorkflow(miscworkflows.TranscribeVX, mock.Anything, miscworkflows.TranscribeVXInput{
 		VXID:     "VBBulk1",
