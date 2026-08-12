@@ -122,20 +122,20 @@ func BmmTrackMetadata(ctx workflow.Context, params BmmTrackMetadataParams) (*Bmm
 			Destination: newPath,
 		}).Result(ctx)
 		if err != nil {
-			wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, "", err)
+			wfutils.SendTelegramError(ctx, telegram.ChatBMM, "", err)
 			return nil, fmt.Errorf("failed to download file: %w", err)
 		}
 
 		title := fmt.Sprintf("BMM-%d %s - %s", params.BmmTrackID, params.Language, params.Title)
 		res, err := ImportFileAsTag(ctx, "original", newPath, title)
 		if err != nil {
-			wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, "", err)
+			wfutils.SendTelegramError(ctx, telegram.ChatBMM, "", err)
 			return nil, err
 		}
 
 		err = WaitForImportTag(ctx, res)
 		if err != nil {
-			wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, res.AssetID, err)
+			wfutils.SendTelegramError(ctx, telegram.ChatBMM, res.AssetID, err)
 			return nil, err
 		}
 
@@ -173,7 +173,7 @@ func BmmTrackMetadata(ctx workflow.Context, params BmmTrackMetadataParams) (*Bmm
 		}).Get(ctx, nil)
 		if err != nil {
 			logger.Warn("TranscribeVX failed; continuing", "error", err)
-			wfutils.SendTelegramErorr(ctx, telegram.ChatBMM, assetID, err)
+			wfutils.SendTelegramError(ctx, telegram.ChatBMM, assetID, err)
 		}
 
 		_ = CreatePreviews(ctx, []string{assetID})
