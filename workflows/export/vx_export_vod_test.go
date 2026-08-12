@@ -189,9 +189,9 @@ func (s *VODExportTestSuite) mockSupportingActivities(env *testsuite.TestWorkflo
 		&telegram.Message{}, nil).Maybe()
 }
 
-// The regression this fix is about: one failed video transcode used to leave the
-// selector waiting on futures that onVideoCreated never scheduled, so the workflow
-// hung until its execution timeout instead of reporting the failure.
+// A failed video transcode must surface as a workflow error. onVideoCreated schedules
+// no follow-up futures for a failed video, so any drain that waits on a count derived
+// from the inputs blocks until the execution timeout instead of reporting the failure.
 func (s *VODExportTestSuite) Test_FailedVideoTranscode_FailsInsteadOfHanging() {
 	env := s.NewTestWorkflowEnvironment()
 	s.mockSupportingActivities(env)
