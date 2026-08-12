@@ -18,6 +18,40 @@ type cantemoErrorResponse struct {
 	Detail string `json:"detail"`
 }
 
+// maxErrorBodyLen bounds how much of an error body is quoted back. These errors
+// travel up into the Temporal workflow history, and an HTML error page from a proxy
+// would otherwise put the whole document there.
+const maxErrorBodyLen = 512
+
+func truncateErrorBody(body []byte) string {
+	if len(body) <= maxErrorBodyLen {
+		return string(body)
+	}
+	return string(body[:maxErrorBodyLen]) + "…(truncated)"
+}
+
+// cantemoErrorFromResponse describes a non-2xx response.
+//
+// The status is checked by the caller rather than inferred from resp.Error() being
+// populated. resty only unmarshals an error body for JSON and XML content types, so
+// the previous hook returned nil for an HTML 502 from a proxy or an empty-bodied
+// 404 — leaving callers with a zero-valued result and no error. It also fell back to
+// merry.New("") when the envelope carried no "detail", producing a non-nil error
+// with an empty message.
+func cantemoErrorFromResponse(resp *resty.Response) error {
+	request := resp.Request.Method + " " + resp.Request.URL
+
+	detail := truncateErrorBody(resp.Body())
+	if cantemoError, ok := resp.Error().(*cantemoErrorResponse); ok && cantemoError != nil && cantemoError.Detail != "" {
+		detail = cantemoError.Detail
+	}
+
+	return merry.New(
+		fmt.Sprintf("cantemo %s failed (status %d): %s", request, resp.StatusCode(), detail),
+		merry.WithHTTPCode(resp.StatusCode()),
+	)
+}
+
 func NewClient(baseURL, authToken string) *Client {
 	baseURL = strings.TrimSuffix(baseURL, "/")
 
@@ -27,12 +61,11 @@ func NewClient(baseURL, authToken string) *Client {
 	client.SetHeader("Accept", "application/json")
 	client.SetDisableWarn(true)
 	client.SetError(cantemoErrorResponse{})
-	client.OnAfterResponse(func(c *resty.Client, resp *resty.Response) error {
-		cantemoError, ok := resp.Error().(*cantemoErrorResponse)
-		if ok && cantemoError != nil {
-			return merry.New(cantemoError.Detail, merry.WithHTTPCode(resp.StatusCode()))
+	client.OnAfterResponse(func(_ *resty.Client, resp *resty.Response) error {
+		if !resp.IsError() {
+			return nil
 		}
-		return nil
+		return cantemoErrorFromResponse(resp)
 	})
 
 	return &Client{
@@ -61,8 +94,10 @@ func (c *Client) GetFormats(itemID string) ([]Format, error) {
 }
 
 func (c *Client) GetMetadata(itemID string) (*ItemMetadata, error) {
+	// SetDebug(true) used to be here. resty's debug mode dumps every request header,
+	// including the Auth-Token set in NewClient, plus the full response body — to
+	// stdout, on every metadata fetch.
 	req := c.restyClient.R()
-	req.SetDebug(true)
 	res, err := req.SetResult(&ItemMetadata{}).
 		Get("/API/v2/items/" + itemID + "/")
 
@@ -272,25 +307,25 @@ type ACLInheritanceExtraData struct {
 // ACLInheritance represents the inherited_from field in ACL
 // (extracted to a named type)
 type ACLInheritance struct {
-	ID        string                 `json:"id"`
-	Type      string                 `json:"type"`
+	ID        string                  `json:"id"`
+	Type      string                  `json:"type"`
 	ExtraData ACLInheritanceExtraData `json:"extra_data"`
 }
 
 // ACL represents an access control list entry for a Cantemo item
 type ACL struct {
-	Source               string           `json:"source"`
-	SourceName           string           `json:"source_name"`
-	SourceFullName       *string          `json:"source_full_name"`
-	Permission           string           `json:"permission"`
-	PermissionTranslated string           `json:"permission_translated"`
-	Recursive            bool             `json:"recursive"`
-	Grantor              string           `json:"grantor"`
-	GrantorFullName      *string          `json:"grantor_full_name"`
-	ID                   string           `json:"id"`
-	Priority             string           `json:"priority"`
-	PriorityTranslated   string           `json:"priority_translated"`
-	InheritedFrom        *ACLInheritance  `json:"inherited_from"`
+	Source               string          `json:"source"`
+	SourceName           string          `json:"source_name"`
+	SourceFullName       *string         `json:"source_full_name"`
+	Permission           string          `json:"permission"`
+	PermissionTranslated string          `json:"permission_translated"`
+	Recursive            bool            `json:"recursive"`
+	Grantor              string          `json:"grantor"`
+	GrantorFullName      *string         `json:"grantor_full_name"`
+	ID                   string          `json:"id"`
+	Priority             string          `json:"priority"`
+	PriorityTranslated   string          `json:"priority_translated"`
+	InheritedFrom        *ACLInheritance `json:"inherited_from"`
 }
 
 // ACLResponse remains unchanged
