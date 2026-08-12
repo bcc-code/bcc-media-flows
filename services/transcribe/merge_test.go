@@ -41,8 +41,8 @@ func TestMergeTranscripts_MalformedJSONIsReported(t *testing.T) {
 	assert.Nil(t, result)
 }
 
-// A partial failure is the dangerous case: one good cut and one bad one used to
-// produce a plausible-looking transcript containing only the good half.
+// A partial failure is the dangerous case: one good cut and one bad one must report
+// the error, not return a plausible-looking transcript containing only the good half.
 func TestMergeTranscripts_PartialFailureIsReported(t *testing.T) {
 	result, err := MergeTranscripts(mergeInput(
 		common.MergeInputItem{Path: testdataPath("transcript_a.json"), Start: 0, End: 10},

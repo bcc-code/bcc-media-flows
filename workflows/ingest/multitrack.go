@@ -108,9 +108,8 @@ func Multitrack(ctx workflow.Context, params MasterParams) (*MasterResult, error
 		return nil, err
 	}
 
-	// Previously `return nil, nil`, which discarded the asset that had just been
-	// created and left callers unable to tell a successful run from an empty one.
-	// Matches what Masters returns.
+	// Callers need the created asset to tell a successful run from an empty one.
+	// Shaped like what Masters returns.
 	return &MasterResult{
 		ImportedVXs: importedVXs,
 	}, nil
