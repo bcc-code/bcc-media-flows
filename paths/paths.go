@@ -273,8 +273,20 @@ func (f Files) Len() int {
 	return len(f)
 }
 
+// Less orders by drive first, then by path within a drive.
+//
+// The comparison has to be antisymmetric for sort.Sort to produce a defined
+// result. The previous `a.Drive < b.Drive || a.Path < b.Path` was not: for
+// {drive: b, path: a} against {drive: a, path: b} it reported Less(i, j) and
+// Less(j, i) both true, leaving the sorted output arbitrary. Files is sorted inside
+// workflow code — it decides multitrack channel order in
+// workflows/ingest/multitrack.go — so an arbitrary result is a replay hazard and
+// not merely a cosmetic one.
 func (f Files) Less(i, j int) bool {
-	return f[i].Drive.Value < f[j].Drive.Value || f[i].Path < f[j].Path
+	if f[i].Drive.Value != f[j].Drive.Value {
+		return f[i].Drive.Value < f[j].Drive.Value
+	}
+	return f[i].Path < f[j].Path
 }
 
 func (f Files) Swap(i, j int) {
