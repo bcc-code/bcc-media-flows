@@ -11,8 +11,7 @@ import (
 // This is the only way to hand off work that must outlive the current workflow.
 // Activities cannot: they are cancelled when the workflow that scheduled them
 // completes, and ParentClosePolicy has no effect on them — setting it and then
-// calling ExecuteActivity silently does nothing, which is how sidecar subtitle
-// imports were being dropped.
+// calling ExecuteActivity silently does nothing.
 //
 // Callers must still wait for the child to actually START, with
 // future.GetChildWorkflowExecution().Get(ctx, nil), before completing. If the

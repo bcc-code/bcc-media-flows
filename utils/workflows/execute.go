@@ -91,12 +91,6 @@ func Execute[T any, TR any](ctx workflow.Context, activity func(context.Context,
 	return Task[TR]{Future: future}
 }
 
-// ExecuteIndependently used to live here. It set ParentClosePolicy via
-// WithChildOptions and then executed an activity, which does nothing: the policy
-// only applies to child workflows. Activities cannot outlive the workflow that
-// scheduled them, so work that needs to survive the parent closing belongs in a
-// detached child workflow — see WithAbandonChildOptions in child.go.
-
 // ExecuteWithLowPrioQueue executes the utility activities with the low priority queue
 func ExecuteWithLowPrioQueue[T any, TR any](ctx workflow.Context, activity func(context.Context, T) (TR, error), params T) Task[TR] {
 	options := workflow.GetActivityOptions(ctx)
