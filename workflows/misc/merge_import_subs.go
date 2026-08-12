@@ -1,9 +1,9 @@
 package miscworkflows
 
 import (
+	"bytes"
 	"encoding/csv"
 	"fmt"
-	"io"
 	"strings"
 	"time"
 
@@ -13,7 +13,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
-	"github.com/gocarina/gocsv"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -157,21 +156,50 @@ func MergeAndImportSubtitlesFromCSV(ctx workflow.Context, params MergeAndImportS
 }
 
 type SubtitleEntry struct {
-	SubtransID  string `csv:"Subtrans ID"`
-	TimecodeStr string `csv:"Timecode start"`
+	SubtransID  string
+	TimecodeStr string
 }
 
+const (
+	subtransIDColumn = "Subtrans ID"
+	timecodeColumn   = "Timecode start"
+)
+
+// parseSubMergeData reads the two columns this workflow needs out of the
+// uploaded CSV, matching them by header name so extra columns and column
+// reordering are both tolerated.
 func parseSubMergeData(input []byte, separator rune) ([]SubtitleEntry, error) {
-	var entries []SubtitleEntry
+	reader := csv.NewReader(bytes.NewReader(input))
+	reader.Comma = separator
 
-	gocsv.SetCSVReader(func(in io.Reader) gocsv.CSVReader {
-		r := csv.NewReader(in)
-		r.Comma = separator
-		return r
-	})
-
-	if err := gocsv.UnmarshalBytes(input, &entries); err != nil {
+	records, err := reader.ReadAll()
+	if err != nil {
 		return nil, err
+	}
+	if len(records) == 0 {
+		return nil, nil
+	}
+
+	idIndex, timecodeIndex := -1, -1
+	for i, name := range records[0] {
+		switch strings.TrimSpace(name) {
+		case subtransIDColumn:
+			idIndex = i
+		case timecodeColumn:
+			timecodeIndex = i
+		}
+	}
+	if idIndex < 0 || timecodeIndex < 0 {
+		return nil, fmt.Errorf("CSV is missing a %q or %q column, got: %s",
+			subtransIDColumn, timecodeColumn, strings.Join(records[0], string(separator)))
+	}
+
+	entries := make([]SubtitleEntry, 0, len(records)-1)
+	for _, record := range records[1:] {
+		entries = append(entries, SubtitleEntry{
+			SubtransID:  record[idIndex],
+			TimecodeStr: record[timecodeIndex],
+		})
 	}
 
 	return entries, nil
