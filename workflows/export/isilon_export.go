@@ -10,6 +10,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/utils"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/orsinium-labs/enum"
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -111,6 +112,16 @@ func IsilonExport(ctx workflow.Context, params IsilonExportParams) error {
 
 	for _, key := range audioKeys {
 		audioPaths = append(audioPaths, mergeResult.AudioFiles[key])
+	}
+
+	// Audio-only items have no VideoFile (VXExport sets MakeVideo from
+	// fileInfo.HasVideo), and dereferencing it would panic the workflow task into an
+	// endless retry loop.
+	if mergeResult.VideoFile == nil {
+		err = temporal.NewNonRetryableApplicationError(
+			"Isilon export needs a video file, but this item is audio-only", "NO_VIDEO_FILE", nil)
+		wfutils.SendTelegramErorr(ctx, telegram.ChatOther, params.VXID, err)
+		return err
 	}
 
 	switch exportFormat.Value {

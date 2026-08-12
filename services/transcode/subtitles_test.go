@@ -125,3 +125,26 @@ func Test_writeEvent_ThreeLines(t *testing.T) {
 	line := string(content)
 	assert.Contains(t, line, `A\NB\NC`)
 }
+
+// CreateBurninASSFile returns (nil, err) when it cannot read the header, and
+// SubtitleBurnIn used to ignore that error and then call assFile.Local() on the nil
+// pointer. A dead `assFile := &subtitleFile` above it made the variable look
+// initialised. The header read happens before any ffmpeg call, so this needs no
+// media — only a header path that does not exist.
+func Test_SubtitleBurnIn_MissingHeaderReturnsErrorNotPanic(t *testing.T) {
+	// Constructed rather than parsed: paths.MustParse only accepts the configured
+	// drive prefixes, so a t.TempDir() path would panic inside the helper.
+	videoPath := paths.Path{Drive: paths.TempDrive, Path: "burnin-test/video.mp4"}
+	// Must not be .ass, or CreateBurninASSFile returns early without reading a header.
+	subtitlePath := paths.Path{Drive: paths.TempDrive, Path: "burnin-test/subs.srt"}
+	missingHeader := paths.Path{Drive: paths.TempDrive, Path: "burnin-test/does-not-exist.ass"}
+	outputPath := paths.Path{Drive: paths.TempDrive, Path: "burnin-test"}
+
+	assert.NotPanics(t, func() {
+		out, err := SubtitleBurnIn(videoPath, subtitlePath, missingHeader, outputPath, nil)
+
+		assert.Error(t, err, "an unreadable header must be reported")
+		assert.Contains(t, err.Error(), "burn-in ASS file")
+		assert.Nil(t, out)
+	})
+}
