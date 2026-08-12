@@ -50,9 +50,9 @@ func TestGrowingPreview_VUMeters(t *testing.T) {
 
 	select {
 	case err := <-done:
-		// Previously discarded. Cancellation is how every live ingest ends normally, so
-		// it must not be reported as a failure — and asserting it here also guards
-		// against killing ffmpeg outright, which would truncate the final segment.
+		// Cancellation is how every live ingest ends normally, so it must not surface as
+		// a failure. This also guards the graceful shutdown: killing ffmpeg outright
+		// rather than letting its stdin EOF would truncate the final segment.
 		require.NoError(t, err, "cancellation is the normal end of a live ingest")
 	case <-time.After(60 * time.Second):
 		t.Fatal("GrowingPreview did not exit after context cancellation")

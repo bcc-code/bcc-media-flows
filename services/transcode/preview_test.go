@@ -153,9 +153,9 @@ func growingPreviewFailFast(t *testing.T) error {
 }
 
 // ffmpeg exiting on its own means no more preview is coming, so GrowingPreview must
-// return promptly. Nothing used to watch for it: the loop selected only on a 60s timer
-// and ctx.Done(), so the activity kept heartbeating and remuxing a stale playlist until
-// its 8 hour StartToCloseTimeout. Note the context is never cancelled here.
+// return promptly rather than wait for cancellation. The context is deliberately never
+// cancelled here: a drain loop watching only its timer and ctx.Done() would keep the
+// activity alive to its 8 hour StartToCloseTimeout, and this test to its deadline.
 func TestGrowingPreview_FfmpegExitingEarlyIsReported(t *testing.T) {
 	err := growingPreviewFailFast(t)
 
@@ -184,10 +184,10 @@ func countOpenFDs(t *testing.T) int {
 	return 0
 }
 
-// Each invocation used to leak the tail pipe's read end and leave an unreaped tail:
-// StdoutPipe registers the read end in tailCmd.parentIOPipes, which only Wait closes,
-// and Wait was never called. That leak is also the only thing that could ever have made
-// os.Pipe fail, which the old code answered with os.Exit(1).
+// Repeated invocations must not accumulate descriptors. StdoutPipe registers the pipe's
+// read end in tailCmd.parentIOPipes, which only Wait closes, so failing to wait on tail
+// leaks one descriptor and one zombie per call — and descriptor exhaustion is the only
+// thing that can make os.Pipe fail in the first place.
 func TestGrowingPreview_DoesNotLeakDescriptors(t *testing.T) {
 	// Warm up first so one-off allocations are not counted as growth.
 	_ = growingPreviewFailFast(t)

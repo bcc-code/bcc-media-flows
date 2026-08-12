@@ -411,8 +411,8 @@ func GrowingPreview(ctx context.Context, input GrowingPreviewInput, heartbeater 
 		return fmt.Errorf("error starting tail: %w", err)
 	}
 
-	// Reaps tail and closes the pipe's read end. Without this every invocation leaked
-	// one descriptor and left a zombie: StdoutPipe registers the read end in
+	// Reaps tail and closes the pipe's read end. Skipping this leaks a descriptor and
+	// leaves a zombie per call: StdoutPipe registers the read end in
 	// tailCmd.parentIOPipes, which only Wait closes, and handing it to ffmpegCmd.Stdin
 	// does not transfer ownership because exec returns a caller-supplied *os.File as-is.
 	defer func() { _ = tailCmd.Wait() }()
@@ -430,8 +430,8 @@ func GrowingPreview(ctx context.Context, input GrowingPreviewInput, heartbeater 
 		select {
 		case waitErr := <-ffmpegDone:
 			// ffmpeg stopped while the file is still growing, so no more preview is
-			// coming. Nothing used to watch for this, so the activity carried on
-			// heartbeating and remuxing a stale playlist until its 8 hour timeout.
+			// coming. Without this case the activity would carry on heartbeating and
+			// remuxing a stale playlist until its 8 hour timeout.
 			if muxErr := muxFinishedPreview(input.TempDir, input.DestinationFile); muxErr != nil {
 				fmt.Println(muxErr)
 			}
