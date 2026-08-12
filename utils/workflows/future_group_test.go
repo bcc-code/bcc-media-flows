@@ -82,7 +82,8 @@ func (s *FutureGroupTestSuite) Test_AllTasksRegisterFollowUps() {
 	s.Equal(9, result.Callbacks)
 }
 
-// The regression: one callback bails out without registering its follow-ups.
+// The case a count derived from the inputs gets wrong: one callback bails out
+// without registering its follow-ups.
 func (s *FutureGroupTestSuite) Test_OneCallbackBailsOut() {
 	result := s.run(groupProbeParams{Tasks: []bool{true, false, true}, FollowUps: 2})
 	// 3 top-level callbacks + 2×2 follow-ups from the two that continued.
