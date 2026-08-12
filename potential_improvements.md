@@ -1117,3 +1117,42 @@ most if the proxy were ever misconfigured, bypassed, or reached from an already-
 - **TODO/FIXME/HACK inventory: 3 matches repo-wide**, none in `cmd/`, `environment/`, `utils/`,
   `analytics/`, `cache/` or the root files. Given the volume above, the debt in this codebase is
   *undocumented* rather than tracked — which is the main argument for keeping this file current.
+
+## Found while fixing the workflowcheck sites (2026-08-12)
+
+- **`analytics.GetService()` returns nil until `Init` runs, and every method dereferences the
+  receiver.** `analytics/service.go:23` returns the package var `Instance`, which is only set by
+  `Init`; each method then starts with `if s.rudderClient == nil`, which panics on a nil `s`
+  rather than returning. Latent today — `cmd/worker/main.go:104` is the only `Init` caller and
+  also the only place that registers `AnalyticsWorkerInterceptor` — but the interceptor wraps
+  **every** workflow and activity, so a second entrypoint registering it without `Init`, or a
+  test that does, panics on the first workflow task. A one-line `if s == nil { return }` at the
+  top of each method removes the whole class.
+
+- **`GetMapKeysSafely` is more expensive and less useful than sorting.**
+  `utils/workflows/maps.go` records `lo.Keys` through a `workflow.SideEffect`: one history event
+  per call, and the keys come back in whatever order the first run happened to produce. Its
+  doc comment also overstates the guarantee — the recorded order is stable across *replays of
+  one execution*, not "identical to other workflow executions". `wfutils.SortedKeys` gives a
+  stronger guarantee for free wherever the key type is ordered. The ten existing callers were
+  left alone deliberately: dropping a `SideEffect` changes the recorded history and breaks
+  replay for in-flight executions, so any migration needs to be sequenced against a drain.
+
+- **Dead `append` inside a `range` in `MergeAndImportSubtitlesFromCSV`.**
+  `workflows/misc/merge_import_subs.go:146` does `langs = append(langs, lang)` while ranging
+  over `langs`. `range` evaluates the slice header once, so the appended lowercased duplicates
+  are never visited — the statement only grows a slice that is discarded. Either the loop was
+  meant to re-process the lowercased language or the line is leftover; as written it reads like
+  an intentional feed-forward and is not one.
+
+- **`workflowcheck` is not pinned.** `make test` invokes whatever version is on the developer's
+  `PATH` (v0.4.0 locally). Now that the check exits 0 and can gate merges, it should be a
+  `tool` directive in `go.mod` and invoked as `go tool workflowcheck`, so everyone runs the same
+  analyzer with the same built-in override list.
+
+- **`SortFilesByImportedDate` carries a function-wide `//workflowcheck:ignore`.**
+  `workflows/misc/cleanup_production.go:34` suppresses everything in a workflow that reads
+  `time.Since`, iterates two maps and writes five `fmt.Printf` lines. That is fine while the
+  comment above it holds — it is deliberately registered nowhere — but the suppression is
+  unconditional, so registering it later silently ships all of that. Worth converting to the
+  narrow line-level ignores the rest of the tree now uses.
