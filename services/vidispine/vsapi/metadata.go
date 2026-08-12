@@ -88,7 +88,9 @@ func (c *Client) GetMetadataAdvanced(params GetMetadataAdvancedParams) (*Metadat
 	outString := fmt.Sprintf("%.2f", params.OutTC)
 	url := fmt.Sprintf("%s/item/%s?content=metadata&terse=true&sampleRate=PAL&interval=%s-%s&group=%s", c.baseURL, params.ItemID, inString, outString, params.Group)
 
-	resp, err := c.restyClient.R().
+	// Asking for a group/interval with no subclips is the normal case for an item
+	// without chapters, and Vidispine may answer that with 404.
+	resp, err := tolerating404(c.restyClient.R()).
 		SetResult(&MetadataResult{}).
 		Get(url)
 

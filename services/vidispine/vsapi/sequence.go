@@ -5,7 +5,8 @@ import (
 )
 
 func (c *Client) GetSequence(sequenceID string) (*SequenceDocument, error) {
-	result, err := c.restyClient.R().
+	// Items that are not sequences answer 404, which callers treat as "no sequence".
+	result, err := tolerating404(c.restyClient.R()).
 		SetResult(&SequenceDocument{}).
 		Get("/item/" + sequenceID + "/sequence/vidispine")
 	if err != nil {

@@ -134,7 +134,8 @@ func (c *Client) FileExistsInStorage(storageID, absoluteFilePath string) (bool, 
 	q.Set("number", "10")
 	requestURL.RawQuery = q.Encode()
 
-	result, err := c.restyClient.R().
+	// This is a probe: "not found" is a legitimate false, which the caller polls on.
+	result, err := tolerating404(c.restyClient.R()).
 		SetResult(&FileSearchResult{}).
 		Get(requestURL.String())
 	if err != nil {
