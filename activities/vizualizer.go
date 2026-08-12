@@ -3,10 +3,11 @@ package activities
 import (
 	"context"
 	"errors"
-	"github.com/bcc-code/bcc-media-flows/paths"
 	"time"
 
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vizualizer"
+	"go.temporal.io/sdk/activity"
 )
 
 // Vizualizer exposes activities for the music visualization service.
@@ -48,6 +49,10 @@ func (a *VizualizerActivities) SubmitVisualization(ctx context.Context, args Sub
 // If PollInterval is zero, defaults to 2s. If Timeout is zero, no timeout.
 // If Timeout elapses, returns context.DeadlineExceeded.
 // Returns the final job status on success; errors if job failed.
+//
+// Timeout only bounds the polling. The activity's own HeartbeatTimeout and
+// ScheduleToCloseTimeout still apply, and the heartbeat is the shorter of the
+// two: GetDefaultActivityOptions sets it to ten minutes.
 type WaitForVisualizationArgs struct {
 	JobID        string
 	PollInterval time.Duration
@@ -55,6 +60,11 @@ type WaitForVisualizationArgs struct {
 }
 
 // WaitForVisualization polls until the job completes or fails.
+//
+// Each poll records a heartbeat. A visualization takes about as long as the
+// audio it renders, so without one, any job outlasting the heartbeat timeout is
+// killed mid-render and retried into the same wall — the workflow spends its
+// whole retry budget failing identically.
 func (a *VizualizerActivities) WaitForVisualization(ctx context.Context, args WaitForVisualizationArgs) (*vizualizer.JobStatusResponse, error) {
 	if args.JobID == "" {
 		return nil, errors.New("JobID is required")
@@ -83,6 +93,9 @@ func (a *VizualizerActivities) WaitForVisualization(ctx context.Context, args Wa
 			if err != nil {
 				return nil, err
 			}
+			// The status is the heartbeat detail, so a job that is progressing
+			// but slow is visible in Temporal rather than just silent.
+			activity.RecordHeartbeat(ctx, status)
 			switch status.Status {
 			case "completed":
 				return status, nil
