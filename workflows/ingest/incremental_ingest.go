@@ -165,8 +165,8 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 			Replace:  false,
 		}).Result(ctx)
 		if importErr != nil {
-			// Previously this error was discarded and the check below inspected the
-			// enclosing function's err instead, so the failure was invisible.
+			// Named separately from the enclosing function's err so the failure cannot
+			// be hidden by a later check reading the wrong variable.
 			logger.Error("Failed to import growing preview as lowres shape", "error", importErr)
 		}
 

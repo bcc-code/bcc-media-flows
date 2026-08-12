@@ -10,9 +10,9 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-// An item with shapes but no "original" among them made GetShape return nil, and
-// the AudioComponent access straight after dereferenced it. Every sibling GetShape
-// call site in this package guards for nil; this one did not.
+// An item with shapes but no "original" among them makes GetShape return nil, and the
+// AudioComponent access straight after would dereference it, so the nil must be caught
+// and reported — as every GetShape call site in this package does.
 func TestEnrichClipWithEmbeddedAudio_NoOriginalShape(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	vs := vsmock.NewMockClient(ctrl)

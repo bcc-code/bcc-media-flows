@@ -127,10 +127,9 @@ func Test_writeEvent_ThreeLines(t *testing.T) {
 }
 
 // CreateBurninASSFile returns (nil, err) when it cannot read the header, and
-// SubtitleBurnIn used to ignore that error and then call assFile.Local() on the nil
-// pointer. A dead `assFile := &subtitleFile` above it made the variable look
-// initialised. The header read happens before any ffmpeg call, so this needs no
-// media — only a header path that does not exist.
+// SubtitleBurnIn dereferences that result, so an unreadable header must surface as an
+// error rather than a panic. The header read happens before any ffmpeg call, so this
+// needs no media — only a header path that does not exist.
 func Test_SubtitleBurnIn_MissingHeaderReturnsErrorNotPanic(t *testing.T) {
 	// Constructed rather than parsed: paths.MustParse only accepts the configured
 	// drive prefixes, so a t.TempDir() path would panic inside the helper.

@@ -14,9 +14,8 @@ import (
 )
 
 func SubtitleBurnIn(videoFile, subtitleFile, subtitleHeader, outputPath paths.Path, progressCallback ffmpeg.ProgressCallback) (*paths.Path, error) {
-	// The error was previously left unchecked while the dead assignment above it made
-	// assFile look initialised. CreateBurninASSFile returns (nil, err) on four paths,
-	// and assFile.Local() below dereferences it.
+	// CreateBurninASSFile returns (nil, err) on four paths, and assFile.Local() below
+	// dereferences the result, so this error must be checked.
 	assFile, err := CreateBurninASSFile(subtitleHeader, subtitleFile)
 	if err != nil {
 		return nil, fmt.Errorf("could not create burn-in ASS file for %s: %w", subtitleFile.Local(), err)

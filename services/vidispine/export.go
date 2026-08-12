@@ -232,8 +232,8 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 
 	shape := shapes.GetShape("original")
 	if shape == nil {
-		// Every sibling GetShape call site checks this; this one did not, and the
-		// AudioComponent access below dereferences it.
+		// The AudioComponent access below dereferences the shape, so a missing original
+		// has to be reported rather than followed.
 		return nil, fmt.Errorf("no original shape found for item %s", clip.VXID)
 	}
 
