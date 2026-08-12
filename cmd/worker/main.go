@@ -265,7 +265,22 @@ func update(version string) error {
 
 	ctx := context.Background()
 
-	latest, found, err := selfupdate.DetectLatest(ctx, selfupdate.ParseSlug("bcc-code/bcc-media-flows"))
+	// SHAValidator makes the update fail closed: the release must carry a
+	// <binary>.sha256 asset whose hash matches what was downloaded, or nothing
+	// is installed. publish.yml writes that file next to every binary.
+	//
+	// This catches a truncated or corrupted download, not a compromised
+	// release pipeline — the hash is published by the same job, to the same
+	// release, so whoever can write one can write the other. Closing that
+	// needs a signature checked against a key the pipeline cannot mint.
+	updater, err := selfupdate.NewUpdater(selfupdate.Config{
+		Validator: &selfupdate.SHAValidator{},
+	})
+	if err != nil {
+		return fmt.Errorf("could not create updater: %w", err)
+	}
+
+	latest, found, err := updater.DetectLatest(ctx, selfupdate.ParseSlug("bcc-code/bcc-media-flows"))
 	if err != nil {
 		return fmt.Errorf("error occurred while detecting version: %w", err)
 	}
@@ -290,7 +305,7 @@ func update(version string) error {
 	if err != nil {
 		return fmt.Errorf("could not locate executable path")
 	}
-	if err := selfupdate.UpdateTo(ctx, latest.AssetURL, latest.AssetName, exe); err != nil {
+	if err := updater.UpdateTo(ctx, latest, exe); err != nil {
 		return fmt.Errorf("error occurred while updating binary: %w", err)
 	}
 	log.Printf("Successfully updated to version %s", latest.Version())
