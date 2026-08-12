@@ -54,9 +54,9 @@ echo "progress=end"
 	return exec.Command("sh", "-c", script)
 }
 
-// The regression. Reading stdout to EOF and only then reading stderr deadlocks once
-// the child fills the stderr pipe: it blocks in write(), so it never exits, so
-// stdout never reaches EOF.
+// Stderr must not be a pipe that is only read after stdout reaches EOF: once the
+// child fills the stderr pipe it blocks in write(), so it never exits, so stdout
+// never reaches EOF either.
 func TestExecuteAnalysisCmd_ChattyStderrDoesNotDeadlock(t *testing.T) {
 	var result string
 	var err error
