@@ -85,7 +85,8 @@ func MergeAndImportSubtitlesFromCSV(ctx workflow.Context, params MergeAndImportS
 			DestinationFolder: tempPath,
 		}).Result(ctx)
 
-		for lang, sub := range res {
+		for _, lang := range wfutils.SortedKeys(res) {
+			sub := res[lang]
 
 			if _, ok := mergeData[lang]; !ok {
 				mergeData[lang] = &common.MergeInput{

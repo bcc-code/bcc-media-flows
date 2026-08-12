@@ -5,6 +5,7 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/services/ingest"
 	"github.com/bcc-code/bcc-media-flows/services/notifications"
+	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 )
 
 // jsonFormSpec describes how a single JSON form (identified by formKey) maps
@@ -80,9 +81,10 @@ func translateJSONForm(form ingest.JSONForm) (*ingest.Metadata, OrderForm, error
 		ReceivedFilename: form.OriginalFilename,
 	}
 
-	for key, target := range spec.fields(&jp) {
+	fields := spec.fields(&jp)
+	for _, key := range wfutils.SortedKeys(fields) {
 		if value, ok := form.Fields[key]; ok {
-			*target = value
+			*fields[key] = value
 		}
 	}
 

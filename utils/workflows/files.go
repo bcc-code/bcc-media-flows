@@ -15,7 +15,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/paths"
-	"github.com/samber/lo"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -186,15 +185,6 @@ func GetWorkflowTempFolder(ctx workflow.Context) (paths.Path, error) {
 	}
 
 	return path, CreateFolder(ctx, path)
-}
-
-// GetMapKeysSafely makes sure that the order of the keys returned are identical to other workflow executions.
-func GetMapKeysSafely[K comparable, T any](ctx workflow.Context, m map[K]T) ([]K, error) {
-	var keys []K
-	err := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
-		return lo.Keys(m)
-	}).Get(&keys)
-	return keys, err
 }
 
 func IsImage(ctx workflow.Context, file paths.Path) (bool, error) {
