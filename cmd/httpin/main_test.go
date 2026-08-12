@@ -73,9 +73,9 @@ func Test_TriggerHandler_UnknownJob_IsNotReportedAsSuccess(t *testing.T) {
 	assert.Contains(t, rec.Body.String(), "ThisJobDoesNotExist")
 }
 
-// The regression in the NormalizeAudio case: `target, err := strconv.ParseFloat`
-// declared a case-scoped err, so the ExecuteWorkflow error below it never reached
-// the check after the switch and the handler answered 200 with a null body.
+// A trigger that cannot start its workflow must answer 500. The NormalizeAudio case
+// declares its own `target, err` with `:=`, so a failure to start is invisible to any
+// check placed after the switch — which answers 200 with a null body.
 func Test_TriggerHandler_WorkflowStartFailure_Returns500(t *testing.T) {
 	withClient(t, stubClient{err: errors.New("temporal is unreachable")})
 
