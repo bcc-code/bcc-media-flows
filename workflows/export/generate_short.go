@@ -98,7 +98,9 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		return nil, err
 	}
 
-	titleWithShort := badChars.ReplaceAllString(exportData.Title, "_") + "_short_" + time.Now().Format("20060102150405")
+	// workflow.Now is stable across replays; time.Now would name the output file
+	// differently every time the workflow is replayed.
+	titleWithShort := badChars.ReplaceAllString(exportData.Title, "_") + "_short_" + workflow.Now(ctx).Format("20060102150405")
 
 	clip := exportData.Clips[0]
 	clip.InSeconds = params.InSeconds
