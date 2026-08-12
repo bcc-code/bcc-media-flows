@@ -120,7 +120,7 @@ func IsilonExport(ctx workflow.Context, params IsilonExportParams) error {
 	if mergeResult.VideoFile == nil {
 		err = temporal.NewNonRetryableApplicationError(
 			"Isilon export needs a video file, but this item is audio-only", "NO_VIDEO_FILE", nil)
-		wfutils.SendTelegramErorr(ctx, telegram.ChatOther, params.VXID, err)
+		wfutils.SendTelegramError(ctx, telegram.ChatOther, params.VXID, err)
 		return err
 	}
 
