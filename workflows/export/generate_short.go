@@ -65,6 +65,11 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		return nil, err
 	}
 
+	// Set before the first activity, so every activity in the workflow runs
+	// under the same options.
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+	ctx = wfutils.WithChildSearchAttributes(ctx, params.VXID)
+
 	exportData, err := wfutils.Execute(ctx, activities.Vidispine.GetExportDataActivity, vsactivity.GetExportDataParams{
 		VXID:        params.VXID,
 		Languages:   []string{"nor", "deu", "eng"},
@@ -82,10 +87,6 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	}
 
 	// transcriptFile := exportData.Clips[0].JSONTranscriptFile
-
-	activityOptions := wfutils.GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, activityOptions)
-	ctx = wfutils.WithChildSearchAttributes(ctx, params.VXID)
 
 	tempFolder, err := wfutils.GetWorkflowTempFolder(ctx)
 	if err != nil {
