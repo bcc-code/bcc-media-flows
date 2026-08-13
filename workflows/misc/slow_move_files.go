@@ -70,6 +70,11 @@ func StartFilesWorkerFlow(ctx context.Context, params MoveMBFileParams) error {
 
 const MoveMBFileSignalName = "move_mb_file"
 
+// moveFilesIdleTimeout is how long the worker flow waits for another request
+// before completing. The next request starts it again through
+// SignalWithStartWorkflow.
+const moveFilesIdleTimeout = 10 * time.Second
+
 type MBStorage struct {
 	VXID     string
 	BasePath string
@@ -147,13 +152,26 @@ func FindStorageForVXID(vxid string) *MBStorage {
 	return nil
 }
 
+// MoveFilesWorkerFlow drains move requests signalled to the fixed "move_mb_file"
+// execution, and exits once none has arrived for idleTimeout.
+//
+// A steady stream of requests keeps one run alive indefinitely, and every move
+// adds activity events to the same history, so the run continues as new once
+// the server says the history is getting long. Continuing only while the
+// channel is empty means no queued request is dropped on the way over.
 func MoveFilesWorkerFlow(ctx workflow.Context) error {
 	ch := workflow.GetSignalChannel(ctx, MoveMBFileSignalName)
 
 	msg := &MoveMBFileParams{}
 
 	for {
-		ok, _ := ch.ReceiveWithTimeout(ctx, 10*time.Second, msg)
+		if workflow.GetInfo(ctx).GetContinueAsNewSuggested() && ch.Len() == 0 {
+			workflow.GetLogger(ctx).Info("History is long, continuing as new",
+				"events", workflow.GetInfo(ctx).GetCurrentHistoryLength())
+			return workflow.NewContinueAsNewError(ctx, MoveFilesWorkerFlow)
+		}
+
+		ok, _ := ch.ReceiveWithTimeout(ctx, moveFilesIdleTimeout, msg)
 		if !ok {
 			break
 		}
