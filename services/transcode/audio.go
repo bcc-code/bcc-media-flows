@@ -308,13 +308,7 @@ func GenerateToneFile(frequency int, duration float64, sampleRate int, timecode 
 }
 
 func TrimFile(inFile, outFile paths.Path, start, end float64, cb ffmpeg.ProgressCallback) error {
-	params := []string{
-		"-progress", "pipe:1",
-		"-hide_banner",
-		"-y",
-		"-i", inFile.Local(),
-		"-ss", fmt.Sprintf("%f", start),
-	}
+	params := []string{"-ss", fmt.Sprintf("%f", start)}
 
 	if end != 0 {
 		params = append(params,
@@ -323,19 +317,19 @@ func TrimFile(inFile, outFile paths.Path, start, end float64, cb ffmpeg.Progress
 
 	params = append(params,
 		"-map", "0",
-		"-c", "copy",
-		outFile.Local())
+		"-c", "copy")
 
-	_, err := ffmpeg.Do(params, ffmpeg.StreamInfo{}, cb)
+	_, err := ffmpeg.Run(ffmpeg.Job{
+		Input:  inFile.Local(),
+		Output: outFile.Local(),
+		Args:   params,
+		Info:   &ffmpeg.StreamInfo{},
+	}, cb)
 	return err
 }
 
 func Convert51to4Mono(inFile, outFile paths.Path, cb ffmpeg.ProgressCallback) error {
 	params := []string{
-		"-progress", "pipe:1",
-		"-hide_banner",
-		"-y",
-		"-i", inFile.Local(),
 		"-map", "0:v",
 		"-c:v", "copy", // Copy video unchanged
 		"-filter_complex", // Process audio
@@ -351,10 +345,14 @@ func Convert51to4Mono(inFile, outFile paths.Path, cb ffmpeg.ProgressCallback) er
 		"-map", "[BL2]",
 		"-map", "[BR2]",
 		"-c:a", "pcm_s24le", // We can not use -c copy here, because the channel layout is changed, but this should be the default codec in any case
-		outFile.Local(),
 	}
 
-	_, err := ffmpeg.Do(params, ffmpeg.StreamInfo{}, cb)
+	_, err := ffmpeg.Run(ffmpeg.Job{
+		Input:  inFile.Local(),
+		Output: outFile.Local(),
+		Args:   params,
+		Info:   &ffmpeg.StreamInfo{},
+	}, cb)
 	return err
 }
 

@@ -21,25 +21,19 @@ func SubtitleBurnIn(videoFile, subtitleFile, subtitleHeader, outputPath paths.Pa
 		return nil, fmt.Errorf("could not create burn-in ASS file for %s: %w", subtitleFile.Local(), err)
 	}
 
-	params := []string{
-		"-i", videoFile.Local(),
-		"-vf", "ass=" + assFile.Local(),
-		"-c:a", "copy",
-	}
-
 	base := videoFile.Base()
 	filename := base[0 : len(base)-len(videoFile.Ext())]
 
 	output := outputPath.Append(filename + ".subs" + videoFile.Ext())
 
-	params = append(params, output.Local())
-
-	info, err := ffmpeg.GetStreamInfo(videoFile.Local())
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = ffmpeg.Do(params, info, progressCallback)
+	_, err = ffmpeg.Run(ffmpeg.Job{
+		Input:  videoFile.Local(),
+		Output: output.Local(),
+		Args: []string{
+			"-vf", "ass=" + assFile.Local(),
+			"-c:a", "copy",
+		},
+	}, progressCallback)
 	if err != nil {
 		return nil, err
 	}
@@ -65,11 +59,13 @@ func CreateBurninASSFile(subtitleHeader, subtitleFile paths.Path) (*paths.Path, 
 		return &out, specialASSConverter(string(headerData), subtitleFile.Local(), out.Local(), 0.00005)
 	}
 
-	_, err = ffmpeg.Do([]string{
-		"-y",
-		"-i", subtitleFile.Local(),
-		out.Local(),
-	}, ffmpeg.StreamInfo{}, nil)
+	// Converting a subtitle file to ASS, so there is nothing to probe and no
+	// progress to report.
+	_, err = ffmpeg.Run(ffmpeg.Job{
+		Input:  subtitleFile.Local(),
+		Output: out.Local(),
+		Info:   &ffmpeg.StreamInfo{},
+	}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +86,7 @@ func CreateBurninASSFile(subtitleHeader, subtitleFile paths.Path) (*paths.Path, 
 		lines = append(lines, l)
 	}
 
-	err = os.WriteFile(out.Local(), []byte(string(headerData)+"\n"+strings.Join(lines, "\n")), os.ModePerm)
+	err = os.WriteFile(out.Local(), []byte(string(headerData)+"\n"+strings.Join(lines, "\n")), ffmpeg.OutputFileMode)
 	if err != nil {
 		return nil, err
 	}
