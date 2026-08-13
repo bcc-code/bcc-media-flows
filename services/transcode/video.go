@@ -2,7 +2,6 @@ package transcode
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/bcc-code/bcc-media-flows/common"
@@ -12,19 +11,12 @@ import (
 )
 
 func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.VideoResult, error) {
-	params := []string{
-		"-hide_banner",
-		"-progress", "pipe:1",
-		"-i", input.Path.Local(),
-	}
-
+	var extraInputs []ffmpeg.Input
 	if input.WatermarkPath != nil {
-		params = append(params,
-			"-i", input.WatermarkPath.Local(),
-		)
+		extraInputs = append(extraInputs, ffmpeg.Input{Path: input.WatermarkPath.Local()})
 	}
 
-	params = append(params,
+	params := []string{
 		"-c:v", "libx264",
 		"-profile:v", "high422",
 		"-preset", "slow",
@@ -36,7 +28,7 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		"-x264opts", "no-scenecut",
 		"-crf", "22",
 		"-write_tmcd", "0",
-	)
+	}
 
 	info, err := ffmpeg.GetStreamInfo(input.Path.Local())
 	if err != nil {
@@ -91,18 +83,15 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 
 	outputFilePath := filepath.Join(input.DestinationPath.Local(), filename)
 
-	params = append(params,
-		"-y", outputFilePath,
-	)
-
-	_, err = ffmpeg.Do(params, info, cb)
+	_, err = ffmpeg.Run(ffmpeg.Job{
+		Input:       input.Path.Local(),
+		ExtraInputs: extraInputs,
+		Output:      outputFilePath,
+		Args:        params,
+		Info:        &info,
+	}, cb)
 	if err != nil {
 		return nil, err
-	}
-
-	err = os.Chmod(outputFilePath, os.ModePerm)
-	if err != nil {
-		fmt.Printf("Failed to set permissions on %s: %s", outputFilePath, err)
 	}
 
 	outputPath, err := paths.Parse(outputFilePath)
