@@ -86,7 +86,7 @@ func TestRunUsesTheGivenInfoWithoutProbing(t *testing.T) {
 func TestJobArgumentsWithExtraInputs(t *testing.T) {
 	args := Job{
 		Input:       "/in/video.mxf",
-		ExtraInputs: []string{"/in/nor.wav", "/in/eng.wav"},
+		ExtraInputs: FileInputs([]string{"/in/nor.wav", "/in/eng.wav"}),
 		Output:      "/out/result.mov",
 		Args:        []string{"-map", "1"},
 	}.Arguments()
@@ -101,5 +101,32 @@ func TestJobArgumentsWithExtraInputs(t *testing.T) {
 		"-i", "/in/eng.wav",
 		"-map", "1",
 		"-y", "/out/result.mov",
+	}, args)
+}
+
+// -itsoffset and -f lavfi apply to the input they precede, so they cannot be
+// lumped in with the codec arguments.
+func TestJobArgumentsWithPerInputOptions(t *testing.T) {
+	args := Job{
+		InputArgs: []string{"-f", "lavfi"},
+		Input:     "color=c=black:s=1920x1080",
+		ExtraInputs: []Input{
+			{Args: []string{"-itsoffset", "-0.022"}, Path: "/in/nor.wav"},
+			{Path: "/in/nor.srt"},
+		},
+		Output: "/out/muxed.mxf",
+		Args:   []string{"-c:v", "copy"},
+	}.Arguments()
+
+	assert.Equal(t, []string{
+		"-progress", "pipe:1",
+		"-hide_banner",
+		"-f", "lavfi",
+		"-i", "color=c=black:s=1920x1080",
+		"-itsoffset", "-0.022",
+		"-i", "/in/nor.wav",
+		"-i", "/in/nor.srt",
+		"-c:v", "copy",
+		"-y", "/out/muxed.mxf",
 	}, args)
 }

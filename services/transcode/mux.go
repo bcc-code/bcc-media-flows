@@ -3,7 +3,6 @@ package transcode
 import (
 	"fmt"
 	"log"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -43,35 +42,25 @@ func Mux(input common.MuxInput, progressCallback ffmpeg.ProgressCallback) (*comm
 
 	outputFilePath := filepath.Join(input.DestinationPath.Local(), input.FileName+".mp4")
 
-	if err := os.MkdirAll(filepath.Dir(outputFilePath), os.ModePerm); err != nil {
-		return nil, err
-	}
-
-	params := []string{
-		"-progress", "pipe:1",
-		"-hide_banner",
-		"-i", input.VideoFilePath.Local(),
-	}
-
 	audioFiles := languageFilesForPaths(input.AudioFilePaths)
 	subtitleFiles := languageFilesForPaths(input.SubtitleFilePaths)
 
+	var extraInputs []ffmpeg.Input
 	for _, f := range audioFiles {
-		// -itsoffset -0.022 is there because AAC inserts a delay at the start of the audio file making it out of sync with the video
-		params = append(params,
-			"-itsoffset", "-0.022", "-i", f.Path.Local(),
-		)
+		extraInputs = append(extraInputs, ffmpeg.Input{
+			// -itsoffset -0.022 is there because AAC inserts a delay at the start of the audio file making it out of sync with the video
+			Args: []string{"-itsoffset", "-0.022"},
+			Path: f.Path.Local(),
+		})
 	}
 
 	for _, f := range subtitleFiles {
-		params = append(params,
-			"-i", f.Path.Local(),
-		)
+		extraInputs = append(extraInputs, ffmpeg.Input{Path: f.Path.Local()})
 	}
 
 	streams := 0
-	params = append(
-		params,
+	params := append(
+		[]string{},
 		"-map", fmt.Sprintf("%d:v", streams),
 		fmt.Sprintf("-metadata:s:%d", streams), "language=eng",
 	)
@@ -98,18 +87,20 @@ func Mux(input common.MuxInput, progressCallback ffmpeg.ProgressCallback) (*comm
 		"-c:v", "copy",
 		"-c:a", "copy",
 		"-c:s", "mov_text",
-		"-y", outputFilePath,
 	)
 
-	_, err = ffmpeg.Do(params, info, progressCallback)
-	if err != nil {
-		log.Default().Println("mux failed", err)
-		return nil, fmt.Errorf("mux failed, %s", strings.Join(params, " "))
+	job := ffmpeg.Job{
+		Input:       input.VideoFilePath.Local(),
+		ExtraInputs: extraInputs,
+		Output:      outputFilePath,
+		Args:        params,
+		Info:        &info,
 	}
 
-	err = os.Chmod(outputFilePath, os.ModePerm)
+	_, err = ffmpeg.Run(job, progressCallback)
 	if err != nil {
-		return nil, err
+		log.Default().Println("mux failed", err)
+		return nil, fmt.Errorf("mux failed, %s", strings.Join(job.Arguments(), " "))
 	}
 
 	outputPath, err := paths.Parse(outputFilePath)

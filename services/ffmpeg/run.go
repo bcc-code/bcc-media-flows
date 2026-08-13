@@ -26,9 +26,13 @@ type Job struct {
 	// Input is the file to read. Required.
 	Input string
 
-	// ExtraInputs are further files to read, in order, after Input. Their
-	// stream indices start at 1.
-	ExtraInputs []string
+	// InputArgs are options that apply to Input and therefore have to precede
+	// its -i, such as -f lavfi for a synthesised source.
+	InputArgs []string
+
+	// ExtraInputs are further inputs, in order, after Input. Their stream
+	// indices start at 1.
+	ExtraInputs []Input
 
 	// Output is the file to write. Its directory is created if missing.
 	Output string
@@ -88,17 +92,59 @@ func Run(job Job, cb ProgressCallback) (StreamInfo, error) {
 	return info, nil
 }
 
+// Input is one ffmpeg input, with the options that belong to it.
+type Input struct {
+	// Args are options that apply to this input and precede its -i, such as
+	// -itsoffset.
+	Args []string
+
+	// Path is the file, or the source description for a synthesised input.
+	Path string
+}
+
 // Arguments returns the full ffmpeg command line for the job.
 func (j Job) Arguments() []string {
-	args := make([]string, 0, len(j.Args)+2*len(j.ExtraInputs)+8)
-	args = append(args,
-		"-progress", "pipe:1",
-		"-hide_banner",
-		"-i", j.Input,
-	)
+	args := make([]string, 0, len(j.Args)+4*len(j.ExtraInputs)+8)
+	args = append(args, "-progress", "pipe:1", "-hide_banner")
+	args = append(args, j.InputArgs...)
+	args = append(args, "-i", j.Input)
+
 	for _, input := range j.ExtraInputs {
-		args = append(args, "-i", input)
+		args = append(args, input.Args...)
+		args = append(args, "-i", input.Path)
 	}
+
 	args = append(args, j.Args...)
 	return append(args, "-y", j.Output)
+}
+
+// FileInputs turns plain paths into inputs with no per-input options.
+func FileInputs(paths []string) []Input {
+	inputs := make([]Input, 0, len(paths))
+	for _, path := range paths {
+		inputs = append(inputs, Input{Path: path})
+	}
+	return inputs
+}
+
+// RunArgs is Run for a command whose argument list the caller assembles itself,
+// because its inputs and its filter graph are built together and cannot be
+// separated into a Job.
+//
+// It still creates the output directory and sets the output's mode, which is
+// the half of Run that has nothing to do with the arguments.
+func RunArgs(args []string, output string, info StreamInfo, cb ProgressCallback) error {
+	if output == "" {
+		return fmt.Errorf("ffmpeg command has no output")
+	}
+
+	if err := os.MkdirAll(filepath.Dir(output), OutputDirMode); err != nil {
+		return err
+	}
+
+	if _, err := Do(args, info, cb); err != nil {
+		return err
+	}
+
+	return os.Chmod(output, OutputFileMode)
 }

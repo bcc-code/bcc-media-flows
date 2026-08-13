@@ -25,17 +25,14 @@ func MultitrackMux(files paths.Files, outputPath paths.Path, cb ffmpeg.ProgressC
 		return nil, err
 	}
 
-	params := []string{
-		"-f", "lavfi", "-i", fmt.Sprintf("color=c=black:s=1920x1080:r=25:d=%f", info.TotalSeconds),
-	}
-
+	extraInputs := make([]ffmpeg.Input, 0, len(files))
 	for _, f := range files {
-		params = append(params, "-i", f.Local())
+		extraInputs = append(extraInputs, ffmpeg.Input{Path: f.Local()})
 	}
 
 	outputPath = outputPath.Append(files[0].Base() + ".mxf")
 
-	params = append(params, "-map", "v")
+	params := []string{"-map", "v"}
 	for i, _ := range files {
 		t := i + 1
 		params = append(params, "-filter_complex", fmt.Sprintf("[%d:a:0]channelsplit=channel_layout=stereo[l%d][r%d]", t, t, t))
@@ -48,11 +45,19 @@ func MultitrackMux(files paths.Files, outputPath paths.Path, cb ffmpeg.ProgressC
 		"-c:v", "libx264",
 		"-c:a", "pcm_s24le",
 		"-t", fmt.Sprintf("%f", info.TotalSeconds),
-		"-y",
-		outputPath.Local(),
 	)
 
-	_, err = ffmpeg.Do(params, ffmpeg.StreamInfo{}, cb)
+	_, err = ffmpeg.Run(ffmpeg.Job{
+		// The video is a synthesised black frame, so -f lavfi has to precede the
+		// input it describes; the audio files follow it and the filter graph refers
+		// to them from index 1.
+		InputArgs:   []string{"-f", "lavfi"},
+		Input:       fmt.Sprintf("color=c=black:s=1920x1080:r=25:d=%f", info.TotalSeconds),
+		ExtraInputs: extraInputs,
+		Output:      outputPath.Local(),
+		Args:        params,
+		Info:        &ffmpeg.StreamInfo{},
+	}, cb)
 	if err != nil {
 		return nil, err
 	}

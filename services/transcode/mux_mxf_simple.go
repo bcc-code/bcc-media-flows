@@ -3,7 +3,6 @@ package transcode
 import (
 	"fmt"
 	"log"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -22,21 +21,14 @@ func MuxToSimpleMXF(input common.SimpleMuxInput, progressCallback ffmpeg.Progres
 
 	outputFilePath := filepath.Join(input.DestinationPath.Local(), input.FileName+".mxf")
 
-	params := []string{
-		"-progress", "pipe:1",
-		"-hide_banner",
-		"-i", input.VideoFilePath.Local(),
-	}
-
+	var extraInputs []ffmpeg.Input
 	for _, f := range input.AudioFilePaths {
-		params = append(params,
-			"-i", f.Local(),
-		)
+		extraInputs = append(extraInputs, ffmpeg.Input{Path: f.Local()})
 	}
 
 	streams := 0
-	params = append(
-		params,
+	params := append(
+		[]string{},
 		"-map", fmt.Sprintf("%d:v", streams),
 	)
 	streams++
@@ -52,18 +44,20 @@ func MuxToSimpleMXF(input common.SimpleMuxInput, progressCallback ffmpeg.Progres
 		"-c:v", "copy",
 		"-ar", "48000",
 		"-c:a", "pcm_s24le",
-		"-y", outputFilePath,
 	)
 
-	_, err = ffmpeg.Do(params, info, progressCallback)
-	if err != nil {
-		log.Default().Println("mux failed", err)
-		return nil, fmt.Errorf("mux failed, %s", strings.Join(params, " "))
+	job := ffmpeg.Job{
+		Input:       input.VideoFilePath.Local(),
+		ExtraInputs: extraInputs,
+		Output:      outputFilePath,
+		Args:        params,
+		Info:        &info,
 	}
 
-	err = os.Chmod(outputFilePath, os.ModePerm)
+	_, err = ffmpeg.Run(job, progressCallback)
 	if err != nil {
-		return nil, err
+		log.Default().Println("mux failed", err)
+		return nil, fmt.Errorf("mux failed, %s", strings.Join(job.Arguments(), " "))
 	}
 
 	outputPath, err := paths.Parse(outputFilePath)

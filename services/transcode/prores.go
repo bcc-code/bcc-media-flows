@@ -124,7 +124,7 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProRe
 
 	_, err = ffmpeg.Run(ffmpeg.Job{
 		Input:       input.FilePath,
-		ExtraInputs: input.AudioPaths,
+		ExtraInputs: ffmpeg.FileInputs(input.AudioPaths),
 		Output:      outputPath,
 		Args:        params,
 	}, progressCallback)
