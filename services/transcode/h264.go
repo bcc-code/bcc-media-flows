@@ -23,10 +23,6 @@ type H264EncodeInput struct {
 	SubtitleStyle  *paths.Path
 }
 
-type EncodeResult struct {
-	Path string
-}
-
 func H264(input H264EncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeResult, error) {
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mxf"
 	outputPath := filepath.Join(input.OutputDir, filename)

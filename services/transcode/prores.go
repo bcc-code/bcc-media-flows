@@ -23,16 +23,12 @@ type ProResInput struct {
 	SubtitleStyle  *paths.Path
 }
 
-type ProResResult struct {
-	OutputPath string
-}
-
 const (
 	ProResProfileHQ   = "3"
 	ProResProfile4444 = "4"
 )
 
-func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProResResult, error) {
+func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*EncodeResult, error) {
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mov"
 
 	var params []string
@@ -132,7 +128,7 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProRe
 		return nil, err
 	}
 
-	return &ProResResult{
-		OutputPath: outputPath,
+	return &EncodeResult{
+		Path: outputPath,
 	}, nil
 }

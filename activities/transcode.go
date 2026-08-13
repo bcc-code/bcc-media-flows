@@ -59,7 +59,7 @@ func (va VideoActivities) TranscodeToProResActivity(ctx context.Context, input E
 	}
 
 	return &EncodeResult{
-		OutputPath: paths.MustParse(transcodeResult.OutputPath),
+		OutputPath: paths.MustParse(transcodeResult.Path),
 	}, nil
 }
 
@@ -93,7 +93,7 @@ func (va VideoActivities) TranscodeToHyperdeckProResActivity(ctx context.Context
 	}
 
 	return &EncodeResult{
-		OutputPath: paths.MustParse(transcodeResult.OutputPath),
+		OutputPath: paths.MustParse(transcodeResult.Path),
 	}, nil
 }
 
@@ -467,7 +467,7 @@ func (va VideoActivities) TranscodeToHAPActivity(ctx context.Context, input HAPI
 	}
 
 	return &HAPResult{
-		OutputPath: paths.MustParse(transcodeResult.OutputPath),
+		OutputPath: paths.MustParse(transcodeResult.Path),
 	}, nil
 }
 

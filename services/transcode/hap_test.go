@@ -40,7 +40,7 @@ func Test_HAP(t *testing.T) {
 		return
 	}
 
-	streamInfo, err := ffmpeg.GetStreamInfo(r.OutputPath)
+	streamInfo, err := ffmpeg.GetStreamInfo(r.Path)
 	assert.NoError(t, err)
 
 	assert.True(t, streamInfo.HasVideo)
@@ -85,7 +85,7 @@ func Test_HAP_PlainFormat(t *testing.T) {
 		return
 	}
 
-	streamInfo, err := ffmpeg.GetStreamInfo(r.OutputPath)
+	streamInfo, err := ffmpeg.GetStreamInfo(r.Path)
 	assert.NoError(t, err)
 
 	assert.True(t, streamInfo.HasVideo)
@@ -133,7 +133,7 @@ func Test_HAP_WithAlpha(t *testing.T) {
 		return
 	}
 
-	streamInfo, err := ffmpeg.GetStreamInfo(r.OutputPath)
+	streamInfo, err := ffmpeg.GetStreamInfo(r.Path)
 	assert.NoError(t, err)
 
 	assert.True(t, streamInfo.HasVideo)
@@ -167,7 +167,7 @@ func Test_HAP_WithAudio(t *testing.T) {
 		return
 	}
 
-	streamInfo, err := ffmpeg.GetStreamInfo(r.OutputPath)
+	streamInfo, err := ffmpeg.GetStreamInfo(r.Path)
 	assert.NoError(t, err)
 
 	assert.True(t, streamInfo.HasVideo)
