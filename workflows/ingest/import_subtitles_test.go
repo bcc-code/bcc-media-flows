@@ -4,6 +4,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
 	//vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
@@ -146,6 +147,75 @@ func (s *ImportSubtitlesTestSuite) Test_ImportSubtitlesWorkflow() {
 	s.True(s.env.IsWorkflowCompleted())
 	err = s.env.GetWorkflowError()
 	s.NoError(err)
+}
+
+// A word-level transcription of a long programme is megabytes, and a workflow
+// argument lives in the WorkflowExecutionStarted event. Passing a path instead
+// keeps it out of the history; the workflow reads it and behaves identically.
+func (s *ImportSubtitlesTestSuite) Test_ImportSubtitlesFromFile() {
+	vxid := "VX-123"
+	segments := []Segment{
+		{Start: 0.0, End: 1.0, Text: "Hello"},
+		{Start: 1.5, End: 2.5, Text: "World"},
+	}
+	stored := Transcription{Segments: segments}
+	subtitlesFile := paths.Path{Drive: paths.Drive{Value: "isilon"}, Path: "Production/aux/incoming.json"}
+
+	input := ImportSubtitlesInput{
+		VXID:          vxid,
+		Language:      "en",
+		SubtitlesFile: &subtitlesFile,
+	}
+
+	storedJSON, err := json.Marshal(stored)
+	s.NoError(err)
+
+	s.env.OnActivity(activities.Util.ReadFile, mock.Anything, activities.FileInput{Path: subtitlesFile}).
+		Return(storedJSON, nil).Once()
+
+	s.env.OnActivity(activities.Vidispine.ImportFileAsShapeActivity, mock.Anything, mock.Anything).Return(&vsactivity.ImportFileResult{JobID: "job"}, nil)
+	s.env.OnActivity(activities.Util.CreateFolder, mock.Anything, mock.Anything).Return("", nil)
+
+	datePath := time.Now().Format("2006/01/02")
+	testPath := "Production/aux/" + datePath + "/VX-123_subtitles"
+
+	jsonString, err := json.MarshalIndent(stored, "", "  ")
+	s.NoError(err)
+
+	s.env.OnActivity(activities.Util.WriteFile, mock.Anything, activities.WriteFileInput{
+		Path: paths.Path{Drive: paths.Drive{Value: "isilon"}, Path: testPath + ".json"},
+		Data: []byte(jsonString),
+	}).Return("", nil).Once()
+
+	s.env.OnActivity(activities.Util.WriteFile, mock.Anything, activities.WriteFileInput{
+		Path: paths.Path{Drive: paths.Drive{Value: "isilon"}, Path: testPath + ".srt"},
+		Data: []byte("1\n00:00:00,000 --> 00:00:01,000\nHello\n\n2\n00:00:01,500 --> 00:00:02,500\nWorld\n\n"),
+	}).Return("", nil).Once()
+
+	s.env.OnActivity(activities.Vidispine.ImportFileAsSidecarActivity, mock.Anything, mock.Anything).Return(nil, nil)
+	s.env.OnActivity(activities.Vidispine.JobCompleteOrErr, mock.Anything, mock.Anything).Return(true, nil)
+
+	s.env.ExecuteWorkflow(ImportSubtitles, input)
+	s.True(s.env.IsWorkflowCompleted())
+	s.NoError(s.env.GetWorkflowError())
+}
+
+func (s *ImportSubtitlesTestSuite) Test_ImportSubtitlesFromMissingFile() {
+	subtitlesFile := paths.Path{Drive: paths.Drive{Value: "isilon"}, Path: "Production/aux/gone.json"}
+
+	s.env.OnActivity(activities.Util.ReadFile, mock.Anything, activities.FileInput{Path: subtitlesFile}).
+		Return(nil, assert.AnError)
+
+	s.env.ExecuteWorkflow(ImportSubtitles, ImportSubtitlesInput{
+		VXID:          "VX-123",
+		Language:      "en",
+		SubtitlesFile: &subtitlesFile,
+	})
+	s.True(s.env.IsWorkflowCompleted())
+
+	err := s.env.GetWorkflowError()
+	s.Error(err)
+	s.Contains(err.Error(), "failed to read subtitles")
 }
 
 func TestImportSubtitlesTestSuite(t *testing.T) {

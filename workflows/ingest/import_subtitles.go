@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -38,9 +39,20 @@ type Word struct {
 }
 
 type ImportSubtitlesInput struct {
-	VXID      string        `json:"vxid"`
+	VXID string `json:"vxid"`
+
+	// Subtitles carries the transcription inline. A workflow argument is stored
+	// in the WorkflowExecutionStarted event, and a word-level transcription of a
+	// long programme is megabytes, so this both bloats the history and can push
+	// the start over Temporal's payload limit. Prefer SubtitlesFile.
 	Subtitles Transcription `json:"subtitles"`
-	Language  string        `json:"language"`
+
+	// SubtitlesFile points at the same JSON on shared storage. When set it is
+	// read by an activity and Subtitles is ignored, keeping the payload out of
+	// the history entirely.
+	SubtitlesFile *paths.Path `json:"subtitlesFile,omitempty"`
+
+	Language string `json:"language"`
 }
 
 // convertSecondsToSRTTimestamp converts a float64 number of seconds to SRT timestamp format: HH:MM:SS,mmm
@@ -95,6 +107,11 @@ func ImportSubtitles(ctx workflow.Context, input ImportSubtitlesInput) error {
 		return fmt.Errorf("missing language")
 	}
 
+	subtitles, err := resolveSubtitles(ctx, input)
+	if err != nil {
+		return err
+	}
+
 	outputPath, err := wfutils.GetWorkflowAuxOutputFolder(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get aux output folder: %w", err)
@@ -103,14 +120,14 @@ func ImportSubtitles(ctx workflow.Context, input ImportSubtitlesInput) error {
 	srtFilePath := outputPath.Append(input.VXID + "_subtitles.srt")
 	jsonFilePath := outputPath.Append(input.VXID + "_subtitles.json")
 
-	srtData := ToSRT(input.Subtitles.Segments, false)
+	srtData := ToSRT(subtitles.Segments, false)
 
 	err = wfutils.WriteFile(ctx, srtFilePath, []byte(srtData))
 	if err != nil {
 		return fmt.Errorf("failed to write SRT file: %w", err)
 	}
 
-	jsonData, err := json.MarshalIndent(input.Subtitles, "", "  ")
+	jsonData, err := json.MarshalIndent(subtitles, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal subtitles to JSON: %w", err)
 	}
@@ -176,4 +193,19 @@ func ImportSubtitles(ctx workflow.Context, input ImportSubtitlesInput) error {
 
 	logger.Info("Subtitle SRT and JSON imported as shapes; SRT as sidecar (async)", "vxid", input.VXID)
 	return nil
+}
+
+// resolveSubtitles returns the transcription to import, reading it from shared
+// storage when the caller passed a path rather than the whole thing.
+func resolveSubtitles(ctx workflow.Context, input ImportSubtitlesInput) (Transcription, error) {
+	if input.SubtitlesFile == nil {
+		return input.Subtitles, nil
+	}
+
+	subtitles, err := wfutils.UnmarshalJSONFile[Transcription](ctx, *input.SubtitlesFile)
+	if err != nil {
+		return Transcription{}, fmt.Errorf("failed to read subtitles from %s: %w", input.SubtitlesFile.Local(), err)
+	}
+
+	return *subtitles, nil
 }
