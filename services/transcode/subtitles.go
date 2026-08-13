@@ -203,3 +203,21 @@ func writeEvent(outFile *os.File, startTime, endTime string, textLines []string,
 func convertTimeFormat(srtTime string) string {
 	return convertTimestamp(strings.Replace(srtTime[:12], ",", ".", 1))
 }
+
+// appendBurnInFilter adds the subtitle burn-in video filter, if there is a
+// subtitle to burn in. The three video encoders each had their own copy.
+func appendBurnInFilter(filters []string, style, subtitle *paths.Path) ([]string, error) {
+	if subtitle == nil {
+		return filters, nil
+	}
+	if style == nil {
+		return nil, fmt.Errorf("burn-in subtitle %s given with no style", subtitle.Local())
+	}
+
+	assFile, err := CreateBurninASSFile(*style, *subtitle)
+	if err != nil {
+		return nil, err
+	}
+
+	return append(filters, "ass="+assFile.Local()), nil
+}

@@ -26,6 +26,10 @@ type Job struct {
 	// Input is the file to read. Required.
 	Input string
 
+	// ExtraInputs are further files to read, in order, after Input. Their
+	// stream indices start at 1.
+	ExtraInputs []string
+
 	// Output is the file to write. Its directory is created if missing.
 	Output string
 
@@ -86,12 +90,15 @@ func Run(job Job, cb ProgressCallback) (StreamInfo, error) {
 
 // Arguments returns the full ffmpeg command line for the job.
 func (j Job) Arguments() []string {
-	args := make([]string, 0, len(j.Args)+8)
+	args := make([]string, 0, len(j.Args)+2*len(j.ExtraInputs)+8)
 	args = append(args,
 		"-progress", "pipe:1",
 		"-hide_banner",
 		"-i", j.Input,
 	)
+	for _, input := range j.ExtraInputs {
+		args = append(args, "-i", input)
+	}
 	args = append(args, j.Args...)
 	return append(args, "-y", j.Output)
 }

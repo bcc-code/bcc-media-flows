@@ -2,7 +2,6 @@ package transcode
 
 import (
 	"github.com/bcc-code/bcc-media-flows/utils"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -25,16 +24,7 @@ func AvcIntra(input AVCIntraEncodeInput, progressCallback ffmpeg.ProgressCallbac
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mxf"
 	outputPath := filepath.Join(input.OutputDir, filename)
 
-	probe, err := ffmpeg.ProbeFile(input.FilePath)
-	if err != nil {
-		return nil, err
-	}
-	info := ffmpeg.ProbeResultToInfo(probe)
-
 	params := []string{
-		"-hide_banner",
-		"-progress", "pipe:1",
-		"-i", input.FilePath,
 		"-c:a", "pcm_s24le",
 		"-c:v", "libx264",
 		"-ar", "48000",
@@ -75,12 +65,9 @@ func AvcIntra(input AVCIntraEncodeInput, progressCallback ffmpeg.ProgressCallbac
 		videoFilters = append(videoFilters, "yadif=0:-1:0")
 	}
 
-	if input.BurnInSubtitle != nil {
-		assFile, err := CreateBurninASSFile(*input.SubtitleStyle, *input.BurnInSubtitle)
-		if err != nil {
-			return nil, err
-		}
-		videoFilters = append(videoFilters, "ass="+assFile.Local())
+	videoFilters, err := appendBurnInFilter(videoFilters, input.SubtitleStyle, input.BurnInSubtitle)
+	if err != nil {
+		return nil, err
 	}
 
 	if len(videoFilters) > 0 {
@@ -90,20 +77,13 @@ func AvcIntra(input AVCIntraEncodeInput, progressCallback ffmpeg.ProgressCallbac
 		)
 	}
 
-	params = append(
-		params,
-		"-map", "v",
-		"-map", "a?",
-		"-y",
-		outputPath,
-	)
+	params = append(params, "-map", "v", "-map", "a?")
 
-	_, err = ffmpeg.Do(params, info, progressCallback)
-	if err != nil {
-		return nil, err
-	}
-
-	err = os.Chmod(outputPath, os.ModePerm)
+	_, err = ffmpeg.Run(ffmpeg.Job{
+		Input:  input.FilePath,
+		Output: outputPath,
+		Args:   params,
+	}, progressCallback)
 	if err != nil {
 		return nil, err
 	}

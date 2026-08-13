@@ -82,3 +82,24 @@ func TestRunUsesTheGivenInfoWithoutProbing(t *testing.T) {
 	require.Error(t, err)
 	assert.NotContains(t, err.Error(), "ffprobe")
 }
+
+func TestJobArgumentsWithExtraInputs(t *testing.T) {
+	args := Job{
+		Input:       "/in/video.mxf",
+		ExtraInputs: []string{"/in/nor.wav", "/in/eng.wav"},
+		Output:      "/out/result.mov",
+		Args:        []string{"-map", "1"},
+	}.Arguments()
+
+	// The extra inputs sit between the primary input and the arguments, so the
+	// stream indices the arguments refer to are the order they were given in.
+	assert.Equal(t, []string{
+		"-progress", "pipe:1",
+		"-hide_banner",
+		"-i", "/in/video.mxf",
+		"-i", "/in/nor.wav",
+		"-i", "/in/eng.wav",
+		"-map", "1",
+		"-y", "/out/result.mov",
+	}, args)
+}

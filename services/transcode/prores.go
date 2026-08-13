@@ -1,7 +1,6 @@
 package transcode
 
 import (
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -36,15 +35,7 @@ const (
 func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProResResult, error) {
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mov"
 
-	params := []string{
-		"-progress", "pipe:1",
-		"-hide_banner",
-		"-i", input.FilePath,
-	}
-
-	for _, i := range input.AudioPaths {
-		params = append(params, "-i", i)
-	}
+	var params []string
 
 	params = append(params,
 		"-c:v", "prores_ks",
@@ -60,12 +51,9 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProRe
 		"yadif=0:-1:0",
 	}
 
-	if input.BurnInSubtitle != nil {
-		assFile, err := CreateBurninASSFile(*input.SubtitleStyle, *input.BurnInSubtitle)
-		if err != nil {
-			return nil, err
-		}
-		videoFilters = append(videoFilters, "ass="+assFile.Local())
+	videoFilters, err := appendBurnInFilter(videoFilters, input.SubtitleStyle, input.BurnInSubtitle)
+	if err != nil {
+		return nil, err
 	}
 
 	if input.ForHyperdeck {
@@ -132,24 +120,14 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProRe
 		}
 	}
 
-	params = append(
-		params,
-		"-map", "v",
-		"-y",
-		outputPath,
-	)
+	params = append(params, "-map", "v")
 
-	info, err := ffmpeg.GetStreamInfo(input.FilePath)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = ffmpeg.Do(params, info, progressCallback)
-	if err != nil {
-		return nil, err
-	}
-
-	err = os.Chmod(outputPath, os.ModePerm)
+	_, err = ffmpeg.Run(ffmpeg.Job{
+		Input:       input.FilePath,
+		ExtraInputs: input.AudioPaths,
+		Output:      outputPath,
+		Args:        params,
+	}, progressCallback)
 	if err != nil {
 		return nil, err
 	}
