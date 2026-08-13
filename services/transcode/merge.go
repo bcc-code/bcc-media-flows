@@ -2,7 +2,6 @@ package transcode
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"os"
 	"os/exec"
@@ -39,11 +38,6 @@ func getFramerate(input common.MergeInput) (int, error) {
 // MergeVideo takes a list of video files and merges them into one file.
 func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallback) (*common.MergeResult, error) {
 	var params []string
-
-	for _, i := range input.Items {
-		params = append(params, "-i", i.Path.Local())
-	}
-
 	var filterComplex string
 
 	for index, i := range input.Items {
@@ -77,8 +71,6 @@ func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 	outputFilePath := filepath.Join(input.OutputDir.Local(), filepath.Clean(input.Title)+".mxf")
 
 	params = append(params,
-		"-progress", "pipe:1",
-		"-hide_banner",
 		"-strict", "unofficial",
 		"-filter_complex", filterComplex,
 		"-map", "[v]",
@@ -91,18 +83,9 @@ func MergeVideo(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 		"-color_primaries", "bt709",
 		"-color_trc", "bt709",
 		"-colorspace", "bt709",
-		"-y",
-		outputFilePath,
 	)
 
-	_, err = ffmpeg.Do(params, ffmpeg.StreamInfo{
-		TotalSeconds: input.Duration,
-	}, progressCallback)
-	if err != nil {
-		return nil, err
-	}
-
-	err = os.Chmod(outputFilePath, os.ModePerm)
+	_, err = runMergeJob(input, outputFilePath, params, progressCallback)
 	if err != nil {
 		return nil, err
 	}
@@ -179,17 +162,8 @@ func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) 
 // MergeAudio merges MXF audio files into one stereo file.
 func MergeAudio(input common.MergeInput, progressCallback ffmpeg.ProgressCallback) (*common.MergeResult, error) {
 	params := []string{
-		"-progress", "pipe:1",
-		"-hide_banner",
-	}
-
-	for _, i := range input.Items {
-		params = append(params, "-i", i.Path.Local())
-	}
-
-	params = append(params,
 		"-c:a", "pcm_s16le",
-	)
+	}
 
 	var filterComplex string
 
@@ -212,10 +186,9 @@ func MergeAudio(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 
 	outputFilePath := filepath.Join(input.OutputDir.Local(), filepath.Clean(input.Title)+".wav")
 
-	params = append(params, "-filter_complex", filterComplex, "-map", "[a]", "-y", outputFilePath)
+	params = append(params, "-filter_complex", filterComplex, "-map", "[a]")
 
-	log.Default().Println(strings.Join(params, " "))
-	_, err := ffmpeg.Do(params, ffmpeg.StreamInfo{}, progressCallback)
+	_, err := runMergeJob(input, outputFilePath, params, progressCallback)
 	if err != nil {
 		return nil, err
 	}
@@ -279,7 +252,7 @@ func MergeSubtitlesByOffset(input common.MergeInput, progressCallback ffmpeg.Pro
 
 	subtitlesFile := filepath.Join(input.WorkDir.Local(), input.Title+"-subtitles.txt")
 
-	err := os.WriteFile(subtitlesFile, []byte(content), os.ModePerm)
+	err := os.WriteFile(subtitlesFile, []byte(content), ffmpeg.OutputFileMode)
 	if err != nil {
 		return nil, err
 	}
@@ -294,17 +267,14 @@ func MergeSubtitlesByOffset(input common.MergeInput, progressCallback ffmpeg.Pro
 	concatStr := fmt.Sprintf("concat:%s", strings.Join(files, "|"))
 
 	outputFilePath := filepath.Join(input.OutputDir.Local(), filepath.Clean(input.Title)+".srt")
-	params := []string{
-		"-hide_banner",
-		"-progress", "pipe:1",
-		"-hide_banner",
-		"-i", concatStr,
-		"-c", "copy",
-		"-y",
-		outputFilePath,
-	}
-
-	_, err = ffmpeg.Do(params, ffmpeg.StreamInfo{}, progressCallback)
+	// The input is ffmpeg's concat: pseudo-protocol rather than one of the merge
+	// items, so this does not go through runMergeJob.
+	_, err = ffmpeg.Run(ffmpeg.Job{
+		Input:  concatStr,
+		Output: outputFilePath,
+		Args:   []string{"-c", "copy"},
+		Info:   &ffmpeg.StreamInfo{},
+	}, progressCallback)
 	if err != nil {
 		return nil, err
 	}
@@ -356,7 +326,7 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 			contents := fmt.Sprintf("1\n%s --> %s\n\n", formatDuration(item.Start), formatDuration(item.End))
 			err = os.WriteFile(file,
 				[]byte(contents),
-				os.ModePerm,
+				ffmpeg.OutputFileMode,
 			)
 			if err != nil {
 				return nil, err
@@ -389,7 +359,7 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 
 	subtitlesFile := filepath.Join(input.WorkDir.Local(), input.Title+"-subtitles.txt")
 
-	err := os.WriteFile(subtitlesFile, []byte(content), os.ModePerm)
+	err := os.WriteFile(subtitlesFile, []byte(content), ffmpeg.OutputFileMode)
 	if err != nil {
 		return nil, err
 	}
@@ -404,17 +374,14 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 	concatStr := fmt.Sprintf("concat:%s", strings.Join(files, "|"))
 
 	outputFilePath := filepath.Join(input.OutputDir.Local(), filepath.Clean(input.Title)+".srt")
-	params := []string{
-		"-hide_banner",
-		"-progress", "pipe:1",
-		"-hide_banner",
-		"-i", concatStr,
-		"-c", "copy",
-		"-y",
-		outputFilePath,
-	}
-
-	_, err = ffmpeg.Do(params, ffmpeg.StreamInfo{}, progressCallback)
+	// The input is ffmpeg's concat: pseudo-protocol rather than one of the merge
+	// items, so this does not go through runMergeJob.
+	_, err = ffmpeg.Run(ffmpeg.Job{
+		Input:  concatStr,
+		Output: outputFilePath,
+		Args:   []string{"-c", "copy"},
+		Info:   &ffmpeg.StreamInfo{},
+	}, progressCallback)
 	if err != nil {
 		return nil, err
 	}
@@ -440,11 +407,39 @@ func ensureValidSrtFile(f string) error {
 		return err
 	}
 	if info.Size() == 0 {
-		err = os.WriteFile(f, []byte("1\n00:00:00,000 --> 00:00:00,000\n"), os.ModePerm)
+		err = os.WriteFile(f, []byte("1\n00:00:00,000 --> 00:00:00,000\n"), ffmpeg.OutputFileMode)
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+// runMergeJob runs one of the merge functions, whose inputs are always the
+// merge items in order — the filter graphs refer to them by that index — and
+// whose progress is measured against the merged duration rather than any one
+// input.
+func runMergeJob(
+	input common.MergeInput,
+	output string,
+	args []string,
+	cb ffmpeg.ProgressCallback,
+) (ffmpeg.StreamInfo, error) {
+	if len(input.Items) == 0 {
+		return ffmpeg.StreamInfo{}, fmt.Errorf("nothing to merge into %s", output)
+	}
+
+	inputs := make([]string, 0, len(input.Items))
+	for _, item := range input.Items {
+		inputs = append(inputs, item.Path.Local())
+	}
+
+	return ffmpeg.Run(ffmpeg.Job{
+		Input:       inputs[0],
+		ExtraInputs: ffmpeg.FileInputs(inputs[1:]),
+		Output:      output,
+		Args:        args,
+		Info:        &ffmpeg.StreamInfo{TotalSeconds: input.Duration},
+	}, cb)
 }
