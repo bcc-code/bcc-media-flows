@@ -188,27 +188,36 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 		}
 	})
 
+	// Executions started before this version watched the signal from a
+	// background coroutine and always slept the full minute between copies; they
+	// have to keep doing that, because cancelling the timer early is a command
+	// their history does not contain. Remove the branch once no such execution
+	// can still be running — they last at most maxCopyAttempts minutes.
+	watchSignalInline := workflow.GetVersion(ctx, versionSignalSelector, workflow.DefaultVersion, 1) != workflow.DefaultVersion
+
 	signalReceived := false
 
-	// Start listening for signals in the background
-	workflow.Go(ctx, func(ctx workflow.Context) {
-		for {
-			var signalFileName string
-			// Wait for a signal
-			signalChan.Receive(ctx, &signalFileName)
+	if !watchSignalInline {
+		// Start listening for signals in the background
+		workflow.Go(ctx, func(ctx workflow.Context) {
+			for {
+				var signalFileName string
+				// Wait for a signal
+				signalChan.Receive(ctx, &signalFileName)
 
-			logger.Info(fmt.Sprintf("Received file transfer signal for: %s", signalFileName))
+				logger.Info(fmt.Sprintf("Received file transfer signal for: %s", signalFileName))
 
-			// Check if the signal matches our expected filename
-			if strings.EqualFold(filepath.Base(signalFileName), expectedFilename) {
-				logger.Info("Signal matches our file, marking as completed")
-				signalReceived = true
-				return // Exit the goroutine when we get the right signal
-			} else {
-				logger.Info(fmt.Sprintf("Signal was for a different file: %s, ignoring", signalFileName))
+				// Check if the signal matches our expected filename
+				if strings.EqualFold(filepath.Base(signalFileName), expectedFilename) {
+					logger.Info("Signal matches our file, marking as completed")
+					signalReceived = true
+					return // Exit the goroutine when we get the right signal
+				} else {
+					logger.Info(fmt.Sprintf("Signal was for a different file: %s, ignoring", signalFileName))
+				}
 			}
-		}
-	})
+		})
+	}
 
 	// Initialize slice to store transfer samples
 	samples := []transferSample{}
@@ -240,10 +249,18 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 			checkTransferRateAndAlert(ctx, rate, pruned, alert)
 		}
 
-		if !signalReceived {
+		if watchSignalInline {
+			// Waiting on the signal and the timer together is what makes the
+			// signal act on arrival. A signal sent while the copy above was
+			// running is already queued on the channel, so this returns without
+			// sleeping at all.
+			signalReceived = waitForTransferSignal(ctx, signalChan, expectedFilename, copyRetryInterval)
+		} else if !signalReceived {
 			logger.Info("Sleeping for 1 minute before next copy attempt")
-			_ = workflow.Sleep(ctx, time.Minute)
-		} else {
+			_ = workflow.Sleep(ctx, copyRetryInterval)
+		}
+
+		if signalReceived {
 			logger.Info("Received signal, breaking out of copy loop")
 			break
 		}
@@ -406,4 +423,63 @@ func checkTransferRateAndAlert(ctx workflow.Context, rateMbps float64, pruned []
 		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟩 RECOVERY: Ingest transfer rate above %.2f Mbps (%.2f Mbps) for at least %v", minTransferRate, rateMbps, actualWindow))
 		state.InAlert = false
 	}
+}
+
+const (
+	// versionSignalSelector names the change from a background signal coroutine
+	// to waiting on the signal and the retry timer together.
+	versionSignalSelector = "incremental-signal-selector"
+
+	// copyRetryInterval is how long to wait between incremental copies while the
+	// source file is still growing.
+	copyRetryInterval = time.Minute
+)
+
+// waitForTransferSignal waits up to interval for the transfer-complete signal
+// for expectedFilename, reporting whether it arrived.
+//
+// Signals for other files are consumed and ignored, which is what the
+// background coroutine did. The difference is that this returns the moment the
+// right signal lands rather than at the end of the current copy-and-sleep
+// cycle, so the ingest does not keep rsyncing a file that finished up to a
+// minute ago.
+func waitForTransferSignal(
+	ctx workflow.Context,
+	signalChan workflow.ReceiveChannel,
+	expectedFilename string,
+	interval time.Duration,
+) bool {
+	logger := workflow.GetLogger(ctx)
+
+	// Cancelling the timer when the signal wins means an abandoned timer does
+	// not sit in the history until it fires.
+	timerCtx, cancelTimer := workflow.WithCancel(ctx)
+	defer cancelTimer()
+
+	timer := workflow.NewTimer(timerCtx, interval)
+
+	var received, elapsed bool
+	selector := workflow.NewSelector(ctx)
+	selector.AddFuture(timer, func(workflow.Future) {
+		elapsed = true
+	})
+	selector.AddReceive(signalChan, func(c workflow.ReceiveChannel, _ bool) {
+		var signalFileName string
+		c.Receive(ctx, &signalFileName)
+
+		logger.Info(fmt.Sprintf("Received file transfer signal for: %s", signalFileName))
+
+		if strings.EqualFold(filepath.Base(signalFileName), expectedFilename) {
+			logger.Info("Signal matches our file, marking as completed")
+			received = true
+			return
+		}
+		logger.Info(fmt.Sprintf("Signal was for a different file: %s, ignoring", signalFileName))
+	})
+
+	for !received && !elapsed {
+		selector.Select(ctx)
+	}
+
+	return received
 }
