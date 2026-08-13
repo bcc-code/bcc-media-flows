@@ -82,6 +82,14 @@ func (s *ScheduledTestSuite) Test_CleanupTemp() {
 	var result CleanupResult
 	s.env.GetWorkflowResult(&result)
 	s.Greater(result.DeletedCount, 0)
+
+	// Two files per folder, counted per root rather than listed: the result goes
+	// into the workflow's completion event, and this sweeps around sixty folders.
+	s.NotEmpty(result.DeletedCountPerRoot)
+	s.Equal(2*len(result.DeletedCountPerRoot), result.DeletedCount)
+	for root, count := range result.DeletedCountPerRoot {
+		s.Equal(2, count, "unexpected count for %s", root)
+	}
 }
 
 func TestScheduledTestSuite(t *testing.T) {

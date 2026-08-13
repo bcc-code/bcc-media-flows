@@ -9,9 +9,17 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
+// CleanupResult reports what a cleanup run removed.
+//
+// Counts rather than paths: the workflow sweeps around sixty folders and the
+// result is written into the workflow's completion event, so returning every
+// deleted path put a fortnight of temp files into the history — and into every
+// caller that fetches the result. The paths themselves are in the activity
+// results and the worker logs, which is where anyone chasing a specific file
+// looks anyway.
 type CleanupResult struct {
-	DeletedFiles []string
-	DeletedCount int
+	DeletedCount        int
+	DeletedCountPerRoot map[string]int
 }
 
 func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
@@ -100,7 +108,8 @@ func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 		"/mnt/isilon/Export": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
 	}
 
-	deletedFiles := []string{}
+	deletedTotal := 0
+	deletedPerRoot := map[string]int{}
 
 	folders, err := wfutils.GetMapKeysSafely(ctx, foldersToCleanup)
 	if err != nil {
@@ -115,14 +124,18 @@ func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 			OlderThan: olderThan,
 		}).Result(ctx)
 
-		logger.Info("Deleted files", "count", len(deletedFiles))
-
 		if err != nil {
 			logger.Error("Error during temp files cleanup", "error", err)
 			return nil, err
 		}
 
-		deletedFiles = append(deletedFiles, deletedFilesLoop...)
+		// Counted after the error check: the old log line ran before it and
+		// reported the running total rather than this folder's, so it printed 0
+		// for the first folder however much it had deleted.
+		logger.Info("Deleted files", "root", folder, "count", len(deletedFilesLoop))
+
+		deletedPerRoot[folder] = len(deletedFilesLoop)
+		deletedTotal += len(deletedFilesLoop)
 
 		err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.DeleteEmptyDirectories, activities.CleanupInput{
 			Root: paths.MustParse(folder),
@@ -135,8 +148,8 @@ func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 	}
 
 	res := &CleanupResult{
-		DeletedFiles: deletedFiles,
-		DeletedCount: len(deletedFiles),
+		DeletedCount:        deletedTotal,
+		DeletedCountPerRoot: deletedPerRoot,
 	}
 
 	return res, nil
