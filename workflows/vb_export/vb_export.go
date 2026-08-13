@@ -29,7 +29,6 @@ var (
 	DestinationBStage    = Destination{Value: "b-stage"}
 	DestinationHyperdeck = Destination{Value: "hyperdeck"}
 	DestinationGfx       = Destination{Value: "gfx"}
-	DestinationHippo     = Destination{Value: "hippo"}
 	DestinationHippoV2   = Destination{Value: "hippo_v2"}
 	DestinationHippoHap  = Destination{Value: "hippo_hap"}
 	DestinationDubbing   = Destination{Value: "dubbing"}
@@ -40,7 +39,6 @@ var (
 		DestinationRawAbekas,
 		DestinationBStage,
 		DestinationGfx,
-		DestinationHippo,
 		DestinationHippoV2,
 		DestinationHippoHap,
 		DestinationDubbing,
@@ -56,7 +54,6 @@ var destinationDescriptions = map[Destination]string{
 	DestinationRawAbekas: "Videoavspilling i bussen (originalfil overføres)",
 	DestinationBStage:    "Avspilling utenfor plenumsalen (festsalen, arenaen, etc)",
 	DestinationGfx:       "",
-	DestinationHippo:     "",
 	DestinationHippoV2:   "For LED (stor fil)",
 	DestinationHippoHap:  "For LED (litt mindre fil)",
 	DestinationDubbing:   "For multispråk avspilling",
@@ -174,7 +171,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	}
 
 	destinationsWithAudioOutput := lo.Filter(destinations, func(dest *Destination, _ int) bool {
-		return *dest != DestinationHippo && *dest != DestinationCasparCG
+		return *dest != DestinationCasparCG
 	})
 
 	if len(destinationsWithAudioOutput) > 0 && analyzeResult.HasAudio && len(analyzeResult.AudioStreams) <= 2 {
@@ -237,8 +234,6 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 			w = VBExportToHyperdeck
 		case DestinationGfx:
 			w = VBExportToGfx
-		case DestinationHippo:
-			w = VBExportToHippo
 		case DestinationHippoV2:
 			w = VBExportToHippoV2
 		case DestinationHippoHap:

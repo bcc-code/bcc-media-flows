@@ -57,7 +57,6 @@ var WorkerWorkflows = []any{
 	vb_export.VBExportToRawAbekas,
 	vb_export.VBExportToBStage,
 	vb_export.VBExportToGfx,
-	vb_export.VBExportToHippo,
 	vb_export.VBExportToHippoV2,
 	vb_export.VBExportToHippoHap,
 	vb_export.VBExportToDubbing,
