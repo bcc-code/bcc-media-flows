@@ -8,30 +8,8 @@ import (
 	"github.com/bcc-code/bcc-media-flows/workflows/vb_export"
 )
 
-var TriggerableWorkflows = []any{
-	export.VXExport,
-	vb_export.VBExport,
-	ingestworkflows.BmmIngestUpload,
-	ingestworkflows.BmmTrackMetadata,
-	miscworkflows.TranscodePreviewVX,
-	miscworkflows.TranscodePreviewFile,
-	miscworkflows.CreateThumbnailsVX,
-	miscworkflows.TranscodeHAP,
-	miscworkflows.TranscribeFile,
-	miscworkflows.TranscribeVX,
-	miscworkflows.HandleMultitrackFile,
-	export.ExportTimedMetadata,
-	miscworkflows.ImportSubtitlesFromSubtrans,
-	miscworkflows.MergeAndImportSubtitlesFromCSV,
-	miscworkflows.UpdateAssetRelations,
-	miscworkflows.NormalizeAudioLevelWorkflow,
-	miscworkflows.FixDurationVX,
-	miscworkflows.MoveMBFile,
-	miscworkflows.MoveFilesWorkerFlow,
-	scheduled.CleanupTemp,
-	scheduled.MediabankenPurgeTrash,
-}
-
+// WorkerWorkflows is the single registry of workflows this worker runs. There
+// is no second list: a workflow is either registered here or it cannot run.
 var WorkerWorkflows = []any{
 	miscworkflows.ImportSidecarSubtitle,
 	miscworkflows.TranscodePreviewVX,
