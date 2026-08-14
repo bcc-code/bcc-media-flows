@@ -18,10 +18,9 @@ const (
 
 // Job is a single-input, single-output ffmpeg run.
 //
-// Args carries only the codec, filter and metadata arguments. Run supplies the
-// rest of the command line, so the pieces every wrapper was repeating —
-// progress reporting, the input flag, overwrite, the output path — are in one
-// place and in one order.
+// Args carries only the codec, filter and metadata arguments; Run supplies the
+// rest of the command line — progress reporting, the input flag, overwrite and
+// the output path — in a fixed order.
 type Job struct {
 	// Input is the file to read. Required.
 	Input string
@@ -51,9 +50,8 @@ type Job struct {
 // Run assembles and executes the job, and returns the stream info it probed or
 // was given.
 //
-// The output directory is created first. Writing to a directory that does not
-// exist is the single most common way for one of these to fail, because the
-// caller is usually the first thing to put a file there.
+// The output directory is created first: the caller is usually the first thing
+// to put a file there.
 func Run(job Job, cb ProgressCallback) (StreamInfo, error) {
 	if job.Input == "" {
 		return StreamInfo{}, fmt.Errorf("ffmpeg job has no input")
@@ -131,8 +129,8 @@ func FileInputs(paths []string) []Input {
 // because its inputs and its filter graph are built together and cannot be
 // separated into a Job.
 //
-// It still creates the output directory and sets the output's mode, which is
-// the half of Run that has nothing to do with the arguments.
+// It creates the output directory and sets the output's mode, and leaves the
+// argument list exactly as given.
 func RunArgs(args []string, output string, info StreamInfo, cb ProgressCallback) error {
 	if output == "" {
 		return fmt.Errorf("ffmpeg command has no output")

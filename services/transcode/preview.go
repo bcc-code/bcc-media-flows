@@ -309,9 +309,7 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 
 	// RunArgs rather than a Job: which files are inputs depends on whether the
 	// source has video, audio or both, and -ss applies to the watermark input it
-	// precedes. The only coverage of that arrangement is behind the integration
-	// build tag, so the argument list is left exactly as it is built and only the
-	// output handling is shared.
+	// precedes.
 	err = ffmpeg.RunArgs(params, outputPath, ffmpeg.ProbeResultToInfo(info), progressCallback)
 	if err != nil {
 		return nil, err

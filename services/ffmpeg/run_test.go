@@ -47,9 +47,8 @@ func TestRunRejectsAnIncompleteJob(t *testing.T) {
 	assert.Contains(t, err.Error(), "no output")
 }
 
-// Writing into a directory that does not exist is the most common way for one
-// of these to fail, because the caller is usually the first thing to put a file
-// there.
+// The caller is usually the first thing to put a file in the output directory,
+// so Run has to create it.
 func TestRunCreatesTheOutputDirectory(t *testing.T) {
 	root := t.TempDir()
 	output := filepath.Join(root, "nested", "deeper", "out.wav")

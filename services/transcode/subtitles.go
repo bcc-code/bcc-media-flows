@@ -201,7 +201,7 @@ func convertTimeFormat(srtTime string) string {
 }
 
 // appendBurnInFilter adds the subtitle burn-in video filter, if there is a
-// subtitle to burn in. The three video encoders each had their own copy.
+// subtitle to burn in.
 func appendBurnInFilter(filters []string, style, subtitle *paths.Path) ([]string, error) {
 	if subtitle == nil {
 		return filters, nil

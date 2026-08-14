@@ -416,10 +416,9 @@ func ensureValidSrtFile(f string) error {
 	return nil
 }
 
-// runMergeJob runs one of the merge functions, whose inputs are always the
-// merge items in order — the filter graphs refer to them by that index — and
-// whose progress is measured against the merged duration rather than any one
-// input.
+// runMergeJob runs a merge: the inputs are the merge items in order — the
+// filter graphs refer to them by that index — and progress is measured against
+// the merged duration rather than any one input.
 func runMergeJob(
 	input common.MergeInput,
 	output string,
