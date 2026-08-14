@@ -1,7 +1,6 @@
 package wfutils
 
 import (
-	"encoding/xml"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -88,26 +87,6 @@ func ListFiles(ctx workflow.Context, path paths.Path) (paths.Files, error) {
 	return Execute(ctx, activities.Util.ListFiles, activities.FileInput{
 		Path: path,
 	}).Result(ctx)
-}
-
-func UnmarshalXMLFile[T any](ctx workflow.Context, file paths.Path) (*T, error) {
-	res, err := ReadFile(ctx, file)
-	if err != nil {
-		return nil, err
-	}
-
-	unmarsalResult := workflow.SideEffect(ctx, func(ctx workflow.Context) any {
-		var r T
-		err := xml.Unmarshal(res, &r)
-		if err != nil {
-			panic(err)
-		}
-		return r
-	})
-
-	var data T
-	err = unmarsalResult.Get(&data)
-	return &data, err
 }
 
 func UnmarshalJSONFile[T any](ctx workflow.Context, file paths.Path) (*T, error) {

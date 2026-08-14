@@ -61,11 +61,20 @@ jobs:
       - name: Build
         run: |
           go build -o "$BINARY_NAME" -ldflags="-X 'main.Version=$TAG_NAME'" -v ./cmd/worker
+      # The worker refuses to install a release binary whose .sha256 is missing
+      # or does not match, so this file is not optional. Only the first 64
+      # characters are read, which is the hash sha256sum prints first.
+      - name: Checksum
+        run: |
+          sha256sum "$BINARY_NAME" > "$BINARY_NAME.sha256"
+          cat "$BINARY_NAME.sha256"
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           draft: false
-          files: ${{env.BINARY_NAME}}
+          files: |
+            ${{env.BINARY_NAME}}
+            ${{env.BINARY_NAME}}.sha256
           tag_name: ${{env.TAG_NAME}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

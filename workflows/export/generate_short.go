@@ -65,6 +65,11 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		return nil, err
 	}
 
+	// Set before the first activity, so every activity in the workflow runs
+	// under the same options.
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+	ctx = wfutils.WithChildSearchAttributes(ctx, params.VXID)
+
 	exportData, err := wfutils.Execute(ctx, activities.Vidispine.GetExportDataActivity, vsactivity.GetExportDataParams{
 		VXID:        params.VXID,
 		Languages:   []string{"nor", "deu", "eng"},
@@ -82,10 +87,6 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	}
 
 	// transcriptFile := exportData.Clips[0].JSONTranscriptFile
-
-	activityOptions := wfutils.GetDefaultActivityOptions()
-	ctx = workflow.WithActivityOptions(ctx, activityOptions)
-	ctx = wfutils.WithChildSearchAttributes(ctx, params.VXID)
 
 	tempFolder, err := wfutils.GetWorkflowTempFolder(ctx)
 	if err != nil {
@@ -162,28 +163,9 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		JobID: jobResult.JobID,
 	}
 
-	var keyframes []activities.Keyframe
-	for {
-		statusResult, err := wfutils.Execute(ctx, activities.Util.CheckJobStatusActivity, checkStatusParams).Result(ctx)
-		if err != nil {
-			logger.Error("Failed to check job status: " + err.Error())
-			return nil, err
-		}
-
-		if statusResult.Status == "completed" {
-			logger.Info("Job completed successfully")
-			keyframes = statusResult.Keyframes
-			break
-		}
-
-		if statusResult.Status != "in_progress" {
-			return nil, fmt.Errorf("job failed with status: %s", statusResult.Status)
-		}
-
-		err = workflow.Sleep(ctx, time.Second*5)
-		if err != nil {
-			return nil, err
-		}
+	keyframes, err := waitForShortJob(ctx, checkStatusParams)
+	if err != nil {
+		return nil, err
 	}
 
 	shortVideoPath := outputPath.Append(titleWithShort + "_cropped.mov")
@@ -238,4 +220,63 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		AudioFiles:     clipResult.AudioFiles,
 		SubtitleFiles:  clipResult.SubtitleFiles,
 	}, nil
+}
+
+const (
+	// shortJobPollInterval is how often the short service is asked whether the
+	// job is done, once it has been running longer than shortJobFastPollFor.
+	shortJobPollInterval = 30 * time.Second
+	// shortJobFastPollFor is the initial window polled every five seconds, so a
+	// job that finishes quickly is noticed quickly.
+	shortJobFastPollFor  = 2 * time.Minute
+	shortJobFastInterval = 5 * time.Second
+	// shortJobTimeout bounds the wait. Reaching it fails the workflow with a
+	// legible error instead of letting the poll loop grow the history until the
+	// server terminates the execution for exceeding its event limit.
+	shortJobTimeout = 2 * time.Hour
+)
+
+// waitForShortJob polls the short service until the job finishes.
+//
+// Each pass costs an activity and a timer — five history events — so a fixed
+// five second interval writes roughly 3,600 events an hour. Backing off after
+// the first couple of minutes and giving up at shortJobTimeout keeps a stuck
+// job well inside the history limit, and turns "the server killed the
+// execution" into an error naming the job.
+func waitForShortJob(ctx workflow.Context, params activities.CheckJobStatusInput) ([]activities.Keyframe, error) {
+	logger := workflow.GetLogger(ctx)
+	start := workflow.Now(ctx)
+
+	for {
+		statusResult, err := wfutils.Execute(ctx, activities.Util.CheckJobStatusActivity, params).Result(ctx)
+		if err != nil {
+			logger.Error("Failed to check job status: " + err.Error())
+			return nil, err
+		}
+
+		if statusResult.Status == "completed" {
+			logger.Info("Job completed successfully")
+			return statusResult.Keyframes, nil
+		}
+
+		if statusResult.Status != "in_progress" {
+			return nil, fmt.Errorf("job failed with status: %s", statusResult.Status)
+		}
+
+		waited := workflow.Now(ctx).Sub(start)
+		if waited >= shortJobTimeout {
+			return nil, temporal.NewNonRetryableApplicationError(
+				fmt.Sprintf("short job %s still in_progress after %s", params.JobID, shortJobTimeout),
+				"ShortJobTimeout", nil)
+		}
+
+		interval := shortJobPollInterval
+		if waited < shortJobFastPollFor {
+			interval = shortJobFastInterval
+		}
+
+		if err := workflow.Sleep(ctx, interval); err != nil {
+			return nil, err
+		}
+	}
 }

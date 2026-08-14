@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "embed"
 	"fmt"
 	"net/http"
 	"os"
@@ -181,15 +180,6 @@ func triggerHandler(ctx *gin.Context) {
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.ExecuteFFmpeg, miscworkflows.ExecuteFFmpegInput{
 			Arguments: input.Arguments,
 		})
-	case "AssetIngest":
-		xmlPath := getParamFromCtx(ctx, "xmlPath")
-		if xmlPath == "" {
-			ctx.Status(http.StatusBadRequest)
-			return
-		}
-		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.Asset, ingestworkflows.AssetParams{
-			XMLPath: xmlPath,
-		})
 	case "AssetIngestJSON":
 		jsonPath := getParamFromCtx(ctx, "jsonPath")
 		if jsonPath == "" {
@@ -270,9 +260,6 @@ func triggerHandler(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-//go:embed trigger.html
-var html string
-
 func main() {
 	var err error
 	temporalClient, err = client.Dial(client.Options{
@@ -293,10 +280,6 @@ func main() {
 	r.POST("/watchers", watchersHandler)
 
 	r.POST("/ingest/json", jsonIngestHandler)
-
-	r.GET("/trigger", func(ctx *gin.Context) {
-		ctx.Writer.WriteString(html)
-	})
 
 	r.GET("/schemas", getWorkflowSchemas)
 	r.POST("/trigger-dynamic", triggerDynamicHandler)

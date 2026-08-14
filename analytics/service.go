@@ -20,7 +20,15 @@ func Init(config Config) {
 	})
 }
 
+// disabled stands in for an uninitialised service. Every method checks
+// rudderClient and returns early, so this drops events instead of panicking on
+// a nil receiver in a process that never called Init.
+var disabled = &Service{}
+
 func GetService() *Service {
+	if Instance == nil {
+		return disabled
+	}
 	return Instance
 }
 

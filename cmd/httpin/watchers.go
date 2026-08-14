@@ -38,13 +38,6 @@ func watchersHandler(ctx *gin.Context) {
 
 	fmt.Printf("watcher event: path=%q size=%d updatedAt=%s\n", result.Path, result.Size, result.UpdatedAt.Format(time.RFC3339))
 
-	xmlPath, err := filepath.Match("/mnt/filecatalyst/workflow/xml/*", result.Path)
-	if err != nil {
-		fmt.Println(err.Error())
-		ctx.String(500, err.Error())
-		return
-	}
-
 	// This needs to match any subfolder
 	multitrackPath := strings.HasPrefix(result.Path, "/mnt/filecatalyst/multitrack/Ingest/tempFraBrunstad/")
 	growingPath := strings.HasPrefix(result.Path, "/mnt/filecatalyst/ingestgrow/")
@@ -54,10 +47,7 @@ func watchersHandler(ctx *gin.Context) {
 	fileboxSimpleUpload := strings.HasPrefix(result.Path, "/mnt/filecatalyst/delivery2/simple")
 
 	var branch string
-	if xmlPath {
-		branch = "ingest"
-		err = doIngest(ctx, result.Path)
-	} else if multitrackPath {
+	if multitrackPath {
 		branch = "multitrack"
 		err = doMultitrackCopy(ctx, result.Path)
 	} else if growingPath {
@@ -181,20 +171,6 @@ func doRawImport(ctx context.Context, path string) error {
 		FilesToIngest: paths.Files{parsedPath},
 	})
 
-	return err
-}
-
-func doIngest(ctx context.Context, path string) error {
-	c, err := getClient()
-	if err != nil {
-		return err
-	}
-
-	workflowOptions := wfutils.NewWorkflowOptions(environment.GetWorkerQueue(), "", "watcher")
-
-	_, err = c.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.Asset, ingestworkflows.AssetParams{
-		XMLPath: path,
-	})
 	return err
 }
 

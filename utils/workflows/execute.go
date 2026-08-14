@@ -3,7 +3,6 @@ package wfutils
 import (
 	"context"
 	"reflect"
-	"sync"
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -23,8 +22,6 @@ var StrictRetryPolicy = temporal.RetryPolicy{
 	InitialInterval: 30 * time.Second,
 	MaximumInterval: 30 * time.Second,
 }
-
-var ActivityWG = sync.WaitGroup{}
 
 type Task[TR any] struct {
 	Future workflow.Future
@@ -57,6 +54,33 @@ func (f Task[TR]) Wait(ctx workflow.Context) error {
 	return f.Future.Get(ctx, nil)
 }
 
+// activityOptionsWithDefaults fills in the timeouts a workflow left unset.
+//
+// A workflow only has activity options if it called
+// workflow.WithActivityOptions, and there is nothing to notice when it did not:
+// most activities are reached through helpers like CreateFolder or WriteFile
+// rather than through an Execute call the author is looking at. Without this,
+// such a workflow schedules activities with no StartToCloseTimeout — so a
+// single attempt may consume the entire schedule-to-close budget and never be
+// retried — and with a schedule-to-close that differs from the one every
+// workflow using GetDefaultActivityOptions gets.
+//
+// HeartbeatTimeout is deliberately not filled in. A heartbeat timeout on an
+// activity that never calls RecordHeartbeat turns a slow success into a
+// certain failure, and this function cannot tell which activities heartbeat.
+func activityOptionsWithDefaults(options workflow.ActivityOptions) workflow.ActivityOptions {
+	defaults := GetDefaultActivityOptions()
+
+	if options.StartToCloseTimeout == 0 {
+		options.StartToCloseTimeout = defaults.StartToCloseTimeout
+	}
+	if options.ScheduleToCloseTimeout == 0 {
+		options.ScheduleToCloseTimeout = defaults.ScheduleToCloseTimeout
+	}
+
+	return options
+}
+
 // Execute executes the specified activity with the correct task queue
 func Execute[T any, TR any](ctx workflow.Context, activity func(context.Context, T) (TR, error), params T) Task[TR] {
 	options := workflow.GetActivityOptions(ctx)
@@ -74,21 +98,9 @@ func Execute[T any, TR any](ctx workflow.Context, activity func(context.Context,
 		}
 	}
 
-	if options.ScheduleToCloseTimeout == 0 {
-		options.ScheduleToCloseTimeout = time.Hour * 3
-	}
+	ctx = workflow.WithActivityOptions(ctx, activityOptionsWithDefaults(options))
 
-	ctx = workflow.WithActivityOptions(ctx, options)
-
-	future := workflow.ExecuteActivity(ctx, activity, params)
-
-	ActivityWG.Add(1)
-	workflow.Go(ctx, func(ctx workflow.Context) {
-		_ = future.Get(ctx, nil)
-		ActivityWG.Done()
-	})
-
-	return Task[TR]{Future: future}
+	return Task[TR]{Future: workflow.ExecuteActivity(ctx, activity, params)}
 }
 
 // ExecuteWithLowPrioQueue executes the utility activities with the low priority queue
@@ -112,7 +124,7 @@ func ExecuteWithLowPrioQueue[T any, TR any](ctx workflow.Context, activity func(
 		}
 	}
 
-	ctx = workflow.WithActivityOptions(ctx, options)
+	ctx = workflow.WithActivityOptions(ctx, activityOptionsWithDefaults(options))
 	return Task[TR]{
 		workflow.ExecuteActivity(ctx, activity, params),
 	}

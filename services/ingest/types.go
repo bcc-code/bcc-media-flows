@@ -1,62 +1,28 @@
 package ingest
 
-import "encoding/xml"
-
+// Metadata is the order form an ingest is described by, and the shape the
+// child workflows consume. It was originally the FileCatalyst XML sidecar;
+// JSONForm is now translated into it (see translateJSONForm).
 type Metadata struct {
-	XMLName       xml.Name      `xml:"Metadata"`
-	JobProperty   JobProperty   `xml:"jobPropertyList"`
-	FileList      FileList      `xml:"fileList"`
-	JobHistoryLog JobHistoryLog `xml:"jobHistoryLog"`
+	JobProperty JobProperty
 }
 
+// JobProperty carries the form fields. Only the fields a form actually fills
+// in are set — the JSON forms populate a handful each, and the rest stay
+// empty.
 type JobProperty struct {
-	JobID              int    `xml:"jobID"`
-	UserName           string `xml:"userName"`
-	CompanyName        string `xml:"companyName"`
-	SourceIP           string `xml:"sourceIP"`
-	UserEmail          string `xml:"userEmail"`
-	IngestStation      string `xml:"ingestStation"`
-	UploadBitRate      string `xml:"uploadBitRate"`
-	UploadTime         string `xml:"uploadTime"`
-	FtpSiteID          string `xml:"ftpSiteId"`
-	FileCount          int    `xml:"fileCount"`
-	OrderForm          string `xml:"orderForm"`
-	SubmissionDate     string `xml:"submissionDate"`
-	LastDateChanged    string `xml:"lastDateChanged"`
-	Status             string `xml:"status"`
-	AssetType          string `xml:"asset_type"`
-	SenderEmail        string `xml:"sender_email"`
-	EpisodeTitle       string `xml:"programtitle"`
-	EpisodeDescription string `xml:"episodedescription"`
-	ProgramPost        string `xml:"program_post"`
-	ProgramID          string `xml:"programid"`
-	Season             string `xml:"season"`
-	Episode            string `xml:"episode"`
-	ReceivedFilename   string `xml:"received_filename"`
-	PersonsAppearing   string `xml:"PersonsAppearing"`
-	Tags               string `xml:"Tags"`
-	PromoType          string `xml:"promo_type"`
-	Language           string `xml:"language"`
-}
-
-type FileList struct {
-	Files []File `xml:"file"`
-}
-
-type File struct {
-	FileName string `xml:"Base"`
-	IsFolder bool   `xml:"isFolder"`
-	FileSize int    `xml:"fileSize"`
-	FilePath string `xml:"filePath"`
-}
-
-type JobHistoryLog struct {
-	JobLogs []JobLog `xml:"jobLog"`
-}
-
-type JobLog struct {
-	LogID             int    `xml:"logId"`
-	JobLogDate        string `xml:"jobLogDate"`
-	JobLogDescription string `xml:"jobLogDescription"`
-	JobLogBy          string `xml:"jobLogBy"`
+	JobID              int
+	OrderForm          string
+	AssetType          string
+	SenderEmail        string
+	EpisodeTitle       string
+	EpisodeDescription string
+	ProgramPost        string
+	ProgramID          string
+	Season             string
+	Episode            string
+	ReceivedFilename   string
+	PersonsAppearing   string
+	Tags               string
+	Language           string
 }
