@@ -283,7 +283,13 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Video ingest ended: https://vault.bcc.media/item/%s\n\nImporting reaper files.", assetResult.AssetID))
 
-	waitForPreviewToCatchUp(ctx, rawPath, previewPath)
+	// Gated because it adds activities and timers where an older history has
+	// ListReaperFiles. Replaying an execution that is past this point against
+	// ungated code fails the workflow task, and Temporal retries a failed task
+	// forever — a live ingest that hangs rather than errors.
+	if workflow.GetVersion(ctx, versionPreviewCatchUp, workflow.DefaultVersion, 1) != workflow.DefaultVersion {
+		waitForPreviewToCatchUp(ctx, rawPath, previewPath)
+	}
 
 	stopPreviewFunc()
 
@@ -446,6 +452,12 @@ const (
 	// versionSignalSelector names the change from a background signal coroutine
 	// to waiting on the signal and the retry timer together.
 	versionSignalSelector = "incremental-signal-selector"
+
+	// versionPreviewCatchUp names waiting for the growing preview to reach the
+	// source duration before cancelling it. Separate from versionSignalSelector
+	// rather than sharing it: sharing would only be sound while the two changes
+	// always deploy together, and nothing enforces that.
+	versionPreviewCatchUp = "incremental-preview-catch-up"
 
 	// previewCatchUpInterval matches how often the preview activity remuxes its
 	// segments, which is what makes progress observable.
