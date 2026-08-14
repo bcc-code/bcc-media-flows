@@ -6,9 +6,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/bcc-code/bcc-media-flows/services/internal/httpx"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 )
 
 // vsServer serves a fixed status and body for every request, and records how many
@@ -170,6 +172,38 @@ func TestClient_DeleteShapeStillErrorsOn500(t *testing.T) {
 	err := client.DeleteShape("VX-1", "VX-2")
 
 	assert.Error(t, err)
+}
+
+// The client used to pair a 10 second timeout with five retries, and the retries
+// apply to POST and DELETE — AddShapeToItem, CreatePlaceholder, DeleteItems. A
+// Vidispine call that merely took longer than ten seconds was therefore retried, and
+// each retry created another shape or job. The fix is a timeout long enough for a slow
+// call to finish; this pins it so a future edit cannot quietly shorten it again.
+func TestClient_TimeoutOutlastsASlowVidispineCall(t *testing.T) {
+	client, _ := vsServer(t, http.StatusOK, `{}`)
+
+	timeout := client.restyClient.GetClient().Timeout
+
+	assert.GreaterOrEqual(t, timeout, httpx.DefaultTimeout,
+		"a POST that is slow rather than broken must finish, not be retried into a duplicate")
+}
+
+// The retries themselves stay: they are there for connection failures.
+func TestClient_RetriesAreStillConfigured(t *testing.T) {
+	client, _ := vsServer(t, http.StatusOK, `{}`)
+
+	assert.Positive(t, client.restyClient.RetryCount)
+}
+
+// An answered failure is not retried, so a 500 costs one request rather than six. If a
+// future change makes hook errors retryable, a failing POST starts creating duplicates.
+func TestClient_ErrorStatusIsNotRetried(t *testing.T) {
+	client, calls := vsServer(t, http.StatusInternalServerError, `{"internalServer":"boom"}`)
+
+	_, err := client.AddShapeToItem("original", "VX-1", "VX-2")
+
+	require.Error(t, err)
+	assert.Equal(t, 1, *calls, "the server answered; asking again would create a second shape")
 }
 
 // A successful response must be untouched by the hook.
