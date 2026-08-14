@@ -266,10 +266,9 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 		}
 	}
 
-	// The copy at the top of the loop ran before the signal arrived, so whatever
-	// was written to the source between the two is not here yet. Executions from
-	// before the selector change get this for free: their loop reads the flag
-	// after the next copy, so breaking out already implied one more copy.
+	// The copy at the top of the loop ran before the signal, so whatever was
+	// written to the source in between is not here yet. Executions on the old
+	// path read the flag after the next copy, so they already do this.
 	if watchSignalInline && signalReceived {
 		logger.Info("Copying once more now that the source is complete")
 		if _, copyErr := wfutils.Execute(ctx, activities.Live.RsyncIncrementalCopy, activities.RsyncIncrementalCopyInput{
@@ -448,13 +447,12 @@ const (
 	// to waiting on the signal and the retry timer together.
 	versionSignalSelector = "incremental-signal-selector"
 
-	// previewCatchUpInterval matches how often the growing preview activity
-	// remuxes its segments, since that is what makes progress observable.
+	// previewCatchUpInterval matches how often the preview activity remuxes its
+	// segments, which is what makes progress observable.
 	previewCatchUpInterval = time.Minute
 	maxPreviewCatchUpWaits = 10
 
-	// previewCatchUpTolerance is how far short of the source the preview may be
-	// and still count as finished.
+	// previewCatchUpTolerance is how far short of the source still counts as done.
 	previewCatchUpTolerance = 5.0
 
 	// copyRetryInterval is how long to wait between incremental copies while the
@@ -514,14 +512,11 @@ func waitForTransferSignal(
 // waitForPreviewToCatchUp blocks until the growing preview covers the whole
 // source file.
 //
-// Cancelling the preview kills the tail feeding ffmpeg's stdin, so everything
-// tail had not yet written is lost — that is the end of the recording, however
-// far behind the transcode is. The activity remuxes its segments into
-// previewPath every minute, so a preview that has reached the source duration
-// is one where ffmpeg has consumed everything.
-//
-// Gives up after maxPreviewCatchUpWaits: cancelling late costs a few minutes,
-// but never cancelling would hang the ingest.
+// Cancelling the preview kills the tail feeding ffmpeg's stdin, so anything
+// tail had not yet written is lost — the end of the recording, however far
+// behind the transcode is. A preview that has reached the source duration is
+// one where ffmpeg has consumed everything. Bounded, because never cancelling
+// would hang the ingest.
 func waitForPreviewToCatchUp(ctx workflow.Context, sourceFile, previewFile paths.Path) {
 	logger := workflow.GetLogger(ctx)
 
