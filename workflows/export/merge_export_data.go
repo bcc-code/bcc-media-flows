@@ -200,9 +200,7 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir p
 			})
 		}
 
-		// Sorted rather than ranged: this runs in workflow code now, and although
-		// each language accumulates into its own MergeInput, the checker cannot
-		// see that and neither can the next reader.
+		// Sorted: this runs in workflow code, where map order must not leak.
 		for _, lan := range wfutils.SortedKeys(clip.AudioFiles) {
 			af := clip.AudioFiles[lan]
 			if _, ok := audioMergeInputs[lan]; !ok {

@@ -149,9 +149,8 @@ func (s *ImportSubtitlesTestSuite) Test_ImportSubtitlesWorkflow() {
 	s.NoError(err)
 }
 
-// A word-level transcription of a long programme is megabytes, and a workflow
-// argument lives in the WorkflowExecutionStarted event. Passing a path instead
-// keeps it out of the history; the workflow reads it and behaves identically.
+// Given a path instead of the transcription, the workflow reads it and behaves
+// identically.
 func (s *ImportSubtitlesTestSuite) Test_ImportSubtitlesFromFile() {
 	vxid := "VX-123"
 	segments := []Segment{

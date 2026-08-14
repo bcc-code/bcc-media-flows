@@ -11,12 +11,9 @@ import (
 
 // CleanupResult reports what a cleanup run removed.
 //
-// Counts rather than paths: the workflow sweeps around sixty folders and the
-// result is written into the workflow's completion event, so returning every
-// deleted path put a fortnight of temp files into the history — and into every
-// caller that fetches the result. The paths themselves are in the activity
-// results and the worker logs, which is where anyone chasing a specific file
-// looks anyway.
+// Counts rather than paths: this is the workflow's completion event, and the
+// paths of a fortnight of temp files across sixty folders do not belong in the
+// history. They are in the activity results and the worker logs.
 type CleanupResult struct {
 	DeletedCount        int
 	DeletedCountPerRoot map[string]int
@@ -129,9 +126,6 @@ func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 			return nil, err
 		}
 
-		// Counted after the error check: the old log line ran before it and
-		// reported the running total rather than this folder's, so it printed 0
-		// for the first folder however much it had deleted.
 		logger.Info("Deleted files", "root", folder, "count", len(deletedFilesLoop))
 
 		deletedPerRoot[folder] = len(deletedFilesLoop)

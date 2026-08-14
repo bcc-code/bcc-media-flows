@@ -41,15 +41,13 @@ type Word struct {
 type ImportSubtitlesInput struct {
 	VXID string `json:"vxid"`
 
-	// Subtitles carries the transcription inline. A workflow argument is stored
-	// in the WorkflowExecutionStarted event, and a word-level transcription of a
-	// long programme is megabytes, so this both bloats the history and can push
-	// the start over Temporal's payload limit. Prefer SubtitlesFile.
+	// Subtitles carries the transcription inline, which puts it in the
+	// WorkflowExecutionStarted event. A word-level transcription of a long
+	// programme can exceed Temporal's payload limit. Prefer SubtitlesFile.
 	Subtitles Transcription `json:"subtitles"`
 
-	// SubtitlesFile points at the same JSON on shared storage. When set it is
-	// read by an activity and Subtitles is ignored, keeping the payload out of
-	// the history entirely.
+	// SubtitlesFile points at the same JSON on shared storage. When set, it is
+	// read by an activity and Subtitles is ignored.
 	SubtitlesFile *paths.Path `json:"subtitlesFile,omitempty"`
 
 	Language string `json:"language"`
@@ -195,8 +193,8 @@ func ImportSubtitles(ctx workflow.Context, input ImportSubtitlesInput) error {
 	return nil
 }
 
-// resolveSubtitles returns the transcription to import, reading it from shared
-// storage when the caller passed a path rather than the whole thing.
+// resolveSubtitles reads the transcription from storage when the caller passed
+// a path instead of the whole thing.
 func resolveSubtitles(ctx workflow.Context, input ImportSubtitlesInput) (Transcription, error) {
 	if input.SubtitlesFile == nil {
 		return input.Subtitles, nil

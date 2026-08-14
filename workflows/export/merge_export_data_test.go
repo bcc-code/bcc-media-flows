@@ -46,9 +46,8 @@ func twoClipExportData() *vidispine.ExportData {
 	}
 }
 
-// The result is used directly in workflow code now rather than being frozen by
-// a SideEffect marker, so it has to be the same on every call — including
-// across the randomized map iteration inside.
+// Workflow code calls this directly, so it has to give the same answer every
+// time, across the randomized map iteration inside.
 func TestExportDataToMergeInputsIsStableAcrossCalls(t *testing.T) {
 	tempDir := paths.MustParse("/mnt/isilon/temp")
 	subsDir := paths.MustParse("/mnt/isilon/subs")
@@ -69,8 +68,7 @@ func TestExportDataToMergeInputsBuildsOneInputPerLanguage(t *testing.T) {
 	require.Len(t, got.AudioMergeInputs, 3)
 	require.Len(t, got.SubtitleMergeInputs, 2)
 
-	// Clip order drives item order within a language; the map iteration must not
-	// be able to reorder it.
+	// Clip order drives item order within a language.
 	nor := got.AudioMergeInputs["nor"]
 	require.Len(t, nor.Items, 2)
 	assert.Equal(t, paths.MustParse("/mnt/isilon/a-nor.wav"), nor.Items[0].Path)
