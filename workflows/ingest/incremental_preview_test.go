@@ -11,17 +11,15 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"go.temporal.io/sdk/testsuite"
-	"go.temporal.io/sdk/workflow"
 )
 
 // The source and the preview report the same duration, so the catch-up wait
-// finishes on its first check when it runs at all.
+// finishes on its first check.
 const incrementalTestDurationSeconds = 120.0
 
 // newIncrementalEnv mocks everything doIncremental reaches, so a test can say
-// something about one activity without the rest getting in the way. Only
-// AnalyzeFile is left un-mocked here — each test sets it up itself, because
-// whether it is called at all is the thing under test.
+// something about one activity without the rest getting in the way. AnalyzeFile
+// is left un-mocked here — it is what the tests below count.
 func newIncrementalEnv(t *testing.T) *testsuite.TestWorkflowEnvironment {
 	t.Helper()
 
@@ -86,27 +84,9 @@ func runIncremental(t *testing.T, env *testsuite.TestWorkflowEnvironment) {
 	require.NoError(t, env.GetWorkflowError())
 }
 
-// An execution started before this change has a history without the catch-up
-// wait's activities and timers. Replaying it must not produce them, or the
-// workflow task fails and Temporal retries it until someone intervenes.
-func TestIncrementalPreviewCatchUpVersion_OldExecutionsSkipIt(t *testing.T) {
-	env := newIncrementalEnv(t)
-
-	env.OnGetVersion(versionPreviewCatchUp, workflow.DefaultVersion, 1).
-		Return(workflow.DefaultVersion)
-
-	analyzed := 0
-	env.OnActivity(activities.Audio.AnalyzeFile, mock.Anything, mock.Anything).
-		Return(&ffmpeg.StreamInfo{TotalSeconds: incrementalTestDurationSeconds}, nil).
-		Run(func(mock.Arguments) { analyzed++ }).Maybe()
-
-	runIncremental(t, env)
-
-	require.Zero(t, analyzed, "the catch-up wait must not run on a pre-change execution")
-}
-
-// New executions get the wait, which is the whole point of it.
-func TestIncrementalPreviewCatchUpVersion_NewExecutionsWait(t *testing.T) {
+// Cancelling the preview before it has consumed the whole source loses the end
+// of the recording, so the ingest measures both before stopping it.
+func TestIncrementalWaitsForThePreviewBeforeStoppingIt(t *testing.T) {
 	env := newIncrementalEnv(t)
 
 	analyzed := 0

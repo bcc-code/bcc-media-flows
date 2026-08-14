@@ -188,36 +188,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 		}
 	})
 
-	// Executions started before this version watched the signal from a
-	// background coroutine and always slept the full minute between copies; they
-	// have to keep doing that, because cancelling the timer early is a command
-	// their history does not contain. Remove the branch once no such execution
-	// can still be running — they last at most maxCopyAttempts minutes.
-	watchSignalInline := workflow.GetVersion(ctx, versionSignalSelector, workflow.DefaultVersion, 1) != workflow.DefaultVersion
-
 	signalReceived := false
-
-	if !watchSignalInline {
-		// Start listening for signals in the background
-		workflow.Go(ctx, func(ctx workflow.Context) {
-			for {
-				var signalFileName string
-				// Wait for a signal
-				signalChan.Receive(ctx, &signalFileName)
-
-				logger.Info(fmt.Sprintf("Received file transfer signal for: %s", signalFileName))
-
-				// Check if the signal matches our expected filename
-				if strings.EqualFold(filepath.Base(signalFileName), expectedFilename) {
-					logger.Info("Signal matches our file, marking as completed")
-					signalReceived = true
-					return // Exit the goroutine when we get the right signal
-				} else {
-					logger.Info(fmt.Sprintf("Signal was for a different file: %s, ignoring", signalFileName))
-				}
-			}
-		})
-	}
 
 	// Initialize slice to store transfer samples
 	samples := []transferSample{}
@@ -249,16 +220,10 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 			checkTransferRateAndAlert(ctx, rate, pruned, alert)
 		}
 
-		if watchSignalInline {
-			// Waiting on the signal and the timer together is what makes the
-			// signal act on arrival. A signal sent while the copy above was
-			// running is already queued on the channel, so this returns without
-			// sleeping at all.
-			signalReceived = waitForTransferSignal(ctx, signalChan, expectedFilename, copyRetryInterval)
-		} else if !signalReceived {
-			logger.Info("Sleeping for 1 minute before next copy attempt")
-			_ = workflow.Sleep(ctx, copyRetryInterval)
-		}
+		// Waiting on the signal and the timer together is what makes the signal
+		// act on arrival. A signal sent while the copy above was running is
+		// already queued on the channel, so this returns without sleeping at all.
+		signalReceived = waitForTransferSignal(ctx, signalChan, expectedFilename, copyRetryInterval)
 
 		if signalReceived {
 			logger.Info("Received signal, breaking out of copy loop")
@@ -267,9 +232,8 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	}
 
 	// The copy at the top of the loop ran before the signal, so whatever was
-	// written to the source in between is not here yet. Executions on the old
-	// path read the flag after the next copy, so they already do this.
-	if watchSignalInline && signalReceived {
+	// written to the source in between is not here yet.
+	if signalReceived {
 		logger.Info("Copying once more now that the source is complete")
 		if _, copyErr := wfutils.Execute(ctx, activities.Live.RsyncIncrementalCopy, activities.RsyncIncrementalCopyInput{
 			In:  in,
@@ -283,13 +247,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Video ingest ended: https://vault.bcc.media/item/%s\n\nImporting reaper files.", assetResult.AssetID))
 
-	// Gated because it adds activities and timers where an older history has
-	// ListReaperFiles. Replaying an execution that is past this point against
-	// ungated code fails the workflow task, and Temporal retries a failed task
-	// forever — a live ingest that hangs rather than errors.
-	if workflow.GetVersion(ctx, versionPreviewCatchUp, workflow.DefaultVersion, 1) != workflow.DefaultVersion {
-		waitForPreviewToCatchUp(ctx, rawPath, previewPath)
-	}
+	waitForPreviewToCatchUp(ctx, rawPath, previewPath)
 
 	stopPreviewFunc()
 
@@ -449,16 +407,6 @@ func checkTransferRateAndAlert(ctx workflow.Context, rateMbps float64, pruned []
 }
 
 const (
-	// versionSignalSelector names the change from a background signal coroutine
-	// to waiting on the signal and the retry timer together.
-	versionSignalSelector = "incremental-signal-selector"
-
-	// versionPreviewCatchUp names waiting for the growing preview to reach the
-	// source duration before cancelling it. Separate from versionSignalSelector
-	// rather than sharing it: sharing would only be sound while the two changes
-	// always deploy together, and nothing enforces that.
-	versionPreviewCatchUp = "incremental-preview-catch-up"
-
 	// previewCatchUpInterval matches how often the preview activity remuxes its
 	// segments, which is what makes progress observable.
 	previewCatchUpInterval = time.Minute
@@ -475,8 +423,7 @@ const (
 // waitForTransferSignal waits up to interval for the transfer-complete signal
 // for expectedFilename, reporting whether it arrived.
 //
-// Signals for other files are consumed and ignored, which is what the
-// background coroutine did. The difference is that this returns the moment the
+// Signals for other files are consumed and ignored. It returns the moment the
 // right signal lands rather than at the end of the current copy-and-sleep
 // cycle, so the ingest does not keep rsyncing a file that finished up to a
 // minute ago.

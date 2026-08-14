@@ -45,9 +45,8 @@ func runSignalWait(t *testing.T, setup func(env *testsuite.TestWorkflowEnvironme
 	return res
 }
 
-// The signal used to be read only after the next copy returned, so a transfer
-// that finished early still cost a full retry cycle of rsync on a file nobody
-// was writing to any more.
+// The wait has to end on the signal rather than at the end of the retry cycle,
+// or the ingest spends another minute rsyncing a file nobody is writing to.
 func TestWaitForTransferSignalReturnsAsSoonAsTheSignalArrives(t *testing.T) {
 	res := runSignalWait(t, func(env *testsuite.TestWorkflowEnvironment) {
 		env.RegisterDelayedCallback(func() {
