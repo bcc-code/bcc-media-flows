@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 
-	"github.com/bcc-code/bcc-media-flows/services/internal/httpx"
+	"github.com/bcc-code/bcc-media-flows/internal/httpx"
 )
 
 // serviceName names Directus in the errors this client returns.

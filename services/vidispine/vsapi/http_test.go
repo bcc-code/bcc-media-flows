@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/bcc-code/bcc-media-flows/services/internal/httpx"
+	"github.com/bcc-code/bcc-media-flows/internal/httpx"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 )
 
