@@ -3,10 +3,11 @@ package activities
 import (
 	"context"
 	"fmt"
-	"go.temporal.io/sdk/activity"
-	"net/http"
-	"net/url"
 	"path"
+
+	"go.temporal.io/sdk/activity"
+
+	"github.com/bcc-code/bcc-media-flows/internal/httpx"
 )
 
 type TriggerBMMImportInput struct {
@@ -19,19 +20,19 @@ func (ua UtilActivities) TriggerBMMImport(ctx context.Context, params TriggerBMM
 	activity.RecordHeartbeat(ctx, "TriggerBMMImport")
 	log.Info("Starting TriggerBMMImportActivity")
 
-	trigger := params.BaseURL + "/events/mediabanken-export/?path="
-	jsonS3Path := path.Join(params.IngestFolder, "bmm.json")
-	trigger += url.QueryEscape(jsonS3Path)
+	client := httpx.New(httpx.Config{
+		Service: "bmm",
+		BaseURL: params.BaseURL,
+		Headers: map[string]string{"Content-Type": "application/json"},
+	})
 
-	resp, err := http.Post(trigger, "application/json", nil)
+	_, err := client.R().
+		SetContext(ctx).
+		SetQueryParam("path", path.Join(params.IngestFolder, "bmm.json")).
+		Post("/events/mediabanken-export/")
+
 	if err != nil {
-		return nil, fmt.Errorf("failed to make request to BMM: %w", err)
-	}
-
-	resp.Body.Close()
-
-	if resp.StatusCode > 200 {
-		return nil, fmt.Errorf("BMM returned unexpected status code: %s", resp.Status)
+		return nil, fmt.Errorf("failed to trigger the BMM import: %w", err)
 	}
 
 	return nil, nil
