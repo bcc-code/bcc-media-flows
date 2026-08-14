@@ -7,13 +7,24 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/bcc-code/bcc-media-flows/paths"
-	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 	"github.com/go-resty/resty/v2"
 	"go.temporal.io/sdk/activity"
+
+	"github.com/bcc-code/bcc-media-flows/internal/httpx"
+	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 )
 
 var shortServiceURL = os.Getenv("SHORTS_SERVICE_URL")
+
+// shortServiceClient talks to the shorts service. It is built per call rather than
+// once, because shortServiceURL is read at package-var time and the tests set it.
+func shortServiceClient() *resty.Client {
+	return httpx.New(httpx.Config{
+		Service: "shorts service",
+		BaseURL: shortServiceURL,
+	})
+}
 
 type SubmitShortJobInput struct {
 	InputPath    string    `json:"input_path"`
@@ -52,15 +63,21 @@ func (ua UtilActivities) SubmitShortJobActivity(ctx context.Context, params Subm
 	activity.RecordHeartbeat(ctx, "SubmitShortJob")
 	log.Info("Starting SubmitShortJob activity")
 
-	restyClient := resty.New()
 	var result SubmitShortJobResult
-	resp, err := restyClient.R().SetContext(ctx).SetBody(params).SetResult(&result).Post(fmt.Sprintf("%s/submit_job", shortServiceURL))
+	_, err := shortServiceClient().R().
+		SetContext(ctx).
+		SetBody(params).
+		SetResult(&result).
+		Post("/submit_job")
 
 	if err != nil {
-		return nil, fmt.Errorf("resty request failed: %w", err)
+		return nil, err
 	}
-	if resp.StatusCode() != 202 {
-		return nil, fmt.Errorf("unexpected status %d: %s", resp.StatusCode(), resp.String())
+
+	if result.JobID == "" {
+		// What matters is having a job id to poll: without one GenerateShort polls
+		// "" until it gives up two hours later.
+		return nil, fmt.Errorf("shorts service accepted the job but returned no job id")
 	}
 
 	return &result, nil
@@ -73,16 +90,14 @@ type CheckJobStatusInput struct {
 func (ua UtilActivities) CheckJobStatusActivity(ctx context.Context, params CheckJobStatusInput) (*GenerateShortRequestResult, error) {
 	activity.RecordHeartbeat(ctx, "CheckJobStatus")
 
-	restyClient := resty.New()
-
 	var result GenerateShortRequestResult
-	resp, err := restyClient.R().SetContext(ctx).SetResult(&result).Get(fmt.Sprintf("%s/job_status/%s", shortServiceURL, params.JobID))
+	_, err := shortServiceClient().R().
+		SetContext(ctx).
+		SetResult(&result).
+		Get("/job_status/" + params.JobID)
 
 	if err != nil {
-		return nil, fmt.Errorf("resty request failed: %w", err)
-	}
-	if resp.StatusCode() != 200 {
-		return nil, fmt.Errorf("unexpected status %d: %s", resp.StatusCode(), resp.String())
+		return nil, err
 	}
 
 	return &result, nil

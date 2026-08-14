@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/go-resty/resty/v2"
 	"os"
+
+	"github.com/bcc-code/bcc-media-flows/internal/httpx"
 )
 
 type GetAudioDiffParams struct {
@@ -17,11 +18,16 @@ type GetAudioDiffResult struct {
 	Difference int // in milliseconds
 }
 
-func (ua UtilActivities) GetAudioDiff(_ context.Context, params GetAudioDiffParams) (*GetAudioDiffResult, error) {
+func (ua UtilActivities) GetAudioDiff(ctx context.Context, params GetAudioDiffParams) (*GetAudioDiffResult, error) {
 	syncServiceURL := os.Getenv("SYNC_SERVICE_URL")
-	client := resty.New()
+
+	client := httpx.New(httpx.Config{
+		Service: "audio sync",
+		Headers: map[string]string{"Content-Type": "application/json"},
+	})
+
 	resp, err := client.R().
-		SetHeader("Content-Type", "application/json").
+		SetContext(ctx).
 		SetBody(map[string]string{
 			"reference_file": params.ReferenceFile,
 			"target_file":    params.TargetFile,
@@ -30,10 +36,6 @@ func (ua UtilActivities) GetAudioDiff(_ context.Context, params GetAudioDiffPara
 
 	if err != nil {
 		return nil, err
-	}
-
-	if resp.StatusCode() != 200 {
-		return nil, fmt.Errorf("non-200 response from sync service: %s", resp.String())
 	}
 
 	// Parse the JSON response
