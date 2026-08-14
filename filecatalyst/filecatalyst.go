@@ -1,14 +1,16 @@
 package filecatalyst
 
 import (
-	"bytes"
+	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"math/rand"
-	"net/http"
 	"os"
 	"time"
+
+	"github.com/go-resty/resty/v2"
+
+	"github.com/bcc-code/bcc-media-flows/internal/httpx"
 )
 
 // FileCatalystTaskConfig represents the configuration for a FileCatalyst task
@@ -122,87 +124,72 @@ type FileCatalystTaskConfig struct {
 	DayFilterSwitchSelect    string `json:"dayFilterSwitchSelect"`
 }
 
+// requestTimeout bounds one call to the FileCatalyst REST API. Both calls exchange a
+// single task configuration document.
+const requestTimeout = 10 * time.Second
+
+// newClient builds the client both calls in this package use. The credentials go in a
+// RESTAuthorization header rather than through basic auth, which is what FileCatalyst
+// asks for.
+func newClient(baseURL, username, password string) *resty.Client {
+	return httpx.New(httpx.Config{
+		Service: "filecatalyst",
+		BaseURL: baseURL,
+		Timeout: requestTimeout,
+		Headers: map[string]string{
+			"Accept": "application/json",
+			"RESTAuthorization": base64.StdEncoding.EncodeToString(
+				[]byte(fmt.Sprintf("%s:%s", username, password))),
+		},
+	})
+}
+
+// taskPath is where one task's configuration lives.
+func taskPath(taskID string) string {
+	return "/rs/tasks/" + taskID
+}
+
 // UpdateFileCatalystTask updates a FileCatalyst task configuration
-func UpdateFileCatalystTask(baseURL, taskID, username, password string, config FileCatalystTaskConfig) error {
-	url := fmt.Sprintf("%s/rs/tasks/%s", baseURL, taskID)
+func UpdateFileCatalystTask(ctx context.Context, baseURL, taskID, username, password string, config FileCatalystTaskConfig) error {
+	_, err := newClient(baseURL, username, password).R().
+		SetContext(ctx).
+		SetHeader("Content-Type", "application/json").
+		SetBody(config).
+		Post(taskPath(taskID))
 
-	jsonData, err := json.Marshal(config)
-	if err != nil {
-		return fmt.Errorf("failed to marshal config: %w", err)
-	}
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return fmt.Errorf("failed to create request: %w", err)
-	}
-
-	// Set essential headers for the API request
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("RESTAuthorization", base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", username, password))))
-
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to execute request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("request failed with status: %d", resp.StatusCode)
-	}
-
-	return nil
+	return err
 }
 
 // GetFileCatalystTask retrieves a FileCatalyst task configuration
-func GetFileCatalystTask(baseURL, taskID, username, password string) (FileCatalystTaskConfig, error) {
-	url := fmt.Sprintf("%s/rs/tasks/%s", baseURL, taskID)
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return FileCatalystTaskConfig{}, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	// Set essential headers for the API request
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("RESTAuthorization", base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", username, password))))
-
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return FileCatalystTaskConfig{}, fmt.Errorf("failed to execute request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return FileCatalystTaskConfig{}, fmt.Errorf("request failed with status: %d", resp.StatusCode)
-	}
-
+func GetFileCatalystTask(ctx context.Context, baseURL, taskID, username, password string) (FileCatalystTaskConfig, error) {
 	var config FileCatalystTaskConfig
-	err = json.NewDecoder(resp.Body).Decode(&config)
+
+	_, err := newClient(baseURL, username, password).R().
+		SetContext(ctx).
+		SetResult(&config).
+		Get(taskPath(taskID))
 	if err != nil {
-		return FileCatalystTaskConfig{}, fmt.Errorf("failed to unmarshal response: %w", err)
+		return FileCatalystTaskConfig{}, err
 	}
 
 	return config, nil
 }
 
 // UpdateCongestionControlAggression updates only the CongestionControlAggression field
-func UpdateCongestionControlAggression(baseURL, taskID, username, password string, aggression int) error {
-	config, err := GetFileCatalystTask(baseURL, taskID, username, password)
+func UpdateCongestionControlAggression(ctx context.Context, baseURL, taskID, username, password string, aggression int) error {
+	config, err := GetFileCatalystTask(ctx, baseURL, taskID, username, password)
 	if err != nil {
 		return fmt.Errorf("failed to get task config: %w", err)
 	}
 
 	config.CongestionControlAggression = aggression
 
-	return UpdateFileCatalystTask(baseURL, taskID, username, password, config)
+	return UpdateFileCatalystTask(ctx, baseURL, taskID, username, password, config)
 }
 
 // PokeFileCatalyst gets the current MB_Grow task config,
 // randomly changes CongestionControlAggression (5-7, different from current), and updates it
-func PokeFileCatalyst() error {
+func PokeFileCatalyst(ctx context.Context) error {
 	baseURL := os.Getenv("FILECATALYST_URL")
 	taskID := os.Getenv("FILECATALYST_TASK_ID")
 	username := os.Getenv("FILECATALYST_USERNAME")
@@ -214,7 +201,7 @@ func PokeFileCatalyst() error {
 	}
 
 	// Get current configuration
-	config, err := GetFileCatalystTask(baseURL, taskID, username, password)
+	config, err := GetFileCatalystTask(ctx, baseURL, taskID, username, password)
 	if err != nil {
 		return fmt.Errorf("failed to get current task config: %w", err)
 	}
@@ -235,7 +222,7 @@ func PokeFileCatalyst() error {
 	config.CongestionControlAggression = newAggression
 
 	// Send updated configuration back to server
-	err = UpdateFileCatalystTask(baseURL, taskID, username, password, config)
+	err = UpdateFileCatalystTask(ctx, baseURL, taskID, username, password, config)
 	if err != nil {
 		return fmt.Errorf("failed to update task config: %w", err)
 	}
