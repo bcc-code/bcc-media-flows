@@ -8,8 +8,8 @@ import (
 	"github.com/bcc-code/bcc-media-flows/workflows/vb_export"
 )
 
-// WorkerWorkflows is the single registry of workflows this worker runs. There
-// is no second list: a workflow is either registered here or it cannot run.
+// WorkerWorkflows is the registry of workflows this worker runs. A workflow
+// missing from it cannot be executed.
 var WorkerWorkflows = []any{
 	miscworkflows.ImportSidecarSubtitle,
 	miscworkflows.TranscodePreviewVX,
