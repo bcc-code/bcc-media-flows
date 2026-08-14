@@ -1,6 +1,7 @@
 package rclone
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -18,7 +19,7 @@ func init() {
 	}
 }
 
-func waitForTransferSlot(priority Priority, timeout time.Duration) error {
+func waitForTransferSlot(ctx context.Context, priority Priority, timeout time.Duration) error {
 	// Create an unbuffered channel
 	ch := make(chan bool)
 
@@ -29,6 +30,8 @@ func waitForTransferSlot(priority Priority, timeout time.Duration) error {
 	select {
 	case <-ch:
 		break
+	case <-ctx.Done():
+		return ctx.Err()
 	case <-time.After(timeout):
 		return merry.Wrap(errTimeout)
 	}
@@ -44,7 +47,7 @@ func StartFileTransferQueue() {
 }
 
 func checkFileTransferQueue() {
-	stats, err := GetRcloneStatus()
+	stats, err := GetRcloneStatus(context.Background())
 	if err != nil {
 		return
 	}

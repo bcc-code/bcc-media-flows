@@ -1,11 +1,16 @@
 package rclone
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
-	"strings"
 	"time"
 )
+
+// retryWait is how long CheckJobStatus waits between attempts. A var so the tests can
+// drive the loop without waiting five seconds a turn.
+var retryWait = 5 * time.Second
 
 type JobStatus struct {
 	Duration  float64   `json:"duration"`
@@ -51,26 +56,37 @@ type JobStatusRequest struct {
 	JobID int `json:"jobid"`
 }
 
-func CheckJobStatus(jobID int, retries int) (*JobStatus, error) {
-	runNr := 1
-
-	body, _ := json.Marshal(JobStatusRequest{JobID: jobID})
-
-	req, err := http.NewRequest(http.MethodPost, baseUrl+"/job/status", strings.NewReader(string(body)))
+func CheckJobStatus(ctx context.Context, jobID int, retries int) (*JobStatus, error) {
+	body, err := json.Marshal(JobStatusRequest{JobID: jobID})
 	if err != nil {
 		return nil, err
 	}
 
 	var status *JobStatus
-	for runNr <= retries {
-		status, err = doRequest[JobStatus](req)
+	for attempt := 1; attempt <= retries; attempt++ {
+		// The request is rebuilt per attempt: its body is a reader, and a reader that
+		// has been sent once is empty, so a retried request asks about no job at all.
+		var req *http.Request
+		req, err = http.NewRequestWithContext(ctx, http.MethodPost, baseUrl+"/job/status",
+			bytes.NewReader(body))
+		if err != nil {
+			return nil, err
+		}
 
+		status, err = doRequest[JobStatus](req)
 		if err == nil {
+			return status, nil
+		}
+
+		if attempt == retries {
 			break
 		}
 
-		runNr++
-		time.Sleep(5 * time.Second)
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(retryWait):
+		}
 	}
 
 	return status, err

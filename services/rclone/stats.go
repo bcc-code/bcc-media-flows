@@ -1,6 +1,7 @@
 package rclone
 
 import (
+	"context"
 	"fmt"
 	cache "github.com/Code-Hex/go-generics-cache"
 	"net/http"
@@ -70,8 +71,8 @@ func GetJobStats(job int) (Transferring, bool) {
 	return statsCache.Get(fmt.Sprintf("job/%d", job))
 }
 
-func GetRcloneStatus() (*CoreStats, error) {
-	req, err := http.NewRequest(http.MethodPost, baseUrl+"/core/stats", nil)
+func GetRcloneStatus(ctx context.Context) (*CoreStats, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, baseUrl+"/core/stats", nil)
 	if err != nil {
 		return nil, err
 	}
