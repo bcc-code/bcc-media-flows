@@ -44,7 +44,7 @@ func Test_ProRes(t *testing.T) {
 		return // Exit early if r is nil to avoid panic
 	}
 
-	streamInfo, err := ffmpeg.GetStreamInfo(r.OutputPath)
+	streamInfo, err := ffmpeg.GetStreamInfo(r.Path)
 	assert.NoError(t, err)
 
 	assert.True(t, streamInfo.HasVideo)
@@ -95,7 +95,7 @@ func Test_ProResHyperdeck(t *testing.T) {
 		return // Exit early if r is nil to avoid panic
 	}
 
-	streamInfo, err := ffmpeg.GetStreamInfo(r.OutputPath)
+	streamInfo, err := ffmpeg.GetStreamInfo(r.Path)
 	assert.NoError(t, err)
 
 	assert.True(t, streamInfo.HasVideo)

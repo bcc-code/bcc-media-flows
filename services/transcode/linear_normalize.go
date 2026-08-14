@@ -2,11 +2,8 @@ package transcode
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/bcc-code/bcc-media-flows/paths"
 
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
@@ -19,7 +16,6 @@ func AdjustAudioLevel(input common.AudioInput, adjustment float64, cb ffmpeg.Pro
 	outputFilePath = outputFilePath[:len(outputFilePath)-len(filepath.Ext(outputFilePath))] + "_normalized" + filepath.Ext(outputFilePath)
 
 	params := []string{
-		"-i", input.Path.Local(),
 		"-c:v", "copy",
 		"-c:a", "pcm_s24le", // Preserve 24-bit audio
 	}
@@ -62,30 +58,16 @@ func AdjustAudioLevel(input common.AudioInput, adjustment float64, cb ffmpeg.Pro
 
 	params = append(params, "-filter_complex", strings.Join(filterParams, ";"))
 	params = append(params, mapParams...)
-	params = append(params, "-y", outputFilePath)
 
-	_, err = ffmpeg.Do(params, info, cb)
+	_, err = ffmpeg.Run(ffmpeg.Job{
+		Input:  input.Path.Local(),
+		Output: outputFilePath,
+		Args:   params,
+		Info:   &info,
+	}, cb)
 	if err != nil {
 		return nil, err
 	}
 
-	err = os.Chmod(outputFilePath, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-
-	outputPath, err := paths.Parse(outputFilePath)
-	if err != nil {
-		return nil, err
-	}
-
-	fileInfo, err := os.Stat(outputFilePath)
-	if err != nil {
-		return nil, err
-	}
-
-	return &common.AudioResult{
-		OutputPath: outputPath,
-		FileSize:   fileInfo.Size(),
-	}, nil
+	return audioResult(outputFilePath, "", "")
 }

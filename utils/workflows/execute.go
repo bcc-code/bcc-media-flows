@@ -83,19 +83,37 @@ func activityOptionsWithDefaults(options workflow.ActivityOptions) workflow.Acti
 
 // Execute executes the specified activity with the correct task queue
 func Execute[T any, TR any](ctx workflow.Context, activity func(context.Context, T) (TR, error), params T) Task[TR] {
-	options := workflow.GetActivityOptions(ctx)
-	options.TaskQueue = activities.GetQueueForActivity(activity)
+	return executeOnQueue(ctx, activities.GetQueueForActivity(activity), activity, params)
+}
 
-	switch options.TaskQueue {
-	case environment.GetWorkerQueue():
-		if options.RetryPolicy == nil {
-			options.RetryPolicy = &LooseRetryPolicy
-		}
-	// usual reason for this failing is invalid files or tweaks to ffmpeg commands
-	case environment.GetTranscodeQueue(), environment.GetAudioQueue():
-		if options.RetryPolicy == nil {
-			options.RetryPolicy = &StrictRetryPolicy
-		}
+// ExecuteWithLowPrioQueue executes the utility activities with the low priority queue
+func ExecuteWithLowPrioQueue[T any, TR any](ctx workflow.Context, activity func(context.Context, T) (TR, error), params T) Task[TR] {
+	queue := activities.GetQueueForActivity(activity)
+
+	// Compared against the constant, not GetWorkerQueue(): in debug mode that
+	// accessor returns the debug queue, and the debug worker polls only that
+	// queue, so moving its activities to low-priority would leave them
+	// unscheduled.
+	if queue == environment.QueueWorker {
+		queue = environment.QueueLowPriority
+	}
+
+	return executeOnQueue(ctx, queue, activity, params)
+}
+
+// executeOnQueue schedules the activity on queue with the options the workflow
+// set, and the defaults for whatever it did not.
+func executeOnQueue[T any, TR any](
+	ctx workflow.Context,
+	queue string,
+	activity func(context.Context, T) (TR, error),
+	params T,
+) Task[TR] {
+	options := workflow.GetActivityOptions(ctx)
+	options.TaskQueue = queue
+
+	if options.RetryPolicy == nil {
+		options.RetryPolicy = retryPolicyForQueue(queue)
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, activityOptionsWithDefaults(options))
@@ -103,29 +121,33 @@ func Execute[T any, TR any](ctx workflow.Context, activity func(context.Context,
 	return Task[TR]{Future: workflow.ExecuteActivity(ctx, activity, params)}
 }
 
-// ExecuteWithLowPrioQueue executes the utility activities with the low priority queue
-func ExecuteWithLowPrioQueue[T any, TR any](ctx workflow.Context, activity func(context.Context, T) (TR, error), params T) Task[TR] {
-	options := workflow.GetActivityOptions(ctx)
+// retryPolicyForQueue picks how hard to retry from the kind of work the queue
+// carries, for workflows that did not choose a policy themselves.
+func retryPolicyForQueue(queue string) *temporal.RetryPolicy {
+	return retryPolicyForQueueNames(
+		queue,
+		environment.GetWorkerQueue(),
+		environment.GetTranscodeQueue(),
+		environment.GetAudioQueue(),
+	)
+}
 
-	options.TaskQueue = activities.GetQueueForActivity(activity)
-	if options.TaskQueue == environment.QueueWorker {
-		options.TaskQueue = environment.QueueLowPriority
-	}
-
-	switch options.TaskQueue {
-	case environment.GetWorkerQueue():
-		if options.RetryPolicy == nil {
-			options.RetryPolicy = &LooseRetryPolicy
-		}
-	// usual reason for this failing is invalid files or tweaks to ffmpeg commands
-	case environment.GetTranscodeQueue(), environment.GetAudioQueue():
-		if options.RetryPolicy == nil {
-			options.RetryPolicy = &StrictRetryPolicy
-		}
-	}
-
-	ctx = workflow.WithActivityOptions(ctx, activityOptionsWithDefaults(options))
-	return Task[TR]{
-		workflow.ExecuteActivity(ctx, activity, params),
+// retryPolicyForQueueNames takes the queue names as arguments so the debug
+// arrangement, where all three collapse onto one queue, can be exercised
+// without the process-wide QUEUE variable that decides them.
+func retryPolicyForQueueNames(queue, worker, transcode, audio string) *temporal.RetryPolicy {
+	switch queue {
+	// Worker first: in debug mode one worker runs everything and all three names
+	// are the debug queue, so this ordering is what keeps the behaviour of the
+	// ordered switch it replaces.
+	case worker:
+		return &LooseRetryPolicy
+	// A transcode or audio failure is usually an invalid file or a tweak needed
+	// to an ffmpeg command, and neither is fixed by trying ten times.
+	case transcode, audio:
+		return &StrictRetryPolicy
+	// Low priority and live ingest carry the same work as the worker queue.
+	default:
+		return &LooseRetryPolicy
 	}
 }

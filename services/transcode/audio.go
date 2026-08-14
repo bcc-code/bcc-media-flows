@@ -104,151 +104,68 @@ func AudioIsSilent(path paths.Path) (bool, error) {
 }
 
 func AudioAac(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.AudioResult, error) {
-	params := []string{
-		"-progress", "pipe:1",
-		"-hide_banner",
-		"-i", input.Path.Local(),
-		"-c:a", "libfdk_aac",
-		"-b:a", input.Bitrate,
-	}
+	outputFilePath := bitrateSuffixedOutput(input, "aac")
 
-	outputFilePath := filepath.Join(input.DestinationPath.Local(), input.Path.Base())
-	outputFilePath = fmt.Sprintf("%s-%s.aac", outputFilePath[:len(outputFilePath)-len(filepath.Ext(outputFilePath))], input.Bitrate)
-
-	params = append(params, "-y", outputFilePath)
-
-	info, err := ffmpeg.GetStreamInfo(input.Path.Local())
+	_, err := ffmpeg.Run(ffmpeg.Job{
+		Input:  input.Path.Local(),
+		Output: outputFilePath,
+		Args: []string{
+			"-c:a", "libfdk_aac",
+			"-b:a", input.Bitrate,
+		},
+	}, cb)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = ffmpeg.Do(params, info, cb)
-	if err != nil {
-		return nil, err
-	}
-
-	err = os.Chmod(outputFilePath, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-
-	outputPath, err := paths.Parse(outputFilePath)
-	if err != nil {
-		return nil, err
-	}
-
-	fileInfo, err := os.Stat(outputFilePath)
-	if err != nil {
-		return nil, err
-	}
-
-	return &common.AudioResult{
-		OutputPath: outputPath,
-		Bitrate:    input.Bitrate,
-		Format:     "aac",
-		FileSize:   fileInfo.Size(),
-	}, nil
+	return audioResult(outputFilePath, input.Bitrate, "aac")
 }
 
 // PrepareForTranscription prepares the audio file for transcription by converting it to a mono wav file
 func PrepareForTranscription(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.AudioResult, error) {
-	outputFilePath := filepath.Join(input.DestinationPath.Local(), input.Path.Base())
-	outputFilePath = fmt.Sprintf("%s-%s.wav", outputFilePath[:len(outputFilePath)-len(filepath.Ext(outputFilePath))], input.Bitrate)
+	outputFilePath := bitrateSuffixedOutput(input, "wav")
 
-	params := []string{
-		"-progress", "pipe:1",
-		"-hide_banner",
-		"-y",
-		"-i", input.Path.Local(),
-		"-map", "0:a:0",
-		"-ac", "1",
-		outputFilePath,
-	}
-
-	info, err := ffmpeg.GetStreamInfo(input.Path.Local())
+	_, err := ffmpeg.Run(ffmpeg.Job{
+		Input:  input.Path.Local(),
+		Output: outputFilePath,
+		Args: []string{
+			"-map", "0:a:0",
+			"-ac", "1",
+		},
+	}, cb)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = ffmpeg.Do(params, info, cb)
-	if err != nil {
-		return nil, err
-	}
-
-	err = os.Chmod(outputFilePath, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-
-	outputPath, err := paths.Parse(outputFilePath)
-	if err != nil {
-		return nil, err
-	}
-
-	fileInfo, err := os.Stat(outputFilePath)
-	if err != nil {
-		return nil, err
-	}
-
-	return &common.AudioResult{
-		OutputPath: outputPath,
-		Bitrate:    input.Bitrate,
-		Format:     "wav",
-		FileSize:   fileInfo.Size(),
-	}, nil
+	return audioResult(outputFilePath, input.Bitrate, "wav")
 }
 
 func AudioWav(input common.WavAudioInput, cb ffmpeg.ProgressCallback) (*common.AudioResult, error) {
 	outputFilePath := input.DestinationPath.Append(input.Path.BaseNoExt() + ".wav").Local()
 
-	params := []string{
-		"-progress", "pipe:1",
-		"-hide_banner",
-		"-i", input.Path.Local(),
-		"-codec:a", "pcm_s24le",
-	}
+	args := []string{"-codec:a", "pcm_s24le"}
 
 	if input.Timecode != "" {
 		tcSamples, err := utils.TCToSamples(input.Timecode, 25, 48000)
 		if err != nil {
 			return nil, err
 		}
-		params = append(params, "-metadata", fmt.Sprintf("time_reference=%d", tcSamples))
-		params = append(params, "-write_bext", "1")
+		args = append(args,
+			"-metadata", fmt.Sprintf("time_reference=%d", tcSamples),
+			"-write_bext", "1",
+		)
 	}
 
-	params = append(params, "-y", outputFilePath)
-
-	info, err := ffmpeg.GetStreamInfo(input.Path.Local())
+	_, err := ffmpeg.Run(ffmpeg.Job{
+		Input:  input.Path.Local(),
+		Output: outputFilePath,
+		Args:   args,
+	}, cb)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = ffmpeg.Do(params, info, cb)
-	if err != nil {
-		return nil, err
-	}
-
-	err = os.Chmod(outputFilePath, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-
-	outputPath, err := paths.Parse(outputFilePath)
-	if err != nil {
-		return nil, err
-	}
-
-	fileInfo, err := os.Stat(outputFilePath)
-	if err != nil {
-		return nil, err
-	}
-
-	return &common.AudioResult{
-		OutputPath: outputPath,
-		Format:     "wav",
-		FileSize:   fileInfo.Size(),
-	}, nil
+	return audioResult(outputFilePath, "", "wav")
 }
 
 func getQfactorFromBitrate(input string) int {
@@ -280,12 +197,7 @@ func getQfactorFromBitrate(input string) int {
 }
 
 func AudioMP3(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.AudioResult, error) {
-	params := []string{
-		"-progress", "pipe:1",
-		"-hide_banner",
-		"-i", input.Path.Local(),
-		"-c:a", "libmp3lame",
-	}
+	params := []string{"-c:a", "libmp3lame"}
 
 	if input.ForceCBR {
 		params = append(params, "-b:a", input.Bitrate)
@@ -293,42 +205,18 @@ func AudioMP3(input common.AudioInput, cb ffmpeg.ProgressCallback) (*common.Audi
 		params = append(params, "-q:a", fmt.Sprint(getQfactorFromBitrate(input.Bitrate)))
 	}
 
-	outputFilePath := filepath.Join(input.DestinationPath.Local(), input.Path.Base())
-	outputFilePath = fmt.Sprintf("%s-%s.mp3", outputFilePath[:len(outputFilePath)-len(filepath.Ext(outputFilePath))], input.Bitrate)
+	outputFilePath := bitrateSuffixedOutput(input, "mp3")
 
-	params = append(params, "-y", outputFilePath)
-
-	info, err := ffmpeg.GetStreamInfo(input.Path.Local())
+	_, err := ffmpeg.Run(ffmpeg.Job{
+		Input:  input.Path.Local(),
+		Output: outputFilePath,
+		Args:   params,
+	}, cb)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = ffmpeg.Do(params, info, cb)
-	if err != nil {
-		return nil, err
-	}
-
-	err = os.Chmod(outputFilePath, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-
-	outputPath, err := paths.Parse(outputFilePath)
-	if err != nil {
-		return nil, err
-	}
-
-	fileInfo, err := os.Stat(outputFilePath)
-	if err != nil {
-		return nil, err
-	}
-
-	return &common.AudioResult{
-		OutputPath: outputPath,
-		Bitrate:    input.Bitrate,
-		Format:     "mp3",
-		FileSize:   fileInfo.Size(),
-	}, nil
+	return audioResult(outputFilePath, input.Bitrate, "mp3")
 }
 
 func SplitAudioChannels(filePath, outputDir paths.Path, cb ffmpeg.ProgressCallback) (paths.Files, error) {
@@ -420,13 +308,7 @@ func GenerateToneFile(frequency int, duration float64, sampleRate int, timecode 
 }
 
 func TrimFile(inFile, outFile paths.Path, start, end float64, cb ffmpeg.ProgressCallback) error {
-	params := []string{
-		"-progress", "pipe:1",
-		"-hide_banner",
-		"-y",
-		"-i", inFile.Local(),
-		"-ss", fmt.Sprintf("%f", start),
-	}
+	params := []string{"-ss", fmt.Sprintf("%f", start)}
 
 	if end != 0 {
 		params = append(params,
@@ -435,19 +317,19 @@ func TrimFile(inFile, outFile paths.Path, start, end float64, cb ffmpeg.Progress
 
 	params = append(params,
 		"-map", "0",
-		"-c", "copy",
-		outFile.Local())
+		"-c", "copy")
 
-	_, err := ffmpeg.Do(params, ffmpeg.StreamInfo{}, cb)
+	_, err := ffmpeg.Run(ffmpeg.Job{
+		Input:  inFile.Local(),
+		Output: outFile.Local(),
+		Args:   params,
+		Info:   &ffmpeg.StreamInfo{},
+	}, cb)
 	return err
 }
 
 func Convert51to4Mono(inFile, outFile paths.Path, cb ffmpeg.ProgressCallback) error {
 	params := []string{
-		"-progress", "pipe:1",
-		"-hide_banner",
-		"-y",
-		"-i", inFile.Local(),
 		"-map", "0:v",
 		"-c:v", "copy", // Copy video unchanged
 		"-filter_complex", // Process audio
@@ -463,9 +345,40 @@ func Convert51to4Mono(inFile, outFile paths.Path, cb ffmpeg.ProgressCallback) er
 		"-map", "[BL2]",
 		"-map", "[BR2]",
 		"-c:a", "pcm_s24le", // We can not use -c copy here, because the channel layout is changed, but this should be the default codec in any case
-		outFile.Local(),
 	}
 
-	_, err := ffmpeg.Do(params, ffmpeg.StreamInfo{}, cb)
+	_, err := ffmpeg.Run(ffmpeg.Job{
+		Input:  inFile.Local(),
+		Output: outFile.Local(),
+		Args:   params,
+		Info:   &ffmpeg.StreamInfo{},
+	}, cb)
 	return err
+}
+
+// bitrateSuffixedOutput is the "<destination>/<input base without extension>-<bitrate>.<ext>"
+// naming the audio encoders share.
+func bitrateSuffixedOutput(input common.AudioInput, ext string) string {
+	name := fmt.Sprintf("%s-%s.%s", input.Path.BaseNoExt(), input.Bitrate, ext)
+	return input.DestinationPath.Append(name).Local()
+}
+
+// audioResult stats the finished file and describes it.
+func audioResult(outputFilePath, bitrate, format string) (*common.AudioResult, error) {
+	outputPath, err := paths.Parse(outputFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	fileInfo, err := os.Stat(outputFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	return &common.AudioResult{
+		OutputPath: outputPath,
+		Bitrate:    bitrate,
+		Format:     format,
+		FileSize:   fileInfo.Size(),
+	}, nil
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -190,26 +191,6 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	signalReceived := false
 
-	// Start listening for signals in the background
-	workflow.Go(ctx, func(ctx workflow.Context) {
-		for {
-			var signalFileName string
-			// Wait for a signal
-			signalChan.Receive(ctx, &signalFileName)
-
-			logger.Info(fmt.Sprintf("Received file transfer signal for: %s", signalFileName))
-
-			// Check if the signal matches our expected filename
-			if strings.EqualFold(filepath.Base(signalFileName), expectedFilename) {
-				logger.Info("Signal matches our file, marking as completed")
-				signalReceived = true
-				return // Exit the goroutine when we get the right signal
-			} else {
-				logger.Info(fmt.Sprintf("Signal was for a different file: %s, ignoring", signalFileName))
-			}
-		}
-	})
-
 	// Initialize slice to store transfer samples
 	samples := []transferSample{}
 
@@ -240,16 +221,34 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 			checkTransferRateAndAlert(ctx, rate, pruned, alert)
 		}
 
-		if !signalReceived {
-			logger.Info("Sleeping for 1 minute before next copy attempt")
-			_ = workflow.Sleep(ctx, time.Minute)
-		} else {
+		// Waiting on the signal and the timer together is what makes the signal
+		// act on arrival. A signal sent while the copy above was running is
+		// already queued on the channel, so this returns without sleeping at all.
+		signalReceived = waitForTransferSignal(ctx, signalChan, expectedFilename, copyRetryInterval)
+
+		if signalReceived {
 			logger.Info("Received signal, breaking out of copy loop")
 			break
 		}
 	}
 
+	// The copy at the top of the loop ran before the signal, so whatever was
+	// written to the source in between is not here yet.
+	if signalReceived {
+		logger.Info("Copying once more now that the source is complete")
+		if _, copyErr := wfutils.Execute(ctx, activities.Live.RsyncIncrementalCopy, activities.RsyncIncrementalCopyInput{
+			In:  in,
+			Out: rawPath,
+		}).Result(ctx); copyErr != nil {
+			logger.Error("Final copy failed", "error", copyErr)
+			wfutils.SendTelegramText(ctx, telegram.ChatOther,
+				fmt.Sprintf("🟥 The final copy of %s failed, the ingested file may be short: %v", in.Base(), copyErr))
+		}
+	}
+
 	wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Video ingest ended: https://vault.bcc.media/item/%s\n\nImporting reaper files.", assetResult.AssetID))
+
+	waitForPreviewToCatchUp(ctx, rawPath, previewPath)
 
 	stopPreviewFunc()
 
@@ -406,4 +405,164 @@ func checkTransferRateAndAlert(ctx workflow.Context, rateMbps float64, pruned []
 		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟩 RECOVERY: Ingest transfer rate above %.2f Mbps (%.2f Mbps) for at least %v", minTransferRate, rateMbps, actualWindow))
 		state.InAlert = false
 	}
+}
+
+const (
+	// previewCatchUpInterval matches how often the preview activity remuxes its
+	// segments, which is what makes progress observable.
+	previewCatchUpInterval = time.Minute
+
+	// previewCatchUpDeadline bounds the whole wait in workflow time, rather than
+	// counting iterations: a probe can take as long as previewProbeTimeout, so a
+	// fixed number of them says nothing about how long the ingest is held open.
+	previewCatchUpDeadline = 10 * time.Minute
+
+	// previewProbeTimeout caps one measurement. The probe runs with no retries,
+	// so this is also the whole cost of a failed one — retries would spend the
+	// deadline on backoff instead of on watching the preview grow.
+	previewProbeTimeout = 2 * time.Minute
+
+	// previewCatchUpStaleSamples is how many consecutive measurements must report
+	// no progress before the transcode counts as stalled.
+	//
+	// More than one, because the preview remux is synchronous and takes longer as
+	// the recording grows: a probe that lands inside one sees the duration it saw
+	// last time while ffmpeg is still working. Treating that as a stall cancels
+	// the tail and truncates the preview, which is the thing this wait exists to
+	// prevent.
+	previewCatchUpStaleSamples = 3
+
+	// previewCatchUpTolerance is how far short of the source still counts as done.
+	previewCatchUpTolerance = 5.0
+
+	// copyRetryInterval is how long to wait between incremental copies while the
+	// source file is still growing.
+	copyRetryInterval = time.Minute
+)
+
+// waitForTransferSignal waits up to interval for the transfer-complete signal
+// for expectedFilename, reporting whether it arrived.
+//
+// Signals for other files are consumed and ignored. It returns the moment the
+// right signal lands rather than at the end of the current copy-and-sleep
+// cycle, so the ingest does not keep rsyncing a file that finished up to a
+// minute ago.
+func waitForTransferSignal(
+	ctx workflow.Context,
+	signalChan workflow.ReceiveChannel,
+	expectedFilename string,
+	interval time.Duration,
+) bool {
+	logger := workflow.GetLogger(ctx)
+
+	// Cancelling the timer when the signal wins means an abandoned timer does
+	// not sit in the history until it fires.
+	timerCtx, cancelTimer := workflow.WithCancel(ctx)
+	defer cancelTimer()
+
+	timer := workflow.NewTimer(timerCtx, interval)
+
+	var received, elapsed bool
+	selector := workflow.NewSelector(ctx)
+	selector.AddFuture(timer, func(workflow.Future) {
+		elapsed = true
+	})
+	selector.AddReceive(signalChan, func(c workflow.ReceiveChannel, _ bool) {
+		var signalFileName string
+		c.Receive(ctx, &signalFileName)
+
+		logger.Info(fmt.Sprintf("Received file transfer signal for: %s", signalFileName))
+
+		if strings.EqualFold(filepath.Base(signalFileName), expectedFilename) {
+			logger.Info("Signal matches our file, marking as completed")
+			received = true
+			return
+		}
+		logger.Info(fmt.Sprintf("Signal was for a different file: %s, ignoring", signalFileName))
+	})
+
+	for !received && !elapsed {
+		selector.Select(ctx)
+	}
+
+	return received
+}
+
+// waitForPreviewToCatchUp blocks until the growing preview covers the whole
+// source file.
+//
+// Cancelling the preview kills the tail feeding ffmpeg's stdin, so anything
+// tail had not yet written is lost — the end of the recording, however far
+// behind the transcode is. A preview that has reached the source duration is
+// one where ffmpeg has consumed everything. Bounded, because never cancelling
+// would hang the ingest.
+func waitForPreviewToCatchUp(ctx workflow.Context, sourceFile, previewFile paths.Path) {
+	logger := workflow.GetLogger(ctx)
+
+	// A failed probe means the preview is missing or mid-remux, which the next
+	// cycle answers; the workflow's own policy would retry it ten times with
+	// backoff first, spending the deadline below rather than the interval it
+	// looks like it spends.
+	probeCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		StartToCloseTimeout:    previewProbeTimeout,
+		ScheduleToCloseTimeout: previewProbeTimeout,
+		RetryPolicy:            &temporal.RetryPolicy{MaximumAttempts: 1},
+	})
+
+	source, err := wfutils.Execute(probeCtx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
+		FilePath: sourceFile,
+	}).Result(probeCtx)
+	if err != nil {
+		logger.Error("Could not measure the source, stopping the preview without waiting", "error", err)
+		return
+	}
+
+	deadline := workflow.Now(ctx).Add(previewCatchUpDeadline)
+
+	previousSeconds := -1.0
+	staleSamples := 0
+
+	for workflow.Now(ctx).Before(deadline) {
+		if sleepErr := workflow.Sleep(ctx, previewCatchUpInterval); sleepErr != nil {
+			return
+		}
+
+		preview, analyzeErr := wfutils.Execute(probeCtx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
+			FilePath: previewFile,
+		}).Result(probeCtx)
+		if analyzeErr != nil {
+			// Expected on the first checks of a short ingest: the preview only
+			// starts a minute in, and the muxed file does not exist before that.
+			logger.Info("Preview not measurable yet", "error", analyzeErr)
+			continue
+		}
+
+		if preview.TotalSeconds >= source.TotalSeconds-previewCatchUpTolerance {
+			logger.Info("Preview has caught up with the source",
+				"previewSeconds", preview.TotalSeconds, "sourceSeconds", source.TotalSeconds)
+			return
+		}
+
+		if preview.TotalSeconds > previousSeconds {
+			previousSeconds = preview.TotalSeconds
+			staleSamples = 0
+			continue
+		}
+
+		staleSamples++
+		if staleSamples >= previewCatchUpStaleSamples {
+			logger.Warn("Preview stopped growing while still short of the source",
+				"previewSeconds", preview.TotalSeconds, "sourceSeconds", source.TotalSeconds,
+				"staleSamples", staleSamples)
+			return
+		}
+
+		logger.Info("Preview reported no progress, probably mid-remux",
+			"previewSeconds", preview.TotalSeconds, "staleSamples", staleSamples)
+	}
+
+	logger.Warn("Preview did not catch up in time, stopping it anyway",
+		"deadline", previewCatchUpDeadline,
+		"previewSeconds", previousSeconds,
+		"sourceSeconds", source.TotalSeconds)
 }

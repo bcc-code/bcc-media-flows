@@ -9,9 +9,14 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
+// CleanupResult reports what a cleanup run removed.
+//
+// Counts rather than paths: this is the workflow's completion event, and the
+// paths of a fortnight of temp files across sixty folders do not belong in the
+// history. They are in the activity results and the worker logs.
 type CleanupResult struct {
-	DeletedFiles []string
-	DeletedCount int
+	DeletedCount        int
+	DeletedCountPerRoot map[string]int
 }
 
 func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
@@ -100,7 +105,8 @@ func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 		"/mnt/isilon/Export": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
 	}
 
-	deletedFiles := []string{}
+	deletedTotal := 0
+	deletedPerRoot := map[string]int{}
 
 	folders, err := wfutils.GetMapKeysSafely(ctx, foldersToCleanup)
 	if err != nil {
@@ -115,14 +121,15 @@ func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 			OlderThan: olderThan,
 		}).Result(ctx)
 
-		logger.Info("Deleted files", "count", len(deletedFiles))
-
 		if err != nil {
 			logger.Error("Error during temp files cleanup", "error", err)
 			return nil, err
 		}
 
-		deletedFiles = append(deletedFiles, deletedFilesLoop...)
+		logger.Info("Deleted files", "root", folder, "count", len(deletedFilesLoop))
+
+		deletedPerRoot[folder] = len(deletedFilesLoop)
+		deletedTotal += len(deletedFilesLoop)
 
 		err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.DeleteEmptyDirectories, activities.CleanupInput{
 			Root: paths.MustParse(folder),
@@ -135,8 +142,8 @@ func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 	}
 
 	res := &CleanupResult{
-		DeletedFiles: deletedFiles,
-		DeletedCount: len(deletedFiles),
+		DeletedCount:        deletedTotal,
+		DeletedCountPerRoot: deletedPerRoot,
 	}
 
 	return res, nil

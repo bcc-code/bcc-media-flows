@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"reflect"
-	"runtime"
 	"strconv"
 
 	"github.com/bcc-code/bcc-media-flows/utils"
@@ -281,34 +279,10 @@ func main() {
 
 	r.POST("/ingest/json", jsonIngestHandler)
 
-	r.GET("/schemas", getWorkflowSchemas)
-	r.POST("/trigger-dynamic", triggerDynamicHandler)
-
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080" // Default port if not specified
 	}
 
 	_ = r.Run(":" + port)
-}
-
-func getFunctionName(i interface{}) (name string, isMethod bool) {
-	if fullName, ok := i.(string); ok {
-		return fullName, false
-	}
-	fullName := runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
-	// Full function name that has a struct pointer receiver has the following format
-	// <prefix>.(*<type>).<function>
-	isMethod = strings.ContainsAny(fullName, "*")
-	elements := strings.Split(fullName, ".")
-	shortName := elements[len(elements)-1]
-	// This allows to call activities by method pointer
-	// Compiler adds -fm suffix to a function name which has a receiver
-	// Note that this works even if struct pointer used to get the function is nil
-	// It is possible because nil receivers are allowed.
-	// For example:
-	// var a *Activities
-	// ExecuteActivity(ctx, a.Foo)
-	// will call this function which is going to return "Foo"
-	return strings.TrimSuffix(shortName, "-fm"), isMethod
 }

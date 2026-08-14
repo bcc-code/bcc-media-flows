@@ -2,7 +2,6 @@ package transcode
 
 import (
 	"github.com/bcc-code/bcc-media-flows/utils"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -19,18 +18,16 @@ type XDCAMEncodeInput struct {
 	Interlace  bool
 }
 
-func generateFfmpegParamsForXDCAM(input XDCAMEncodeInput, output string) []string {
+// xdcamArgs returns the codec arguments, i.e. everything ffmpeg.Job puts
+// between the input and the output.
+func xdcamArgs(input XDCAMEncodeInput) []string {
 	params := []string{
-		"-progress", "pipe:1",
-		"-hide_banner",
-		"-i", input.FilePath,
 		"-c:a", "copy",
 		"-c:v", "mpeg2video",
 		"-pix_fmt", "yuv422p",
 		"-color_primaries", "bt709",
 		"-color_trc", "bt709",
 		"-colorspace", "bt709",
-		"-y",
 	}
 
 	if input.Bitrate != "" {
@@ -62,30 +59,18 @@ func generateFfmpegParamsForXDCAM(input XDCAMEncodeInput, output string) []strin
 		)
 	}
 
-	params = append(
-		params,
-		output,
-	)
-
 	return params
 }
 
 func XDCAM(input XDCAMEncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeResult, error) {
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mxf"
 	outputPath := filepath.Join(input.OutputDir, filename)
-	params := generateFfmpegParamsForXDCAM(input, outputPath)
 
-	info, err := ffmpeg.GetStreamInfo(input.FilePath)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = ffmpeg.Do(params, info, progressCallback)
-	if err != nil {
-		return nil, err
-	}
-
-	err = os.Chmod(outputPath, os.ModePerm)
+	_, err := ffmpeg.Run(ffmpeg.Job{
+		Input:  input.FilePath,
+		Output: outputPath,
+		Args:   xdcamArgs(input),
+	}, progressCallback)
 	if err != nil {
 		return nil, err
 	}

@@ -1,7 +1,6 @@
 package transcode
 
 import (
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -24,27 +23,15 @@ type ProResInput struct {
 	SubtitleStyle  *paths.Path
 }
 
-type ProResResult struct {
-	OutputPath string
-}
-
 const (
 	ProResProfileHQ   = "3"
 	ProResProfile4444 = "4"
 )
 
-func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProResResult, error) {
+func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*EncodeResult, error) {
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mov"
 
-	params := []string{
-		"-progress", "pipe:1",
-		"-hide_banner",
-		"-i", input.FilePath,
-	}
-
-	for _, i := range input.AudioPaths {
-		params = append(params, "-i", i)
-	}
+	var params []string
 
 	params = append(params,
 		"-c:v", "prores_ks",
@@ -60,12 +47,9 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProRe
 		"yadif=0:-1:0",
 	}
 
-	if input.BurnInSubtitle != nil {
-		assFile, err := CreateBurninASSFile(*input.SubtitleStyle, *input.BurnInSubtitle)
-		if err != nil {
-			return nil, err
-		}
-		videoFilters = append(videoFilters, "ass="+assFile.Local())
+	videoFilters, err := appendBurnInFilter(videoFilters, input.SubtitleStyle, input.BurnInSubtitle)
+	if err != nil {
+		return nil, err
 	}
 
 	if input.ForHyperdeck {
@@ -132,29 +116,19 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*ProRe
 		}
 	}
 
-	params = append(
-		params,
-		"-map", "v",
-		"-y",
-		outputPath,
-	)
+	params = append(params, "-map", "v")
 
-	info, err := ffmpeg.GetStreamInfo(input.FilePath)
+	_, err = ffmpeg.Run(ffmpeg.Job{
+		Input:       input.FilePath,
+		ExtraInputs: ffmpeg.FileInputs(input.AudioPaths),
+		Output:      outputPath,
+		Args:        params,
+	}, progressCallback)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = ffmpeg.Do(params, info, progressCallback)
-	if err != nil {
-		return nil, err
-	}
-
-	err = os.Chmod(outputPath, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-
-	return &ProResResult{
-		OutputPath: outputPath,
+	return &EncodeResult{
+		Path: outputPath,
 	}, nil
 }

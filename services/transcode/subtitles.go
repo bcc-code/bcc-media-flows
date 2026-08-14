@@ -21,25 +21,19 @@ func SubtitleBurnIn(videoFile, subtitleFile, subtitleHeader, outputPath paths.Pa
 		return nil, fmt.Errorf("could not create burn-in ASS file for %s: %w", subtitleFile.Local(), err)
 	}
 
-	params := []string{
-		"-i", videoFile.Local(),
-		"-vf", "ass=" + assFile.Local(),
-		"-c:a", "copy",
-	}
-
 	base := videoFile.Base()
 	filename := base[0 : len(base)-len(videoFile.Ext())]
 
 	output := outputPath.Append(filename + ".subs" + videoFile.Ext())
 
-	params = append(params, output.Local())
-
-	info, err := ffmpeg.GetStreamInfo(videoFile.Local())
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = ffmpeg.Do(params, info, progressCallback)
+	_, err = ffmpeg.Run(ffmpeg.Job{
+		Input:  videoFile.Local(),
+		Output: output.Local(),
+		Args: []string{
+			"-vf", "ass=" + assFile.Local(),
+			"-c:a", "copy",
+		},
+	}, progressCallback)
 	if err != nil {
 		return nil, err
 	}
@@ -65,11 +59,13 @@ func CreateBurninASSFile(subtitleHeader, subtitleFile paths.Path) (*paths.Path, 
 		return &out, specialASSConverter(string(headerData), subtitleFile.Local(), out.Local(), 0.00005)
 	}
 
-	_, err = ffmpeg.Do([]string{
-		"-y",
-		"-i", subtitleFile.Local(),
-		out.Local(),
-	}, ffmpeg.StreamInfo{}, nil)
+	// Converting a subtitle file to ASS, so there is nothing to probe and no
+	// progress to report.
+	_, err = ffmpeg.Run(ffmpeg.Job{
+		Input:  subtitleFile.Local(),
+		Output: out.Local(),
+		Info:   &ffmpeg.StreamInfo{},
+	}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +86,7 @@ func CreateBurninASSFile(subtitleHeader, subtitleFile paths.Path) (*paths.Path, 
 		lines = append(lines, l)
 	}
 
-	err = os.WriteFile(out.Local(), []byte(string(headerData)+"\n"+strings.Join(lines, "\n")), os.ModePerm)
+	err = os.WriteFile(out.Local(), []byte(string(headerData)+"\n"+strings.Join(lines, "\n")), ffmpeg.OutputFileMode)
 	if err != nil {
 		return nil, err
 	}
@@ -202,4 +198,22 @@ func writeEvent(outFile *os.File, startTime, endTime string, textLines []string,
 
 func convertTimeFormat(srtTime string) string {
 	return convertTimestamp(strings.Replace(srtTime[:12], ",", ".", 1))
+}
+
+// appendBurnInFilter adds the subtitle burn-in video filter, if there is a
+// subtitle to burn in.
+func appendBurnInFilter(filters []string, style, subtitle *paths.Path) ([]string, error) {
+	if subtitle == nil {
+		return filters, nil
+	}
+	if style == nil {
+		return nil, fmt.Errorf("burn-in subtitle %s given with no style", subtitle.Local())
+	}
+
+	assFile, err := CreateBurninASSFile(*style, *subtitle)
+	if err != nil {
+		return nil, err
+	}
+
+	return append(filters, "ass="+assFile.Local()), nil
 }

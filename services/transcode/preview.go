@@ -197,6 +197,8 @@ func AudioPreview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) 
 		return out, nil
 	}
 
+	// One output per language, so there is no single output for Run or RunArgs to
+	// create a directory for and chmod.
 	_, err = ffmpeg.Do(previewData.FFMPEGParams, ffmpeg.ProbeResultToInfo(info), progressCallback)
 	if err != nil {
 		return nil, err
@@ -305,12 +307,10 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 		outputPath,
 	)
 
-	_, err = ffmpeg.Do(params, ffmpeg.ProbeResultToInfo(info), progressCallback)
-	if err != nil {
-		return nil, err
-	}
-
-	err = os.Chmod(outputPath, os.ModePerm)
+	// RunArgs rather than a Job: which files are inputs depends on whether the
+	// source has video, audio or both, and -ss applies to the watermark input it
+	// precedes.
+	err = ffmpeg.RunArgs(params, outputPath, ffmpeg.ProbeResultToInfo(info), progressCallback)
 	if err != nil {
 		return nil, err
 	}

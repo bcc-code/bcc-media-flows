@@ -36,10 +36,11 @@ var (
 )
 
 type VXExportParams struct {
-	VXID                      string
-	WithChapters              bool
-	WatermarkPath             string
-	Destinations              []string `jsonschema:"enum=vod,enum=xdcam,enum=bmm,enum=bmm-integration,enum=isilon"`
+	VXID          string
+	WithChapters  bool
+	WatermarkPath string
+	// Destinations are AssetExportDestination values; VXExport rejects anything else.
+	Destinations              []string
 	AudioSource               string
 	Languages                 []string
 	Subclip                   string

@@ -8,30 +8,8 @@ import (
 	"github.com/bcc-code/bcc-media-flows/workflows/vb_export"
 )
 
-var TriggerableWorkflows = []any{
-	export.VXExport,
-	vb_export.VBExport,
-	ingestworkflows.BmmIngestUpload,
-	ingestworkflows.BmmTrackMetadata,
-	miscworkflows.TranscodePreviewVX,
-	miscworkflows.TranscodePreviewFile,
-	miscworkflows.CreateThumbnailsVX,
-	miscworkflows.TranscodeHAP,
-	miscworkflows.TranscribeFile,
-	miscworkflows.TranscribeVX,
-	miscworkflows.HandleMultitrackFile,
-	export.ExportTimedMetadata,
-	miscworkflows.ImportSubtitlesFromSubtrans,
-	miscworkflows.MergeAndImportSubtitlesFromCSV,
-	miscworkflows.UpdateAssetRelations,
-	miscworkflows.NormalizeAudioLevelWorkflow,
-	miscworkflows.FixDurationVX,
-	miscworkflows.MoveMBFile,
-	miscworkflows.MoveFilesWorkerFlow,
-	scheduled.CleanupTemp,
-	scheduled.MediabankenPurgeTrash,
-}
-
+// WorkerWorkflows is the registry of workflows this worker runs. A workflow
+// missing from it cannot be executed.
 var WorkerWorkflows = []any{
 	miscworkflows.ImportSidecarSubtitle,
 	miscworkflows.TranscodePreviewVX,
@@ -79,7 +57,6 @@ var WorkerWorkflows = []any{
 	vb_export.VBExportToRawAbekas,
 	vb_export.VBExportToBStage,
 	vb_export.VBExportToGfx,
-	vb_export.VBExportToHippo,
 	vb_export.VBExportToHippoV2,
 	vb_export.VBExportToHippoHap,
 	vb_export.VBExportToDubbing,

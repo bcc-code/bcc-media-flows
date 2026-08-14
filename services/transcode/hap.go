@@ -25,11 +25,7 @@ type HAPInput struct {
 	Format    HAPFormat
 }
 
-type HAPResult struct {
-	OutputPath string
-}
-
-func HAP(input HAPInput, progressCallback ffmpeg.ProgressCallback) (*HAPResult, error) {
+func HAP(input HAPInput, progressCallback ffmpeg.ProgressCallback) (*EncodeResult, error) {
 	info, err := ffmpeg.GetStreamInfo(input.FilePath)
 	if err != nil {
 		return nil, err
@@ -98,19 +94,18 @@ func HAP(input HAPInput, progressCallback ffmpeg.ProgressCallback) (*HAPResult, 
 		format = HAPFormatHAPAlpha
 	}
 
-	videoParams := []string{
-		"-progress", "pipe:1",
-		"-hide_banner",
-		"-i", input.FilePath,
-		"-c:v", "hap",
-		"-format", format.Value,
-		"-r", "50",
-		"-map", "0:v:0",
-		"-an", // Explicitly exclude audio
-		"-y", tempVideoPath,
-	}
-
-	_, err = ffmpeg.Do(videoParams, info, progressCallback)
+	_, err = ffmpeg.Run(ffmpeg.Job{
+		Input:  input.FilePath,
+		Output: tempVideoPath,
+		Args: []string{
+			"-c:v", "hap",
+			"-format", format.Value,
+			"-r", "50",
+			"-map", "0:v:0",
+			"-an", // Explicitly exclude audio
+		},
+		Info: &info,
+	}, progressCallback)
 	if err != nil {
 		// Clean up audio files on error
 		for _, af := range audioFiles {
@@ -124,16 +119,7 @@ func HAP(input HAPInput, progressCallback ffmpeg.ProgressCallback) (*HAPResult, 
 
 	// Step 3: Mux audio tracks back if any were extracted
 	if len(audioFiles) > 0 {
-		muxParams := []string{
-			"-progress", "pipe:1",
-			"-hide_banner",
-			"-i", tempVideoPath,
-		}
-
-		// Add all audio files as inputs
-		for _, audioFile := range audioFiles {
-			muxParams = append(muxParams, "-i", audioFile)
-		}
+		var muxParams []string
 
 		// Map video stream first
 		muxParams = append(muxParams, "-map", "0:v:0")
@@ -147,10 +133,13 @@ func HAP(input HAPInput, progressCallback ffmpeg.ProgressCallback) (*HAPResult, 
 		muxParams = append(muxParams, "-c:v", "copy")
 		muxParams = append(muxParams, "-c:a", "pcm_s24le")
 
-		// Output to final path
-		muxParams = append(muxParams, "-y", outputPath)
-
-		_, err = ffmpeg.Do(muxParams, info, progressCallback)
+		_, err = ffmpeg.Run(ffmpeg.Job{
+			Input:       tempVideoPath,
+			ExtraInputs: ffmpeg.FileInputs(audioFiles),
+			Output:      outputPath,
+			Args:        muxParams,
+			Info:        &info,
+		}, progressCallback)
 		if err != nil {
 			// Clean up temporary files on error
 			_ = os.Remove(tempVideoPath) // Ignore cleanup errors
@@ -167,12 +156,7 @@ func HAP(input HAPInput, progressCallback ffmpeg.ProgressCallback) (*HAPResult, 
 		}
 	}
 
-	err = os.Chmod(outputPath, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-
-	return &HAPResult{
-		OutputPath: outputPath,
+	return &EncodeResult{
+		Path: outputPath,
 	}, nil
 }

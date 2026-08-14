@@ -1,0 +1,148 @@
+package ffmpeg
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+)
+
+const (
+	// OutputFileMode and OutputDirMode are what transcode output is left as.
+	//
+	// Group-writable rather than world-writable: these land on a shared Isilon
+	// mount where 0777 masters can be modified by anything that can reach the
+	// share.
+	OutputFileMode os.FileMode = 0664
+	OutputDirMode  os.FileMode = 0775
+)
+
+// Job is a single-input, single-output ffmpeg run.
+//
+// Args carries only the codec, filter and metadata arguments; Run supplies the
+// rest of the command line — progress reporting, the input flag, overwrite and
+// the output path — in a fixed order.
+type Job struct {
+	// Input is the file to read. Required.
+	Input string
+
+	// InputArgs are options that apply to Input and therefore have to precede
+	// its -i, such as -f lavfi for a synthesised source.
+	InputArgs []string
+
+	// ExtraInputs are further inputs, in order, after Input. Their stream
+	// indices start at 1.
+	ExtraInputs []Input
+
+	// Output is the file to write. Its directory is created if missing.
+	Output string
+
+	// Args are the arguments between the input and the output.
+	Args []string
+
+	// Info is the probe result used to turn ffmpeg's progress output into a
+	// percentage. Run probes Input when it is nil.
+	Info *StreamInfo
+
+	// FileMode is what Output is chmodded to. Zero means OutputFileMode.
+	FileMode os.FileMode
+}
+
+// Run assembles and executes the job, and returns the stream info it probed or
+// was given.
+//
+// The output directory is created first: the caller is usually the first thing
+// to put a file there.
+func Run(job Job, cb ProgressCallback) (StreamInfo, error) {
+	if job.Input == "" {
+		return StreamInfo{}, fmt.Errorf("ffmpeg job has no input")
+	}
+	if job.Output == "" {
+		return StreamInfo{}, fmt.Errorf("ffmpeg job for %s has no output", job.Input)
+	}
+
+	info := StreamInfo{}
+	if job.Info != nil {
+		info = *job.Info
+	} else {
+		probed, err := GetStreamInfo(job.Input)
+		if err != nil {
+			return StreamInfo{}, err
+		}
+		info = probed
+	}
+
+	if err := os.MkdirAll(filepath.Dir(job.Output), OutputDirMode); err != nil {
+		return info, err
+	}
+
+	if _, err := Do(job.Arguments(), info, cb); err != nil {
+		return info, err
+	}
+
+	mode := job.FileMode
+	if mode == 0 {
+		mode = OutputFileMode
+	}
+	if err := os.Chmod(job.Output, mode); err != nil {
+		return info, err
+	}
+
+	return info, nil
+}
+
+// Input is one ffmpeg input, with the options that belong to it.
+type Input struct {
+	// Args are options that apply to this input and precede its -i, such as
+	// -itsoffset.
+	Args []string
+
+	// Path is the file, or the source description for a synthesised input.
+	Path string
+}
+
+// Arguments returns the full ffmpeg command line for the job.
+func (j Job) Arguments() []string {
+	args := make([]string, 0, len(j.Args)+4*len(j.ExtraInputs)+8)
+	args = append(args, "-progress", "pipe:1", "-hide_banner")
+	args = append(args, j.InputArgs...)
+	args = append(args, "-i", j.Input)
+
+	for _, input := range j.ExtraInputs {
+		args = append(args, input.Args...)
+		args = append(args, "-i", input.Path)
+	}
+
+	args = append(args, j.Args...)
+	return append(args, "-y", j.Output)
+}
+
+// FileInputs turns plain paths into inputs with no per-input options.
+func FileInputs(paths []string) []Input {
+	inputs := make([]Input, 0, len(paths))
+	for _, path := range paths {
+		inputs = append(inputs, Input{Path: path})
+	}
+	return inputs
+}
+
+// RunArgs is Run for a command whose argument list the caller assembles itself,
+// because its inputs and its filter graph are built together and cannot be
+// separated into a Job.
+//
+// It creates the output directory and sets the output's mode, and leaves the
+// argument list exactly as given.
+func RunArgs(args []string, output string, info StreamInfo, cb ProgressCallback) error {
+	if output == "" {
+		return fmt.Errorf("ffmpeg command has no output")
+	}
+
+	if err := os.MkdirAll(filepath.Dir(output), OutputDirMode); err != nil {
+		return err
+	}
+
+	if _, err := Do(args, info, cb); err != nil {
+		return err
+	}
+
+	return os.Chmod(output, OutputFileMode)
+}

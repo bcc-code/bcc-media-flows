@@ -1,7 +1,6 @@
 package transcode
 
 import (
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -22,10 +21,6 @@ type H264EncodeInput struct {
 	Interlace      bool
 	BurnInSubtitle *paths.Path
 	SubtitleStyle  *paths.Path
-}
-
-type EncodeResult struct {
-	Path string
 }
 
 func H264(input H264EncodeInput, progressCallback ffmpeg.ProgressCallback) (*EncodeResult, error) {
@@ -54,9 +49,6 @@ func H264(input H264EncodeInput, progressCallback ffmpeg.ProgressCallback) (*Enc
 	}
 
 	params := []string{
-		"-hide_banner",
-		"-progress", "pipe:1",
-		"-i", input.FilePath,
 		"-c:v", h264encoder,
 		"-ar", "48000",
 	}
@@ -103,13 +95,9 @@ func H264(input H264EncodeInput, progressCallback ffmpeg.ProgressCallback) (*Enc
 		videoFilters = append(videoFilters, "yadif=0:-1:0")
 	}
 
-	if input.BurnInSubtitle != nil {
-		assFile, err := CreateBurninASSFile(*input.SubtitleStyle, *input.BurnInSubtitle)
-		if err != nil {
-			return nil, err
-		}
-		//defer os.Remove(assFile.Local()) ??
-		videoFilters = append(videoFilters, "ass="+assFile.Local())
+	videoFilters, err = appendBurnInFilter(videoFilters, input.SubtitleStyle, input.BurnInSubtitle)
+	if err != nil {
+		return nil, err
 	}
 
 	if len(videoFilters) > 0 {
@@ -119,18 +107,12 @@ func H264(input H264EncodeInput, progressCallback ffmpeg.ProgressCallback) (*Enc
 		)
 	}
 
-	params = append(
-		params,
-		"-y",
-		outputPath,
-	)
-
-	_, err = ffmpeg.Do(params, info, progressCallback)
-	if err != nil {
-		return nil, err
-	}
-
-	err = os.Chmod(outputPath, os.ModePerm)
+	_, err = ffmpeg.Run(ffmpeg.Job{
+		Input:  input.FilePath,
+		Output: outputPath,
+		Args:   params,
+		Info:   &info,
+	}, progressCallback)
 	if err != nil {
 		return nil, err
 	}

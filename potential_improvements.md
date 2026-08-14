@@ -1156,3 +1156,14 @@ most if the proxy were ever misconfigured, bypassed, or reached from an already-
   comment above it holds — it is deliberately registered nowhere — but the suppression is
   unconditional, so registering it later silently ships all of that. Worth converting to the
   narrow line-level ignores the rest of the tree now uses.
+
+- **`CropShortActivity` runs ffprobe on the worker queue.** `activities/crop_shorts.go:32`
+  calls `ffmpeg.GetStreamInfo` to choose between 25 and 50 fps, but it hangs off
+  `UtilActivities`, so `GetQueueForActivity` routes it to the worker queue — and
+  `worker.Dockerfile` installs no ffmpeg. The error is discarded (`if err == nil &&
+  info.FrameRate > 40`), so instead of failing it silently produces a 25 fps crop for
+  50 fps source material. It is the only activity outside `Audio`/`Video` that touches
+  the ffmpeg packages, which `TestEveryFFmpegActivityIsOnAnFFmpegQueue` now asserts and
+  allowlists. Two ways out: move the frame-rate probe into the video activity that runs
+  the resulting arguments, or move `CropShortActivity` to `VideoActivities`. Either way
+  the discarded error should become a real one.
