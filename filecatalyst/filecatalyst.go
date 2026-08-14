@@ -224,9 +224,9 @@ func PokeFileCatalyst(ctx context.Context) error {
 	// Send updated configuration back to server
 	err = UpdateFileCatalystTask(ctx, baseURL, taskID, username, password, config)
 	if err != nil {
-		return fmt.Errorf("failed to update task config: %w", err)
+		return fmt.Errorf("failed to update task config from %d to %d: %w",
+			currentAggression, newAggression, err)
 	}
 
-	fmt.Printf("Successfully updated CongestionControlAggression from %d to %d\n", currentAggression, newAggression)
 	return nil
 }
