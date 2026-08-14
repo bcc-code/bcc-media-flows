@@ -14,6 +14,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -410,7 +411,26 @@ const (
 	// previewCatchUpInterval matches how often the preview activity remuxes its
 	// segments, which is what makes progress observable.
 	previewCatchUpInterval = time.Minute
-	maxPreviewCatchUpWaits = 10
+
+	// previewCatchUpDeadline bounds the whole wait in workflow time, rather than
+	// counting iterations: a probe can take as long as previewProbeTimeout, so a
+	// fixed number of them says nothing about how long the ingest is held open.
+	previewCatchUpDeadline = 10 * time.Minute
+
+	// previewProbeTimeout caps one measurement. The probe runs with no retries,
+	// so this is also the whole cost of a failed one — retries would spend the
+	// deadline on backoff instead of on watching the preview grow.
+	previewProbeTimeout = 2 * time.Minute
+
+	// previewCatchUpStaleSamples is how many consecutive measurements must report
+	// no progress before the transcode counts as stalled.
+	//
+	// More than one, because the preview remux is synchronous and takes longer as
+	// the recording grows: a probe that lands inside one sees the duration it saw
+	// last time while ffmpeg is still working. Treating that as a stall cancels
+	// the tail and truncates the preview, which is the thing this wait exists to
+	// prevent.
+	previewCatchUpStaleSamples = 3
 
 	// previewCatchUpTolerance is how far short of the source still counts as done.
 	previewCatchUpTolerance = 5.0
@@ -479,23 +499,37 @@ func waitForTransferSignal(
 func waitForPreviewToCatchUp(ctx workflow.Context, sourceFile, previewFile paths.Path) {
 	logger := workflow.GetLogger(ctx)
 
-	source, err := wfutils.Execute(ctx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
+	// A failed probe means the preview is missing or mid-remux, which the next
+	// cycle answers; the workflow's own policy would retry it ten times with
+	// backoff first, spending the deadline below rather than the interval it
+	// looks like it spends.
+	probeCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		StartToCloseTimeout:    previewProbeTimeout,
+		ScheduleToCloseTimeout: previewProbeTimeout,
+		RetryPolicy:            &temporal.RetryPolicy{MaximumAttempts: 1},
+	})
+
+	source, err := wfutils.Execute(probeCtx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
 		FilePath: sourceFile,
-	}).Result(ctx)
+	}).Result(probeCtx)
 	if err != nil {
 		logger.Error("Could not measure the source, stopping the preview without waiting", "error", err)
 		return
 	}
 
+	deadline := workflow.Now(ctx).Add(previewCatchUpDeadline)
+
 	previousSeconds := -1.0
-	for i := 0; i < maxPreviewCatchUpWaits; i++ {
+	staleSamples := 0
+
+	for workflow.Now(ctx).Before(deadline) {
 		if sleepErr := workflow.Sleep(ctx, previewCatchUpInterval); sleepErr != nil {
 			return
 		}
 
-		preview, analyzeErr := wfutils.Execute(ctx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
+		preview, analyzeErr := wfutils.Execute(probeCtx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
 			FilePath: previewFile,
-		}).Result(ctx)
+		}).Result(probeCtx)
 		if analyzeErr != nil {
 			// Expected on the first checks of a short ingest: the preview only
 			// starts a minute in, and the muxed file does not exist before that.
@@ -509,16 +543,26 @@ func waitForPreviewToCatchUp(ctx workflow.Context, sourceFile, previewFile paths
 			return
 		}
 
-		if preview.TotalSeconds <= previousSeconds {
+		if preview.TotalSeconds > previousSeconds {
+			previousSeconds = preview.TotalSeconds
+			staleSamples = 0
+			continue
+		}
+
+		staleSamples++
+		if staleSamples >= previewCatchUpStaleSamples {
 			logger.Warn("Preview stopped growing while still short of the source",
-				"previewSeconds", preview.TotalSeconds, "sourceSeconds", source.TotalSeconds)
+				"previewSeconds", preview.TotalSeconds, "sourceSeconds", source.TotalSeconds,
+				"staleSamples", staleSamples)
 			return
 		}
 
-		previousSeconds = preview.TotalSeconds
+		logger.Info("Preview reported no progress, probably mid-remux",
+			"previewSeconds", preview.TotalSeconds, "staleSamples", staleSamples)
 	}
 
 	logger.Warn("Preview did not catch up in time, stopping it anyway",
-		"waited", time.Duration(maxPreviewCatchUpWaits)*previewCatchUpInterval,
+		"deadline", previewCatchUpDeadline,
+		"previewSeconds", previousSeconds,
 		"sourceSeconds", source.TotalSeconds)
 }
