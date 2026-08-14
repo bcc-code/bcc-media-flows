@@ -2,8 +2,14 @@ package vizualizer
 
 import (
 	"fmt"
+
 	"github.com/go-resty/resty/v2"
+
+	"github.com/bcc-code/bcc-media-flows/services/internal/httpx"
 )
+
+// serviceName names the visualizer in the errors this client returns.
+const serviceName = "vizualizer"
 
 // Client is a lightweight REST client for the Music Vizualizer service.
 //
@@ -20,8 +26,13 @@ func NewClient(baseURL string) (*Client, error) {
 	if baseURL == "" {
 		return nil, fmt.Errorf("vizualizer baseURL not set")
 	}
-	c := resty.New()
-	return &Client{BaseURL: baseURL, client: c}, nil
+
+	client := httpx.New(httpx.Config{
+		Service: serviceName,
+		BaseURL: baseURL,
+	})
+
+	return &Client{BaseURL: baseURL, client: client}, nil
 }
 
 // CreateVisualizationRequest models the POST body for creating a visualization.
@@ -55,14 +66,10 @@ type JobStatusResponse struct {
 
 // CreateVisualization starts a new visualization job from a local audio file.
 func (c *Client) CreateVisualization(req CreateVisualizationRequest) (*CreateVisualizationResponse, error) {
-	url := c.BaseURL + "/api/visualize"
 	var out CreateVisualizationResponse
-	resp, err := c.client.R().SetBody(req).SetResult(&out).Post(url)
+	_, err := c.client.R().SetBody(req).SetResult(&out).Post("/api/visualize")
 	if err != nil {
 		return nil, err
-	}
-	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
-		return nil, fmt.Errorf("vizualizer create failed: %s, body: %s", resp.Status(), resp.String())
 	}
 	return &out, nil
 }
@@ -72,41 +79,26 @@ func (c *Client) GetJob(jobID string) (*JobStatusResponse, error) {
 	if jobID == "" {
 		return nil, fmt.Errorf("jobID is required")
 	}
-	url := c.BaseURL + "/api/status/" + jobID
 	var out JobStatusResponse
-	resp, err := c.client.R().SetResult(&out).Get(url)
+	_, err := c.client.R().SetResult(&out).Get("/api/status/" + jobID)
 	if err != nil {
 		return nil, err
-	}
-	if resp.StatusCode() != 200 {
-		return nil, fmt.Errorf("vizualizer get job failed: %s, body: %s", resp.Status(), resp.String())
 	}
 	return &out, nil
 }
 
 // ListJobs returns all visualization jobs.
 func (c *Client) ListJobs() ([]JobStatusResponse, error) {
-	url := c.BaseURL + "/api/jobs"
 	var out []JobStatusResponse
-	resp, err := c.client.R().SetResult(&out).Get(url)
+	_, err := c.client.R().SetResult(&out).Get("/api/jobs")
 	if err != nil {
 		return nil, err
-	}
-	if resp.StatusCode() != 200 {
-		return nil, fmt.Errorf("vizualizer list jobs failed: %s, body: %s", resp.Status(), resp.String())
 	}
 	return out, nil
 }
 
 // Health pings the health endpoint. Returns nil if healthy.
 func (c *Client) Health() error {
-	url := c.BaseURL + "/api/health"
-	resp, err := c.client.R().Get(url)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("vizualizer health failed: %s, body: %s", resp.Status(), resp.String())
-	}
-	return nil
+	_, err := c.client.R().Get("/api/health")
+	return err
 }

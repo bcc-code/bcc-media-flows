@@ -5,7 +5,12 @@ import (
 	"fmt"
 
 	"github.com/go-resty/resty/v2"
+
+	"github.com/bcc-code/bcc-media-flows/services/internal/httpx"
 )
+
+// serviceName names ClickUp in the errors this client returns.
+const serviceName = "clickup"
 
 // Defaults for the public "Shorts Export" view. These are deliberately
 // hardcoded: a public share exposes all of this in its share URL, so there is
@@ -50,8 +55,12 @@ func NewClient(baseURL, workspaceID, viewID, token string) (*Client, error) {
 		token = defaultToken
 	}
 
-	client := resty.New()
-	client.SetHeader("Content-Type", "application/json")
+	client := httpx.New(httpx.Config{
+		Service: serviceName,
+		BaseURL: baseURL,
+		Headers: map[string]string{"Content-Type": "application/json"},
+	})
+
 	return &Client{
 		baseURL:     baseURL,
 		workspaceID: workspaceID,
@@ -174,7 +183,7 @@ func (c *Client) ListTasks() ([]Task, error) {
 // and the full list of task IDs. It pages until last_page, guarding against a
 // non-advancing page param by stopping once no new task IDs appear.
 func (c *Client) loadView() ([]fieldDefinition, []string, error) {
-	url := fmt.Sprintf("%s/view/v1/%s/public/view/%s", c.baseURL, c.workspaceID, c.viewID)
+	url := fmt.Sprintf("/view/v1/%s/public/view/%s", c.workspaceID, c.viewID)
 
 	var defs []fieldDefinition
 	var taskIDs []string
@@ -182,7 +191,7 @@ func (c *Client) loadView() ([]fieldDefinition, []string, error) {
 
 	for page := 0; ; page++ {
 		var result viewResponse
-		resp, err := c.client.R().
+		_, err := c.client.R().
 			SetQueryParams(map[string]string{
 				"token": c.token,
 				"page":  fmt.Sprintf("%d", page),
@@ -191,9 +200,6 @@ func (c *Client) loadView() ([]fieldDefinition, []string, error) {
 			Get(url)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to load ClickUp view: %w", err)
-		}
-		if resp.StatusCode() != 200 {
-			return nil, nil, fmt.Errorf("ClickUp view load failed: %s, body: %s", resp.Status(), resp.String())
 		}
 
 		if page == 0 {
@@ -223,7 +229,7 @@ func (c *Client) loadView() ([]fieldDefinition, []string, error) {
 
 // fetchTaskValues fetches the requested custom field values for a batch of task IDs.
 func (c *Client) fetchTaskValues(taskIDs, fieldIDs []string) ([]publicTask, error) {
-	url := fmt.Sprintf("%s/view/v1/%s/public/view/%s/tasks", c.baseURL, c.workspaceID, c.viewID)
+	url := fmt.Sprintf("/view/v1/%s/public/view/%s/tasks", c.workspaceID, c.viewID)
 
 	payload := map[string]any{
 		"context":           map[string]any{"listId": c.viewID, "dataType": "NextPage"},
@@ -233,15 +239,12 @@ func (c *Client) fetchTaskValues(taskIDs, fieldIDs []string) ([]publicTask, erro
 	}
 
 	var result tasksResponse
-	resp, err := c.client.R().
+	_, err := c.client.R().
 		SetBody(payload).
 		SetResult(&result).
 		Post(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch ClickUp task values: %w", err)
-	}
-	if resp.StatusCode() != 200 {
-		return nil, fmt.Errorf("ClickUp task fetch failed: %s, body: %s", resp.Status(), resp.String())
 	}
 
 	return result.Tasks, nil
