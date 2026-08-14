@@ -162,7 +162,8 @@ func TestClient_SendsTheShareToken(t *testing.T) {
 	assert.Equal(t, "token-1", token)
 }
 
-// The paths are now relative to the client's base URL, so they are worth pinning.
+// The paths are relative to the client's base URL, so they are pinned against what
+// the service actually receives.
 func TestClient_RequestsTheViewPaths(t *testing.T) {
 	var paths []string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -199,7 +200,8 @@ func TestNewClient_EmptyArgumentsUseTheDefaults(t *testing.T) {
 	assert.True(t, strings.HasPrefix(client.baseURL, "https://"))
 }
 
-// This client had no timeout, and it is called from a scheduled workflow.
+// A scheduled workflow calls this, so a ClickUp that accepts the connection and stops
+// answering must fail rather than hold the activity.
 func TestClient_HasATimeout(t *testing.T) {
 	client, err := NewClient("", "", "", "")
 	require.NoError(t, err)

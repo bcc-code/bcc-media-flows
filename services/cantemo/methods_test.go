@@ -192,7 +192,7 @@ func TestGetFiles_ParsesTheTimestamps(t *testing.T) {
 	assert.Equal(t, 44, result.Objects[0].Timestamp.Minute())
 }
 
-// A timestamp Cantemo formats differently is a parse failure, not a zero time silently
+// A timestamp Cantemo formats differently is a parse failure, not a zero time
 // standing in for one.
 func TestGetFiles_UnparseableTimestampIsAnError(t *testing.T) {
 	client := cantemoServer(t, http.StatusOK, "application/json",
@@ -288,8 +288,8 @@ func TestGetTask(t *testing.T) {
 		assert.Equal(t, "FINISHED", task.State)
 	})
 
-	// The move workflows poll this until the state is finished. A zero-valued Task with
-	// no error would be polled forever, or read as a task in an unknown state.
+	// The move workflows poll this until the state is finished, so a zero-valued Task
+	// with no error is polled forever or read as a task in an unknown state.
 	t.Run("failure", func(t *testing.T) {
 		client := cantemoServer(t, http.StatusInternalServerError, "text/plain", "boom")
 

@@ -29,10 +29,10 @@ func tolerating404(req *resty.Request) *resty.Request {
 
 // vsErrorFromResponse turns a non-2xx Vidispine response into an error.
 //
-// Shape-tag-not-found keeps its ErrShapeTagNotFound sentinel so
-// activities/vidispine/files.go can still detect it with errors.Is and skip
-// pointless retries, regardless of which request produced it. Everything else is
-// described the same way as any other service.
+// Shape-tag-not-found carries the ErrShapeTagNotFound sentinel so
+// activities/vidispine/files.go can detect it with errors.Is and skip pointless
+// retries, regardless of which request produced it. Everything else is described the
+// same way as any other service.
 func vsErrorFromResponse(resp *resty.Response) error {
 	var envelope vsErrorBody
 	if err := json.Unmarshal(resp.Body(), &envelope); err == nil &&
@@ -45,11 +45,11 @@ func vsErrorFromResponse(resp *resty.Response) error {
 }
 
 func NewClient(baseURL string, username string, password string) *Client {
-	// The timeout is deliberately not the 10 seconds this client used to carry.
-	// Retries apply to POST and DELETE as well — AddShapeToItem, CreatePlaceholder,
-	// DeleteItems — so a call that was merely slow got retried and created a second
-	// shape or job. A timeout long enough for a working call to finish is what stops
-	// that; the retries stay for the connection failures they were added for.
+	// The timeout has to outlast a slow Vidispine call rather than merely a healthy
+	// one. Retries apply to POST and DELETE as well — AddShapeToItem,
+	// CreatePlaceholder, DeleteItems — so a timeout short enough to fire on a call
+	// that is working retries it and creates a second shape or job. The retries are
+	// for connection failures.
 	client := httpx.New(httpx.Config{
 		Service:       serviceName,
 		BaseURL:       baseURL,

@@ -174,11 +174,10 @@ func TestClient_DeleteShapeStillErrorsOn500(t *testing.T) {
 	assert.Error(t, err)
 }
 
-// The client used to pair a 10 second timeout with five retries, and the retries
-// apply to POST and DELETE — AddShapeToItem, CreatePlaceholder, DeleteItems. A
-// Vidispine call that merely took longer than ten seconds was therefore retried, and
-// each retry created another shape or job. The fix is a timeout long enough for a slow
-// call to finish; this pins it so a future edit cannot quietly shorten it again.
+// The retries apply to POST and DELETE — AddShapeToItem, CreatePlaceholder,
+// DeleteItems — so the timeout has to be long enough for a slow Vidispine call to
+// finish. A shorter one fires on a call that is working, retries it, and creates a
+// second shape or job.
 func TestClient_TimeoutOutlastsASlowVidispineCall(t *testing.T) {
 	client, _ := vsServer(t, http.StatusOK, `{}`)
 
@@ -195,8 +194,8 @@ func TestClient_RetriesAreStillConfigured(t *testing.T) {
 	assert.Positive(t, client.restyClient.RetryCount)
 }
 
-// An answered failure is not retried, so a 500 costs one request rather than six. If a
-// future change makes hook errors retryable, a failing POST starts creating duplicates.
+// An answered failure is not retried, so a 500 costs one request rather than six. If
+// hook errors become retryable, a failing POST starts creating duplicates.
 func TestClient_ErrorStatusIsNotRetried(t *testing.T) {
 	client, calls := vsServer(t, http.StatusInternalServerError, `{"internalServer":"boom"}`)
 

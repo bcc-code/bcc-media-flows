@@ -50,10 +50,9 @@ func routingServer(t *testing.T, storyBody string, exportStatus int, exportBody 
 
 const oneNorwegianLanguage = `{"id":42,"name":"AABC-%lang%","languages":[{"isoName":"NOR","approved":true}]}`
 
-// The finding this package exists to close. GetSubtitlesActivity writes every value of
-// the returned map straight to a .srt file, so a 500 whose body is an HTML error page
-// used to produce a subtitle file containing that page — which then went on to be
-// imported into Vidispine and burned into video.
+// GetSubtitlesActivity writes every value of the returned map straight to a .srt file
+// on disk, and that file goes on to be imported into Vidispine and burned into video.
+// An error page reaching the map is therefore an error page reaching air.
 func TestGetSubtitles_ServerErrorIsNotWrittenAsASubtitle(t *testing.T) {
 	client, _ := routingServer(t, oneNorwegianLanguage,
 		http.StatusInternalServerError, "<html>500 Internal Server Error</html>")
@@ -107,10 +106,9 @@ func TestGetSubtitles_SkipsUnapprovedExceptNorwegian(t *testing.T) {
 	assert.NotContains(t, subs, "ENG")
 }
 
-// SearchByName used to return an empty slice and a nil error on any failure.
-// GetOrCreateSubtransID reads that as "no subtitles exist for this file", which either
-// fails the ingest as non-retryable or continues silently without subtitles — so a
-// Subtrans outage looked like an editorial fact about the programme.
+// GetOrCreateSubtransID reads an empty result as "no subtitles exist for this file",
+// and acts on it: the ingest either fails as non-retryable or, with NoSubsOK,
+// continues without subtitles. A Subtrans outage must not be able to say that.
 func TestSearchByName_ServerErrorIsNotAnEmptyResult(t *testing.T) {
 	client := subtransServer(t, http.StatusBadGateway, "text/html", "<html>502</html>")
 
@@ -140,8 +138,8 @@ func TestSearchByID_ServerErrorIsAnError(t *testing.T) {
 	assert.Nil(t, res, "a zero-valued result would read as a story with no languages")
 }
 
-// GetFilePrefix names the files written to disk. On a failure it used to return the
-// zero value with no error, so every subtitle file was written with an empty prefix.
+// GetFilePrefix names the files written to disk, so a zero value with no error would
+// write every subtitle file with an empty prefix.
 func TestGetFilePrefix_ServerErrorIsAnError(t *testing.T) {
 	client := subtransServer(t, http.StatusInternalServerError, "text/plain", "boom")
 
@@ -161,8 +159,7 @@ func TestGetFilePrefix_StripsTheLanguagePlaceholder(t *testing.T) {
 	assert.Equal(t, "AABC_2024_S01E01_", prefix)
 }
 
-// The key must reach the service on every request, including the export requests that
-// no longer build it into their path by hand.
+// The key must reach the service on every request, the exports included.
 func TestClient_SendsTheAPIKeyOnEveryRequest(t *testing.T) {
 	var keys []string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

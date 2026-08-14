@@ -40,10 +40,8 @@ func recordingServer(t *testing.T, body string) (*Client, *http.Request) {
 	return NewClient(server.URL, "test-api-key"), captured
 }
 
-// Every method in this package used to compare against 200 exactly. The comparison
-// itself was fine; what it cost was ten copies of it, and a new method was only safe if
-// its author remembered to write the eleventh. These cases pin that the client fails on
-// its own now.
+// The client decides on the status for every method, so a method added later is safe
+// without its author writing a check. These cases pin that, one per method.
 func TestClient_ServerErrorsAreErrors(t *testing.T) {
 	tests := []struct {
 		name string
@@ -89,9 +87,9 @@ func TestClient_HTMLErrorBodyIsAnError(t *testing.T) {
 	assert.Nil(t, asset)
 }
 
-// 201 Created is what a REST API is entitled to answer a POST with, and the old
-// `!= 200` check turned it into a failure — after the item had been created. Retrying
-// that error is how duplicates get made.
+// 201 Created is what a REST API is entitled to answer a POST with, and it means the
+// item exists. Reporting that as a failure invites a retry, which is how duplicates
+// get made.
 func TestClient_CreatedIsASuccess(t *testing.T) {
 	client := directusServer(t, http.StatusCreated, `{"data":{"id":"tag-1","code":"c","name":"n"}}`)
 
@@ -143,8 +141,8 @@ func TestAssetExists(t *testing.T) {
 	})
 }
 
-// The path is now relative to the client's base URL rather than built with Sprintf at
-// each call site, so it is worth checking one of each verb still lands where it did.
+// The paths are relative to the client's base URL, so one of each verb is checked
+// against the full path the service actually receives.
 func TestClient_RequestsLandOnTheExpectedPaths(t *testing.T) {
 	t.Run("GET carries its filter", func(t *testing.T) {
 		client, captured := recordingServer(t, `{"data":[]}`)

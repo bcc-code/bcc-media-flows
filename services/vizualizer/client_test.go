@@ -40,8 +40,8 @@ func TestNewClient_RequiresABaseURL(t *testing.T) {
 }
 
 // GetJob is polled by VisualizeAudioActivity every few seconds until the job reports
-// done. A failure has to be an error rather than a zero-valued status, which would
-// leave the activity polling a job that is not there until its timeout.
+// done. A failure has to be an error rather than a zero-valued status, or the activity
+// polls a job that is not there until its timeout.
 func TestGetJob_ServerErrorIsAnError(t *testing.T) {
 	client := vizServer(t, http.StatusInternalServerError, "application/json", `{"error":"boom"}`)
 
@@ -196,9 +196,9 @@ func TestHealth(t *testing.T) {
 	})
 }
 
-// This client had no timeout. VisualizeAudioActivity polls it for as long as a
-// visualization takes, and a visualizer that accepts the connection and then stops
-// answering would have held one poll open for the whole activity.
+// VisualizeAudioActivity polls this for as long as a visualization takes, so a
+// visualizer that accepts the connection and then stops answering has to fail the
+// poll rather than hold it open for the rest of the activity.
 func TestClient_HasATimeout(t *testing.T) {
 	client, err := NewClient("http://vizualizer.example")
 	require.NoError(t, err)

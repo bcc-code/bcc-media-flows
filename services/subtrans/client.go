@@ -26,9 +26,9 @@ func NewClient(baseURL string, apiKey string) *Client {
 		Headers: map[string]string{"accept": "application/json"},
 	})
 
-	// The key authenticates every request. Setting it on the client rather than
-	// pasting it into each path keeps it in the query parameters, where the error
-	// redaction can find it before the URL reaches a workflow history.
+	// The key authenticates every request. Holding it on the client keeps it a query
+	// parameter rather than part of a path, which is where the error redaction looks
+	// for it before a URL reaches a workflow history.
 	client.SetQueryParam("key", apiKey)
 
 	return &Client{
@@ -111,9 +111,8 @@ func (c *Client) GetSubtitles(id string, format string, approvedOnly bool) (map[
 			SetQueryParam("onlyApproved", fmt.Sprintf("%t", approvedOnly)).
 			Get(url)
 		if err != nil {
-			// The body of a failed response is what would otherwise be written to
-			// disk as the subtitle file: GetSubtitlesActivity writes every value of
-			// this map straight to a .srt.
+			// The body of a failed response must not reach the map:
+			// GetSubtitlesActivity writes every value of it straight to a .srt.
 			return nil, err
 		}
 
