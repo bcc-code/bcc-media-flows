@@ -11,6 +11,7 @@ package httpx
 import (
 	"context"
 	"fmt"
+	neturl "net/url"
 	"slices"
 	"strings"
 	"time"
@@ -80,6 +81,7 @@ func New(cfg Config) *resty.Client {
 	// resty warns on stdout about auth over a plain connection; several of these
 	// services are plain HTTP on the internal network by design.
 	client.SetDisableWarn(true)
+	client.SetLogger(quietLogger{})
 
 	if cfg.BaseURL != "" {
 		client.SetBaseURL(strings.TrimSuffix(cfg.BaseURL, "/"))
@@ -140,10 +142,56 @@ func Describe(service string, resp *resty.Response) error {
 func DescribeWithDetail(service string, resp *resty.Response, detail string) error {
 	return merry.New(
 		fmt.Sprintf("%s %s %s failed (status %d): %s",
-			service, resp.Request.Method, resp.Request.URL, resp.StatusCode(), detail),
+			service, resp.Request.Method, RedactURL(resp.Request.URL), resp.StatusCode(), detail),
 		merry.WithHTTPCode(resp.StatusCode()),
 	)
 }
+
+// secretQueryParams are query parameters whose value is a credential. Subtrans
+// authenticates with ?key=, and an error message naming the request would otherwise
+// carry that key into the Temporal workflow history, where it is readable by anyone
+// who can open the execution.
+var secretQueryParams = []string{"key", "token", "api_key", "apikey", "access_token", "password"}
+
+// RedactURL returns url with the value of any credential-carrying query parameter
+// replaced. A URL it cannot parse is reported as unparseable rather than echoed, since
+// the reason it failed to parse may itself be the credential.
+func RedactURL(url string) string {
+	parsed, err := neturl.Parse(url)
+	if err != nil {
+		return "(unparseable url)"
+	}
+
+	query := parsed.Query()
+	redacted := false
+	for _, name := range secretQueryParams {
+		for candidate := range query {
+			if strings.EqualFold(candidate, name) {
+				query.Set(candidate, "redacted")
+				redacted = true
+			}
+		}
+	}
+
+	if !redacted {
+		return url
+	}
+
+	parsed.RawQuery = query.Encode()
+	return parsed.String()
+}
+
+// quietLogger drops resty's own logging.
+//
+// resty prints a WARN and an ERROR line to stdout for every failed request, both
+// containing the unredacted URL, and both saying what the error this package returns
+// already says. The caller logs the error it gets; this stops the credential-bearing
+// duplicate.
+type quietLogger struct{}
+
+func (quietLogger) Errorf(string, ...any) {}
+func (quietLogger) Warnf(string, ...any)  {}
+func (quietLogger) Debugf(string, ...any) {}
 
 // TruncateBody renders a response body for an error message, bounded so a proxy's
 // HTML error page does not end up in a workflow history in full.

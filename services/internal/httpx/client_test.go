@@ -154,6 +154,92 @@ func TestDescribeError_OverridesTheDefaultMessage(t *testing.T) {
 	assert.ErrorIs(t, err, sentinel)
 }
 
+// The error names the request, and subtrans authenticates with ?key=, so without
+// redaction every failed subtitle fetch would write that key into the workflow history.
+func TestNew_ErrorDoesNotLeakACredentialFromTheQueryString(t *testing.T) {
+	client := serving(t, http.StatusInternalServerError, "text/plain", "boom")
+
+	_, err := client.R().
+		SetQueryParams(map[string]string{"key": "s3cr3t-api-key", "incLanguages": "true"}).
+		Get("/api/external/story/files/name")
+
+	require.Error(t, err)
+	assert.NotContains(t, err.Error(), "s3cr3t-api-key")
+	assert.Contains(t, err.Error(), "redacted")
+	assert.Contains(t, err.Error(), "incLanguages=true", "non-secret parameters stay readable")
+}
+
+func TestRedactURL(t *testing.T) {
+	tests := []struct {
+		name    string
+		url     string
+		wants   []string
+		unwants []string
+	}{
+		{
+			name:    "key",
+			url:     "http://subtrans/api/story?key=secret&incLanguages=true",
+			wants:   []string{"key=redacted", "incLanguages=true"},
+			unwants: []string{"secret"},
+		},
+		{
+			name:    "capitalised name",
+			url:     "http://svc/thing?Token=secret",
+			wants:   []string{"redacted"},
+			unwants: []string{"secret"},
+		},
+		{
+			name:    "several at once",
+			url:     "http://svc/thing?api_key=one&access_token=two",
+			unwants: []string{"one", "two"},
+		},
+		{
+			name:  "nothing to redact is returned unchanged",
+			url:   "http://svc/items/VX-1?content=metadata&terse=true",
+			wants: []string{"http://svc/items/VX-1?content=metadata&terse=true"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := RedactURL(test.url)
+			for _, want := range test.wants {
+				assert.Contains(t, got, want)
+			}
+			for _, unwanted := range test.unwants {
+				assert.NotContains(t, got, unwanted)
+			}
+		})
+	}
+}
+
+// A URL that will not parse must not be echoed: whatever made it unparseable could be
+// the credential itself.
+func TestRedactURL_UnparseableIsNotEchoed(t *testing.T) {
+	got := RedactURL("://not a url\x7f?key=secret")
+
+	assert.NotContains(t, got, "secret")
+}
+
+// Retries exist for connection failures. An error the response hook produced must not
+// be retried: it means the server answered, and answering again would create a second
+// shape or job for a POST.
+func TestNew_ErrorStatusIsNotRetried(t *testing.T) {
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		calls++
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	t.Cleanup(server.Close)
+
+	client := New(Config{Service: "retrying", BaseURL: server.URL, RetryCount: 5})
+
+	_, err := client.R().Post("/thing")
+
+	require.Error(t, err)
+	assert.Equal(t, 1, calls, "a 500 answered by the server is not a reason to POST again")
+}
+
 func TestTruncateBody_BoundsWhatReachesWorkflowHistory(t *testing.T) {
 	short := strings.Repeat("a", maxErrorBodyLen)
 	assert.Equal(t, short, TruncateBody([]byte(short)), "a body at the limit is kept whole")
