@@ -8,7 +8,12 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
+
+	"github.com/bcc-code/bcc-media-flows/services/internal/httpx"
 )
+
+// serviceName names Directus in the errors this client returns.
+const serviceName = "directus"
 
 type Client struct {
 	BaseURL string
@@ -16,9 +21,20 @@ type Client struct {
 	client  *resty.Client
 }
 
+// uploadTimeout has to cover UploadFile, which posts a poster or thumbnail as
+// multipart form data. The rest of this client exchanges small JSON documents and
+// would be happy with the shared default; one client-wide timeout that fits the
+// slowest call is simpler than a per-request one, and nothing here polls.
+const uploadTimeout = 5 * time.Minute
+
 func NewClient(baseURL, apiKey string) *Client {
-	client := resty.New()
-	client.SetHeader("Authorization", "Bearer "+apiKey)
+	client := httpx.New(httpx.Config{
+		Service: serviceName,
+		BaseURL: baseURL,
+		Timeout: uploadTimeout,
+		Headers: map[string]string{"Authorization": "Bearer " + apiKey},
+	})
+
 	return &Client{
 		BaseURL: baseURL,
 		APIKey:  apiKey,
@@ -101,7 +117,6 @@ type MediaItem struct {
 // Fields that are integers in the DB are now *int64 and omitempty
 // AssetID and ParentEpisodeID are *int64, not string
 // This prevents sending empty strings for integer fields
-//
 type MediaItemCreate struct {
 	Label           string                   `json:"label"`
 	Type            string                   `json:"type"`
@@ -149,12 +164,12 @@ type MediaItemTag struct {
 
 // GetAssetByMediabankenID retrieves an asset by its mediabanken_id
 func (c *Client) GetAssetByMediabankenID(mediabankenID string) (*Asset, error) {
-	endpoint := fmt.Sprintf("%s/items/assets", c.BaseURL)
+	endpoint := "/items/assets"
 	result := &struct {
 		Data []Asset `json:"data"`
 	}{}
 
-	resp, err := c.client.R().
+	_, err := c.client.R().
 		SetQueryParams(map[string]string{
 			"filter[mediabanken_id][_eq]": mediabankenID,
 			"limit":                       "1",
@@ -166,10 +181,6 @@ func (c *Client) GetAssetByMediabankenID(mediabankenID string) (*Asset, error) {
 		return nil, fmt.Errorf("failed to fetch asset: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return nil, fmt.Errorf("Directus API error: %s", resp.Status())
-	}
-
 	if len(result.Data) == 0 {
 		return nil, nil
 	}
@@ -179,9 +190,9 @@ func (c *Client) GetAssetByMediabankenID(mediabankenID string) (*Asset, error) {
 
 // AssetExists checks if an asset with the given mediabanken_id exists in Directus
 func (c *Client) AssetExists(mediabankenID string) (bool, error) {
-	endpoint := fmt.Sprintf("%s/items/assets", c.BaseURL)
+	endpoint := "/items/assets"
 	result := &directusResponse{}
-	resp, err := c.client.R().
+	_, err := c.client.R().
 		SetQueryParams(map[string]string{
 			"filter[mediabanken_id][_eq]": mediabankenID,
 			"limit":                       "1",
@@ -190,9 +201,6 @@ func (c *Client) AssetExists(mediabankenID string) (bool, error) {
 		Get(endpoint)
 	if err != nil {
 		return false, err
-	}
-	if resp.StatusCode() != 200 {
-		return false, fmt.Errorf("Directus API error: %s", resp.Status())
 	}
 	return len(result.Data) > 0, nil
 }
@@ -220,21 +228,17 @@ func (c *Client) CreateStyledImage(imageID, style string) (*StyledImage, error) 
 		Data StyledImage `json:"data"`
 	}{}
 
-	resp, err := c.client.R().
+	_, err := c.client.R().
 		SetResult(result).
 		SetBody(StyledImageCreate{
 			Style:    style,
 			Language: "no",
 			File:     imageID,
 		}).
-		Post(fmt.Sprintf("%s/items/styledimages", c.BaseURL))
+		Post("/items/styledimages")
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create styled image: %w", err)
-	}
-
-	if resp.StatusCode() != 200 {
-		return nil, fmt.Errorf("Directus API error: %s", resp.Status())
 	}
 
 	if result.Data.ID == "" {
@@ -246,7 +250,7 @@ func (c *Client) CreateStyledImage(imageID, style string) (*StyledImage, error) 
 
 // CreateShort creates a new short in Directus
 func (c *Client) CreateShort(short ShortCreate) (*Short, error) {
-	endpoint := fmt.Sprintf("%s/items/shorts", c.BaseURL)
+	endpoint := "/items/shorts"
 	result := &struct {
 		Data Short `json:"data"`
 	}{}
@@ -274,7 +278,7 @@ func (c *Client) CreateShort(short ShortCreate) (*Short, error) {
 		}
 	}
 
-	resp, err := c.client.R().
+	_, err := c.client.R().
 		SetResult(result).
 		SetBody(shortData).
 		Post(endpoint)
@@ -283,16 +287,12 @@ func (c *Client) CreateShort(short ShortCreate) (*Short, error) {
 		return nil, fmt.Errorf("failed to create short: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return nil, fmt.Errorf("Directus API error: %s - %s", resp.Status(), resp.String())
-	}
-
 	return &result.Data, nil
 }
 
 // CreateMediaItemStyledImage creates a relationship between a media item and a styled image
 func (c *Client) CreateMediaItemStyledImage(mediaItemID, styledImageID string) error {
-	endpoint := fmt.Sprintf("%s/relations/mediaitems_images", c.BaseURL)
+	endpoint := "/relations/mediaitems_images"
 
 	payload := map[string]interface{}{
 		"data": map[string]interface{}{
@@ -301,7 +301,7 @@ func (c *Client) CreateMediaItemStyledImage(mediaItemID, styledImageID string) e
 		},
 	}
 
-	resp, err := c.client.R().
+	_, err := c.client.R().
 		SetBody(payload).
 		Post(endpoint)
 
@@ -309,21 +309,17 @@ func (c *Client) CreateMediaItemStyledImage(mediaItemID, styledImageID string) e
 		return fmt.Errorf("failed to create media item styled image relationship: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("Directus API error: %s - %s", resp.Status(), string(resp.Body()))
-	}
-
 	return nil
 }
 
 // CreateMediaItem creates a new media item in Directus
 func (c *Client) CreateMediaItem(mediaItem MediaItemCreate) (*MediaItem, error) {
-	endpoint := fmt.Sprintf("%s/items/mediaitems", c.BaseURL)
+	endpoint := "/items/mediaitems"
 	result := &struct {
 		Data MediaItem `json:"data"`
 	}{}
 
-	resp, err := c.client.R().
+	_, err := c.client.R().
 		SetResult(result).
 		SetBody(mediaItem).
 		Post(endpoint)
@@ -332,21 +328,17 @@ func (c *Client) CreateMediaItem(mediaItem MediaItemCreate) (*MediaItem, error) 
 		return nil, fmt.Errorf("failed to create media item: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return nil, fmt.Errorf("Directus API error: %s - %s", resp.Status(), string(resp.Body()))
-	}
-
 	return &result.Data, nil
 }
 
 // GetTagByCode finds a tag by its code
 func (c *Client) GetTagByCode(code string) (*Tag, error) {
-	endpoint := fmt.Sprintf("%s/items/tags", c.BaseURL)
+	endpoint := "/items/tags"
 	result := &struct {
 		Data []Tag `json:"data"`
 	}{}
 
-	resp, err := c.client.R().
+	_, err := c.client.R().
 		SetQueryParams(map[string]string{
 			"filter[code][_eq]": code,
 			"limit":             "1",
@@ -358,10 +350,6 @@ func (c *Client) GetTagByCode(code string) (*Tag, error) {
 		return nil, fmt.Errorf("failed to fetch tag: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return nil, fmt.Errorf("Directus API error: %s", resp.Status())
-	}
-
 	if len(result.Data) == 0 {
 		return nil, nil
 	}
@@ -371,7 +359,7 @@ func (c *Client) GetTagByCode(code string) (*Tag, error) {
 
 // CreateMediaItemTag creates a relationship between a media item and a tag
 func (c *Client) CreateMediaItemTag(mediaItemID, tagID string) (*MediaItemTag, error) {
-	endpoint := fmt.Sprintf("%s/items/mediaitems_tags", c.BaseURL)
+	endpoint := "/items/mediaitems_tags"
 	result := &struct {
 		Data MediaItemTag `json:"data"`
 	}{}
@@ -381,7 +369,7 @@ func (c *Client) CreateMediaItemTag(mediaItemID, tagID string) (*MediaItemTag, e
 		"tags_id":       tagID,
 	}
 
-	resp, err := c.client.R().
+	_, err := c.client.R().
 		SetResult(result).
 		SetBody(tagData).
 		Post(endpoint)
@@ -390,15 +378,11 @@ func (c *Client) CreateMediaItemTag(mediaItemID, tagID string) (*MediaItemTag, e
 		return nil, fmt.Errorf("failed to create media item tag: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return nil, fmt.Errorf("Directus API error: %s - %s", resp.Status(), resp.String())
-	}
-
 	return &result.Data, nil
 }
 
 func (c *Client) CreateTag(code, name string) (*Tag, error) {
-	endpoint := fmt.Sprintf("%s/items/tags", c.BaseURL)
+	endpoint := "/items/tags"
 	result := &struct {
 		Data Tag `json:"data"`
 	}{}
@@ -408,17 +392,13 @@ func (c *Client) CreateTag(code, name string) (*Tag, error) {
 		"name": name,
 	}
 
-	resp, err := c.client.R().
+	_, err := c.client.R().
 		SetResult(result).
 		SetBody(tagData).
 		Post(endpoint)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create tag: %w", err)
-	}
-
-	if resp.StatusCode() != 200 {
-		return nil, fmt.Errorf("Directus API error: %s - %s", resp.Status(), resp.String())
 	}
 
 	return &result.Data, nil
@@ -435,21 +415,17 @@ func (c *Client) UploadFile(directusFolderID string, filePath string) (*File, er
 		Data File `json:"data"`
 	}{}
 
-	resp, err := c.client.R().
+	_, err = c.client.R().
 		SetResult(result).
 		SetFileReader("file", filename, bytes.NewReader(fileBytes)).
 		SetMultipartFormData(map[string]string{
 			"type":   "image/jpeg",
 			"folder": directusFolderID,
 		}).
-		Post(fmt.Sprintf("%s/files", c.BaseURL))
+		Post("/files")
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file: %w", err)
-	}
-
-	if resp.StatusCode() != 200 {
-		return nil, fmt.Errorf("Directus API error: %s", resp.Status())
 	}
 
 	if result.Data.ID == "" {
