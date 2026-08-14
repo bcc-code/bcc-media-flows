@@ -252,12 +252,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	stopPreviewFunc()
 
-	// List Reaper files
-	reaperResult := &activities.ReaperResult{}
-	listReaperFilesParams := activities.ListReaperFilesParams{
-		SessionID: reaperSessionID,
-	}
-	err = wfutils.Execute(ctx, activities.Live.ListReaperFiles, &listReaperFilesParams).Get(ctx, reaperResult)
+	reaperResult, err := listReaperFiles(ctx, reaperSessionID, videoVXID)
 	if err != nil {
 		return err
 	}
@@ -320,9 +315,9 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 		}
 	}
 
-	wfutils.SendTelegramText(ctx, telegram.ChatOther, "🟩 Audio import finished")
-
 	if len(importAudioFuture) > 0 {
+		wfutils.SendTelegramText(ctx, telegram.ChatOther, "🟩 Audio import finished")
+
 		audioFiles, err := wfutils.Execute(ctx, activities.Vidispine.GetRelatedAudioFiles, videoVXID).Result(ctx)
 		if err != nil {
 			wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟥 Audio/video sync skipped for %s, failed to get related audio files: %v", videoVXID, err))
@@ -360,6 +355,31 @@ const (
 // alertState tracks whether we are currently in alert mode
 type alertState struct {
 	InAlert bool
+}
+
+// listReaperFiles returns the audio the reaper recorded alongside this video.
+//
+// An empty session id means the reaper never started — doIncremental reports that and
+// carries on, because the video ingest is worth finishing without the audio. There is
+// nothing to list in that case: the reaper answers a request for a session it does not
+// have with an error, or worse, with somebody else's recording. The result is empty, so
+// no audio is imported and the audio/video sync that follows it is skipped too.
+func listReaperFiles(ctx workflow.Context, sessionID, videoVXID string) (*activities.ReaperResult, error) {
+	if sessionID == "" {
+		wfutils.SendTelegramText(ctx, telegram.ChatOther,
+			fmt.Sprintf("🟧 No reaper session for %s, skipping the audio import. The video is unaffected.", videoVXID))
+		return &activities.ReaperResult{}, nil
+	}
+
+	result := &activities.ReaperResult{}
+	err := wfutils.Execute(ctx, activities.Live.ListReaperFiles, &activities.ListReaperFilesParams{
+		SessionID: sessionID,
+	}).Get(ctx, result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // CalculateRollingTransferRate returns the transfer rate (Mbps) over the last window, always using at least 4 samples if available.
