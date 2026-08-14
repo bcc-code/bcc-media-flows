@@ -36,13 +36,7 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 	logger.Info("Starting MergeExportData")
 	data := params.ExportData
 
-	var dataMergeInputs MergeInput
-	err := workflow.SideEffect(ctx, func(ctx workflow.Context) interface{} {
-		return exportDataToMergeInputs(data, params.TempDir, params.SubtitlesDir)
-	}).Get(&dataMergeInputs)
-	if err != nil {
-		return nil, err
-	}
+	dataMergeInputs := exportDataToMergeInputs(data, params.TempDir, params.SubtitlesDir)
 
 	mergeInput := dataMergeInputs.MergeInput
 	audioMergeInputs := dataMergeInputs.AudioMergeInputs
@@ -206,7 +200,11 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir p
 			})
 		}
 
-		for lan, af := range clip.AudioFiles {
+		// Sorted rather than ranged: this runs in workflow code now, and although
+		// each language accumulates into its own MergeInput, the checker cannot
+		// see that and neither can the next reader.
+		for _, lan := range wfutils.SortedKeys(clip.AudioFiles) {
+			af := clip.AudioFiles[lan]
 			if _, ok := audioMergeInputs[lan]; !ok {
 				audioMergeInputs[lan] = &common.MergeInput{
 					Title:     data.SafeTitle + "-" + lan,
@@ -224,7 +222,8 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir p
 			})
 		}
 
-		for lan, sf := range clip.SubtitleFiles {
+		for _, lan := range wfutils.SortedKeys(clip.SubtitleFiles) {
+			sf := clip.SubtitleFiles[lan]
 			if _, ok := subtitleMergeInputs[lan]; !ok {
 				subtitleMergeInputs[lan] = &common.MergeInput{
 					Title:     data.SafeTitle + "-" + lan,
