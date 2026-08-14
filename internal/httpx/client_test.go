@@ -41,8 +41,8 @@ func TestNew_NonSuccessStatusIsAnError(t *testing.T) {
 	assert.Empty(t, result.Name)
 }
 
-// A body resty will not unmarshal — an HTML page from a proxy — is the case that
-// caught cantemo out, so it is the case worth pinning here.
+// A body resty will not unmarshal — an HTML page from a proxy — is the case a
+// JSON-shaped check misses.
 func TestNew_HTMLErrorBodyIsAnError(t *testing.T) {
 	client := serving(t, http.StatusBadGateway, "text/html", "<html>502 Bad Gateway</html>")
 
@@ -89,8 +89,8 @@ func TestNew_SuccessPassesThroughAndUnmarshals(t *testing.T) {
 	assert.Equal(t, "ok", result.Name)
 }
 
-// 201 and 204 are successes. The per-call checks this package replaces mostly compared
-// against 200 exactly, which made a correct Created read as a failure.
+// 201 and 204 are successes. A check that compares against 200 exactly makes a
+// correct Created read as a failure.
 func TestNew_CreatedAndNoContentAreNotErrors(t *testing.T) {
 	for _, status := range []int{http.StatusCreated, http.StatusNoContent} {
 		t.Run(http.StatusText(status), func(t *testing.T) {
@@ -154,8 +154,8 @@ func TestDescribeError_OverridesTheDefaultMessage(t *testing.T) {
 	assert.ErrorIs(t, err, sentinel)
 }
 
-// The error names the request, and subtrans authenticates with ?key=, so without
-// redaction every failed subtitle fetch would write that key into the workflow history.
+// The error names the request, and subtrans authenticates with ?key=, so redaction is
+// what keeps that key out of the Temporal workflow history.
 func TestNew_ErrorDoesNotLeakACredentialFromTheQueryString(t *testing.T) {
 	client := serving(t, http.StatusInternalServerError, "text/plain", "boom")
 

@@ -7,14 +7,46 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bcc-code/bcc-media-flows/common"
-	"github.com/bcc-code/bcc-media-flows/utils"
-
 	"github.com/go-resty/resty/v2"
 	"go.temporal.io/sdk/activity"
+
+	"github.com/bcc-code/bcc-media-flows/common"
+	"github.com/bcc-code/bcc-media-flows/internal/httpx"
+	"github.com/bcc-code/bcc-media-flows/utils"
 )
 
 const BaseUrl = "http://10.12.128.44:8888"
+
+// serviceName names the transcription service in the errors this package returns.
+const serviceName = "transcribe"
+
+// pollInterval is how often DoTranscribe asks the service whether the job is done.
+// A var so the tests can drive the loop without waiting ten seconds a turn.
+var pollInterval = 10 * time.Second
+
+// retries cover a connection that drops, not a service that answers with a failure —
+// an answered error is not retried. The waits are durations, so they have to be
+// written with a unit: bare numbers are nanoseconds, which is no backoff at all.
+const (
+	retryCount   = 3
+	retryWait    = 10 * time.Second
+	retryMaxWait = 30 * time.Second
+)
+
+// baseURL is where the requests go. A var so the tests can point them at a stub
+// server; production reads BaseUrl and nothing reassigns it.
+var baseURL = BaseUrl
+
+// newClient builds the client every call in this package uses.
+func newClient() *resty.Client {
+	return httpx.New(httpx.Config{
+		Service:      serviceName,
+		BaseURL:      baseURL,
+		RetryCount:   retryCount,
+		RetryWait:    retryWait,
+		RetryMaxWait: retryMaxWait,
+	})
+}
 
 var (
 	errNoInputFile = fmt.Errorf("no input file")
@@ -44,32 +76,6 @@ type TranscribeJob struct {
 	Model        string `json:"model"`
 	Duration     string `json:"duration"`
 	Priority     int    `json:"priority"`
-}
-
-func DebugResponse(resp *resty.Response) {
-	fmt.Println("Response Info:")
-	fmt.Println("  Status Code:", resp.StatusCode())
-	fmt.Println("  Status     :", resp.Status())
-	fmt.Println("  Proto      :", resp.Proto())
-	fmt.Println("  Time       :", resp.Time())
-	fmt.Println("  Received At:", resp.ReceivedAt())
-	fmt.Println("  Body       :\n", resp)
-	fmt.Println()
-
-	fmt.Println("Request Trace Info:")
-	ti := resp.Request.TraceInfo()
-	fmt.Println("  DNSLookup     :", ti.DNSLookup)
-	fmt.Println("  ConnTime      :", ti.ConnTime)
-	fmt.Println("  TCPConnTime   :", ti.TCPConnTime)
-	fmt.Println("  TLSHandshake  :", ti.TLSHandshake)
-	fmt.Println("  ServerTime    :", ti.ServerTime)
-	fmt.Println("  ResponseTime  :", ti.ResponseTime)
-	fmt.Println("  TotalTime     :", ti.TotalTime)
-	fmt.Println("  IsConnReused  :", ti.IsConnReused)
-	fmt.Println("  IsConnWasIdle :", ti.IsConnWasIdle)
-	fmt.Println("  ConnIdleTime  :", ti.ConnIdleTime)
-	fmt.Println("  RequestAttempt:", ti.RequestAttempt)
-	fmt.Println("  RemoteAddr    :", ti.RemoteAddr.String())
 }
 
 var whisperSupportedLanguages = map[string]bool{
@@ -205,15 +211,12 @@ func DoTranscribe(
 		return nil, errNoOutput
 	}
 
-	restyClient := resty.New()
-	restyClient.Debug = true
-	restyClient.RetryCount = 3
-	restyClient.RetryWaitTime = 10
-	restyClient.RetryMaxWaitTime = 30
+	client := newClient()
 
 	language = normalizeTranscriptionLanguage(language)
 
-	resp, err := restyClient.R().EnableTrace().
+	resp, err := client.R().
+		SetContext(ctx).
 		SetBody(TranscribeInput{
 			Path:       inputFile,
 			Language:   language,
@@ -221,33 +224,52 @@ func DoTranscribe(
 			OutputPath: outputFolder,
 		}).
 		SetResult(&TranscribeJob{}).
-		Post(fmt.Sprintf("%s/transcription/job", BaseUrl))
+		Post("/transcription/job")
 
 	if err != nil {
 		return nil, err
 	}
 
 	job := resp.Result().(*TranscribeJob)
+	if job.ID == "" {
+		// A 2xx with no id is not a started job, and polling for "" below would ask
+		// the service about a job that does not exist for as long as the activity is
+		// allowed to run.
+		return nil, fmt.Errorf("transcription service accepted the job but returned no id")
+	}
 
 	// Periodically check the status of the job
 	for {
-		activity.RecordHeartbeat(ctx)
-		resp, err := restyClient.R().EnableTrace().
+		// Guarded because RecordHeartbeat panics outside an activity: this is a plain
+		// function taking a context, and a caller that is not an activity — a test, a
+		// backfill — should not have to be one to use it.
+		if activity.IsActivity(ctx) {
+			activity.RecordHeartbeat(ctx)
+		}
+
+		resp, err := client.R().
+			SetContext(ctx).
 			SetResult(&TranscribeJob{}).
-			Get(fmt.Sprintf("%s/transcription/job/%s", BaseUrl, job.ID))
+			Get("/transcription/job/" + job.ID)
 
 		if err != nil {
+			// Including a 404: the job is gone, and polling on cannot bring it back.
 			return nil, err
 		}
 
-		job := resp.Result().(*TranscribeJob)
-		switch job.Status {
+		status := resp.Result().(*TranscribeJob)
+		switch status.Status {
 		case "COMPLETED":
-			return job, nil
+			return status, nil
 		case "FAILED":
-			return job, fmt.Errorf("job failed")
+			return status, fmt.Errorf("transcription job %s failed", job.ID)
 		}
-		time.Sleep(10 * time.Second)
+
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(pollInterval):
+		}
 	}
 }
 

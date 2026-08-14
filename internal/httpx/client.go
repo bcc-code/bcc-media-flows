@@ -58,6 +58,12 @@ type Config struct {
 	// out. Prefer a Timeout long enough that a working call finishes.
 	RetryCount int
 
+	// RetryWait and RetryMaxWait bound the backoff between attempts. Both are
+	// durations, so a bare number is nanoseconds and gives no backoff at all — write
+	// them as `10 * time.Second`. Zero leaves resty's defaults in place.
+	RetryWait    time.Duration
+	RetryMaxWait time.Duration
+
 	// Headers are set on every request.
 	Headers map[string]string
 
@@ -95,6 +101,12 @@ func New(cfg Config) *resty.Client {
 
 	if cfg.RetryCount > 0 {
 		client.SetRetryCount(cfg.RetryCount)
+	}
+	if cfg.RetryWait > 0 {
+		client.SetRetryWaitTime(cfg.RetryWait)
+	}
+	if cfg.RetryMaxWait > 0 {
+		client.SetRetryMaxWaitTime(cfg.RetryMaxWait)
 	}
 
 	for name, value := range cfg.Headers {
