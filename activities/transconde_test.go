@@ -3,7 +3,6 @@ package activities
 import (
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
-	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.temporal.io/sdk/testsuite"
@@ -38,7 +37,7 @@ func (s *TranscodeTestSuite) TestAThing() {
 				Path:  paths.MustParse(testFilePath),
 				Start: 0,
 				End:   3,
-				Streams: []vidispine.AudioStream{
+				Streams: []common.AudioStream{
 					{
 						StreamID:  2,
 						ChannelID: 16,

@@ -12,6 +12,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/stretchr/testify/assert"
 )
@@ -40,7 +41,7 @@ func Test_GetChapterMetaForClips_Overlapping(t *testing.T) {
 				AudioFiles: map[string]*AudioFile{
 					"nor": {
 						VXID: "VX-489605",
-						Streams: []AudioStream{
+						Streams: []common.AudioStream{
 							{
 								StreamID:  0,
 								ChannelID: 0,
@@ -64,7 +65,7 @@ func Test_GetChapterMetaForClips_Overlapping(t *testing.T) {
 				AudioFiles: map[string]*AudioFile{
 					"nor": {
 						VXID: "VX-489605",
-						Streams: []AudioStream{
+						Streams: []common.AudioStream{
 							{
 								StreamID:  0,
 								ChannelID: 0,
