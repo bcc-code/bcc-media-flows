@@ -9,7 +9,6 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 
-	"github.com/ansel1/merry/v2"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/orsinium-labs/enum"
@@ -159,8 +158,6 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		destinations = append(destinations, d)
 	}
 
-	var errs []error
-
 	shapes, err := wfutils.Execute(ctx, activities.Vidispine.GetShapes, avidispine.VXOnlyParam{
 		VXID: params.VXID,
 	}).Result(ctx)
@@ -274,26 +271,9 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		resultFutures = append(resultFutures, future)
 	}
 
-	var results []wfutils.ResultOrError[VBExportResult]
-	for _, future := range resultFutures {
-		var result *VBExportResult
-		err = future.Get(ctx, &result)
-		results = append(results, wfutils.ResultOrError[VBExportResult]{
-			Result: result,
-			Error:  err,
-		})
-		if err != nil {
-			errs = append(errs, err)
-			wfutils.SendTelegramText(ctx, telegram.ChatOslofjord, fmt.Sprintf("🟥 VB Export of %s failed: ```%s```", params.VXID, err.Error()))
-		}
-	}
-	err = nil
-	if len(errs) > 0 {
-		err = merry.New(strings.Join(lo.Map(errs, func(err error, _ int) string {
-			return err.Error()
-		}), "\n"))
-	}
-	return results, err
+	return wfutils.CollectChildResults[VBExportResult](ctx, resultFutures, func(err error) {
+		wfutils.SendTelegramText(ctx, telegram.ChatOslofjord, fmt.Sprintf("🟥 VB Export of %s failed: ```%s```", params.VXID, err.Error()))
+	})
 }
 
 func notifyExportDone(ctx workflow.Context, params VBExportChildWorkflowParams, destination Destination, tempExportPath paths.Path) {

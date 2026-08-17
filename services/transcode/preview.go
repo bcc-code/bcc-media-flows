@@ -97,12 +97,7 @@ func buildGrowingPreviewFilter(audioTracks int, trcPrefix string) string {
 }
 
 func prepareAudioPreview(isMU1, isMU2 bool, fileInfo *ffmpeg.FFProbeResult, inputFile, outputDir string) (*audioPreviewData, error) {
-	audioStreams := []ffmpeg.FFProbeStream{}
-	for _, stream := range fileInfo.Streams {
-		if stream.CodecType == "audio" {
-			audioStreams = append(audioStreams, stream)
-		}
-	}
+	audioStreams := fileInfo.AudioStreams()
 
 	fileMap := map[string]string{}
 	filterParts := []string{}
@@ -225,16 +220,9 @@ func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*Pre
 		return nil, err
 	}
 
-	var hasVideo, hasAudio bool
-	var audioTracks int
-	for _, stream := range info.Streams {
-		if stream.CodecType == "video" {
-			hasVideo = true
-		} else if stream.CodecType == "audio" {
-			hasAudio = true
-			audioTracks++
-		}
-	}
+	audioTracks := len(info.AudioStreams())
+	hasAudio := audioTracks > 0
+	hasVideo := len(info.VideoStreams()) > 0
 
 	var trcPrefix string
 	if trcFix := ffmpeg.NormalizeColorTRCFilter(ffmpeg.ProbeResultToInfo(info)); trcFix != "" {
@@ -341,11 +329,7 @@ func GrowingPreview(ctx context.Context, input GrowingPreviewInput, heartbeater 
 	if info, err := ffmpeg.ProbeFile(input.FilePath); err != nil {
 		fmt.Printf("growing preview: probe failed, falling back to filter without VU meters: %v\n", err)
 	} else {
-		for _, stream := range info.Streams {
-			if stream.CodecType == "audio" {
-				audioTracks++
-			}
-		}
+		audioTracks = len(info.AudioStreams())
 		if trcFix := ffmpeg.NormalizeColorTRCFilter(ffmpeg.ProbeResultToInfo(info)); trcFix != "" {
 			trcPrefix = trcFix + ","
 		}

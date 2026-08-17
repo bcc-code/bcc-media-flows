@@ -139,6 +139,18 @@ func GetWorkflowIsilonOutputFolder(ctx workflow.Context, root string) (paths.Pat
 	return path, CreateFolder(ctx, path)
 }
 
+// GetIsilonExportFolder is where a finished export is delivered for humans to pick
+// up, so it is named after the title rather than the run alone.
+func GetIsilonExportFolder(ctx workflow.Context, safeTitle string) paths.Path {
+	date := workflow.Now(ctx)
+	id := workflow.GetInfo(ctx).OriginalRunID
+
+	return paths.New(
+		paths.IsilonDrive,
+		filepath.Join("Export", date.Format("2006-01"), safeTitle+"-"+id),
+	)
+}
+
 func GetWorkflowMastersOutputFolder(ctx workflow.Context) (paths.Path, error) {
 	return GetWorkflowIsilonOutputFolder(ctx, "Production/masters")
 }

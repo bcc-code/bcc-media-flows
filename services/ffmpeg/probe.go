@@ -134,6 +134,15 @@ func (r *FFProbeResult) AudioStreams() []FFProbeStream {
 	})
 }
 
+func (r *FFProbeResult) VideoStreams() []FFProbeStream {
+	if r == nil {
+		return nil
+	}
+	return lo.Filter(r.Streams, func(s FFProbeStream, _ int) bool {
+		return s.CodecType == "video"
+	})
+}
+
 func doProbe(path string) (*FFProbeResult, error) {
 
 	cmd := exec.Command(

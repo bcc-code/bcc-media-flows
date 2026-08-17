@@ -7,7 +7,6 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/utils"
 
-	"github.com/ansel1/merry/v2"
 	avidispine "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
@@ -93,7 +92,6 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		destinations = append(destinations, d)
 	}
 
-	var errs []error
 	var data *vidispine.ExportData
 	err := wfutils.Execute(ctx, avidispine.Vidispine.GetExportDataActivity, avidispine.GetExportDataParams{
 		VXID:        params.VXID,
@@ -216,12 +214,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 				continue
 			}
 			childParams.Upload = false
-			date := workflow.Now(ctx)
-			id := workflow.GetInfo(ctx).OriginalRunID
-			childParams.OutputDir = paths.Path{
-				Drive: paths.IsilonDrive,
-				Path:  fmt.Sprintf("Export/%s/%s", date.Format("2006-01"), data.SafeTitle+"-"+id[0:8]),
-			}
+			childParams.OutputDir = wfutils.GetIsilonExportFolder(ctx, data.SafeTitle)
 			fallthrough
 		case AssetExportDestinationVOD:
 			w = VXExportToVOD
@@ -243,24 +236,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		resultFutures = append(resultFutures, future)
 	}
 
-	var results []wfutils.ResultOrError[VXExportResult]
-	for _, future := range resultFutures {
-		var result *VXExportResult
-		err = future.Get(ctx, &result)
-		results = append(results, wfutils.ResultOrError[VXExportResult]{
-			Result: result,
-			Error:  err,
-		})
-		if err != nil {
-			errs = append(errs, err)
-			wfutils.SendTelegramText(ctx, telegramChat, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
-		}
-	}
-	err = nil
-	if len(errs) > 0 {
-		err = merry.New(strings.Join(lo.Map(errs, func(err error, _ int) string {
-			return err.Error()
-		}), "\n"))
-	}
-	return results, err
+	return wfutils.CollectChildResults[VXExportResult](ctx, resultFutures, func(err error) {
+		wfutils.SendTelegramText(ctx, telegramChat, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
+	})
 }
