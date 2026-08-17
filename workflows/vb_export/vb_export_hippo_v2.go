@@ -3,8 +3,7 @@ package vb_export
 import (
 	"github.com/ansel1/merry/v2"
 	"github.com/bcc-code/bcc-media-flows/activities"
-	"github.com/bcc-code/bcc-media-flows/services/rclone"
-	"github.com/bcc-code/bcc-media-flows/services/telegram"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/transcode"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
@@ -19,7 +18,7 @@ Video: Various resolutions, 25p/50p, HAP Q codec with audio support
 Audio: Included in HAP output
 */
 func VBExportToHippoV2(ctx workflow.Context, params VBExportChildWorkflowParams) (*VBExportResult, error) {
-	return exportToHippoHAP(ctx, params, transcode.HAPFormatHAPQ, "hippo_v2")
+	return runVBExportChild(ctx, params, hippo(DestinationHippoV2, transcode.HAPFormatHAPQ))
 }
 
 /*
@@ -31,93 +30,56 @@ Video: Various resolutions, 25p/50p, HAP codec with audio support
 Audio: Included in HAP output
 */
 func VBExportToHippoHap(ctx workflow.Context, params VBExportChildWorkflowParams) (*VBExportResult, error) {
-	return exportToHippoHAP(ctx, params, transcode.HAPFormatHAP, "hippo_hap")
+	return runVBExportChild(ctx, params, hippo(DestinationHippoHap, transcode.HAPFormatHAP))
 }
 
-func exportToHippoHAP(ctx workflow.Context, params VBExportChildWorkflowParams, format transcode.HAPFormat, flowName string) (*VBExportResult, error) {
-	logger := workflow.GetLogger(ctx)
-	logger.Info("Starting VBExport to Hippo", "flow", flowName)
-
-	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
-
-	isImage, err := wfutils.IsImage(ctx, params.InputFile)
-	if err != nil {
-		return nil, err
+func hippo(destination Destination, format transcode.HAPFormat) vbExportDestination {
+	return vbExportDestination{
+		destination: destination,
+		imageAware:  true,
+		transcode:   transcodeToHAP(format),
+		image:       copyImageToOutputDir,
 	}
+}
 
-	destExt := params.InputFile.Ext()
-	if !isImage {
-		destExt = ".mov"
-	}
+func copyImageToOutputDir(ctx workflow.Context, params VBExportChildWorkflowParams, outputDir paths.Path) (paths.Path, error) {
+	outputFile := outputDir.Append(params.InputFile.Base())
+	_ = wfutils.CopyFile(ctx, params.InputFile, outputFile)
+	return outputFile, nil
+}
 
-	extraFileName := ""
-	if params.SubtitleFile != nil && !isImage {
-		extraFileName = "_SUB_NOR"
-	}
-
-	rcloneDestination := deliveryFolder.Append("Hippo", params.OriginalFilenameWithoutExt+extraFileName+destExt)
-
-	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
-	if err != nil {
-		return nil, err
-	}
-
-	hippoOutputDir := params.TempDir.Append(flowName + "_output")
-	err = wfutils.CreateFolder(ctx, hippoOutputDir)
-	if err != nil {
-		return nil, err
-	}
-
-	outputFile := hippoOutputDir.Append(params.InputFile.Base())
-
-	if !isImage {
-		outputFile = hippoOutputDir.Append(params.InputFile.SetExt("mov").Base())
-
+func transcodeToHAP(format transcode.HAPFormat) transcodeFunc {
+	return func(ctx workflow.Context, params VBExportChildWorkflowParams, outputDir paths.Path) (paths.Path, error) {
 		if params.AnalyzeResult.FrameRate != 25 && params.AnalyzeResult.FrameRate != 50 {
-			return nil, merry.New("Expected 25 or 50 fps input")
+			return paths.Path{}, merry.New("Expected 25 or 50 fps input")
 		}
 
 		currentVideoFile := params.InputFile
 		if params.SubtitleFile != nil {
-			// Burn in subtitle first
 			videoResult, err := wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
 				FilePath:       currentVideoFile,
-				OutputDir:      hippoOutputDir,
+				OutputDir:      outputDir,
 				Interlace:      false,
 				BurnInSubtitle: params.SubtitleFile,
 				SubtitleStyle:  params.SubtitleStyle,
 				Alpha:          params.AnalyzeResult.HasAlpha,
 			}).Result(ctx)
 			if err != nil {
-				return nil, err
+				return paths.Path{}, err
 			}
 			currentVideoFile = videoResult.OutputPath
 		}
 
 		hapResult, err := wfutils.Execute(ctx, activities.Video.TranscodeToHAPActivity, activities.HAPInput{
 			FilePath:  currentVideoFile,
-			OutputDir: hippoOutputDir,
+			OutputDir: outputDir,
 			Format:    format,
 		}).Result(ctx)
 		if err != nil {
-			return nil, err
+			return paths.Path{}, err
 		}
 
-		outputFile = hapResult.OutputPath
-	} else {
-		_ = wfutils.CopyFile(ctx, params.InputFile, outputFile)
+		// The HAP export file is deliberately left in temp storage.
+		return hapResult.OutputPath, nil
 	}
-
-	err = wfutils.RcloneCopyFileWithNotifications(ctx, outputFile, rcloneDestination, rclone.PriorityHigh, rcloneNotificationOptions)
-	if err != nil {
-		return nil, err
-	}
-
-	// Intentionally keep the HAP export file in temp storage; it is not deleted after upload.
-
-	notifyExportDone(ctx, params, flowName, outputFile)
-
-	return &VBExportResult{
-		ID: params.ParentParams.VXID,
-	}, nil
 }

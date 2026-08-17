@@ -15,13 +15,13 @@ import (
 )
 
 func VBExportToDubbing(ctx workflow.Context, params VBExportChildWorkflowParams) (*VBExportResult, error) {
-	deliveryFolder := deliveryFolder.Append("Reaper-Wav", params.OriginalFilenameWithoutExt)
+	deliveryFolder := deliveryFolder.Append(DestinationDubbing.DeliveryFolder(), params.OriginalFilenameWithoutExt)
 
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting ExportToAbekas")
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	dubbingOutputDir := params.TempDir.Append("dubbing_output")
+	dubbingOutputDir := params.TempDir.Append(DestinationDubbing.OutputDirName())
 	err := wfutils.CreateFolder(ctx, dubbingOutputDir)
 	if err != nil {
 		return nil, err

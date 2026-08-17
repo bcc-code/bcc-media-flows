@@ -32,7 +32,7 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	abekasOutputDir := params.TempDir.Append("abekas_output")
+	abekasOutputDir := params.TempDir.Append(DestinationAbekas.OutputDirName())
 	err := wfutils.CreateFolder(ctx, abekasOutputDir)
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 	}
 
 	if analyzeResult.HasAlpha {
-		rcloneDestination := deliveryFolder.Append("Abekas-AVCI", params.InputFile.Base())
+		rcloneDestination := deliveryFolder.Append(DestinationAbekas.DeliveryFolder(), params.InputFile.Base())
 
 		err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
 		if err != nil {
@@ -75,7 +75,7 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 			return nil, err
 		}
 
-		notifyExportDone(ctx, params, "abekas", params.InputFile)
+		notifyExportDone(ctx, params, DestinationAbekas, params.InputFile)
 		return &VBExportResult{
 			ID:    params.ParentParams.VXID,
 			Title: params.OriginalFilenameWithoutExt,
@@ -87,7 +87,7 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		extraFileName += "_SUB_NOR"
 	}
 
-	rcloneDestination := deliveryFolder.Append("Abekas-AVCI", params.OriginalFilenameWithoutExt+extraFileName+".mxf")
+	rcloneDestination := deliveryFolder.Append(DestinationAbekas.DeliveryFolder(), params.OriginalFilenameWithoutExt+extraFileName+".mxf")
 
 	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
 	if err != nil {
@@ -132,7 +132,7 @@ func VBExportToAbekas(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		return nil, err
 	}
 
-	notifyExportDone(ctx, params, "abekas", videoResult.OutputPath)
+	notifyExportDone(ctx, params, DestinationAbekas, videoResult.OutputPath)
 
 	return &VBExportResult{
 		ID: params.ParentParams.VXID,
@@ -174,7 +174,7 @@ func VBExportToAbekasAudioOnly(ctx workflow.Context, params VBExportChildWorkflo
 		return nil, err
 	}
 
-	notifyExportDone(ctx, params, "abekas", audioRes.OutputPath)
+	notifyExportDone(ctx, params, DestinationAbekas, audioRes.OutputPath)
 
 	return &VBExportResult{
 		ID: params.ParentParams.VXID,
