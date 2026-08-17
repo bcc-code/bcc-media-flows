@@ -12,7 +12,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/internal/httpx"
 )
 
-// serviceName names Directus in the errors this client returns.
 const serviceName = "directus"
 
 type Client struct {
@@ -21,10 +20,8 @@ type Client struct {
 	client  *resty.Client
 }
 
-// uploadTimeout has to cover UploadFile, which posts a poster or thumbnail as
-// multipart form data. The rest of this client exchanges small JSON documents and
-// would be happy with the shared default; one client-wide timeout that fits the
-// slowest call is simpler than a per-request one, and nothing here polls.
+// uploadTimeout has to cover UploadFile posting a poster or thumbnail as multipart
+// form data; every other call here exchanges small JSON documents.
 const uploadTimeout = 5 * time.Minute
 
 func NewClient(baseURL, apiKey string) *Client {

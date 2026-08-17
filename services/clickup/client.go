@@ -9,7 +9,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/internal/httpx"
 )
 
-// serviceName names ClickUp in the errors this client returns.
 const serviceName = "clickup"
 
 // Defaults for the public "Shorts Export" view. These are deliberately

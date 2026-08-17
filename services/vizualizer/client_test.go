@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// decodeJSON reads a request body into target.
 func decodeJSON(r *http.Request, target any) error {
 	defer func() { _ = r.Body.Close() }()
 	return json.NewDecoder(r.Body).Decode(target)
@@ -39,9 +38,6 @@ func TestNewClient_RequiresABaseURL(t *testing.T) {
 	assert.Nil(t, client)
 }
 
-// GetJob is polled by VisualizeAudioActivity every few seconds until the job reports
-// done. A failure has to be an error rather than a zero-valued status, or the activity
-// polls a job that is not there until its timeout.
 func TestGetJob_ServerErrorIsAnError(t *testing.T) {
 	client := vizServer(t, http.StatusInternalServerError, "application/json", `{"error":"boom"}`)
 
@@ -109,8 +105,6 @@ func TestGetJob_RequestsTheJobPath(t *testing.T) {
 	assert.Equal(t, "/api/status/job-1", path)
 }
 
-// A failed create must not return a response with an empty JobID: the caller would
-// then poll for a job that was never started.
 func TestCreateVisualization_ServerErrorIsAnError(t *testing.T) {
 	client := vizServer(t, http.StatusBadRequest, "application/json", `{"message":"bad audio path"}`)
 
@@ -120,7 +114,6 @@ func TestCreateVisualization_ServerErrorIsAnError(t *testing.T) {
 	assert.Nil(t, created)
 }
 
-// 202 Accepted is a plausible answer to "start this job", and it is a success.
 func TestCreateVisualization_AcceptedIsASuccess(t *testing.T) {
 	client := vizServer(t, http.StatusAccepted, "application/json",
 		`{"job_id":"job-1","status":"queued"}`)
@@ -196,9 +189,6 @@ func TestHealth(t *testing.T) {
 	})
 }
 
-// VisualizeAudioActivity polls this for as long as a visualization takes, so a
-// visualizer that accepts the connection and then stops answering has to fail the
-// poll rather than hold it open for the rest of the activity.
 func TestClient_HasATimeout(t *testing.T) {
 	client, err := NewClient("http://vizualizer.example")
 	require.NoError(t, err)

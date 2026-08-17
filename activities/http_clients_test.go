@@ -10,8 +10,6 @@ import (
 	"go.temporal.io/sdk/testsuite"
 )
 
-// shortsServer points the shorts activities at a stub for the duration of one test.
-// shortServiceURL is read at package-var time, so the var is what has to be swapped.
 func shortsServer(t *testing.T, handler http.HandlerFunc) {
 	t.Helper()
 
@@ -23,8 +21,6 @@ func shortsServer(t *testing.T, handler http.HandlerFunc) {
 	t.Cleanup(func() { shortServiceURL = previous })
 }
 
-// activityEnv runs these activities the way the worker does, which they need: both
-// record a heartbeat, and RecordHeartbeat panics outside an activity context.
 func activityEnv(t *testing.T) *testsuite.TestActivityEnvironment {
 	t.Helper()
 
@@ -32,7 +28,6 @@ func activityEnv(t *testing.T) *testsuite.TestActivityEnvironment {
 	return suite.NewTestActivityEnvironment()
 }
 
-// A failed submit fails, with the service and the status in the message.
 func TestSubmitShortJobActivity_ServerErrorIsAnError(t *testing.T) {
 	shortsServer(t, func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -69,8 +64,6 @@ func TestSubmitShortJobActivity_AcceptedReturnsTheJobID(t *testing.T) {
 	assert.Equal(t, "job-1", result.JobID)
 }
 
-// Any 2xx carrying a job id is a started job. What is not acceptable is a success
-// with nothing to poll.
 func TestSubmitShortJobActivity_SuccessWithoutAJobIDIsAnError(t *testing.T) {
 	shortsServer(t, func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -111,8 +104,6 @@ func TestCheckJobStatusActivity_SuccessParsesTheKeyframes(t *testing.T) {
 	assert.Equal(t, 100, result.Keyframes[0].W)
 }
 
-// GenerateShort polls this every five seconds. A 404 — a job the service does not
-// have — has to fail rather than come back as a status of "".
 func TestCheckJobStatusActivity_NotFoundIsAnError(t *testing.T) {
 	shortsServer(t, func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
@@ -152,8 +143,6 @@ func TestGetAudioDiff_ConvertsSecondsToMilliseconds(t *testing.T) {
 	assert.Equal(t, 1234, result.Difference)
 }
 
-// The sync service answering with an error must not read as an offset of zero, which
-// is a legitimate answer meaning the two files are already aligned.
 func TestGetAudioDiff_ServerErrorIsNotAZeroOffset(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -201,8 +190,6 @@ func TestGetAudioDiff_SendsBothFiles(t *testing.T) {
 	assert.Contains(t, body, `"target_file":"/mnt/target.wav"`)
 }
 
-// A service that accepts the connection and then stops answering has to fail the
-// request rather than hold the activity open.
 func TestServiceClientsHaveTimeouts(t *testing.T) {
 	assert.Positive(t, shortServiceClient().GetClient().Timeout)
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/internal/httpx"
 )
 
-// serviceName names the visualizer in the errors this client returns.
 const serviceName = "vizualizer"
 
 // Client is a lightweight REST client for the Music Vizualizer service.

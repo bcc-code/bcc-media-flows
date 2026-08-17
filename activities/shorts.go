@@ -17,8 +17,7 @@ import (
 
 var shortServiceURL = os.Getenv("SHORTS_SERVICE_URL")
 
-// shortServiceClient talks to the shorts service. It is built per call rather than
-// once, because shortServiceURL is read at package-var time and the tests set it.
+// shortServiceClient is built per call because the tests swap shortServiceURL.
 func shortServiceClient() *resty.Client {
 	return httpx.New(httpx.Config{
 		Service: "shorts service",
@@ -75,8 +74,6 @@ func (ua UtilActivities) SubmitShortJobActivity(ctx context.Context, params Subm
 	}
 
 	if result.JobID == "" {
-		// What matters is having a job id to poll: without one GenerateShort polls
-		// "" until it gives up two hours later.
 		return nil, fmt.Errorf("shorts service accepted the job but returned no job id")
 	}
 

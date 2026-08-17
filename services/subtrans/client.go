@@ -10,7 +10,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/internal/httpx"
 )
 
-// serviceName names Subtrans in the errors this client returns.
 const serviceName = "subtrans"
 
 type Client struct {
@@ -26,9 +25,8 @@ func NewClient(baseURL string, apiKey string) *Client {
 		Headers: map[string]string{"accept": "application/json"},
 	})
 
-	// The key authenticates every request. Holding it on the client keeps it a query
-	// parameter rather than part of a path, which is where the error redaction looks
-	// for it before a URL reaches a workflow history.
+	// Keep the key a query parameter rather than part of a path: that is where
+	// httpx.RedactURL looks for it before a URL reaches a workflow history.
 	client.SetQueryParam("key", apiKey)
 
 	return &Client{
@@ -48,9 +46,7 @@ func (c *Client) SearchByName(name string) ([]*SubtransResult, error) {
 		SetResult(&res).
 		Get("/api/external/story/files/" + name)
 	if err != nil {
-		// Not the empty slice: the caller reads that as "no subtitles exist for this
-		// file", which for GetOrCreateSubtransID means either failing the ingest as
-		// non-retryable or continuing without subtitles.
+		// Not the empty slice: callers read that as "this file has no subtitles".
 		return nil, err
 	}
 
@@ -111,8 +107,8 @@ func (c *Client) GetSubtitles(id string, format string, approvedOnly bool) (map[
 			SetQueryParam("onlyApproved", fmt.Sprintf("%t", approvedOnly)).
 			Get(url)
 		if err != nil {
-			// The body of a failed response must not reach the map:
-			// GetSubtitlesActivity writes every value of it straight to a .srt.
+			// GetSubtitlesActivity writes every value of the map straight to a .srt,
+			// so the body of a failed response must not reach it.
 			return nil, err
 		}
 

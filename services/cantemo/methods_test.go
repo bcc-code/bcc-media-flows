@@ -11,8 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// routedServer answers each path prefix with its own body, so the methods that make
-// more than one request can be driven end to end.
 func routedServer(t *testing.T, bodyByPrefix map[string]string) (*Client, *[]string) {
 	t.Helper()
 
@@ -56,7 +54,6 @@ func TestGetFormats_ServerErrorIsAnError(t *testing.T) {
 	assert.Nil(t, formats)
 }
 
-// GetTranscriptionJSON looks the format up first and then follows its download URI.
 func TestGetTranscriptionJSON_FollowsTheDownloadURI(t *testing.T) {
 	client, requested := routedServer(t, map[string]string{
 		"/API/v2/items/VX-1/formats/": `{"formats":[{"name":"transcription_json","download_uri":"/dl/transcript"}]}`,
@@ -71,7 +68,6 @@ func TestGetTranscriptionJSON_FollowsTheDownloadURI(t *testing.T) {
 	assert.Contains(t, *requested, "GET /dl/transcript")
 }
 
-// An item with no transcription format is not a failure — it has no transcription.
 func TestGetTranscriptionJSON_NoTranscriptionFormatIsEmptyNotAnError(t *testing.T) {
 	client, _ := routedServer(t, map[string]string{
 		"/API/v2/items/VX-1/formats/": `{"formats":[{"name":"lowres","download_uri":"/dl/lowres"}]}`,
@@ -84,8 +80,6 @@ func TestGetTranscriptionJSON_NoTranscriptionFormatIsEmptyNotAnError(t *testing.
 	assert.Empty(t, transcription.Text)
 }
 
-// A failure on the download must not read as "this item has no transcription", which
-// is what an empty Transcription means to the caller.
 func TestGetTranscriptionJSON_DownloadFailureIsAnError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -168,8 +162,6 @@ func TestGetLookupChoices_MapsKeysToValues(t *testing.T) {
 	assert.Equal(t, map[string]string{"k1": "Human One", "k2": "Human Two"}, choices)
 }
 
-// A truncated choice list is reported, because the caller would otherwise publish raw
-// machine keys for the choices that did not fit.
 func TestGetLookupChoices_MoreChoicesExistIsAnError(t *testing.T) {
 	client := cantemoServer(t, http.StatusOK, "application/json",
 		`{"choices":[{"key":"k1","value":"Human One"}],"more_choices_exist":true}`)
@@ -192,8 +184,6 @@ func TestGetFiles_ParsesTheTimestamps(t *testing.T) {
 	assert.Equal(t, 44, result.Objects[0].Timestamp.Minute())
 }
 
-// A timestamp Cantemo formats differently is a parse failure, not a zero time
-// standing in for one.
 func TestGetFiles_UnparseableTimestampIsAnError(t *testing.T) {
 	client := cantemoServer(t, http.StatusOK, "application/json",
 		`{"objects":[{"name":"a.mxf","timestamp":"yesterday"}]}`)
@@ -265,8 +255,6 @@ func TestMoveFileAndRenameFile(t *testing.T) {
 	}
 }
 
-// A failed move must not return an empty task id with no error: the caller polls that
-// id, and an empty one reads as a task that finished.
 func TestMoveFile_ServerErrorIsAnError(t *testing.T) {
 	client := cantemoServer(t, http.StatusInternalServerError, "text/plain", "boom")
 
@@ -288,8 +276,6 @@ func TestGetTask(t *testing.T) {
 		assert.Equal(t, "FINISHED", task.State)
 	})
 
-	// The move workflows poll this until the state is finished, so a zero-valued Task
-	// with no error is polled forever or read as a task in an unknown state.
 	t.Run("failure", func(t *testing.T) {
 		client := cantemoServer(t, http.StatusInternalServerError, "text/plain", "boom")
 
@@ -314,7 +300,6 @@ func TestGetACL(t *testing.T) {
 		assert.Equal(t, 1, acl.Total)
 	})
 
-	// An empty ACL list means "nobody has access", so a failure must not produce one.
 	t.Run("failure", func(t *testing.T) {
 		client := cantemoServer(t, http.StatusForbidden, "application/json",
 			`{"detail":"You do not have permission"}`)

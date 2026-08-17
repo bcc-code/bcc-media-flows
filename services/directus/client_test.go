@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// directusServer answers every request the same way.
 func directusServer(t *testing.T, status int, body string) *Client {
 	t.Helper()
 
@@ -25,7 +24,6 @@ func directusServer(t *testing.T, status int, body string) *Client {
 	return NewClient(server.URL, "test-api-key")
 }
 
-// recordingServer captures the request each method makes and answers with body.
 func recordingServer(t *testing.T, body string) (*Client, *http.Request) {
 	t.Helper()
 
@@ -40,8 +38,6 @@ func recordingServer(t *testing.T, body string) (*Client, *http.Request) {
 	return NewClient(server.URL, "test-api-key"), captured
 }
 
-// The client decides on the status for every method, so a method added later is safe
-// without its author writing a check. These cases pin that, one per method.
 func TestClient_ServerErrorsAreErrors(t *testing.T) {
 	tests := []struct {
 		name string
@@ -71,7 +67,6 @@ func TestClient_ServerErrorsAreErrors(t *testing.T) {
 	}
 }
 
-// An HTML error page from a proxy is the case a JSON-shaped check would miss.
 func TestClient_HTMLErrorBodyIsAnError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
@@ -87,9 +82,6 @@ func TestClient_HTMLErrorBodyIsAnError(t *testing.T) {
 	assert.Nil(t, asset)
 }
 
-// 201 Created is what a REST API is entitled to answer a POST with, and it means the
-// item exists. Reporting that as a failure invites a retry, which is how duplicates
-// get made.
 func TestClient_CreatedIsASuccess(t *testing.T) {
 	client := directusServer(t, http.StatusCreated, `{"data":{"id":"tag-1","code":"c","name":"n"}}`)
 
@@ -100,7 +92,6 @@ func TestClient_CreatedIsASuccess(t *testing.T) {
 	assert.Equal(t, "tag-1", tag.ID)
 }
 
-// A genuinely absent asset is not an error: the caller creates one.
 func TestGetAssetByMediabankenID_EmptyResultIsNotAnError(t *testing.T) {
 	client := directusServer(t, http.StatusOK, `{"data":[]}`)
 
@@ -141,8 +132,6 @@ func TestAssetExists(t *testing.T) {
 	})
 }
 
-// The paths are relative to the client's base URL, so one of each verb is checked
-// against the full path the service actually receives.
 func TestClient_RequestsLandOnTheExpectedPaths(t *testing.T) {
 	t.Run("GET carries its filter", func(t *testing.T) {
 		client, captured := recordingServer(t, `{"data":[]}`)
@@ -175,7 +164,6 @@ func TestClient_SendsTheBearerToken(t *testing.T) {
 	assert.Equal(t, "Bearer test-api-key", captured.Header.Get("Authorization"))
 }
 
-// CreateStyledImage validates its style before making a request.
 func TestCreateStyledImage_RejectsAnUnknownStyleWithoutCallingDirectus(t *testing.T) {
 	calls := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -192,8 +180,6 @@ func TestCreateStyledImage_RejectsAnUnknownStyleWithoutCallingDirectus(t *testin
 	assert.Zero(t, calls)
 }
 
-// A 200 whose body carries no id is not a created image, and the caller would otherwise
-// go on to reference an empty id.
 func TestCreateStyledImage_MissingIDIsAnError(t *testing.T) {
 	client := directusServer(t, http.StatusOK, `{"data":{}}`)
 
@@ -242,8 +228,6 @@ func TestUploadFile_SendsTheFileAndParsesTheResult(t *testing.T) {
 	assert.Equal(t, "folder-1", folder)
 }
 
-// The upload is the slowest thing this client does, so the timeout has to outlast it
-// rather than the small JSON calls around it.
 func TestClient_TimeoutCoversTheUpload(t *testing.T) {
 	client := NewClient("http://directus.example", "test-api-key")
 

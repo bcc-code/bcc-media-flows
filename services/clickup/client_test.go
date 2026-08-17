@@ -12,8 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// viewPage is one page of the view-load response: the field definitions and a batch of
-// task IDs.
 func viewPage(lastPage bool, taskIDs ...string) string {
 	ids, _ := json.Marshal(taskIDs)
 	last := "false"
@@ -27,8 +25,6 @@ func viewPage(lastPage bool, taskIDs ...string) string {
 		"list":{"divisions":[{"groups":[{"task_ids":` + string(ids) + `}]}]}}`
 }
 
-// clickupServer routes the two calls ListTasks makes: a paged GET for the view, and a
-// POST for the task values.
 func clickupServer(t *testing.T, pages []string, tasksBody string) (*Client, *int) {
 	t.Helper()
 
@@ -74,8 +70,6 @@ func TestListTasks_SuccessAssemblesTasksFromBothCalls(t *testing.T) {
 	assert.Equal(t, 1, *posts)
 }
 
-// A failed view load must not read as a view with no tasks: the shorts export would
-// then quietly export nothing and report success.
 func TestListTasks_ViewLoadFailureIsAnError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -93,7 +87,6 @@ func TestListTasks_ViewLoadFailureIsAnError(t *testing.T) {
 	assert.Contains(t, err.Error(), "500")
 }
 
-// The second call can fail on its own, after a successful view load.
 func TestListTasks_TaskFetchFailureIsAnError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -115,7 +108,6 @@ func TestListTasks_TaskFetchFailureIsAnError(t *testing.T) {
 	assert.Nil(t, tasks)
 }
 
-// Paging continues until last_page.
 func TestListTasks_PagesUntilLastPage(t *testing.T) {
 	pages := []string{viewPage(false, "t1"), viewPage(true, "t2")}
 	tasks := `{"tasks":[{"id":"t1","name":"First"},{"id":"t2","name":"Second"}]}`
@@ -128,8 +120,6 @@ func TestListTasks_PagesUntilLastPage(t *testing.T) {
 	assert.Len(t, all, 2)
 }
 
-// The guard against a non-advancing page parameter: a view that keeps answering with
-// the same task IDs must end the loop rather than page forever.
 func TestListTasks_StopsWhenAPageAddsNothingNew(t *testing.T) {
 	repeated := viewPage(false, "t1")
 	tasks := `{"tasks":[{"id":"t1","name":"First"}]}`
@@ -162,8 +152,6 @@ func TestClient_SendsTheShareToken(t *testing.T) {
 	assert.Equal(t, "token-1", token)
 }
 
-// The paths are relative to the client's base URL, so they are pinned against what
-// the service actually receives.
 func TestClient_RequestsTheViewPaths(t *testing.T) {
 	var paths []string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -188,7 +176,6 @@ func TestClient_RequestsTheViewPaths(t *testing.T) {
 	assert.Equal(t, "POST /view/v1/ws-1/public/view/view-1/tasks", paths[1])
 }
 
-// Empty arguments fall back to the public "Shorts Export" view.
 func TestNewClient_EmptyArgumentsUseTheDefaults(t *testing.T) {
 	client, err := NewClient("", "", "", "")
 
@@ -200,8 +187,6 @@ func TestNewClient_EmptyArgumentsUseTheDefaults(t *testing.T) {
 	assert.True(t, strings.HasPrefix(client.baseURL, "https://"))
 }
 
-// A scheduled workflow calls this, so a ClickUp that accepts the connection and stops
-// answering must fail rather than hold the activity.
 func TestClient_HasATimeout(t *testing.T) {
 	client, err := NewClient("", "", "", "")
 	require.NoError(t, err)

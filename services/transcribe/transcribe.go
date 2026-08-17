@@ -17,27 +17,21 @@ import (
 
 const BaseUrl = "http://10.12.128.44:8888"
 
-// serviceName names the transcription service in the errors this package returns.
 const serviceName = "transcribe"
 
-// pollInterval is how often DoTranscribe asks the service whether the job is done.
-// A var so the tests can drive the loop without waiting ten seconds a turn.
-var pollInterval = 10 * time.Second
-
-// retries cover a connection that drops, not a service that answers with a failure —
-// an answered error is not retried. The waits are durations, so they have to be
-// written with a unit: bare numbers are nanoseconds, which is no backoff at all.
 const (
 	retryCount   = 3
 	retryWait    = 10 * time.Second
 	retryMaxWait = 30 * time.Second
 )
 
-// baseURL is where the requests go. A var so the tests can point them at a stub
-// server; production reads BaseUrl and nothing reassigns it.
-var baseURL = BaseUrl
+// pollInterval and baseURL are vars only so the tests can drive the poll loop against
+// a stub server.
+var (
+	pollInterval = 10 * time.Second
+	baseURL      = BaseUrl
+)
 
-// newClient builds the client every call in this package uses.
 func newClient() *resty.Client {
 	return httpx.New(httpx.Config{
 		Service:      serviceName,
@@ -232,17 +226,12 @@ func DoTranscribe(
 
 	job := resp.Result().(*TranscribeJob)
 	if job.ID == "" {
-		// A 2xx with no id is not a started job, and polling for "" below would ask
-		// the service about a job that does not exist for as long as the activity is
-		// allowed to run.
 		return nil, fmt.Errorf("transcription service accepted the job but returned no id")
 	}
 
 	// Periodically check the status of the job
 	for {
-		// Guarded because RecordHeartbeat panics outside an activity: this is a plain
-		// function taking a context, and a caller that is not an activity — a test, a
-		// backfill — should not have to be one to use it.
+		// RecordHeartbeat panics outside an activity, and this is a plain function.
 		if activity.IsActivity(ctx) {
 			activity.RecordHeartbeat(ctx)
 		}
@@ -253,7 +242,6 @@ func DoTranscribe(
 			Get("/transcription/job/" + job.ID)
 
 		if err != nil {
-			// Including a 404: the job is gone, and polling on cannot bring it back.
 			return nil, err
 		}
 

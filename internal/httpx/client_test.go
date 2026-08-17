@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// serving returns a client pointed at a server that answers everything the same way.
 func serving(t *testing.T, status int, contentType, body string) *resty.Client {
 	t.Helper()
 
@@ -28,7 +27,6 @@ func serving(t *testing.T, status int, contentType, body string) *resty.Client {
 	return New(Config{Service: "testservice", BaseURL: server.URL})
 }
 
-// The whole point of the package: a status the caller never looks at still fails.
 func TestNew_NonSuccessStatusIsAnError(t *testing.T) {
 	client := serving(t, http.StatusInternalServerError, "application/json", `{"error":"boom"}`)
 
@@ -41,8 +39,6 @@ func TestNew_NonSuccessStatusIsAnError(t *testing.T) {
 	assert.Empty(t, result.Name)
 }
 
-// A body resty will not unmarshal — an HTML page from a proxy — is the case a
-// JSON-shaped check misses.
 func TestNew_HTMLErrorBodyIsAnError(t *testing.T) {
 	client := serving(t, http.StatusBadGateway, "text/html", "<html>502 Bad Gateway</html>")
 
@@ -66,7 +62,6 @@ func TestNew_ErrorNamesServiceRequestAndStatus(t *testing.T) {
 	assert.Contains(t, message, "nope")
 }
 
-// The status travels with the error, so a caller can branch on it without parsing text.
 func TestNew_ErrorCarriesHTTPCode(t *testing.T) {
 	client := serving(t, http.StatusNotFound, "text/plain", "gone")
 
@@ -89,8 +84,6 @@ func TestNew_SuccessPassesThroughAndUnmarshals(t *testing.T) {
 	assert.Equal(t, "ok", result.Name)
 }
 
-// 201 and 204 are successes. A check that compares against 200 exactly makes a
-// correct Created read as a failure.
 func TestNew_CreatedAndNoContentAreNotErrors(t *testing.T) {
 	for _, status := range []int{http.StatusCreated, http.StatusNoContent} {
 		t.Run(http.StatusText(status), func(t *testing.T) {
@@ -112,7 +105,6 @@ func TestTolerating_LeavesTheListedStatusToTheCaller(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode())
 }
 
-// Tolerating one status must not tolerate the rest of the failures on that request.
 func TestTolerating_OtherStatusesStillFail(t *testing.T) {
 	client := serving(t, http.StatusInternalServerError, "text/plain", "boom")
 
@@ -122,7 +114,6 @@ func TestTolerating_OtherStatusesStillFail(t *testing.T) {
 	assert.Contains(t, err.Error(), "500")
 }
 
-// Toleration is per request, not per client.
 func TestTolerating_DoesNotLeakToOtherRequests(t *testing.T) {
 	client := serving(t, http.StatusNotFound, "text/plain", "gone")
 
@@ -154,8 +145,6 @@ func TestDescribeError_OverridesTheDefaultMessage(t *testing.T) {
 	assert.ErrorIs(t, err, sentinel)
 }
 
-// The error names the request, and subtrans authenticates with ?key=, so redaction is
-// what keeps that key out of the Temporal workflow history.
 func TestNew_ErrorDoesNotLeakACredentialFromTheQueryString(t *testing.T) {
 	client := serving(t, http.StatusInternalServerError, "text/plain", "boom")
 
@@ -213,17 +202,12 @@ func TestRedactURL(t *testing.T) {
 	}
 }
 
-// A URL that will not parse must not be echoed: whatever made it unparseable could be
-// the credential itself.
 func TestRedactURL_UnparseableIsNotEchoed(t *testing.T) {
 	got := RedactURL("://not a url\x7f?key=secret")
 
 	assert.NotContains(t, got, "secret")
 }
 
-// Retries exist for connection failures. An error the response hook produced must not
-// be retried: it means the server answered, and answering again would create a second
-// shape or job for a POST.
 func TestNew_ErrorStatusIsNotRetried(t *testing.T) {
 	calls := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -250,8 +234,6 @@ func TestTruncateBody_BoundsWhatReachesWorkflowHistory(t *testing.T) {
 	assert.Contains(t, truncated, "truncated")
 }
 
-// A hung server must fail the attempt rather than hold the worker until the activity's
-// schedule-to-close budget runs out.
 func TestNew_TimeoutBoundsTheAttempt(t *testing.T) {
 	release := make(chan struct{})
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -296,7 +278,6 @@ func TestNew_HeadersAndBasicAuthAreSentOnEveryRequest(t *testing.T) {
 	assert.Equal(t, "pass", gotPassword)
 }
 
-// A trailing slash on the configured base URL must not produce "//path".
 func TestNew_BaseURLTrailingSlashIsTrimmed(t *testing.T) {
 	var path string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

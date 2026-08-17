@@ -10,7 +10,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/internal/httpx"
 )
 
-// serviceName names Vidispine in the errors this client returns.
 const serviceName = "vidispine"
 
 type Client struct {
@@ -20,19 +19,14 @@ type Client struct {
 	restyClient *resty.Client
 }
 
-// tolerating404 marks a request so the response hook leaves its 404 alone. Use it
-// only where "not found" is an answer the caller handles, never to paper over a
-// request that should have succeeded — a probe, or deleting something already gone.
+// tolerating404 is for a probe, or deleting something already gone — never to paper
+// over a request that should have succeeded.
 func tolerating404(req *resty.Request) *resty.Request {
 	return httpx.Tolerating(req, http.StatusNotFound)
 }
 
-// vsErrorFromResponse turns a non-2xx Vidispine response into an error.
-//
-// Shape-tag-not-found carries the ErrShapeTagNotFound sentinel so
-// activities/vidispine/files.go can detect it with errors.Is and skip pointless
-// retries, regardless of which request produced it. Everything else is described the
-// same way as any other service.
+// vsErrorFromResponse carries ErrShapeTagNotFound so activities/vidispine/files.go can
+// detect it with errors.Is and skip pointless retries.
 func vsErrorFromResponse(resp *resty.Response) error {
 	var envelope vsErrorBody
 	if err := json.Unmarshal(resp.Body(), &envelope); err == nil &&
@@ -45,11 +39,9 @@ func vsErrorFromResponse(resp *resty.Response) error {
 }
 
 func NewClient(baseURL string, username string, password string) *Client {
-	// The timeout has to outlast a slow Vidispine call rather than merely a healthy
-	// one. Retries apply to POST and DELETE as well — AddShapeToItem,
-	// CreatePlaceholder, DeleteItems — so a timeout short enough to fire on a call
-	// that is working retries it and creates a second shape or job. The retries are
-	// for connection failures.
+	// The retries reach POST and DELETE, so the timeout has to outlast a slow call
+	// rather than merely a healthy one: retrying a working AddShapeToItem or
+	// CreatePlaceholder creates a second shape or job.
 	client := httpx.New(httpx.Config{
 		Service:       serviceName,
 		BaseURL:       baseURL,

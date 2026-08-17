@@ -15,7 +15,6 @@ import (
 	"go.temporal.io/sdk/testsuite"
 )
 
-// transcribeServer points the package at a test server for the duration of one test.
 func transcribeServer(t *testing.T, handler http.HandlerFunc) {
 	t.Helper()
 
@@ -27,7 +26,6 @@ func transcribeServer(t *testing.T, handler http.HandlerFunc) {
 	t.Cleanup(func() { baseURL = previous })
 }
 
-// fastPolling keeps the poll loop from waiting ten seconds a turn.
 func fastPolling(t *testing.T) {
 	t.Helper()
 
@@ -44,9 +42,6 @@ func TestDoTranscribe_RejectsMissingArguments(t *testing.T) {
 	assert.ErrorIs(t, err, errNoOutput)
 }
 
-// resty leaves err nil for a 500 and only unmarshals on 2xx, so a submit that does not
-// check its status hands back a zero-valued TranscribeJob — and the poll loop below
-// then asks the service about job "" until the activity runs out of budget.
 func TestDoTranscribe_SubmitFailureIsAnError(t *testing.T) {
 	transcribeServer(t, func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -60,7 +55,6 @@ func TestDoTranscribe_SubmitFailureIsAnError(t *testing.T) {
 	assert.Contains(t, err.Error(), "500")
 }
 
-// A 2xx that carries no id is not a started job either.
 func TestDoTranscribe_SubmitWithoutAnIDIsAnError(t *testing.T) {
 	transcribeServer(t, func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -74,9 +68,6 @@ func TestDoTranscribe_SubmitWithoutAnIDIsAnError(t *testing.T) {
 	assert.Contains(t, err.Error(), "no id")
 }
 
-// A 404 on the status poll has to end the loop. Polling on about a job that does not
-// exist, heartbeating all the while, burns the activity's whole budget and then
-// reports a timeout instead of the real cause.
 func TestDoTranscribe_PollNotFoundEndsTheLoop(t *testing.T) {
 	fastPolling(t)
 
@@ -155,8 +146,6 @@ func TestDoTranscribe_FailedJobIsAnError(t *testing.T) {
 	assert.NotNil(t, job, "the failed job is still returned for its detail")
 }
 
-// A cancelled activity has to end the poll loop, which means waiting on the context
-// as well as the timer — time.Sleep watches neither.
 func TestDoTranscribe_CancellationEndsTheLoop(t *testing.T) {
 	previous := pollInterval
 	pollInterval = time.Hour
@@ -178,7 +167,6 @@ func TestDoTranscribe_CancellationEndsTheLoop(t *testing.T) {
 		done <- err
 	}()
 
-	// Let it get past the first poll and into the wait.
 	time.Sleep(50 * time.Millisecond)
 	cancel()
 
@@ -214,9 +202,6 @@ func TestDoTranscribe_SendsTheJobDefinition(t *testing.T) {
 	assert.Contains(t, submitted, `"format":"all"`)
 }
 
-// The retry waits are time.Duration, so a bare 10 is ten nanoseconds and the retries
-// fire as fast as the transport allows — no backoff at all against a service that is
-// briefly down.
 func TestClient_RetryWaitsAreSecondsNotNanoseconds(t *testing.T) {
 	client := newClient()
 
@@ -225,8 +210,6 @@ func TestClient_RetryWaitsAreSecondsNotNanoseconds(t *testing.T) {
 	assert.Positive(t, client.RetryCount)
 }
 
-// Debug mode dumps every request header and the full response body — whole
-// transcripts — to stdout.
 func TestClient_DebugIsOff(t *testing.T) {
 	client := newClient()
 
@@ -239,9 +222,6 @@ func TestClient_HasATimeout(t *testing.T) {
 	assert.Positive(t, client.GetClient().Timeout)
 }
 
-// The heartbeat is guarded by activity.IsActivity so the function can be called
-// outside Temporal. Inside an activity it has to heartbeat on every poll, or the ten
-// minute HeartbeatTimeout kills a transcription that is merely long.
 func TestDoTranscribe_HeartbeatsWhileItPolls(t *testing.T) {
 	fastPolling(t)
 
@@ -283,14 +263,9 @@ func TestDoTranscribe_HeartbeatsWhileItPolls(t *testing.T) {
 	require.NoError(t, val.Get(&status))
 	assert.Equal(t, "COMPLETED", status)
 
-	// The SDK throttles heartbeats and forwards only a fraction to the listener, so
-	// what is checked is that the activity heartbeats at all while the job runs.
 	assert.NotZero(t, heartbeats.Load(), "a long transcription must heartbeat while it polls")
 }
 
-// Anything Whisper does not list falls back to auto-detection rather than being sent
-// as-is, which is why a three-letter code — the form the rest of this repository uses —
-// does not reach the service.
 func TestNormalizeTranscriptionLanguage(t *testing.T) {
 	tests := []struct {
 		name  string

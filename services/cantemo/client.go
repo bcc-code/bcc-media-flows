@@ -10,7 +10,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/internal/httpx"
 )
 
-// serviceName names Cantemo in the errors this client returns.
 const serviceName = "cantemo"
 
 type Client struct {
@@ -22,13 +21,9 @@ type cantemoErrorResponse struct {
 	Detail string `json:"detail"`
 }
 
-// cantemoErrorFromResponse prefers Cantemo's own explanation of a failure.
-//
-// The status decides, rather than resp.Error() being populated: resty only unmarshals
-// an error body for JSON and XML content types, so an HTML 502 from a proxy or an
-// empty-bodied 404 leaves resp.Error() nil. The message never depends solely on the
-// envelope's "detail" either, since that key is absent from some responses — in which
-// case the shared description of the body is what is left.
+// cantemoErrorFromResponse prefers Cantemo's own explanation, when there is one: resty
+// only unmarshals an error body for JSON and XML, and "detail" is absent from some
+// responses.
 func cantemoErrorFromResponse(resp *resty.Response) error {
 	if cantemoError, ok := resp.Error().(*cantemoErrorResponse); ok && cantemoError != nil && cantemoError.Detail != "" {
 		return httpx.DescribeWithDetail(serviceName, resp, cantemoError.Detail)
