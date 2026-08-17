@@ -19,92 +19,108 @@ type CleanupResult struct {
 	DeletedCountPerRoot map[string]int
 }
 
+const defaultRetention = 14 * 24 * time.Hour
+
+// cleanupFolder is one folder to sweep. A zero Retention keeps
+// defaultRetention, so only a folder that needs a different one says so.
+type cleanupFolder struct {
+	Path      string
+	Retention time.Duration
+}
+
+func (f cleanupFolder) olderThan(now time.Time) time.Time {
+	if f.Retention == 0 {
+		return now.Add(-defaultRetention)
+	}
+	return now.Add(-f.Retention)
+}
+
 func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting temp files cleanup")
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	olderThan := workflow.Now(ctx).Add(-14 * 24 * time.Hour)
+	now := workflow.Now(ctx)
 
-	folders := []string{
-		"/mnt/temp/",
-		"/mnt/filecatalyst/ingestgrow/",
-		"/mnt/filecatalyst/workflow/",
-		"/mnt/isilon/Input/FromArvoll",
-		"/mnt/isilon/Input/FromDelivery",
-		"/mnt/isilon/Input/MGOF",
-		"/mnt/isilon/Input/Rawmaterial",
+	folders := []cleanupFolder{
+		{Path: "/mnt/temp/"},
+		{Path: "/mnt/filecatalyst/ingestgrow/"},
+		{Path: "/mnt/filecatalyst/workflow/"},
+		{Path: "/mnt/isilon/Input/FromArvoll"},
+		{Path: "/mnt/isilon/Input/FromDelivery"},
+		{Path: "/mnt/isilon/Input/MGOF"},
+		{Path: "/mnt/isilon/Input/Rawmaterial"},
 
 		// Transcoding folders
-		"/mnt/isilon/Transcoding/AVCintra100_HD/error",
-		"/mnt/isilon/Transcoding/AVCintra100_HD/out",
-		"/mnt/isilon/Transcoding/AVCintra100_HD/processed",
-		"/mnt/isilon/Transcoding/AVCintra100_HD/processing",
-		"/mnt/isilon/Transcoding/AVCintra100_HD/tmp",
+		{Path: "/mnt/isilon/Transcoding/AVCintra100_HD/error"},
+		{Path: "/mnt/isilon/Transcoding/AVCintra100_HD/out"},
+		{Path: "/mnt/isilon/Transcoding/AVCintra100_HD/processed"},
+		{Path: "/mnt/isilon/Transcoding/AVCintra100_HD/processing"},
+		{Path: "/mnt/isilon/Transcoding/AVCintra100_HD/tmp"},
 
-		"/mnt/isilon/Transcoding/AVCIntra100_TCSet/In",
-		"/mnt/isilon/Transcoding/AVCIntra100_TCSet/Out",
+		{Path: "/mnt/isilon/Transcoding/AVCIntra100_TCSet/In"},
+		{Path: "/mnt/isilon/Transcoding/AVCIntra100_TCSet/Out"},
 
-		"/mnt/isilon/Transcoding/BroadcastWav_withTC/In",
-		"/mnt/isilon/Transcoding/BroadcastWav_withTC/Out",
+		{Path: "/mnt/isilon/Transcoding/BroadcastWav_withTC/In"},
+		{Path: "/mnt/isilon/Transcoding/BroadcastWav_withTC/Out"},
 
-		"/mnt/isilon/Transcoding/Fallback/In",
-		"/mnt/isilon/Transcoding/Fallback/Out",
+		{Path: "/mnt/isilon/Transcoding/Fallback/In"},
+		{Path: "/mnt/isilon/Transcoding/Fallback/Out"},
 
-		"/mnt/isilon/Transcoding/ImageSequence/Input",
-		"/mnt/isilon/Transcoding/ImageSequence/Out",
+		{Path: "/mnt/isilon/Transcoding/ImageSequence/Input"},
+		{Path: "/mnt/isilon/Transcoding/ImageSequence/Out"},
 
-		"/mnt/isilon/Transcoding/IMX50/In",
-		"/mnt/isilon/Transcoding/IMX50/Out",
+		{Path: "/mnt/isilon/Transcoding/IMX50/In"},
+		{Path: "/mnt/isilon/Transcoding/IMX50/Out"},
 
-		"/mnt/isilon/Transcoding/Multitrack_Playback/Input",
-		"/mnt/isilon/Transcoding/Multitrack_Playback/Output",
+		{Path: "/mnt/isilon/Transcoding/Multitrack_Playback/Input"},
+		{Path: "/mnt/isilon/Transcoding/Multitrack_Playback/Output"},
 
-		"/mnt/isilon/Transcoding/ProRes422D/in",
+		{Path: "/mnt/isilon/Transcoding/ProRes422D/in"},
 
-		"/mnt/isilon/Transcoding/ProRes422HQ_HD/error",
-		"/mnt/isilon/Transcoding/ProRes422HQ_HD/out",
-		"/mnt/isilon/Transcoding/ProRes422HQ_HD/processed",
-		"/mnt/isilon/Transcoding/ProRes422HQ_HD/processing",
-		"/mnt/isilon/Transcoding/ProRes422HQ_HD/tmp",
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_HD/error"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_HD/out"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_HD/processed"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_HD/processing"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_HD/tmp"},
 
-		"/mnt/isilon/Transcoding/ProRes422HQ_HD_16chaudio/In",
-		"/mnt/isilon/Transcoding/ProRes422HQ_HD_16chaudio/Out",
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_HD_16chaudio/In"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_HD_16chaudio/Out"},
 
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native/error",
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native/out",
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native/processed",
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native/processing",
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native/tmp",
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native/error"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native/out"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native/processed"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native/processing"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native/tmp"},
 
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/error",
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/out",
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/processed",
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/processing",
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/tmp",
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/error"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/out"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/processed"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/processing"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/tmp"},
 
-		"/mnt/isilon/Transcoding/ProRes444_4K-25FPS/In",
-		"/mnt/isilon/Transcoding/ProRes444_4K-25FPS/Out",
+		{Path: "/mnt/isilon/Transcoding/ProRes444_4K-25FPS/In"},
+		{Path: "/mnt/isilon/Transcoding/ProRes444_4K-25FPS/Out"},
 
-		"/mnt/isilon/Transcoding/SRT_TCOffset/In",
-		"/mnt/isilon/Transcoding/SRT_TCOffset/Out",
+		{Path: "/mnt/isilon/Transcoding/SRT_TCOffset/In"},
+		{Path: "/mnt/isilon/Transcoding/SRT_TCOffset/Out"},
 
-		"/mnt/isilon/Transcoding/tmp",
+		{Path: "/mnt/isilon/Transcoding/tmp"},
 
-		"/mnt/isilon/Transcoding/Transcribe/error",
-		"/mnt/isilon/Transcoding/Transcribe/out",
-		"/mnt/isilon/Transcoding/Transcribe/processed",
-		"/mnt/isilon/Transcoding/Transcribe/processing",
-		"/mnt/isilon/Transcoding/Transcribe/tmp",
+		{Path: "/mnt/isilon/Transcoding/Transcribe/error"},
+		{Path: "/mnt/isilon/Transcoding/Transcribe/out"},
+		{Path: "/mnt/isilon/Transcoding/Transcribe/processed"},
+		{Path: "/mnt/isilon/Transcoding/Transcribe/processing"},
+		{Path: "/mnt/isilon/Transcoding/Transcribe/tmp"},
 
-		"/mnt/isilon/Transcoding/Wav/In",
-		"/mnt/isilon/Transcoding/Wav/Out",
+		{Path: "/mnt/isilon/Transcoding/Wav/In"},
+		{Path: "/mnt/isilon/Transcoding/Wav/Out"},
 
-		"/mnt/isilon/Transcoding/XDCAMHD422/In",
-		"/mnt/isilon/Transcoding/XDCAMHD422/Out",
+		{Path: "/mnt/isilon/Transcoding/XDCAMHD422/In"},
+		{Path: "/mnt/isilon/Transcoding/XDCAMHD422/Out"},
 
-		"/mnt/isilon/Export",
+		{Path: "/mnt/isilon/Export"},
 	}
 
 	deletedTotal := 0
@@ -112,8 +128,8 @@ func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 
 	for _, folder := range folders {
 		deletedFilesLoop, err := wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.DeleteOldFiles, activities.CleanupInput{
-			Root:      paths.MustParse(folder),
-			OlderThan: olderThan,
+			Root:      paths.MustParse(folder.Path),
+			OlderThan: folder.olderThan(now),
 		}).Result(ctx)
 
 		if err != nil {
@@ -121,13 +137,13 @@ func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 			return nil, err
 		}
 
-		logger.Info("Deleted files", "root", folder, "count", len(deletedFilesLoop))
+		logger.Info("Deleted files", "root", folder.Path, "count", len(deletedFilesLoop))
 
-		deletedPerRoot[folder] = len(deletedFilesLoop)
+		deletedPerRoot[folder.Path] = len(deletedFilesLoop)
 		deletedTotal += len(deletedFilesLoop)
 
 		err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.DeleteEmptyDirectories, activities.CleanupInput{
-			Root: paths.MustParse(folder),
+			Root: paths.MustParse(folder.Path),
 		}).Wait(ctx)
 
 		if err != nil {

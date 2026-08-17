@@ -8,6 +8,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/samber/lo"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"go.temporal.io/sdk/testsuite"
@@ -121,7 +122,19 @@ func (s *ScheduledTestSuite) Test_CleanupTemp_OneCutoffForEveryFolder() {
 	s.Len(lo.Uniq(roots), 57, "no folder is cleaned twice")
 
 	for _, cutoff := range cutoffs {
-		s.Equal(cutoffs[0], cutoff, "every folder is cleaned to the same cutoff")
+		s.Equal(cutoffs[0], cutoff, "no folder currently overrides the default retention")
 	}
-	s.WithinDuration(start.Add(-14*24*time.Hour), cutoffs[0], time.Minute)
+	s.WithinDuration(start.Add(-defaultRetention), cutoffs[0], time.Minute)
+}
+
+func TestCleanupFolder_Retention(t *testing.T) {
+	now := time.Date(2026, 8, 17, 12, 0, 0, 0, time.UTC)
+
+	s := cleanupFolder{Path: "/mnt/temp/"}
+	assert.Equal(t, now.Add(-defaultRetention), s.olderThan(now))
+
+	kept := cleanupFolder{Path: "/mnt/isilon/Export", Retention: 90 * 24 * time.Hour}
+	assert.Equal(t, now.Add(-90*24*time.Hour), kept.olderThan(now))
+	assert.True(t, kept.olderThan(now).Before(s.olderThan(now)),
+		"a longer retention sweeps less")
 }
