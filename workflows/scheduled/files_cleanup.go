@@ -28,7 +28,7 @@ type cleanupFolder struct {
 	Retention time.Duration
 }
 
-func (f cleanupFolder) olderThan(now time.Time) time.Time {
+func (f cleanupFolder) cutoff(now time.Time) time.Time {
 	if f.Retention == 0 {
 		return now.Add(-defaultRetention)
 	}
@@ -129,7 +129,7 @@ func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 	for _, folder := range folders {
 		deletedFilesLoop, err := wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.DeleteOldFiles, activities.CleanupInput{
 			Root:      paths.MustParse(folder.Path),
-			OlderThan: folder.olderThan(now),
+			OlderThan: folder.cutoff(now),
 		}).Result(ctx)
 
 		if err != nil {

@@ -131,10 +131,10 @@ func TestCleanupFolder_Retention(t *testing.T) {
 	now := time.Date(2026, 8, 17, 12, 0, 0, 0, time.UTC)
 
 	s := cleanupFolder{Path: "/mnt/temp/"}
-	assert.Equal(t, now.Add(-defaultRetention), s.olderThan(now))
+	assert.Equal(t, now.Add(-defaultRetention), s.cutoff(now))
 
 	kept := cleanupFolder{Path: "/mnt/isilon/Export", Retention: 90 * 24 * time.Hour}
-	assert.Equal(t, now.Add(-90*24*time.Hour), kept.olderThan(now))
-	assert.True(t, kept.olderThan(now).Before(s.olderThan(now)),
+	assert.Equal(t, now.Add(-90*24*time.Hour), kept.cutoff(now))
+	assert.True(t, kept.cutoff(now).Before(s.cutoff(now)),
 		"a longer retention sweeps less")
 }
