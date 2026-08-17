@@ -28,11 +28,15 @@ type cleanupFolder struct {
 	Retention time.Duration
 }
 
-func (f cleanupFolder) cutoff(now time.Time) time.Time {
+func (f cleanupFolder) retention() time.Duration {
 	if f.Retention == 0 {
-		return now.Add(-defaultRetention)
+		return defaultRetention
 	}
-	return now.Add(-f.Retention)
+	return f.Retention
+}
+
+func (f cleanupFolder) cutoff(ctx workflow.Context) time.Time {
+	return workflow.Now(ctx).Add(-f.retention())
 }
 
 func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
@@ -40,8 +44,6 @@ func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 	logger.Info("Starting temp files cleanup")
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
-
-	now := workflow.Now(ctx)
 
 	folders := []cleanupFolder{
 		{Path: "/mnt/temp/"},
@@ -129,7 +131,7 @@ func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 	for _, folder := range folders {
 		deletedFilesLoop, err := wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.DeleteOldFiles, activities.CleanupInput{
 			Root:      paths.MustParse(folder.Path),
-			OlderThan: folder.cutoff(now),
+			OlderThan: folder.cutoff(ctx),
 		}).Result(ctx)
 
 		if err != nil {

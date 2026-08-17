@@ -128,13 +128,9 @@ func (s *ScheduledTestSuite) Test_CleanupTemp_OneCutoffForEveryFolder() {
 }
 
 func TestCleanupFolder_Retention(t *testing.T) {
-	now := time.Date(2026, 8, 17, 12, 0, 0, 0, time.UTC)
-
-	s := cleanupFolder{Path: "/mnt/temp/"}
-	assert.Equal(t, now.Add(-defaultRetention), s.cutoff(now))
+	assert.Equal(t, defaultRetention, cleanupFolder{Path: "/mnt/temp/"}.retention())
 
 	kept := cleanupFolder{Path: "/mnt/isilon/Export", Retention: 90 * 24 * time.Hour}
-	assert.Equal(t, now.Add(-90*24*time.Hour), kept.cutoff(now))
-	assert.True(t, kept.cutoff(now).Before(s.cutoff(now)),
-		"a longer retention sweeps less")
+	assert.Equal(t, 90*24*time.Hour, kept.retention())
+	assert.Greater(t, kept.retention(), defaultRetention, "a longer retention sweeps less")
 }
