@@ -15,9 +15,7 @@ type transcodeFunc func(ctx workflow.Context, params VBExportChildWorkflowParams
 // vbExportDestination describes one delivery destination. Exactly one of copySource
 // and transcode must be set.
 type vbExportDestination struct {
-	flow      string
-	folder    string
-	outputDir string
+	destination Destination
 
 	// ext is ignored when imageAware, which delivers an image under its own
 	// extension and everything else as .mov.
@@ -34,7 +32,7 @@ type vbExportDestination struct {
 
 func runVBExportChild(ctx workflow.Context, params VBExportChildWorkflowParams, dest vbExportDestination) (*VBExportResult, error) {
 	logger := workflow.GetLogger(ctx)
-	logger.Info("Starting VB export", "flow", dest.flow)
+	logger.Info("Starting VB export", "destination", dest.destination.Value)
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
@@ -69,7 +67,7 @@ func runVBExportChild(ctx workflow.Context, params VBExportChildWorkflowParams, 
 		destName = params.OriginalFilenameWithoutExt + extraFileName + ext
 	}
 
-	rcloneDestination := deliveryFolder.Append(dest.folder, destName)
+	rcloneDestination := deliveryFolder.Append(dest.destination.DeliveryFolder(), destName)
 
 	err := wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
 	if err != nil {
@@ -77,7 +75,7 @@ func runVBExportChild(ctx workflow.Context, params VBExportChildWorkflowParams, 
 	}
 
 	if dest.transcode != nil {
-		outputDir := params.TempDir.Append(dest.outputDir)
+		outputDir := params.TempDir.Append(dest.destination.OutputDirName())
 		err = wfutils.CreateFolder(ctx, outputDir)
 		if err != nil {
 			return nil, err
@@ -101,7 +99,7 @@ func runVBExportChild(ctx workflow.Context, params VBExportChildWorkflowParams, 
 		return nil, err
 	}
 
-	notifyExportDone(ctx, params, dest.flow, filePath)
+	notifyExportDone(ctx, params, dest.destination, filePath)
 
 	return &VBExportResult{
 		ID:    params.ParentParams.VXID,

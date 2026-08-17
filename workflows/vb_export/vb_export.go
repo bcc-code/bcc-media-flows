@@ -66,6 +66,30 @@ func (d Destination) Description() string {
 	return destinationDescriptions[d]
 }
 
+// destinationFolders are the subfolders of deliveryFolder each destination is
+// delivered to. Abekas has a second one, Abekas-WAV, for audio-only exports.
+var destinationFolders = map[Destination]string{
+	DestinationAbekas:    "Abekas-AVCI",
+	DestinationRawAbekas: "Abekas-RAW",
+	DestinationBStage:    "B-Stage",
+	DestinationGfx:       "GFX",
+	DestinationHippoV2:   "Hippo",
+	DestinationHippoHap:  "Hippo",
+	DestinationDubbing:   "Reaper-Wav",
+	DestinationHyperdeck: "Hyperdeck-ProRes",
+	DestinationXDCAM:     "XDCAM",
+	DestinationCasparCG:  "CasparCG",
+}
+
+func (d Destination) DeliveryFolder() string {
+	return destinationFolders[d]
+}
+
+// OutputDirName is the per-destination subfolder of the workflow's temp dir.
+func (d Destination) OutputDirName() string {
+	return d.Value + "_output"
+}
+
 var destinationWorkflows = map[Destination]any{
 	DestinationAbekas:    VBExportToAbekas,
 	DestinationRawAbekas: VBExportToRawAbekas,
@@ -272,7 +296,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	return results, err
 }
 
-func notifyExportDone(ctx workflow.Context, params VBExportChildWorkflowParams, flow string, tempExportPath paths.Path) {
-	message := fmt.Sprintf("🟩 Export of `%s` finished.\nDestination: `%s`, Preview: `%s`", params.ParentParams.VXID, flow, tempExportPath.Local())
+func notifyExportDone(ctx workflow.Context, params VBExportChildWorkflowParams, destination Destination, tempExportPath paths.Path) {
+	message := fmt.Sprintf("🟩 Export of `%s` finished.\nDestination: `%s`, Preview: `%s`", params.ParentParams.VXID, destination.Value, tempExportPath.Local())
 	wfutils.SendTelegramText(ctx, telegram.ChatOslofjord, message)
 }

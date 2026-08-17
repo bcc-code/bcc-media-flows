@@ -2,12 +2,14 @@ package vb_export
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
+	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/stretchr/testify/mock"
@@ -194,15 +196,22 @@ func (s *VBExportTestSuite) Test_VBExportToXDCAM() {
 	s.Equal("VX-123", result.ID)
 }
 
-func (s *VBExportTestSuite) Test_EveryDestinationHasAWorkflow() {
+func (s *VBExportTestSuite) Test_EveryDestinationHasAWorkflowAndAFolder() {
 	for _, dest := range Destinations.Members() {
 		_, ok := destinationWorkflows[dest]
 		s.True(ok, "destination %q has no workflow", dest.Value)
+		s.NotEmpty(dest.DeliveryFolder(), "destination %q has no delivery folder", dest.Value)
 	}
 }
 
 func (s *VBExportTestSuite) Test_VBExportToBStage() {
-	s.env.OnActivity(activities.Util.SendTelegramMessage, mock.Anything, mock.Anything).Maybe().Return(nil, nil)
+	var messages []string
+	s.env.OnActivity(activities.Util.SendTelegramMessage, mock.Anything, mock.Anything).Maybe().
+		Run(func(args mock.Arguments) {
+			if msg, ok := args.Get(1).(*telegram.Message); ok && msg != nil {
+				messages = append(messages, msg.Markdown)
+			}
+		}).Return(nil, nil)
 	s.env.OnActivity(activities.Util.CreateFolder, mock.Anything, mock.Anything).Maybe().Return(nil, nil)
 	s.env.OnActivity(activities.Util.RcloneCheckFileExists, mock.Anything, mock.Anything).Maybe().Return(false, nil)
 	s.env.OnActivity(activities.Util.RcloneWaitForJob, mock.Anything, mock.Anything).Maybe().Return(true, nil)
@@ -231,6 +240,9 @@ func (s *VBExportTestSuite) Test_VBExportToBStage() {
 	s.env.GetWorkflowResult(&result)
 	s.Equal("VX-123", result.ID)
 	s.Equal("test_video", result.Title)
+
+	s.Contains(strings.Join(messages, "\n"), "Destination: `b-stage`",
+		"the finish notification names the destination the way everything else does")
 }
 
 func (s *VBExportTestSuite) Test_VBExportToBStage_ImageIsDeliveredWithoutTranscoding() {

@@ -18,7 +18,7 @@ Video: Various resolutions, 25p/50p, HAP Q codec with audio support
 Audio: Included in HAP output
 */
 func VBExportToHippoV2(ctx workflow.Context, params VBExportChildWorkflowParams) (*VBExportResult, error) {
-	return runVBExportChild(ctx, params, hippo("hippo_v2", transcode.HAPFormatHAPQ))
+	return runVBExportChild(ctx, params, hippo(DestinationHippoV2, transcode.HAPFormatHAPQ))
 }
 
 /*
@@ -30,17 +30,15 @@ Video: Various resolutions, 25p/50p, HAP codec with audio support
 Audio: Included in HAP output
 */
 func VBExportToHippoHap(ctx workflow.Context, params VBExportChildWorkflowParams) (*VBExportResult, error) {
-	return runVBExportChild(ctx, params, hippo("hippo_hap", transcode.HAPFormatHAP))
+	return runVBExportChild(ctx, params, hippo(DestinationHippoHap, transcode.HAPFormatHAP))
 }
 
-func hippo(flow string, format transcode.HAPFormat) vbExportDestination {
+func hippo(destination Destination, format transcode.HAPFormat) vbExportDestination {
 	return vbExportDestination{
-		flow:       flow,
-		folder:     "Hippo",
-		outputDir:  flow + "_output",
-		imageAware: true,
-		transcode:  transcodeToHAP(format),
-		image:      copyImageToOutputDir,
+		destination: destination,
+		imageAware:  true,
+		transcode:   transcodeToHAP(format),
+		image:       copyImageToOutputDir,
 	}
 }
 

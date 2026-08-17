@@ -19,10 +19,8 @@ Audio tracks:
 */
 func VBExportToBStage(ctx workflow.Context, params VBExportChildWorkflowParams) (*VBExportResult, error) {
 	return runVBExportChild(ctx, params, vbExportDestination{
-		flow:       "bstage",
-		folder:     "B-Stage",
-		outputDir:  "b-stage_output",
-		imageAware: true,
-		transcode:  proRes{interlace: false, alpha: false}.transcode,
+		destination: DestinationBStage,
+		imageAware:  true,
+		transcode:   proRes{interlace: false, alpha: false}.transcode,
 	})
 }

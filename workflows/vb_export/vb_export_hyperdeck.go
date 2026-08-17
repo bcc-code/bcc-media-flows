@@ -14,11 +14,9 @@ import (
 
 func VBExportToHyperdeck(ctx workflow.Context, params VBExportChildWorkflowParams) (*VBExportResult, error) {
 	return runVBExportChild(ctx, params, vbExportDestination{
-		flow:      "hyperdeck",
-		folder:    "Hyperdeck-ProRes",
-		outputDir: "hyperdeck_output",
-		ext:       ".mov",
-		transcode: transcodeToHyperdeckProRes,
+		destination: DestinationHyperdeck,
+		ext:         ".mov",
+		transcode:   transcodeToHyperdeckProRes,
 	})
 }
 

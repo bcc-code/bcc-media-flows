@@ -19,10 +19,8 @@ Audio tracks:
 */
 func VBExportToGfx(ctx workflow.Context, params VBExportChildWorkflowParams) (*VBExportResult, error) {
 	return runVBExportChild(ctx, params, vbExportDestination{
-		flow:       "gfx",
-		folder:     "GFX",
-		outputDir:  "gfx_output",
-		imageAware: true,
-		transcode:  proRes{interlace: true, alpha: true}.transcode,
+		destination: DestinationGfx,
+		imageAware:  true,
+		transcode:   proRes{interlace: true, alpha: true}.transcode,
 	})
 }

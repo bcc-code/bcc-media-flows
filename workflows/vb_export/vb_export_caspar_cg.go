@@ -8,8 +8,7 @@ import (
 // VBExportToCasparCG copies the input file directly to the CasparCG delivery folder without transcoding.
 func VBExportToCasparCG(ctx workflow.Context, params VBExportChildWorkflowParams) (*VBExportResult, error) {
 	return runVBExportChild(ctx, params, vbExportDestination{
-		flow:       "caspar-cg",
-		folder:     "CasparCG",
-		copySource: func(p VBExportChildWorkflowParams) paths.Path { return p.OriginalFile },
+		destination: DestinationCasparCG,
+		copySource:  func(p VBExportChildWorkflowParams) paths.Path { return p.OriginalFile },
 	})
 }
