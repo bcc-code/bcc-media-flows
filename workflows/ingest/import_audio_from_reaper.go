@@ -9,11 +9,11 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 
-	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/common"
+	"github.com/bcc-code/bcc-media-flows/languages"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
@@ -98,7 +98,7 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 		err = wfutils.Execute(ctx, activities.Vidispine.SetVXMetadataFieldActivity, vsactivity.VXMetadataFieldParams{
 			ItemID:  params.VideoVXID,
 			GroupID: "System",
-			Key:     bccmflows.LanguagesByISO[lang].RelatedMBFieldID,
+			Key:     languages.LanguagesByISO[lang].RelatedMBFieldID,
 			Value:   assetResult.AssetID,
 		}).Get(ctx, nil)
 		if err != nil {
@@ -179,7 +179,7 @@ func doImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFro
 	}
 
 	if isSilent {
-		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟧 File %s is silent, skipping", bccmflows.LanguagesByReaper[reaperTrackNumber].LanguageName))
+		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟧 File %s is silent, skipping", languages.LanguagesByReaper[reaperTrackNumber].LanguageName))
 
 		// This is not a fail, so we should not send an error
 		return nil
@@ -196,7 +196,7 @@ func doImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFro
 		return err
 	}
 
-	lang := bccmflows.LanguagesByReaper[reaperTrackNumber]
+	lang := languages.LanguagesByReaper[reaperTrackNumber]
 
 	// Generate a filename with the language code
 	outPath := outputFolder.Append(fmt.Sprintf("%s-%s.wav", params.BaseName, strings.ToUpper(lang.ISO6391)))

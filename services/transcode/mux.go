@@ -8,8 +8,8 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/paths"
 
-	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/common"
+	"github.com/bcc-code/bcc-media-flows/languages"
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	"github.com/samber/lo"
@@ -22,9 +22,9 @@ type languageFile struct {
 
 // Order and respect the global language ordering.
 func languageFilesForPaths(paths map[string]paths.Path) []languageFile {
-	languages := utils.LanguageKeysToOrderedLanguages(lo.Keys(paths))
+	langs := utils.LanguageKeysToOrderedLanguages(lo.Keys(paths))
 
-	return lo.Map(languages, func(lang bccmflows.Language, _ int) languageFile {
+	return lo.Map(langs, func(lang languages.Language, _ int) languageFile {
 		return languageFile{
 			Path:     paths[lang.ISO6391],
 			Language: lang.ISO6391,

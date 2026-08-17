@@ -13,10 +13,10 @@ import (
 	platform_activities "github.com/bcc-code/bcc-media-flows/activities/platform"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 
-	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/common/smil"
+	"github.com/bcc-code/bcc-media-flows/languages"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/bcc-code/bcc-media-platform/backend/asset"
@@ -387,7 +387,7 @@ func (v *vxExportVodService) handleFileWorkflowFuture(ctx workflow.Context, lang
 		v.errs = append(v.errs, err)
 		return
 	}
-	code := bccmflows.LanguagesByISO[lang].ISO6392TwoLetter
+	code := languages.LanguagesByISO[lang].ISO6392TwoLetter
 	if code == "" {
 		code = lang
 	}
@@ -415,10 +415,10 @@ func (v *vxExportVodService) handleStreamWorkflowFuture(ctx workflow.Context, re
 	v.smilVideos[resolutionWithLanguages.Resolution] = smil.Video{
 		Src:          result.Path.Base(),
 		IncludeAudio: fmt.Sprintf("%t", len(fileLanguages) > 0),
-		SystemLanguage: strings.Join(lo.Map(fileLanguages, func(i bccmflows.Language, _ int) string {
+		SystemLanguage: strings.Join(lo.Map(fileLanguages, func(i languages.Language, _ int) string {
 			return i.ISO6391
 		}), ","),
-		AudioName: strings.Join(lo.Map(fileLanguages, func(i bccmflows.Language, _ int) string {
+		AudioName: strings.Join(lo.Map(fileLanguages, func(i languages.Language, _ int) string {
 			return i.LanguageNameSystem
 		}), ","),
 	}

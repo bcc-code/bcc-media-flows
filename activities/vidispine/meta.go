@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	bccmflows "github.com/bcc-code/bcc-media-flows"
+	"github.com/bcc-code/bcc-media-flows/languages"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
@@ -187,7 +187,7 @@ func (a Activities) UpdateAssetRelations(ctx context.Context, params VXOnlyParam
 		// Get the last three characters of the title, as it should be a language code
 		title = title[len(title)-3:]
 
-		if l, ok := bccmflows.LanguagesByISO[strings.ToLower(title)]; ok {
+		if l, ok := languages.LanguagesByISO[strings.ToLower(title)]; ok {
 			err := vsClient.SetItemMetadataField(
 				vsapi.ItemMetadataFieldParams{
 					ItemID:  vxID,

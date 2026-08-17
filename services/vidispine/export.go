@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/environment"
+	"github.com/bcc-code/bcc-media-flows/languages"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	mapset "github.com/deckarep/golang-set/v2"
@@ -90,7 +90,7 @@ func GetRelatedAudioPaths(client Client, vxID string) (map[string]string, error)
 	}
 
 	var result = map[string]string{}
-	for _, lang := range bccmflows.LanguagesByISO {
+	for _, lang := range languages.LanguagesByISO {
 		relatedField := lang.RelatedMBFieldID
 		if relatedField == "" {
 			continue
@@ -144,7 +144,7 @@ func enrichClipWithRelatedAudios(client Client, clip *Clip, oLanguagesToExport [
 		}
 
 		// Figure out which field holds the related id
-		relatedField := bccmflows.LanguagesByISO[lang].RelatedMBFieldID
+		relatedField := languages.LanguagesByISO[lang].RelatedMBFieldID
 		if relatedField == "" {
 			return errors.New("No related field for language " + lang + ". This indicates missing support in Vidispine")
 		}
@@ -278,7 +278,7 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 		// This is a softron file
 
 		for _, lang := range languagesToExport {
-			if langInfo, ok := bccmflows.LanguagesByISO[lang]; ok {
+			if langInfo, ok := languages.LanguagesByISO[lang]; ok {
 				clip.AudioFiles[lang] = &AudioFile{
 					File: shape.GetPath(),
 					Streams: []common.AudioStream{
@@ -377,7 +377,7 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 	// We have an actual 16 channel audio file, so we need to figure out which channels to use
 	// and assign them to the correct language
 	for _, lang := range languagesToExport {
-		if l, ok := bccmflows.LanguagesByISO[lang]; ok {
+		if l, ok := languages.LanguagesByISO[lang]; ok {
 			var streams []common.AudioStream
 			for i := 0; i < l.MU1ChannelCount; i++ {
 				streams = append(streams, common.AudioStream{
@@ -392,7 +392,7 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 				Streams: streams,
 			}
 		} else if lang != "" {
-			return nil, errors.New("No language " + lang + " found in bccmflows.LanguagesByISO")
+			return nil, errors.New("No language " + lang + " found in languages.LanguagesByISO")
 		}
 	}
 
@@ -561,7 +561,7 @@ func addSubtitlesAndTranscriptionsToClips(client Client, clips []*Clip, allowAI 
 			return err
 		}
 
-		for langCode := range bccmflows.LanguagesByISO {
+		for langCode := range languages.LanguagesByISO {
 			// There are also videos with .txt subs... we should support those at some point
 			shape := clipShapes.GetShape(fmt.Sprintf("sub_%s_srt", langCode))
 			if shape == nil || shape.GetPath() == "" {

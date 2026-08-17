@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/environment"
+	"github.com/bcc-code/bcc-media-flows/languages"
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 )
 
@@ -105,7 +105,7 @@ func prepareAudioPreview(isMU1, isMU2 bool, fileInfo *ffmpeg.FFProbeResult, inpu
 
 	if len(audioStreams) == 16 {
 		if isMU1 {
-			for i, l := range bccmflows.LanguagesByMU1 {
+			for i, l := range languages.LanguagesByMU1 {
 				if l.MU1ChannelStart != i {
 					continue // skip duplicated languages
 				}
@@ -123,7 +123,7 @@ func prepareAudioPreview(isMU1, isMU2 bool, fileInfo *ffmpeg.FFProbeResult, inpu
 				fileMap[l.ISO6391] = fileName
 			}
 		} else if isMU2 {
-			for i, l := range bccmflows.LanguagesByMU2 {
+			for i, l := range languages.LanguagesByMU2 {
 				if l.MU2ChannelStart != i {
 					continue // skip duplicated languages
 				}
@@ -144,7 +144,7 @@ func prepareAudioPreview(isMU1, isMU2 bool, fileInfo *ffmpeg.FFProbeResult, inpu
 		}
 
 	} else if len(audioStreams) == 1 && audioStreams[0].Channels == 64 {
-		for i, l := range bccmflows.LanguageBySoftron {
+		for i, l := range languages.LanguageBySoftron {
 			fileName := filepath.Join(outputDir, fmt.Sprintf("%d.%s.aac", i, l.ISO6391))
 			filterParts = append(filterParts, fmt.Sprintf("[0:%d]pan=stereo|c0=c%d|c1=c%d[a%d]", audioStreams[0].Index, l.SoftronStartCh, l.SoftronStartCh+1, i))
 			audioMap = append(audioMap, "-map", fmt.Sprintf("[a%d]", i), fileName)

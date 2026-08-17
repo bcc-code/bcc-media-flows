@@ -3,7 +3,7 @@ package miscworkflows
 import (
 	"errors"
 	"fmt"
-	bccmflows "github.com/bcc-code/bcc-media-flows"
+	"github.com/bcc-code/bcc-media-flows/languages"
 	"github.com/samber/lo"
 	"path/filepath"
 	"strings"
@@ -96,7 +96,7 @@ func TranscodePreviewVX(
 
 	for _, l := range audioLangs {
 		p := previewResponse.AudioPreviewFiles[l]
-		tag := bccmflows.LanguagesByISO[l].MBPreviewTag
+		tag := languages.LanguagesByISO[l].MBPreviewTag
 		if tag == "" {
 			logger.Info("Skipping audio preview with empty MBPreviewTag", "language", l)
 			continue
