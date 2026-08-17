@@ -109,22 +109,25 @@ func runVBExportChild(ctx workflow.Context, params VBExportChildWorkflowParams, 
 	}, nil
 }
 
-func transcodeToProRes(interlace, alpha bool) transcodeFunc {
-	return func(ctx workflow.Context, params VBExportChildWorkflowParams, outputDir paths.Path) (paths.Path, error) {
-		res, err := wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
-			FilePath:       params.InputFile,
-			OutputDir:      outputDir,
-			Resolution:     utils.Resolution1080,
-			FrameRate:      50,
-			Interlace:      interlace,
-			BurnInSubtitle: params.SubtitleFile,
-			SubtitleStyle:  params.SubtitleStyle,
-			Alpha:          alpha,
-		}).Result(ctx)
-		if err != nil {
-			return paths.Path{}, err
-		}
+type proRes struct {
+	interlace bool
+	alpha     bool
+}
 
-		return res.OutputPath, nil
+func (p proRes) transcode(ctx workflow.Context, params VBExportChildWorkflowParams, outputDir paths.Path) (paths.Path, error) {
+	res, err := wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
+		FilePath:       params.InputFile,
+		OutputDir:      outputDir,
+		Resolution:     utils.Resolution1080,
+		FrameRate:      50,
+		Interlace:      p.interlace,
+		BurnInSubtitle: params.SubtitleFile,
+		SubtitleStyle:  params.SubtitleStyle,
+		Alpha:          p.alpha,
+	}).Result(ctx)
+	if err != nil {
+		return paths.Path{}, err
 	}
+
+	return res.OutputPath, nil
 }

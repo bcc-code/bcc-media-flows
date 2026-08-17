@@ -23,6 +23,6 @@ func VBExportToBStage(ctx workflow.Context, params VBExportChildWorkflowParams) 
 		folder:     "B-Stage",
 		outputDir:  "b-stage_output",
 		imageAware: true,
-		transcode:  transcodeToProRes(false, false),
+		transcode:  proRes{interlace: false, alpha: false}.transcode,
 	})
 }

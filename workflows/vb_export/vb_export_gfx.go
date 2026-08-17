@@ -23,6 +23,6 @@ func VBExportToGfx(ctx workflow.Context, params VBExportChildWorkflowParams) (*V
 		folder:     "GFX",
 		outputDir:  "gfx_output",
 		imageAware: true,
-		transcode:  transcodeToProRes(true, true),
+		transcode:  proRes{interlace: true, alpha: true}.transcode,
 	})
 }
