@@ -2,64 +2,49 @@ package vb_export
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
-	"github.com/bcc-code/bcc-media-flows/services/rclone"
-	"github.com/bcc-code/bcc-media-flows/services/telegram"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
-	"strings"
 )
 
 func VBExportToHyperdeck(ctx workflow.Context, params VBExportChildWorkflowParams) (*VBExportResult, error) {
-	logger := workflow.GetLogger(ctx)
-	logger.Info("Starting Hyperdeck")
+	return runVBExportChild(ctx, params, vbExportDestination{
+		flow:      "hyperdeck",
+		folder:    "Hyperdeck-ProRes",
+		outputDir: "hyperdeck_output",
+		ext:       ".mov",
+		transcode: transcodeToHyperdeckProRes,
+	})
+}
 
-	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
-
-	extraFileName := ""
-	if params.SubtitleFile != nil {
-		extraFileName += "_SUB_NOR"
-	}
-
-	rcloneDestination := deliveryFolder.Append("Hyperdeck-ProRes", params.OriginalFilenameWithoutExt+extraFileName+".mov")
-
-	err := wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
-	if err != nil {
-		return nil, err
-	}
-
-	outputDir := params.TempDir.Append("hyperdeck_output")
-	err = wfutils.CreateFolder(ctx, outputDir)
-	if err != nil {
-		return nil, err
-	}
-
+func transcodeToHyperdeckProRes(ctx workflow.Context, params VBExportChildWorkflowParams, outputDir paths.Path, _ bool) (paths.Path, error) {
 	analyzeResult, err := wfutils.Execute(ctx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
 		FilePath: params.InputFile,
 	}).Result(ctx)
 	if err != nil {
-		return nil, err
+		return paths.Path{}, err
 	}
 
 	if analyzeResult.HasAlpha {
-		return nil, fmt.Errorf("hyperdeck export currently does not support alpha channels")
+		return paths.Path{}, fmt.Errorf("hyperdeck export currently does not support alpha channels")
 	}
 
 	fileToTranscode := params.InputFile
 
-	// Check for 5.1 audio
-	// Used prefix to catch 5.1, 5.1(side), and any other variations
+	// The prefix catches 5.1, 5.1(side), and any other variation.
 	if len(analyzeResult.AudioStreams) == 1 && strings.HasPrefix(analyzeResult.AudioStreams[0].ChannelLayout, "5.1") {
-		// Convert a one stream 5.1 to 4 mono streams (L, R, Lb, Rb)
 		fileToTranscode = params.TempDir.Append("4mono_" + params.InputFile.Base())
 		err = wfutils.Execute(ctx, activities.Audio.Convert51to4Mono, common.AudioInput{
 			Path:            params.InputFile,
 			DestinationPath: fileToTranscode,
 		}).Wait(ctx)
 		if err != nil {
-			return nil, err
+			return paths.Path{}, err
 		}
 	}
 
@@ -73,21 +58,12 @@ func VBExportToHyperdeck(ctx workflow.Context, params VBExportChildWorkflowParam
 		SubtitleStyle:  params.SubtitleStyle,
 	}).Result(ctx)
 	if err != nil {
-		return nil, err
+		return paths.Path{}, err
 	}
 
 	if videoResult.OutputPath.Ext() != ".mov" {
-		return nil, fmt.Errorf("expected Hyperdeck ProRes output to be .mov, got %s", videoResult.OutputPath.Ext())
+		return paths.Path{}, fmt.Errorf("expected Hyperdeck ProRes output to be .mov, got %s", videoResult.OutputPath.Ext())
 	}
 
-	err = wfutils.RcloneCopyFileWithNotifications(ctx, videoResult.OutputPath, rcloneDestination, rclone.PriorityHigh, rcloneNotificationOptions)
-	if err != nil {
-		return nil, err
-	}
-
-	notifyExportDone(ctx, params, "hyperdeck", videoResult.OutputPath)
-
-	return &VBExportResult{
-		ID: params.ParentParams.VXID,
-	}, nil
+	return videoResult.OutputPath, nil
 }

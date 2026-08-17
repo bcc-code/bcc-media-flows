@@ -194,6 +194,109 @@ func (s *VBExportTestSuite) Test_VBExportToXDCAM() {
 	s.Equal("VX-123", result.ID)
 }
 
+func (s *VBExportTestSuite) Test_EveryDestinationHasAWorkflow() {
+	for _, dest := range Destinations.Members() {
+		_, ok := destinationWorkflows[dest]
+		s.True(ok, "destination %q has no workflow", dest.Value)
+	}
+}
+
+func (s *VBExportTestSuite) Test_VBExportToBStage() {
+	s.env.OnActivity(activities.Util.SendTelegramMessage, mock.Anything, mock.Anything).Maybe().Return(nil, nil)
+	s.env.OnActivity(activities.Util.CreateFolder, mock.Anything, mock.Anything).Maybe().Return(nil, nil)
+	s.env.OnActivity(activities.Util.RcloneCheckFileExists, mock.Anything, mock.Anything).Maybe().Return(false, nil)
+	s.env.OnActivity(activities.Util.RcloneWaitForJob, mock.Anything, mock.Anything).Maybe().Return(true, nil)
+
+	mimeType := "video/mp4"
+	s.env.OnActivity(activities.Util.GetMimeType, mock.Anything, mock.Anything).Return(&mimeType, nil)
+
+	outputPath := paths.MustParse("/mnt/temp/workflows/b-stage_output/test_video.mov")
+	s.env.OnActivity(activities.Video.TranscodeToProResActivity, mock.Anything, mock.MatchedBy(func(p activities.EncodeParams) bool {
+		return !p.Interlace && !p.Alpha
+	})).Return(&activities.EncodeResult{OutputPath: outputPath}, nil)
+
+	var copied activities.RcloneFileInput
+	s.env.OnActivity(activities.Util.RcloneCopyFile, mock.Anything, mock.Anything).
+		Run(func(args mock.Arguments) { copied = args.Get(1).(activities.RcloneFileInput) }).
+		Return(1, nil)
+
+	s.env.ExecuteWorkflow(VBExportToBStage, childParams())
+	s.True(s.env.IsWorkflowCompleted())
+	s.NoError(s.env.GetWorkflowError())
+
+	s.Equal(outputPath, copied.Source)
+	s.Equal("/Delivery/FraMB/B-Stage/test_video.mov", copied.Destination.Path)
+
+	var result VBExportResult
+	s.env.GetWorkflowResult(&result)
+	s.Equal("VX-123", result.ID)
+	s.Equal("test_video", result.Title)
+}
+
+func (s *VBExportTestSuite) Test_VBExportToRawAbekas_CopiesWithoutTranscoding() {
+	s.env.OnActivity(activities.Util.SendTelegramMessage, mock.Anything, mock.Anything).Maybe().Return(nil, nil)
+	s.env.OnActivity(activities.Util.RcloneCheckFileExists, mock.Anything, mock.Anything).Maybe().Return(false, nil)
+	s.env.OnActivity(activities.Util.RcloneWaitForJob, mock.Anything, mock.Anything).Maybe().Return(true, nil)
+
+	var copied activities.RcloneFileInput
+	s.env.OnActivity(activities.Util.RcloneCopyFile, mock.Anything, mock.Anything).
+		Run(func(args mock.Arguments) { copied = args.Get(1).(activities.RcloneFileInput) }).
+		Return(1, nil)
+
+	s.env.ExecuteWorkflow(VBExportToRawAbekas, childParams())
+	s.True(s.env.IsWorkflowCompleted())
+	s.NoError(s.env.GetWorkflowError())
+
+	s.Equal(childParams().InputFile, copied.Source)
+	s.Equal("/Delivery/FraMB/Abekas-RAW/test_video.mxf", copied.Destination.Path)
+
+	var result VBExportResult
+	s.env.GetWorkflowResult(&result)
+	s.Equal("test_video", result.Title)
+}
+
+func (s *VBExportTestSuite) Test_VBExportChild_SubtitleFileNamesTheDelivery() {
+	s.env.OnActivity(activities.Util.SendTelegramMessage, mock.Anything, mock.Anything).Maybe().Return(nil, nil)
+	s.env.OnActivity(activities.Util.CreateFolder, mock.Anything, mock.Anything).Maybe().Return(nil, nil)
+	s.env.OnActivity(activities.Util.RcloneCheckFileExists, mock.Anything, mock.Anything).Maybe().Return(false, nil)
+	s.env.OnActivity(activities.Util.RcloneWaitForJob, mock.Anything, mock.Anything).Maybe().Return(true, nil)
+	s.env.OnActivity(activities.Video.TranscodeToXDCAMActivity, mock.Anything, mock.Anything).Return(&activities.EncodeResult{
+		OutputPath: paths.MustParse("/mnt/temp/workflows/xdcam_output/test_video.mxf"),
+	}, nil)
+
+	var copied activities.RcloneFileInput
+	s.env.OnActivity(activities.Util.RcloneCopyFile, mock.Anything, mock.Anything).
+		Run(func(args mock.Arguments) { copied = args.Get(1).(activities.RcloneFileInput) }).
+		Return(1, nil)
+
+	params := childParams()
+	subtitle := paths.MustParse("/mnt/temp/workflows/test_video.srt")
+	params.SubtitleFile = &subtitle
+
+	s.env.ExecuteWorkflow(VBExportToXDCAM, params)
+	s.True(s.env.IsWorkflowCompleted())
+	s.NoError(s.env.GetWorkflowError())
+
+	s.Equal("/Delivery/FraMB/XDCAM/test_video_SUB_NOR.mxf", copied.Destination.Path)
+}
+
+func childParams() VBExportChildWorkflowParams {
+	return VBExportChildWorkflowParams{
+		ParentParams: VBExportParams{
+			VXID: "VX-123",
+		},
+		InputFile:                  paths.MustParse("/mnt/temp/workflows/test_video.mxf"),
+		OriginalFile:               paths.MustParse("/mnt/isilon/Production/masters/test_video.mxf"),
+		OriginalFilenameWithoutExt: "test_video",
+		TempDir:                    paths.MustParse("/mnt/temp/workflows"),
+		OutputDir:                  paths.MustParse("/mnt/temp/workflows/output"),
+		AnalyzeResult: ffmpeg.StreamInfo{
+			HasVideo:  true,
+			FrameRate: 25,
+		},
+	}
+}
+
 func TestVBExportTestSuite(t *testing.T) {
 	suite.Run(t, new(VBExportTestSuite))
 }

@@ -66,6 +66,19 @@ func (d Destination) Description() string {
 	return destinationDescriptions[d]
 }
 
+var destinationWorkflows = map[Destination]any{
+	DestinationAbekas:    VBExportToAbekas,
+	DestinationRawAbekas: VBExportToRawAbekas,
+	DestinationBStage:    VBExportToBStage,
+	DestinationGfx:       VBExportToGfx,
+	DestinationHippoV2:   VBExportToHippoV2,
+	DestinationHippoHap:  VBExportToHippoHap,
+	DestinationDubbing:   VBExportToDubbing,
+	DestinationHyperdeck: VBExportToHyperdeck,
+	DestinationXDCAM:     VBExportToXDCAM,
+	DestinationCasparCG:  VBExportToCasparCG,
+}
+
 var (
 	rcloneNotificationOptions = &activities.TelegramNotificationOptions{
 		ChatID:               telegram.ChatOslofjord,
@@ -222,30 +235,8 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 			AnalyzeResult:              *analyzeResult,
 		}
 
-		var w any
-		switch *dest {
-		case DestinationAbekas:
-			w = VBExportToAbekas
-		case DestinationRawAbekas:
-			w = VBExportToRawAbekas
-		case DestinationBStage:
-			w = VBExportToBStage
-		case DestinationHyperdeck:
-			w = VBExportToHyperdeck
-		case DestinationGfx:
-			w = VBExportToGfx
-		case DestinationHippoV2:
-			w = VBExportToHippoV2
-		case DestinationHippoHap:
-			w = VBExportToHippoHap
-		case DestinationDubbing:
-			w = VBExportToDubbing
-		case DestinationXDCAM:
-			w = VBExportToXDCAM
-		case DestinationCasparCG:
-			w = VBExportToCasparCG
-
-		default:
+		w, ok := destinationWorkflows[*dest]
+		if !ok {
 			return nil, fmt.Errorf("destination not implemented: %s", dest)
 		}
 

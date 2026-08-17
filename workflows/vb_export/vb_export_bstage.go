@@ -1,11 +1,6 @@
 package vb_export
 
 import (
-	"github.com/bcc-code/bcc-media-flows/activities"
-	"github.com/bcc-code/bcc-media-flows/services/rclone"
-	"github.com/bcc-code/bcc-media-flows/services/telegram"
-	"github.com/bcc-code/bcc-media-flows/utils"
-	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -23,66 +18,11 @@ Audio tracks:
 - Stream1, Track 3-16: Timecode/Multitrack Audio (optional)
 */
 func VBExportToBStage(ctx workflow.Context, params VBExportChildWorkflowParams) (*VBExportResult, error) {
-	logger := workflow.GetLogger(ctx)
-	logger.Info("Starting ExportToBStage")
-
-	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
-
-	isImage, err := wfutils.IsImage(ctx, params.InputFile)
-	if err != nil {
-		return nil, err
-	}
-
-	destExt := params.InputFile.Ext()
-	if !isImage {
-		destExt = ".mov"
-	}
-
-	extraFileName := ""
-	if params.SubtitleFile != nil && !isImage {
-		extraFileName = "_SUB_NOR"
-	}
-
-	rcloneDestination := deliveryFolder.Append("B-Stage", params.OriginalFilenameWithoutExt+extraFileName+destExt)
-
-	err = wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
-	if err != nil {
-		return nil, err
-	}
-
-	bStageOutputDir := params.TempDir.Append("b-stage_output")
-	err = wfutils.CreateFolder(ctx, bStageOutputDir)
-	if err != nil {
-		return nil, err
-	}
-
-	filePath := params.InputFile
-
-	if !isImage {
-		videoResult, err := wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
-			FilePath:       params.InputFile,
-			OutputDir:      bStageOutputDir,
-			Resolution:     utils.Resolution1080,
-			FrameRate:      50,
-			Interlace:      false,
-			BurnInSubtitle: params.SubtitleFile,
-			SubtitleStyle:  params.SubtitleStyle,
-			Alpha:          false,
-		}).Result(ctx)
-		if err != nil {
-			return nil, err
-		}
-		filePath = videoResult.OutputPath
-	}
-
-	err = wfutils.RcloneCopyFileWithNotifications(ctx, filePath, rcloneDestination, rclone.PriorityHigh, rcloneNotificationOptions)
-	if err != nil {
-		return nil, err
-	}
-
-	notifyExportDone(ctx, params, "bstage", filePath)
-
-	return &VBExportResult{
-		ID: params.ParentParams.VXID,
-	}, nil
+	return runVBExportChild(ctx, params, vbExportDestination{
+		flow:       "bstage",
+		folder:     "B-Stage",
+		outputDir:  "b-stage_output",
+		imageAware: true,
+		transcode:  transcodeToProRes(false, false),
+	})
 }
