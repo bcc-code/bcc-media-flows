@@ -14,7 +14,7 @@ func VBExportToXDCAM(ctx workflow.Context, params VBExportChildWorkflowParams) (
 		folder:    "XDCAM",
 		outputDir: "xdcam_output",
 		ext:       ".mxf",
-		transcode: func(ctx workflow.Context, params VBExportChildWorkflowParams, outputDir paths.Path, _ bool) (paths.Path, error) {
+		transcode: func(ctx workflow.Context, params VBExportChildWorkflowParams, outputDir paths.Path) (paths.Path, error) {
 			res, err := wfutils.Execute(ctx, activities.Video.TranscodeToXDCAMActivity, activities.EncodeParams{
 				FilePath:       params.InputFile,
 				OutputDir:      outputDir,

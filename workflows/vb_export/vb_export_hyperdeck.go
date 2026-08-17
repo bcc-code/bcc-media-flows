@@ -22,7 +22,7 @@ func VBExportToHyperdeck(ctx workflow.Context, params VBExportChildWorkflowParam
 	})
 }
 
-func transcodeToHyperdeckProRes(ctx workflow.Context, params VBExportChildWorkflowParams, outputDir paths.Path, _ bool) (paths.Path, error) {
+func transcodeToHyperdeckProRes(ctx workflow.Context, params VBExportChildWorkflowParams, outputDir paths.Path) (paths.Path, error) {
 	analyzeResult, err := wfutils.Execute(ctx, activities.Audio.AnalyzeFile, activities.AnalyzeFileParams{
 		FilePath: params.InputFile,
 	}).Result(ctx)

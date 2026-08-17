@@ -40,17 +40,18 @@ func exportToHippoHAP(ctx workflow.Context, params VBExportChildWorkflowParams, 
 		outputDir:  flowName + "_output",
 		imageAware: true,
 		transcode:  transcodeToHAP(format),
+		image:      copyImageToOutputDir,
 	})
 }
 
-func transcodeToHAP(format transcode.HAPFormat) transcodeFunc {
-	return func(ctx workflow.Context, params VBExportChildWorkflowParams, outputDir paths.Path, isImage bool) (paths.Path, error) {
-		if isImage {
-			outputFile := outputDir.Append(params.InputFile.Base())
-			_ = wfutils.CopyFile(ctx, params.InputFile, outputFile)
-			return outputFile, nil
-		}
+func copyImageToOutputDir(ctx workflow.Context, params VBExportChildWorkflowParams, outputDir paths.Path) (paths.Path, error) {
+	outputFile := outputDir.Append(params.InputFile.Base())
+	_ = wfutils.CopyFile(ctx, params.InputFile, outputFile)
+	return outputFile, nil
+}
 
+func transcodeToHAP(format transcode.HAPFormat) transcodeFunc {
+	return func(ctx workflow.Context, params VBExportChildWorkflowParams, outputDir paths.Path) (paths.Path, error) {
 		if params.AnalyzeResult.FrameRate != 25 && params.AnalyzeResult.FrameRate != 50 {
 			return paths.Path{}, merry.New("Expected 25 or 50 fps input")
 		}

@@ -233,6 +233,33 @@ func (s *VBExportTestSuite) Test_VBExportToBStage() {
 	s.Equal("test_video", result.Title)
 }
 
+func (s *VBExportTestSuite) Test_VBExportToBStage_ImageIsDeliveredWithoutTranscoding() {
+	s.env.OnActivity(activities.Util.SendTelegramMessage, mock.Anything, mock.Anything).Maybe().Return(nil, nil)
+	s.env.OnActivity(activities.Util.CreateFolder, mock.Anything, mock.Anything).Maybe().Return(nil, nil)
+	s.env.OnActivity(activities.Util.RcloneCheckFileExists, mock.Anything, mock.Anything).Maybe().Return(false, nil)
+	s.env.OnActivity(activities.Util.RcloneWaitForJob, mock.Anything, mock.Anything).Maybe().Return(true, nil)
+
+	mimeType := "image/png"
+	s.env.OnActivity(activities.Util.GetMimeType, mock.Anything, mock.Anything).Return(&mimeType, nil)
+
+	var copied activities.RcloneFileInput
+	s.env.OnActivity(activities.Util.RcloneCopyFile, mock.Anything, mock.Anything).
+		Run(func(args mock.Arguments) { copied = args.Get(1).(activities.RcloneFileInput) }).
+		Return(1, nil)
+
+	params := childParams()
+	params.InputFile = paths.MustParse("/mnt/temp/workflows/test_image.png")
+	params.OriginalFilenameWithoutExt = "test_image"
+
+	s.env.ExecuteWorkflow(VBExportToBStage, params)
+	s.True(s.env.IsWorkflowCompleted())
+	s.NoError(s.env.GetWorkflowError())
+
+	s.env.AssertNotCalled(s.T(), "TranscodeToProResActivity", mock.Anything, mock.Anything)
+	s.Equal(params.InputFile, copied.Source)
+	s.Equal("/Delivery/FraMB/B-Stage/test_image.png", copied.Destination.Path)
+}
+
 func (s *VBExportTestSuite) Test_VBExportToRawAbekas_CopiesWithoutTranscoding() {
 	s.env.OnActivity(activities.Util.SendTelegramMessage, mock.Anything, mock.Anything).Maybe().Return(nil, nil)
 	s.env.OnActivity(activities.Util.RcloneCheckFileExists, mock.Anything, mock.Anything).Maybe().Return(false, nil)

@@ -10,7 +10,7 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-type transcodeFunc func(ctx workflow.Context, params VBExportChildWorkflowParams, outputDir paths.Path, isImage bool) (paths.Path, error)
+type transcodeFunc func(ctx workflow.Context, params VBExportChildWorkflowParams, outputDir paths.Path) (paths.Path, error)
 
 // vbExportDestination describes one delivery destination. Exactly one of copySource
 // and transcode must be set.
@@ -26,6 +26,10 @@ type vbExportDestination struct {
 
 	copySource func(VBExportChildWorkflowParams) paths.Path
 	transcode  transcodeFunc
+
+	// image runs in place of transcode when the input is an image. Nil delivers the
+	// input untouched.
+	image transcodeFunc
 }
 
 func runVBExportChild(ctx workflow.Context, params VBExportChildWorkflowParams, dest vbExportDestination) (*VBExportResult, error) {
@@ -79,9 +83,16 @@ func runVBExportChild(ctx workflow.Context, params VBExportChildWorkflowParams, 
 			return nil, err
 		}
 
-		filePath, err = dest.transcode(ctx, params, outputDir, isImage)
-		if err != nil {
-			return nil, err
+		produce := dest.transcode
+		if isImage {
+			produce = dest.image
+		}
+
+		if produce != nil {
+			filePath, err = produce(ctx, params, outputDir)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -99,11 +110,7 @@ func runVBExportChild(ctx workflow.Context, params VBExportChildWorkflowParams, 
 }
 
 func transcodeToProRes(interlace, alpha bool) transcodeFunc {
-	return func(ctx workflow.Context, params VBExportChildWorkflowParams, outputDir paths.Path, isImage bool) (paths.Path, error) {
-		if isImage {
-			return params.InputFile, nil
-		}
-
+	return func(ctx workflow.Context, params VBExportChildWorkflowParams, outputDir paths.Path) (paths.Path, error) {
 		res, err := wfutils.Execute(ctx, activities.Video.TranscodeToProResActivity, activities.EncodeParams{
 			FilePath:       params.InputFile,
 			OutputDir:      outputDir,
