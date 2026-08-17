@@ -15,8 +15,8 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-// DefaultTimeout bounds a single attempt when a Config does not say otherwise. It is
-// generous on purpose: the activity around the call carries the real deadline.
+// DefaultTimeout is generous on purpose: the activity around the call carries the real
+// deadline.
 const DefaultTimeout = 60 * time.Second
 
 const maxErrorBodyLen = 512
@@ -30,26 +30,23 @@ type Config struct {
 	Service string
 	BaseURL string
 
-	// Timeout bounds a single attempt. Zero means DefaultTimeout.
+	// Zero means DefaultTimeout.
 	Timeout time.Duration
 
-	// RetryCount applies to every method, POST included, so a retried slow call can
-	// duplicate what it creates. Zero means no retries.
-	RetryCount int
-
-	// RetryWait and RetryMaxWait bound the backoff. Zero leaves resty's defaults.
+	// Retries reach every method, POST included, so a retried slow call can duplicate
+	// what it creates. Zero leaves resty's defaults for the waits, and no retries.
+	RetryCount   int
 	RetryWait    time.Duration
 	RetryMaxWait time.Duration
 
 	Headers   map[string]string
 	BasicAuth *BasicAuth
 
-	// ErrorBody is what resty unmarshals a JSON or XML error body into, reachable from
-	// DescribeError through resp.Error(). Nil leaves error bodies unparsed.
+	// ErrorBody is unmarshalled only for a JSON or XML error body, and reaches
+	// DescribeError through resp.Error().
 	ErrorBody any
 
-	// DescribeError turns a non-2xx response into the error the caller sees. Nil means
-	// Describe.
+	// Nil means Describe.
 	DescribeError func(*resty.Response) error
 }
 
@@ -114,13 +111,12 @@ func New(cfg Config) *resty.Client {
 	return client
 }
 
-// Describe is the default description of a non-2xx response.
 func Describe(service string, resp *resty.Response) error {
 	return DescribeWithDetail(service, resp, TruncateBody(resp.Body()))
 }
 
-// DescribeWithDetail is Describe with the body text replaced by detail, for a
-// DescribeError that has read a structured error envelope.
+// DescribeWithDetail replaces the body text with detail, for a DescribeError that has
+// read a structured error envelope.
 func DescribeWithDetail(service string, resp *resty.Response, detail string) error {
 	return merry.New(
 		fmt.Sprintf("%s %s %s failed (status %d): %s",
@@ -131,10 +127,9 @@ func DescribeWithDetail(service string, resp *resty.Response, detail string) err
 
 var secretQueryParams = []string{"key", "token", "api_key", "apikey", "access_token", "password"}
 
-// SanitizeError redacts a credential from an error raised before there was a response.
-// resty hands back net/http's *url.Error untouched, and it carries the whole request
-// URL — so a DNS failure or a refused connection reaches the workflow history with the
-// query string that Describe would have redacted.
+// SanitizeError covers the errors raised before there is a response to describe: resty
+// hands back net/http's *url.Error untouched, and it carries the whole request URL, so
+// a DNS failure or a refused connection would leak the query string.
 func SanitizeError(err error) error {
 	var urlErr *neturl.Error
 	if !errors.As(err, &urlErr) {
@@ -149,8 +144,8 @@ func SanitizeError(err error) error {
 	return &neturl.Error{Op: urlErr.Op, URL: redacted, Err: urlErr.Err}
 }
 
-// RedactURL replaces the value of any credential-carrying query parameter, so that an
-// error naming the request does not carry a key into the workflow history.
+// RedactURL keeps an error that names the request from putting a key in the workflow
+// history.
 func RedactURL(url string) string {
 	parsed, err := neturl.Parse(url)
 	if err != nil {
@@ -177,8 +172,8 @@ func RedactURL(url string) string {
 	return parsed.String()
 }
 
-// quietLogger drops resty's own logging, which prints the unredacted URL to stdout for
-// every failed request.
+// quietLogger exists because resty prints the unredacted URL to stdout for every
+// failed request.
 type quietLogger struct{}
 
 func (quietLogger) Errorf(string, ...any) {}
@@ -194,9 +189,8 @@ func TruncateBody(body []byte) string {
 
 type toleratedKey struct{}
 
-// Tolerating hands the listed statuses back to the caller instead of erroring. Use it
-// only where the status is an answer the caller handles — an existence probe, or
-// deleting something already gone.
+// Tolerating hands the listed statuses back to the caller: an existence probe, or
+// deleting something already gone — never a request that should have succeeded.
 func Tolerating(req *resty.Request, statuses ...int) *resty.Request {
 	return req.SetContext(context.WithValue(req.Context(), toleratedKey{}, statuses))
 }
