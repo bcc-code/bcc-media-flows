@@ -3,9 +3,11 @@ package scheduled
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"go.temporal.io/sdk/testsuite"
@@ -93,4 +95,33 @@ func (s *ScheduledTestSuite) Test_CleanupTemp() {
 
 func TestScheduledTestSuite(t *testing.T) {
 	suite.Run(t, new(ScheduledTestSuite))
+}
+
+func (s *ScheduledTestSuite) Test_CleanupTemp_OneCutoffForEveryFolder() {
+	var cutoffs []time.Time
+	var roots []string
+
+	s.env.OnActivity(activities.Util.DeleteOldFiles, mock.Anything, mock.Anything).
+		Run(func(args mock.Arguments) {
+			input := args.Get(1).(activities.CleanupInput)
+			cutoffs = append(cutoffs, input.OlderThan)
+			roots = append(roots, input.Root.Local())
+		}).Return([]string{}, nil)
+
+	s.env.OnActivity(activities.Util.DeleteEmptyDirectories, mock.Anything, mock.Anything).
+		Return(nil, nil)
+
+	start := s.env.Now()
+
+	s.env.ExecuteWorkflow(CleanupTemp)
+	s.True(s.env.IsWorkflowCompleted())
+	s.NoError(s.env.GetWorkflowError())
+
+	s.Len(cutoffs, 57, "one call per folder")
+	s.Len(lo.Uniq(roots), 57, "no folder is cleaned twice")
+
+	for _, cutoff := range cutoffs {
+		s.Equal(cutoffs[0], cutoff, "every folder is cleaned to the same cutoff")
+	}
+	s.WithinDuration(start.Add(-14*24*time.Hour), cutoffs[0], time.Minute)
 }
