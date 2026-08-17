@@ -92,38 +92,14 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 		videoFile = &result.Path
 	}
 
-	var audioFiles = map[string]paths.Path{}
-	{
-		keys, err := wfutils.GetMapKeysSafely(ctx, audioTasks)
-		if err != nil {
-			return nil, err
-		}
-		for _, lang := range keys {
-			task := audioTasks[lang]
-			var result common.MergeResult
-			err = task.Get(ctx, &result)
-			if err != nil {
-				return nil, err
-			}
-			audioFiles[lang] = result.Path
-		}
+	audioFiles, err := collectMergedPaths(ctx, audioTasks)
+	if err != nil {
+		return nil, err
 	}
 
-	var subtitleFiles = map[string]paths.Path{}
-	{
-		keys, err := wfutils.GetMapKeysSafely(ctx, subtitleTasks)
-		if err != nil {
-			return nil, err
-		}
-		for _, lang := range keys {
-			task := subtitleTasks[lang]
-			var result common.MergeResult
-			err = task.Get(ctx, &result)
-			if err != nil {
-				return nil, err
-			}
-			subtitleFiles[lang] = result.Path
-		}
+	subtitleFiles, err := collectMergedPaths(ctx, subtitleTasks)
+	if err != nil {
+		return nil, err
 	}
 
 	jsonTranscriptResult := map[string]paths.Path{}
@@ -249,4 +225,25 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir p
 		SubtitleMergeInputs: subtitleMergeInputs,
 		JSONTranscriptInput: JSONTranscriptInput,
 	}
+}
+
+// collectMergedPaths waits for one merge per language and keeps where each landed.
+func collectMergedPaths(ctx workflow.Context, tasks map[string]workflow.Future) (map[string]paths.Path, error) {
+	langs, err := wfutils.GetMapKeysSafely(ctx, tasks)
+	if err != nil {
+		return nil, err
+	}
+
+	files := map[string]paths.Path{}
+	for _, lang := range langs {
+		var result common.MergeResult
+		err = tasks[lang].Get(ctx, &result)
+		if err != nil {
+			return nil, err
+		}
+
+		files[lang] = result.Path
+	}
+
+	return files, nil
 }
