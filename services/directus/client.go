@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -209,15 +210,7 @@ func (c *Client) CreateStyledImage(imageID, style string) (*StyledImage, error) 
 	}
 
 	validStyles := []string{"poster", "default", "icon", "album", "featured"}
-	valid := false
-	for _, s := range validStyles {
-		if s == style {
-			valid = true
-			break
-		}
-	}
-
-	if !valid {
+	if !slices.Contains(validStyles, style) {
 		return nil, fmt.Errorf("invalid style: %s. Valid styles: %v", style, validStyles)
 	}
 

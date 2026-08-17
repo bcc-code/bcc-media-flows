@@ -2,7 +2,7 @@ package analytics
 
 import (
 	"fmt"
-	"os"
+	"github.com/bcc-code/bcc-media-flows/internal/bootstrap"
 	"sync"
 	"time"
 
@@ -72,10 +72,7 @@ func (s *Service) ActivityStarted(activityName string, queue string, parentWorkf
 		return
 	}
 
-	identity := os.Getenv("IDENTITY")
-	if identity == "" {
-		identity = "worker"
-	}
+	identity := bootstrap.Identity()
 
 	properties := map[string]interface{}{
 		"activityName":   activityName,

@@ -19,106 +19,119 @@ type CleanupResult struct {
 	DeletedCountPerRoot map[string]int
 }
 
+const defaultRetention = 14 * 24 * time.Hour
+
+// cleanupFolder is one folder to sweep. A zero Retention keeps
+// defaultRetention, so only a folder that needs a different one says so.
+type cleanupFolder struct {
+	Path      string
+	Retention time.Duration
+}
+
+func (f cleanupFolder) retention() time.Duration {
+	if f.Retention == 0 {
+		return defaultRetention
+	}
+	return f.Retention
+}
+
+func (f cleanupFolder) cutoff(ctx workflow.Context) time.Time {
+	return workflow.Now(ctx).Add(-f.retention())
+}
+
 func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting temp files cleanup")
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	foldersToCleanup := map[string]time.Time{
-		"/mnt/temp/":                     workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/filecatalyst/ingestgrow/":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/filecatalyst/workflow/":    workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Input/FromArvoll":   workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Input/FromDelivery": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Input/MGOF":         workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Input/Rawmaterial":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+	folders := []cleanupFolder{
+		{Path: "/mnt/temp/"},
+		{Path: "/mnt/filecatalyst/ingestgrow/"},
+		{Path: "/mnt/filecatalyst/workflow/"},
+		{Path: "/mnt/isilon/Input/FromArvoll"},
+		{Path: "/mnt/isilon/Input/FromDelivery"},
+		{Path: "/mnt/isilon/Input/MGOF"},
+		{Path: "/mnt/isilon/Input/Rawmaterial"},
 
 		// Transcoding folders
-		"/mnt/isilon/Transcoding/AVCintra100_HD/error":      workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/AVCintra100_HD/out":        workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/AVCintra100_HD/processed":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/AVCintra100_HD/processing": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/AVCintra100_HD/tmp":        workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Transcoding/AVCintra100_HD/error"},
+		{Path: "/mnt/isilon/Transcoding/AVCintra100_HD/out"},
+		{Path: "/mnt/isilon/Transcoding/AVCintra100_HD/processed"},
+		{Path: "/mnt/isilon/Transcoding/AVCintra100_HD/processing"},
+		{Path: "/mnt/isilon/Transcoding/AVCintra100_HD/tmp"},
 
-		"/mnt/isilon/Transcoding/AVCIntra100_TCSet/In":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/AVCIntra100_TCSet/Out": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Transcoding/AVCIntra100_TCSet/In"},
+		{Path: "/mnt/isilon/Transcoding/AVCIntra100_TCSet/Out"},
 
-		"/mnt/isilon/Transcoding/BroadcastWav_withTC/In":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/BroadcastWav_withTC/Out": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Transcoding/BroadcastWav_withTC/In"},
+		{Path: "/mnt/isilon/Transcoding/BroadcastWav_withTC/Out"},
 
-		"/mnt/isilon/Transcoding/Fallback/In":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/Fallback/Out": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Transcoding/Fallback/In"},
+		{Path: "/mnt/isilon/Transcoding/Fallback/Out"},
 
-		"/mnt/isilon/Transcoding/ImageSequence/Input": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/ImageSequence/Out":   workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Transcoding/ImageSequence/Input"},
+		{Path: "/mnt/isilon/Transcoding/ImageSequence/Out"},
 
-		"/mnt/isilon/Transcoding/IMX50/In":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/IMX50/Out": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Transcoding/IMX50/In"},
+		{Path: "/mnt/isilon/Transcoding/IMX50/Out"},
 
-		"/mnt/isilon/Transcoding/Multitrack_Playback/Input":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/Multitrack_Playback/Output": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Transcoding/Multitrack_Playback/Input"},
+		{Path: "/mnt/isilon/Transcoding/Multitrack_Playback/Output"},
 
-		"/mnt/isilon/Transcoding/ProRes422D/in": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Transcoding/ProRes422D/in"},
 
-		"/mnt/isilon/Transcoding/ProRes422HQ_HD/error":      workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/ProRes422HQ_HD/out":        workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/ProRes422HQ_HD/processed":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/ProRes422HQ_HD/processing": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/ProRes422HQ_HD/tmp":        workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_HD/error"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_HD/out"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_HD/processed"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_HD/processing"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_HD/tmp"},
 
-		"/mnt/isilon/Transcoding/ProRes422HQ_HD_16chaudio/In":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/ProRes422HQ_HD_16chaudio/Out": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_HD_16chaudio/In"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_HD_16chaudio/Out"},
 
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native/error":      workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native/out":        workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native/processed":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native/processing": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native/tmp":        workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native/error"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native/out"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native/processed"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native/processing"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native/tmp"},
 
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/error":      workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/out":        workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/processed":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/processing": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/tmp":        workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/error"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/out"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/processed"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/processing"},
+		{Path: "/mnt/isilon/Transcoding/ProRes422HQ_Native_25FPS/tmp"},
 
-		"/mnt/isilon/Transcoding/ProRes444_4K-25FPS/In":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/ProRes444_4K-25FPS/Out": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Transcoding/ProRes444_4K-25FPS/In"},
+		{Path: "/mnt/isilon/Transcoding/ProRes444_4K-25FPS/Out"},
 
-		"/mnt/isilon/Transcoding/SRT_TCOffset/In":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/SRT_TCOffset/Out": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Transcoding/SRT_TCOffset/In"},
+		{Path: "/mnt/isilon/Transcoding/SRT_TCOffset/Out"},
 
-		"/mnt/isilon/Transcoding/tmp": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Transcoding/tmp"},
 
-		"/mnt/isilon/Transcoding/Transcribe/error":      workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/Transcribe/out":        workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/Transcribe/processed":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/Transcribe/processing": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/Transcribe/tmp":        workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Transcoding/Transcribe/error"},
+		{Path: "/mnt/isilon/Transcoding/Transcribe/out"},
+		{Path: "/mnt/isilon/Transcoding/Transcribe/processed"},
+		{Path: "/mnt/isilon/Transcoding/Transcribe/processing"},
+		{Path: "/mnt/isilon/Transcoding/Transcribe/tmp"},
 
-		"/mnt/isilon/Transcoding/Wav/In":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/Wav/Out": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Transcoding/Wav/In"},
+		{Path: "/mnt/isilon/Transcoding/Wav/Out"},
 
-		"/mnt/isilon/Transcoding/XDCAMHD422/In":  workflow.Now(ctx).Add(-14 * 24 * time.Hour),
-		"/mnt/isilon/Transcoding/XDCAMHD422/Out": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Transcoding/XDCAMHD422/In"},
+		{Path: "/mnt/isilon/Transcoding/XDCAMHD422/Out"},
 
-		"/mnt/isilon/Export": workflow.Now(ctx).Add(-14 * 24 * time.Hour),
+		{Path: "/mnt/isilon/Export"},
 	}
 
 	deletedTotal := 0
 	deletedPerRoot := map[string]int{}
 
-	folders, err := wfutils.GetMapKeysSafely(ctx, foldersToCleanup)
-	if err != nil {
-		return nil, err
-	}
-
 	for _, folder := range folders {
-		olderThan := foldersToCleanup[folder]
-
 		deletedFilesLoop, err := wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.DeleteOldFiles, activities.CleanupInput{
-			Root:      paths.MustParse(folder),
-			OlderThan: olderThan,
+			Root:      paths.MustParse(folder.Path),
+			OlderThan: folder.cutoff(ctx),
 		}).Result(ctx)
 
 		if err != nil {
@@ -126,13 +139,13 @@ func CleanupTemp(ctx workflow.Context) (*CleanupResult, error) {
 			return nil, err
 		}
 
-		logger.Info("Deleted files", "root", folder, "count", len(deletedFilesLoop))
+		logger.Info("Deleted files", "root", folder.Path, "count", len(deletedFilesLoop))
 
-		deletedPerRoot[folder] = len(deletedFilesLoop)
+		deletedPerRoot[folder.Path] = len(deletedFilesLoop)
 		deletedTotal += len(deletedFilesLoop)
 
 		err = wfutils.ExecuteWithLowPrioQueue(ctx, activities.Util.DeleteEmptyDirectories, activities.CleanupInput{
-			Root: paths.MustParse(folder),
+			Root: paths.MustParse(folder.Path),
 		}).Wait(ctx)
 
 		if err != nil {

@@ -70,12 +70,7 @@ func IsilonExport(ctx workflow.Context, params IsilonExportParams) error {
 		return err
 	}
 
-	date := workflow.Now(ctx)
-	id := workflow.GetInfo(ctx).OriginalRunID
-	outputDir := paths.Path{
-		Drive: paths.IsilonDrive,
-		Path:  fmt.Sprintf("Export/%s/%s", date.Format("2006-01"), data.SafeTitle+"-"+id),
-	}
+	outputDir := wfutils.GetIsilonExportFolder(ctx, data.SafeTitle)
 
 	subtitlesOutputDir := outputDir.Append("subtitles")
 	err = wfutils.CreateFolder(ctx, subtitlesOutputDir)

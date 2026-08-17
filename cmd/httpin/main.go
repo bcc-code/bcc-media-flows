@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/internal/bootstrap"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/bcc-code/bcc-media-flows/utils"
@@ -42,11 +42,7 @@ func getClient() (client.Client, error) {
 }
 
 func getQueue() string {
-	queue := os.Getenv("QUEUE")
-	if queue == "" {
-		queue = environment.QueueWorker
-	}
-	return queue
+	return environment.GetQueue()
 }
 
 func triggerHandler(ctx *gin.Context) {
@@ -260,10 +256,7 @@ func triggerHandler(ctx *gin.Context) {
 
 func main() {
 	var err error
-	temporalClient, err = client.Dial(client.Options{
-		HostPort:  os.Getenv("TEMPORAL_HOST_PORT"),
-		Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
-	})
+	temporalClient, err = bootstrap.TemporalClient()
 	if err != nil {
 		panic(err)
 	}
@@ -279,10 +272,5 @@ func main() {
 
 	r.POST("/ingest/json", jsonIngestHandler)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080" // Default port if not specified
-	}
-
-	_ = r.Run(":" + port)
+	_ = bootstrap.Serve(r, "8080")
 }
