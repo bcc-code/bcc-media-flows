@@ -6,7 +6,11 @@ import (
 	"strings"
 
 	"github.com/go-resty/resty/v2"
+
+	"github.com/bcc-code/bcc-media-flows/internal/httpx"
 )
+
+const serviceName = "subtrans"
 
 type Client struct {
 	baseURL     string
@@ -15,9 +19,15 @@ type Client struct {
 }
 
 func NewClient(baseURL string, apiKey string) *Client {
-	client := resty.New()
-	client.SetBaseURL(baseURL)
-	client.SetHeader("accept", "application/json")
+	client := httpx.New(httpx.Config{
+		Service: serviceName,
+		BaseURL: baseURL,
+		Headers: map[string]string{"accept": "application/json"},
+	})
+
+	// Keep the key a query parameter rather than part of a path: that is where
+	// httpx.RedactURL looks for it before a URL reaches a workflow history.
+	client.SetQueryParam("key", apiKey)
 
 	return &Client{
 		baseURL:     baseURL,
@@ -26,22 +36,50 @@ func NewClient(baseURL string, apiKey string) *Client {
 	}
 }
 
+// get is the only place this client makes a request, so that no path can return an
+// error still carrying the key.
+func (c *Client) get(path string, query map[string]string, result any) (*resty.Response, error) {
+	req := c.restyClient.R().SetQueryParams(query)
+	if result != nil {
+		req = req.SetResult(result)
+	}
+
+	resp, err := req.Get(path)
+	if err != nil {
+		return nil, httpx.SanitizeError(err)
+	}
+
+	return resp, nil
+}
+
 func (c *Client) SearchByName(name string) ([]*SubtransResult, error) {
 	res := []*SubtransResult{}
-	_, err := c.restyClient.R().SetResult(&res).Get("/api/external/story/files/" + name + "?incLanguages=true&returnApprovedOnly=true&key=" + c.apiKey)
-	return res, err
+	_, err := c.get("/api/external/story/files/"+name, map[string]string{
+		"incLanguages":       "true",
+		"returnApprovedOnly": "true",
+	}, &res)
+	if err != nil {
+		// Not the empty slice: callers read that as "this file has no subtitles".
+		return nil, err
+	}
+
+	return res, nil
 }
 
 func (c *Client) SearchByID(id string) (*SubtransResult, error) {
 	res := &SubtransResult{}
-	_, err := c.restyClient.R().SetResult(res).Get("/api/external/story/storyid/" + id + "?incLanguages=true&key=" + c.apiKey)
-	return res, err
+	_, err := c.get("/api/external/story/storyid/"+id, map[string]string{
+		"incLanguages": "true",
+	}, res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 func (c *Client) GetFilePrefix(id string) (string, error) {
-	res := &SubtransResult{}
-	_, err := c.restyClient.R().SetResult(res).Get("/api/external/story/storyid/" + id + "?incLanguages=true&key=" + c.apiKey)
-
+	res, err := c.SearchByID(id)
 	if err != nil {
 		return "", err
 	}
@@ -75,17 +113,14 @@ func (c *Client) GetSubtitles(id string, format string, approvedOnly bool) (map[
 			continue
 		}
 
-		onlyApproved := "onlyApproved="
-		if approvedOnly {
-			onlyApproved += "true"
-		} else {
-			onlyApproved += "false"
-		}
-
 		// The 0 is a timecode offset
-		url := fmt.Sprintf("/api/external/export/story/storyid/%s/%s/%s/0?key=%s&%s", id, l.IsoName, format, c.apiKey, onlyApproved)
-		res, err := c.restyClient.R().Get(url)
+		url := fmt.Sprintf("/api/external/export/story/storyid/%s/%s/%s/0", id, l.IsoName, format)
+		res, err := c.get(url, map[string]string{
+			"onlyApproved": fmt.Sprintf("%t", approvedOnly),
+		}, nil)
 		if err != nil {
+			// GetSubtitlesActivity writes every value of the map straight to a .srt,
+			// so the body of a failed response must not reach it.
 			return nil, err
 		}
 

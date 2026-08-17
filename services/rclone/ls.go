@@ -2,6 +2,7 @@ package rclone
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -43,7 +44,7 @@ type RcloneFile struct {
 	IsDir    bool      `json:"IsDir"`
 }
 
-func ListFiles(remote, path string) ([]RcloneFile, error) {
+func ListFiles(ctx context.Context, remote, path string) ([]RcloneFile, error) {
 	body, err := json.Marshal(ListRequest{
 		Remote: remote,
 		Path:   path,
@@ -55,7 +56,7 @@ func ListFiles(remote, path string) ([]RcloneFile, error) {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", baseUrl+"/operations/list", bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, baseUrl+"/operations/list", bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +68,7 @@ func ListFiles(remote, path string) ([]RcloneFile, error) {
 	return resp.List, nil
 }
 
-func Stat(remote, path string) (*RcloneFile, error) {
+func Stat(ctx context.Context, remote, path string) (*RcloneFile, error) {
 	body, err := json.Marshal(ListRequest{
 		Remote: remote,
 		Path:   path,
@@ -79,7 +80,7 @@ func Stat(remote, path string) (*RcloneFile, error) {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", baseUrl+"/operations/stat", bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, baseUrl+"/operations/stat", bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}

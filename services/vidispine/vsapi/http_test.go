@@ -6,9 +6,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/bcc-code/bcc-media-flows/internal/httpx"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 )
 
 // vsServer serves a fixed status and body for every request, and records how many
@@ -170,6 +172,30 @@ func TestClient_DeleteShapeStillErrorsOn500(t *testing.T) {
 	err := client.DeleteShape("VX-1", "VX-2")
 
 	assert.Error(t, err)
+}
+
+func TestClient_TimeoutOutlastsASlowVidispineCall(t *testing.T) {
+	client, _ := vsServer(t, http.StatusOK, `{}`)
+
+	timeout := client.restyClient.GetClient().Timeout
+
+	assert.GreaterOrEqual(t, timeout, httpx.DefaultTimeout,
+		"a POST that is slow rather than broken must finish, not be retried into a duplicate")
+}
+
+func TestClient_RetriesAreStillConfigured(t *testing.T) {
+	client, _ := vsServer(t, http.StatusOK, `{}`)
+
+	assert.Positive(t, client.restyClient.RetryCount)
+}
+
+func TestClient_ErrorStatusIsNotRetried(t *testing.T) {
+	client, calls := vsServer(t, http.StatusInternalServerError, `{"internalServer":"boom"}`)
+
+	_, err := client.AddShapeToItem("original", "VX-1", "VX-2")
+
+	require.Error(t, err)
+	assert.Equal(t, 1, *calls, "the server answered; asking again would create a second shape")
 }
 
 // A successful response must be untouched by the hook.

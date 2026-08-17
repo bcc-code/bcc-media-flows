@@ -5,9 +5,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ansel1/merry/v2"
 	"github.com/go-resty/resty/v2"
+
+	"github.com/bcc-code/bcc-media-flows/internal/httpx"
 )
+
+const serviceName = "cantemo"
 
 type Client struct {
 	baseURL     string
@@ -18,53 +21,29 @@ type cantemoErrorResponse struct {
 	Detail string `json:"detail"`
 }
 
-// maxErrorBodyLen bounds how much of an error body is quoted back. These errors
-// travel up into the Temporal workflow history, and an HTML error page from a proxy
-// would otherwise put the whole document there.
-const maxErrorBodyLen = 512
-
-func truncateErrorBody(body []byte) string {
-	if len(body) <= maxErrorBodyLen {
-		return string(body)
-	}
-	return string(body[:maxErrorBodyLen]) + "…(truncated)"
-}
-
-// cantemoErrorFromResponse describes a non-2xx response.
-//
-// Callers decide on the status directly rather than inferring it from resp.Error()
-// being populated: resty only unmarshals an error body for JSON and XML content
-// types, so an HTML 502 from a proxy or an empty-bodied 404 leaves resp.Error() nil.
-// The message never depends solely on the envelope's "detail" either, since that key
-// is absent from some responses.
+// cantemoErrorFromResponse prefers Cantemo's own explanation, when there is one: resty
+// only unmarshals an error body for JSON and XML, and "detail" is absent from some
+// responses.
 func cantemoErrorFromResponse(resp *resty.Response) error {
-	request := resp.Request.Method + " " + resp.Request.URL
-
-	detail := truncateErrorBody(resp.Body())
 	if cantemoError, ok := resp.Error().(*cantemoErrorResponse); ok && cantemoError != nil && cantemoError.Detail != "" {
-		detail = cantemoError.Detail
+		return httpx.DescribeWithDetail(serviceName, resp, cantemoError.Detail)
 	}
 
-	return merry.New(
-		fmt.Sprintf("cantemo %s failed (status %d): %s", request, resp.StatusCode(), detail),
-		merry.WithHTTPCode(resp.StatusCode()),
-	)
+	return httpx.Describe(serviceName, resp)
 }
 
 func NewClient(baseURL, authToken string) *Client {
 	baseURL = strings.TrimSuffix(baseURL, "/")
 
-	client := resty.New()
-	client.SetBaseURL(baseURL)
-	client.SetHeader("Auth-Token", authToken)
-	client.SetHeader("Accept", "application/json")
-	client.SetDisableWarn(true)
-	client.SetError(cantemoErrorResponse{})
-	client.OnAfterResponse(func(_ *resty.Client, resp *resty.Response) error {
-		if !resp.IsError() {
-			return nil
-		}
-		return cantemoErrorFromResponse(resp)
+	client := httpx.New(httpx.Config{
+		Service: serviceName,
+		BaseURL: baseURL,
+		Headers: map[string]string{
+			"Auth-Token": authToken,
+			"Accept":     "application/json",
+		},
+		ErrorBody:     cantemoErrorResponse{},
+		DescribeError: cantemoErrorFromResponse,
 	})
 
 	return &Client{

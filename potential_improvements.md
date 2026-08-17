@@ -1167,3 +1167,39 @@ most if the proxy were ever misconfigured, bypassed, or reached from an already-
   allowlists. Two ways out: move the frame-rate probe into the video activity that runs
   the resulting arguments, or move `CropShortActivity` to `VideoActivities`. Either way
   the discarded error should become a real one.
+
+## Found while building the shared HTTP client (2026-08-14)
+
+- **`services/transcribe` is the last client on raw resty, and the worst of them.**
+  It was left out of the `httpx` migration deliberately, and everything the shared client
+  would have given it is still missing: no status check anywhere, so a 404 from the
+  transcription service leaves `DoTranscribe` polling a job that does not exist until the
+  activity's heartbeat budget runs out, and `resp.Result()` hands back a zero-valued
+  `TranscribeJob` that reads as a job in no state. Three more things in the same
+  constructor (`transcribe.go:208-212`): `Debug = true` dumps full transcript payloads to
+  stdout; `RetryWaitTime = 10` and `RetryMaxWaitTime = 30` are `time.Duration`, so they are
+  **10 and 30 nanoseconds**, not seconds — the three retries fire as fast as the transport
+  allows; and there is no timeout. `transcribe.go:51` also has a leftover
+  `fmt.Println("  Status Code:", ...)`.
+
+- **Three ad-hoc resty clients live in `activities/`.** `activities/shorts.go:55,76` and
+  `activities/audio_sync.go:22` each build their own `resty.New()` with a hand-written
+  status check and no timeout, so they are outside `services/` and outside the shared
+  client. `services/internal/httpx` cannot be imported from `activities/` — Go's internal
+  rule confines it to `services/...` — so folding these in means either moving the package
+  to `internal/httpx` at the module root or moving the calls behind a service client.
+
+- **resty logs every failed request to stdout, with the URL.** A `WARN` and an `ERROR`
+  line per failure, duplicating the returned error. `httpx` installs a no-op logger, which
+  matters because two clients carry a credential in the query string — but the clients not
+  on `httpx` (`transcribe`, the `activities/` clients) still log theirs.
+
+- **`subtrans.SearchByName` concatenates an unescaped file name into the request path.**
+  The name comes from a media file's basename, so a space or a `#` in it produces a
+  request for something other than what was asked for. Left alone in the status-handling
+  commit; `SetPathParam` would escape it.
+
+- **`rclone` and `filecatalyst` never got a timeout either.** Both are on raw `net/http`
+  and were kept off `httpx` on purpose, but `rclone/requests.go:31` uses
+  `http.DefaultClient`, which has no timeout at all — and it is the client every file
+  copy in the tree goes through. `bmm/raven.go`'s `queryRaven` remains the shape to copy.

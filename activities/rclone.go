@@ -60,7 +60,7 @@ func (ua UtilActivities) RcloneWaitForJob(ctx context.Context, params RcloneWait
 	lastNotification := time.Now()
 
 	for {
-		job, err := rclone.CheckJobStatus(jobID, 5)
+		job, err := rclone.CheckJobStatus(ctx, jobID, 5)
 		if err != nil {
 			return false, JobFailedErr(err)
 		}
@@ -108,7 +108,7 @@ func (ua UtilActivities) RcloneCopyDir(ctx context.Context, input RcloneCopyDirI
 	activity.RecordHeartbeat(ctx, "Rclone CopyDir")
 	activity.GetLogger(ctx).Debug(fmt.Sprintf("Rclone CopyDir: %s -> %s", input.Source, input.Destination))
 
-	res, err := rclone.CopyDir(input.Source, input.Destination)
+	res, err := rclone.CopyDir(ctx, input.Source, input.Destination)
 	if err != nil {
 		return 0, err
 	}
@@ -124,7 +124,7 @@ func (ua UtilActivities) RcloneListFiles(ctx context.Context, input RcloneListFi
 	activity.GetLogger(ctx).Debug(fmt.Sprintf("Rclone list dir: %s", input.Folder))
 
 	remote, path := input.Folder.RcloneFsRemote()
-	return rclone.ListFiles(remote, path)
+	return rclone.ListFiles(ctx, remote, path)
 }
 
 type RcloneFileInput struct {
@@ -141,6 +141,7 @@ func (ua UtilActivities) RcloneMoveFile(ctx context.Context, input RcloneFileInp
 	dstFs, dstRemote := input.Destination.RcloneFsRemote()
 
 	res, err := rclone.MoveFile(
+		ctx,
 		srcFs, srcRemote,
 		dstFs, dstRemote,
 		input.Priority,
@@ -160,6 +161,7 @@ func (ua UtilActivities) RcloneCopyFile(ctx context.Context, input RcloneFileInp
 	dstFs, dstRemote := input.Destination.RcloneFsRemote()
 
 	res, err := rclone.CopyFile(
+		ctx,
 		srcFs, srcRemote,
 		dstFs, dstRemote,
 		input.Priority,
@@ -181,7 +183,7 @@ func (ua UtilActivities) RcloneCheckFileExists(ctx context.Context, input Rclone
 
 	fs, remote := input.File.RcloneFsRemote()
 
-	stats, err := rclone.Stat(fs, remote)
+	stats, err := rclone.Stat(ctx, fs, remote)
 	if err != nil {
 		return false, err
 	}

@@ -2,6 +2,7 @@ package rclone
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"github.com/ansel1/merry/v2"
 	"github.com/orsinium-labs/enum"
@@ -9,7 +10,9 @@ import (
 	"time"
 )
 
-const baseUrl = "http://rclone.lan.bcc.media"
+// baseUrl is where the rclone remote-control API lives. A var so the tests can point
+// the package at a stub.
+var baseUrl = "http://rclone.lan.bcc.media"
 
 var (
 	errTimeout = merry.Sentinel("timeout waiting for transfer slot")
@@ -33,7 +36,7 @@ type copyRequest struct {
 	Destination string `json:"dstFs"`
 }
 
-func CopyDir(source, destination string) (*JobResponse, error) {
+func CopyDir(ctx context.Context, source, destination string) (*JobResponse, error) {
 	body, err := json.Marshal(copyRequest{
 		Async:       true,
 		Source:      source,
@@ -43,7 +46,7 @@ func CopyDir(source, destination string) (*JobResponse, error) {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", baseUrl+"/sync/copy", bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, baseUrl+"/sync/copy", bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +62,7 @@ type fileRequest struct {
 	DestinationPath   string `json:"dstRemote"`
 }
 
-func MoveFile(sourceRemote, sourcePath, destinationRemote, destinationPath string, priority Priority) (*JobResponse, error) {
+func MoveFile(ctx context.Context, sourceRemote, sourcePath, destinationRemote, destinationPath string, priority Priority) (*JobResponse, error) {
 	body, err := json.Marshal(fileRequest{
 		Async:             true,
 		SourceRemote:      sourceRemote,
@@ -71,12 +74,12 @@ func MoveFile(sourceRemote, sourcePath, destinationRemote, destinationPath strin
 		return nil, err
 	}
 
-	err = waitForTransferSlot(priority, time.Hour)
+	err = waitForTransferSlot(ctx, priority, time.Hour)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", baseUrl+"/operations/movefile", bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, baseUrl+"/operations/movefile", bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +87,7 @@ func MoveFile(sourceRemote, sourcePath, destinationRemote, destinationPath strin
 	return doRequest[JobResponse](req)
 }
 
-func CopyFile(sourceRemote, sourcePath, destinationRemote, destinationPath string, priority Priority) (*JobResponse, error) {
+func CopyFile(ctx context.Context, sourceRemote, sourcePath, destinationRemote, destinationPath string, priority Priority) (*JobResponse, error) {
 	body, err := json.Marshal(fileRequest{
 		Async:             true,
 		SourceRemote:      sourceRemote,
@@ -97,12 +100,12 @@ func CopyFile(sourceRemote, sourcePath, destinationRemote, destinationPath strin
 		return nil, err
 	}
 
-	err = waitForTransferSlot(priority, time.Hour)
+	err = waitForTransferSlot(ctx, priority, time.Hour)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", baseUrl+"/operations/copyfile", bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, baseUrl+"/operations/copyfile", bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}

@@ -7,14 +7,40 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bcc-code/bcc-media-flows/common"
-	"github.com/bcc-code/bcc-media-flows/utils"
-
 	"github.com/go-resty/resty/v2"
 	"go.temporal.io/sdk/activity"
+
+	"github.com/bcc-code/bcc-media-flows/common"
+	"github.com/bcc-code/bcc-media-flows/internal/httpx"
+	"github.com/bcc-code/bcc-media-flows/utils"
 )
 
 const BaseUrl = "http://10.12.128.44:8888"
+
+const serviceName = "transcribe"
+
+const (
+	retryCount   = 3
+	retryWait    = 10 * time.Second
+	retryMaxWait = 30 * time.Second
+)
+
+// pollInterval and baseURL are vars only so the tests can drive the poll loop against
+// a stub server.
+var (
+	pollInterval = 10 * time.Second
+	baseURL      = BaseUrl
+)
+
+func newClient() *resty.Client {
+	return httpx.New(httpx.Config{
+		Service:      serviceName,
+		BaseURL:      baseURL,
+		RetryCount:   retryCount,
+		RetryWait:    retryWait,
+		RetryMaxWait: retryMaxWait,
+	})
+}
 
 var (
 	errNoInputFile = fmt.Errorf("no input file")
@@ -44,32 +70,6 @@ type TranscribeJob struct {
 	Model        string `json:"model"`
 	Duration     string `json:"duration"`
 	Priority     int    `json:"priority"`
-}
-
-func DebugResponse(resp *resty.Response) {
-	fmt.Println("Response Info:")
-	fmt.Println("  Status Code:", resp.StatusCode())
-	fmt.Println("  Status     :", resp.Status())
-	fmt.Println("  Proto      :", resp.Proto())
-	fmt.Println("  Time       :", resp.Time())
-	fmt.Println("  Received At:", resp.ReceivedAt())
-	fmt.Println("  Body       :\n", resp)
-	fmt.Println()
-
-	fmt.Println("Request Trace Info:")
-	ti := resp.Request.TraceInfo()
-	fmt.Println("  DNSLookup     :", ti.DNSLookup)
-	fmt.Println("  ConnTime      :", ti.ConnTime)
-	fmt.Println("  TCPConnTime   :", ti.TCPConnTime)
-	fmt.Println("  TLSHandshake  :", ti.TLSHandshake)
-	fmt.Println("  ServerTime    :", ti.ServerTime)
-	fmt.Println("  ResponseTime  :", ti.ResponseTime)
-	fmt.Println("  TotalTime     :", ti.TotalTime)
-	fmt.Println("  IsConnReused  :", ti.IsConnReused)
-	fmt.Println("  IsConnWasIdle :", ti.IsConnWasIdle)
-	fmt.Println("  ConnIdleTime  :", ti.ConnIdleTime)
-	fmt.Println("  RequestAttempt:", ti.RequestAttempt)
-	fmt.Println("  RemoteAddr    :", ti.RemoteAddr.String())
 }
 
 var whisperSupportedLanguages = map[string]bool{
@@ -205,15 +205,12 @@ func DoTranscribe(
 		return nil, errNoOutput
 	}
 
-	restyClient := resty.New()
-	restyClient.Debug = true
-	restyClient.RetryCount = 3
-	restyClient.RetryWaitTime = 10
-	restyClient.RetryMaxWaitTime = 30
+	client := newClient()
 
 	language = normalizeTranscriptionLanguage(language)
 
-	resp, err := restyClient.R().EnableTrace().
+	resp, err := client.R().
+		SetContext(ctx).
 		SetBody(TranscribeInput{
 			Path:       inputFile,
 			Language:   language,
@@ -221,33 +218,46 @@ func DoTranscribe(
 			OutputPath: outputFolder,
 		}).
 		SetResult(&TranscribeJob{}).
-		Post(fmt.Sprintf("%s/transcription/job", BaseUrl))
+		Post("/transcription/job")
 
 	if err != nil {
 		return nil, err
 	}
 
 	job := resp.Result().(*TranscribeJob)
+	if job.ID == "" {
+		return nil, fmt.Errorf("transcription service accepted the job but returned no id")
+	}
 
 	// Periodically check the status of the job
 	for {
-		activity.RecordHeartbeat(ctx)
-		resp, err := restyClient.R().EnableTrace().
+		// RecordHeartbeat panics outside an activity, and this is a plain function.
+		if activity.IsActivity(ctx) {
+			activity.RecordHeartbeat(ctx)
+		}
+
+		resp, err := client.R().
+			SetContext(ctx).
 			SetResult(&TranscribeJob{}).
-			Get(fmt.Sprintf("%s/transcription/job/%s", BaseUrl, job.ID))
+			Get("/transcription/job/" + job.ID)
 
 		if err != nil {
 			return nil, err
 		}
 
-		job := resp.Result().(*TranscribeJob)
-		switch job.Status {
+		status := resp.Result().(*TranscribeJob)
+		switch status.Status {
 		case "COMPLETED":
-			return job, nil
+			return status, nil
 		case "FAILED":
-			return job, fmt.Errorf("job failed")
+			return status, fmt.Errorf("transcription job %s failed", job.ID)
 		}
-		time.Sleep(10 * time.Second)
+
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(pollInterval):
+		}
 	}
 }
 
