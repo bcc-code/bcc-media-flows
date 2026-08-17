@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	neturl "net/url"
 	"strings"
 	"testing"
 	"time"
@@ -292,4 +293,60 @@ func TestNew_BaseURLTrailingSlashIsTrimmed(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, "/items/VX-1", path)
+}
+
+func TestNew_RedirectItDidNotFollowIsAnError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusFound)
+		_, _ = w.Write([]byte(`{"name":"not the answer"}`))
+	}))
+	t.Cleanup(server.Close)
+
+	client := New(Config{Service: "redirecting", BaseURL: server.URL})
+
+	result := &struct {
+		Name string `json:"name"`
+	}{}
+	_, err := client.R().SetResult(result).Get("/thing")
+
+	require.Error(t, err, "resty calls a status an error only from 400 up")
+	assert.Contains(t, err.Error(), "302")
+	assert.Empty(t, result.Name, "resty unmarshals a result only on 2xx")
+}
+
+func TestSanitizeError_RedactsTheURLATransportErrorCarries(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
+	server.Close()
+
+	client := New(Config{Service: "unreachable", BaseURL: server.URL})
+
+	_, err := client.R().SetQueryParam("key", "s3cr3t-api-key").Get("/api/story")
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "s3cr3t-api-key", "resty returns net/http's error untouched")
+
+	sanitized := SanitizeError(err)
+	assert.NotContains(t, sanitized.Error(), "s3cr3t-api-key")
+	assert.Contains(t, sanitized.Error(), "redacted")
+}
+
+func TestSanitizeError_KeepsTheWrappedError(t *testing.T) {
+	sentinel := fmt.Errorf("connection refused")
+	err := &neturl.Error{Op: "Get", URL: "http://svc/story?key=secret", Err: sentinel}
+
+	sanitized := SanitizeError(err)
+
+	assert.ErrorIs(t, sanitized, sentinel, "callers branch on the cause, not the message")
+	assert.NotContains(t, sanitized.Error(), "secret")
+}
+
+func TestSanitizeError_LeavesEverythingElseAlone(t *testing.T) {
+	plain := fmt.Errorf("something else went wrong")
+	assert.Equal(t, plain, SanitizeError(plain))
+
+	nothingToRedact := &neturl.Error{Op: "Get", URL: "http://svc/items/VX-1", Err: plain}
+	assert.Equal(t, nothingToRedact, SanitizeError(nothingToRedact))
+
+	assert.NoError(t, SanitizeError(nil))
 }

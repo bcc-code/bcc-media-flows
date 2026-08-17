@@ -36,15 +36,28 @@ func NewClient(baseURL string, apiKey string) *Client {
 	}
 }
 
+// get is the only place this client makes a request, so that no path can return an
+// error still carrying the key.
+func (c *Client) get(path string, query map[string]string, result any) (*resty.Response, error) {
+	req := c.restyClient.R().SetQueryParams(query)
+	if result != nil {
+		req = req.SetResult(result)
+	}
+
+	resp, err := req.Get(path)
+	if err != nil {
+		return nil, httpx.SanitizeError(err)
+	}
+
+	return resp, nil
+}
+
 func (c *Client) SearchByName(name string) ([]*SubtransResult, error) {
 	res := []*SubtransResult{}
-	_, err := c.restyClient.R().
-		SetQueryParams(map[string]string{
-			"incLanguages":       "true",
-			"returnApprovedOnly": "true",
-		}).
-		SetResult(&res).
-		Get("/api/external/story/files/" + name)
+	_, err := c.get("/api/external/story/files/"+name, map[string]string{
+		"incLanguages":       "true",
+		"returnApprovedOnly": "true",
+	}, &res)
 	if err != nil {
 		// Not the empty slice: callers read that as "this file has no subtitles".
 		return nil, err
@@ -55,10 +68,9 @@ func (c *Client) SearchByName(name string) ([]*SubtransResult, error) {
 
 func (c *Client) SearchByID(id string) (*SubtransResult, error) {
 	res := &SubtransResult{}
-	_, err := c.restyClient.R().
-		SetQueryParam("incLanguages", "true").
-		SetResult(res).
-		Get("/api/external/story/storyid/" + id)
+	_, err := c.get("/api/external/story/storyid/"+id, map[string]string{
+		"incLanguages": "true",
+	}, res)
 	if err != nil {
 		return nil, err
 	}
@@ -103,9 +115,9 @@ func (c *Client) GetSubtitles(id string, format string, approvedOnly bool) (map[
 
 		// The 0 is a timecode offset
 		url := fmt.Sprintf("/api/external/export/story/storyid/%s/%s/%s/0", id, l.IsoName, format)
-		res, err := c.restyClient.R().
-			SetQueryParam("onlyApproved", fmt.Sprintf("%t", approvedOnly)).
-			Get(url)
+		res, err := c.get(url, map[string]string{
+			"onlyApproved": fmt.Sprintf("%t", approvedOnly),
+		}, nil)
 		if err != nil {
 			// GetSubtitlesActivity writes every value of the map straight to a .srt,
 			// so the body of a failed response must not reach it.

@@ -195,3 +195,28 @@ func TestGetSubtitles_PassesApprovedOnlyThrough(t *testing.T) {
 		})
 	}
 }
+
+func TestClient_TransportErrorDoesNotLeakTheKey(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
+	server.Close()
+
+	client := NewClient(server.URL, "s3cr3t-api-key")
+
+	for _, test := range []struct {
+		name string
+		call func() error
+	}{
+		{"SearchByID", func() error { _, err := client.SearchByID("1"); return err }},
+		{"SearchByName", func() error { _, err := client.SearchByName("file.mxf"); return err }},
+		{"GetFilePrefix", func() error { _, err := client.GetFilePrefix("1"); return err }},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			err := test.call()
+
+			require.Error(t, err)
+			assert.NotContains(t, err.Error(), "s3cr3t-api-key",
+				"a refused connection reaches the workflow history with the whole URL")
+			assert.Contains(t, err.Error(), "redacted")
+		})
+	}
+}

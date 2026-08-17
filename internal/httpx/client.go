@@ -4,6 +4,7 @@ package httpx
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	neturl "net/url"
 	"slices"
@@ -97,8 +98,11 @@ func New(cfg Config) *resty.Client {
 		describe = func(resp *resty.Response) error { return Describe(service, resp) }
 	}
 
+	// IsSuccess rather than IsError: resty calls a status an error only from 400 up,
+	// and it unmarshals a result only on 2xx, so a 3xx it did not follow would reach
+	// the caller as a zero value with no error.
 	client.OnAfterResponse(func(_ *resty.Client, resp *resty.Response) error {
-		if !resp.IsError() {
+		if resp.IsSuccess() {
 			return nil
 		}
 		if tolerates(resp.Request, resp.StatusCode()) {
@@ -126,6 +130,24 @@ func DescribeWithDetail(service string, resp *resty.Response, detail string) err
 }
 
 var secretQueryParams = []string{"key", "token", "api_key", "apikey", "access_token", "password"}
+
+// SanitizeError redacts a credential from an error raised before there was a response.
+// resty hands back net/http's *url.Error untouched, and it carries the whole request
+// URL — so a DNS failure or a refused connection reaches the workflow history with the
+// query string that Describe would have redacted.
+func SanitizeError(err error) error {
+	var urlErr *neturl.Error
+	if !errors.As(err, &urlErr) {
+		return err
+	}
+
+	redacted := RedactURL(urlErr.URL)
+	if redacted == urlErr.URL {
+		return err
+	}
+
+	return &neturl.Error{Op: urlErr.Op, URL: redacted, Err: urlErr.Err}
+}
 
 // RedactURL replaces the value of any credential-carrying query parameter, so that an
 // error naming the request does not carry a key into the workflow history.
