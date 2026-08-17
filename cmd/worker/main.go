@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/internal/bootstrap"
 	"log"
 	"os"
 	"os/exec"
@@ -17,7 +18,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/vizualizer"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
-	"github.com/joho/godotenv"
 
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"github.com/bcc-code/bcc-media-flows/workflows"
@@ -65,12 +65,11 @@ func GetAnalyticsService() *analytics.Service {
 var Version = "development"
 
 func main() {
-	err := godotenv.Load(".env")
-	if err == nil {
+	if bootstrap.LoadEnv() {
 		fmt.Println("Env file loaded")
 	}
 
-	err = update(Version)
+	err := update(Version)
 	if err != nil {
 		panic(err)
 	}
@@ -85,11 +84,7 @@ func main() {
 		}
 	}()
 
-	c, err := client.Dial(client.Options{
-		HostPort:  os.Getenv("TEMPORAL_HOST_PORT"),
-		Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
-	})
-
+	c, err := bootstrap.TemporalClient()
 	if err != nil {
 		panic(err)
 	}
@@ -107,10 +102,7 @@ func main() {
 		Verbose:   false,
 	})
 
-	identity := os.Getenv("IDENTITY")
-	if identity == "" {
-		identity = "worker"
-	}
+	identity := bootstrap.Identity()
 
 	activityCountString := os.Getenv("ACTIVITY_COUNT")
 	if activityCountString == "" {

@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/internal/bootstrap"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -32,18 +33,11 @@ import (
 )
 
 func getTemporalClient() (client.Client, error) {
-	return client.Dial(client.Options{
-		HostPort:  os.Getenv("TEMPORAL_HOST_PORT"),
-		Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
-	})
+	return bootstrap.TemporalClient()
 }
 
 func getQueue() string {
-	queue := os.Getenv("QUEUE")
-	if queue == "" {
-		queue = environment.QueueWorker
-	}
-	return queue
+	return environment.GetQueue()
 }
 
 var overlaysDir = os.Getenv("OVERLAYS_DIR")
@@ -562,13 +556,7 @@ func main() {
 		ctx.HTML(http.StatusOK, "index.gohtml", nil)
 	})
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8083"
-	}
-
-	fmt.Printf("Started on port %s", port)
-	err = router.Run(fmt.Sprintf(":%s", port))
+	err = bootstrap.Serve(router, "8083")
 	if err != nil {
 		panic(err)
 	}

@@ -3,6 +3,7 @@ package bmm
 import (
 	"context"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/internal/bootstrap"
 	"os"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
@@ -12,14 +13,7 @@ import (
 )
 
 func NewTemporalClient() (client.Client, error) {
-	host := os.Getenv("TEMPORAL_HOST_PORT")
-	if host == "" {
-		return nil, fmt.Errorf("TEMPORAL_HOST_PORT is required")
-	}
-	return client.Dial(client.Options{
-		HostPort:  host,
-		Namespace: os.Getenv("TEMPORAL_NAMESPACE"),
-	})
+	return bootstrap.TemporalClient()
 }
 
 func queueFromEnv() string {

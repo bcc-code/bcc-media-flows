@@ -1,12 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"github.com/bcc-code/bcc-media-flows/internal/bootstrap"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -123,13 +122,7 @@ func main() {
 	router.POST("/operations/movefile", operationsCopyFileHandler)
 	router.POST("/sync/copy", operationsCopyFileHandler)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8084"
-	}
-
-	fmt.Printf("Started on port %s", port)
-	err := router.Run(fmt.Sprintf(":%s", port))
+	err := bootstrap.Serve(router, "8084")
 	if err != nil {
 		panic(err)
 	}
