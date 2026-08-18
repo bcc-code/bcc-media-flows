@@ -40,26 +40,18 @@ func getQueue() string {
 	return environment.GetQueue()
 }
 
-func overlaysDir() string {
-	return os.Getenv("OVERLAYS_DIR")
-}
-
-func masterTriggerDir() string {
-	return os.Getenv("MASTER_TRIGGER_DIR")
-}
-
-// triggeredByHeader() names a request header set by an identity-aware proxy in
-// front of the UI, e.g. "X-Forwarded-User".
-func triggeredByHeader() string {
-	return os.Getenv("TRIGGERED_BY_HEADER")
-}
-
+// getTriggeredBy reads the user from a header an identity-aware proxy sets, e.g.
+// "X-Forwarded-User".
 func getTriggeredBy(ctx *gin.Context) string {
-	if triggeredByHeader() != "" {
-		if v := ctx.GetHeader(triggeredByHeader()); v != "" {
-			return v
-		}
+	header := environment.Get().TriggeredByHeader
+	if header == "" {
+		return "trigger-ui"
 	}
+
+	if user := ctx.GetHeader(header); user != "" {
+		return user
+	}
+
 	return "trigger-ui"
 }
 
@@ -77,7 +69,7 @@ func getFilenames(dir string) ([]string, error) {
 }
 
 func getOverlayFilePath(file string) string {
-	return filepath.Join(overlaysDir(), file)
+	return filepath.Join(environment.Get().OverlaysDir, file)
 }
 
 func renderErrorPage(ctx *gin.Context, httpStatus int, err error) {
@@ -185,7 +177,7 @@ func (s *TriggerServer) vxExportGET(ctx *gin.Context) {
 
 	selectedLanguages := meta.GetArray(vscommon.FieldLangsToExport)
 
-	filenames, err := getFilenames(overlaysDir())
+	filenames, err := getFilenames(environment.Get().OverlaysDir)
 	if err != nil {
 		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
@@ -475,6 +467,7 @@ func (s *TriggerServer) moveFilesPOST(ctx *gin.Context) {
 
 func main() {
 	bootstrap.LoadEnv()
+	environment.Load()
 
 	router := gin.Default()
 
@@ -522,7 +515,7 @@ func main() {
 	// MD: This is a legacy route, it should be removed in the future.
 	router.POST("/filecatalyst", server.fileCatalystWebhookHandler)
 
-	if os.Getenv(massiveWebhookKeyVar) == "" {
+	if environment.Get().MassiveWebhookAPIKey == "" {
 		log.Printf("WARNING: %s is not set, so /webhook/massive will refuse every request", massiveWebhookKeyVar)
 	}
 

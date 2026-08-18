@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/internal/bootstrap"
 	"os"
 	"strconv"
@@ -16,6 +17,7 @@ import (
 
 func main() {
 	bootstrap.LoadEnv()
+	environment.Load()
 
 	trackID := flag.Int("track-id", 0, "BMM track ID to load from RavenDB (mutually exclusive with --album-id and --playlist-id)")
 	albumID := flag.Int("album-id", 0, "BMM album (ParentId) to load tracks for (mutually exclusive with --track-id and --playlist-id)")

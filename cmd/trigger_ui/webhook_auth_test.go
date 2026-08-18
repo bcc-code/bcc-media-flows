@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -13,6 +14,8 @@ import (
 func authResult(t *testing.T, configuredKey, sentKey string) (bool, int, string) {
 	t.Helper()
 	t.Setenv(massiveWebhookKeyVar, configuredKey)
+	environment.Load()
+	t.Cleanup(func() { environment.Load() })
 
 	gin.SetMode(gin.TestMode)
 	recorder := httptest.NewRecorder()

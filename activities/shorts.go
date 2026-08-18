@@ -3,7 +3,7 @@ package activities
 import (
 	"context"
 	"fmt"
-	"os"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"regexp"
 	"strconv"
 
@@ -15,14 +15,10 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 )
 
-func shortServiceURL() string {
-	return os.Getenv("SHORTS_SERVICE_URL")
-}
-
 func shortServiceClient() *resty.Client {
 	return httpx.New(httpx.Config{
 		Service: "shorts service",
-		BaseURL: shortServiceURL(),
+		BaseURL: environment.Get().ShortsServiceURL,
 	})
 }
 

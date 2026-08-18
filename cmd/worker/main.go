@@ -66,6 +66,7 @@ var Version = "development"
 
 func main() {
 	bootstrap.LoadEnv()
+	environment.Load()
 
 	err := update(Version)
 	if err != nil {

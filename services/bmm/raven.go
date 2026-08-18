@@ -92,16 +92,16 @@ type RavenRel struct {
 }
 
 type RavenTranslation struct {
-	Language  string             `json:"Language"`
-	IsVisible bool               `json:"IsVisible"`
-	Title     string             `json:"Title"`
-	Media     []RavenMediaGroup  `json:"Media"`
+	Language  string               `json:"Language"`
+	IsVisible bool                 `json:"IsVisible"`
+	Title     string               `json:"Title"`
+	Media     []RavenMediaGroup    `json:"Media"`
 	Meta      RavenTranslationMeta `json:"_meta"`
 }
 
 type RavenMediaGroup struct {
-	Type      string         `json:"Type"`
-	IsVisible bool           `json:"IsVisible"`
+	Type      string           `json:"Type"`
+	IsVisible bool             `json:"IsVisible"`
 	Files     []RavenMediaFile `json:"Files"`
 }
 

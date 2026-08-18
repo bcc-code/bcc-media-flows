@@ -5,6 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/bcc-code/bcc-media-flows/environment"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.temporal.io/sdk/testsuite"
@@ -17,6 +19,8 @@ func shortsServer(t *testing.T, handler http.HandlerFunc) {
 	t.Cleanup(server.Close)
 
 	t.Setenv("SHORTS_SERVICE_URL", server.URL)
+	environment.Load()
+	t.Cleanup(func() { environment.Load() })
 }
 
 func activityEnv(t *testing.T) *testsuite.TestActivityEnvironment {

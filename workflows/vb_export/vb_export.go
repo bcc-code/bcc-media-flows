@@ -2,7 +2,6 @@ package vb_export
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -10,6 +9,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
@@ -137,14 +137,12 @@ type VBExportChildWorkflowParams struct {
 	AnalyzeResult              ffmpeg.StreamInfo
 }
 
-// subtitleStyleDir goes through SideEffect so the directory is recorded in the
-// history. Read directly it would be whatever the environment says at the moment of
-// the read, which on a replay is a different worker, possibly a later deploy — and the
-// subtitle style path would come out different from the one the export actually used.
+// subtitleStyleDir goes through SideEffect so a replay on a differently configured
+// worker builds the same path.
 func subtitleStyleDir(ctx workflow.Context) (string, error) {
 	var dir string
 	err := workflow.SideEffect(ctx, func(workflow.Context) any {
-		return os.Getenv("SUBTITLE_STYLES_DIR")
+		return environment.Get().SubtitleStylesDir
 	}).Get(&dir)
 
 	return dir, err

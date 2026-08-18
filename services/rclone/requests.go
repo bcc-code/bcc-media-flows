@@ -3,19 +3,15 @@ package rclone
 import (
 	"encoding/base64"
 	"encoding/json"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"io"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/ansel1/merry/v2"
 
 	"github.com/bcc-code/bcc-media-flows/internal/httpx"
 )
-
-func credentials() (string, string) {
-	return os.Getenv("RCLONE_USERNAME"), os.Getenv("RCLONE_PASSWORD")
-}
 
 var (
 	errNon200Status = merry.Sentinel("non-200 status")
@@ -40,8 +36,8 @@ func doRequest[T any](req *http.Request) (*T, error) {
 	}
 	req.Close = true
 
-	username, password := credentials()
-	basicAuth := base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
+	cfg := environment.Get()
+	basicAuth := base64.StdEncoding.EncodeToString([]byte(cfg.RcloneUsername + ":" + cfg.RclonePassword))
 	req.Header.Set("Authorization", "Basic "+basicAuth)
 
 	res, err := client.Do(req)

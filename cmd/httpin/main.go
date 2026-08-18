@@ -256,6 +256,7 @@ func triggerHandler(ctx *gin.Context) {
 
 func main() {
 	bootstrap.LoadEnv()
+	environment.Load()
 
 	var err error
 	temporalClient, err = bootstrap.TemporalClient()
