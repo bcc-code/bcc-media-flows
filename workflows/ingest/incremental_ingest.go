@@ -89,36 +89,14 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	expectedFilename := in.Base()
 	logger.Info(fmt.Sprintf("Waiting for signal with filename: %s", expectedFilename))
 
-	// Create placeholder in Vidispine
-	var assetResult vsactivity.CreatePlaceholderResult
-	err = wfutils.Execute(ctx, activities.Vidispine.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
-		Title: in.Base(),
-	}).Get(ctx, &assetResult)
+	videoVXID, err := createGrowingPlaceholder(ctx, in)
 	if err != nil {
 		return err
 	}
-	wfutils.UpsertVXID(ctx, assetResult.AssetID)
 
-	err = wfutils.SetVidispineMeta(ctx, assetResult.AssetID, vscommon.FieldIngested.Value, workflow.Now(ctx).Format(time.RFC3339))
-	if err != nil {
-		logger.Error("%w", err)
-	}
+	reaperSessionID := startReaperSession(ctx, params.ReaperSessionID)
 
-	videoVXID := assetResult.AssetID
-
-	// REAPER: Start recording
-	reaperSessionID := params.ReaperSessionID
-
-	if reaperSessionID == "" {
-		err = wfutils.Execute(ctx, activities.Live.StartReaper, nil).Get(ctx, &reaperSessionID)
-		if err != nil {
-			wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Unable to start reaper. Start it manually and notify Matjaz!\n\n```%s```", err.Error()))
-		}
-	} else {
-		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 ASSUMING REAPER SESSION: %s", reaperSessionID))
-	}
-
-	wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Starting live ingest: https://vault.bcc.media/item/%s", assetResult.AssetID))
+	wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Starting live ingest: https://vault.bcc.media/item/%s", videoVXID))
 
 	var jobResult vsactivity.FileJobResult
 	err = wfutils.Execute(ctx, activities.Vidispine.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
@@ -130,127 +108,15 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 		return err
 	}
 
-	previewPath, err := wfutils.GetWorkflowAuxOutputFolder(ctx)
-	if err != nil {
-		logger.Error("%w", err)
-	}
+	previewPath, stopPreview := startGrowingPreview(ctx, rawPath, videoVXID)
 
-	previewTempPath, err := wfutils.GetWorkflowTempFolder(ctx)
-	if err != nil {
-		logger.Error("%w", err)
-	}
-	previewTempPath.Append("preview")
+	copyUntilTransferred(ctx, in, rawPath, signalChan, expectedFilename)
 
-	previewPath = previewPath.Append(rawPath.Base()).SetExt("mp4")
-
-	var previewFuture wfutils.Task[any]
-	previewCtx, stopPreviewFunc := workflow.WithCancel(ctx)
-	previewActivityOpts := wfutils.GetDefaultActivityOptions()
-	previewActivityOpts.StartToCloseTimeout = time.Hour * 8
-	previewCtx = workflow.WithActivityOptions(previewCtx, previewActivityOpts)
-
-	workflow.Go(ctx, func(ctx workflow.Context) {
-		_ = workflow.Sleep(ctx, 1*time.Minute)
-		previewFuture = wfutils.Execute(previewCtx, activities.Video.TranscodeGrowingPreview, activities.TranscodeGrowingPreviewParams{
-			OriginalFilePath:    rawPath,
-			DestinationFilePath: previewPath,
-			TempFolderPath:      previewTempPath,
-		})
-
-		_ = workflow.Sleep(ctx, 2*time.Minute)
-		lowresImportJob, importErr := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
-			AssetID:  videoVXID,
-			FilePath: previewPath,
-			ShapeTag: "lowres_watermarked",
-			Growing:  true,
-			Replace:  false,
-		}).Result(ctx)
-		if importErr != nil {
-			// Named separately from the enclosing function's err so the failure cannot
-			// be hidden by a later check reading the wrong variable.
-			logger.Error("Failed to import growing preview as lowres shape", "error", importErr)
-		}
-
-		if previewErr := previewFuture.Wait(ctx); previewErr != nil {
-			logger.Error("Growing preview transcode failed", "error", previewErr)
-		}
-
-		// Only close a file the import actually produced. A failed import leaves
-		// lowresImportJob nil, and dereferencing it panics the workflow task — which
-		// Temporal then retries indefinitely.
-		if lowresImportJob == nil {
-			return
-		}
-
-		if closeErr := wfutils.Execute(ctx, activities.Vidispine.CloseFile, vsactivity.CloseFileParams{
-			FileID: lowresImportJob.FileID,
-		}).Wait(ctx); closeErr != nil {
-			logger.Error("Failed to close growing lowres file", "error", closeErr)
-		}
-	})
-
-	signalReceived := false
-
-	// Initialize slice to store transfer samples
-	samples := []transferSample{}
-
-	// alertState tracks whether we are currently in alert mode
-	alert := &alertState{}
-
-	// Keep copying the file until we receive a signal or the copy process completes naturally
-	maxCopyAttempts := 1000 // Limit total number of attempts
-
-	for copyAttempt := 0; copyAttempt < maxCopyAttempts; copyAttempt++ {
-		logger.Info(fmt.Sprintf("Starting copy attempt %d", copyAttempt+1))
-
-		copyFuture := wfutils.Execute(ctx, activities.Live.RsyncIncrementalCopy, activities.RsyncIncrementalCopyInput{
-			In:  in,
-			Out: rawPath,
-		})
-
-		copyResult, err := copyFuture.Result(ctx)
-		if err != nil {
-			logger.Error("Copy operation failed", "error", err)
-		} else {
-			sample := transferSample{time: workflow.Now(ctx), bytes: copyResult.Size}
-			samples = append(samples, sample)
-
-			// Use the function to calculate rate and prune samples
-			rate, pruned := CalculateRollingTransferRate(samples, workflow.Now(ctx), windowDuration)
-			samples = pruned
-			checkTransferRateAndAlert(ctx, rate, pruned, alert)
-		}
-
-		// Waiting on the signal and the timer together is what makes the signal
-		// act on arrival. A signal sent while the copy above was running is
-		// already queued on the channel, so this returns without sleeping at all.
-		signalReceived = waitForTransferSignal(ctx, signalChan, expectedFilename, copyRetryInterval)
-
-		if signalReceived {
-			logger.Info("Received signal, breaking out of copy loop")
-			break
-		}
-	}
-
-	// The copy at the top of the loop ran before the signal, so whatever was
-	// written to the source in between is not here yet.
-	if signalReceived {
-		logger.Info("Copying once more now that the source is complete")
-		if _, copyErr := wfutils.Execute(ctx, activities.Live.RsyncIncrementalCopy, activities.RsyncIncrementalCopyInput{
-			In:  in,
-			Out: rawPath,
-		}).Result(ctx); copyErr != nil {
-			logger.Error("Final copy failed", "error", copyErr)
-			wfutils.SendTelegramText(ctx, telegram.ChatOther,
-				fmt.Sprintf("🟥 The final copy of %s failed, the ingested file may be short: %v", in.Base(), copyErr))
-		}
-	}
-
-	wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Video ingest ended: https://vault.bcc.media/item/%s\n\nImporting reaper files.", assetResult.AssetID))
+	wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Video ingest ended: https://vault.bcc.media/item/%s\n\nImporting reaper files.", videoVXID))
 
 	waitForPreviewToCatchUp(ctx, rawPath, previewPath)
 
-	stopPreviewFunc()
+	stopPreview()
 
 	reaperResult, err := listReaperFiles(ctx, reaperSessionID, videoVXID)
 	if err != nil {
@@ -345,6 +211,167 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	_ = fixDurationFuture.Get(ctx, nil)
 
 	return nil
+}
+
+func createGrowingPlaceholder(ctx workflow.Context, in paths.Path) (string, error) {
+	logger := workflow.GetLogger(ctx)
+
+	var assetResult vsactivity.CreatePlaceholderResult
+	err := wfutils.Execute(ctx, activities.Vidispine.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
+		Title: in.Base(),
+	}).Get(ctx, &assetResult)
+	if err != nil {
+		return "", err
+	}
+
+	wfutils.UpsertVXID(ctx, assetResult.AssetID)
+
+	err = wfutils.SetVidispineMeta(ctx, assetResult.AssetID, vscommon.FieldIngested.Value, workflow.Now(ctx).Format(time.RFC3339))
+	if err != nil {
+		logger.Error("%w", err)
+	}
+
+	return assetResult.AssetID, nil
+}
+
+// startReaperSession returns the session to take audio from. A failure to start one is
+// reported and not fatal: the video ingest is worth finishing without the audio.
+func startReaperSession(ctx workflow.Context, existing string) string {
+	if existing != "" {
+		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 ASSUMING REAPER SESSION: %s", existing))
+		return existing
+	}
+
+	sessionID := ""
+	err := wfutils.Execute(ctx, activities.Live.StartReaper, nil).Get(ctx, &sessionID)
+	if err != nil {
+		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Unable to start reaper. Start it manually and notify Matjaz!\n\n```%s```", err.Error()))
+	}
+
+	return sessionID
+}
+
+// startGrowingPreview transcodes a preview alongside the ingest and imports it as the
+// lowres shape, so the item is watchable while the source is still arriving. It returns
+// where the preview is written and the cancel that stops the transcode.
+func startGrowingPreview(ctx workflow.Context, rawPath paths.Path, videoVXID string) (paths.Path, func()) {
+	logger := workflow.GetLogger(ctx)
+
+	previewPath, err := wfutils.GetWorkflowAuxOutputFolder(ctx)
+	if err != nil {
+		logger.Error("%w", err)
+	}
+
+	previewTempPath, err := wfutils.GetWorkflowTempFolder(ctx)
+	if err != nil {
+		logger.Error("%w", err)
+	}
+	previewTempPath.Append("preview")
+
+	previewPath = previewPath.Append(rawPath.Base()).SetExt("mp4")
+
+	var previewFuture wfutils.Task[any]
+	previewCtx, stopPreview := workflow.WithCancel(ctx)
+	previewActivityOpts := wfutils.GetDefaultActivityOptions()
+	previewActivityOpts.StartToCloseTimeout = time.Hour * 8
+	previewCtx = workflow.WithActivityOptions(previewCtx, previewActivityOpts)
+
+	workflow.Go(ctx, func(ctx workflow.Context) {
+		_ = workflow.Sleep(ctx, 1*time.Minute)
+		previewFuture = wfutils.Execute(previewCtx, activities.Video.TranscodeGrowingPreview, activities.TranscodeGrowingPreviewParams{
+			OriginalFilePath:    rawPath,
+			DestinationFilePath: previewPath,
+			TempFolderPath:      previewTempPath,
+		})
+
+		_ = workflow.Sleep(ctx, 2*time.Minute)
+		lowresImportJob, importErr := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
+			AssetID:  videoVXID,
+			FilePath: previewPath,
+			ShapeTag: "lowres_watermarked",
+			Growing:  true,
+			Replace:  false,
+		}).Result(ctx)
+		if importErr != nil {
+			// Named separately from the enclosing function's err so the failure cannot
+			// be hidden by a later check reading the wrong variable.
+			logger.Error("Failed to import growing preview as lowres shape", "error", importErr)
+		}
+
+		if previewErr := previewFuture.Wait(ctx); previewErr != nil {
+			logger.Error("Growing preview transcode failed", "error", previewErr)
+		}
+
+		// Only close a file the import actually produced. A failed import leaves
+		// lowresImportJob nil, and dereferencing it panics the workflow task — which
+		// Temporal then retries indefinitely.
+		if lowresImportJob == nil {
+			return
+		}
+
+		if closeErr := wfutils.Execute(ctx, activities.Vidispine.CloseFile, vsactivity.CloseFileParams{
+			FileID: lowresImportJob.FileID,
+		}).Wait(ctx); closeErr != nil {
+			logger.Error("Failed to close growing lowres file", "error", closeErr)
+		}
+	})
+
+	return previewPath, stopPreview
+}
+
+// copyUntilTransferred copies the growing source until the watcher signals that the
+// transfer finished, then copies once more: the last copy ran before the signal, so
+// whatever was written in between is not here yet.
+func copyUntilTransferred(ctx workflow.Context, in, rawPath paths.Path, signalChan workflow.ReceiveChannel, expectedFilename string) {
+	logger := workflow.GetLogger(ctx)
+
+	samples := []transferSample{}
+	alert := &alertState{}
+	signalReceived := false
+
+	const maxCopyAttempts = 1000
+
+	for copyAttempt := 0; copyAttempt < maxCopyAttempts; copyAttempt++ {
+		logger.Info(fmt.Sprintf("Starting copy attempt %d", copyAttempt+1))
+
+		copyResult, err := wfutils.Execute(ctx, activities.Live.RsyncIncrementalCopy, activities.RsyncIncrementalCopyInput{
+			In:  in,
+			Out: rawPath,
+		}).Result(ctx)
+		if err != nil {
+			logger.Error("Copy operation failed", "error", err)
+		} else {
+			samples = append(samples, transferSample{time: workflow.Now(ctx), bytes: copyResult.Size})
+
+			rate, pruned := CalculateRollingTransferRate(samples, workflow.Now(ctx), windowDuration)
+			samples = pruned
+			checkTransferRateAndAlert(ctx, rate, pruned, alert)
+		}
+
+		// Waiting on the signal and the timer together is what makes the signal
+		// act on arrival. A signal sent while the copy above was running is
+		// already queued on the channel, so this returns without sleeping at all.
+		signalReceived = waitForTransferSignal(ctx, signalChan, expectedFilename, copyRetryInterval)
+
+		if signalReceived {
+			logger.Info("Received signal, breaking out of copy loop")
+			break
+		}
+	}
+
+	if !signalReceived {
+		return
+	}
+
+	logger.Info("Copying once more now that the source is complete")
+	if _, copyErr := wfutils.Execute(ctx, activities.Live.RsyncIncrementalCopy, activities.RsyncIncrementalCopyInput{
+		In:  in,
+		Out: rawPath,
+	}).Result(ctx); copyErr != nil {
+		logger.Error("Final copy failed", "error", copyErr)
+		wfutils.SendTelegramText(ctx, telegram.ChatOther,
+			fmt.Sprintf("🟥 The final copy of %s failed, the ingested file may be short: %v", in.Base(), copyErr))
+	}
 }
 
 const (
