@@ -29,7 +29,7 @@ func main() {
 	doWait := flag.Bool("wait", false, "When --trigger is set, block until the workflow completes")
 	vxSource := flag.String("vx-source", "", "Override vxSource (skip ingest, update metadata only)")
 	fileURL := flag.String("file-url", "", "Override fileUrl (skip file URL construction from RavenDB)")
-	fileBaseURL := flag.String("file-base-url", os.Getenv("BMM_FILE_BASE_URL"), "Base URL prefixed to the audio file Path (defaults to $BMM_FILE_BASE_URL)")
+	fileBaseURL := flag.String("file-base-url", environment.Get().BMMFileBaseURL, "Base URL prefixed to the audio file Path (defaults to $BMM_FILE_BASE_URL)")
 	noResolve := flag.Bool("no-resolve", false, "Skip following redirects on fileUrl; keep the constructed URL verbatim (with userinfo if present)")
 	flag.Parse()
 
@@ -243,7 +243,7 @@ func certLabel(cfg bmm.RavenConfig) string {
 }
 
 func envOrDash(key string) string {
-	if v := os.Getenv(key); v != "" {
+	if v := environment.Getenv(key); v != "" {
 		return v
 	}
 	return "-"

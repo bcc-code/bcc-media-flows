@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"reflect"
 	"runtime"
-	"strconv"
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/analytics"
@@ -97,22 +96,14 @@ func main() {
 	}
 
 	analytics.Init(analytics.Config{
-		WriteKey:  os.Getenv("RUDDERSTACK_WRITE_KEY"),
-		DataPlane: os.Getenv("RUDDERSTACK_DATA_PLANE_URL"),
+		WriteKey:  environment.Get().RudderstackWriteKey,
+		DataPlane: environment.Get().RudderstackDataPlaneURL,
 		Verbose:   false,
 	})
 
 	identity := bootstrap.Identity()
 
-	activityCountString := os.Getenv("ACTIVITY_COUNT")
-	if activityCountString == "" {
-		activityCountString = "5"
-	}
-
-	activityCount, err := strconv.Atoi(activityCountString)
-	if err != nil {
-		panic(err)
-	}
+	activityCount := environment.Get().ActivityCount
 
 	if environment.GetQueue() == environment.QueueAudio {
 		// Test if the libfdk_aac encoder is available
@@ -147,7 +138,7 @@ func main() {
 		},
 	}
 
-	if os.Getenv("RCLONE_PASSWORD") != "" {
+	if environment.Get().RclonePassword != "" {
 		go rclone.StartFileTransferQueue()
 	}
 
@@ -157,19 +148,19 @@ func main() {
 func registerWorker(c client.Client, queue string, options worker.Options) {
 	w := worker.New(c, queue, options)
 
-	directusBaseURL := os.Getenv("DIRECTUS_BASE_URL")
-	directusAPIKey := os.Getenv("DIRECTUS_API_KEY")
+	directusBaseURL := environment.Get().DirectusBaseURL
+	directusAPIKey := environment.Get().DirectusAPIKey
 	directusClient := directus.NewClient(directusBaseURL, directusAPIKey)
 	activities.Directus = &activities.DirectusActivities{
 		Client:         directusClient,
-		ShortsFolderID: os.Getenv("DIRECTUS_SHORTS_FOLDER_ID"),
+		ShortsFolderID: environment.Get().DirectusShortsFolder,
 	}
 
 	clickUpClient, err := clickup.NewClient(
-		os.Getenv("CLICKUP_FRONTDOOR_BASE_URL"),
-		os.Getenv("CLICKUP_WORKSPACE_ID"),
-		os.Getenv("CLICKUP_SHORTS_VIEW_ID"),
-		os.Getenv("CLICKUP_SHORTS_VIEW_TOKEN"),
+		environment.Get().ClickUpFrontdoorBaseURL,
+		environment.Get().ClickUpWorkspaceID,
+		environment.Get().ClickUpShortsViewID,
+		environment.Get().ClickUpShortsViewToken,
 	)
 	if err != nil {
 		log.Printf("Error creating ClickUp client: %v", err)
@@ -179,7 +170,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 	}
 
 	// Vizualizer client initialization
-	vizBaseURL := os.Getenv("VIZUALIZER_BASE_URL")
+	vizBaseURL := environment.Get().VizualizerBaseURL
 	if vizBaseURL == "" {
 		vizBaseURL = "http://vizualizer.lan.bcc.media"
 	}

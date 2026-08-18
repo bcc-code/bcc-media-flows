@@ -5,10 +5,10 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 )
@@ -22,10 +22,10 @@ type RavenConfig struct {
 
 func LoadRavenConfigFromEnv() (RavenConfig, error) {
 	cfg := RavenConfig{
-		URL:         strings.TrimRight(os.Getenv("RAVENDB_URL"), "/"),
-		Database:    os.Getenv("RAVENDB_DATABASE"),
-		CertPath:    os.Getenv("RAVENDB_CERT_PATH"),
-		CertKeyPath: os.Getenv("RAVENDB_CERT_KEY_PATH"),
+		URL:         environment.Get().RavenDBURL,
+		Database:    environment.Get().RavenDBDatabase,
+		CertPath:    environment.Get().RavenDBCertPath,
+		CertKeyPath: environment.Get().RavenDBCertKeyPath,
 	}
 	if cfg.URL == "" {
 		return cfg, fmt.Errorf("RAVENDB_URL is required")

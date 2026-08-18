@@ -2,7 +2,7 @@ package cantemo
 
 import (
 	"context"
-	"os"
+	"github.com/bcc-code/bcc-media-flows/environment"
 
 	"github.com/bcc-code/bcc-media-flows/services/cantemo"
 )
@@ -13,8 +13,8 @@ type AddRelationParams struct {
 }
 
 func GetClient() *cantemo.Client {
-	urlBase := os.Getenv("CANTEMO_URL")
-	token := os.Getenv("CANTEMO_TOKEN")
+	urlBase := environment.Get().CantemoURL
+	token := environment.Get().CantemoToken
 	return cantemo.NewClient(urlBase, token)
 }
 

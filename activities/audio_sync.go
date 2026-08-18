@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
+	"github.com/bcc-code/bcc-media-flows/environment"
 
 	"github.com/bcc-code/bcc-media-flows/internal/httpx"
 )
@@ -19,7 +19,7 @@ type GetAudioDiffResult struct {
 }
 
 func (ua UtilActivities) GetAudioDiff(ctx context.Context, params GetAudioDiffParams) (*GetAudioDiffResult, error) {
-	syncServiceURL := os.Getenv("SYNC_SERVICE_URL")
+	syncServiceURL := environment.Get().SyncServiceURL
 
 	client := httpx.New(httpx.Config{
 		Service: "audio sync",

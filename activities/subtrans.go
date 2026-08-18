@@ -3,6 +3,7 @@ package activities
 import (
 	"context"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -74,8 +75,8 @@ func (ua UtilActivities) GetSubtransIDActivity(_ context.Context, input GetSubtr
 	fileName = strings.Join(fileNameSplit, ".")
 
 	stClient := subtrans.NewClient(
-		os.Getenv("SUBTRANS_BASE_URL"),
-		os.Getenv("SUBTRANS_API_KEY"),
+		environment.Get().SubtransBaseURL,
+		environment.Get().SubtransAPIKey,
 	)
 
 	res, err := stClient.SearchByName(fileName)
@@ -99,7 +100,7 @@ func (ua UtilActivities) GetSubtransIDActivity(_ context.Context, input GetSubtr
 }
 
 func (ua UtilActivities) GetSubtitlesActivity(_ context.Context, params GetSubtitlesInput) (map[string]paths.Path, error) {
-	client := subtrans.NewClient(os.Getenv("SUBTRANS_BASE_URL"), os.Getenv("SUBTRANS_API_KEY"))
+	client := subtrans.NewClient(environment.Get().SubtransBaseURL, environment.Get().SubtransAPIKey)
 
 	info, err := os.Stat(params.DestinationFolder.Local())
 	if os.IsNotExist(err) {

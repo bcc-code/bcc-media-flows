@@ -2,7 +2,7 @@ package wfutils
 
 import (
 	"context"
-	"os"
+	"github.com/bcc-code/bcc-media-flows/environment"
 
 	"github.com/google/uuid"
 	"go.temporal.io/api/enums/v1"
@@ -22,7 +22,7 @@ var (
 // EnsureSearchAttributes registers the custom search attributes on the
 // namespace if they are missing. Meant to run once at worker startup.
 func EnsureSearchAttributes(ctx context.Context, c client.Client) error {
-	namespace := os.Getenv("TEMPORAL_NAMESPACE")
+	namespace := environment.Get().TemporalNamespace
 	resp, err := c.OperatorService().ListSearchAttributes(ctx, &operatorservice.ListSearchAttributesRequest{
 		Namespace: namespace,
 	})

@@ -3,7 +3,7 @@ package vsactivity
 import (
 	"context"
 	"fmt"
-	"os"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"time"
 
 	"go.temporal.io/sdk/activity"
@@ -18,7 +18,7 @@ type Activities struct{}
 var Vidispine = Activities{}
 
 func GetClient() vidispine.Client {
-	return vsapi.NewClient(os.Getenv("VIDISPINE_BASE_URL"), os.Getenv("VIDISPINE_USERNAME"), os.Getenv("VIDISPINE_PASSWORD"))
+	return vsapi.NewClient(environment.Get().VidispineBaseURL, environment.Get().VidispineUsername, environment.Get().VidispinePassword)
 }
 
 type WaitForJobCompletionParams struct {

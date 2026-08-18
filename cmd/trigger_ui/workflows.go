@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -279,7 +278,7 @@ func (s *TriggerServer) listGET(ctx *gin.Context) {
 
 func (s *TriggerServer) workflowDetailsGET(ctx *gin.Context) {
 	workflowID := ctx.Param("id")
-	namespace := os.Getenv("TEMPORAL_NAMESPACE")
+	namespace := environment.Get().TemporalNamespace
 	resp, err := s.wfClient.WorkflowService().GetWorkflowExecutionHistory(ctx, &workflowservice.GetWorkflowExecutionHistoryRequest{
 		Execution: &common.WorkflowExecution{
 			WorkflowId: workflowID,

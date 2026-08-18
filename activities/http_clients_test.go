@@ -12,15 +12,22 @@ import (
 	"go.temporal.io/sdk/testsuite"
 )
 
+// setEnv reloads the config, which reads the environment once at boot.
+func setEnv(t *testing.T, name, value string) {
+	t.Helper()
+
+	t.Setenv(name, value)
+	environment.Load()
+	t.Cleanup(func() { environment.Load() })
+}
+
 func shortsServer(t *testing.T, handler http.HandlerFunc) {
 	t.Helper()
 
 	server := httptest.NewServer(handler)
 	t.Cleanup(server.Close)
 
-	t.Setenv("SHORTS_SERVICE_URL", server.URL)
-	environment.Load()
-	t.Cleanup(func() { environment.Load() })
+	setEnv(t, "SHORTS_SERVICE_URL", server.URL)
 }
 
 func activityEnv(t *testing.T) *testsuite.TestActivityEnvironment {
@@ -128,7 +135,7 @@ func TestGetAudioDiff_ConvertsSecondsToMilliseconds(t *testing.T) {
 		_, _ = w.Write([]byte(`{"offset":1.234}`))
 	}))
 	t.Cleanup(server.Close)
-	t.Setenv("SYNC_SERVICE_URL", server.URL)
+	setEnv(t, "SYNC_SERVICE_URL", server.URL)
 
 	env := activityEnv(t)
 	ua := UtilActivities{}
@@ -151,7 +158,7 @@ func TestGetAudioDiff_ServerErrorIsNotAZeroOffset(t *testing.T) {
 		_, _ = w.Write([]byte(`{"detail":"boom"}`))
 	}))
 	t.Cleanup(server.Close)
-	t.Setenv("SYNC_SERVICE_URL", server.URL)
+	setEnv(t, "SYNC_SERVICE_URL", server.URL)
 
 	env := activityEnv(t)
 	ua := UtilActivities{}
@@ -176,7 +183,7 @@ func TestGetAudioDiff_SendsBothFiles(t *testing.T) {
 		_, _ = w.Write([]byte(`{"offset":0}`))
 	}))
 	t.Cleanup(server.Close)
-	t.Setenv("SYNC_SERVICE_URL", server.URL)
+	setEnv(t, "SYNC_SERVICE_URL", server.URL)
 
 	env := activityEnv(t)
 	ua := UtilActivities{}

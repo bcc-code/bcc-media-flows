@@ -1,9 +1,7 @@
 package telegram
 
 import (
-	"fmt"
-	"os"
-	"strconv"
+	"github.com/bcc-code/bcc-media-flows/environment"
 
 	"github.com/orsinium-labs/enum"
 )
@@ -25,27 +23,10 @@ var (
 )
 
 func init() {
-	chat, err := strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID_VOD"), 10, 64)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error parsing TELEGRAM_CHAT_ID_VOD: %v\n", err)
-	}
-	ChatVOD.Value = chat
+	cfg := environment.Get()
 
-	chat, err = strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID_OSLOFJORD"), 10, 64)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error parsing TELEGRAM_CHAT_ID_OSLOFJORD: %v\n", err)
-	}
-	ChatOslofjord.Value = chat
-
-	chat, err = strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID_OTHER"), 10, 64)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error parsing TELEGRAM_CHAT_ID_OTHER: %v\n", err)
-	}
-	ChatOther.Value = chat
-
-	chat, err = strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID_BMM"), 10, 64)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error parsing TELEGRAM_CHAT_ID_BMM: %v\n", err)
-	}
-	ChatBMM.Value = chat
+	ChatVOD.Value = cfg.TelegramChatVOD
+	ChatOslofjord.Value = cfg.TelegramChatOslofjord
+	ChatOther.Value = cfg.TelegramChatOther
+	ChatBMM.Value = cfg.TelegramChatBMM
 }
