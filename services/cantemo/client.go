@@ -37,11 +37,9 @@ type Config interface {
 	Token() string
 }
 
-func NewFromConfig(cfg Config) *Client {
-	return NewClient(cfg.URL(), cfg.Token())
-}
+func NewClient(cfg Config) *Client {
+	baseURL, authToken := cfg.URL(), cfg.Token()
 
-func NewClient(baseURL, authToken string) *Client {
 	baseURL = strings.TrimSuffix(baseURL, "/")
 
 	client := httpx.New(httpx.Config{

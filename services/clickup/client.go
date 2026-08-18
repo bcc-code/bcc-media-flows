@@ -47,11 +47,9 @@ type Config interface {
 	ShortsViewToken() string
 }
 
-func NewFromConfig(cfg Config) (*Client, error) {
-	return NewClient(cfg.FrontdoorBaseURL(), cfg.WorkspaceID(), cfg.ShortsViewID(), cfg.ShortsViewToken())
-}
+func NewClient(cfg Config) (*Client, error) {
+	baseURL, workspaceID, viewID, token := cfg.FrontdoorBaseURL(), cfg.WorkspaceID(), cfg.ShortsViewID(), cfg.ShortsViewToken()
 
-func NewClient(baseURL, workspaceID, viewID, token string) (*Client, error) {
 	if baseURL == "" {
 		baseURL = defaultBaseURL
 	}

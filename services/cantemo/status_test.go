@@ -21,7 +21,7 @@ func cantemoServer(t *testing.T, status int, contentType, body string) *Client {
 	}))
 	t.Cleanup(server.Close)
 
-	return NewClient(server.URL, "token")
+	return NewClient(testConfig{url: server.URL, token: "token"})
 }
 
 // Hole 1, the important one. resty only unmarshals an error body for JSON/XML, so the

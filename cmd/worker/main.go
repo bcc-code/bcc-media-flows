@@ -148,13 +148,13 @@ func main() {
 func registerWorker(c client.Client, queue string, options worker.Options) {
 	w := worker.New(c, queue, options)
 
-	directusClient := directus.NewFromConfig(environment.Get().Directus)
+	directusClient := directus.NewClient(environment.Get().Directus)
 	activities.Directus = &activities.DirectusActivities{
 		Client:         directusClient,
 		ShortsFolderID: environment.Get().Directus.ShortsFolderID(),
 	}
 
-	clickUpClient, err := clickup.NewFromConfig(environment.Get().ClickUp)
+	clickUpClient, err := clickup.NewClient(environment.Get().ClickUp)
 	if err != nil {
 		log.Printf("Error creating ClickUp client: %v", err)
 	}
@@ -162,7 +162,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		Client: clickUpClient,
 	}
 
-	vizClient, err := vizualizer.NewFromConfig(environment.Get().Services)
+	vizClient, err := vizualizer.NewClient(environment.Get().Services)
 	if err != nil {
 		log.Printf("Error creating vizualizer client: %v", err)
 	}

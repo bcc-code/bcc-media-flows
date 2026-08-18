@@ -15,6 +15,10 @@ import (
 	"go.temporal.io/sdk/testsuite"
 )
 
+type vizConfig struct{ baseURL string }
+
+func (c vizConfig) Vizualizer() string { return c.baseURL }
+
 // vizualizerStub answers status polls with "processing" until the given number
 // of polls have happened, then "completed".
 func vizualizerStub(t *testing.T, pollsBeforeDone int) (*vizualizer.Client, *atomic.Int32) {
@@ -32,7 +36,7 @@ func vizualizerStub(t *testing.T, pollsBeforeDone int) (*vizualizer.Client, *ato
 	}))
 	t.Cleanup(server.Close)
 
-	client, err := vizualizer.NewClient(server.URL)
+	client, err := vizualizer.NewClient(vizConfig{server.URL})
 	require.NoError(t, err)
 	return client, &polls
 }

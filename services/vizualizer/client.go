@@ -25,11 +25,9 @@ type Config interface {
 	Vizualizer() string
 }
 
-func NewFromConfig(cfg Config) (*Client, error) {
-	return NewClient(cfg.Vizualizer())
-}
+func NewClient(cfg Config) (*Client, error) {
+	baseURL := cfg.Vizualizer()
 
-func NewClient(baseURL string) (*Client, error) {
 	if baseURL == "" {
 		return nil, fmt.Errorf("vizualizer baseURL not set")
 	}

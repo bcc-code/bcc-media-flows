@@ -44,11 +44,9 @@ type Config interface {
 	Password() string
 }
 
-func NewFromConfig(cfg Config) *Client {
-	return NewClient(cfg.BaseURL(), cfg.Username(), cfg.Password())
-}
+func NewClient(cfg Config) *Client {
+	baseURL, username, password := cfg.BaseURL(), cfg.Username(), cfg.Password()
 
-func NewClient(baseURL string, username string, password string) *Client {
 	// The retries reach POST and DELETE, so the timeout has to outlast a slow call
 	// rather than merely a healthy one: retrying a working AddShapeToItem or
 	// CreatePlaceholder creates a second shape or job.

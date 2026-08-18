@@ -23,11 +23,9 @@ type Config interface {
 	APIKey() string
 }
 
-func NewFromConfig(cfg Config) *Client {
-	return NewClient(cfg.BaseURL(), cfg.APIKey())
-}
+func NewClient(cfg Config) *Client {
+	baseURL, apiKey := cfg.BaseURL(), cfg.APIKey()
 
-func NewClient(baseURL string, apiKey string) *Client {
 	client := httpx.New(httpx.Config{
 		Service: serviceName,
 		BaseURL: baseURL,

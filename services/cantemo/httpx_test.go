@@ -11,7 +11,7 @@ import (
 )
 
 func TestClient_HasATimeout(t *testing.T) {
-	client := NewClient("http://cantemo.example", "token")
+	client := NewClient(testConfig{url: "http://cantemo.example", token: "token"})
 
 	assert.Positive(t, client.restyClient.GetClient().Timeout)
 }
@@ -26,7 +26,7 @@ func TestClient_SendsTheAuthTokenAndAcceptHeaders(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	client := NewClient(server.URL, "secret-token")
+	client := NewClient(testConfig{url: server.URL, token: "secret-token"})
 	_, err := client.GetFiles("/mnt/x", "imported", "storage", 0, "")
 
 	require.NoError(t, err)
@@ -43,7 +43,7 @@ func TestClient_BaseURLTrailingSlashIsTrimmed(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	client := NewClient(server.URL+"/", "token")
+	client := NewClient(testConfig{url: server.URL + "/", token: "token"})
 	err := client.AddRelation("VX-1", "VX-2")
 
 	require.NoError(t, err)
@@ -58,7 +58,7 @@ func TestClient_DescribeErrorFallsBackToTheSharedDescription(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	client := NewClient(server.URL, "token")
+	client := NewClient(testConfig{url: server.URL, token: "token"})
 	_, err := client.GetFiles("/mnt/x", "imported", "storage", 0, "")
 
 	require.Error(t, err)
