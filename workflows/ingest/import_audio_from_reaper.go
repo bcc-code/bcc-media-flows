@@ -67,7 +67,7 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 			FilePath: path,
 			AssetID:  assetResult.AssetID,
 			Growing:  false,
-		}).Get(ctx, nil)
+		}).Wait(ctx)
 		if err != nil {
 			return err
 		}
@@ -89,7 +89,7 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 		err = wfutils.Execute(ctx, activities.Cantemo.AddRelation, cantemo.AddRelationParams{
 			Child:  assetResult.AssetID,
 			Parent: params.VideoVXID,
-		}).Get(ctx, nil)
+		}).Wait(ctx)
 		if err != nil {
 			return err
 		}
@@ -99,7 +99,7 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 			GroupID: "System",
 			Key:     languages.LanguagesByISO[lang].RelatedMBFieldID,
 			Value:   assetResult.AssetID,
-		}).Get(ctx, nil)
+		}).Wait(ctx)
 		if err != nil {
 			logger.Error(fmt.Sprintf("SetVXMetadataFieldActivity: %s", err.Error()))
 		}
@@ -108,7 +108,7 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 			ItemID: assetResult.AssetID,
 			Key:    vscommon.FieldLanguagesRecorded.Value,
 			Value:  lang,
-		}).Get(ctx, nil)
+		}).Wait(ctx)
 
 		if err != nil {
 			return err

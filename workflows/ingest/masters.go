@@ -95,7 +95,7 @@ func processMaster(ctx workflow.Context, sourceFile paths.Path, destinationFile 
 	// This just triggers the task, the actual work is done in the background by Vidispine
 	_ = wfutils.Execute(ctx, activities.Vidispine.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
 		AssetID: result.AssetID,
-	}).Get(ctx, nil)
+	}).Wait(ctx)
 
 	if _, err := createPreviewsAsync(ctx, []string{result.AssetID}); err != nil {
 		return "", err

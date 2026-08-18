@@ -141,7 +141,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 		if result.HasVideo {
 			err = wfutils.Execute(ctx, activities.Vidispine.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
 				AssetID: id,
-			}).Get(ctx, nil)
+			}).Wait(ctx)
 			if err != nil {
 				return imported, err
 			}

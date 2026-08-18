@@ -124,7 +124,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	err = wfutils.Execute(ctx, activities.Vidispine.CloseFile, vsactivity.CloseFileParams{
 		FileID: jobResult.FileID,
-	}).Get(ctx, nil)
+	}).Wait(ctx)
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	_ = wfutils.Execute(ctx, activities.Vidispine.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
 		AssetID: videoVXID,
-	}).Get(ctx, nil)
+	}).Wait(ctx)
 
 	var errors []error
 	for _, f := range importAudioFuture {

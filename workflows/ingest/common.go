@@ -181,10 +181,10 @@ func notifyImportCompleted(ctx workflow.Context, recipients []string, jobID int,
 	}
 
 	msg, _ := telegram.NewMessage(telegram.ChatOther, content)
-	wfutils.Execute(ctx, activities.Util.SendTelegramMessage, msg).Get(ctx, nil)
+	wfutils.Execute(ctx, activities.Util.SendTelegramMessage, msg).Wait(ctx)
 
 	email, _ := emails.NewMessage(content, recipients, nil, nil)
-	return wfutils.Execute(ctx, activities.Util.SendEmail, email).Get(ctx, nil)
+	return wfutils.Execute(ctx, activities.Util.SendEmail, email).Wait(ctx)
 }
 
 func notifyImportFailed(ctx workflow.Context, recipients []string, jobID int, filesByAssetID []paths.Path, importError error) error {
@@ -204,7 +204,7 @@ func notifyImportFailed(ctx workflow.Context, recipients []string, jobID int, fi
 		return err
 	}
 
-	wfutils.Execute(ctx, activities.Util.SendTelegramMessage, msg).Get(ctx, nil)
+	wfutils.Execute(ctx, activities.Util.SendTelegramMessage, msg).Wait(ctx)
 	email, _ := emails.NewMessage(content, recipients, nil, nil)
-	return wfutils.Execute(ctx, activities.Util.SendEmail, email).Get(ctx, nil)
+	return wfutils.Execute(ctx, activities.Util.SendEmail, email).Wait(ctx)
 }

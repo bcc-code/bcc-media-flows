@@ -122,7 +122,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	service.fileFutures.Wait(ctx)
 
 	for _, task := range service.tasks {
-		err = task.Get(ctx, nil)
+		err = task.Wait(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -291,7 +291,7 @@ type vxExportVodService struct {
 	fileFutures *wfutils.FutureGroup
 	smilVideos  map[resolutionString]smil.Video
 	files       []asset.IngestFileMeta
-	tasks       []workflow.Future
+	tasks       []wfutils.Task[bool]
 	errs        []error
 }
 
@@ -447,5 +447,5 @@ func (v *vxExportVodService) copyToIngest(ctx workflow.Context, path paths.Path)
 		v.errs = append(v.errs, err)
 		return
 	}
-	v.tasks = append(v.tasks, wfutils.Execute(ctx, activities.Util.RcloneWaitForJob, activities.RcloneWaitForJobInput{JobID: jobID}).Future)
+	v.tasks = append(v.tasks, wfutils.Execute(ctx, activities.Util.RcloneWaitForJob, activities.RcloneWaitForJobInput{JobID: jobID}))
 }

@@ -95,7 +95,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 	}
 
 	filesToImport := map[string]paths.Path{}
-	var futures []workflow.Future
+	var tasks []wfutils.Waiter
 
 	// Align audio from MU1 and MU2
 
@@ -114,7 +114,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 				Start:  float64(-sampleOffset) / float64(48000),
 			})
 
-			futures = append(futures, f.Future)
+			tasks = append(tasks, f)
 			filesToImport[languages.LanguagesByMU2[key].ISO6391] = outputFile
 		}
 	} else if sampleOffset > 0 {
@@ -128,7 +128,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 				Samples:    sampleOffset,
 			})
 
-			futures = append(futures, f.Future)
+			tasks = append(tasks, f)
 			filesToImport[languages.LanguagesByMU2[key].ISO6391] = outputFile
 		}
 	} else {
@@ -148,13 +148,13 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 			Source:      file,
 			Destination: destinationFile,
 		})
-		futures = append(futures, f.Future)
+		tasks = append(tasks, f)
 		filesToImport[languages.LanguagesByMU1[i].ISO6391] = destinationFile
 	}
 
 	errors := ""
-	for _, f := range futures {
-		err = f.Get(ctx, nil)
+	for _, t := range tasks {
+		err = t.Wait(ctx)
 		if err != nil {
 			errors += err.Error() + "\n"
 		}
