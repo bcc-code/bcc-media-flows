@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -42,20 +43,43 @@ type massivePayload struct {
 
 // Massive.app webhook handler
 // Expects:
-//   - Header: api-key (must match MASSIVE_WEBHOOK_API_KEY env var if set)
+//   - Header: api-key, matching MASSIVE_WEBHOOK_API_KEY
 //   - JSON body similar to:
 //     {
 //     "event_type": "package.finalized",
 //     "object": {"id": "...", "name": "...", "sender": "...", "total_files": 1}
 //     }
+const massiveWebhookKeyVar = "MASSIVE_WEBHOOK_API_KEY"
+
+// massiveWebhookAuthorized answers whether this request may start an import, and writes
+// the refusal itself when it may not.
+//
+// An unset key disables the route rather than opening it. This endpoint starts a
+// workflow that copies whatever it is pointed at out of an S3 bucket, and it is reachable
+// from the internet, so "no key configured" cannot mean "no key required" — which is what
+// it used to mean, and nothing in the deployment sets the variable.
+func massiveWebhookAuthorized(ctx *gin.Context) bool {
+	expected := os.Getenv(massiveWebhookKeyVar)
+	if expected == "" {
+		log.Printf("%s is not set: refusing a request to %s", massiveWebhookKeyVar, ctx.Request.URL.Path)
+		ctx.JSON(http.StatusServiceUnavailable, gin.H{
+			"error": "webhook disabled: " + massiveWebhookKeyVar + " is not set",
+		})
+		return false
+	}
+
+	// Constant time, so the response time does not report how much of the key was right.
+	if subtle.ConstantTimeCompare([]byte(ctx.GetHeader("api-key")), []byte(expected)) != 1 {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid api-key"})
+		return false
+	}
+
+	return true
+}
+
 func (s *TriggerServer) massiveWebhookHandler(ctx *gin.Context) {
-	// Validate API key if configured
-	expectedKey := os.Getenv("MASSIVE_WEBHOOK_API_KEY")
-	if expectedKey != "" {
-		if ctx.GetHeader("api-key") != expectedKey {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid api-key"})
-			return
-		}
+	if !massiveWebhookAuthorized(ctx) {
+		return
 	}
 	var payload massivePayload
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
