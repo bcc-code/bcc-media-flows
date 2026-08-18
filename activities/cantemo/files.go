@@ -18,8 +18,8 @@ type GetFilesParams struct {
 	Query    string
 }
 
-func GetFiles(_ context.Context, params GetFilesParams) (*cantemo.GetFilesResult, error) {
-	return GetClient().GetFiles(
+func (a Activities) GetFiles(_ context.Context, params GetFilesParams) (*cantemo.GetFilesResult, error) {
+	return a.Client.GetFiles(
 		params.Path,
 		params.State,
 		strings.Join(params.Storages, ","),
@@ -36,16 +36,16 @@ type RenameFileParams struct {
 	NewPath           string
 }
 
-func RenameFile(_ context.Context, params *RenameFileParams) (string, error) {
+func (a Activities) RenameFile(_ context.Context, params *RenameFileParams) (string, error) {
 	if params.SourceStorage == params.DestinatinStorage {
-		return GetClient().RenameFile(params.ItemID, params.ShapeID, params.SourceStorage, params.DestinatinStorage, params.NewPath)
+		return a.Client.RenameFile(params.ItemID, params.ShapeID, params.SourceStorage, params.DestinatinStorage, params.NewPath)
 	}
 
-	return GetClient().MoveFile(params.ItemID, params.ShapeID, params.SourceStorage, params.DestinatinStorage, params.NewPath)
+	return a.Client.MoveFile(params.ItemID, params.ShapeID, params.SourceStorage, params.DestinatinStorage, params.NewPath)
 }
 
-func MoveFileWait(ctx context.Context, params *RenameFileParams) (any, error) {
-	taskID, err := RenameFile(ctx, params)
+func (a Activities) MoveFileWait(ctx context.Context, params *RenameFileParams) (any, error) {
+	taskID, err := a.RenameFile(ctx, params)
 
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func MoveFileWait(ctx context.Context, params *RenameFileParams) (any, error) {
 	status := "STARTED"
 
 	for status == "STARTED" {
-		taskStatus, err := GetTaskInfo(ctx, GetTaskInfoParams{
+		taskStatus, err := a.GetTaskInfo(ctx, GetTaskInfoParams{
 			TaskID: taskID,
 		})
 

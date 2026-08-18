@@ -11,6 +11,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type testConfig struct {
+	baseURL string
+	apiKey  string
+}
+
+func (c testConfig) BaseURL() string { return c.baseURL }
+func (c testConfig) APIKey() string  { return c.apiKey }
+
 func directusServer(t *testing.T, status int, body string) *Client {
 	t.Helper()
 
@@ -21,7 +29,7 @@ func directusServer(t *testing.T, status int, body string) *Client {
 	}))
 	t.Cleanup(server.Close)
 
-	return NewClient(server.URL, "test-api-key")
+	return NewClient(testConfig{baseURL: server.URL, apiKey: "test-api-key"})
 }
 
 func recordingServer(t *testing.T, body string) (*Client, *http.Request) {
@@ -35,7 +43,7 @@ func recordingServer(t *testing.T, body string) (*Client, *http.Request) {
 	}))
 	t.Cleanup(server.Close)
 
-	return NewClient(server.URL, "test-api-key"), captured
+	return NewClient(testConfig{baseURL: server.URL, apiKey: "test-api-key"}), captured
 }
 
 func TestClient_ServerErrorsAreErrors(t *testing.T) {
@@ -75,7 +83,7 @@ func TestClient_HTMLErrorBodyIsAnError(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	client := NewClient(server.URL, "test-api-key")
+	client := NewClient(testConfig{baseURL: server.URL, apiKey: "test-api-key"})
 	asset, err := client.GetAssetByMediabankenID("MB-1")
 
 	require.Error(t, err)
@@ -172,7 +180,7 @@ func TestCreateStyledImage_RejectsAnUnknownStyleWithoutCallingDirectus(t *testin
 	}))
 	t.Cleanup(server.Close)
 
-	client := NewClient(server.URL, "test-api-key")
+	client := NewClient(testConfig{baseURL: server.URL, apiKey: "test-api-key"})
 	_, err := client.CreateStyledImage("file-1", "banner")
 
 	require.Error(t, err)
@@ -218,7 +226,7 @@ func TestUploadFile_SendsTheFileAndParsesTheResult(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	client := NewClient(server.URL, "test-api-key")
+	client := NewClient(testConfig{baseURL: server.URL, apiKey: "test-api-key"})
 	file, err := client.UploadFile("folder-1", path)
 
 	require.NoError(t, err)
@@ -229,7 +237,7 @@ func TestUploadFile_SendsTheFileAndParsesTheResult(t *testing.T) {
 }
 
 func TestClient_TimeoutCoversTheUpload(t *testing.T) {
-	client := NewClient("http://directus.example", "test-api-key")
+	client := NewClient(testConfig{baseURL: "http://directus.example", apiKey: "test-api-key"})
 
 	assert.GreaterOrEqual(t, client.client.GetClient().Timeout, uploadTimeout)
 }

@@ -18,7 +18,15 @@ type Client struct {
 	restyClient *resty.Client
 }
 
-func NewClient(baseURL string, apiKey string) *Client {
+type Config interface {
+	BaseURL() string
+	APIKey() string
+}
+
+func NewClient(cfg Config) *Client {
+	baseURL := cfg.BaseURL()
+	apiKey := cfg.APIKey()
+
 	client := httpx.New(httpx.Config{
 		Service: serviceName,
 		BaseURL: baseURL,

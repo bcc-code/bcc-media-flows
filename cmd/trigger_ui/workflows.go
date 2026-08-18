@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/bcc-code/bcc-media-flows/environment"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"github.com/gin-gonic/gin"
@@ -59,7 +59,7 @@ const massiveWebhookKeyVar = "MASSIVE_WEBHOOK_API_KEY"
 // from the internet, so "no key configured" cannot mean "no key required" — which is what
 // it used to mean, and nothing in the deployment sets the variable.
 func massiveWebhookAuthorized(ctx *gin.Context) bool {
-	expected := os.Getenv(massiveWebhookKeyVar)
+	expected := environment.Get().TriggerUI.MassiveWebhookAPIKey()
 	if expected == "" {
 		log.Printf("%s is not set: refusing a request to %s", massiveWebhookKeyVar, ctx.Request.URL.Path)
 		ctx.JSON(http.StatusServiceUnavailable, gin.H{
@@ -278,7 +278,7 @@ func (s *TriggerServer) listGET(ctx *gin.Context) {
 
 func (s *TriggerServer) workflowDetailsGET(ctx *gin.Context) {
 	workflowID := ctx.Param("id")
-	namespace := os.Getenv("TEMPORAL_NAMESPACE")
+	namespace := environment.Get().Temporal.Namespace()
 	resp, err := s.wfClient.WorkflowService().GetWorkflowExecutionHistory(ctx, &workflowservice.GetWorkflowExecutionHistoryRequest{
 		Execution: &common.WorkflowExecution{
 			WorkflowId: workflowID,

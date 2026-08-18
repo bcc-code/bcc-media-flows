@@ -3,8 +3,8 @@ package activities
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"github.com/bcc-code/bcc-media-flows/services/directus"
+	"strconv"
 )
 
 var Directus *DirectusActivities

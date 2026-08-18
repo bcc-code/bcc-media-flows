@@ -1,6 +1,9 @@
 package activities
 
 import (
+	cantemoactivities "github.com/bcc-code/bcc-media-flows/activities/cantemo"
+	"github.com/bcc-code/bcc-media-flows/services/subtrans"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	"reflect"
 	"runtime"
 	"strings"
@@ -27,15 +30,21 @@ type VideoActivities struct{}
 
 var Video = VideoActivities{}
 
-type UtilActivities struct{}
+type UtilActivities struct {
+	Vidispine vidispine.Client
+	Subtrans  *subtrans.Client
+}
 
-var Util = UtilActivities{}
+// Util is replaced at boot with clients built from the configuration.
+var Util = &UtilActivities{}
 
 type LiveActivities struct{}
 
 var Live = LiveActivities{}
 
 var Vidispine = vsactivity.Vidispine
+
+var Cantemo = cantemoactivities.Cantemo
 
 var Platform = platform_activities.PlatformActivities
 

@@ -1,73 +1,64 @@
 package environment
 
 import (
-	"os"
 	"strings"
 )
 
-var queue = os.Getenv("QUEUE")
-
 func GetQueue() string {
-	if queue != "" {
-		return queue
+	if q := Get().Queue; q != "" {
+		return q
 	}
 	return QueueWorker
 }
 
 func GetWorkerQueue() string {
-	if queue == QueueDebug {
+	if Get().Queue == QueueDebug {
 		return QueueDebug
 	}
 	return QueueWorker
 }
 
 func GetTranscodeQueue() string {
-	if queue == QueueDebug {
+	if Get().Queue == QueueDebug {
 		return QueueDebug
 	}
 	return QueueTranscode
 }
 
 func GetAudioQueue() string {
-	if queue == QueueDebug {
+	if Get().Queue == QueueDebug {
 		return QueueDebug
 	}
 	return QueueAudio
 }
 
 func GetLiveIngestQueue() string {
-	if queue == QueueDebug {
+	if Get().Queue == QueueDebug {
 		return QueueDebug
 	}
 	return QueueLiveIngest
 }
 
-var isilonPrefix = os.Getenv("ISILON_PREFIX")
-
 func GetIsilonPrefix() string {
 	// For local testing
-	if isilonPrefix != "" {
-		return isilonPrefix
+	if prefix := Get().Paths.IsilonPrefix(); prefix != "" {
+		return prefix
 	}
 	return "/mnt/isilon"
 }
 
-var tempMountPrefix = os.Getenv("TEMP_MOUNT_PREFIX")
-
 func GetTempMountPrefix() string {
 	// For local testing
-	if tempMountPrefix != "" {
-		return tempMountPrefix
+	if prefix := Get().Paths.TempMount(); prefix != "" {
+		return prefix
 	}
 	return "/mnt/temp"
 }
 
-var fileCatalystMountPrefix = os.Getenv("FILECATALYST_MOUNT_PREFIX")
-
 func GetFileCatalystMountPrefix() string {
 	// For local testing
-	if fileCatalystMountPrefix != "" {
-		return fileCatalystMountPrefix
+	if prefix := Get().Paths.FileCatalystMount(); prefix != "" {
+		return prefix
 	}
 	return "/mnt/filecatalyst"
 }

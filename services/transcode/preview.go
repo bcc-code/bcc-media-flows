@@ -205,7 +205,7 @@ func AudioPreview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) 
 }
 
 func Preview(input PreviewInput, progressCallback ffmpeg.ProgressCallback) (*PreviewResult, error) {
-	encoder := os.Getenv("H264_ENCODER")
+	encoder := environment.Get().H264Encoder
 	if encoder == "" {
 		encoder = "libx264"
 	}

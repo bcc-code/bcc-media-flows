@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"math/rand"
-	"os"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -190,10 +190,10 @@ func UpdateCongestionControlAggression(ctx context.Context, baseURL, taskID, use
 // PokeFileCatalyst gets the current MB_Grow task config,
 // randomly changes CongestionControlAggression (5-7, different from current), and updates it
 func PokeFileCatalyst(ctx context.Context) error {
-	baseURL := os.Getenv("FILECATALYST_URL")
-	taskID := os.Getenv("FILECATALYST_TASK_ID")
-	username := os.Getenv("FILECATALYST_USERNAME")
-	password := os.Getenv("FILECATALYST_PASSWORD")
+	baseURL := environment.Get().FileCatalyst.URL()
+	taskID := environment.Get().FileCatalyst.TaskID()
+	username := environment.Get().FileCatalyst.Username()
+	password := environment.Get().FileCatalyst.Password()
 
 	// Validate required environment variables
 	if baseURL == "" || taskID == "" || username == "" || password == "" {

@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
@@ -19,8 +19,6 @@ type VBTriggerGETParams struct {
 	SubtitleShapes []string
 	SubtitleStyles []string
 }
-
-var subtitleStylesDir = os.Getenv("SUBTITLE_STYLES_DIR")
 
 func (s *TriggerServer) vbExportGET(ctx *gin.Context) {
 	vxID := ctx.Query("id")
@@ -47,7 +45,7 @@ func (s *TriggerServer) vbExportGET(ctx *gin.Context) {
 	clips := meta.SplitByClips()
 	title := clips[vsapi.OriginalClip].Get(vscommon.FieldTitle, "")
 
-	subStyles, err := getFilenames(subtitleStylesDir)
+	subStyles, err := getFilenames(environment.Get().Paths.SubtitleStyles())
 	if err != nil {
 		log.Print(err)
 		renderErrorPage(ctx, http.StatusInternalServerError, err)

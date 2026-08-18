@@ -1,15 +1,10 @@
 package ftp
 
 import (
-	"os"
-)
-
-var (
-	playoutIP       = os.Getenv("PLAYOUT_FTP_ADDRESS")
-	playoutUser     = os.Getenv("PLAYOUT_FTP_USERNAME")
-	playoutPassword = os.Getenv("PLAYOUT_FTP_PASSWORD")
+	"github.com/bcc-code/bcc-media-flows/environment"
 )
 
 func Playout() (*Client, error) {
-	return NewClient(playoutIP, playoutUser, playoutPassword)
+	cfg := environment.Get()
+	return NewClient(cfg.PlayoutFTP.Address(), cfg.PlayoutFTP.Username(), cfg.PlayoutFTP.Password())
 }

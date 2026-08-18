@@ -8,10 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
 
-	"github.com/bcc-code/bcc-media-flows/services/subtrans"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"go.temporal.io/sdk/temporal"
@@ -37,8 +35,7 @@ type GetSubtransIDOutput struct {
 func (ua UtilActivities) GetSubtransIDActivity(_ context.Context, input GetSubtransIDInput) (*GetSubtransIDOutput, error) {
 	out := &GetSubtransIDOutput{}
 
-	vsClient := vsactivity.GetClient()
-	subtransID, err := vidispine.GetSubtransID(vsClient, input.VXID)
+	subtransID, err := vidispine.GetSubtransID(ua.Vidispine, input.VXID)
 	if err != nil {
 		return out, err
 	}
@@ -49,7 +46,7 @@ func (ua UtilActivities) GetSubtransIDActivity(_ context.Context, input GetSubtr
 	}
 
 	// We do not have a story ID saved, so we try to find it using the file name
-	meta, err := vsClient.GetMetadata(input.VXID)
+	meta, err := ua.Vidispine.GetMetadata(input.VXID)
 	if err != nil {
 		return nil, err
 	}
@@ -73,10 +70,7 @@ func (ua UtilActivities) GetSubtransIDActivity(_ context.Context, input GetSubtr
 	// Join back together
 	fileName = strings.Join(fileNameSplit, ".")
 
-	stClient := subtrans.NewClient(
-		os.Getenv("SUBTRANS_BASE_URL"),
-		os.Getenv("SUBTRANS_API_KEY"),
-	)
+	stClient := ua.Subtrans
 
 	res, err := stClient.SearchByName(fileName)
 	if err != nil {
@@ -99,7 +93,7 @@ func (ua UtilActivities) GetSubtransIDActivity(_ context.Context, input GetSubtr
 }
 
 func (ua UtilActivities) GetSubtitlesActivity(_ context.Context, params GetSubtitlesInput) (map[string]paths.Path, error) {
-	client := subtrans.NewClient(os.Getenv("SUBTRANS_BASE_URL"), os.Getenv("SUBTRANS_API_KEY"))
+	client := ua.Subtrans
 
 	info, err := os.Stat(params.DestinationFolder.Local())
 	if os.IsNotExist(err) {

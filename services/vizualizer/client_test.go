@@ -10,6 +10,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type testConfig struct {
+	baseURL string
+}
+
+func (c testConfig) Vizualizer() string { return c.baseURL }
+
 func decodeJSON(r *http.Request, target any) error {
 	defer func() { _ = r.Body.Close() }()
 	return json.NewDecoder(r.Body).Decode(target)
@@ -25,14 +31,14 @@ func vizServer(t *testing.T, status int, contentType, body string) *Client {
 	}))
 	t.Cleanup(server.Close)
 
-	client, err := NewClient(server.URL)
+	client, err := NewClient(testConfig{baseURL: server.URL})
 	require.NoError(t, err)
 
 	return client
 }
 
 func TestNewClient_RequiresABaseURL(t *testing.T) {
-	client, err := NewClient("")
+	client, err := NewClient(testConfig{baseURL: ""})
 
 	require.Error(t, err)
 	assert.Nil(t, client)
@@ -65,7 +71,7 @@ func TestGetJob_RequiresAJobID(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	client, err := NewClient(server.URL)
+	client, err := NewClient(testConfig{baseURL: server.URL})
 	require.NoError(t, err)
 
 	_, err = client.GetJob("")
@@ -96,7 +102,7 @@ func TestGetJob_RequestsTheJobPath(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	client, err := NewClient(server.URL)
+	client, err := NewClient(testConfig{baseURL: server.URL})
 	require.NoError(t, err)
 
 	_, err = client.GetJob("job-1")
@@ -134,7 +140,7 @@ func TestCreateVisualization_SendsTheRequestBody(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	client, err := NewClient(server.URL)
+	client, err := NewClient(testConfig{baseURL: server.URL})
 	require.NoError(t, err)
 
 	_, err = client.CreateVisualization(CreateVisualizationRequest{
@@ -190,7 +196,7 @@ func TestHealth(t *testing.T) {
 }
 
 func TestClient_HasATimeout(t *testing.T) {
-	client, err := NewClient("http://vizualizer.example")
+	client, err := NewClient(testConfig{baseURL: "http://vizualizer.example"})
 	require.NoError(t, err)
 
 	assert.Positive(t, client.client.GetClient().Timeout)

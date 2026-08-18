@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"net/http"
 
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
@@ -34,7 +35,7 @@ func (s *TriggerServer) isilonExportGET(ctx *gin.Context) {
 
 	selectedAudioSource := meta.Get(vscommon.FieldExportAudioSource, "")
 
-	filenames, err := getFilenames(overlaysDir)
+	filenames, err := getFilenames(environment.Get().Paths.Overlays())
 	if err != nil {
 		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return

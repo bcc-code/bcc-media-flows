@@ -1,8 +1,8 @@
 package telegram
 
 import (
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/services/notifications"
-	"os"
 	"time"
 
 	"gopkg.in/telebot.v3"
@@ -40,7 +40,7 @@ func (m *Message) UpdateWithTemplate(template notifications.Template) error {
 func getOrInitTelegramBot() (*telebot.Bot, error) {
 	if telegramBot == nil {
 		pref := telebot.Settings{
-			Token:  os.Getenv("TELEGRAM_BOT_TOKEN"),
+			Token:  environment.Get().Telegram.BotToken(),
 			Poller: &telebot.LongPoller{Timeout: 10 * time.Second},
 		}
 

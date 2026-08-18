@@ -32,8 +32,14 @@ func cantemoErrorFromResponse(resp *resty.Response) error {
 	return httpx.Describe(serviceName, resp)
 }
 
-func NewClient(baseURL, authToken string) *Client {
-	baseURL = strings.TrimSuffix(baseURL, "/")
+type Config interface {
+	URL() string
+	Token() string
+}
+
+func NewClient(cfg Config) *Client {
+	baseURL := strings.TrimSuffix(cfg.URL(), "/")
+	authToken := cfg.Token()
 
 	client := httpx.New(httpx.Config{
 		Service: serviceName,

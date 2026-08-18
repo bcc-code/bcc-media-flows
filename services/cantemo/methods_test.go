@@ -31,7 +31,7 @@ func routedServer(t *testing.T, bodyByPrefix map[string]string) (*Client, *[]str
 	}))
 	t.Cleanup(server.Close)
 
-	return NewClient(server.URL, "token"), &requested
+	return NewClient(testConfig{url: server.URL, token: "token"}), &requested
 }
 
 func TestGetFormats_SuccessParsesTheFormats(t *testing.T) {
@@ -92,7 +92,7 @@ func TestGetTranscriptionJSON_DownloadFailureIsAnError(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	client := NewClient(server.URL, "token")
+	client := NewClient(testConfig{url: server.URL, token: "token"})
 	transcription, err := client.GetTranscriptionJSON("VX-1")
 
 	require.Error(t, err)
@@ -106,7 +106,7 @@ func TestGetPreviewUrl_ReturnsAnAbsoluteURL(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	client := NewClient(server.URL, "token")
+	client := NewClient(testConfig{url: server.URL, token: "token"})
 	url, err := client.GetPreviewUrl("VX-1")
 
 	require.NoError(t, err)
@@ -203,7 +203,7 @@ func TestGetFiles_SendsTheListingParameters(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	client := NewClient(server.URL, "token")
+	client := NewClient(testConfig{url: server.URL, token: "token"})
 	_, err := client.GetFiles("/mnt/x", "imported", "isilon", 3, "name:a.mxf")
 
 	require.NoError(t, err)
@@ -243,7 +243,7 @@ func TestMoveFileAndRenameFile(t *testing.T) {
 			}))
 			t.Cleanup(server.Close)
 
-			client := NewClient(server.URL, "token")
+			client := NewClient(testConfig{url: server.URL, token: "token"})
 			taskID, err := test.call(client)
 
 			require.NoError(t, err)
@@ -320,7 +320,7 @@ func TestAddRelation_PostsToTheRelationPath(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	client := NewClient(server.URL, "token")
+	client := NewClient(testConfig{url: server.URL, token: "token"})
 	err := client.AddRelation("VX-parent", "VX-child")
 
 	require.NoError(t, err)

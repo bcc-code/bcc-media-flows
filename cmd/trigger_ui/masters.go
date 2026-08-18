@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -81,7 +82,7 @@ func (s *TriggerServer) uploadMasterAdminPOST(ctx *gin.Context) {
 }
 
 func (s *TriggerServer) uploadMasterGET(ctx *gin.Context) {
-	filenames, err := getFilenames(masterTriggerDir)
+	filenames, err := getFilenames(environment.Get().Paths.MasterTrigger())
 	if err != nil {
 		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
@@ -153,7 +154,7 @@ func (s *TriggerServer) uploadMasterPOST(ctx *gin.Context) {
 		}
 	}
 
-	rawPath := filepath.Join(masterTriggerDir, params.Path)
+	rawPath := filepath.Join(environment.Get().Paths.MasterTrigger(), params.Path)
 	path, err := paths.Parse(rawPath)
 	if err != nil {
 		renderErrorPage(ctx, http.StatusBadRequest, err)

@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,14 +10,17 @@ import (
 
 func TestIdentity(t *testing.T) {
 	t.Setenv("IDENTITY", "")
+	environment.Load()
 	assert.Equal(t, "worker", Identity())
 
 	t.Setenv("IDENTITY", "transcode-01")
+	environment.Load()
 	assert.Equal(t, "transcode-01", Identity())
 }
 
 func TestTemporalClient_RequiresAHost(t *testing.T) {
 	t.Setenv("TEMPORAL_HOST_PORT", "")
+	environment.Load()
 
 	_, err := TemporalClient()
 

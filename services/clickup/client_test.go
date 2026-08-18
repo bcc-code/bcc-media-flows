@@ -12,6 +12,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type testConfig struct {
+	baseURL     string
+	workspaceID string
+	viewID      string
+	token       string
+}
+
+func (c testConfig) FrontdoorBaseURL() string { return c.baseURL }
+func (c testConfig) WorkspaceID() string      { return c.workspaceID }
+func (c testConfig) ShortsViewID() string     { return c.viewID }
+func (c testConfig) ShortsViewToken() string  { return c.token }
+
 func viewPage(lastPage bool, taskIDs ...string) string {
 	ids, _ := json.Marshal(taskIDs)
 	last := "false"
@@ -46,7 +58,7 @@ func clickupServer(t *testing.T, pages []string, tasksBody string) (*Client, *in
 	}))
 	t.Cleanup(server.Close)
 
-	client, err := NewClient(server.URL, "ws-1", "view-1", "token-1")
+	client, err := NewClient(testConfig{baseURL: server.URL, workspaceID: "ws-1", viewID: "view-1", token: "token-1"})
 	require.NoError(t, err)
 
 	return client, &posts
@@ -77,7 +89,7 @@ func TestListTasks_ViewLoadFailureIsAnError(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	client, err := NewClient(server.URL, "ws-1", "view-1", "token-1")
+	client, err := NewClient(testConfig{baseURL: server.URL, workspaceID: "ws-1", viewID: "view-1", token: "token-1"})
 	require.NoError(t, err)
 
 	tasks, err := client.ListTasks()
@@ -99,7 +111,7 @@ func TestListTasks_TaskFetchFailureIsAnError(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	client, err := NewClient(server.URL, "ws-1", "view-1", "token-1")
+	client, err := NewClient(testConfig{baseURL: server.URL, workspaceID: "ws-1", viewID: "view-1", token: "token-1"})
 	require.NoError(t, err)
 
 	tasks, err := client.ListTasks()
@@ -143,7 +155,7 @@ func TestClient_SendsTheShareToken(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	client, err := NewClient(server.URL, "ws-1", "view-1", "token-1")
+	client, err := NewClient(testConfig{baseURL: server.URL, workspaceID: "ws-1", viewID: "view-1", token: "token-1"})
 	require.NoError(t, err)
 
 	_, err = client.ListTasks()
@@ -165,7 +177,7 @@ func TestClient_RequestsTheViewPaths(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	client, err := NewClient(server.URL, "ws-1", "view-1", "token-1")
+	client, err := NewClient(testConfig{baseURL: server.URL, workspaceID: "ws-1", viewID: "view-1", token: "token-1"})
 	require.NoError(t, err)
 
 	_, err = client.ListTasks()
@@ -177,7 +189,7 @@ func TestClient_RequestsTheViewPaths(t *testing.T) {
 }
 
 func TestNewClient_EmptyArgumentsUseTheDefaults(t *testing.T) {
-	client, err := NewClient("", "", "", "")
+	client, err := NewClient(testConfig{baseURL: "", workspaceID: "", viewID: "", token: ""})
 
 	require.NoError(t, err)
 	assert.Equal(t, defaultBaseURL, client.baseURL)
@@ -188,7 +200,7 @@ func TestNewClient_EmptyArgumentsUseTheDefaults(t *testing.T) {
 }
 
 func TestClient_HasATimeout(t *testing.T) {
-	client, err := NewClient("", "", "", "")
+	client, err := NewClient(testConfig{baseURL: "", workspaceID: "", viewID: "", token: ""})
 	require.NoError(t, err)
 
 	assert.Positive(t, client.client.GetClient().Timeout)
