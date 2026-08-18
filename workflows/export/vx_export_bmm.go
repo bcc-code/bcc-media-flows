@@ -254,11 +254,9 @@ func makeBMMJSON(
 
 	// Prepare data for the JSON file
 	jsonData := prepareBMMData(ctx, audioResults, normalizedResults)
-	var err error
 	jsonData.Length = int(params.MergeResult.Duration)
 	jsonData.MediabankenID = fmt.Sprintf("%s-%s", params.ParentParams.VXID, HashTitle(params.ExportData.Title))
 	jsonData.ImportDate = params.ExportData.ImportDate
-	jsonData.TranscriptionFiles = map[string]string{}
 	jsonData.ForceReplaceTranscription = params.ForceReplaceTranscription
 
 	if params.ExportData.BmmTitle != nil && *params.ExportData.BmmTitle != "" {
@@ -266,10 +264,7 @@ func makeBMMJSON(
 	}
 	jsonData.TrackID = params.ExportData.BmmTrackID
 
-	jsonData.TranscriptionFiles, err = bmmTranscriptionFiles(ctx, params.MergeResult.JSONTranscript)
-	if err != nil {
-		return nil, err
-	}
+	jsonData.TranscriptionFiles = bmmTranscriptionFiles(ctx, params.MergeResult.JSONTranscript)
 
 	if len(chapters) > 0 {
 		recordedBase := workflow.Now(ctx).Truncate(time.Hour * 6)
@@ -290,11 +285,11 @@ func makeBMMJSON(
 
 // bmmTranscriptionFiles keys the transcripts by the same language codes as the audio,
 // which BMM needs, and drops the ones known to be broken.
-func bmmTranscriptionFiles(ctx workflow.Context, transcripts map[string]paths.Path) (map[string]string, error) {
-	langs, err := wfutils.GetMapKeysSafely(ctx, transcripts)
-	if err != nil {
-		return nil, err
-	}
+//
+// Nothing here fails the export. A missing transcription costs a transcription and
+// nothing else, and an episode without one is still an episode people can listen to.
+func bmmTranscriptionFiles(ctx workflow.Context, transcripts map[string]paths.Path) map[string]string {
+	langs, _ := wfutils.GetMapKeysSafely(ctx, transcripts)
 
 	files := map[string]string{}
 	for _, lang := range langs {
@@ -310,7 +305,7 @@ func bmmTranscriptionFiles(ctx workflow.Context, transcripts map[string]paths.Pa
 		files[bmmLang] = transcripts[lang].Base()
 	}
 
-	return files, nil
+	return files
 }
 
 func applyChapterToBMMData(data *BMMData, chapter asset.TimedMetadata, recordedBase time.Time) {
