@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
+	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
 )
 
@@ -47,7 +48,7 @@ func (c *Client) RegisterFile(filePath string, fileState FileState) (string, err
 	q := requestURL.Query()
 	q.Set("path", filePath)
 	q.Set("createOnly", "false")
-	q.Set("state", string(fileState))
+	q.Set("state", fileState.Value)
 	requestURL.RawQuery = q.Encode()
 
 	result, err := c.restyClient.R().
@@ -62,7 +63,7 @@ func (c *Client) RegisterFile(filePath string, fileState FileState) (string, err
 
 func (c *Client) UpdateFileState(fileID string, fileState FileState) error {
 	_, err := c.restyClient.R().
-		Put("/file/" + fileID + "/state/" + string(fileState))
+		Put("/file/" + fileID + "/state/" + fileState.Value)
 	if err != nil {
 		return err
 	}
@@ -70,12 +71,15 @@ func (c *Client) UpdateFileState(fileID string, fileState FileState) error {
 	return nil
 }
 
-type ListFilesFilter string
+// ListFilesFilter narrows a storage listing to files by whether they are
+// attached to an item.
+type ListFilesFilter enum.Member[string]
 
-const (
-	AllFiles          ListFilesFilter = "files"
-	AssociatedFiles   ListFilesFilter = "item"
-	UnassociatedFiles ListFilesFilter = "noitem"
+var (
+	AllFiles          = ListFilesFilter{Value: "files"}
+	AssociatedFiles   = ListFilesFilter{Value: "item"}
+	UnassociatedFiles = ListFilesFilter{Value: "noitem"}
+	ListFilesFilters  = enum.New(AllFiles, AssociatedFiles, UnassociatedFiles)
 )
 
 func (c *Client) ListFilesForStorage(
@@ -94,13 +98,12 @@ func (c *Client) ListFilesForStorage(
 	q.Set("includeItem", "true")
 	q.Set("first", fmt.Sprintf("%d", offset))
 	q.Set("number", fmt.Sprintf("%d", count))
-	q.Set("state", "CLOSED")
+	q.Set("state", FileStateClosed.Value)
 
 	if len(filter) > 0 {
-		qFilter := lo.Reduce(filter, func(agg string, f ListFilesFilter, _ int) string {
-			return agg + string(f) + ","
-		}, "")
-		q.Set("filter", strings.TrimRight(qFilter, ","))
+		q.Set("filter", strings.Join(lo.Map(filter, func(f ListFilesFilter, _ int) string {
+			return f.Value
+		}), ","))
 	}
 
 	requestURL.RawQuery = q.Encode()

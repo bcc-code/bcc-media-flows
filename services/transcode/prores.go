@@ -9,6 +9,7 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
+	"github.com/orsinium-labs/enum"
 )
 
 type ProResInput struct {
@@ -23,9 +24,13 @@ type ProResInput struct {
 	SubtitleStyle  *paths.Path
 }
 
-const (
-	ProResProfileHQ   = "3"
-	ProResProfile4444 = "4"
+// ProResProfile is the -profile:v value ffmpeg's prores_ks encoder takes.
+type ProResProfile enum.Member[string]
+
+var (
+	ProResProfileHQ   = ProResProfile{Value: "3"}
+	ProResProfile4444 = ProResProfile{Value: "4"}
+	ProResProfiles    = enum.New(ProResProfileHQ, ProResProfile4444)
 )
 
 func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*EncodeResult, error) {
@@ -67,12 +72,12 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*Encod
 		)
 		params = append(
 			params,
-			"-profile:v", ProResProfile4444,
+			"-profile:v", ProResProfile4444.Value,
 		)
 	} else {
 		params = append(
 			params,
-			"-profile:v", ProResProfileHQ,
+			"-profile:v", ProResProfileHQ.Value,
 		)
 	}
 
