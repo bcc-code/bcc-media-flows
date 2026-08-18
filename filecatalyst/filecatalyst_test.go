@@ -3,6 +3,7 @@ package filecatalyst
 import (
 	"context"
 	"encoding/base64"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -141,6 +142,8 @@ func TestPokeFileCatalyst_RequiresItsEnvironment(t *testing.T) {
 	t.Setenv("FILECATALYST_TASK_ID", "")
 	t.Setenv("FILECATALYST_USERNAME", "")
 	t.Setenv("FILECATALYST_PASSWORD", "")
+	environment.Load()
+	t.Cleanup(func() { environment.Load() })
 
 	err := PokeFileCatalyst(context.Background())
 
@@ -169,6 +172,8 @@ func TestPokeFileCatalyst_WritesADifferentAggression(t *testing.T) {
 	t.Setenv("FILECATALYST_TASK_ID", "task-1")
 	t.Setenv("FILECATALYST_USERNAME", "user")
 	t.Setenv("FILECATALYST_PASSWORD", "pass")
+	environment.Load()
+	t.Cleanup(func() { environment.Load() })
 
 	require.NoError(t, PokeFileCatalyst(context.Background()))
 

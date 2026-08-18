@@ -9,6 +9,6 @@ type GetFormatsParams struct {
 	ItemID string
 }
 
-func GetFormats(_ context.Context, params GetFormatsParams) ([]cantemo.Format, error) {
-	return GetClient().GetFormats(params.ItemID)
+func (a Activities) GetFormats(_ context.Context, params GetFormatsParams) ([]cantemo.Format, error) {
+	return a.Client.GetFormats(params.ItemID)
 }

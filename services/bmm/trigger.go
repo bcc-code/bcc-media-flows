@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/internal/bootstrap"
-	"os"
 
 	"github.com/bcc-code/bcc-media-flows/environment"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
@@ -17,7 +16,7 @@ func NewTemporalClient() (client.Client, error) {
 }
 
 func queueFromEnv() string {
-	if q := os.Getenv("QUEUE"); q != "" {
+	if q := environment.Get().Queue; q != "" {
 		return q
 	}
 	return environment.GetWorkerQueue()

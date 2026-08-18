@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -17,8 +16,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
-
-var TranscodeRootPath = os.Getenv("TRANSCODE_ROOT_PATH")
 
 type watcherResult struct {
 	Name      string    `json:"name"`
@@ -128,7 +125,7 @@ func doGrowingFile(ctx context.Context, path string) error {
 	return err
 }
 
-var exp = regexp.MustCompile(fmt.Sprintf("(?:%s/)(?P<encoding>[\\w-]*)(?:/in/)", TranscodeRootPath))
+var exp = regexp.MustCompile(fmt.Sprintf("(?:%s/)(?P<encoding>[\\w-]*)(?:/in/)", environment.Get().Paths.TranscodeRoot()))
 
 func doTranscode(ctx context.Context, path string) error {
 	match := exp.MatchString(path)

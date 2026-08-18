@@ -2,7 +2,6 @@ package vb_export
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -10,6 +9,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
@@ -137,7 +137,16 @@ type VBExportChildWorkflowParams struct {
 	AnalyzeResult              ffmpeg.StreamInfo
 }
 
-var subtitleStyleBase = os.Getenv("SUBTITLE_STYLES_DIR")
+// subtitleStyleDir goes through SideEffect so a replay on a differently configured
+// worker builds the same path.
+func subtitleStyleDir(ctx workflow.Context) (string, error) {
+	var dir string
+	err := workflow.SideEffect(ctx, func(workflow.Context) any {
+		return environment.Get().Paths.SubtitleStyles()
+	}).Get(&dir)
+
+	return dir, err
+}
 
 func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrError[VBExportResult], error) {
 	logger := workflow.GetLogger(ctx)
@@ -226,7 +235,12 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	var subtitleFile *paths.Path
 	var subtitleStyle *paths.Path
 	if params.SubtitleShapeTag != "" {
-		subtitleStylePath := paths.MustParse(subtitleStyleBase + params.SubtitleStyle)
+		styleDir, err := subtitleStyleDir(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		subtitleStylePath := paths.MustParse(styleDir + params.SubtitleStyle)
 		subtitleStyle = &subtitleStylePath
 
 	outer:

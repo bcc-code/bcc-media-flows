@@ -2,7 +2,7 @@ package emails
 
 import (
 	"fmt"
-	"os"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/services/notifications"
@@ -15,7 +15,7 @@ func Send(email string, subject string, messagePlainText string, messageHTML str
 		return fmt.Errorf("recipient email is empty")
 	}
 
-	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
+	client := sendgrid.NewSendClient(environment.Get().SendgridAPIKey)
 	from := mail.NewEmail("Workflows", "workflows@em5370.brunstad.tv")
 	to := mail.NewEmail(email, email)
 

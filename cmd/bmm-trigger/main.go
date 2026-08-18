@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/internal/bootstrap"
 	"os"
 	"strconv"
@@ -16,6 +17,8 @@ import (
 
 func main() {
 	bootstrap.LoadEnv()
+	environment.Load()
+	environment.WarnMissing(environment.RequiredByBMMTrigger)
 
 	trackID := flag.Int("track-id", 0, "BMM track ID to load from RavenDB (mutually exclusive with --album-id and --playlist-id)")
 	albumID := flag.Int("album-id", 0, "BMM album (ParentId) to load tracks for (mutually exclusive with --track-id and --playlist-id)")
@@ -26,7 +29,7 @@ func main() {
 	doWait := flag.Bool("wait", false, "When --trigger is set, block until the workflow completes")
 	vxSource := flag.String("vx-source", "", "Override vxSource (skip ingest, update metadata only)")
 	fileURL := flag.String("file-url", "", "Override fileUrl (skip file URL construction from RavenDB)")
-	fileBaseURL := flag.String("file-base-url", os.Getenv("BMM_FILE_BASE_URL"), "Base URL prefixed to the audio file Path (defaults to $BMM_FILE_BASE_URL)")
+	fileBaseURL := flag.String("file-base-url", environment.Get().BMMFileBaseURL, "Base URL prefixed to the audio file Path (defaults to $BMM_FILE_BASE_URL)")
 	noResolve := flag.Bool("no-resolve", false, "Skip following redirects on fileUrl; keep the constructed URL verbatim (with userinfo if present)")
 	flag.Parse()
 
@@ -240,7 +243,7 @@ func certLabel(cfg bmm.RavenConfig) string {
 }
 
 func envOrDash(key string) string {
-	if v := os.Getenv(key); v != "" {
+	if v := environment.Getenv(key); v != "" {
 		return v
 	}
 	return "-"

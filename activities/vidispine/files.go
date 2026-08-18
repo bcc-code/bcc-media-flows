@@ -28,26 +28,24 @@ func (a Activities) ImportFileAsShapeActivity(ctx context.Context, params Import
 	log := activity.GetLogger(ctx)
 	log.Info("Starting ImportFileAsShapeActivity")
 
-	vsClient := GetClient()
-
 	fileState := vsapi.FileStateClosed
 	if params.Growing {
 		fileState = vsapi.FileStateOpen
 	}
 
-	fileID, err := vsClient.RegisterFile(params.FilePath.Local(), fileState)
+	fileID, err := a.Client.RegisterFile(params.FilePath.Local(), fileState)
 	if err != nil {
 		return nil, err
 	}
 
 	if params.Replace {
-		s, err := vsClient.GetShapes(params.AssetID)
+		s, err := a.Client.GetShapes(params.AssetID)
 		if err != nil {
 			return nil, err
 		}
 
 		if shape := s.GetShape(params.ShapeTag); shape != nil {
-			err = vsClient.DeleteShape(params.AssetID, shape.ID)
+			err = a.Client.DeleteShape(params.AssetID, shape.ID)
 			if err != nil {
 				return nil, err
 			}
@@ -55,7 +53,7 @@ func (a Activities) ImportFileAsShapeActivity(ctx context.Context, params Import
 		}
 	}
 
-	res, err := vsClient.AddShapeToItem(params.ShapeTag, params.AssetID, fileID)
+	res, err := a.Client.AddShapeToItem(params.ShapeTag, params.AssetID, fileID)
 	if err != nil && errors.Is(err, vsapi.ErrShapeTagNotFound) {
 		err = temporal.NewNonRetryableApplicationError(err.Error(), "VS_SHAPE_TAG_NOT_FOUND", err)
 	}
@@ -79,9 +77,7 @@ func (a Activities) ImportFileAsSidecarActivity(ctx context.Context, params Impo
 	log := activity.GetLogger(ctx)
 	log.Info("Starting ImportSubtitleAsSidecarParams")
 
-	vsClient := GetClient()
-
-	jobID, err := vsClient.AddSidecarToItem(params.AssetID, params.FilePath.Local(), params.Language)
+	jobID, err := a.Client.AddSidecarToItem(params.AssetID, params.FilePath.Local(), params.Language)
 	return &ImportFileAsSidecarResult{
 		JobID: jobID,
 	}, err
@@ -99,9 +95,7 @@ func (a Activities) CreatePlaceholderActivity(ctx context.Context, params Create
 	log := activity.GetLogger(ctx)
 	log.Info("Starting CreatePlaceholderActivity")
 
-	vsClient := GetClient()
-
-	id, err := vsClient.CreatePlaceholder(vsapi.PlaceholderTypeRaw, params.Title)
+	id, err := a.Client.CreatePlaceholder(vsapi.PlaceholderTypeRaw, params.Title)
 	if err != nil {
 		return nil, err
 	}
@@ -129,14 +123,12 @@ func (a Activities) CreateThumbnailsActivity(ctx context.Context, params CreateT
 	log := activity.GetLogger(ctx)
 	log.Info("Starting CreateThumbnailsActivity")
 
-	vsClient := GetClient()
-
 	if params.Width == 0 {
 		params.Width = 320
 		params.Height = 180
 	}
 
-	res, err := vsClient.CreateThumbnails(params.AssetID, params.Width, params.Height)
+	res, err := a.Client.CreateThumbnails(params.AssetID, params.Width, params.Height)
 	return &JobResult{
 		JobID: res,
 	}, err
@@ -153,9 +145,7 @@ func (a Activities) AddFileToPlaceholder(ctx context.Context, params AddFileToPl
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting AddFileToPlaceholder")
 
-	vsClient := GetClient()
-
-	fileID, err := vsClient.RegisterFile(params.FilePath.Local(), vsapi.FileStateOpen)
+	fileID, err := a.Client.RegisterFile(params.FilePath.Local(), vsapi.FileStateOpen)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +157,7 @@ func (a Activities) AddFileToPlaceholder(ctx context.Context, params AddFileToPl
 		fileState = vsapi.FileStateClosed
 	}
 
-	jobID, err := vsClient.AddFileToPlaceholder(params.AssetID, fileID, params.Tag, fileState)
+	jobID, err := a.Client.AddFileToPlaceholder(params.AssetID, fileID, params.Tag, fileState)
 	if err != nil {
 		return nil, err
 	}
@@ -186,9 +176,7 @@ func (a Activities) CloseFile(ctx context.Context, params CloseFileParams) (any,
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting CloseFile")
 
-	vsClient := GetClient()
-
-	return nil, vsClient.UpdateFileState(params.FileID, vsapi.FileStateClosed)
+	return nil, a.Client.UpdateFileState(params.FileID, vsapi.FileStateClosed)
 }
 
 type WaitForFileVisibleInStorageParams struct {
@@ -211,9 +199,8 @@ func (a Activities) WaitForFileVisibleInStorageActivity(ctx context.Context, par
 		storageID = vsapi.DefaultStorageID
 	}
 
-	vsClient := GetClient()
 	for {
-		exists, err := vsClient.FileExistsInStorage(storageID, params.FilePath.Local())
+		exists, err := a.Client.FileExistsInStorage(storageID, params.FilePath.Local())
 		if err != nil {
 			return nil, err
 		}

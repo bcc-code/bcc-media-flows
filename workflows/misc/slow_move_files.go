@@ -3,6 +3,7 @@ package miscworkflows
 import (
 	"context"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/environment"
@@ -230,7 +231,7 @@ func MoveFilesWorkerFlow(ctx workflow.Context) error {
 				NewPath:           newPath,
 			}
 
-			err := wfutils.Execute(ctx, cantemo.MoveFileWait, &renameParams).Wait(ctx)
+			err := wfutils.Execute(ctx, activities.Cantemo.MoveFileWait, &renameParams).Wait(ctx)
 			if err != nil {
 				workflow.GetLogger(ctx).Error("Failed to rename file", "error", err)
 				continue

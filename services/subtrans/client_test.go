@@ -11,6 +11,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type testConfig struct {
+	baseURL string
+	apiKey  string
+}
+
+func (c testConfig) BaseURL() string { return c.baseURL }
+func (c testConfig) APIKey() string  { return c.apiKey }
+
 func subtransServer(t *testing.T, status int, contentType, body string) *Client {
 	t.Helper()
 
@@ -21,7 +29,7 @@ func subtransServer(t *testing.T, status int, contentType, body string) *Client 
 	}))
 	t.Cleanup(server.Close)
 
-	return NewClient(server.URL, "test-api-key")
+	return NewClient(testConfig{baseURL: server.URL, apiKey: "test-api-key"})
 }
 
 func routingServer(t *testing.T, storyBody string, exportStatus int, exportBody string) (*Client, *int) {
@@ -41,7 +49,7 @@ func routingServer(t *testing.T, storyBody string, exportStatus int, exportBody 
 	}))
 	t.Cleanup(server.Close)
 
-	return NewClient(server.URL, "test-api-key"), &exports
+	return NewClient(testConfig{baseURL: server.URL, apiKey: "test-api-key"}), &exports
 }
 
 const oneNorwegianLanguage = `{"id":42,"name":"AABC-%lang%","languages":[{"isoName":"NOR","approved":true}]}`
@@ -152,7 +160,7 @@ func TestClient_SendsTheAPIKeyOnEveryRequest(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	client := NewClient(server.URL, "test-api-key")
+	client := NewClient(testConfig{baseURL: server.URL, apiKey: "test-api-key"})
 	_, err := client.GetSubtitles("42", SubTypeSRT, true)
 
 	require.NoError(t, err)
@@ -187,7 +195,7 @@ func TestGetSubtitles_PassesApprovedOnlyThrough(t *testing.T) {
 			}))
 			t.Cleanup(server.Close)
 
-			client := NewClient(server.URL, "test-api-key")
+			client := NewClient(testConfig{baseURL: server.URL, apiKey: "test-api-key"})
 			_, err := client.GetSubtitles("42", SubTypeSRT, approvedOnly)
 
 			require.NoError(t, err)
@@ -200,7 +208,7 @@ func TestClient_TransportErrorDoesNotLeakTheKey(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
 	server.Close()
 
-	client := NewClient(server.URL, "s3cr3t-api-key")
+	client := NewClient(testConfig{baseURL: server.URL, apiKey: "s3cr3t-api-key"})
 
 	for _, test := range []struct {
 		name string

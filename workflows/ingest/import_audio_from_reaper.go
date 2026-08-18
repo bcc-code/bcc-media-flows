@@ -87,7 +87,7 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 		}
 
 		// Add relation
-		err = wfutils.Execute(ctx, cantemo.AddRelation, cantemo.AddRelationParams{
+		err = wfutils.Execute(ctx, activities.Cantemo.AddRelation, cantemo.AddRelationParams{
 			Child:  assetResult.AssetID,
 			Parent: params.VideoVXID,
 		}).Get(ctx, nil)

@@ -3,7 +3,6 @@ package vsactivity
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"go.temporal.io/sdk/activity"
@@ -13,13 +12,12 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 )
 
-type Activities struct{}
-
-var Vidispine = Activities{}
-
-func GetClient() vidispine.Client {
-	return vsapi.NewClient(os.Getenv("VIDISPINE_BASE_URL"), os.Getenv("VIDISPINE_USERNAME"), os.Getenv("VIDISPINE_PASSWORD"))
+type Activities struct {
+	Client vidispine.Client
 }
+
+// Vidispine is replaced at boot with a client built from the configuration.
+var Vidispine = &Activities{}
 
 type WaitForJobCompletionParams struct {
 	JobID     string
@@ -35,15 +33,13 @@ func (a Activities) WaitForJobCompletion(ctx context.Context, params WaitForJobC
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting WaitForJobCompletionActivity")
 
-	vsClient := GetClient()
-
 	sleepTime := time.Second * 30
 	if params.SleepTime > 0 {
 		sleepTime = time.Second * time.Duration(params.SleepTime)
 	}
 
 	for {
-		job, err := vsClient.GetJob(params.JobID)
+		job, err := a.Client.GetJob(params.JobID)
 		if err != nil {
 			return nil, err
 		}
@@ -68,10 +64,8 @@ func (a Activities) JobCompleteOrErr(ctx context.Context, params WaitForJobCompl
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting WaitForJobCompletionActivity")
 
-	vsClient := GetClient()
-
 	for {
-		job, err := vsClient.GetJob(params.JobID)
+		job, err := a.Client.GetJob(params.JobID)
 		if err != nil {
 			return false, temporal.NewNonRetryableApplicationError("couldn't complete job", "JOB_FAILED", err)
 		}
@@ -95,8 +89,7 @@ func (a Activities) FindJob(ctx context.Context, params FindJobParams) (*vsapi.J
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting FindJob")
 
-	vsClient := GetClient()
-	res, err := vsClient.FindJob(params.ItemID, params.JobType)
+	res, err := a.Client.FindJob(params.ItemID, params.JobType)
 
 	return res, err
 }

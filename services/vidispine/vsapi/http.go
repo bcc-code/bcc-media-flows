@@ -38,7 +38,17 @@ func vsErrorFromResponse(resp *resty.Response) error {
 	return httpx.Describe(serviceName, resp)
 }
 
-func NewClient(baseURL string, username string, password string) *Client {
+type Config interface {
+	BaseURL() string
+	Username() string
+	Password() string
+}
+
+func NewClient(cfg Config) *Client {
+	baseURL := cfg.BaseURL()
+	username := cfg.Username()
+	password := cfg.Password()
+
 	// The retries reach POST and DELETE, so the timeout has to outlast a slow call
 	// rather than merely a healthy one: retrying a working AddShapeToItem or
 	// CreatePlaceholder creates a second shape or job.

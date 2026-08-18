@@ -25,7 +25,15 @@ type Client struct {
 // form data; every other call here exchanges small JSON documents.
 const uploadTimeout = 5 * time.Minute
 
-func NewClient(baseURL, apiKey string) *Client {
+type Config interface {
+	BaseURL() string
+	APIKey() string
+}
+
+func NewClient(cfg Config) *Client {
+	baseURL := cfg.BaseURL()
+	apiKey := cfg.APIKey()
+
 	client := httpx.New(httpx.Config{
 		Service: serviceName,
 		BaseURL: baseURL,

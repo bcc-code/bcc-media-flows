@@ -40,7 +40,19 @@ type Client struct {
 // NewClient builds a read-only client for one public view. Any empty argument
 // falls back to the hardcoded default for the public "Shorts Export" view, so
 // the client works out of the box; pass non-empty values to override.
-func NewClient(baseURL, workspaceID, viewID, token string) (*Client, error) {
+type Config interface {
+	FrontdoorBaseURL() string
+	WorkspaceID() string
+	ShortsViewID() string
+	ShortsViewToken() string
+}
+
+func NewClient(cfg Config) (*Client, error) {
+	baseURL := cfg.FrontdoorBaseURL()
+	workspaceID := cfg.WorkspaceID()
+	viewID := cfg.ShortsViewID()
+	token := cfg.ShortsViewToken()
+
 	if baseURL == "" {
 		baseURL = defaultBaseURL
 	}

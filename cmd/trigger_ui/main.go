@@ -40,19 +40,18 @@ func getQueue() string {
 	return environment.GetQueue()
 }
 
-var overlaysDir = os.Getenv("OVERLAYS_DIR")
-var masterTriggerDir = os.Getenv("MASTER_TRIGGER_DIR")
-
-// triggeredByHeader names a request header set by an identity-aware proxy in
-// front of the UI, e.g. "X-Forwarded-User".
-var triggeredByHeader = os.Getenv("TRIGGERED_BY_HEADER")
-
+// getTriggeredBy reads the user from a header an identity-aware proxy sets, e.g.
+// "X-Forwarded-User".
 func getTriggeredBy(ctx *gin.Context) string {
-	if triggeredByHeader != "" {
-		if v := ctx.GetHeader(triggeredByHeader); v != "" {
-			return v
-		}
+	header := environment.Get().TriggerUI.TriggeredByHeader()
+	if header == "" {
+		return "trigger-ui"
 	}
+
+	if user := ctx.GetHeader(header); user != "" {
+		return user
+	}
+
 	return "trigger-ui"
 }
 
@@ -70,7 +69,7 @@ func getFilenames(dir string) ([]string, error) {
 }
 
 func getOverlayFilePath(file string) string {
-	return filepath.Join(overlaysDir, file)
+	return filepath.Join(environment.Get().Paths.Overlays(), file)
 }
 
 func renderErrorPage(ctx *gin.Context, httpStatus int, err error) {
@@ -178,7 +177,7 @@ func (s *TriggerServer) vxExportGET(ctx *gin.Context) {
 
 	selectedLanguages := meta.GetArray(vscommon.FieldLangsToExport)
 
-	filenames, err := getFilenames(overlaysDir)
+	filenames, err := getFilenames(environment.Get().Paths.Overlays())
 	if err != nil {
 		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
@@ -467,9 +466,13 @@ func (s *TriggerServer) moveFilesPOST(ctx *gin.Context) {
 }
 
 func main() {
+	bootstrap.LoadEnv()
+	environment.Load()
+	environment.WarnMissing(environment.RequiredByTriggerUI)
+
 	router := gin.Default()
 
-	vsapiClient := vsapi.NewClient(os.Getenv("VIDISPINE_BASE_URL"), os.Getenv("VIDISPINE_USERNAME"), os.Getenv("VIDISPINE_PASSWORD"))
+	vsapiClient := vsapi.NewClient(environment.Get().Vidispine)
 	wfClient, err := getTemporalClient()
 	if err != nil {
 		panic(err.Error())
@@ -513,7 +516,7 @@ func main() {
 	// MD: This is a legacy route, it should be removed in the future.
 	router.POST("/filecatalyst", server.fileCatalystWebhookHandler)
 
-	if os.Getenv(massiveWebhookKeyVar) == "" {
+	if environment.Get().TriggerUI.MassiveWebhookAPIKey() == "" {
 		log.Printf("WARNING: %s is not set, so /webhook/massive will refuse every request", massiveWebhookKeyVar)
 	}
 

@@ -5,10 +5,10 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 )
@@ -22,10 +22,10 @@ type RavenConfig struct {
 
 func LoadRavenConfigFromEnv() (RavenConfig, error) {
 	cfg := RavenConfig{
-		URL:         strings.TrimRight(os.Getenv("RAVENDB_URL"), "/"),
-		Database:    os.Getenv("RAVENDB_DATABASE"),
-		CertPath:    os.Getenv("RAVENDB_CERT_PATH"),
-		CertKeyPath: os.Getenv("RAVENDB_CERT_KEY_PATH"),
+		URL:         environment.Get().RavenDB.URL(),
+		Database:    environment.Get().RavenDB.Database(),
+		CertPath:    environment.Get().RavenDB.CertPath(),
+		CertKeyPath: environment.Get().RavenDB.CertKeyPath(),
 	}
 	if cfg.URL == "" {
 		return cfg, fmt.Errorf("RAVENDB_URL is required")
@@ -92,16 +92,16 @@ type RavenRel struct {
 }
 
 type RavenTranslation struct {
-	Language  string             `json:"Language"`
-	IsVisible bool               `json:"IsVisible"`
-	Title     string             `json:"Title"`
-	Media     []RavenMediaGroup  `json:"Media"`
+	Language  string               `json:"Language"`
+	IsVisible bool                 `json:"IsVisible"`
+	Title     string               `json:"Title"`
+	Media     []RavenMediaGroup    `json:"Media"`
 	Meta      RavenTranslationMeta `json:"_meta"`
 }
 
 type RavenMediaGroup struct {
-	Type      string         `json:"Type"`
-	IsVisible bool           `json:"IsVisible"`
+	Type      string           `json:"Type"`
+	IsVisible bool             `json:"IsVisible"`
 	Files     []RavenMediaFile `json:"Files"`
 }
 

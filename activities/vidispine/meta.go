@@ -30,9 +30,7 @@ func (a Activities) GetFileFromVXActivity(ctx context.Context, params GetFileFro
 	log := activity.GetLogger(ctx)
 	log.Info("Starting GetFileFromVXActivity")
 
-	vsClient := GetClient()
-
-	shapes, err := vsClient.GetShapes(params.VXID)
+	shapes, err := a.Client.GetShapes(params.VXID)
 	if err != nil {
 		return nil, err
 	}
@@ -54,8 +52,7 @@ func (a Activities) GetFileFromVXActivity(ctx context.Context, params GetFileFro
 }
 
 func (a Activities) GetVXMetadata(_ context.Context, params VXOnlyParam) (*vsapi.MetadataResult, error) {
-	vsClient := GetClient()
-	data, err := vsClient.GetMetadata(params.VXID)
+	data, err := a.Client.GetMetadata(params.VXID)
 	return data, err
 }
 
@@ -65,12 +62,11 @@ type GetVXMetadataFieldsParams struct {
 }
 
 func (a Activities) GetVXMetadataFields(_ context.Context, params GetVXMetadataFieldsParams) (*vsapi.MetadataResult, error) {
-	vsClient := GetClient()
 	fields := make([]string, len(params.Fields))
 	for i, f := range params.Fields {
 		fields[i] = f.Value
 	}
-	return vsClient.GetMetadataFields(params.VXID, fields)
+	return a.Client.GetMetadataFields(params.VXID, fields)
 }
 
 type VXMetadataFieldParams = vsapi.ItemMetadataFieldParams
@@ -82,9 +78,7 @@ func (a Activities) SetVXMetadataFieldActivity(ctx context.Context, params vsapi
 	log := activity.GetLogger(ctx)
 	log.Info("Starting SetVXMetadataFieldActivity")
 
-	vsClient := GetClient()
-
-	err := vsClient.SetItemMetadataField(params)
+	err := a.Client.SetItemMetadataField(params)
 	return nil, err
 }
 
@@ -92,9 +86,7 @@ func (a Activities) AddToVXMetadataFieldActivity(ctx context.Context, params vsa
 	log := activity.GetLogger(ctx)
 	log.Info("Starting SetVXMetadataFieldActivity")
 
-	vsClient := GetClient()
-
-	err := vsClient.AddToItemMetadataField(params)
+	err := a.Client.AddToItemMetadataField(params)
 	return nil, err
 }
 
@@ -102,31 +94,25 @@ type GetResolutionsParams struct {
 	VXID string
 }
 
-func GetResolutions(ctx context.Context, params GetResolutionsParams) ([]vsapi.Resolution, error) {
+func (a Activities) GetResolutions(ctx context.Context, params GetResolutionsParams) ([]vsapi.Resolution, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting GetResolutions")
 
-	vsClient := GetClient()
-
-	return vsClient.GetResolutions(params.VXID)
+	return a.Client.GetResolutions(params.VXID)
 }
 
 func (a Activities) GetRelations(ctx context.Context, assetID string) ([]vsapi.Relation, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting GetRelations")
 
-	vsClient := GetClient()
-
-	return vsClient.GetRelations(assetID)
+	return a.Client.GetRelations(assetID)
 }
 
 func (a Activities) GetTrashedItems(ctx context.Context, _ any) ([]string, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting GetTrashedItems")
 
-	vsClient := GetClient()
-
-	return vsClient.GetTrash()
+	return a.Client.GetTrash()
 }
 
 type SearchByMetadataFieldParams struct {
@@ -138,7 +124,7 @@ func (a Activities) SearchItemsByMetadataField(ctx context.Context, params Searc
 	log := activity.GetLogger(ctx)
 	log.Info("Starting SearchItemsByMetadataField", "name", params.Name, "value", params.Value)
 
-	return GetClient().SearchByMetadataField(params.Name, params.Value)
+	return a.Client.SearchByMetadataField(params.Name, params.Value)
 }
 
 // UpdateAssetRelations attempts to find languages of related audio files and update the metadata
@@ -148,9 +134,7 @@ func (a Activities) UpdateAssetRelations(ctx context.Context, params VXOnlyParam
 	log := activity.GetLogger(ctx)
 	log.Info("Starting UpdateAssetRelations")
 
-	vsClient := GetClient()
-
-	relations, err := vsClient.GetRelations(vxID)
+	relations, err := a.Client.GetRelations(vxID)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +146,7 @@ func (a Activities) UpdateAssetRelations(ctx context.Context, params VXOnlyParam
 			other = relation.Direction.Target
 		}
 
-		meta, err := vsClient.GetMetadata(other)
+		meta, err := a.Client.GetMetadata(other)
 		if err != nil {
 			return nil, err
 		}
@@ -188,7 +172,7 @@ func (a Activities) UpdateAssetRelations(ctx context.Context, params VXOnlyParam
 		title = title[len(title)-3:]
 
 		if l, ok := languages.LanguagesByISO[strings.ToLower(title)]; ok {
-			err := vsClient.SetItemMetadataField(
+			err := a.Client.SetItemMetadataField(
 				vsapi.ItemMetadataFieldParams{
 					ItemID:  vxID,
 					GroupID: "System",
@@ -209,7 +193,5 @@ func (a Activities) GetShapes(ctx context.Context, params VXOnlyParam) (*vsapi.S
 	log := activity.GetLogger(ctx)
 	log.Info("Starting GetShapes")
 
-	vsClient := GetClient()
-
-	return vsClient.GetShapes(params.VXID)
+	return a.Client.GetShapes(params.VXID)
 }

@@ -3,19 +3,14 @@ package rclone
 import (
 	"encoding/base64"
 	"encoding/json"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"io"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/ansel1/merry/v2"
 
 	"github.com/bcc-code/bcc-media-flows/internal/httpx"
-)
-
-var (
-	username = os.Getenv("RCLONE_USERNAME")
-	password = os.Getenv("RCLONE_PASSWORD")
 )
 
 var (
@@ -41,7 +36,8 @@ func doRequest[T any](req *http.Request) (*T, error) {
 	}
 	req.Close = true
 
-	basicAuth := base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
+	cfg := environment.Get()
+	basicAuth := base64.StdEncoding.EncodeToString([]byte(cfg.Rclone.Username() + ":" + cfg.Rclone.Password()))
 	req.Header.Set("Authorization", "Basic "+basicAuth)
 
 	res, err := client.Do(req)

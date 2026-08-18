@@ -13,6 +13,17 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 )
 
+// testConfig is what a client needs, without the environment.
+type testConfig struct {
+	baseURL  string
+	username string
+	password string
+}
+
+func (c testConfig) BaseURL() string  { return c.baseURL }
+func (c testConfig) Username() string { return c.username }
+func (c testConfig) Password() string { return c.password }
+
 // vsServer serves a fixed status and body for every request, and records how many
 // requests it saw.
 func vsServer(t *testing.T, status int, body string) (*Client, *int) {
@@ -27,7 +38,7 @@ func vsServer(t *testing.T, status int, body string) (*Client, *int) {
 	}))
 	t.Cleanup(server.Close)
 
-	return NewClient(server.URL, "user", "pass"), &calls
+	return NewClient(testConfig{baseURL: server.URL, username: "user", password: "pass"}), &calls
 }
 
 // A server error must reach the caller as an error. resty leaves err nil for 4xx/5xx
@@ -79,7 +90,7 @@ func TestClient_NonJSONErrorBodyIsStillAnError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(server.URL, "user", "pass")
+	client := NewClient(testConfig{baseURL: server.URL, username: "user", password: "pass"})
 
 	result, err := client.GetShapes("VX-1")
 
@@ -127,7 +138,7 @@ func TestClient_FileExistsInStorageTolerates404(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(server.URL, "user", "pass")
+	client := NewClient(testConfig{baseURL: server.URL, username: "user", password: "pass"})
 
 	exists, err := client.FileExistsInStorage("VX-42", "/mnt/isilon/some/file.mxf")
 
@@ -150,7 +161,7 @@ func TestClient_FileExistsInStorageStillErrorsOn500(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(server.URL, "user", "pass")
+	client := NewClient(testConfig{baseURL: server.URL, username: "user", password: "pass"})
 
 	_, err := client.FileExistsInStorage("VX-42", "/mnt/isilon/some/file.mxf")
 

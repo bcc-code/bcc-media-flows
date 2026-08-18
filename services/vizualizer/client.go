@@ -21,7 +21,13 @@ type Client struct {
 }
 
 // NewClient constructs a vizualizer API client.
-func NewClient(baseURL string) (*Client, error) {
+type Config interface {
+	Vizualizer() string
+}
+
+func NewClient(cfg Config) (*Client, error) {
+	baseURL := cfg.Vizualizer()
+
 	if baseURL == "" {
 		return nil, fmt.Errorf("vizualizer baseURL not set")
 	}

@@ -6,6 +6,14 @@ import (
 	"testing"
 )
 
+type testConfig struct {
+	url   string
+	token string
+}
+
+func (c testConfig) URL() string   { return c.url }
+func (c testConfig) Token() string { return c.token }
+
 // TestAddRelation tests is a bare-bones check,
 // it does not check if the relation was actually added.
 func TestAddRelation(t *testing.T) {
@@ -20,7 +28,7 @@ func TestAddRelation(t *testing.T) {
 		t.Skip("CANTEMO_TOKEN not set")
 	}
 
-	client := NewClient(cantemoBaseURL, cantemoToken)
+	client := NewClient(testConfig{url: cantemoBaseURL, token: cantemoToken})
 	err := client.AddRelation("VX-parent", "VX-child")
 	assert.NoError(t, err)
 }
@@ -37,7 +45,7 @@ func TestClient_GetTranscriptionJSON(t *testing.T) {
 		t.Skip("CANTEMO_TOKEN not set")
 	}
 
-	client := NewClient(baseURL, token)
+	client := NewClient(testConfig{url: baseURL, token: token})
 	tr, err := client.GetTranscriptionJSON("VX-486350")
 	assert.NoError(t, err)
 	assert.NotEmpty(t, tr)
@@ -55,7 +63,7 @@ func TestClient_GetPreview(t *testing.T) {
 		t.Skip("CANTEMO_TOKEN not set")
 	}
 
-	client := NewClient(baseURL, token)
+	client := NewClient(testConfig{url: baseURL, token: token})
 	meta, err := client.GetPreviewUrl("VX-486350")
 	assert.NoError(t, err)
 	assert.NotEmpty(t, meta)
@@ -73,7 +81,7 @@ func TestClient_GetFiles(t *testing.T) {
 		t.Skip("CANTEMO_TOKEN not set")
 	}
 
-	client := NewClient(baseURL, token)
+	client := NewClient(testConfig{url: baseURL, token: token})
 	files, err := client.GetFiles(
 		"/",
 		"imported",
