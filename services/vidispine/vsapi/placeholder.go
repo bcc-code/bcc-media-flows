@@ -4,20 +4,28 @@ import (
 	"bytes"
 	"fmt"
 	"net/url"
+
+	"github.com/orsinium-labs/enum"
 )
 
-type PlaceholderType string
+// PlaceholderType selects which metadata template a new placeholder is created
+// from, and so which group the item lands in.
+type PlaceholderType enum.Member[string]
 
-const (
-	PlaceholderTypeMaster PlaceholderType = "master"
-	PlaceholderTypeRaw    PlaceholderType = "raw"
+var (
+	PlaceholderTypeMaster = PlaceholderType{Value: "master"}
+	PlaceholderTypeRaw    = PlaceholderType{Value: "raw"}
+	PlaceholderTypes      = enum.New(PlaceholderTypeMaster, PlaceholderTypeRaw)
 )
 
-type FileState string
+// FileState is Vidispine's own name for whether a file is still being written
+// to. Registering a file as OPEN is what makes it a growing file.
+type FileState enum.Member[string]
 
-const (
-	FileStateClosed FileState = "CLOSED"
-	FileStateOpen   FileState = "OPEN"
+var (
+	FileStateClosed = FileState{Value: "CLOSED"}
+	FileStateOpen   = FileState{Value: "OPEN"}
+	FileStates      = enum.New(FileStateClosed, FileStateOpen)
 )
 
 type PlacholderTplData struct {

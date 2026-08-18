@@ -1181,3 +1181,19 @@ most if the proxy were ever misconfigured, bypassed, or reached from an already-
   `return temporalClient, nil` over a package variable, so every caller has an error branch
   that no input can reach. `bootstrap.TemporalClient()` is the one that can fail, and httpin
   calls it once at boot.
+
+- **`vsapi.ListFilesForStorage` has no callers.** It is the only reason
+  `ListFilesFilter` exists, and neither the method nor the filter values are referenced
+  anywhere in the tree. Converted to an enum with everything else rather than singled out,
+  but the whole thing looks like it should go.
+
+- **The watch-folder names in `common/codecs.go` are a closed set that cannot become an
+  enum yet.** `WatchFolderTranscodeInput.FolderName` is a plain `string` on a workflow
+  input, so it is persisted in history; making it an `enum.Member[string]` changes the
+  serialized shape from `"HAP_50FPS"` to `{"Value":"HAP_50FPS"}` and breaks anything
+  already scheduled. Needs a migration, not a rename.
+
+- **The queue names in `environment/queues.go` are half a set.** `QueueWorker` and friends
+  are a fixed list, but `GetWorkerQueue()` and the other accessors return whatever the
+  `QUEUE` environment variable says, so the type would be an enum with a hole in it.
+  Worth revisiting if the queue names ever stop being configurable.
