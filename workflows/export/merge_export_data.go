@@ -45,15 +45,15 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	var transcriptTask workflow.Future
+	var transcriptTask wfutils.Task[*activities.MergeTranscriptResult]
 	if params.MakeTranscript && jsonTranscriptFile != nil {
 		transcriptTask = wfutils.Execute(ctx, activities.Util.MergeTranscriptJSON, activities.MergeTranscriptJSONParams{
 			MergeInput:      *jsonTranscriptFile,
 			DestinationPath: params.TempDir,
-		}).Future
+		})
 	}
 
-	var audioTasks = map[string]workflow.Future{}
+	var audioTasks = map[string]wfutils.Task[*common.MergeResult]{}
 	if params.MakeAudio {
 		keys, err := wfutils.GetMapKeysSafely(ctx, audioMergeInputs)
 		if err != nil {
@@ -64,11 +64,11 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 				continue
 			}
 			mi := audioMergeInputs[lang]
-			audioTasks[lang] = wfutils.Execute(ctx, activities.Audio.TranscodeMergeAudio, *mi).Future
+			audioTasks[lang] = wfutils.Execute(ctx, activities.Audio.TranscodeMergeAudio, *mi)
 		}
 	}
 
-	var subtitleTasks = map[string]workflow.Future{}
+	var subtitleTasks = map[string]wfutils.Task[*common.MergeResult]{}
 	if params.MakeSubtitles {
 		keys, err := wfutils.GetMapKeysSafely(ctx, subtitleMergeInputs)
 		if err != nil {
@@ -76,16 +76,14 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 		}
 		for _, lang := range keys {
 			mi := subtitleMergeInputs[lang]
-			subtitleTasks[lang] = wfutils.Execute(ctx, activities.Video.TranscodeMergeSubtitles, *mi).Future
+			subtitleTasks[lang] = wfutils.Execute(ctx, activities.Video.TranscodeMergeSubtitles, *mi)
 		}
 
 	}
 
 	var videoFile *paths.Path
 	if params.MakeVideo {
-		videoTask := wfutils.Execute(ctx, activities.Video.TranscodeMergeVideo, mergeInput)
-		var result common.MergeResult
-		err := videoTask.Get(ctx, &result)
+		result, err := wfutils.Execute(ctx, activities.Video.TranscodeMergeVideo, mergeInput).Result(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -104,9 +102,8 @@ func MergeExportData(ctx workflow.Context, params MergeExportDataParams) (*Merge
 
 	jsonTranscriptResult := map[string]paths.Path{}
 
-	if params.MakeTranscript && transcriptTask != nil {
-		var res activities.MergeTranscriptResult
-		err := transcriptTask.Get(ctx, &res)
+	if params.MakeTranscript && transcriptTask.Future != nil {
+		res, err := transcriptTask.Result(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -228,7 +225,7 @@ func exportDataToMergeInputs(data *vidispine.ExportData, tempDir, subtitlesDir p
 }
 
 // collectMergedPaths waits for one merge per language and keeps where each landed.
-func collectMergedPaths(ctx workflow.Context, tasks map[string]workflow.Future) (map[string]paths.Path, error) {
+func collectMergedPaths(ctx workflow.Context, tasks map[string]wfutils.Task[*common.MergeResult]) (map[string]paths.Path, error) {
 	langs, err := wfutils.GetMapKeysSafely(ctx, tasks)
 	if err != nil {
 		return nil, err
@@ -236,8 +233,7 @@ func collectMergedPaths(ctx workflow.Context, tasks map[string]workflow.Future) 
 
 	files := map[string]paths.Path{}
 	for _, lang := range langs {
-		var result common.MergeResult
-		err = tasks[lang].Get(ctx, &result)
+		result, err := tasks[lang].Result(ctx)
 		if err != nil {
 			return nil, err
 		}

@@ -71,8 +71,7 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 
 		f := wfutils.Execute(ctx, activities.Util.RcloneWaitForJob, activities.RcloneWaitForJobInput{JobID: jobID}).Future
 		group.Add(f, func(future workflow.Future) {
-			var copied bool
-			err := future.Get(ctx, &copied)
+			copied, err := wfutils.FutureResult[bool](ctx, future)
 			if err != nil {
 				errs = append(errs, err)
 				return

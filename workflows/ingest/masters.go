@@ -95,7 +95,7 @@ func processMaster(ctx workflow.Context, sourceFile paths.Path, destinationFile 
 	// This just triggers the task, the actual work is done in the background by Vidispine
 	_ = wfutils.Execute(ctx, activities.Vidispine.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
 		AssetID: result.AssetID,
-	}).Get(ctx, nil)
+	}).Wait(ctx)
 
 	if _, err := createPreviewsAsync(ctx, []string{result.AssetID}); err != nil {
 		return "", err
@@ -187,11 +187,10 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 }
 
 func analyzeAudioAndSetMetadata(ctx workflow.Context, assetID string, path paths.Path) (*common.AnalyzeEBUR128Result, error) {
-	var result common.AnalyzeEBUR128Result
-	err := wfutils.Execute(ctx, activities.Audio.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
+	result, err := wfutils.Execute(ctx, activities.Audio.AnalyzeEBUR128Activity, activities.AnalyzeEBUR128Params{
 		FilePath:       path,
 		TargetLoudness: -24,
-	}).Get(ctx, &result)
+	}).Result(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +212,7 @@ func analyzeAudioAndSetMetadata(ctx workflow.Context, assetID string, path paths
 		}
 	}
 
-	return &result, nil
+	return result, nil
 }
 
 func masterFilename(props ingest.JobProperty) (string, error) {
