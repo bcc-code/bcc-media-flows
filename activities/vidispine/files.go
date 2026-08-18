@@ -28,7 +28,7 @@ func (a Activities) ImportFileAsShapeActivity(ctx context.Context, params Import
 	log := activity.GetLogger(ctx)
 	log.Info("Starting ImportFileAsShapeActivity")
 
-	vsClient := GetClient()
+	vsClient := a.Client
 
 	fileState := vsapi.FileStateClosed
 	if params.Growing {
@@ -79,7 +79,7 @@ func (a Activities) ImportFileAsSidecarActivity(ctx context.Context, params Impo
 	log := activity.GetLogger(ctx)
 	log.Info("Starting ImportSubtitleAsSidecarParams")
 
-	vsClient := GetClient()
+	vsClient := a.Client
 
 	jobID, err := vsClient.AddSidecarToItem(params.AssetID, params.FilePath.Local(), params.Language)
 	return &ImportFileAsSidecarResult{
@@ -99,7 +99,7 @@ func (a Activities) CreatePlaceholderActivity(ctx context.Context, params Create
 	log := activity.GetLogger(ctx)
 	log.Info("Starting CreatePlaceholderActivity")
 
-	vsClient := GetClient()
+	vsClient := a.Client
 
 	id, err := vsClient.CreatePlaceholder(vsapi.PlaceholderTypeRaw, params.Title)
 	if err != nil {
@@ -129,7 +129,7 @@ func (a Activities) CreateThumbnailsActivity(ctx context.Context, params CreateT
 	log := activity.GetLogger(ctx)
 	log.Info("Starting CreateThumbnailsActivity")
 
-	vsClient := GetClient()
+	vsClient := a.Client
 
 	if params.Width == 0 {
 		params.Width = 320
@@ -153,7 +153,7 @@ func (a Activities) AddFileToPlaceholder(ctx context.Context, params AddFileToPl
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting AddFileToPlaceholder")
 
-	vsClient := GetClient()
+	vsClient := a.Client
 
 	fileID, err := vsClient.RegisterFile(params.FilePath.Local(), vsapi.FileStateOpen)
 	if err != nil {
@@ -186,7 +186,7 @@ func (a Activities) CloseFile(ctx context.Context, params CloseFileParams) (any,
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting CloseFile")
 
-	vsClient := GetClient()
+	vsClient := a.Client
 
 	return nil, vsClient.UpdateFileState(params.FileID, vsapi.FileStateClosed)
 }
@@ -211,7 +211,7 @@ func (a Activities) WaitForFileVisibleInStorageActivity(ctx context.Context, par
 		storageID = vsapi.DefaultStorageID
 	}
 
-	vsClient := GetClient()
+	vsClient := a.Client
 	for {
 		exists, err := vsClient.FileExistsInStorage(storageID, params.FilePath.Local())
 		if err != nil {

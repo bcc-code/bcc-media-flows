@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/internal/bootstrap"
+	cantemo "github.com/bcc-code/bcc-media-flows/services/cantemo"
+	"github.com/bcc-code/bcc-media-flows/services/subtrans"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"log"
 	"os"
 	"os/exec"
@@ -22,7 +25,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/workflows"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
-	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/teamwork/reload"
 	"go.temporal.io/sdk/activity"
@@ -34,11 +36,15 @@ import (
 	selfupdate "github.com/creativeprojects/go-selfupdate"
 )
 
-var utilActivities = []any{
-	cantemo.AddRelation,
-	cantemo.RenameFile,
-	cantemo.MoveFileWait,
-	cantemo.GetTaskInfo,
+// utilActivities is a function, not a var: a method value captures the receiver, and
+// at package-init time the clients are not built yet.
+func utilActivities() []any {
+	return []any{
+		activities.Cantemo.AddRelation,
+		activities.Cantemo.RenameFile,
+		activities.Cantemo.MoveFileWait,
+		activities.Cantemo.GetTaskInfo,
+	}
 }
 
 // registerActivitiesInStruct registers all methods in a struct as activities
@@ -142,39 +148,52 @@ func main() {
 		go rclone.StartFileTransferQueue()
 	}
 
+	buildClients(environment.Get())
+
 	registerWorker(c, environment.GetQueue(), workerOptions)
+}
+
+// buildClients constructs every service client once, from the configuration, and hands
+// them to the activities that use them. Nothing reaches for a client later.
+func buildClients(cfg *environment.Config) {
+	vsClient := vsapi.NewClient(cfg.Vidispine)
+	cantemoClient := cantemo.NewClient(cfg.Cantemo)
+
+	activities.Vidispine.Client = vsClient
+	activities.Cantemo.Client = cantemoClient
+
+	activities.Platform.Vidispine = vsClient
+	activities.Platform.Cantemo = cantemoClient
+
+	activities.Util.Vidispine = vsClient
+	activities.Util.Subtrans = subtrans.NewClient(cfg.Subtrans)
+
+	activities.Directus = &activities.DirectusActivities{
+		Client:         directus.NewClient(cfg.Directus),
+		ShortsFolderID: cfg.Directus.ShortsFolderID(),
+	}
+
+	clickUpClient, err := clickup.NewClient(cfg.ClickUp)
+	if err != nil {
+		log.Printf("Error creating ClickUp client: %v", err)
+	}
+	activities.ClickUp = &activities.ClickUpActivities{Client: clickUpClient}
+
+	vizClient, err := vizualizer.NewClient(cfg.Services)
+	if err != nil {
+		log.Printf("Error creating vizualizer client: %v", err)
+	}
+	activities.Vizualizer = &activities.VizualizerActivities{Client: vizClient}
 }
 
 func registerWorker(c client.Client, queue string, options worker.Options) {
 	w := worker.New(c, queue, options)
 
-	directusClient := directus.NewClient(environment.Get().Directus)
-	activities.Directus = &activities.DirectusActivities{
-		Client:         directusClient,
-		ShortsFolderID: environment.Get().Directus.ShortsFolderID(),
-	}
-
-	clickUpClient, err := clickup.NewClient(environment.Get().ClickUp)
-	if err != nil {
-		log.Printf("Error creating ClickUp client: %v", err)
-	}
-	activities.ClickUp = &activities.ClickUpActivities{
-		Client: clickUpClient,
-	}
-
-	vizClient, err := vizualizer.NewClient(environment.Get().Services)
-	if err != nil {
-		log.Printf("Error creating vizualizer client: %v", err)
-	}
-	activities.Vizualizer = &activities.VizualizerActivities{
-		Client: vizClient,
-	}
-
 	switch queue {
 	case environment.QueueDebug:
 		registerActivitiesInStruct(w, activities.Util)
 
-		for _, a := range utilActivities {
+		for _, a := range utilActivities() {
 			w.RegisterActivity(a)
 		}
 
@@ -200,7 +219,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 	case environment.QueueWorker:
 		registerActivitiesInStruct(w, activities.Util)
 
-		for _, a := range utilActivities {
+		for _, a := range utilActivities() {
 			w.RegisterActivity(a)
 		}
 
@@ -223,7 +242,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 	}
 
 	fmt.Println("STARTING")
-	err = w.Run(worker.InterruptCh())
+	err := w.Run(worker.InterruptCh())
 
 	log.Printf("Worker finished: %v", err)
 

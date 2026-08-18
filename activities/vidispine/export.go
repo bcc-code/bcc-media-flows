@@ -23,7 +23,7 @@ func (a Activities) GetExportDataActivity(ctx context.Context, params GetExportD
 	activity.RecordHeartbeat(ctx, "GetExportDataActivity")
 	log.Info("Starting GetExportDataActivity")
 
-	client := GetClient()
+	client := a.Client
 
 	audioSource := vidispine.ExportAudioSources.Parse(params.AudioSource)
 	if params.AudioSource != "" && audioSource == nil {
@@ -43,7 +43,7 @@ func (a Activities) GetRelatedAudioFiles(ctx context.Context, vxID string) (map[
 	activity.RecordHeartbeat(ctx, "GetRelatedAudioFiles")
 	log.Info("Starting GetRelatedAudioFiles")
 
-	client := GetClient()
+	client := a.Client
 
 	audios, err := vidispine.GetRelatedAudioPaths(client, vxID)
 

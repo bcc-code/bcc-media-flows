@@ -5,8 +5,6 @@ import (
 	"regexp"
 	"strings"
 
-	cantemoactivities "github.com/bcc-code/bcc-media-flows/activities/cantemo"
-	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/services/cantemo"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
@@ -17,9 +15,13 @@ import (
 	"go.temporal.io/sdk/activity"
 )
 
-type Activities struct{}
+type Activities struct {
+	Vidispine vidispine.Client
+	Cantemo   *cantemo.Client
+}
 
-var PlatformActivities = Activities{}
+// PlatformActivities is replaced at boot with clients built from the configuration.
+var PlatformActivities = &Activities{}
 
 type GetTimedMetadataChaptersParams struct {
 	Clips []*vidispine.Clip
@@ -30,10 +32,7 @@ func (a Activities) GetTimedMetadataChaptersActivity(ctx context.Context, params
 	activity.RecordHeartbeat(ctx, "GetTimedMetadataChaptersActivity")
 	log.Info("Starting GetTimedMetadataChaptersActivity")
 
-	vsClient := vsactivity.GetClient()
-	cantemoClient := cantemoactivities.GetClient()
-
-	return GetTimedMetadataChapters(vsClient, cantemoClient, params.Clips)
+	return GetTimedMetadataChapters(a.Vidispine, a.Cantemo, params.Clips)
 }
 
 func GetTimedMetadataChapters(vsClient vidispine.Client, cantemoClient *cantemo.Client, clips []*vidispine.Clip) ([]asset.TimedMetadata, error) {

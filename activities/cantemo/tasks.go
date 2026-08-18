@@ -9,6 +9,6 @@ type GetTaskInfoParams struct {
 	TaskID string
 }
 
-func GetTaskInfo(_ context.Context, params GetTaskInfoParams) (*cantemo.Task, error) {
-	return GetClient().GetTask(params.TaskID)
+func (a Activities) GetTaskInfo(_ context.Context, params GetTaskInfoParams) (*cantemo.Task, error) {
+	return a.Client.GetTask(params.TaskID)
 }

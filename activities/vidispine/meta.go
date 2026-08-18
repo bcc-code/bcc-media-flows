@@ -30,7 +30,7 @@ func (a Activities) GetFileFromVXActivity(ctx context.Context, params GetFileFro
 	log := activity.GetLogger(ctx)
 	log.Info("Starting GetFileFromVXActivity")
 
-	vsClient := GetClient()
+	vsClient := a.Client
 
 	shapes, err := vsClient.GetShapes(params.VXID)
 	if err != nil {
@@ -54,7 +54,7 @@ func (a Activities) GetFileFromVXActivity(ctx context.Context, params GetFileFro
 }
 
 func (a Activities) GetVXMetadata(_ context.Context, params VXOnlyParam) (*vsapi.MetadataResult, error) {
-	vsClient := GetClient()
+	vsClient := a.Client
 	data, err := vsClient.GetMetadata(params.VXID)
 	return data, err
 }
@@ -65,7 +65,7 @@ type GetVXMetadataFieldsParams struct {
 }
 
 func (a Activities) GetVXMetadataFields(_ context.Context, params GetVXMetadataFieldsParams) (*vsapi.MetadataResult, error) {
-	vsClient := GetClient()
+	vsClient := a.Client
 	fields := make([]string, len(params.Fields))
 	for i, f := range params.Fields {
 		fields[i] = f.Value
@@ -82,7 +82,7 @@ func (a Activities) SetVXMetadataFieldActivity(ctx context.Context, params vsapi
 	log := activity.GetLogger(ctx)
 	log.Info("Starting SetVXMetadataFieldActivity")
 
-	vsClient := GetClient()
+	vsClient := a.Client
 
 	err := vsClient.SetItemMetadataField(params)
 	return nil, err
@@ -92,7 +92,7 @@ func (a Activities) AddToVXMetadataFieldActivity(ctx context.Context, params vsa
 	log := activity.GetLogger(ctx)
 	log.Info("Starting SetVXMetadataFieldActivity")
 
-	vsClient := GetClient()
+	vsClient := a.Client
 
 	err := vsClient.AddToItemMetadataField(params)
 	return nil, err
@@ -102,11 +102,11 @@ type GetResolutionsParams struct {
 	VXID string
 }
 
-func GetResolutions(ctx context.Context, params GetResolutionsParams) ([]vsapi.Resolution, error) {
+func (a Activities) GetResolutions(ctx context.Context, params GetResolutionsParams) ([]vsapi.Resolution, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting GetResolutions")
 
-	vsClient := GetClient()
+	vsClient := a.Client
 
 	return vsClient.GetResolutions(params.VXID)
 }
@@ -115,7 +115,7 @@ func (a Activities) GetRelations(ctx context.Context, assetID string) ([]vsapi.R
 	log := activity.GetLogger(ctx)
 	log.Info("Starting GetRelations")
 
-	vsClient := GetClient()
+	vsClient := a.Client
 
 	return vsClient.GetRelations(assetID)
 }
@@ -124,7 +124,7 @@ func (a Activities) GetTrashedItems(ctx context.Context, _ any) ([]string, error
 	log := activity.GetLogger(ctx)
 	log.Info("Starting GetTrashedItems")
 
-	vsClient := GetClient()
+	vsClient := a.Client
 
 	return vsClient.GetTrash()
 }
@@ -138,7 +138,7 @@ func (a Activities) SearchItemsByMetadataField(ctx context.Context, params Searc
 	log := activity.GetLogger(ctx)
 	log.Info("Starting SearchItemsByMetadataField", "name", params.Name, "value", params.Value)
 
-	return GetClient().SearchByMetadataField(params.Name, params.Value)
+	return a.Client.SearchByMetadataField(params.Name, params.Value)
 }
 
 // UpdateAssetRelations attempts to find languages of related audio files and update the metadata
@@ -148,7 +148,7 @@ func (a Activities) UpdateAssetRelations(ctx context.Context, params VXOnlyParam
 	log := activity.GetLogger(ctx)
 	log.Info("Starting UpdateAssetRelations")
 
-	vsClient := GetClient()
+	vsClient := a.Client
 
 	relations, err := vsClient.GetRelations(vxID)
 	if err != nil {
@@ -209,7 +209,7 @@ func (a Activities) GetShapes(ctx context.Context, params VXOnlyParam) (*vsapi.S
 	log := activity.GetLogger(ctx)
 	log.Info("Starting GetShapes")
 
-	vsClient := GetClient()
+	vsClient := a.Client
 
 	return vsClient.GetShapes(params.VXID)
 }

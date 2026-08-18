@@ -107,7 +107,7 @@ func MoveFileByImportDate(ctx context.Context, params MoveFileByImportDateParams
 		return nil, fmt.Errorf("not implemented: moving files between different storages")
 	}
 
-	filesResult, err := cantemo.GetFiles(ctx, cantemo.GetFilesParams{
+	filesResult, err := activities.Cantemo.GetFiles(ctx, cantemo.GetFilesParams{
 		Path:     "/",
 		Storages: []string{storageID},
 		Page:     1,
@@ -129,7 +129,7 @@ func MoveFileByImportDate(ctx context.Context, params MoveFileByImportDateParams
 
 		renameData, err := generateRenameParams(ctx, file, oldName, "", params.SourceStorageID)
 
-		_, err = cantemo.RenameFile(ctx, renameData)
+		_, err = activities.Cantemo.RenameFile(ctx, renameData)
 		return nil, err
 	}
 
@@ -137,7 +137,7 @@ func MoveFileByImportDate(ctx context.Context, params MoveFileByImportDateParams
 }
 
 func generateRenameParams(ctx context.Context, file cantemoservice.Objects, oldName, prefix, oldStorage string) (*cantemo.RenameFileParams, error) {
-	formats, err := cantemo.GetFormats(ctx, cantemo.GetFormatsParams{
+	formats, err := activities.Cantemo.GetFormats(ctx, cantemo.GetFormatsParams{
 		ItemID: file.Item.ID,
 	})
 
