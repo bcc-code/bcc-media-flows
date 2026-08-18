@@ -714,8 +714,17 @@ most if the proxy were ever misconfigured, bypassed, or reached from an already-
 
 ### Project conventions (`CLAUDE.md`)
 
-- **`.Result(ctx)` over `.Get(ctx, &x)`:** 93 `.Get(ctx` call sites remain, e.g.
-  `workflows/ingest/multitrack.go:60,75`.
+- **`.Result(ctx)` over `.Get(ctx, &x)`: done.** Every `Task` is now read with
+  `.Result(ctx)` or waited on with `.Wait(ctx)`. A `grep` for `.Get(ctx` still returns 29
+  hits and none of them is a violation, so they are listed here rather than found again:
+  five `GetChildWorkflowExecution().Get(ctx, nil)` child-*started* handshakes, three calls
+  inside `Task[T]` that are its `Result`/`Get`/`Wait`, one comment, `activities/pubsub.go:26`
+  (Pub/Sub, not Temporal), `services/bmm/trigger.go:42` (a client-side `WorkflowRun`),
+  `CollectChildResults` (`utils/workflows/common.go:28`, which keeps `.Get` so its result
+  stays `nil` on failure), and seventeen `.Get(ctx, nil)` on `ExecuteChildWorkflow` and
+  `ExecuteLocalActivity` futures, which are not `Task`s and have no `Wait`. Converting those
+  seventeen means wrapping the SDK's child-workflow future, which is a bigger change than the
+  convention asks for.
 
 - **`github.com/orsinium-labs/enum` over string constants.** The codebase already does this
   well in 11 places (`paths/paths.go:32`, `workflows/export/vx_export.go:21`,

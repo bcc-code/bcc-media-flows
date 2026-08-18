@@ -35,13 +35,11 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 		Tags: []string{"original"},
 	})
 
-	Mu1Result := &vsactivity.GetFileFromVXResult{}
-	Mu2Result := &vsactivity.GetFileFromVXResult{}
-	err := MU1FileFuture.Get(ctx, Mu1Result)
+	Mu1Result, err := MU1FileFuture.Result(ctx)
 	if err != nil {
 		return err
 	}
-	err = MU2FileFuture.Get(ctx, Mu2Result)
+	Mu2Result, err := MU2FileFuture.Result(ctx)
 	if err != nil {
 		return err
 	}
