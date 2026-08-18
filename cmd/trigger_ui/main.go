@@ -475,7 +475,7 @@ func main() {
 	}
 	lang := languages.LanguagesByISO
 
-	router.LoadHTMLGlob("./templates/*")
+	router.SetHTMLTemplate(parseTemplates())
 
 	sqlitePath, ok := os.LookupEnv("TRIGGER_DB")
 	if !ok {
