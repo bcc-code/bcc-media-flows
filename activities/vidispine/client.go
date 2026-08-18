@@ -33,15 +33,13 @@ func (a Activities) WaitForJobCompletion(ctx context.Context, params WaitForJobC
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting WaitForJobCompletionActivity")
 
-	vsClient := a.Client
-
 	sleepTime := time.Second * 30
 	if params.SleepTime > 0 {
 		sleepTime = time.Second * time.Duration(params.SleepTime)
 	}
 
 	for {
-		job, err := vsClient.GetJob(params.JobID)
+		job, err := a.Client.GetJob(params.JobID)
 		if err != nil {
 			return nil, err
 		}
@@ -66,10 +64,8 @@ func (a Activities) JobCompleteOrErr(ctx context.Context, params WaitForJobCompl
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting WaitForJobCompletionActivity")
 
-	vsClient := a.Client
-
 	for {
-		job, err := vsClient.GetJob(params.JobID)
+		job, err := a.Client.GetJob(params.JobID)
 		if err != nil {
 			return false, temporal.NewNonRetryableApplicationError("couldn't complete job", "JOB_FAILED", err)
 		}
@@ -93,8 +89,7 @@ func (a Activities) FindJob(ctx context.Context, params FindJobParams) (*vsapi.J
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting FindJob")
 
-	vsClient := a.Client
-	res, err := vsClient.FindJob(params.ItemID, params.JobType)
+	res, err := a.Client.FindJob(params.ItemID, params.JobType)
 
 	return res, err
 }

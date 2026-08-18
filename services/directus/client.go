@@ -31,7 +31,8 @@ type Config interface {
 }
 
 func NewClient(cfg Config) *Client {
-	baseURL, apiKey := cfg.BaseURL(), cfg.APIKey()
+	baseURL := cfg.BaseURL()
+	apiKey := cfg.APIKey()
 
 	client := httpx.New(httpx.Config{
 		Service: serviceName,

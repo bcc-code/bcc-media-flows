@@ -48,7 +48,10 @@ type Config interface {
 }
 
 func NewClient(cfg Config) (*Client, error) {
-	baseURL, workspaceID, viewID, token := cfg.FrontdoorBaseURL(), cfg.WorkspaceID(), cfg.ShortsViewID(), cfg.ShortsViewToken()
+	baseURL := cfg.FrontdoorBaseURL()
+	workspaceID := cfg.WorkspaceID()
+	viewID := cfg.ShortsViewID()
+	token := cfg.ShortsViewToken()
 
 	if baseURL == "" {
 		baseURL = defaultBaseURL

@@ -23,14 +23,12 @@ func (a Activities) GetExportDataActivity(ctx context.Context, params GetExportD
 	activity.RecordHeartbeat(ctx, "GetExportDataActivity")
 	log.Info("Starting GetExportDataActivity")
 
-	client := a.Client
-
 	audioSource := vidispine.ExportAudioSources.Parse(params.AudioSource)
 	if params.AudioSource != "" && audioSource == nil {
 		return nil, fmt.Errorf("invalid audioSource: %s", params.AudioSource)
 	}
 
-	data, err := vidispine.GetDataForExport(client, params.VXID, params.Languages, audioSource, params.Subclip, params.SubsAllowAI)
+	data, err := vidispine.GetDataForExport(a.Client, params.VXID, params.Languages, audioSource, params.Subclip, params.SubsAllowAI)
 	if err != nil {
 		return nil, err
 	}
@@ -43,9 +41,7 @@ func (a Activities) GetRelatedAudioFiles(ctx context.Context, vxID string) (map[
 	activity.RecordHeartbeat(ctx, "GetRelatedAudioFiles")
 	log.Info("Starting GetRelatedAudioFiles")
 
-	client := a.Client
-
-	audios, err := vidispine.GetRelatedAudioPaths(client, vxID)
+	audios, err := vidispine.GetRelatedAudioPaths(a.Client, vxID)
 
 	if err != nil {
 		return nil, err

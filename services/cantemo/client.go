@@ -38,9 +38,8 @@ type Config interface {
 }
 
 func NewClient(cfg Config) *Client {
-	baseURL, authToken := cfg.URL(), cfg.Token()
-
-	baseURL = strings.TrimSuffix(baseURL, "/")
+	baseURL := strings.TrimSuffix(cfg.URL(), "/")
+	authToken := cfg.Token()
 
 	client := httpx.New(httpx.Config{
 		Service: serviceName,

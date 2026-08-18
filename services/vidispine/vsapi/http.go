@@ -45,7 +45,9 @@ type Config interface {
 }
 
 func NewClient(cfg Config) *Client {
-	baseURL, username, password := cfg.BaseURL(), cfg.Username(), cfg.Password()
+	baseURL := cfg.BaseURL()
+	username := cfg.Username()
+	password := cfg.Password()
 
 	// The retries reach POST and DELETE, so the timeout has to outlast a slow call
 	// rather than merely a healthy one: retrying a working AddShapeToItem or

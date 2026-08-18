@@ -35,8 +35,7 @@ type GetSubtransIDOutput struct {
 func (ua UtilActivities) GetSubtransIDActivity(_ context.Context, input GetSubtransIDInput) (*GetSubtransIDOutput, error) {
 	out := &GetSubtransIDOutput{}
 
-	vsClient := ua.Vidispine
-	subtransID, err := vidispine.GetSubtransID(vsClient, input.VXID)
+	subtransID, err := vidispine.GetSubtransID(ua.Vidispine, input.VXID)
 	if err != nil {
 		return out, err
 	}
@@ -47,7 +46,7 @@ func (ua UtilActivities) GetSubtransIDActivity(_ context.Context, input GetSubtr
 	}
 
 	// We do not have a story ID saved, so we try to find it using the file name
-	meta, err := vsClient.GetMetadata(input.VXID)
+	meta, err := ua.Vidispine.GetMetadata(input.VXID)
 	if err != nil {
 		return nil, err
 	}
