@@ -45,7 +45,7 @@ func (s *TriggerServer) vbExportGET(ctx *gin.Context) {
 	clips := meta.SplitByClips()
 	title := clips[vsapi.OriginalClip].Get(vscommon.FieldTitle, "")
 
-	subStyles, err := getFilenames(environment.Get().SubtitleStylesDir)
+	subStyles, err := getFilenames(environment.Get().Paths.SubtitleStyles())
 	if err != nil {
 		log.Print(err)
 		renderErrorPage(ctx, http.StatusInternalServerError, err)

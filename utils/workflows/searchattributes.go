@@ -22,7 +22,7 @@ var (
 // EnsureSearchAttributes registers the custom search attributes on the
 // namespace if they are missing. Meant to run once at worker startup.
 func EnsureSearchAttributes(ctx context.Context, c client.Client) error {
-	namespace := environment.Get().TemporalNamespace
+	namespace := environment.Get().Temporal.Namespace()
 	resp, err := c.OperatorService().ListSearchAttributes(ctx, &operatorservice.ListSearchAttributesRequest{
 		Namespace: namespace,
 	})

@@ -43,7 +43,7 @@ func getQueue() string {
 // getTriggeredBy reads the user from a header an identity-aware proxy sets, e.g.
 // "X-Forwarded-User".
 func getTriggeredBy(ctx *gin.Context) string {
-	header := environment.Get().TriggeredByHeader
+	header := environment.Get().TriggerUI.TriggeredByHeader()
 	if header == "" {
 		return "trigger-ui"
 	}
@@ -69,7 +69,7 @@ func getFilenames(dir string) ([]string, error) {
 }
 
 func getOverlayFilePath(file string) string {
-	return filepath.Join(environment.Get().OverlaysDir, file)
+	return filepath.Join(environment.Get().Paths.Overlays(), file)
 }
 
 func renderErrorPage(ctx *gin.Context, httpStatus int, err error) {
@@ -177,7 +177,7 @@ func (s *TriggerServer) vxExportGET(ctx *gin.Context) {
 
 	selectedLanguages := meta.GetArray(vscommon.FieldLangsToExport)
 
-	filenames, err := getFilenames(environment.Get().OverlaysDir)
+	filenames, err := getFilenames(environment.Get().Paths.Overlays())
 	if err != nil {
 		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
@@ -472,7 +472,7 @@ func main() {
 
 	router := gin.Default()
 
-	vsapiClient := vsapi.NewFromConfig(environment.Get())
+	vsapiClient := vsapi.NewFromConfig(environment.Get().Vidispine)
 	wfClient, err := getTemporalClient()
 	if err != nil {
 		panic(err.Error())
@@ -516,7 +516,7 @@ func main() {
 	// MD: This is a legacy route, it should be removed in the future.
 	router.POST("/filecatalyst", server.fileCatalystWebhookHandler)
 
-	if environment.Get().MassiveWebhookAPIKey == "" {
+	if environment.Get().TriggerUI.MassiveWebhookAPIKey() == "" {
 		log.Printf("WARNING: %s is not set, so /webhook/massive will refuse every request", massiveWebhookKeyVar)
 	}
 

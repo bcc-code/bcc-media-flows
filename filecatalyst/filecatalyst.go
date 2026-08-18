@@ -190,10 +190,10 @@ func UpdateCongestionControlAggression(ctx context.Context, baseURL, taskID, use
 // PokeFileCatalyst gets the current MB_Grow task config,
 // randomly changes CongestionControlAggression (5-7, different from current), and updates it
 func PokeFileCatalyst(ctx context.Context) error {
-	baseURL := environment.Get().FileCatalystURL
-	taskID := environment.Get().FileCatalystTaskID
-	username := environment.Get().FileCatalystUsername
-	password := environment.Get().FileCatalystPassword
+	baseURL := environment.Get().FileCatalyst.URL()
+	taskID := environment.Get().FileCatalyst.TaskID()
+	username := environment.Get().FileCatalyst.Username()
+	password := environment.Get().FileCatalyst.Password()
 
 	// Validate required environment variables
 	if baseURL == "" || taskID == "" || username == "" || password == "" {

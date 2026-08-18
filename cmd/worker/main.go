@@ -96,8 +96,8 @@ func main() {
 	}
 
 	analytics.Init(analytics.Config{
-		WriteKey:  environment.Get().RudderstackWriteKey,
-		DataPlane: environment.Get().RudderstackDataPlaneURL,
+		WriteKey:  environment.Get().Rudderstack.WriteKey(),
+		DataPlane: environment.Get().Rudderstack.DataPlaneURL(),
 		Verbose:   false,
 	})
 
@@ -138,7 +138,7 @@ func main() {
 		},
 	}
 
-	if environment.Get().RclonePassword != "" {
+	if environment.Get().Rclone.Password() != "" {
 		go rclone.StartFileTransferQueue()
 	}
 
@@ -148,13 +148,13 @@ func main() {
 func registerWorker(c client.Client, queue string, options worker.Options) {
 	w := worker.New(c, queue, options)
 
-	directusClient := directus.NewFromConfig(environment.Get())
+	directusClient := directus.NewFromConfig(environment.Get().Directus)
 	activities.Directus = &activities.DirectusActivities{
 		Client:         directusClient,
-		ShortsFolderID: environment.Get().DirectusShortsFolder,
+		ShortsFolderID: environment.Get().Directus.ShortsFolderID(),
 	}
 
-	clickUpClient, err := clickup.NewFromConfig(environment.Get())
+	clickUpClient, err := clickup.NewFromConfig(environment.Get().ClickUp)
 	if err != nil {
 		log.Printf("Error creating ClickUp client: %v", err)
 	}
@@ -162,7 +162,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		Client: clickUpClient,
 	}
 
-	vizClient, err := vizualizer.NewFromConfig(environment.Get())
+	vizClient, err := vizualizer.NewFromConfig(environment.Get().Services)
 	if err != nil {
 		log.Printf("Error creating vizualizer client: %v", err)
 	}

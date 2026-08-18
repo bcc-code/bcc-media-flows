@@ -13,7 +13,7 @@ type AddRelationParams struct {
 }
 
 func GetClient() *cantemo.Client {
-	return cantemo.NewFromConfig(environment.Get())
+	return cantemo.NewFromConfig(environment.Get().Cantemo)
 }
 
 func AddRelation(ctx context.Context, params AddRelationParams) (any, error) {

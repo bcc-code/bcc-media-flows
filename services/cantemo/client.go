@@ -33,12 +33,12 @@ func cantemoErrorFromResponse(resp *resty.Response) error {
 }
 
 type Config interface {
-	Cantemo() (baseURL, authToken string)
+	URL() string
+	Token() string
 }
 
-// NewFromConfig builds the client from the process configuration.
 func NewFromConfig(cfg Config) *Client {
-	return NewClient(cfg.Cantemo())
+	return NewClient(cfg.URL(), cfg.Token())
 }
 
 func NewClient(baseURL, authToken string) *Client {

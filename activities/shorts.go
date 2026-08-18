@@ -18,7 +18,7 @@ import (
 func shortServiceClient() *resty.Client {
 	return httpx.New(httpx.Config{
 		Service: "shorts service",
-		BaseURL: environment.Get().ShortsServiceURL,
+		BaseURL: environment.Get().Services.Shorts(),
 	})
 }
 

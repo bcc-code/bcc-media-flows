@@ -142,7 +142,7 @@ type VBExportChildWorkflowParams struct {
 func subtitleStyleDir(ctx workflow.Context) (string, error) {
 	var dir string
 	err := workflow.SideEffect(ctx, func(workflow.Context) any {
-		return environment.Get().SubtitleStylesDir
+		return environment.Get().Paths.SubtitleStyles()
 	}).Get(&dir)
 
 	return dir, err

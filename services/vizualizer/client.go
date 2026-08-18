@@ -22,10 +22,9 @@ type Client struct {
 
 // NewClient constructs a vizualizer API client.
 type Config interface {
-	Vizualizer() (baseURL string)
+	Vizualizer() string
 }
 
-// NewFromConfig builds the client from the process configuration.
 func NewFromConfig(cfg Config) (*Client, error) {
 	return NewClient(cfg.Vizualizer())
 }

@@ -37,7 +37,7 @@ func doRequest[T any](req *http.Request) (*T, error) {
 	req.Close = true
 
 	cfg := environment.Get()
-	basicAuth := base64.StdEncoding.EncodeToString([]byte(cfg.RcloneUsername + ":" + cfg.RclonePassword))
+	basicAuth := base64.StdEncoding.EncodeToString([]byte(cfg.Rclone.Username() + ":" + cfg.Rclone.Password()))
 	req.Header.Set("Authorization", "Basic "+basicAuth)
 
 	res, err := client.Do(req)

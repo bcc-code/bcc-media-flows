@@ -19,12 +19,12 @@ type Client struct {
 }
 
 type Config interface {
-	Subtrans() (baseURL, apiKey string)
+	BaseURL() string
+	APIKey() string
 }
 
-// NewFromConfig builds the client from the process configuration.
 func NewFromConfig(cfg Config) *Client {
-	return NewClient(cfg.Subtrans())
+	return NewClient(cfg.BaseURL(), cfg.APIKey())
 }
 
 func NewClient(baseURL string, apiKey string) *Client {

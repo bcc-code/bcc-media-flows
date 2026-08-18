@@ -26,12 +26,12 @@ type Client struct {
 const uploadTimeout = 5 * time.Minute
 
 type Config interface {
-	Directus() (baseURL, apiKey string)
+	BaseURL() string
+	APIKey() string
 }
 
-// NewFromConfig builds the client from the process configuration.
 func NewFromConfig(cfg Config) *Client {
-	return NewClient(cfg.Directus())
+	return NewClient(cfg.BaseURL(), cfg.APIKey())
 }
 
 func NewClient(baseURL, apiKey string) *Client {

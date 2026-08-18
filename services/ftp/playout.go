@@ -6,5 +6,5 @@ import (
 
 func Playout() (*Client, error) {
 	cfg := environment.Get()
-	return NewClient(cfg.PlayoutFTPAddress, cfg.PlayoutFTPUsername, cfg.PlayoutFTPPassword)
+	return NewClient(cfg.PlayoutFTP.Address(), cfg.PlayoutFTP.Username(), cfg.PlayoutFTP.Password())
 }

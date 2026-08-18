@@ -25,8 +25,8 @@ var (
 func init() {
 	cfg := environment.Get()
 
-	ChatVOD.Value = cfg.TelegramChatVOD
-	ChatOslofjord.Value = cfg.TelegramChatOslofjord
-	ChatOther.Value = cfg.TelegramChatOther
-	ChatBMM.Value = cfg.TelegramChatBMM
+	ChatVOD.Value = cfg.Telegram.ChatVOD()
+	ChatOslofjord.Value = cfg.Telegram.ChatOslofjord()
+	ChatOther.Value = cfg.Telegram.ChatOther()
+	ChatBMM.Value = cfg.Telegram.ChatBMM()
 }

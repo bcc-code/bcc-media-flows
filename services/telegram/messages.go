@@ -40,7 +40,7 @@ func (m *Message) UpdateWithTemplate(template notifications.Template) error {
 func getOrInitTelegramBot() (*telebot.Bot, error) {
 	if telegramBot == nil {
 		pref := telebot.Settings{
-			Token:  environment.Get().TelegramBotToken,
+			Token:  environment.Get().Telegram.BotToken(),
 			Poller: &telebot.LongPoller{Timeout: 10 * time.Second},
 		}
 

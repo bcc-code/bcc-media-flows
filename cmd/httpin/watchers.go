@@ -125,7 +125,7 @@ func doGrowingFile(ctx context.Context, path string) error {
 	return err
 }
 
-var exp = regexp.MustCompile(fmt.Sprintf("(?:%s/)(?P<encoding>[\\w-]*)(?:/in/)", environment.Get().TranscodeRootPath))
+var exp = regexp.MustCompile(fmt.Sprintf("(?:%s/)(?P<encoding>[\\w-]*)(?:/in/)", environment.Get().Paths.TranscodeRoot()))
 
 func doTranscode(ctx context.Context, path string) error {
 	match := exp.MatchString(path)

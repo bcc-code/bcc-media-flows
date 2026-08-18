@@ -41,7 +41,7 @@ func GetLiveIngestQueue() string {
 
 func GetIsilonPrefix() string {
 	// For local testing
-	if prefix := Get().IsilonPrefix; prefix != "" {
+	if prefix := Get().Paths.IsilonPrefix(); prefix != "" {
 		return prefix
 	}
 	return "/mnt/isilon"
@@ -49,7 +49,7 @@ func GetIsilonPrefix() string {
 
 func GetTempMountPrefix() string {
 	// For local testing
-	if prefix := Get().TempMountPrefix; prefix != "" {
+	if prefix := Get().Paths.TempMount(); prefix != "" {
 		return prefix
 	}
 	return "/mnt/temp"
@@ -57,7 +57,7 @@ func GetTempMountPrefix() string {
 
 func GetFileCatalystMountPrefix() string {
 	// For local testing
-	if prefix := Get().FileCatalystMountPrefix; prefix != "" {
+	if prefix := Get().Paths.FileCatalystMount(); prefix != "" {
 		return prefix
 	}
 	return "/mnt/filecatalyst"

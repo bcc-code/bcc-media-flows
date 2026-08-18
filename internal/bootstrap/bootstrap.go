@@ -27,14 +27,14 @@ func LoadEnv() {
 
 // TemporalClient dials the server named by TEMPORAL_HOST_PORT.
 func TemporalClient() (client.Client, error) {
-	host := environment.Get().TemporalHostPort
+	host := environment.Get().Temporal.HostPort()
 	if host == "" {
 		return nil, fmt.Errorf("TEMPORAL_HOST_PORT is required")
 	}
 
 	return client.Dial(client.Options{
 		HostPort:  host,
-		Namespace: environment.Get().TemporalNamespace,
+		Namespace: environment.Get().Temporal.Namespace(),
 	})
 }
 

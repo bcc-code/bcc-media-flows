@@ -22,10 +22,10 @@ type RavenConfig struct {
 
 func LoadRavenConfigFromEnv() (RavenConfig, error) {
 	cfg := RavenConfig{
-		URL:         environment.Get().RavenDBURL,
-		Database:    environment.Get().RavenDBDatabase,
-		CertPath:    environment.Get().RavenDBCertPath,
-		CertKeyPath: environment.Get().RavenDBCertKeyPath,
+		URL:         environment.Get().RavenDB.URL(),
+		Database:    environment.Get().RavenDB.Database(),
+		CertPath:    environment.Get().RavenDB.CertPath(),
+		CertKeyPath: environment.Get().RavenDB.CertKeyPath(),
 	}
 	if cfg.URL == "" {
 		return cfg, fmt.Errorf("RAVENDB_URL is required")

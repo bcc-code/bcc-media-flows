@@ -19,7 +19,7 @@ type GetAudioDiffResult struct {
 }
 
 func (ua UtilActivities) GetAudioDiff(ctx context.Context, params GetAudioDiffParams) (*GetAudioDiffResult, error) {
-	syncServiceURL := environment.Get().SyncServiceURL
+	syncServiceURL := environment.Get().Services.Sync()
 
 	client := httpx.New(httpx.Config{
 		Service: "audio sync",

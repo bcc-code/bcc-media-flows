@@ -39,12 +39,13 @@ func vsErrorFromResponse(resp *resty.Response) error {
 }
 
 type Config interface {
-	Vidispine() (baseURL, username, password string)
+	BaseURL() string
+	Username() string
+	Password() string
 }
 
-// NewFromConfig builds the client from the process configuration.
 func NewFromConfig(cfg Config) *Client {
-	return NewClient(cfg.Vidispine())
+	return NewClient(cfg.BaseURL(), cfg.Username(), cfg.Password())
 }
 
 func NewClient(baseURL string, username string, password string) *Client {
