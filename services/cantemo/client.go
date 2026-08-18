@@ -32,6 +32,15 @@ func cantemoErrorFromResponse(resp *resty.Response) error {
 	return httpx.Describe(serviceName, resp)
 }
 
+type Config interface {
+	Cantemo() (baseURL, authToken string)
+}
+
+// NewFromConfig builds the client from the process configuration.
+func NewFromConfig(cfg Config) *Client {
+	return NewClient(cfg.Cantemo())
+}
+
 func NewClient(baseURL, authToken string) *Client {
 	baseURL = strings.TrimSuffix(baseURL, "/")
 

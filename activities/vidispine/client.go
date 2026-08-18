@@ -18,7 +18,7 @@ type Activities struct{}
 var Vidispine = Activities{}
 
 func GetClient() vidispine.Client {
-	return vsapi.NewClient(environment.Get().VidispineBaseURL, environment.Get().VidispineUsername, environment.Get().VidispinePassword)
+	return vsapi.NewFromConfig(environment.Get())
 }
 
 type WaitForJobCompletionParams struct {

@@ -18,6 +18,15 @@ type Client struct {
 	restyClient *resty.Client
 }
 
+type Config interface {
+	Subtrans() (baseURL, apiKey string)
+}
+
+// NewFromConfig builds the client from the process configuration.
+func NewFromConfig(cfg Config) *Client {
+	return NewClient(cfg.Subtrans())
+}
+
 func NewClient(baseURL string, apiKey string) *Client {
 	client := httpx.New(httpx.Config{
 		Service: serviceName,

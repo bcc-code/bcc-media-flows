@@ -148,20 +148,13 @@ func main() {
 func registerWorker(c client.Client, queue string, options worker.Options) {
 	w := worker.New(c, queue, options)
 
-	directusBaseURL := environment.Get().DirectusBaseURL
-	directusAPIKey := environment.Get().DirectusAPIKey
-	directusClient := directus.NewClient(directusBaseURL, directusAPIKey)
+	directusClient := directus.NewFromConfig(environment.Get())
 	activities.Directus = &activities.DirectusActivities{
 		Client:         directusClient,
 		ShortsFolderID: environment.Get().DirectusShortsFolder,
 	}
 
-	clickUpClient, err := clickup.NewClient(
-		environment.Get().ClickUpFrontdoorBaseURL,
-		environment.Get().ClickUpWorkspaceID,
-		environment.Get().ClickUpShortsViewID,
-		environment.Get().ClickUpShortsViewToken,
-	)
+	clickUpClient, err := clickup.NewFromConfig(environment.Get())
 	if err != nil {
 		log.Printf("Error creating ClickUp client: %v", err)
 	}
@@ -169,12 +162,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		Client: clickUpClient,
 	}
 
-	// Vizualizer client initialization
-	vizBaseURL := environment.Get().VizualizerBaseURL
-	if vizBaseURL == "" {
-		vizBaseURL = "http://vizualizer.lan.bcc.media"
-	}
-	vizClient, err := vizualizer.NewClient(vizBaseURL)
+	vizClient, err := vizualizer.NewFromConfig(environment.Get())
 	if err != nil {
 		log.Printf("Error creating vizualizer client: %v", err)
 	}

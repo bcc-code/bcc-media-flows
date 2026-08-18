@@ -219,3 +219,32 @@ func intOr(name string, fallback int) int {
 func Getenv(name string) string {
 	return os.Getenv(name)
 }
+
+// The service packages declare what they need; these hand it over.
+
+func (c *Config) Vidispine() (string, string, string) {
+	return c.VidispineBaseURL, c.VidispineUsername, c.VidispinePassword
+}
+
+func (c *Config) Cantemo() (string, string) {
+	return c.CantemoURL, c.CantemoToken
+}
+
+func (c *Config) Subtrans() (string, string) {
+	return c.SubtransBaseURL, c.SubtransAPIKey
+}
+
+func (c *Config) Directus() (string, string) {
+	return c.DirectusBaseURL, c.DirectusAPIKey
+}
+
+func (c *Config) ClickUp() (string, string, string, string) {
+	return c.ClickUpFrontdoorBaseURL, c.ClickUpWorkspaceID, c.ClickUpShortsViewID, c.ClickUpShortsViewToken
+}
+
+func (c *Config) Vizualizer() string {
+	if c.VizualizerBaseURL != "" {
+		return c.VizualizerBaseURL
+	}
+	return "http://vizualizer.lan.bcc.media"
+}

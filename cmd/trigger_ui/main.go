@@ -472,7 +472,7 @@ func main() {
 
 	router := gin.Default()
 
-	vsapiClient := vsapi.NewClient(environment.Get().VidispineBaseURL, environment.Get().VidispineUsername, environment.Get().VidispinePassword)
+	vsapiClient := vsapi.NewFromConfig(environment.Get())
 	wfClient, err := getTemporalClient()
 	if err != nil {
 		panic(err.Error())

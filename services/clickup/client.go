@@ -40,6 +40,15 @@ type Client struct {
 // NewClient builds a read-only client for one public view. Any empty argument
 // falls back to the hardcoded default for the public "Shorts Export" view, so
 // the client works out of the box; pass non-empty values to override.
+type Config interface {
+	ClickUp() (baseURL, workspaceID, viewID, token string)
+}
+
+// NewFromConfig builds the client from the process configuration.
+func NewFromConfig(cfg Config) (*Client, error) {
+	return NewClient(cfg.ClickUp())
+}
+
 func NewClient(baseURL, workspaceID, viewID, token string) (*Client, error) {
 	if baseURL == "" {
 		baseURL = defaultBaseURL

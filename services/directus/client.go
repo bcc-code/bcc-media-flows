@@ -25,6 +25,15 @@ type Client struct {
 // form data; every other call here exchanges small JSON documents.
 const uploadTimeout = 5 * time.Minute
 
+type Config interface {
+	Directus() (baseURL, apiKey string)
+}
+
+// NewFromConfig builds the client from the process configuration.
+func NewFromConfig(cfg Config) *Client {
+	return NewClient(cfg.Directus())
+}
+
 func NewClient(baseURL, apiKey string) *Client {
 	client := httpx.New(httpx.Config{
 		Service: serviceName,

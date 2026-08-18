@@ -13,9 +13,7 @@ type AddRelationParams struct {
 }
 
 func GetClient() *cantemo.Client {
-	urlBase := environment.Get().CantemoURL
-	token := environment.Get().CantemoToken
-	return cantemo.NewClient(urlBase, token)
+	return cantemo.NewFromConfig(environment.Get())
 }
 
 func AddRelation(ctx context.Context, params AddRelationParams) (any, error) {

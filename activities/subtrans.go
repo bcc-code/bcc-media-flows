@@ -74,10 +74,7 @@ func (ua UtilActivities) GetSubtransIDActivity(_ context.Context, input GetSubtr
 	// Join back together
 	fileName = strings.Join(fileNameSplit, ".")
 
-	stClient := subtrans.NewClient(
-		environment.Get().SubtransBaseURL,
-		environment.Get().SubtransAPIKey,
-	)
+	stClient := subtrans.NewFromConfig(environment.Get())
 
 	res, err := stClient.SearchByName(fileName)
 	if err != nil {
@@ -100,7 +97,7 @@ func (ua UtilActivities) GetSubtransIDActivity(_ context.Context, input GetSubtr
 }
 
 func (ua UtilActivities) GetSubtitlesActivity(_ context.Context, params GetSubtitlesInput) (map[string]paths.Path, error) {
-	client := subtrans.NewClient(environment.Get().SubtransBaseURL, environment.Get().SubtransAPIKey)
+	client := subtrans.NewFromConfig(environment.Get())
 
 	info, err := os.Stat(params.DestinationFolder.Local())
 	if os.IsNotExist(err) {

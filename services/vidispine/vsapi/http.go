@@ -38,6 +38,15 @@ func vsErrorFromResponse(resp *resty.Response) error {
 	return httpx.Describe(serviceName, resp)
 }
 
+type Config interface {
+	Vidispine() (baseURL, username, password string)
+}
+
+// NewFromConfig builds the client from the process configuration.
+func NewFromConfig(cfg Config) *Client {
+	return NewClient(cfg.Vidispine())
+}
+
 func NewClient(baseURL string, username string, password string) *Client {
 	// The retries reach POST and DELETE, so the timeout has to outlast a slow call
 	// rather than merely a healthy one: retrying a working AddShapeToItem or
