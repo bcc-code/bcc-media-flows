@@ -584,8 +584,8 @@ most if the proxy were ever misconfigured, bypassed, or reached from an already-
   `cmd/trigger_ui/templates/*.gohtml` loads `https://cdn.tailwindcss.com` at `:4-6`. A CDN
   compromise yields JS execution in the admin UI that drives the ingest pipeline (and
   Tailwind's CDN build is explicitly not for production). Vendor a built CSS file into the
-  image — the Dockerfile already copies the templates directory — and add a
-  `Content-Security-Policy` header.
+  image — the templates are embedded in the binary, so a vendored CSS file can be too — and add
+  a `Content-Security-Policy` header.
 
 - **No server timeouts, size limits, graceful shutdown, or release mode.**
   `cmd/httpin/main.go:287`, `cmd/trigger_ui/main.go:571` and `cmd/fakerclone/main.go:132` all
@@ -675,11 +675,6 @@ most if the proxy were ever misconfigured, bypassed, or reached from an already-
   `cmd/bmm-trigger` despite its eight required variables. `cmd/worker/readme.md` documents four
   queues while `environment/queues.go:3-10` defines six (`debug` and `live` undocumented).
 
-- **Templates loaded from a CWD-relative path.** `cmd/trigger_ui/main.go:485` calls
-  `LoadHTMLGlob("./templates/*")`, which works only because the Dockerfile copies templates to
-  `/templates` with `WORKDIR /` — so `go run ./cmd/trigger_ui` from the repo root panics at
-  startup. `cmd/httpin/main.go:251-252` already does the right thing with `//go:embed`.
-
 ### The language table
 
 - **`""` collides across three languages, and `ParseLanguageCode("")` returns Swahili.**
@@ -708,43 +703,14 @@ most if the proxy were ever misconfigured, bypassed, or reached from an already-
   opposite of their contents, and `LanguagesByISO` inherits the confusion. This is the most
   likely source of future integration bugs in the file. `ISO6392TwoLetter` is also overloaded
   with a third format: `"no-x-tolk"` (`:472`) and `"und-x-ai-generated"` (`:611`) are BCP-47
-  private-use subtags, not two-letter codes.
-
-- **Two different "not applicable" sentinels.** 27 of 29 entries use `-1`; the AI-generated
-  entry (`LanguageNumber: 100`) uses `-2` at `:613-615` while its `SoftronStartCh` at `:617` is
-  `-1`. All consumers test `< 0`, so behaviour is identical today, but any future `== -1` check
-  silently mishandles that entry. Relatedly, `SoftronStartCh` runs `0,2,4,…,44,48,50,52,54` —
-  **46 is skipped**, undocumented, between Tamil (`:526`) and Estonian (`:541`).
-
-- **Six languages can never be produced by MU1/MU2 extraction.** `mal`, `tam`, `est`, `kha`,
-  `swa` and `afr` (numbers 21-26) have `MU1ChannelStart: -1` *and* `MU2ChannelStart: -1`
-  (`:509-510,524-525,539-540,554-555,569-570,584-585`) while carrying valid `ReaperChannel`
-  22-27 and `SoftronStartCh` 42-54, so `workflows/ingest/mu1_mu2_extract.go` silently skips
-  them. Either intentional — in which case document it — or a transcription gap. (The MU1 and
-  MU2 channel maps themselves are clean: no collisions in either, and Norwegian is deliberately
-  in both.)
-
-- **`MU1ChannelCount` is inconsistent with Softron spacing.** `nor`/`deu`/`nld`/`eng` use
-  `MU1ChannelCount: 2` while `fra` through `pol` use `1` (`:222,239,256,273,290,307,324,341`),
-  yet all of them get two Softron channels, leaving MU1 channels 17+ unallocated. Possibly
-  correct (mono vs stereo feeds), but nothing states it.
+  private-use subtags, not two-letter codes. **Deferred by decision** — renaming the fields
+  touches too many call sites to be worth it right now.
 
 - **`LanguageByBMM["no"]` resolves to the interpreter track, not Norwegian.** `:150` gives
-  Norwegian `BMMLangauageCode: "nb"`, while `:473` ("Norsk tolk") gets `"no"`. Any BMM
+  Norwegian `BMMLanguageCode: "nb"`, while `:473` ("Norsk tolk") gets `"no"`. Any BMM
   integration passing the obvious `"no"` gets the interpreter feed. Deserves a comment at
-  minimum. The field name is also misspelled ("Langauage") at `:10` and referenced by that
-  misspelling at `:121`, `:124` and in all 29 literals, and its values are stylistically mixed
-  (2-letter for 24 entries, but `"hun"`, `"yue"`, `"kha"`, `"zxx"`).
-
-- **Placeholder and misspelled strings reach the production UI.** These render into
-  `vx-export.gohtml`/`isilon-export.gohtml` via `TriggerGETParams.Languages`
-  (`cmd/trigger_ui/main.go:123,235`): `:469`
-  `LanguageNameNative: "Forstår du ikke hva jeg sier?"` is a joke placeholder in the language
-  picker; `:163` `"Deutch"` → `Deutsch`; `:180` `"Nederland"` → `Nederlands`; `:231`
-  `"Española"` → `Español`; `:502` `"Maylaisisk"` + `:504` `"Malayallam"` → Malayalam (and
-  "Maylaisisk" reads as *Malay*, a different language, though `ISO6391: "mal"` is correctly
-  Malayalam). `LanguageNameNative` is empty at `:563`, `:578` and `:593`, which renders as
-  blank options.
+  minimum. Its values are also stylistically mixed (2-letter for 24 entries, but `"hun"`,
+  `"yue"`, `"kha"`, `"zxx"`).
 
 ### Project conventions (`CLAUDE.md`)
 
@@ -1095,7 +1061,7 @@ most if the proxy were ever misconfigured, bypassed, or reached from an already-
   `EmtpySRTFile` (`services/vidispine/export.go:85`), `PlacholderTplData`
   (`vsapi/placeholder.go:23`), `SubSteams` (`services/ffmpeg/progress.go:51`),
   `sanitizeDuplicatdPath` (`workflows/ingest/asset_ingest.go:59`), `BmmTargetEnvionment`
-  (`workflows/ingest/bmm_simple_upload.go:25`), `BMMLangauageCode` (`language_config.go:10`).
+  (`workflows/ingest/bmm_simple_upload.go:25`).
   Plus capitalised error strings (`ST1005`) at `services/vidispine/export.go:153,393`,
   `vsapi/metadata.go:181`, `vsapi/clips.go:135`, `vsapi/files_paths.go:29`,
   `workflows/ingest/multitrack.go:45`, `workflows/ingest/common.go:168`, and the ~10
