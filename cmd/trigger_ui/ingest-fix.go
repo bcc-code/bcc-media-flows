@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/bcc-code/bcc-media-flows/environment"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	ingestworkflows "github.com/bcc-code/bcc-media-flows/workflows/ingest"
 	"github.com/gin-gonic/gin"
@@ -27,7 +28,7 @@ func (s *TriggerServer) mu1mu2ExtractPOST(ctx *gin.Context) {
 		return
 	}
 
-	workflowOptions := wfutils.NewWorkflowOptions(getQueue(), form.VX1ID, getTriggeredBy(ctx))
+	workflowOptions := wfutils.NewWorkflowOptions(environment.GetQueue(), form.VX1ID, getTriggeredBy(ctx))
 
 	res, err := s.wfClient.ExecuteWorkflow(ctx, workflowOptions, ingestworkflows.ExtractAudioFromMU1MU2, ingestworkflows.ExtractAudioFromMU1MU2Input{
 		MU1ID: form.VX1ID,
@@ -62,7 +63,7 @@ func (s *TriggerServer) ingestSyncFixPOST(ctx *gin.Context) {
 		return
 	}
 
-	workflowOptions := wfutils.NewWorkflowOptions(getQueue(), form.VXID, getTriggeredBy(ctx))
+	workflowOptions := wfutils.NewWorkflowOptions(environment.GetQueue(), form.VXID, getTriggeredBy(ctx))
 
 	adjustment, err := strconv.ParseInt(form.Adjustment, 10, 64)
 	if err != nil {

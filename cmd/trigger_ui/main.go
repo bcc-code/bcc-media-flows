@@ -36,10 +36,6 @@ func getTemporalClient() (client.Client, error) {
 	return bootstrap.TemporalClient()
 }
 
-func getQueue() string {
-	return environment.GetQueue()
-}
-
 // getTriggeredBy reads the user from a header an identity-aware proxy sets, e.g.
 // "X-Forwarded-User".
 func getTriggeredBy(ctx *gin.Context) string {
@@ -240,7 +236,7 @@ func (s *TriggerServer) vxExportPOST(ctx *gin.Context) {
 	languages := ctx.PostFormArray("languages[]")
 	audioSource := ctx.PostForm("audioSource")
 
-	workflowOptions := wfutils.NewWorkflowOptions(getQueue(), vxID, getTriggeredBy(ctx))
+	workflowOptions := wfutils.NewWorkflowOptions(environment.GetQueue(), vxID, getTriggeredBy(ctx))
 
 	go func() {
 		err := s.vidispine.SetItemMetadataField(vsapi.ItemMetadataFieldParams{
@@ -360,7 +356,7 @@ func (s *TriggerServer) vxExportPOST(ctx *gin.Context) {
 
 func (s *TriggerServer) vxExportTimedMetadataPOST(ctx *gin.Context) {
 	vxID := ctx.PostForm("id")
-	workflowOptions := wfutils.NewWorkflowOptions(getQueue(), vxID, getTriggeredBy(ctx))
+	workflowOptions := wfutils.NewWorkflowOptions(environment.GetQueue(), vxID, getTriggeredBy(ctx))
 	res, err := s.wfClient.ExecuteWorkflow(ctx, workflowOptions, export.ExportTimedMetadata, export.ExportTimedMetadataParams{
 		VXID: vxID,
 	})
@@ -442,7 +438,7 @@ func (s *TriggerServer) moveFilesPOST(ctx *gin.Context) {
 			DestinationStorage: destinationStorage,
 		}
 
-		workflowOptions := wfutils.NewWorkflowOptions(getQueue(), vxID, getTriggeredBy(ctx))
+		workflowOptions := wfutils.NewWorkflowOptions(environment.GetQueue(), vxID, getTriggeredBy(ctx))
 		_, err := s.wfClient.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.MoveMBFile, params)
 		if err != nil {
 			log.Default().Printf("Failed to start workflow for VX ID %s: %v", vxID, err)

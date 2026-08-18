@@ -62,7 +62,7 @@ func (s *TriggerServer) isilonExportGET(ctx *gin.Context) {
 func (s *TriggerServer) isilonExportPOST(ctx *gin.Context) {
 	vxID := ctx.Query("id")
 
-	workflowOptions := wfutils.NewWorkflowOptions(getQueue(), vxID, getTriggeredBy(ctx))
+	workflowOptions := wfutils.NewWorkflowOptions(environment.GetQueue(), vxID, getTriggeredBy(ctx))
 
 	resolutionIndex := bccmUtils.AsInt(ctx.PostForm("resolutions"))
 	vsResolutions, err := s.vidispine.GetResolutions(vxID)

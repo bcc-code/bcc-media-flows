@@ -98,7 +98,7 @@ func (s *TriggerServer) massiveWebhookHandler(ctx *gin.Context) {
 	}
 
 	// Start MASVImport workflow
-	options := wfutils.NewWorkflowOptions(getQueue(), "", payload.Object.Sender)
+	options := wfutils.NewWorkflowOptions(environment.GetQueue(), "", payload.Object.Sender)
 	options.ID = uuid.NewString() + "-" + payload.Object.ID
 
 	params := miscworkflows.MASVImportParams{

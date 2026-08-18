@@ -15,13 +15,6 @@ func NewTemporalClient() (client.Client, error) {
 	return bootstrap.TemporalClient()
 }
 
-func queueFromEnv() string {
-	if q := environment.Get().Queue; q != "" {
-		return q
-	}
-	return environment.GetWorkerQueue()
-}
-
 type TriggerResult struct {
 	WorkflowID string
 	RunID      string
@@ -32,7 +25,7 @@ func TriggerBmmTrackMetadata(ctx context.Context, c client.Client, params ingest
 	if triggeredBy == "" {
 		triggeredBy = "bmm-trigger"
 	}
-	opts := wfutils.NewWorkflowOptions(queueFromEnv(), "", triggeredBy)
+	opts := wfutils.NewWorkflowOptions(environment.GetQueue(), "", triggeredBy)
 
 	run, err := c.ExecuteWorkflow(ctx, opts, ingestworkflows.BmmTrackMetadata, params)
 	if err != nil {

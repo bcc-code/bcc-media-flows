@@ -137,7 +137,7 @@ func (s *TriggerServer) uploadMasterPOST(ctx *gin.Context) {
 	}
 
 	// No VXID yet — the asset is created mid-workflow and upserted there.
-	workflowOptions := wfutils.NewWorkflowOptions(getQueue(), "", getTriggeredBy(ctx))
+	workflowOptions := wfutils.NewWorkflowOptions(environment.GetQueue(), "", getTriggeredBy(ctx))
 
 	for _, tag := range params.Tags {
 		err := s.addTag(tag)
