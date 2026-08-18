@@ -30,10 +30,9 @@ type ImportTagResult struct {
 }
 
 func ImportFileAsTag(ctx workflow.Context, tag string, path paths.Path, title string) (*ImportTagResult, error) {
-	var result vsactivity.CreatePlaceholderResult
-	err := wfutils.Execute(ctx, activities.Vidispine.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
+	result, err := wfutils.Execute(ctx, activities.Vidispine.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
 		Title: title,
-	}).Get(ctx, &result)
+	}).Result(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -42,12 +41,11 @@ func ImportFileAsTag(ctx workflow.Context, tag string, path paths.Path, title st
 	// can lag the worker's view by minutes due to NFS metadata caching. We
 	// optimistically kick off the import without waiting and let
 	// WaitForImportTag handle the visibility wait + retry on JOB_FAILED.
-	var job vsactivity.ImportFileResult
-	err = wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
+	job, err := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
 		AssetID:  result.AssetID,
 		FilePath: path,
 		ShapeTag: tag,
-	}).Get(ctx, &job)
+	}).Result(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -78,13 +76,13 @@ func WaitForImportTag(ctx workflow.Context, result *ImportTagResult) error {
 		return vErr
 	}
 
-	var newJob vsactivity.ImportFileResult
-	if iErr := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
+	newJob, iErr := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
 		AssetID:  result.AssetID,
 		FilePath: result.FilePath,
 		ShapeTag: result.ShapeTag,
 		Replace:  true,
-	}).Get(ctx, &newJob); iErr != nil {
+	}).Result(ctx)
+	if iErr != nil {
 		return iErr
 	}
 

@@ -101,7 +101,7 @@ func WatchFolderTranscode(ctx workflow.Context, params WatchFolderTranscodeInput
 	if encode, ok := watchFolderEncodes[params.FolderName]; ok {
 		encode.params.FilePath = path
 		encode.params.OutputDir = tmpFolder
-		err = wfutils.Execute(ctx, encode.activity, encode.params).Get(ctx, &transcodeOutput)
+		transcodeOutput, err = wfutils.Execute(ctx, encode.activity, encode.params).Result(ctx)
 	} else {
 		switch params.FolderName {
 		case common.FolderTranscribe:

@@ -1181,3 +1181,20 @@ most if the proxy were ever misconfigured, bypassed, or reached from an already-
   `return temporalClient, nil` over a package variable, so every caller has an error branch
   that no input can reach. `bootstrap.TemporalClient()` is the one that can fail, and httpin
   calls it once at boot.
+
+- **38 `.Get(ctx, nil)` call sites are `Task.Wait(ctx)` spelled out.** `Task` already has
+  `Wait` for exactly this (`utils/workflows/execute.go`), and the `nil` form reads as
+  "discard the result" rather than "wait for it". Not touched in the `.Result(ctx)` sweep,
+  which only covered the sites that actually deserialize a value.
+
+- **`XDCAM playout never reads its mux result.`** `workflows/export/vx_export_playout.go`
+  waited on `TranscodePlayoutMux` into a `muxResult` nothing ever read — the output path is
+  found again by copying the whole `params.OutputDir`. It is now `_, err`, but the activity
+  returning a `PlayoutMuxResult` no caller wants suggests either the result or the field
+  should go.
+
+- **`CollectChildResults` still calls `future.Get` directly.** `utils/workflows/common.go:28`
+  is the one workflow-side site left on `.Get`, and deliberately: it relies on `Result`
+  staying `nil` on failure so `ResultOrError.Result` distinguishes "no result" from a
+  zero-valued one, which `Task.Result`'s pointer allocation would erase. Worth revisiting
+  if `ResultOrError` ever grows an explicit "ok" flag.

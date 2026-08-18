@@ -127,8 +127,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 
 	for _, id := range mediaAssetIDs {
 		task := mediaAnalyzeTasks[id]
-		var result ffmpeg.StreamInfo
-		err = task.Get(ctx, &result)
+		result, err := task.Result(ctx)
 		if err != nil {
 			return imported, err
 		}

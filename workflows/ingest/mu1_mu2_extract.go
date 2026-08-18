@@ -47,13 +47,12 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 	}
 
 	// Calculte TC difference between MU1 and MU2
-	sampleOffset := int(0)
-	err = wfutils.Execute(ctx, activities.Video.GetVideoOffset, activities.GetVideoOffsetInput{
+	sampleOffset, err := wfutils.Execute(ctx, activities.Video.GetVideoOffset, activities.GetVideoOffsetInput{
 		VideoPath1:      Mu1Result.FilePath,
 		VideoPath2:      Mu2Result.FilePath,
 		VideoFPS:        25,
 		AudioSampleRate: 48000,
-	}).Get(ctx, &sampleOffset)
+	}).Result(ctx)
 	if err != nil {
 		return err
 	}

@@ -108,8 +108,10 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		OriginalLanguage: exportData.OriginalLanguage,
 	}
 
-	var clipResult MergeExportDataResult
-	err = workflow.ExecuteChildWorkflow(ctx, MergeExportData, mergeExportDataParams).Get(ctx, &clipResult)
+	clipResult, err := wfutils.FutureResult[*MergeExportDataResult](
+		ctx,
+		workflow.ExecuteChildWorkflow(ctx, MergeExportData, mergeExportDataParams),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -237,8 +239,7 @@ type cropShortRequest struct {
 func cropShortVideo(ctx workflow.Context, req cropShortRequest) error {
 	logger := workflow.GetLogger(ctx)
 
-	var cropRes activities.CropShortResult
-	err := wfutils.Execute(ctx, activities.Util.CropShortActivity, activities.CropShortInput{
+	cropRes, err := wfutils.Execute(ctx, activities.Util.CropShortActivity, activities.CropShortInput{
 		InputVideoPath:  req.Video,
 		OutputVideoPath: req.Output,
 		// SubtitlePath is left out: subtitle burn-in is disabled for now.
@@ -247,7 +248,7 @@ func cropShortVideo(ctx workflow.Context, req cropShortRequest) error {
 		InSeconds:    req.InSeconds,
 		OutSeconds:   req.OutSeconds,
 		SceneChanges: req.SceneChanges,
-	}).Get(ctx, &cropRes)
+	}).Result(ctx)
 	if err != nil {
 		logger.Error("CropShortActivity failed: " + err.Error())
 		return err

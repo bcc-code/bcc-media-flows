@@ -54,6 +54,15 @@ func (f Task[TR]) Wait(ctx workflow.Context) error {
 	return f.Future.Get(ctx, nil)
 }
 
+// FutureResult is Task.Result for a bare workflow.Future, for the places where
+// the Task wrapper is not available: selector callbacks are handed the future
+// itself, and child workflows are started through the SDK rather than Execute.
+//
+//workflowcheck:ignore
+func FutureResult[TR any](ctx workflow.Context, future workflow.Future) (TR, error) {
+	return Task[TR]{Future: future}.Result(ctx)
+}
+
 // activityOptionsWithDefaults fills in the timeouts a workflow left unset.
 //
 // A workflow only has activity options if it called

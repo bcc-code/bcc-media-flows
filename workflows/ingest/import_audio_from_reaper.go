@@ -54,10 +54,9 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 		}
 
 		// Create placeholder
-		var assetResult vsactivity.CreatePlaceholderResult
-		err = wfutils.Execute(ctx, activities.Vidispine.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
+		assetResult, err := wfutils.Execute(ctx, activities.Vidispine.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
 			Title: path.Base(),
-		}).Get(ctx, &assetResult)
+		}).Result(ctx)
 		if err != nil {
 			return err
 		}
@@ -162,10 +161,9 @@ func doImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFro
 		return err
 	}
 
-	isSilent := false
-	err = wfutils.Execute(ctx, activities.Audio.DetectSilence, common.DetectSilenceInput{
+	isSilent, err := wfutils.Execute(ctx, activities.Audio.DetectSilence, common.DetectSilenceInput{
 		Path: tempFile,
-	}).Get(ctx, &isSilent)
+	}).Result(ctx)
 
 	if err != nil {
 		return err
@@ -187,11 +185,10 @@ func doImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFro
 
 	outputFolder := params.OutputPath
 
-	getFileResult := vsactivity.GetFileFromVXResult{}
-	err = wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
+	getFileResult, err := wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		VXID: params.VideoVXID,
 		Tags: []string{"original"},
-	}).Get(ctx, &getFileResult)
+	}).Result(ctx)
 	if err != nil {
 		return err
 	}

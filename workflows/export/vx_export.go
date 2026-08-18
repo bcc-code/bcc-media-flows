@@ -133,14 +133,13 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		destinations = append(destinations, d)
 	}
 
-	var data *vidispine.ExportData
-	err := wfutils.Execute(ctx, avidispine.Vidispine.GetExportDataActivity, avidispine.GetExportDataParams{
+	data, err := wfutils.Execute(ctx, avidispine.Vidispine.GetExportDataActivity, avidispine.GetExportDataParams{
 		VXID:        params.VXID,
 		Languages:   params.Languages,
 		AudioSource: params.AudioSource,
 		Subclip:     params.Subclip,
 		SubsAllowAI: params.SubsAllowAI,
-	}).Get(ctx, &data)
+	}).Result(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -171,8 +170,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 
 	bmmOnly := len(params.Destinations) == 1 && (params.Destinations[0] == AssetExportDestinationBMM.Value || params.Destinations[0] == AssetExportDestinationBMMIntegration.Value)
 
-	var mergeResult MergeExportDataResult
-	err = workflow.ExecuteChildWorkflow(ctx, MergeExportData, MergeExportDataParams{
+	mergeResult, err := wfutils.FutureResult[*MergeExportDataResult](ctx, workflow.ExecuteChildWorkflow(ctx, MergeExportData, MergeExportDataParams{
 		ExportData:       data,
 		TempDir:          tempDir,
 		SubtitlesDir:     subtitlesOutputDir,
@@ -182,7 +180,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		MakeTranscript:   true,
 		Languages:        params.Languages,
 		OriginalLanguage: data.OriginalLanguage,
-	}).Get(ctx, &mergeResult)
+	}))
 	if err != nil {
 		wfutils.SendTelegramText(ctx, telegramChat, fmt.Sprintf("🟥 Export of `%s` failed:\n```\n%s\n```", params.VXID, err.Error()))
 		return nil, err
@@ -200,7 +198,7 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		childParams := VXExportChildWorkflowParams{
 			ParentParams:              params,
 			ExportData:                *data,
-			MergeResult:               mergeResult,
+			MergeResult:               *mergeResult,
 			TempDir:                   tempDir,
 			OutputDir:                 outputDir.Append(dest.Value),
 			RunID:                     workflow.GetInfo(ctx).OriginalRunID,

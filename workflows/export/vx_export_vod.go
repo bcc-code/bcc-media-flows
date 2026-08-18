@@ -76,8 +76,7 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	}
 
 	onVideoCreated := func(f workflow.Future, resolution utils.Resolution) {
-		var result common.VideoResult
-		err := f.Get(ctx, &result)
+		result, err := wfutils.FutureResult[*common.VideoResult](ctx, f)
 		if err != nil {
 			logger.Error("Failed to get video result", "error", err)
 			service.errs = append(service.errs, err)
@@ -227,7 +226,7 @@ func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, 
 		if err != nil {
 			return nil, err
 		}
-		normalizedFutures := map[string]workflow.Future{}
+		normalizedFutures := map[string]wfutils.Task[*activities.NormalizeAudioResult]{}
 		// Normalize audio
 		for _, lang := range langs {
 			audio := mergeResult.AudioFiles[lang]
@@ -237,13 +236,12 @@ func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, 
 				PerformOutputAnalysis: true,
 				OutputPath:            tempDir,
 			})
-			normalizedFutures[lang] = future.Future
+			normalizedFutures[lang] = future
 		}
 
 		for _, lang := range langs {
 			future := normalizedFutures[lang]
-			normalizedRes := activities.NormalizeAudioResult{}
-			err := future.Get(ctx, &normalizedRes)
+			normalizedRes, err := future.Result(ctx)
 			if err != nil {
 				workflow.GetLogger(ctx).Error("Failed to get normalized audio result", "error", err)
 				return nil, fmt.Errorf("failed to normalize audio for language %s: %w", lang, err)
@@ -264,8 +262,7 @@ func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, 
 
 	var audioFiles = map[string]paths.Path{}
 	audioKeys, err := startAudioTasks(ctx, prepareFilesSelector, mergeResult.AudioFiles, tempDir, func(f workflow.Future, l string) {
-		var result common.AudioResult
-		err := f.Get(ctx, &result)
+		result, err := wfutils.FutureResult[*common.AudioResult](ctx, f)
 		if err != nil {
 			workflow.GetLogger(ctx).Error("Failed to get audio result", "error", err)
 			return
@@ -330,8 +327,7 @@ func (v *vxExportVodService) setMetadataAndPublishToVOD(
 	ingestData.SmilFile = "aws.smil"
 	if chapterDataWF != nil {
 		ingestData.ChaptersFile = "chapters.json"
-		var chaptersData []asset.TimedMetadata
-		err = chapterDataWF.Get(ctx, &chaptersData)
+		chaptersData, err := wfutils.FutureResult[[]asset.TimedMetadata](ctx, chapterDataWF)
 		if err != nil {
 			return nil, err
 		}
@@ -394,8 +390,7 @@ func sortedVideos(streams map[resolutionString]smil.Video, qualities []Resolutio
 func (v *vxExportVodService) handleFileWorkflowFuture(ctx workflow.Context, lang string, resolution utils.Resolution, f workflow.Future) {
 	logger := workflow.GetLogger(ctx)
 
-	var result common.MuxResult
-	err := f.Get(ctx, &result)
+	result, err := wfutils.FutureResult[*common.MuxResult](ctx, f)
 	if err != nil {
 		logger.Error("Failed to get mux result", "error", err)
 		v.errs = append(v.errs, err)
@@ -417,8 +412,7 @@ func (v *vxExportVodService) handleFileWorkflowFuture(ctx workflow.Context, lang
 
 func (v *vxExportVodService) handleStreamWorkflowFuture(ctx workflow.Context, resolutionWithLanguages ResolutionWithLanguages, f workflow.Future) {
 	logger := workflow.GetLogger(ctx)
-	var result common.MuxResult
-	err := f.Get(ctx, &result)
+	result, err := wfutils.FutureResult[*common.MuxResult](ctx, f)
 	if err != nil {
 		logger.Error("Failed to get mux result", "error", err)
 		v.errs = append(v.errs, err)
