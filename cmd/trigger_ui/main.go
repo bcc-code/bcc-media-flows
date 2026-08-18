@@ -513,6 +513,10 @@ func main() {
 	// MD: This is a legacy route, it should be removed in the future.
 	router.POST("/filecatalyst", server.fileCatalystWebhookHandler)
 
+	if os.Getenv(massiveWebhookKeyVar) == "" {
+		log.Printf("WARNING: %s is not set, so /webhook/massive will refuse every request", massiveWebhookKeyVar)
+	}
+
 	router.Group("/webhook").
 		POST("/massive", server.massiveWebhookHandler).
 		POST("/filecatalyst", server.fileCatalystWebhookHandler)
