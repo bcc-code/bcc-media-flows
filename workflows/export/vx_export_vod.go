@@ -42,25 +42,9 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		}).Future
 	}
 
-	{
-		keys, err := wfutils.GetMapKeysSafely(ctx, params.MergeResult.SubtitleFiles)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, key := range keys {
-
-			if key == "und" && !params.ParentParams.SubsAllowAI {
-				// Skip AI generated if not allowed
-				continue
-			}
-
-			subtitle := params.MergeResult.SubtitleFiles[key]
-			err = wfutils.CopyFile(ctx, subtitle, params.OutputDir.Append(subtitle.Base()))
-			if err != nil {
-				return nil, err
-			}
-		}
+	err := copySubtitlesToOutput(ctx, params)
+	if err != nil {
+		return nil, err
 	}
 
 	audioFiles, err := prepareAudioFiles(ctx, params.MergeResult, params.TempDir, true, params.ParentParams.IgnoreSilence)
@@ -78,57 +62,9 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		wm = &path
 	}
 
-	// Determine base video source: if none from merge, generate using vizualizer
-	var baseVideo paths.Path
-	primaryMediaType := "video"
-	if params.MergeResult.VideoFile == nil {
-		primaryMediaType = "audio"
-		// pick an audio to visualize: prefer original language, else any available
-		chosenLang := params.ExportData.OriginalLanguage
-		if chosenLang == "" || audioFiles[chosenLang].Path == "" {
-			if len(audioKeys) == 0 {
-				return nil, fmt.Errorf("no audio available to generate visualization video")
-			}
-			chosenLang = audioKeys[0]
-		}
-		audioPath := audioFiles[chosenLang]
-
-		// decide render size based on the largest requested resolution
-		maxW, maxH := 1920, 1080
-		for _, r := range params.ParentParams.Resolutions {
-			if r.Width*r.Height > maxW*maxH {
-				maxW, maxH = r.Width, r.Height
-			}
-		}
-
-		outPath := params.TempDir.Append("viz_source.mp4")
-
-		// submit job
-		jobID, err := wfutils.Execute(ctx, activities.Vizualizer.SubmitVisualization, activities.SubmitVisualizationArgs{
-			AudioPath:    audioPath,
-			OutputPath:   outPath,
-			Width:        maxW,
-			Height:       maxH,
-			FPS:          50,
-			IncludeAudio: false,
-		}).Result(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("submit vizualizer job: %w", err)
-		}
-
-		// wait for completion
-		_, err = wfutils.Execute(ctx, activities.Vizualizer.WaitForVisualization, activities.WaitForVisualizationArgs{
-			JobID:        jobID,
-			PollInterval: 5 * time.Second,
-			Timeout:      2 * time.Hour,
-		}).Result(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("vizualizer job failed: %w", err)
-		}
-
-		baseVideo = outPath
-	} else {
-		baseVideo = *params.MergeResult.VideoFile
+	baseVideo, primaryMediaType, err := baseVideoForVOD(ctx, params, audioFiles, audioKeys)
+	if err != nil {
+		return nil, err
 	}
 
 	service := &vxExportVodService{
@@ -202,6 +138,84 @@ func VXExportToVOD(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		params.OutputDir,
 		primaryMediaType,
 	)
+}
+
+func copySubtitlesToOutput(ctx workflow.Context, params VXExportChildWorkflowParams) error {
+	langs, err := wfutils.GetMapKeysSafely(ctx, params.MergeResult.SubtitleFiles)
+	if err != nil {
+		return err
+	}
+
+	for _, lang := range langs {
+		if lang == "und" && !params.ParentParams.SubsAllowAI {
+			// "und" is the AI generated one.
+			continue
+		}
+
+		subtitle := params.MergeResult.SubtitleFiles[lang]
+		err = wfutils.CopyFile(ctx, subtitle, params.OutputDir.Append(subtitle.Base()))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// baseVideoForVOD is the video every rendition is derived from, and what kind of media
+// this export really is. An audio-only export has no video, so one is rendered from the
+// audio instead.
+func baseVideoForVOD(
+	ctx workflow.Context,
+	params VXExportChildWorkflowParams,
+	audioFiles map[string]paths.Path,
+	audioKeys []string,
+) (paths.Path, string, error) {
+	if params.MergeResult.VideoFile != nil {
+		return *params.MergeResult.VideoFile, "video", nil
+	}
+
+	// Prefer the original language, else whatever there is.
+	lang := params.ExportData.OriginalLanguage
+	if lang == "" || audioFiles[lang].Path == "" {
+		if len(audioKeys) == 0 {
+			return paths.Path{}, "", fmt.Errorf("no audio available to generate visualization video")
+		}
+		lang = audioKeys[0]
+	}
+
+	// Render at the largest resolution asked for, so every rendition downscales.
+	width, height := 1920, 1080
+	for _, r := range params.ParentParams.Resolutions {
+		if r.Width*r.Height > width*height {
+			width, height = r.Width, r.Height
+		}
+	}
+
+	outPath := params.TempDir.Append("viz_source.mp4")
+
+	jobID, err := wfutils.Execute(ctx, activities.Vizualizer.SubmitVisualization, activities.SubmitVisualizationArgs{
+		AudioPath:    audioFiles[lang],
+		OutputPath:   outPath,
+		Width:        width,
+		Height:       height,
+		FPS:          50,
+		IncludeAudio: false,
+	}).Result(ctx)
+	if err != nil {
+		return paths.Path{}, "", fmt.Errorf("submit vizualizer job: %w", err)
+	}
+
+	_, err = wfutils.Execute(ctx, activities.Vizualizer.WaitForVisualization, activities.WaitForVisualizationArgs{
+		JobID:        jobID,
+		PollInterval: 5 * time.Second,
+		Timeout:      2 * time.Hour,
+	}).Result(ctx)
+	if err != nil {
+		return paths.Path{}, "", fmt.Errorf("vizualizer job failed: %w", err)
+	}
+
+	return outPath, "audio", nil
 }
 
 func prepareAudioFiles(ctx workflow.Context, mergeResult MergeExportDataResult, tempDir paths.Path, normalizeAudio, ignoreSilence bool) (map[string]paths.Path, error) {

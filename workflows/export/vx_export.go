@@ -69,6 +69,47 @@ type VXExportChildWorkflowParams struct {
 	ForceReplaceTranscription bool
 }
 
+// announceExportStarted reports the warnings the export data came with, then that the
+// export started. An export with no clips is announced too rather than refused: the
+// destinations decide what to do about it.
+func announceExportStarted(ctx workflow.Context, chat telegram.Chat, params VXExportParams, data *vidispine.ExportData) {
+	for _, warning := range data.Warnings {
+		wfutils.SendTelegramText(ctx, chat,
+			fmt.Sprintf("Warning during export of `%s`:\n%s", params.VXID, warning))
+	}
+
+	destinations := strings.Join(params.Destinations, ", ")
+	runID := workflow.GetInfo(ctx).OriginalRunID
+
+	if len(data.Clips) == 0 {
+		wfutils.SendTelegramText(ctx, chat,
+			fmt.Sprintf("No clips found for `%s`.\nTitle: `%s`\nDestinations: `%s`\n\nRunID: `%s`",
+				params.VXID, data.Title, destinations, runID))
+	}
+
+	wfutils.SendTelegramText(ctx, chat,
+		fmt.Sprintf("🟦 Export of `%s` started.\nTitle: `%s`\nDestinations: `%s`\n\nRunID: `%s`",
+			params.VXID, data.Title, destinations, runID))
+}
+
+func createExportFolders(ctx workflow.Context) (tempDir, outputDir, subtitlesDir paths.Path, err error) {
+	tempDir, err = wfutils.GetWorkflowTempFolder(ctx)
+	if err != nil {
+		return
+	}
+
+	outputDir = tempDir.Append("output")
+	err = wfutils.CreateFolder(ctx, outputDir)
+	if err != nil {
+		return
+	}
+
+	subtitlesDir = outputDir.Append("subtitles")
+	err = wfutils.CreateFolder(ctx, subtitlesDir)
+
+	return
+}
+
 // VXExport is the main workflow for exporting assets from vidispine
 // It will create a child workflow for each destination
 func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrError[VXExportResult], error) {
@@ -104,49 +145,11 @@ func VXExport(ctx workflow.Context, params VXExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
-	// Send warnings to Telegram
-	for _, warning := range data.Warnings {
-		wfutils.SendTelegramText(ctx, telegramChat,
-			fmt.Sprintf("Warning during export of `%s`:\n%s", params.VXID, warning))
-	}
-
-	if len(data.Clips) == 0 {
-		wfutils.SendTelegramText(ctx, telegramChat,
-			fmt.Sprintf("No clips found for `%s`.\nTitle: `%s`\nDestinations: `%s`\n\nRunID: `%s`",
-				params.VXID,
-				data.Title,
-				strings.Join(params.Destinations, ", "),
-				workflow.GetInfo(ctx).OriginalRunID,
-			),
-		)
-	}
-
-	wfutils.SendTelegramText(ctx,
-		telegramChat,
-		fmt.Sprintf(
-			"🟦 Export of `%s` started.\nTitle: `%s`\nDestinations: `%s`\n\nRunID: `%s`",
-			params.VXID,
-			data.Title,
-			strings.Join(params.Destinations, ", "),
-			workflow.GetInfo(ctx).OriginalRunID,
-		),
-	)
+	announceExportStarted(ctx, telegramChat, params, data)
 
 	logger.Info("Retrieved data from vidispine")
 
-	tempDir, err := wfutils.GetWorkflowTempFolder(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	outputDir := tempDir.Append("output")
-	err = wfutils.CreateFolder(ctx, outputDir)
-	if err != nil {
-		return nil, err
-	}
-
-	subtitlesOutputDir := outputDir.Append("subtitles")
-	err = wfutils.CreateFolder(ctx, subtitlesOutputDir)
+	tempDir, outputDir, subtitlesOutputDir, err := createExportFolders(ctx)
 	if err != nil {
 		return nil, err
 	}
