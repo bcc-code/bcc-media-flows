@@ -408,10 +408,9 @@ func listReaperFiles(ctx workflow.Context, sessionID, videoVXID string) (*activi
 		return &activities.ReaperResult{}, nil
 	}
 
-	result := &activities.ReaperResult{}
-	err := wfutils.Execute(ctx, activities.Live.ListReaperFiles, &activities.ListReaperFilesParams{
+	result, err := wfutils.Execute(ctx, activities.Live.ListReaperFiles, &activities.ListReaperFilesParams{
 		SessionID: sessionID,
-	}).Get(ctx, result)
+	}).Result(ctx)
 	if err != nil {
 		return nil, err
 	}

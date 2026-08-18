@@ -99,8 +99,7 @@ func VBExportToDubbing(ctx workflow.Context, params VBExportChildWorkflowParams)
 func postTranscodeAudio(ctx workflow.Context, originalFile paths.Path, destinationBase paths.Path, lang string) func(f workflow.Future) {
 	logger := workflow.GetLogger(ctx)
 	return func(f workflow.Future) {
-		res := &common.AudioResult{}
-		err := f.Get(ctx, res)
+		res, err := wfutils.FutureResult[*common.AudioResult](ctx, f)
 		if err != nil {
 			logger.Error("Error transcoding audio", "error", err)
 			return
