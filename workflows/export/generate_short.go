@@ -44,20 +44,9 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting GenerateShort")
 
-	if strings.TrimSpace(params.VXID) == "" {
-		return nil, validationError("VXID is empty")
-	}
-	if strings.TrimSpace(params.OutputDirPath) == "" {
-		return nil, validationError("OutputDirPath is empty")
-	}
-	if params.InSeconds < 0 {
-		return nil, validationError("InSeconds must be >= 0")
-	}
-	if params.OutSeconds < 0 {
-		return nil, validationError("OutSeconds must be >= 0")
-	}
-	if params.InSeconds >= params.OutSeconds {
-		return nil, validationError("InSeconds must be < OutSeconds")
+	err := validateShortParams(params)
+	if err != nil {
+		return nil, err
 	}
 
 	outputPath, err := paths.Parse(params.OutputDirPath)
@@ -134,36 +123,7 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 			"cannot generate a short without a video file", "NO_VIDEO_FILE", nil)
 	}
 
-	sceneResult, err := wfutils.Execute(ctx,
-		activities.Video.FFmpegGetSceneChanges,
-		clipResult.VideoFile,
-	).Result(ctx)
-	if err != nil {
-		logger.Error("Scene-detect FFmpeg failed: " + err.Error())
-		return nil, err
-	}
-
-	submitJobParams := activities.SubmitShortJobInput{
-		InputPath:    clipResult.VideoFile.Linux(),
-		OutputPath:   tempFolder.Linux(),
-		Model:        params.ModelSize,
-		Debug:        params.DebugMode,
-		SceneChanges: sceneResult,
-	}
-
-	jobResult, err := wfutils.Execute(ctx, activities.Util.SubmitShortJobActivity, submitJobParams).Result(ctx)
-	if err != nil {
-		logger.Error("Failed to submit job: " + err.Error())
-		return nil, err
-	}
-
-	logger.Info("Job submitted with ID: " + jobResult.JobID)
-
-	checkStatusParams := activities.CheckJobStatusInput{
-		JobID: jobResult.JobID,
-	}
-
-	keyframes, err := waitForShortJob(ctx, checkStatusParams)
+	sceneChanges, keyframes, err := findShortKeyframes(ctx, *clipResult.VideoFile, tempFolder, params)
 	if err != nil {
 		return nil, err
 	}
@@ -185,31 +145,16 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		norwegianAudioPath = &audioPath
 	}
 
-	var cropRes activities.CropShortResult
-	err = wfutils.Execute(ctx,
-		activities.Util.CropShortActivity,
-		activities.CropShortInput{
-			InputVideoPath:  *clipResult.VideoFile,
-			OutputVideoPath: shortVideoPath,
-			//SubtitlePath:    subtitlePaths, // For now disable subtitle burn-in
-			AudioPath:    norwegianAudioPath,
-			KeyFrames:    keyframes,
-			InSeconds:    params.InSeconds,
-			OutSeconds:   params.OutSeconds,
-			SceneChanges: sceneResult,
-		}).Get(ctx, &cropRes)
+	err = cropShortVideo(ctx, cropShortRequest{
+		Video:        *clipResult.VideoFile,
+		Output:       shortVideoPath,
+		Audio:        norwegianAudioPath,
+		Keyframes:    keyframes,
+		SceneChanges: sceneChanges,
+		InSeconds:    params.InSeconds,
+		OutSeconds:   params.OutSeconds,
+	})
 	if err != nil {
-		logger.Error("CropShortActivity failed: " + err.Error())
-		return nil, err
-	}
-
-	ffmpegParams := miscworkflows.ExecuteFFmpegInput{
-		Arguments: cropRes.Arguments,
-	}
-
-	err = workflow.ExecuteChildWorkflow(ctx, miscworkflows.ExecuteFFmpeg, ffmpegParams).Get(ctx, nil)
-	if err != nil {
-		logger.Error("Failed to execute FFmpeg: " + err.Error())
 		return nil, err
 	}
 
@@ -220,6 +165,103 @@ func GenerateShort(ctx workflow.Context, params GenerateShortDataParams) (*Gener
 		AudioFiles:     clipResult.AudioFiles,
 		SubtitleFiles:  clipResult.SubtitleFiles,
 	}, nil
+}
+
+func validateShortParams(params GenerateShortDataParams) error {
+	switch {
+	case strings.TrimSpace(params.VXID) == "":
+		return validationError("VXID is empty")
+	case strings.TrimSpace(params.OutputDirPath) == "":
+		return validationError("OutputDirPath is empty")
+	case params.InSeconds < 0:
+		return validationError("InSeconds must be >= 0")
+	case params.OutSeconds < 0:
+		return validationError("OutSeconds must be >= 0")
+	case params.InSeconds >= params.OutSeconds:
+		return validationError("InSeconds must be < OutSeconds")
+	}
+
+	return nil
+}
+
+// findShortKeyframes asks the shorts service where to crop. The scene changes come
+// back too, because the crop needs them as well as the keyframes.
+func findShortKeyframes(
+	ctx workflow.Context,
+	video paths.Path,
+	tempFolder paths.Path,
+	params GenerateShortDataParams,
+) ([]float64, []activities.Keyframe, error) {
+	logger := workflow.GetLogger(ctx)
+
+	sceneChanges, err := wfutils.Execute(ctx, activities.Video.FFmpegGetSceneChanges, &video).Result(ctx)
+	if err != nil {
+		logger.Error("Scene-detect FFmpeg failed: " + err.Error())
+		return nil, nil, err
+	}
+
+	jobResult, err := wfutils.Execute(ctx, activities.Util.SubmitShortJobActivity, activities.SubmitShortJobInput{
+		InputPath:    video.Linux(),
+		OutputPath:   tempFolder.Linux(),
+		Model:        params.ModelSize,
+		Debug:        params.DebugMode,
+		SceneChanges: sceneChanges,
+	}).Result(ctx)
+	if err != nil {
+		logger.Error("Failed to submit job: " + err.Error())
+		return nil, nil, err
+	}
+
+	logger.Info("Job submitted with ID: " + jobResult.JobID)
+
+	keyframes, err := waitForShortJob(ctx, activities.CheckJobStatusInput{JobID: jobResult.JobID})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return sceneChanges, keyframes, nil
+}
+
+type cropShortRequest struct {
+	Video        paths.Path
+	Output       paths.Path
+	Audio        *paths.Path
+	Keyframes    []activities.Keyframe
+	SceneChanges []float64
+	InSeconds    float64
+	OutSeconds   float64
+}
+
+// cropShortVideo works out the ffmpeg arguments and then runs them, which is two
+// steps because the run happens in a child workflow on the transcode queue.
+func cropShortVideo(ctx workflow.Context, req cropShortRequest) error {
+	logger := workflow.GetLogger(ctx)
+
+	var cropRes activities.CropShortResult
+	err := wfutils.Execute(ctx, activities.Util.CropShortActivity, activities.CropShortInput{
+		InputVideoPath:  req.Video,
+		OutputVideoPath: req.Output,
+		// SubtitlePath is left out: subtitle burn-in is disabled for now.
+		AudioPath:    req.Audio,
+		KeyFrames:    req.Keyframes,
+		InSeconds:    req.InSeconds,
+		OutSeconds:   req.OutSeconds,
+		SceneChanges: req.SceneChanges,
+	}).Get(ctx, &cropRes)
+	if err != nil {
+		logger.Error("CropShortActivity failed: " + err.Error())
+		return err
+	}
+
+	err = workflow.ExecuteChildWorkflow(ctx, miscworkflows.ExecuteFFmpeg, miscworkflows.ExecuteFFmpegInput{
+		Arguments: cropRes.Arguments,
+	}).Get(ctx, nil)
+	if err != nil {
+		logger.Error("Failed to execute FFmpeg: " + err.Error())
+		return err
+	}
+
+	return nil
 }
 
 const (

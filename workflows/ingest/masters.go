@@ -251,100 +251,94 @@ func SetUploadJobID(ctx workflow.Context, assetID string, jobID string) error {
 }
 
 func addMetaTags(ctx workflow.Context, assetID string, metadata *ingest.Metadata) error {
-	err := SetUploadedBy(ctx, assetID, metadata.JobProperty.SenderEmail)
+	job := metadata.JobProperty
+
+	err := SetUploadedBy(ctx, assetID, job.SenderEmail)
 	if err != nil {
 		return err
 	}
 
-	err = SetUploadJobID(ctx, assetID, strconv.Itoa(metadata.JobProperty.JobID))
+	err = SetUploadJobID(ctx, assetID, strconv.Itoa(job.JobID))
 	if err != nil {
 		return err
 	}
 
-	if metadata.JobProperty.PersonsAppearing != "" {
-		for _, person := range strings.Split(metadata.JobProperty.PersonsAppearing, ",") {
-			person = strings.TrimSpace(person)
-			if person == "" {
-				continue
-			}
-			err = wfutils.AddVidispineMetaValue(ctx, assetID, vscommon.FieldPersonsAppearing.Value, person)
-			if err != nil {
-				return err
-			}
-		}
+	err = addMetaValues(ctx, assetID, vscommon.FieldPersonsAppearing.Value, job.PersonsAppearing)
+	if err != nil {
+		return err
 	}
 
-	if metadata.JobProperty.Tags != "" {
-		for _, tag := range strings.Split(metadata.JobProperty.Tags, ",") {
-			tag = strings.TrimSpace(tag)
-			if tag == "" {
-				continue
-			}
-			err = wfutils.AddVidispineMetaValue(ctx, assetID, vscommon.FieldGeneralTags.Value, tag)
-			if err != nil {
-				return err
-			}
-		}
+	err = addMetaValues(ctx, assetID, vscommon.FieldGeneralTags.Value, job.Tags)
+	if err != nil {
+		return err
 	}
 
-	if metadata.JobProperty.Language != "" {
-		err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldLanguagesRecorded.Value, metadata.JobProperty.Language)
-		if err != nil {
-			return err
-		}
+	program := programName(job.ProgramID)
+
+	title := job.EpisodeTitle
+	if title != "" && program != "" {
+		title = fmt.Sprintf("%s | %s", program, title)
 	}
 
-	program := ""
-	if metadata.JobProperty.ProgramID != "" {
-		// XML ProgramIDs are formatted "<code> - <program name>"; take the name.
-		// JSON ingest forms provide the program directly with no separator.
-		parts := strings.Split(metadata.JobProperty.ProgramID, " - ")
-		if len(parts) > 1 {
-			program = parts[1]
-		} else {
-			program = parts[0]
-		}
-		if program != "" {
-			err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldProgram.Value, program)
-			if err != nil {
-				return err
-			}
-		}
+	fields := []struct {
+		field string
+		value string
+	}{
+		{vscommon.FieldLanguagesRecorded.Value, job.Language},
+		{vscommon.FieldProgram.Value, program},
+		{vscommon.FieldSeason.Value, job.Season},
+		{vscommon.FieldEpisode.Value, job.Episode},
+		{vscommon.FieldTitle.Value, title},
+		{vscommon.FieldEpisodeDescription.Value, job.EpisodeDescription},
 	}
 
-	if metadata.JobProperty.Season != "" {
-		err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldSeason.Value, metadata.JobProperty.Season)
-		if err != nil {
-			return err
-		}
-	}
-
-	if metadata.JobProperty.Episode != "" {
-		err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldEpisode.Value, metadata.JobProperty.Episode)
-		if err != nil {
-			return err
-		}
-	}
-
-	if metadata.JobProperty.EpisodeTitle != "" {
-		title := metadata.JobProperty.EpisodeTitle
-
-		if program != "" {
-			title = fmt.Sprintf("%s | %s", program, title)
+	for _, f := range fields {
+		if f.value == "" {
+			continue
 		}
 
-		err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldTitle.Value, title)
-		if err != nil {
-			return err
-		}
-	}
-
-	if metadata.JobProperty.EpisodeDescription != "" {
-		err = wfutils.SetVidispineMeta(ctx, assetID, vscommon.FieldEpisodeDescription.Value, metadata.JobProperty.EpisodeDescription)
+		err = wfutils.SetVidispineMeta(ctx, assetID, f.field, f.value)
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+// addMetaValues adds one value per comma-separated entry, skipping the blanks a
+// trailing or doubled comma leaves behind.
+func addMetaValues(ctx workflow.Context, assetID, field, commaSeparated string) error {
+	if commaSeparated == "" {
+		return nil
+	}
+
+	for _, value := range strings.Split(commaSeparated, ",") {
+		value = strings.TrimSpace(value)
+		if value == "" {
+			continue
+		}
+
+		err := wfutils.AddVidispineMetaValue(ctx, assetID, field, value)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// programName takes the name out of an XML ProgramID, formatted
+// "<code> - <program name>". JSON ingest forms provide the program directly.
+func programName(programID string) string {
+	if programID == "" {
+		return ""
+	}
+
+	parts := strings.Split(programID, " - ")
+	if len(parts) > 1 {
+		return parts[1]
+	}
+
+	return parts[0]
 }
