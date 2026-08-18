@@ -98,12 +98,11 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Starting live ingest: https://vault.bcc.media/item/%s", videoVXID))
 
-	var jobResult vsactivity.FileJobResult
-	err = wfutils.Execute(ctx, activities.Vidispine.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
+	jobResult, err := wfutils.Execute(ctx, activities.Vidispine.AddFileToPlaceholder, vsactivity.AddFileToPlaceholderParams{
 		AssetID:  videoVXID,
 		FilePath: rawPath,
 		Growing:  true,
-	}).Get(ctx, &jobResult)
+	}).Result(ctx)
 	if err != nil {
 		return err
 	}
@@ -125,7 +124,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	err = wfutils.Execute(ctx, activities.Vidispine.CloseFile, vsactivity.CloseFileParams{
 		FileID: jobResult.FileID,
-	}).Get(ctx, nil)
+	}).Wait(ctx)
 	if err != nil {
 		return err
 	}
@@ -171,7 +170,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	_ = wfutils.Execute(ctx, activities.Vidispine.CreateThumbnailsActivity, vsactivity.CreateThumbnailsParams{
 		AssetID: videoVXID,
-	}).Get(ctx, nil)
+	}).Wait(ctx)
 
 	var errors []error
 	for _, f := range importAudioFuture {
@@ -229,10 +228,9 @@ func syncAudioToVideo(ctx workflow.Context, videoVXID string) {
 func createGrowingPlaceholder(ctx workflow.Context, in paths.Path) (string, error) {
 	logger := workflow.GetLogger(ctx)
 
-	var assetResult vsactivity.CreatePlaceholderResult
-	err := wfutils.Execute(ctx, activities.Vidispine.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
+	assetResult, err := wfutils.Execute(ctx, activities.Vidispine.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
 		Title: in.Base(),
-	}).Get(ctx, &assetResult)
+	}).Result(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -255,8 +253,7 @@ func startReaperSession(ctx workflow.Context, existing string) string {
 		return existing
 	}
 
-	sessionID := ""
-	err := wfutils.Execute(ctx, activities.Live.StartReaper, nil).Get(ctx, &sessionID)
+	sessionID, err := wfutils.Execute(ctx, activities.Live.StartReaper, nil).Result(ctx)
 	if err != nil {
 		wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟦 Unable to start reaper. Start it manually and notify Matjaz!\n\n```%s```", err.Error()))
 	}

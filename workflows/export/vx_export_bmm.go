@@ -98,10 +98,9 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, err
 	}
 
-	var chapters []asset.TimedMetadata
-	err = wfutils.Execute(ctx, activities.Platform.GetTimedMetadataChaptersActivity, platform_activities.GetTimedMetadataChaptersParams{
+	chapters, err := wfutils.Execute(ctx, activities.Platform.GetTimedMetadataChaptersActivity, platform_activities.GetTimedMetadataChaptersParams{
 		Clips: params.ExportData.Clips,
-	}).Get(ctx, &chapters)
+	}).Result(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -149,26 +148,25 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 func normalizeAudioPerLanguage(ctx workflow.Context, params VXExportChildWorkflowParams, langs []string) (map[string]activities.NormalizeAudioResult, error) {
 	logger := workflow.GetLogger(ctx)
 
-	futures := map[string]workflow.Future{}
+	futures := map[string]wfutils.Task[*activities.NormalizeAudioResult]{}
 	for _, lang := range langs {
 		futures[lang] = wfutils.Execute(ctx, activities.Audio.NormalizeAudioActivity, activities.NormalizeAudioParams{
 			FilePath:              params.MergeResult.AudioFiles[lang],
 			TargetLUFS:            targetLufs,
 			PerformOutputAnalysis: true,
 			OutputPath:            params.TempDir,
-		}).Future
+		})
 	}
 
 	results := map[string]activities.NormalizeAudioResult{}
 	for _, lang := range langs {
-		result := activities.NormalizeAudioResult{}
-		err := futures[lang].Get(ctx, &result)
+		result, err := futures[lang].Result(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to normalize audio for language %s: %w", lang, err)
 		}
 
 		logger.Debug("Normalized audio for language", lang, result)
-		results[lang] = result
+		results[lang] = *result
 		params.MergeResult.AudioFiles[lang] = result.FilePath
 	}
 
@@ -181,17 +179,17 @@ func encodeAudioPerLanguage(
 	langs []string,
 	normalized map[string]activities.NormalizeAudioResult,
 ) (map[string][]common.AudioResult, error) {
-	futures := map[string][]workflow.Future{}
+	futures := map[string][]wfutils.Task[*common.AudioResult]{}
 	for _, lang := range langs {
 		audio := normalized[lang]
 
-		var encodings []workflow.Future
+		var encodings []wfutils.Task[*common.AudioResult]
 		for _, bitrate := range aacBitrates {
 			encodings = append(encodings, wfutils.Execute(ctx, activities.Audio.TranscodeToAudioAac, common.AudioInput{
 				Path:            audio.FilePath,
 				DestinationPath: params.OutputDir,
 				Bitrate:         bitrate,
-			}).Future)
+			}))
 		}
 
 		for _, bitrate := range mp3Bitrates {
@@ -200,7 +198,7 @@ func encodeAudioPerLanguage(
 				DestinationPath: params.OutputDir,
 				Bitrate:         bitrate,
 				ForceCBR:        true,
-			}).Future)
+			}))
 		}
 
 		futures[lang] = encodings
@@ -210,13 +208,12 @@ func encodeAudioPerLanguage(
 	for _, lang := range langs {
 		var encodings []common.AudioResult
 		for _, future := range futures[lang] {
-			var res common.AudioResult
-			err := future.Get(ctx, &res)
+			res, err := future.Result(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("failed to transcode audio for language %s: %w", lang, err)
 			}
 
-			encodings = append(encodings, res)
+			encodings = append(encodings, *res)
 		}
 
 		results[lang] = encodings

@@ -54,6 +54,22 @@ func (f Task[TR]) Wait(ctx workflow.Context) error {
 	return f.Future.Get(ctx, nil)
 }
 
+// Waiter is the part of Task that does not mention the result type, so one
+// slice can hold tasks returning different things when all the caller does is
+// wait for them.
+type Waiter interface {
+	Wait(ctx workflow.Context) error
+}
+
+// FutureResult is Task.Result for a bare workflow.Future, for the places where
+// the Task wrapper is not available: selector callbacks are handed the future
+// itself, and child workflows are started through the SDK rather than Execute.
+//
+//workflowcheck:ignore
+func FutureResult[TR any](ctx workflow.Context, future workflow.Future) (TR, error) {
+	return Task[TR]{Future: future}.Result(ctx)
+}
+
 // activityOptionsWithDefaults fills in the timeouts a workflow left unset.
 //
 // A workflow only has activity options if it called

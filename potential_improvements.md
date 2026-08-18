@@ -1197,3 +1197,14 @@ most if the proxy were ever misconfigured, bypassed, or reached from an already-
   are a fixed list, but `GetWorkerQueue()` and the other accessors return whatever the
   `QUEUE` environment variable says, so the type would be an enum with a hole in it.
   Worth revisiting if the queue names ever stop being configurable.
+- **`XDCAM playout never reads its mux result.`** `workflows/export/vx_export_playout.go`
+  waited on `TranscodePlayoutMux` into a `muxResult` nothing ever read — the output path is
+  found again by copying the whole `params.OutputDir`. It is now `_, err`, but the activity
+  returning a `PlayoutMuxResult` no caller wants suggests either the result or the field
+  should go.
+
+- **`CollectChildResults` still calls `future.Get` directly.** `utils/workflows/common.go:28`
+  is the one workflow-side site left on `.Get`, and deliberately: it relies on `Result`
+  staying `nil` on failure so `ResultOrError.Result` distinguishes "no result" from a
+  zero-valued one, which `Task.Result`'s pointer allocation would erase. Worth revisiting
+  if `ResultOrError` ever grows an explicit "ok" flag.

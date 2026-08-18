@@ -80,8 +80,7 @@ func IsilonExport(ctx workflow.Context, params IsilonExportParams) error {
 
 	ctx = workflow.WithChildOptions(ctx, wfutils.GetVXDefaultWorkflowOptions(ctx, params.VXID))
 
-	var mergeResult MergeExportDataResult
-	err = workflow.ExecuteChildWorkflow(ctx, MergeExportData, MergeExportDataParams{
+	mergeResult, err := wfutils.FutureResult[*MergeExportDataResult](ctx, workflow.ExecuteChildWorkflow(ctx, MergeExportData, MergeExportDataParams{
 		ExportData:       data,
 		TempDir:          tempDir,
 		SubtitlesDir:     subtitlesOutputDir,
@@ -91,7 +90,7 @@ func IsilonExport(ctx workflow.Context, params IsilonExportParams) error {
 		MakeTranscript:   false,
 		Languages:        selectedLanguages,
 		OriginalLanguage: data.OriginalLanguage,
-	}).Get(ctx, &mergeResult)
+	}))
 
 	if err != nil {
 		wfutils.SendTelegramError(ctx, telegram.ChatOther, params.VXID, err)
