@@ -81,7 +81,7 @@ func (s *TriggerServer) uploadMasterAdminPOST(ctx *gin.Context) {
 }
 
 func (s *TriggerServer) uploadMasterGET(ctx *gin.Context) {
-	filenames, err := getFilenames(masterTriggerDir)
+	filenames, err := getFilenames(masterTriggerDir())
 	if err != nil {
 		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
@@ -153,7 +153,7 @@ func (s *TriggerServer) uploadMasterPOST(ctx *gin.Context) {
 		}
 	}
 
-	rawPath := filepath.Join(masterTriggerDir, params.Path)
+	rawPath := filepath.Join(masterTriggerDir(), params.Path)
 	path, err := paths.Parse(rawPath)
 	if err != nil {
 		renderErrorPage(ctx, http.StatusBadRequest, err)

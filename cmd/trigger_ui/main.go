@@ -40,16 +40,23 @@ func getQueue() string {
 	return environment.GetQueue()
 }
 
-var overlaysDir = os.Getenv("OVERLAYS_DIR")
-var masterTriggerDir = os.Getenv("MASTER_TRIGGER_DIR")
+func overlaysDir() string {
+	return os.Getenv("OVERLAYS_DIR")
+}
 
-// triggeredByHeader names a request header set by an identity-aware proxy in
+func masterTriggerDir() string {
+	return os.Getenv("MASTER_TRIGGER_DIR")
+}
+
+// triggeredByHeader() names a request header set by an identity-aware proxy in
 // front of the UI, e.g. "X-Forwarded-User".
-var triggeredByHeader = os.Getenv("TRIGGERED_BY_HEADER")
+func triggeredByHeader() string {
+	return os.Getenv("TRIGGERED_BY_HEADER")
+}
 
 func getTriggeredBy(ctx *gin.Context) string {
-	if triggeredByHeader != "" {
-		if v := ctx.GetHeader(triggeredByHeader); v != "" {
+	if triggeredByHeader() != "" {
+		if v := ctx.GetHeader(triggeredByHeader()); v != "" {
 			return v
 		}
 	}
@@ -70,7 +77,7 @@ func getFilenames(dir string) ([]string, error) {
 }
 
 func getOverlayFilePath(file string) string {
-	return filepath.Join(overlaysDir, file)
+	return filepath.Join(overlaysDir(), file)
 }
 
 func renderErrorPage(ctx *gin.Context, httpStatus int, err error) {
@@ -178,7 +185,7 @@ func (s *TriggerServer) vxExportGET(ctx *gin.Context) {
 
 	selectedLanguages := meta.GetArray(vscommon.FieldLangsToExport)
 
-	filenames, err := getFilenames(overlaysDir)
+	filenames, err := getFilenames(overlaysDir())
 	if err != nil {
 		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return
@@ -467,6 +474,8 @@ func (s *TriggerServer) moveFilesPOST(ctx *gin.Context) {
 }
 
 func main() {
+	bootstrap.LoadEnv()
+
 	router := gin.Default()
 
 	vsapiClient := vsapi.NewClient(os.Getenv("VIDISPINE_BASE_URL"), os.Getenv("VIDISPINE_USERNAME"), os.Getenv("VIDISPINE_PASSWORD"))

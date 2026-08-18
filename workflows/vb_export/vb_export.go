@@ -137,7 +137,18 @@ type VBExportChildWorkflowParams struct {
 	AnalyzeResult              ffmpeg.StreamInfo
 }
 
-var subtitleStyleBase = os.Getenv("SUBTITLE_STYLES_DIR")
+// subtitleStyleDir goes through SideEffect so the directory is recorded in the
+// history. Read directly it would be whatever the environment says at the moment of
+// the read, which on a replay is a different worker, possibly a later deploy — and the
+// subtitle style path would come out different from the one the export actually used.
+func subtitleStyleDir(ctx workflow.Context) (string, error) {
+	var dir string
+	err := workflow.SideEffect(ctx, func(workflow.Context) any {
+		return os.Getenv("SUBTITLE_STYLES_DIR")
+	}).Get(&dir)
+
+	return dir, err
+}
 
 func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrError[VBExportResult], error) {
 	logger := workflow.GetLogger(ctx)
@@ -226,7 +237,12 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	var subtitleFile *paths.Path
 	var subtitleStyle *paths.Path
 	if params.SubtitleShapeTag != "" {
-		subtitleStylePath := paths.MustParse(subtitleStyleBase + params.SubtitleStyle)
+		styleDir, err := subtitleStyleDir(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		subtitleStylePath := paths.MustParse(styleDir + params.SubtitleStyle)
 		subtitleStyle = &subtitleStylePath
 
 	outer:

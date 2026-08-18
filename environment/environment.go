@@ -5,69 +5,67 @@ import (
 	"strings"
 )
 
-var queue = os.Getenv("QUEUE")
+// queue is read per call rather than once at init, so a .env loaded in main and a
+// t.Setenv in a test both take effect.
+func queue() string {
+	return os.Getenv("QUEUE")
+}
 
 func GetQueue() string {
-	if queue != "" {
-		return queue
+	if q := queue(); q != "" {
+		return q
 	}
 	return QueueWorker
 }
 
 func GetWorkerQueue() string {
-	if queue == QueueDebug {
+	if queue() == QueueDebug {
 		return QueueDebug
 	}
 	return QueueWorker
 }
 
 func GetTranscodeQueue() string {
-	if queue == QueueDebug {
+	if queue() == QueueDebug {
 		return QueueDebug
 	}
 	return QueueTranscode
 }
 
 func GetAudioQueue() string {
-	if queue == QueueDebug {
+	if queue() == QueueDebug {
 		return QueueDebug
 	}
 	return QueueAudio
 }
 
 func GetLiveIngestQueue() string {
-	if queue == QueueDebug {
+	if queue() == QueueDebug {
 		return QueueDebug
 	}
 	return QueueLiveIngest
 }
 
-var isilonPrefix = os.Getenv("ISILON_PREFIX")
-
 func GetIsilonPrefix() string {
 	// For local testing
-	if isilonPrefix != "" {
-		return isilonPrefix
+	if prefix := os.Getenv("ISILON_PREFIX"); prefix != "" {
+		return prefix
 	}
 	return "/mnt/isilon"
 }
 
-var tempMountPrefix = os.Getenv("TEMP_MOUNT_PREFIX")
-
 func GetTempMountPrefix() string {
 	// For local testing
-	if tempMountPrefix != "" {
-		return tempMountPrefix
+	if prefix := os.Getenv("TEMP_MOUNT_PREFIX"); prefix != "" {
+		return prefix
 	}
 	return "/mnt/temp"
 }
 
-var fileCatalystMountPrefix = os.Getenv("FILECATALYST_MOUNT_PREFIX")
-
 func GetFileCatalystMountPrefix() string {
 	// For local testing
-	if fileCatalystMountPrefix != "" {
-		return fileCatalystMountPrefix
+	if prefix := os.Getenv("FILECATALYST_MOUNT_PREFIX"); prefix != "" {
+		return prefix
 	}
 	return "/mnt/filecatalyst"
 }

@@ -20,7 +20,9 @@ type VBTriggerGETParams struct {
 	SubtitleStyles []string
 }
 
-var subtitleStylesDir = os.Getenv("SUBTITLE_STYLES_DIR")
+func subtitleStylesDir() string {
+	return os.Getenv("SUBTITLE_STYLES_DIR")
+}
 
 func (s *TriggerServer) vbExportGET(ctx *gin.Context) {
 	vxID := ctx.Query("id")
@@ -47,7 +49,7 @@ func (s *TriggerServer) vbExportGET(ctx *gin.Context) {
 	clips := meta.SplitByClips()
 	title := clips[vsapi.OriginalClip].Get(vscommon.FieldTitle, "")
 
-	subStyles, err := getFilenames(subtitleStylesDir)
+	subStyles, err := getFilenames(subtitleStylesDir())
 	if err != nil {
 		log.Print(err)
 		renderErrorPage(ctx, http.StatusInternalServerError, err)

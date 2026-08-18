@@ -3,7 +3,9 @@
 package bootstrap
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -11,10 +13,19 @@ import (
 	"go.temporal.io/sdk/client"
 )
 
-// LoadEnv reads .env into the environment. A missing file is not an error: in
-// production the values come from the deployment rather than a file.
-func LoadEnv() bool {
-	return godotenv.Load(".env") == nil
+// LoadEnv reads .env into the environment. Call it first: anything that reads the
+// environment before this runs sees the deployment's values and not the file's.
+//
+// A missing file is not an error — in production the values come from the deployment.
+// A file that exists and will not parse is, and says so, which is the way round that
+// is useful to whoever is looking at the logs.
+func LoadEnv() {
+	err := godotenv.Load(".env")
+	if err == nil || errors.Is(err, os.ErrNotExist) {
+		return
+	}
+
+	log.Printf("WARNING: .env exists but could not be loaded: %v", err)
 }
 
 // TemporalClient dials the server named by TEMPORAL_HOST_PORT.

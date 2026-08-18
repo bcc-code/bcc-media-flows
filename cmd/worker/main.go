@@ -65,9 +65,7 @@ func GetAnalyticsService() *analytics.Service {
 var Version = "development"
 
 func main() {
-	if bootstrap.LoadEnv() {
-		fmt.Println("Env file loaded")
-	}
+	bootstrap.LoadEnv()
 
 	err := update(Version)
 	if err != nil {

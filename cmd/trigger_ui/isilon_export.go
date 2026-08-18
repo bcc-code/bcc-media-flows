@@ -34,7 +34,7 @@ func (s *TriggerServer) isilonExportGET(ctx *gin.Context) {
 
 	selectedAudioSource := meta.Get(vscommon.FieldExportAudioSource, "")
 
-	filenames, err := getFilenames(overlaysDir)
+	filenames, err := getFilenames(overlaysDir())
 	if err != nil {
 		renderErrorPage(ctx, http.StatusInternalServerError, err)
 		return

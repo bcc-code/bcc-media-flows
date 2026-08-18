@@ -16,9 +16,7 @@ func shortsServer(t *testing.T, handler http.HandlerFunc) {
 	server := httptest.NewServer(handler)
 	t.Cleanup(server.Close)
 
-	previous := shortServiceURL
-	shortServiceURL = server.URL
-	t.Cleanup(func() { shortServiceURL = previous })
+	t.Setenv("SHORTS_SERVICE_URL", server.URL)
 }
 
 func activityEnv(t *testing.T) *testsuite.TestActivityEnvironment {

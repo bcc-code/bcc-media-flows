@@ -13,10 +13,9 @@ import (
 	"github.com/bcc-code/bcc-media-flows/internal/httpx"
 )
 
-var (
-	username = os.Getenv("RCLONE_USERNAME")
-	password = os.Getenv("RCLONE_PASSWORD")
-)
+func credentials() (string, string) {
+	return os.Getenv("RCLONE_USERNAME"), os.Getenv("RCLONE_PASSWORD")
+}
 
 var (
 	errNon200Status = merry.Sentinel("non-200 status")
@@ -41,6 +40,7 @@ func doRequest[T any](req *http.Request) (*T, error) {
 	}
 	req.Close = true
 
+	username, password := credentials()
 	basicAuth := base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
 	req.Header.Set("Authorization", "Basic "+basicAuth)
 

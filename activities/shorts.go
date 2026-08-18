@@ -15,13 +15,14 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
 )
 
-var shortServiceURL = os.Getenv("SHORTS_SERVICE_URL")
+func shortServiceURL() string {
+	return os.Getenv("SHORTS_SERVICE_URL")
+}
 
-// shortServiceClient is built per call because the tests swap shortServiceURL.
 func shortServiceClient() *resty.Client {
 	return httpx.New(httpx.Config{
 		Service: "shorts service",
-		BaseURL: shortServiceURL,
+		BaseURL: shortServiceURL(),
 	})
 }
 
