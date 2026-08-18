@@ -183,20 +183,7 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	if len(importAudioFuture) > 0 {
 		wfutils.SendTelegramText(ctx, telegram.ChatOther, "🟩 Audio import finished")
-
-		audioFiles, err := wfutils.Execute(ctx, activities.Vidispine.GetRelatedAudioFiles, videoVXID).Result(ctx)
-		if err != nil {
-			wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟥 Audio/video sync skipped for %s, failed to get related audio files: %v", videoVXID, err))
-		} else if _, ok := audioFiles["nor"]; ok {
-			err = workflow.ExecuteChildWorkflow(ctx, IngestSyncFix, IngestSyncFixParams{
-				VXID: videoVXID,
-			}).Get(ctx, nil)
-			if err != nil {
-				wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟥 Audio/video sync failed for %s: %v", videoVXID, err))
-			}
-		} else {
-			wfutils.SendTelegramText(ctx, telegram.ChatOther, fmt.Sprintf("🟧 Audio/video sync skipped for %s: nor audio not found", videoVXID))
-		}
+		syncAudioToVideo(ctx, videoVXID)
 	}
 
 	err = transcribeFuture.Get(ctx, nil)
@@ -211,6 +198,32 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 	_ = fixDurationFuture.Get(ctx, nil)
 
 	return nil
+}
+
+// syncAudioToVideo lines the reaper audio up with the video. Every failure here is
+// reported and swallowed: the ingest itself has succeeded by this point, and a sync
+// that did not happen is something an operator fixes rather than a reason to fail.
+func syncAudioToVideo(ctx workflow.Context, videoVXID string) {
+	audioFiles, err := wfutils.Execute(ctx, activities.Vidispine.GetRelatedAudioFiles, videoVXID).Result(ctx)
+	if err != nil {
+		wfutils.SendTelegramText(ctx, telegram.ChatOther,
+			fmt.Sprintf("🟥 Audio/video sync skipped for %s, failed to get related audio files: %v", videoVXID, err))
+		return
+	}
+
+	if _, ok := audioFiles["nor"]; !ok {
+		wfutils.SendTelegramText(ctx, telegram.ChatOther,
+			fmt.Sprintf("🟧 Audio/video sync skipped for %s: nor audio not found", videoVXID))
+		return
+	}
+
+	err = workflow.ExecuteChildWorkflow(ctx, IngestSyncFix, IngestSyncFixParams{
+		VXID: videoVXID,
+	}).Get(ctx, nil)
+	if err != nil {
+		wfutils.SendTelegramText(ctx, telegram.ChatOther,
+			fmt.Sprintf("🟥 Audio/video sync failed for %s: %v", videoVXID, err))
+	}
 }
 
 func createGrowingPlaceholder(ctx workflow.Context, in paths.Path) (string, error) {

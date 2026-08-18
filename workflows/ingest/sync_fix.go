@@ -42,62 +42,9 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 	}
 
 	if params.Adjustment == 0 {
-		wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟦 `%s`\n\nCalculating automatic adjustments to audio files.", params.VXID))
-		// Attempt to calculate the adjustment automatically
-		shapes, err := wfutils.Execute(ctx, activities.Vidispine.GetShapes, vsactivity.VXOnlyParam{
-			VXID: params.VXID,
-		}).Result(ctx)
-
+		params.Adjustment, err = calculateAudioAdjustment(ctx, params.VXID, audioPaths)
 		if err != nil {
 			return err
-		}
-
-		originalShape := shapes.GetShape("original")
-		if originalShape == nil {
-			return fmt.Errorf("original shape not found")
-		}
-
-		if len(originalShape.AudioComponent) == 0 {
-			return fmt.Errorf("original shape has no audio")
-		}
-
-		originalPath, err := paths.Parse(originalShape.GetPath())
-		if err != nil {
-			return err
-		}
-
-		tempFolder, err := wfutils.GetWorkflowTempFolder(ctx)
-		if err != nil {
-			return err
-		}
-		prepareResult, err := wfutils.Execute(ctx, activities.Audio.PrepareForTranscription, common.AudioInput{
-			Path:            originalPath,
-			DestinationPath: tempFolder,
-		}).Result(ctx)
-		if err != nil {
-			return err
-		}
-
-		if prepareResult.HasAudio {
-			reaperAudioPath := ""
-			if p, ok := audioPaths["nor"]; ok {
-				reaperAudioPath = p.Linux()
-			} else {
-				return fmt.Errorf("nor audio not found")
-			}
-
-			diff, err := wfutils.Execute(ctx, activities.Util.GetAudioDiff, activities.GetAudioDiffParams{
-				ReferenceFile: prepareResult.OutputPath.Linux(),
-				TargetFile:    reaperAudioPath,
-			}).Result(ctx)
-
-			if err != nil {
-				return err
-			}
-
-			params.Adjustment = diff.Difference
-
-			wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟦 `%s`\n\nAutomatic adjustment calculated: %dms", params.VXID, params.Adjustment))
 		}
 	}
 
@@ -173,4 +120,67 @@ func IngestSyncFix(ctx workflow.Context, params IngestSyncFixParams) error {
 	wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟩 `%s`\n\nAdjustments applied to audio files.", params.VXID))
 
 	return nil
+}
+
+// calculateAudioAdjustment measures how far the reaper audio drifts from the audio in
+// the original video, so the copies can be shifted by it. A video with no audio to
+// compare against is not an error: the adjustment stays zero and the operator is told
+// nothing was calculated.
+func calculateAudioAdjustment(ctx workflow.Context, vxID string, audioPaths map[string]paths.Path) (int, error) {
+	wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟦 `%s`\n\nCalculating automatic adjustments to audio files.", vxID))
+
+	shapes, err := wfutils.Execute(ctx, activities.Vidispine.GetShapes, vsactivity.VXOnlyParam{
+		VXID: vxID,
+	}).Result(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	originalShape := shapes.GetShape("original")
+	if originalShape == nil {
+		return 0, fmt.Errorf("original shape not found")
+	}
+
+	if len(originalShape.AudioComponent) == 0 {
+		return 0, fmt.Errorf("original shape has no audio")
+	}
+
+	originalPath, err := paths.Parse(originalShape.GetPath())
+	if err != nil {
+		return 0, err
+	}
+
+	tempFolder, err := wfutils.GetWorkflowTempFolder(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	prepareResult, err := wfutils.Execute(ctx, activities.Audio.PrepareForTranscription, common.AudioInput{
+		Path:            originalPath,
+		DestinationPath: tempFolder,
+	}).Result(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	if !prepareResult.HasAudio {
+		return 0, nil
+	}
+
+	reaperAudio, ok := audioPaths["nor"]
+	if !ok {
+		return 0, fmt.Errorf("nor audio not found")
+	}
+
+	diff, err := wfutils.Execute(ctx, activities.Util.GetAudioDiff, activities.GetAudioDiffParams{
+		ReferenceFile: prepareResult.OutputPath.Linux(),
+		TargetFile:    reaperAudio.Linux(),
+	}).Result(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	wfutils.SendTelegramText(ctx, telegram.ChatVOD, fmt.Sprintf("🟦 `%s`\n\nAutomatic adjustment calculated: %dms", vxID, diff.Difference))
+
+	return diff.Difference, nil
 }

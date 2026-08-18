@@ -247,10 +247,8 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 
 	assetID := strconv.Itoa(int(assetResult.ID))
 
-	var episodeID string
-	if short.EpisodeID != "" {
-		episodeID = short.EpisodeID
-	} else {
+	episodeID := short.EpisodeID
+	if episodeID == "" {
 		workflow.GetLogger(ctx).Warn("EpisodeID is empty", "mediabankenID", short.MBMetadata.ID, "label", short.Label)
 	}
 
@@ -280,36 +278,11 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 	}
 
 	// Tag codes will be sourced from ClickUp custom fields once those are added.
-	// The loop below already no-ops on empty values.
 	var tagCodes []string
 
-	for _, raw := range tagCodes {
-		code := strings.ToLower(strings.TrimSpace(raw))
-		if code == "" {
-			continue
-		}
-
-		tag, err := wfutils.Execute(ctx, activities.Directus.GetOrCreateTag, activities.GetOrCreateTagInput{
-			Code: code,
-			Name: code,
-		}).Result(ctx)
-
-		if err != nil {
-			return err
-		}
-
-		// Create relationship between media item and tag
-		_, err = wfutils.Execute(ctx, activities.Directus.CreateMediaItemTag, activities.CreateMediaItemTagInput{
-			MediaItemID: mediaItemResult.ID,
-			TagID:       tag.ID,
-		}).Result(ctx)
-		if err != nil {
-			workflow.GetLogger(ctx).Error("Error creating media item tag relationship",
-				"error", err,
-				"mediaItemID", mediaItemResult.ID,
-				"tagId", tag.ID,
-			)
-		}
+	err = tagMediaItem(ctx, mediaItemResult.ID, tagCodes)
+	if err != nil {
+		return err
 	}
 
 	// Create short
@@ -324,6 +297,40 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 
 	if shortResult == nil {
 		return fmt.Errorf("failed to create short: no data in response")
+	}
+
+	return nil
+}
+
+// tagMediaItem attaches each tag to the media item, creating the tag if it is new. A
+// relationship that fails to save is logged rather than returned: the short is already
+// created, and losing a tag is not worth failing the export over.
+func tagMediaItem(ctx workflow.Context, mediaItemID string, tagCodes []string) error {
+	for _, raw := range tagCodes {
+		code := strings.ToLower(strings.TrimSpace(raw))
+		if code == "" {
+			continue
+		}
+
+		tag, err := wfutils.Execute(ctx, activities.Directus.GetOrCreateTag, activities.GetOrCreateTagInput{
+			Code: code,
+			Name: code,
+		}).Result(ctx)
+		if err != nil {
+			return err
+		}
+
+		_, err = wfutils.Execute(ctx, activities.Directus.CreateMediaItemTag, activities.CreateMediaItemTagInput{
+			MediaItemID: mediaItemID,
+			TagID:       tag.ID,
+		}).Result(ctx)
+		if err != nil {
+			workflow.GetLogger(ctx).Error("Error creating media item tag relationship",
+				"error", err,
+				"mediaItemID", mediaItemID,
+				"tagId", tag.ID,
+			)
+		}
 	}
 
 	return nil
