@@ -1,15 +1,15 @@
 package utils
 
 import (
-	bccmflows "github.com/bcc-code/bcc-media-flows"
+	"github.com/bcc-code/bcc-media-flows/languages"
 	"github.com/samber/lo"
 	"sort"
 )
 
-func LanguageKeysToOrderedLanguages(keys []string) bccmflows.LanguageList {
+func LanguageKeysToOrderedLanguages(keys []string) languages.LanguageList {
 	// Do we want this to fail the job if key doesn't exist? Will panic.
-	languages := bccmflows.LanguageList(lo.Map(keys, func(key string, _ int) bccmflows.Language {
-		return bccmflows.LanguagesByISO[key]
+	languages := languages.LanguageList(lo.Map(keys, func(key string, _ int) languages.Language {
+		return languages.LanguagesByISO[key]
 	}))
 
 	// Sort languages by priority

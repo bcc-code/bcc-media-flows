@@ -1,4 +1,4 @@
-package bccmflows
+package languages
 
 type Language struct {
 	LanguageNumber     int
@@ -32,14 +32,14 @@ var (
 )
 
 func init() {
-	LanguagesByNumber = languages.ByNumber()
-	LanguagesByISO = languages.ByISO6391()
-	LanguagesByMU1 = languages.ByMU1()
-	LanguagesByMU2 = languages.ByMU2()
-	LanguagesByReaper = languages.ByReaperChan()
-	LanguagesByISOTwoLetter = languages.ByISO6392TwoLetter()
-	LanguageBySoftron = languages.BySoftron()
-	LanguageByBMM = languages.ByBMMCode()
+	LanguagesByNumber = all.ByNumber()
+	LanguagesByISO = all.ByISO6391()
+	LanguagesByMU1 = all.ByMU1()
+	LanguagesByMU2 = all.ByMU2()
+	LanguagesByReaper = all.ByReaperChan()
+	LanguagesByISOTwoLetter = all.ByISO6392TwoLetter()
+	LanguageBySoftron = all.BySoftron()
+	LanguageByBMM = all.ByBMMCode()
 }
 
 func (l LanguageList) BySoftron() map[int]Language {
@@ -138,7 +138,7 @@ func (l LanguageList) Less(i, j int) bool {
 	return l[i].LanguageNumber < l[j].LanguageNumber
 }
 
-var languages = LanguageList{
+var all = LanguageList{
 	{
 		LanguageNumber:     0,
 		LanguageName:       "Norsk",

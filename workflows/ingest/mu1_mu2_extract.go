@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/bcc-code/bcc-media-flows/languages"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
@@ -116,7 +116,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 			})
 
 			futures = append(futures, f.Future)
-			filesToImport[bccmflows.LanguagesByMU2[key].ISO6391] = outputFile
+			filesToImport[languages.LanguagesByMU2[key].ISO6391] = outputFile
 		}
 	} else if sampleOffset > 0 {
 		for _, key := range keys {
@@ -130,7 +130,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 			})
 
 			futures = append(futures, f.Future)
-			filesToImport[bccmflows.LanguagesByMU2[key].ISO6391] = outputFile
+			filesToImport[languages.LanguagesByMU2[key].ISO6391] = outputFile
 		}
 	} else {
 		return fmt.Errorf("no offset - this is extremely unlikely to happen, please check the input files - STOPPING WORKFLOW")
@@ -150,7 +150,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 			Destination: destinationFile,
 		})
 		futures = append(futures, f.Future)
-		filesToImport[bccmflows.LanguagesByMU1[i].ISO6391] = destinationFile
+		filesToImport[languages.LanguagesByMU1[i].ISO6391] = destinationFile
 	}
 
 	errors := ""

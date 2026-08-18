@@ -3,10 +3,10 @@ package vb_export
 import (
 	"fmt"
 
-	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/common"
+	"github.com/bcc-code/bcc-media-flows/languages"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
@@ -109,7 +109,7 @@ func postTranscodeAudio(ctx workflow.Context, originalFile paths.Path, destinati
 		//Naming: wav with trackNumber_languageCode at the end of the name e.g. BIST_S01_E07_MAS_NORmov_1_nor
 
 		dubbReaperChannel := 99
-		if l, ok := bccmflows.LanguagesByISO[lang]; ok {
+		if l, ok := languages.LanguagesByISO[lang]; ok {
 			dubbReaperChannel = l.ReaperChannel
 		}
 

@@ -21,7 +21,7 @@ import (
 
 	"os"
 
-	bccmflows "github.com/bcc-code/bcc-media-flows"
+	"github.com/bcc-code/bcc-media-flows/languages"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
@@ -82,7 +82,7 @@ func renderErrorPage(ctx *gin.Context, httpStatus int, err error) {
 type TriggerServer struct {
 	vidispine vidispine.Client
 	wfClient  client.Client
-	languages map[string]bccmflows.Language
+	languages map[string]languages.Language
 	database  *sql.DB
 }
 
@@ -114,7 +114,7 @@ type TriggerGETParams struct {
 	Title                   string
 	AssetExportDestinations []string
 	Filenames               []string
-	Languages               map[string]bccmflows.Language
+	Languages               map[string]languages.Language
 	SelectedLanguages       []string
 	SelectedAudioSource     string
 	AudioSources            []string
@@ -474,7 +474,7 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-	lang := bccmflows.LanguagesByISO
+	lang := languages.LanguagesByISO
 
 	router.LoadHTMLGlob("./templates/*")
 

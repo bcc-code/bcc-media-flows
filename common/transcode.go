@@ -31,9 +31,10 @@ type AudioInput struct {
 }
 
 type DetectSilenceInput struct {
-	Path         paths.Path
+	Path paths.Path
+
+	// Not read yet: AudioIsSilent scans the whole file in 30 second windows.
 	SampleLength time.Duration
-	offset       time.Duration
 }
 
 type WavAudioInput struct {

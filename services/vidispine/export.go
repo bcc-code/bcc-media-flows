@@ -9,8 +9,9 @@ import (
 	"strings"
 	"time"
 
-	bccmflows "github.com/bcc-code/bcc-media-flows"
+	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/environment"
+	"github.com/bcc-code/bcc-media-flows/languages"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	mapset "github.com/deckarep/golang-set/v2"
@@ -35,13 +36,8 @@ type Clip struct {
 
 type AudioFile struct {
 	VXID    string
-	Streams []AudioStream
+	Streams []common.AudioStream
 	File    string
-}
-
-type AudioStream struct {
-	StreamID  uint
-	ChannelID uint
 }
 
 type ExportData struct {
@@ -94,7 +90,7 @@ func GetRelatedAudioPaths(client Client, vxID string) (map[string]string, error)
 	}
 
 	var result = map[string]string{}
-	for _, lang := range bccmflows.LanguagesByISO {
+	for _, lang := range languages.LanguagesByISO {
 		relatedField := lang.RelatedMBFieldID
 		if relatedField == "" {
 			continue
@@ -148,7 +144,7 @@ func enrichClipWithRelatedAudios(client Client, clip *Clip, oLanguagesToExport [
 		}
 
 		// Figure out which field holds the related id
-		relatedField := bccmflows.LanguagesByISO[lang].RelatedMBFieldID
+		relatedField := languages.LanguagesByISO[lang].RelatedMBFieldID
 		if relatedField == "" {
 			return errors.New("No related field for language " + lang + ". This indicates missing support in Vidispine")
 		}
@@ -165,8 +161,8 @@ func enrichClipWithRelatedAudios(client Client, clip *Clip, oLanguagesToExport [
 			// If nor (floor language) is missing we fall back to silece
 			if lang == "nor" {
 				clip.AudioFiles[lang] = &AudioFile{
-					Streams: []AudioStream{
-						AudioStream{
+					Streams: []common.AudioStream{
+						common.AudioStream{
 							StreamID:  0,
 							ChannelID: 0,
 						},
@@ -198,11 +194,11 @@ func enrichClipWithRelatedAudios(client Client, clip *Clip, oLanguagesToExport [
 			continue
 		}
 
-		var streams []AudioStream
+		var streams []common.AudioStream
 
 		if len(relatedAudioShape.AudioComponent) > 0 {
 			for i := 0; relatedAudioShape.AudioComponent[0].ChannelCount > i; i++ {
-				streams = append(streams, AudioStream{
+				streams = append(streams, common.AudioStream{
 					ChannelID: uint(i),
 					StreamID:  uint(relatedAudioShape.AudioComponent[0].EssenceStreamID),
 				})
@@ -245,7 +241,7 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 			"Found %d audio components on item %s. Using first 2 tracks as Norwegian L+R for all languages.",
 			len(shape.AudioComponent), clip.VXID))
 
-		streams := []AudioStream{
+		streams := []common.AudioStream{
 			{StreamID: uint(shape.AudioComponent[0].EssenceStreamID), ChannelID: 0},
 			{StreamID: uint(shape.AudioComponent[1].EssenceStreamID), ChannelID: 0},
 		}
@@ -262,7 +258,7 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 
 	if len(shape.AudioComponent) == 0 {
 		// We have no audio, so we fall back to silence
-		streams := []AudioStream{
+		streams := []common.AudioStream{
 			{
 				ChannelID: 0,
 				StreamID:  0,
@@ -282,10 +278,10 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 		// This is a softron file
 
 		for _, lang := range languagesToExport {
-			if langInfo, ok := bccmflows.LanguagesByISO[lang]; ok {
+			if langInfo, ok := languages.LanguagesByISO[lang]; ok {
 				clip.AudioFiles[lang] = &AudioFile{
 					File: shape.GetPath(),
-					Streams: []AudioStream{
+					Streams: []common.AudioStream{
 						{
 							StreamID:  2,
 							ChannelID: uint(langInfo.SoftronStartCh),
@@ -307,9 +303,9 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 	if len(shape.AudioComponent) == 1 {
 		// We have stereo or mono audio, so we copy it to all languages
 		for _, lang := range languagesToExport {
-			var streams []AudioStream
+			var streams []common.AudioStream
 			for i := 0; shape.AudioComponent[0].ChannelCount > i; i++ {
-				streams = append(streams, AudioStream{
+				streams = append(streams, common.AudioStream{
 					StreamID:  uint(shape.AudioComponent[0].EssenceStreamID),
 					ChannelID: uint(i),
 				})
@@ -326,12 +322,12 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 	}
 
 	if len(shape.AudioComponent) == 2 {
-		var streams []AudioStream
+		var streams []common.AudioStream
 		for _, c := range shape.AudioComponent {
 			if c.ChannelCount != 1 {
 				return nil, fmt.Errorf("found %d channels in audio component, expected 1", c.ChannelCount)
 			}
-			streams = append(streams, AudioStream{
+			streams = append(streams, common.AudioStream{
 				StreamID:  uint(c.EssenceStreamID),
 				ChannelID: 0,
 			})
@@ -356,13 +352,13 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 				clip.VXID, len(languagesToExport)))
 		}
 
-		var streams []AudioStream
+		var streams []common.AudioStream
 		for _, c := range shape.AudioComponent[:2] {
 			if c.ChannelCount != 1 {
 				return nil, fmt.Errorf("found %d channels in audio component, expected 1", c.ChannelCount)
 			}
 
-			streams = append(streams, AudioStream{
+			streams = append(streams, common.AudioStream{
 				StreamID:  uint(c.EssenceStreamID),
 				ChannelID: 0,
 			})
@@ -381,10 +377,10 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 	// We have an actual 16 channel audio file, so we need to figure out which channels to use
 	// and assign them to the correct language
 	for _, lang := range languagesToExport {
-		if l, ok := bccmflows.LanguagesByISO[lang]; ok {
-			var streams []AudioStream
+		if l, ok := languages.LanguagesByISO[lang]; ok {
+			var streams []common.AudioStream
 			for i := 0; i < l.MU1ChannelCount; i++ {
-				streams = append(streams, AudioStream{
+				streams = append(streams, common.AudioStream{
 					StreamID:  uint(l.MU1ChannelStart + i),
 					ChannelID: 0,
 				})
@@ -396,7 +392,7 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 				Streams: streams,
 			}
 		} else if lang != "" {
-			return nil, errors.New("No language " + lang + " found in bccmflows.LanguagesByISO")
+			return nil, errors.New("No language " + lang + " found in languages.LanguagesByISO")
 		}
 	}
 
@@ -565,7 +561,7 @@ func addSubtitlesAndTranscriptionsToClips(client Client, clips []*Clip, allowAI 
 			return err
 		}
 
-		for langCode := range bccmflows.LanguagesByISO {
+		for langCode := range languages.LanguagesByISO {
 			// There are also videos with .txt subs... we should support those at some point
 			shape := clipShapes.GetShape(fmt.Sprintf("sub_%s_srt", langCode))
 			if shape == nil || shape.GetPath() == "" {

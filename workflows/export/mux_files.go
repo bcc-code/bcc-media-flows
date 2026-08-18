@@ -7,10 +7,10 @@ import (
 	"github.com/bcc-code/bcc-media-flows/paths"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 
-	bccmflows "github.com/bcc-code/bcc-media-flows"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/common/smil"
+	"github.com/bcc-code/bcc-media-flows/languages"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	"go.temporal.io/sdk/workflow"
 )
@@ -46,11 +46,11 @@ func createTranslatedFile(ctx workflow.Context, language string, videoPath, outp
 
 type ResolutionWithLanguages struct {
 	Resolution resolutionString
-	Languages  []bccmflows.Language
+	Languages  []languages.Language
 }
 
 func assignLanguagesToResolutions(audioKeys []string, resolutions []utils.Resolution) []ResolutionWithLanguages {
-	languages := utils.LanguageKeysToOrderedLanguages(audioKeys)
+	langs := utils.LanguageKeysToOrderedLanguages(audioKeys)
 
 	sortedResolutions := sortResolutionsForVODStreaming(resolutions)
 
@@ -58,14 +58,14 @@ func assignLanguagesToResolutions(audioKeys []string, resolutions []utils.Resolu
 	for i, r := range sortedResolutions {
 		qualities[i] = ResolutionWithLanguages{
 			Resolution: resolutionToString(r),
-			Languages:  []bccmflows.Language{},
+			Languages:  []languages.Language{},
 		}
 
 		// 9 is the limit of audio streams AWS will accept on one file
 		// https://eu-north-1.console.aws.amazon.com/servicequotas/home/services/mediapackage/quotas/L-81A8E99B
-		for len(languages) > 0 && len(qualities[i].Languages) < 8 {
-			qualities[i].Languages = append(qualities[i].Languages, languages[0])
-			languages = languages[1:]
+		for len(langs) > 0 && len(qualities[i].Languages) < 8 {
+			qualities[i].Languages = append(qualities[i].Languages, langs[0])
+			langs = langs[1:]
 		}
 	}
 
@@ -90,9 +90,9 @@ func sortResolutionsForVODStreaming(resolutions []utils.Resolution) []utils.Reso
 	return sortedResolutions
 }
 
-func createStreamFile(ctx workflow.Context, languages []bccmflows.Language, videoFile, outputPath paths.Path, audioFiles map[string]paths.Path) workflow.Future {
+func createStreamFile(ctx workflow.Context, langs []languages.Language, videoFile, outputPath paths.Path, audioFiles map[string]paths.Path) workflow.Future {
 	audioFilePaths := map[string]paths.Path{}
-	for _, lang := range languages {
+	for _, lang := range langs {
 		audioFilePaths[lang.ISO6391] = audioFiles[lang.ISO6391]
 	}
 

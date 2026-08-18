@@ -7,7 +7,6 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
-	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	"github.com/bcc-code/bcc-media-flows/utils/testutils"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,8 +16,8 @@ func Test_mergeItemsToStereoStream_simple(t *testing.T) {
 
 	str, err := mergeItemToStereoStream(0, "a0", common.MergeInputItem{
 		Path: paths.MustParse("./testdata/test_tone_5s.wav"),
-		Streams: []vidispine.AudioStream{
-			vidispine.AudioStream{
+		Streams: []common.AudioStream{
+			common.AudioStream{
 				StreamID:  0,
 				ChannelID: 0,
 			},
@@ -36,12 +35,12 @@ func Test_mergeItemsToStereoStream_dualMono(t *testing.T) {
 
 	str, err := mergeItemToStereoStream(0, "a0", common.MergeInputItem{
 		Path: file,
-		Streams: []vidispine.AudioStream{
-			vidispine.AudioStream{
+		Streams: []common.AudioStream{
+			common.AudioStream{
 				StreamID:  0,
 				ChannelID: 0,
 			},
-			vidispine.AudioStream{
+			common.AudioStream{
 				StreamID:  1,
 				ChannelID: 0,
 			},
@@ -57,20 +56,20 @@ func Test_mergeItemsToStereoStream_stereo(t *testing.T) {
 
 	str, err := mergeItemToStereoStream(0, "a0", common.MergeInputItem{
 		Path: file,
-		Streams: []vidispine.AudioStream{
-			vidispine.AudioStream{
+		Streams: []common.AudioStream{
+			common.AudioStream{
 				StreamID:  0,
 				ChannelID: 0,
 			},
-			vidispine.AudioStream{
+			common.AudioStream{
 				StreamID:  0,
 				ChannelID: 1,
 			},
-			vidispine.AudioStream{
+			common.AudioStream{
 				StreamID:  1,
 				ChannelID: 0,
 			},
-			vidispine.AudioStream{
+			common.AudioStream{
 				StreamID:  1,
 				ChannelID: 1,
 			},
@@ -112,7 +111,7 @@ func Test_mergeItemsToStereoStream_videoFirstStereoAudio(t *testing.T) {
 	// whose 0-based indexing differs from the container-level numbering).
 	str, err := mergeItemToStereoStream(0, "a0", common.MergeInputItem{
 		Path: outFile,
-		Streams: []vidispine.AudioStream{
+		Streams: []common.AudioStream{
 			{StreamID: 1, ChannelID: 0},
 			{StreamID: 1, ChannelID: 1},
 		},
@@ -131,12 +130,12 @@ func Test_mergeItemsToStereoStream_64Chan(t *testing.T) {
 
 	str, err := mergeItemToStereoStream(0, "a0", common.MergeInputItem{
 		Path: file,
-		Streams: []vidispine.AudioStream{
-			vidispine.AudioStream{
+		Streams: []common.AudioStream{
+			common.AudioStream{
 				StreamID:  0,
 				ChannelID: 5,
 			},
-			vidispine.AudioStream{
+			common.AudioStream{
 				StreamID:  0,
 				ChannelID: 6,
 			},

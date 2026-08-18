@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	bccmflows "github.com/bcc-code/bcc-media-flows"
+	"github.com/bcc-code/bcc-media-flows/languages"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 
 	pcommon "github.com/bcc-code/bcc-media-platform/backend/common"
@@ -242,7 +242,7 @@ func makeBMMJSON(
 
 		// The text languages are mapped with two letter codes so we need to convert to code
 		// in order to be uniform with the audio languages
-		if val, ok := bccmflows.LanguagesByISOTwoLetter[lang]; ok {
+		if val, ok := languages.LanguagesByISOTwoLetter[lang]; ok {
 			bmmTextLang = val.ISO6391
 		}
 

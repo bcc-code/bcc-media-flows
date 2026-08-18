@@ -1,4 +1,4 @@
-package bccmflows
+package languages
 
 import "github.com/ansel1/merry/v2"
 
