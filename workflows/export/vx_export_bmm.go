@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/languages"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 
 	pcommon "github.com/bcc-code/bcc-media-platform/backend/common"
@@ -71,8 +72,6 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 
 	wfutils.SendTelegramText(ctx, telegram.ChatBMM, fmt.Sprintf("🟦 Exporting to BMM - `%s`", params.ExportData.Title))
 
-	normalizedFutures := map[string]workflow.Future{}
-
 	langs, err := wfutils.GetMapKeysSafely(ctx, params.MergeResult.AudioFiles)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get audio file keys: %w", err)
@@ -84,89 +83,19 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, fmt.Errorf("failed to create output folder: %w", err)
 	}
 
-	// Normalize audio
-	for _, lang := range langs {
-		audio := params.MergeResult.AudioFiles[lang]
-		future := wfutils.Execute(ctx, activities.Audio.NormalizeAudioActivity, activities.NormalizeAudioParams{
-			FilePath:              audio,
-			TargetLUFS:            targetLufs,
-			PerformOutputAnalysis: true,
-			OutputPath:            params.TempDir,
-		})
-		normalizedFutures[lang] = future.Future
+	normalizedResults, err := normalizeAudioPerLanguage(ctx, params, langs)
+	if err != nil {
+		return nil, err
 	}
 
-	normalizedResults := map[string]activities.NormalizeAudioResult{}
-	for _, lang := range langs {
-		future := normalizedFutures[lang]
-		normalizedRes := activities.NormalizeAudioResult{}
-		err := future.Get(ctx, &normalizedRes)
-		if err != nil {
-			return nil, fmt.Errorf("failed to normalize audio for language %s: %w", lang, err)
-		}
-
-		logger.Debug("Normalized audio for language", lang, normalizedRes)
-		normalizedResults[lang] = normalizedRes
-		params.MergeResult.AudioFiles[lang] = normalizedRes.FilePath
+	audioResults, err := encodeAudioPerLanguage(ctx, params, langs, normalizedResults)
+	if err != nil {
+		return nil, err
 	}
 
-	// Encode to AAC and MP3
-	encodingFutures := map[string][]workflow.Future{}
-	for _, lang := range langs {
-		audio := normalizedResults[lang]
-		var encodings []workflow.Future
-		for _, bitrate := range aacBitrates {
-			f := wfutils.Execute(ctx, activities.Audio.TranscodeToAudioAac, common.AudioInput{
-				Path:            audio.FilePath,
-				DestinationPath: params.OutputDir,
-				Bitrate:         bitrate,
-			})
-			encodings = append(encodings, f.Future)
-		}
-
-		for _, bitrate := range mp3Bitrates {
-			f := wfutils.Execute(ctx, activities.Audio.TranscodeToAudioMP3, common.AudioInput{
-				Path:            audio.FilePath,
-				DestinationPath: params.OutputDir,
-				Bitrate:         bitrate,
-				ForceCBR:        true,
-			})
-			encodings = append(encodings, f.Future)
-		}
-
-		encodingFutures[lang] = encodings
-	}
-
-	audioResults := map[string][]common.AudioResult{}
-	for _, lang := range langs {
-		futures := encodingFutures[lang]
-		var encodings []common.AudioResult
-		for _, future := range futures {
-			var res common.AudioResult
-			err := future.Get(ctx, &res)
-			if err != nil {
-				return nil, fmt.Errorf("failed to transcode audio for language %s: %w", lang, err)
-			}
-			encodings = append(encodings, res)
-		}
-
-		audioResults[lang] = encodings
-	}
-
-	{
-		// Move the transcription files to the output folder
-		keys, err := wfutils.GetMapKeysSafely(ctx, params.MergeResult.JSONTranscript)
-		if err != nil {
-			return nil, err
-		}
-		for _, lang := range keys {
-			p := params.MergeResult.JSONTranscript[lang]
-
-			err = wfutils.MoveFile(ctx, p, params.OutputDir.Append(p.Base()), rclone.PriorityNormal)
-			if err != nil {
-				return nil, err
-			}
-		}
+	err = moveTranscriptsToOutput(ctx, params)
+	if err != nil {
+		return nil, err
 	}
 
 	var chapters []asset.TimedMetadata
@@ -214,6 +143,106 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 	}, nil
 }
 
+// normalizeAudioPerLanguage schedules every language before waiting on any of them, so
+// they normalize in parallel. It rewrites params.MergeResult.AudioFiles to the
+// normalized copies, which the map being shared makes visible to the caller.
+func normalizeAudioPerLanguage(ctx workflow.Context, params VXExportChildWorkflowParams, langs []string) (map[string]activities.NormalizeAudioResult, error) {
+	logger := workflow.GetLogger(ctx)
+
+	futures := map[string]workflow.Future{}
+	for _, lang := range langs {
+		futures[lang] = wfutils.Execute(ctx, activities.Audio.NormalizeAudioActivity, activities.NormalizeAudioParams{
+			FilePath:              params.MergeResult.AudioFiles[lang],
+			TargetLUFS:            targetLufs,
+			PerformOutputAnalysis: true,
+			OutputPath:            params.TempDir,
+		}).Future
+	}
+
+	results := map[string]activities.NormalizeAudioResult{}
+	for _, lang := range langs {
+		result := activities.NormalizeAudioResult{}
+		err := futures[lang].Get(ctx, &result)
+		if err != nil {
+			return nil, fmt.Errorf("failed to normalize audio for language %s: %w", lang, err)
+		}
+
+		logger.Debug("Normalized audio for language", lang, result)
+		results[lang] = result
+		params.MergeResult.AudioFiles[lang] = result.FilePath
+	}
+
+	return results, nil
+}
+
+func encodeAudioPerLanguage(
+	ctx workflow.Context,
+	params VXExportChildWorkflowParams,
+	langs []string,
+	normalized map[string]activities.NormalizeAudioResult,
+) (map[string][]common.AudioResult, error) {
+	futures := map[string][]workflow.Future{}
+	for _, lang := range langs {
+		audio := normalized[lang]
+
+		var encodings []workflow.Future
+		for _, bitrate := range aacBitrates {
+			encodings = append(encodings, wfutils.Execute(ctx, activities.Audio.TranscodeToAudioAac, common.AudioInput{
+				Path:            audio.FilePath,
+				DestinationPath: params.OutputDir,
+				Bitrate:         bitrate,
+			}).Future)
+		}
+
+		for _, bitrate := range mp3Bitrates {
+			encodings = append(encodings, wfutils.Execute(ctx, activities.Audio.TranscodeToAudioMP3, common.AudioInput{
+				Path:            audio.FilePath,
+				DestinationPath: params.OutputDir,
+				Bitrate:         bitrate,
+				ForceCBR:        true,
+			}).Future)
+		}
+
+		futures[lang] = encodings
+	}
+
+	results := map[string][]common.AudioResult{}
+	for _, lang := range langs {
+		var encodings []common.AudioResult
+		for _, future := range futures[lang] {
+			var res common.AudioResult
+			err := future.Get(ctx, &res)
+			if err != nil {
+				return nil, fmt.Errorf("failed to transcode audio for language %s: %w", lang, err)
+			}
+
+			encodings = append(encodings, res)
+		}
+
+		results[lang] = encodings
+	}
+
+	return results, nil
+}
+
+func moveTranscriptsToOutput(ctx workflow.Context, params VXExportChildWorkflowParams) error {
+	langs, err := wfutils.GetMapKeysSafely(ctx, params.MergeResult.JSONTranscript)
+	if err != nil {
+		return err
+	}
+
+	for _, lang := range langs {
+		transcript := params.MergeResult.JSONTranscript[lang]
+
+		err = wfutils.MoveFile(ctx, transcript, params.OutputDir.Append(transcript.Base()), rclone.PriorityNormal)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func makeBMMJSON(
 	ctx workflow.Context,
 	params VXExportChildWorkflowParams,
@@ -225,6 +254,7 @@ func makeBMMJSON(
 
 	// Prepare data for the JSON file
 	jsonData := prepareBMMData(ctx, audioResults, normalizedResults)
+	var err error
 	jsonData.Length = int(params.MergeResult.Duration)
 	jsonData.MediabankenID = fmt.Sprintf("%s-%s", params.ParentParams.VXID, HashTitle(params.ExportData.Title))
 	jsonData.ImportDate = params.ExportData.ImportDate
@@ -236,55 +266,18 @@ func makeBMMJSON(
 	}
 	jsonData.TrackID = params.ExportData.BmmTrackID
 
-	langs, _ := wfutils.GetMapKeysSafely(ctx, params.MergeResult.JSONTranscript)
-	for _, lang := range langs {
-		bmmTextLang := lang
-
-		// The text languages are mapped with two letter codes so we need to convert to code
-		// in order to be uniform with the audio languages
-		if val, ok := languages.LanguagesByISOTwoLetter[lang]; ok {
-			bmmTextLang = val.ISO6391
-		}
-
-		// skip broken transcriptions
-		if _, skip := brokenTranscription[bmmTextLang]; skip {
-			continue
-		}
-
-		transcript := params.MergeResult.JSONTranscript[lang]
-		jsonData.TranscriptionFiles[bmmTextLang] = transcript.Base()
+	jsonData.TranscriptionFiles, err = bmmTranscriptionFiles(ctx, params.MergeResult.JSONTranscript)
+	if err != nil {
+		return nil, err
 	}
 
 	if len(chapters) > 0 {
-		chapter := chapters[0]
-		for _, p := range chapter.Persons {
-			if !lo.Contains(jsonData.PersonsAppearing, p) {
-				jsonData.PersonsAppearing = append(jsonData.PersonsAppearing, p)
-			}
-		}
-
-		d := workflow.Now(ctx).Truncate(time.Hour * 6)
+		recordedBase := workflow.Now(ctx).Truncate(time.Hour * 6)
 		if params.ExportData.ImportDate != nil {
-			d = *params.ExportData.ImportDate
-		}
-		chaperRecordedAt := d.Add(time.Duration(chapter.Timestamp * float64(time.Second)))
-		jsonData.RecordedAt = &chaperRecordedAt
-
-		jsonData.StartsAt = chapter.Timestamp
-		jsonData.Type = chapter.ContentType
-
-		if chapter.SongNumber != "" && chapter.SongCollection != "" {
-			jsonData.SongCollection = &chapter.SongCollection
-			jsonData.SongNumber = &chapter.SongNumber
+			recordedBase = *params.ExportData.ImportDate
 		}
 
-		if chapter.ContentType == pcommon.ContentTypeSong.Value && chapter.SongCollection == "" {
-			jsonData.Title = chapter.Title
-		}
-
-		if len(jsonData.PersonsAppearing) == 0 && jsonData.SongNumber == nil && jsonData.Title == "" {
-			jsonData.Title = chapter.Title
-		}
+		applyChapterToBMMData(&jsonData, chapters[0], recordedBase)
 	}
 
 	if len(jsonData.PersonsAppearing) == 0 && jsonData.SongNumber == nil && jsonData.Title == "" {
@@ -293,6 +286,58 @@ func makeBMMJSON(
 	}
 
 	return wfutils.MarshalJson(ctx, jsonData)
+}
+
+// bmmTranscriptionFiles keys the transcripts by the same language codes as the audio,
+// which BMM needs, and drops the ones known to be broken.
+func bmmTranscriptionFiles(ctx workflow.Context, transcripts map[string]paths.Path) (map[string]string, error) {
+	langs, err := wfutils.GetMapKeysSafely(ctx, transcripts)
+	if err != nil {
+		return nil, err
+	}
+
+	files := map[string]string{}
+	for _, lang := range langs {
+		bmmLang := lang
+		if val, ok := languages.LanguagesByISOTwoLetter[lang]; ok {
+			bmmLang = val.ISO6391
+		}
+
+		if _, skip := brokenTranscription[bmmLang]; skip {
+			continue
+		}
+
+		files[bmmLang] = transcripts[lang].Base()
+	}
+
+	return files, nil
+}
+
+func applyChapterToBMMData(data *BMMData, chapter asset.TimedMetadata, recordedBase time.Time) {
+	for _, p := range chapter.Persons {
+		if !lo.Contains(data.PersonsAppearing, p) {
+			data.PersonsAppearing = append(data.PersonsAppearing, p)
+		}
+	}
+
+	recordedAt := recordedBase.Add(time.Duration(chapter.Timestamp * float64(time.Second)))
+	data.RecordedAt = &recordedAt
+
+	data.StartsAt = chapter.Timestamp
+	data.Type = chapter.ContentType
+
+	if chapter.SongNumber != "" && chapter.SongCollection != "" {
+		data.SongCollection = &chapter.SongCollection
+		data.SongNumber = &chapter.SongNumber
+	}
+
+	if chapter.ContentType == pcommon.ContentTypeSong.Value && chapter.SongCollection == "" {
+		data.Title = chapter.Title
+	}
+
+	if len(data.PersonsAppearing) == 0 && data.SongNumber == nil && data.Title == "" {
+		data.Title = chapter.Title
+	}
 }
 
 type BMMData struct {
