@@ -468,6 +468,7 @@ func (s *TriggerServer) moveFilesPOST(ctx *gin.Context) {
 func main() {
 	bootstrap.LoadEnv()
 	environment.Load()
+	environment.WarnMissing(environment.RequiredByTriggerUI)
 
 	router := gin.Default()
 

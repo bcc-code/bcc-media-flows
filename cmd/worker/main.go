@@ -67,6 +67,7 @@ var Version = "development"
 func main() {
 	bootstrap.LoadEnv()
 	environment.Load()
+	environment.WarnMissing(environment.RequiredByWorker)
 
 	err := update(Version)
 	if err != nil {
