@@ -41,10 +41,6 @@ func getClient() (client.Client, error) {
 	return temporalClient, nil
 }
 
-func getQueue() string {
-	return environment.GetQueue()
-}
-
 func triggerHandler(ctx *gin.Context) {
 	job := ctx.Param("job")
 
@@ -56,7 +52,7 @@ func triggerHandler(ctx *gin.Context) {
 		return
 	}
 
-	queue := getQueue()
+	queue := environment.GetQueue()
 	vxID := getParamFromCtx(ctx, "vxID")
 	workflowOptions := wfutils.NewWorkflowOptions(queue, vxID, getTriggeredBy(ctx))
 

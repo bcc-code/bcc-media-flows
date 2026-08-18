@@ -63,7 +63,7 @@ func (s *TriggerServer) vbExportGET(ctx *gin.Context) {
 func (s *TriggerServer) vbExportPOST(ctx *gin.Context) {
 	vxID := ctx.Query("id")
 
-	workflowOptions := wfutils.NewWorkflowOptions(getQueue(), vxID, getTriggeredBy(ctx))
+	workflowOptions := wfutils.NewWorkflowOptions(environment.GetQueue(), vxID, getTriggeredBy(ctx))
 
 	params := vb_export.VBExportParams{
 		VXID:             vxID,

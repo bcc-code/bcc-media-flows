@@ -1203,3 +1203,15 @@ most if the proxy were ever misconfigured, bypassed, or reached from an already-
   and were kept off `httpx` on purpose, but `rclone/requests.go:31` uses
   `http.DefaultClient`, which has no timeout at all — and it is the client every file
   copy in the tree goes through. `bmm/raven.go`'s `queryRaven` remains the shape to copy.
+
+- **The three mount-prefix getters repeat the shape the queue getters just lost.**
+  `environment.GetIsilonPrefix`, `GetTempMountPrefix` and `GetFileCatalystMountPrefix` are
+  each `if configured != "" { return configured }; return "/mnt/<name>"`, with the default
+  written in Go rather than next to the field it defaults. Now that `queueOrDebug` is one
+  helper, these are the remaining copies of that pattern in the package — and a default
+  belongs in `Config`, which is where `af6c82d` moved the vizualizer URL's.
+
+- **`cmd/httpin`'s `getClient()` cannot fail but returns an error anyway.** It is
+  `return temporalClient, nil` over a package variable, so every caller has an error branch
+  that no input can reach. `bootstrap.TemporalClient()` is the one that can fail, and httpin
+  calls it once at boot.

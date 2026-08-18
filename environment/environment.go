@@ -11,33 +11,23 @@ func GetQueue() string {
 	return QueueWorker
 }
 
-func GetWorkerQueue() string {
+// queueOrDebug collapses a specialised queue onto the debug one. A debug worker polls
+// only QueueDebug, so an activity routed to worker, transcode, audio or live would sit
+// unscheduled unless it lands there too.
+func queueOrDebug(queue string) string {
 	if Get().Queue == QueueDebug {
 		return QueueDebug
 	}
-	return QueueWorker
+	return queue
 }
 
-func GetTranscodeQueue() string {
-	if Get().Queue == QueueDebug {
-		return QueueDebug
-	}
-	return QueueTranscode
-}
+func GetWorkerQueue() string { return queueOrDebug(QueueWorker) }
 
-func GetAudioQueue() string {
-	if Get().Queue == QueueDebug {
-		return QueueDebug
-	}
-	return QueueAudio
-}
+func GetTranscodeQueue() string { return queueOrDebug(QueueTranscode) }
 
-func GetLiveIngestQueue() string {
-	if Get().Queue == QueueDebug {
-		return QueueDebug
-	}
-	return QueueLiveIngest
-}
+func GetAudioQueue() string { return queueOrDebug(QueueAudio) }
+
+func GetLiveIngestQueue() string { return queueOrDebug(QueueLiveIngest) }
 
 func GetIsilonPrefix() string {
 	// For local testing

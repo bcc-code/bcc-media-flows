@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/bcc-code/bcc-media-flows/environment"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/bcc-code/bcc-media-flows/workflows/export"
 	"github.com/gin-gonic/gin"
@@ -36,7 +37,7 @@ func (s *TriggerServer) bulkShortsExportPOST(ctx *gin.Context) {
 
 	input := export.BulkExportShortsInput{CollectionVXID: collectionVXID}
 
-	workflowOptions := wfutils.NewWorkflowOptions(getQueue(), collectionVXID, getTriggeredBy(ctx))
+	workflowOptions := wfutils.NewWorkflowOptions(environment.GetQueue(), collectionVXID, getTriggeredBy(ctx))
 	workflowOptions.ID = collectionVXID + "-bulk-shorts-" + uuid.NewString()
 
 	res, err := s.wfClient.ExecuteWorkflow(ctx, workflowOptions, export.BulkExportShorts, input)
