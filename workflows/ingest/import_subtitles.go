@@ -2,6 +2,7 @@ package ingestworkflows
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -166,16 +167,16 @@ func ImportSubtitles(ctx workflow.Context, input ImportSubtitlesInput) error {
 	}
 
 	if len(errs) > 0 {
-		return fmt.Errorf("failed to import subtitle shapes: %v", errs)
+		return fmt.Errorf("failed to import subtitle shapes: %w", errors.Join(errs...))
 	}
 
 	err = wfutils.WaitForVidispineJob(ctx, importSRTResult.JobID)
 	if err != nil {
-		return fmt.Errorf("importing of SRT file into Mediabanken failed: %v", err)
+		return fmt.Errorf("importing of SRT file into Mediabanken failed: %w", err)
 	}
 	err = wfutils.WaitForVidispineJob(ctx, importJSONResult.JobID)
 	if err != nil {
-		return fmt.Errorf("importing of JSON file into Mediabanken failed: %v", err)
+		return fmt.Errorf("importing of JSON file into Mediabanken failed: %w", err)
 	}
 
 	// Import SRT as sidecar independently (non-blocking, fire-and-forget)
@@ -186,7 +187,7 @@ func ImportSubtitles(ctx workflow.Context, input ImportSubtitlesInput) error {
 	}).Wait(ctx)
 
 	if err != nil {
-		return fmt.Errorf("importing of SRT file as sidecar failed: %v", err)
+		return fmt.Errorf("importing of SRT file as sidecar failed: %w", err)
 	}
 
 	logger.Info("Subtitle SRT and JSON imported as shapes; SRT as sidecar (async)", "vxid", input.VXID)

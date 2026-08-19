@@ -49,8 +49,8 @@ func TestClient_EmptyErrorBodyIsAnError(t *testing.T) {
 	assert.Contains(t, err.Error(), "404")
 }
 
-// Hole 2: a JSON error envelope with no "detail" key produced merry.New(""), a non-nil
-// error carrying no message at all, which then surfaced in Temporal as a blank failure.
+// Hole 2: a JSON error envelope with no "detail" key must not yield a non-nil error
+// carrying no message at all, which surfaces in Temporal as a blank failure.
 func TestClient_JSONErrorWithoutDetailStillDescribesItself(t *testing.T) {
 	client := cantemoServer(t, http.StatusInternalServerError, "application/json", `{"other":"field"}`)
 

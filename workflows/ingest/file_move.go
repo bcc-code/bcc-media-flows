@@ -1,7 +1,7 @@
 package ingestworkflows
 
 import (
-	"fmt"
+	"errors"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -28,24 +28,24 @@ func MoveUploadedFiles(ctx workflow.Context, params MoveUploadedFilesParams) err
 		return err
 	}
 
-	var errors []error
+	var errs []error
 	for _, f := range originalFiles {
 		filename, err := getOrderFormFilename(params.OrderForm, f, params.Metadata.JobProperty)
 		if err != nil {
-			errors = append(errors, err)
+			errs = append(errs, err)
 			continue
 		}
 		newPath := params.OutputDir.Append(filename + f.Ext())
 
 		err = wfutils.MoveFile(ctx, f, newPath, rclone.PriorityNormal)
 		if err != nil {
-			errors = append(errors, err)
+			errs = append(errs, err)
 			continue
 		}
 	}
 
-	if len(errors) > 0 {
-		return fmt.Errorf("errors: %v", errors)
+	if len(errs) > 0 {
+		return errors.Join(errs...)
 	}
 	return nil
 }

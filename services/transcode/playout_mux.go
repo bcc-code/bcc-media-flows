@@ -3,7 +3,6 @@ package transcode
 import (
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/paths"
-	"log"
 	"path/filepath"
 	"strings"
 
@@ -238,8 +237,7 @@ func PlayoutMux(input common.PlayoutMuxInput, progressCallback ffmpeg.ProgressCa
 	// goes, so its inputs cannot be lifted out of the argument list.
 	err = ffmpeg.RunArgs(params, outputFilePath, info, progressCallback)
 	if err != nil {
-		log.Default().Println("mux failed", err)
-		return nil, fmt.Errorf("mux failed, %s", strings.Join(params, " "))
+		return nil, fmt.Errorf("mux failed (%s): %w", strings.Join(params, " "), err)
 	}
 
 	outputPath, err := paths.Parse(outputFilePath)

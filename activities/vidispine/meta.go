@@ -38,7 +38,7 @@ func (a Activities) GetFileFromVXActivity(ctx context.Context, params GetFileFro
 	for _, tag := range params.Tags {
 		shape := shapes.GetShape(tag)
 		if shape == nil {
-			log.Debug("No shape found for tag: %s", tag)
+			log.Debug("No shape found for tag", "tag", tag)
 			continue
 		}
 

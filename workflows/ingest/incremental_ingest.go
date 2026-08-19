@@ -1,6 +1,7 @@
 package ingestworkflows
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -172,11 +173,11 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 		AssetID: videoVXID,
 	}).Wait(ctx)
 
-	var errors []error
+	var errs []error
 	for _, f := range importAudioFuture {
 		err = f.Get(ctx, nil)
 		if err != nil {
-			errors = append(errors, err)
+			errs = append(errs, err)
 		}
 	}
 
@@ -187,11 +188,11 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	err = transcribeFuture.Get(ctx, nil)
 	if err != nil {
-		errors = append(errors, err)
+		errs = append(errs, err)
 	}
 
-	if len(errors) > 0 {
-		return fmt.Errorf("failed to import one or more audio files: %v", errors)
+	if len(errs) > 0 {
+		return fmt.Errorf("failed to import one or more audio files: %w", errors.Join(errs...))
 	}
 
 	_ = fixDurationFuture.Get(ctx, nil)
@@ -239,7 +240,7 @@ func createGrowingPlaceholder(ctx workflow.Context, in paths.Path) (string, erro
 
 	err = wfutils.SetVidispineMeta(ctx, assetResult.AssetID, vscommon.FieldIngested.Value, workflow.Now(ctx).Format(time.RFC3339))
 	if err != nil {
-		logger.Error("%w", err)
+		logger.Error("Failed to set the ingested timestamp", "error", err)
 	}
 
 	return assetResult.AssetID, nil
@@ -269,12 +270,12 @@ func startGrowingPreview(ctx workflow.Context, rawPath paths.Path, videoVXID str
 
 	previewPath, err := wfutils.GetWorkflowAuxOutputFolder(ctx)
 	if err != nil {
-		logger.Error("%w", err)
+		logger.Error("Failed to resolve the preview output folder", "error", err)
 	}
 
 	previewTempPath, err := wfutils.GetWorkflowTempFolder(ctx)
 	if err != nil {
-		logger.Error("%w", err)
+		logger.Error("Failed to resolve the workflow temp folder", "error", err)
 	}
 	previewTempPath.Append("preview")
 

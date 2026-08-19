@@ -49,7 +49,7 @@ func ExecuteCmd(cmd *exec.Cmd, outputCallback func(string)) (string, error) {
 
 	err = cmd.Start()
 	if err != nil {
-		return "", fmt.Errorf("start failed %s", err.Error())
+		return "", fmt.Errorf("start failed: %w", err)
 	}
 
 	var result string
@@ -68,7 +68,7 @@ func ExecuteCmd(cmd *exec.Cmd, outputCallback func(string)) (string, error) {
 
 	err = cmd.Wait()
 	if err != nil {
-		return "", fmt.Errorf("execution failed error: %s,\nmessage: %s", err.Error(), tailForError(errorBytes.String()))
+		return "", fmt.Errorf("execution failed, message: %s: %w", tailForError(errorBytes.String()), err)
 	}
 
 	return result, err
@@ -99,7 +99,7 @@ func ExecuteAnalysisCmd(cmd *exec.Cmd, outputCallback func(string)) (string, err
 
 	err = cmd.Start()
 	if err != nil {
-		return "", fmt.Errorf("start failed %s", err.Error())
+		return "", fmt.Errorf("start failed: %w", err)
 	}
 
 	scannerOut := newLineScanner(stdout)
@@ -115,7 +115,7 @@ func ExecuteAnalysisCmd(cmd *exec.Cmd, outputCallback func(string)) (string, err
 
 	err = cmd.Wait()
 	if err != nil {
-		return "", fmt.Errorf("execution failed error: %s,\nmessage: %s", err.Error(), tailForError(errorBytes.String()))
+		return "", fmt.Errorf("execution failed, message: %s: %w", tailForError(errorBytes.String()), err)
 	}
 
 	result, err := extractJSONObject(&errorBytes)

@@ -1,12 +1,10 @@
 package wfutils
 
 import (
-	"strings"
+	"errors"
 	"time"
 
-	"github.com/ansel1/merry/v2"
 	"github.com/bcc-code/bcc-media-flows/environment"
-	"github.com/samber/lo"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -42,9 +40,7 @@ func CollectChildResults[T any](ctx workflow.Context, futures []workflow.Future,
 		return results, nil
 	}
 
-	return results, merry.New(strings.Join(lo.Map(errs, func(err error, _ int) string {
-		return err.Error()
-	}), "\n"))
+	return results, errors.Join(errs...)
 }
 
 func GetDefaultActivityOptions() workflow.ActivityOptions {

@@ -1,7 +1,8 @@
 package vb_export
 
 import (
-	"github.com/ansel1/merry/v2"
+	"errors"
+
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/transcode"
@@ -51,7 +52,7 @@ func copyImageToOutputDir(ctx workflow.Context, params VBExportChildWorkflowPara
 func transcodeToHAP(format transcode.HAPFormat) transcodeFunc {
 	return func(ctx workflow.Context, params VBExportChildWorkflowParams, outputDir paths.Path) (paths.Path, error) {
 		if params.AnalyzeResult.FrameRate != 25 && params.AnalyzeResult.FrameRate != 50 {
-			return paths.Path{}, merry.New("Expected 25 or 50 fps input")
+			return paths.Path{}, errors.New("expected 25 or 50 fps input")
 		}
 
 		currentVideoFile := params.InputFile

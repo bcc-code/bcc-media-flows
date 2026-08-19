@@ -2,12 +2,12 @@ package paths
 
 import (
 	"encoding/json"
+	"errors"
 	"go.temporal.io/sdk/temporal"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/ansel1/merry/v2"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/orsinium-labs/enum"
 )
@@ -45,7 +45,7 @@ func (d *Drive) UnmarshalJSON(value []byte) error {
 	}
 	drive := Drives.Parse(stringValue)
 	if drive == nil {
-		return merry.Wrap(ErrDriveNotFound)
+		return ErrDriveNotFound
 	}
 	*d = *drive
 	return nil
@@ -61,8 +61,8 @@ var (
 	TestDrive          = Drive{Value: "test"}
 	MassiveIngestDrive = Drive{Value: "massive_ingest"}
 	Drives             = enum.New(IsilonDrive, FileCatalystDrive, TempDrive, AssetIngestDrive, BrunstadDrive, LucidLinkDrive, TestDrive, MassiveIngestDrive)
-	ErrDriveNotFound   = merry.Sentinel("drive not found")
-	ErrPathNotValid    = merry.Sentinel("path not valid")
+	ErrDriveNotFound   = errors.New("drive not found")
+	ErrPathNotValid    = errors.New("path not valid")
 )
 
 //goland:noinspection GoMixedReceiverTypes
@@ -239,7 +239,7 @@ func Parse(path string) (Path, error) {
 	return Path{},
 		temporal.NewNonRetryableApplicationError(
 			"path is invalid", "invalid_path",
-			merry.Wrap(ErrPathNotValid),
+			ErrPathNotValid,
 			path,
 		)
 }

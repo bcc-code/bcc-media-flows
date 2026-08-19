@@ -2,7 +2,6 @@ package transcode
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
 	"strings"
 
@@ -56,8 +55,7 @@ func MuxToSimpleMXF(input common.SimpleMuxInput, progressCallback ffmpeg.Progres
 
 	_, err = ffmpeg.Run(job, progressCallback)
 	if err != nil {
-		log.Default().Println("mux failed", err)
-		return nil, fmt.Errorf("mux failed, %s", strings.Join(job.Arguments(), " "))
+		return nil, fmt.Errorf("mux failed (%s): %w", strings.Join(job.Arguments(), " "), err)
 	}
 
 	outputPath, err := paths.Parse(outputFilePath)

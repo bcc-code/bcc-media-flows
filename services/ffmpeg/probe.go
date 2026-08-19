@@ -157,7 +157,7 @@ func doProbe(path string) (*FFProbeResult, error) {
 
 	result, err := utils.ExecuteCmd(cmd, nil)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't execute ffprobe %s, %s", path, err.Error())
+		return nil, fmt.Errorf("couldn't execute ffprobe %s: %w", path, err)
 	}
 
 	var info FFProbeResult

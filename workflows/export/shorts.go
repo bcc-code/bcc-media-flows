@@ -1,6 +1,7 @@
 package export
 
 import (
+	"errors"
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/activities/vidispine"
@@ -60,7 +61,7 @@ func BulkExportShorts(ctx workflow.Context, input BulkExportShortsInput) error {
 	}
 
 	logger := workflow.GetLogger(ctx)
-	logger.Info("Starting BulkExportShorts %s", input.CollectionVXID)
+	logger.Info("Starting BulkExportShorts", "collectionVXID", input.CollectionVXID)
 
 	tasks, err := wfutils.Execute(ctx, activities.ClickUp.QueryShorts, nil).Result(ctx)
 	if err != nil {
@@ -89,16 +90,16 @@ func BulkExportShorts(ctx workflow.Context, input BulkExportShortsInput) error {
 		wfs[i] = wf
 	}
 
-	errors := []error{}
+	var errs []error
 	for _, wf := range wfs {
 		err = wf.Get(ctx, nil)
 		if err != nil {
-			errors = append(errors, err)
+			errs = append(errs, err)
 		}
 	}
 
-	if len(errors) > 0 {
-		return fmt.Errorf("errors: %v", errors)
+	if len(errs) > 0 {
+		return errors.Join(errs...)
 	}
 
 	return nil
@@ -107,7 +108,7 @@ func BulkExportShorts(ctx workflow.Context, input BulkExportShortsInput) error {
 // ExportShort exports a single short to BCCM Platform
 func ExportShort(ctx workflow.Context, short *ShortsData) error {
 	logger := workflow.GetLogger(ctx)
-	logger.Debug("Starting export for %s", short.MBMetadata.ID)
+	logger.Debug("Starting export for short", "mediabankenID", short.MBMetadata.ID)
 
 	tempFolder, err := wfutils.GetWorkflowTempFolder(ctx)
 	if err != nil {
