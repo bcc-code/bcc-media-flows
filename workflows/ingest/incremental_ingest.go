@@ -240,7 +240,7 @@ func createGrowingPlaceholder(ctx workflow.Context, in paths.Path) (string, erro
 
 	err = wfutils.SetVidispineMeta(ctx, assetResult.AssetID, vscommon.FieldIngested.Value, workflow.Now(ctx).Format(time.RFC3339))
 	if err != nil {
-		logger.Error("%w", err)
+		logger.Error("Failed to set the ingested timestamp", "error", err)
 	}
 
 	return assetResult.AssetID, nil
@@ -270,12 +270,12 @@ func startGrowingPreview(ctx workflow.Context, rawPath paths.Path, videoVXID str
 
 	previewPath, err := wfutils.GetWorkflowAuxOutputFolder(ctx)
 	if err != nil {
-		logger.Error("%w", err)
+		logger.Error("Failed to resolve the preview output folder", "error", err)
 	}
 
 	previewTempPath, err := wfutils.GetWorkflowTempFolder(ctx)
 	if err != nil {
-		logger.Error("%w", err)
+		logger.Error("Failed to resolve the workflow temp folder", "error", err)
 	}
 	previewTempPath.Append("preview")
 
