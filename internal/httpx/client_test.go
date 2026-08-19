@@ -1,6 +1,7 @@
 package httpx
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -69,6 +70,24 @@ func TestNew_ErrorCarriesHTTPCode(t *testing.T) {
 
 	require.Error(t, err)
 	assert.Equal(t, http.StatusNotFound, StatusCode(err))
+}
+
+func TestStatusCode_IsZeroForAnErrorThatCarriesNoStatus(t *testing.T) {
+	assert.Zero(t, StatusCode(errors.New("no status here")))
+	assert.Zero(t, StatusCode(nil))
+}
+
+func TestStatusCode_ReadsThroughAWrappedStatusError(t *testing.T) {
+	wrapped := fmt.Errorf("uploading the file: %w", &StatusError{StatusCode: http.StatusBadGateway, Message: "502"})
+
+	assert.Equal(t, http.StatusBadGateway, StatusCode(wrapped))
+}
+
+func TestStatusError_UnwrapsToItsSentinel(t *testing.T) {
+	sentinel := errors.New("non-200 status")
+	err := &StatusError{StatusCode: http.StatusTeapot, Message: "teapot", Err: sentinel}
+
+	assert.ErrorIs(t, err, sentinel)
 }
 
 func TestNew_SuccessPassesThroughAndUnmarshals(t *testing.T) {

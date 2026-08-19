@@ -1,4 +1,6 @@
 - Remember that you need to register workflows and workers for them to be useful.
 - Do not use .Get to retrieve the result of an activity. Use .Result(ctx)
 - When creating enums always use     "github.com/orsinium-labs/enum"
+- Errors: `errors.New` for sentinels, `fmt.Errorf` with `%w` whenever there is a cause, `errors.Join` for a set of failures, and `temporal.NewNonRetryableApplicationError` at the activity boundary when a retry cannot help. Do not add another error library.
+- Workflow and activity loggers take a message plus key/value pairs. `logger.Error("%s", err)` logs the verb and drops the error; write `logger.Error("What failed", "error", err)`.
 - When reading the code, if you notice things that could be improved, append them to `potential_improvements.md` and notify the user that you found new things. This is so we can look into potential improvements later.
