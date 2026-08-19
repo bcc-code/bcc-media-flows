@@ -19,7 +19,7 @@ func ResolutionFromString(str string) (*Resolution, error) {
 	var r Resolution
 	_, err := fmt.Sscanf(str, "%dx%d", &r.Width, &r.Height)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse resolution string %s, err: %v", str, err)
+		return nil, fmt.Errorf("failed to parse resolution string %s: %w", str, err)
 	}
 	return &r, nil
 }

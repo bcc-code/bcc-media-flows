@@ -1,6 +1,7 @@
 package ingestworkflows
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
-	"github.com/samber/lo"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
@@ -148,7 +148,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 	}
 
 	importedVXs := map[string]paths.Path{}
-	errors := []error{}
+	var errs []error
 
 	for _, sourceFile := range sourceFiles {
 		file := params.OutputDir.Append(sourceFile.Base())
@@ -160,19 +160,15 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		result, err := processMaster(ctx, sourceFile, file, params.Metadata)
 
 		if err != nil {
-			errors = append(errors, err)
+			errs = append(errs, err)
 			continue
 		}
 
 		importedVXs[result] = file
 	}
 
-	if len(errors) > 0 {
-		errText := lo.Reduce(errors, func(acc string, err error, _ int) string {
-			return acc + err.Error() + "\n"
-		}, "")
-
-		return nil, fmt.Errorf("%s", errText)
+	if len(errs) > 0 {
+		return nil, errors.Join(errs...)
 	}
 
 	asyncCtx := wfutils.WithAbandonChildOptions(ctx)

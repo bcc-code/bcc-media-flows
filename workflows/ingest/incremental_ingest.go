@@ -1,6 +1,7 @@
 package ingestworkflows
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -172,11 +173,11 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 		AssetID: videoVXID,
 	}).Wait(ctx)
 
-	var errors []error
+	var errs []error
 	for _, f := range importAudioFuture {
 		err = f.Get(ctx, nil)
 		if err != nil {
-			errors = append(errors, err)
+			errs = append(errs, err)
 		}
 	}
 
@@ -187,11 +188,11 @@ func doIncremental(ctx workflow.Context, params IncrementalParams) error {
 
 	err = transcribeFuture.Get(ctx, nil)
 	if err != nil {
-		errors = append(errors, err)
+		errs = append(errs, err)
 	}
 
-	if len(errors) > 0 {
-		return fmt.Errorf("failed to import one or more audio files: %v", errors)
+	if len(errs) > 0 {
+		return fmt.Errorf("failed to import one or more audio files: %w", errors.Join(errs...))
 	}
 
 	_ = fixDurationFuture.Get(ctx, nil)

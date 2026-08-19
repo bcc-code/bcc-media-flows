@@ -1,6 +1,7 @@
 package ingestworkflows
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -150,16 +151,16 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 		filesToImport[languages.LanguagesByMU1[i].ISO6391] = destinationFile
 	}
 
-	errors := ""
+	var errs []error
 	for _, t := range tasks {
 		err = t.Wait(ctx)
 		if err != nil {
-			errors += err.Error() + "\n"
+			errs = append(errs, err)
 		}
 	}
 
-	if errors != "" {
-		return fmt.Errorf("errors while aligning audio: %s", errors)
+	if len(errs) > 0 {
+		return fmt.Errorf("errors while aligning audio: %w", errors.Join(errs...))
 	}
 
 	// Import to MB

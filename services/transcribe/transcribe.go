@@ -43,9 +43,9 @@ func newClient() *resty.Client {
 }
 
 var (
-	errNoInputFile = fmt.Errorf("no input file")
-	errNoOutput    = fmt.Errorf("no output folder")
-	errNoLanguage  = fmt.Errorf("no language")
+	errNoInputFile = errors.New("no input file")
+	errNoOutput    = errors.New("no output folder")
+	errNoLanguage  = errors.New("no language")
 )
 
 type TranscribeInput struct {

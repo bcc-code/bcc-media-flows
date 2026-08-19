@@ -1,6 +1,7 @@
 package export
 
 import (
+	"errors"
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/activities/vidispine"
@@ -89,16 +90,16 @@ func BulkExportShorts(ctx workflow.Context, input BulkExportShortsInput) error {
 		wfs[i] = wf
 	}
 
-	errors := []error{}
+	var errs []error
 	for _, wf := range wfs {
 		err = wf.Get(ctx, nil)
 		if err != nil {
-			errors = append(errors, err)
+			errs = append(errs, err)
 		}
 	}
 
-	if len(errors) > 0 {
-		return fmt.Errorf("errors: %v", errors)
+	if len(errs) > 0 {
+		return errors.Join(errs...)
 	}
 
 	return nil
