@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ansel1/merry/v2"
 	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -69,7 +68,7 @@ func TestNew_ErrorCarriesHTTPCode(t *testing.T) {
 	_, err := client.R().Get("/thing")
 
 	require.Error(t, err)
-	assert.Equal(t, http.StatusNotFound, merry.HTTPCode(err))
+	assert.Equal(t, http.StatusNotFound, StatusCode(err))
 }
 
 func TestNew_SuccessPassesThroughAndUnmarshals(t *testing.T) {

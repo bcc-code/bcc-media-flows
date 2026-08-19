@@ -8,7 +8,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 
-	"github.com/ansel1/merry/v2"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -158,7 +157,7 @@ func getOrderFormFilename(orderForm OrderForm, file paths.Path, props ingest.Job
 	case OrderFormLEDMaterial, OrderFormVBMaster, OrderFormSeriesMaster, OrderFormOtherMaster:
 		return masterFilename(props)
 	}
-	return "", merry.New("Unsupported order form")
+	return "", errors.New("unsupported order form")
 }
 
 func notifyImportCompleted(ctx workflow.Context, recipients []string, jobID int, filesByAssetID map[string]paths.Path) error {

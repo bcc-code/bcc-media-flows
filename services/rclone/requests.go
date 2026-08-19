@@ -3,18 +3,18 @@ package rclone
 import (
 	"encoding/base64"
 	"encoding/json"
-	"github.com/bcc-code/bcc-media-flows/environment"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
 
-	"github.com/ansel1/merry/v2"
-
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/internal/httpx"
 )
 
 var (
-	errNon200Status = merry.Sentinel("non-200 status")
+	errNon200Status = errors.New("non-200 status")
 )
 
 // requestTimeout bounds one call to the rclone API. Every request in this package
@@ -51,10 +51,12 @@ func doRequest[T any](req *http.Request) (*T, error) {
 
 	if res.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(io.LimitReader(res.Body, maxErrorBody))
-		return nil, merry.Wrap(errNon200Status,
-			merry.WithHTTPCode(res.StatusCode),
-			merry.WithMessagef("rclone %s %s returned %s: %s",
-				req.Method, req.URL.Path, res.Status, httpx.TruncateBody(body)))
+		return nil, &httpx.StatusError{
+			StatusCode: res.StatusCode,
+			Message: fmt.Sprintf("rclone %s %s returned %s: %s",
+				req.Method, req.URL.Path, res.Status, httpx.TruncateBody(body)),
+			Err: errNon200Status,
+		}
 	}
 
 	var response *T

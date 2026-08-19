@@ -4,8 +4,6 @@ import (
 	"context"
 	"sync"
 	"time"
-
-	"github.com/ansel1/merry/v2"
 )
 
 const maxConcurrentTransfers = 5
@@ -33,7 +31,7 @@ func waitForTransferSlot(ctx context.Context, priority Priority, timeout time.Du
 	case <-ctx.Done():
 		return ctx.Err()
 	case <-time.After(timeout):
-		return merry.Wrap(errTimeout)
+		return errTimeout
 	}
 
 	return nil

@@ -5,7 +5,6 @@ go 1.25.8
 require (
 	cloud.google.com/go/pubsub v1.49.0
 	github.com/Code-Hex/go-generics-cache v1.3.1
-	github.com/ansel1/merry/v2 v2.2.1
 	github.com/bcc-code/bcc-media-platform v0.0.0-20250903091027-11ead5481489
 	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/creativeprojects/go-selfupdate v1.1.3
@@ -37,6 +36,7 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.32.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.51.0 // indirect
 	github.com/MicahParks/keyfunc v1.9.0 // indirect
+	github.com/ansel1/merry/v2 v2.2.1 // indirect
 	github.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.37.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.3.3 // indirect

@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ansel1/merry/v2"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -118,11 +117,33 @@ func Describe(service string, resp *resty.Response) error {
 // DescribeWithDetail replaces the body text with detail, for a DescribeError that has
 // read a structured error envelope.
 func DescribeWithDetail(service string, resp *resty.Response, detail string) error {
-	return merry.New(
-		fmt.Sprintf("%s %s %s failed (status %d): %s",
+	return &StatusError{
+		StatusCode: resp.StatusCode(),
+		Message: fmt.Sprintf("%s %s %s failed (status %d): %s",
 			service, resp.Request.Method, RedactURL(resp.Request.URL), resp.StatusCode(), detail),
-		merry.WithHTTPCode(resp.StatusCode()),
-	)
+	}
+}
+
+// StatusError is what a non-2xx response becomes. Callers that need the status reach
+// it with StatusCode(err) rather than by parsing the message.
+type StatusError struct {
+	StatusCode int
+	Message    string
+	// Err is an optional sentinel a package wants its callers to match with errors.Is.
+	Err error
+}
+
+func (e *StatusError) Error() string { return e.Message }
+
+func (e *StatusError) Unwrap() error { return e.Err }
+
+// StatusCode returns the HTTP status err carries, or 0 if it carries none.
+func StatusCode(err error) int {
+	var statusErr *StatusError
+	if errors.As(err, &statusErr) {
+		return statusErr.StatusCode
+	}
+	return 0
 }
 
 var secretQueryParams = []string{"key", "token", "api_key", "apikey", "access_token", "password"}

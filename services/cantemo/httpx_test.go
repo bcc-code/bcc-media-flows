@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ansel1/merry/v2"
+	"github.com/bcc-code/bcc-media-flows/internal/httpx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -64,6 +64,6 @@ func TestClient_DescribeErrorFallsBackToTheSharedDescription(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "cantemo")
 	assert.Contains(t, err.Error(), "502")
-	assert.Equal(t, http.StatusBadGateway, merry.HTTPCode(err),
+	assert.Equal(t, http.StatusBadGateway, httpx.StatusCode(err),
 		"the status travels with the error so a caller can branch on it")
 }

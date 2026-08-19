@@ -2,6 +2,7 @@ package activities
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -9,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ansel1/merry/v2"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	"github.com/samber/lo"
@@ -199,7 +199,7 @@ func (ua UtilActivities) DeletePath(ctx context.Context, input DeletePathInput) 
 	log.Info("Starting DeletePathActivity")
 
 	if (input.Path.Path == "/") || (input.Path.Path == "") {
-		return nil, merry.New("cannot delete root")
+		return nil, errors.New("cannot delete root")
 	}
 
 	if input.RemoveAll {

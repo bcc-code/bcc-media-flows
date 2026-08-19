@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/ansel1/merry/v2"
+	"errors"
 	"github.com/orsinium-labs/enum"
 	"net/http"
 	"time"
@@ -15,7 +15,7 @@ import (
 var baseUrl = "http://rclone.lan.bcc.media"
 
 var (
-	errTimeout = merry.Sentinel("timeout waiting for transfer slot")
+	errTimeout = errors.New("timeout waiting for transfer slot")
 )
 
 type Priority enum.Member[string]

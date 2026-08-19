@@ -1,8 +1,8 @@
 package languages
 
-import "github.com/ansel1/merry/v2"
+import "errors"
 
-var ErrLanguageParsingFailed = merry.Sentinel("uanable to parse language code")
+var ErrLanguageParsingFailed = errors.New("uanable to parse language code")
 
 func ParseLanguageCode(langCode string) (Language, error) {
 
@@ -18,7 +18,7 @@ func ParseLanguageCode(langCode string) (Language, error) {
 		return lang, nil
 	}
 
-	return Language{}, merry.Wrap(ErrLanguageParsingFailed)
+	return Language{}, ErrLanguageParsingFailed
 }
 
 func MustParseLanguageCode(langCode string) Language {
