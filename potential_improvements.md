@@ -751,31 +751,23 @@ most if the proxy were ever misconfigured, bypassed, or reached from an already-
   → `vidispine.ExportAudioSource`, `vb_export/vb_export.go:83` `Destinations []string`, and
   `export/isilon_export.go:20,22`.
 
-- **Error handling: four competing conventions coexist.** (1) merry sentinels + `merry.Wrap` +
-  `WithHTTPCode` in `paths`, `rclone`, `cantemo`; (2) `errors.New` sentinel + `%w`
-  (`vsapi.ErrShapeTagNotFound`, `transcode.ErrUnknownAudioChannelFormat`); (3) bare
-  `fmt.Errorf` with **no `%w`** — the majority, and some drop the cause entirely
-  (`mux.go:107`, `mux_mxf_simple.go:61`, `playout_mux.go:240`, `directus/client.go` ×10,
-  `ffmpeg/probe.go:326` interpolates `err.Error()` with `%s`); (4)
-  `temporal.NewNonRetryableApplicationError` (`paths/paths.go:247-252`, sole site). With only
-  18 merry call sites, dropping merry for stdlib `errors`/`%w` plus
-  `NewNonRetryableApplicationError` at the activity boundary is the smaller migration; if merry
-  stays, every `fmt.Errorf` still needs `%w`.
+- **Error handling: one convention, done (#478).** merry is gone: its 19 call sites are stdlib
+  `errors`, and `httpx.StatusError` + `httpx.StatusCode(err)` carry the HTTP status that
+  `merry.WithHTTPCode`/`merry.HTTPCode` used to. It stays in `go.mod` as an indirect dependency
+  of bcc-media-platform. Every `fmt.Errorf` holding an error now wraps it with `%w` (101 → 117
+  sites); the three mux paths had been logging the ffmpeg error to the process log and returning
+  only the argument list, so the reason a mux failed never reached Temporal. The error-slice
+  concatenations are `errors.Join`, including `CollectChildResults`; the locals were named
+  `errors` and shadowed the package, which is most of why nobody reached for `Join`. The six
+  `logger.Error("%w", err)`-class sites log a message plus `"error", err`. `CLAUDE.md` states
+  the surviving convention — `errors.New`, `%w`, `errors.Join`,
+  `NewNonRetryableApplicationError` at the activity boundary — plus the logger call shape.
 
-  Good news worth protecting: **zero** string-matched error comparisons
+  Still true and worth protecting: **zero** string-matched error comparisons
   (`strings.Contains(err…)` and `err.Error() ==` both return nothing).
 
-  Roughly 10 sites stringify a slice of errors instead of joining it — `export/shorts.go:101`,
-  `ingest/file_move.go:48`, `ingest/incremental_ingest.go:340`, `ingest/masters.go:196-201`
-  (`lo.Reduce` string concat), `ingest/mu1_mu2_extract.go:156-165`, `misc/transcribe-vx.go:103`,
-  `ingest/import_subtitles.go:154`, `export/vx_export.go:260`, `vb_export/vb_export.go:282`.
-  Prefer `errors.Join`, which preserves `errors.As` — something
-  `workflows/ingest/common.go:73-74` actually depends on for its `JOB_FAILED` detection.
-
-  Also, `logger.Error("%w", err)` appears at `ingest/incremental_ingest.go:103,134,139,170,179`:
-  `workflow.GetLogger` takes a message plus key/value pairs, so `"%w"` becomes the message and
-  the error text is **never logged**. Same class with `logger.Info` at `export/shorts.go:63`
-  and `:110`.
+  Not done, and deliberately: the ~50 argument-less `fmt.Errorf("…")` calls that could be
+  `errors.New`. No linter in this repo flags them and the rewrite changes no behaviour.
 
 - **JSON tags on workflow payloads are inconsistent — and the choice is permanent.** These
   structs are serialized into workflow history, so adding or renaming a tag later breaks replay
@@ -866,9 +858,7 @@ most if the proxy were ever misconfigured, bypassed, or reached from an already-
   time at `:524` as `/webhook/filecatalyst`; both point at the same handler, so the legacy one
   can go now.
 
-- **Awkward constructs.** `workflows/export/vx_export_vod.go:206-208`
-  `for _, err = range service.errs { return nil, err }` → `errors.Join`.
-  `workflows/misc/merge_import_subs.go:145` `langs = append(langs, lang)` appends to the slice
+- **Awkward constructs.** `workflows/misc/merge_import_subs.go:145` `langs = append(langs, lang)` appends to the slice
   currently being ranged at `:125` — a copy-paste from `import_subs.go:93` where `langs` is a
   separate accumulator; here it just corrupts the `GetMapKeysSafely` result for no reason (and
   the `if err != nil` at `:104-106` is placed *after* the loop that consumes `res`).
