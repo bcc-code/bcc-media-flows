@@ -1,33 +1,29 @@
 # Potential improvements
 
-Condensed 2026-08-21. Items confirmed fixed were removed.
+Condensed 2026-08-21. Items confirmed fixed were removed. Bugs section validated against the code 2026-08-21.
 
 ## Bugs
 
 - `workflows/export/shorts.go:442` — `os.Stat` inside workflow code (`generateThumbnailForShort`); not replay-safe. Use `wfutils.RcloneCheckFileExists`.
-- `workflows/export/generate_short.go:293` — `waitForShortJob` polls forever with no attempt cap; history grows unbounded.
-- `workflows/ingest/incremental_ingest.go:343` — 1000-attempt copy loop, ~6000 history events; needs selector + ContinueAsNew.
-- `workflows/misc/slow_move_files.go:50` — `_, _ = c.SignalWithStartWorkflow(...)` then `return nil`; failure to start is invisible.
+- `workflows/misc/slow_move_files.go:50` — `_, _ = c.SignalWithStartWorkflow(...)` then `return nil` in a local activity; the swallowed error also defeats the `MaximumAttempts: 5` retry policy, so a failed start is invisible.
 - `workflows/export/vx_export_bmm.go:62,407` — `panic` in workflow code; workflow task retries forever. Return errors.
-- `workflows/misc/cleanup_production.go` — `MoveFileByImportDate` activity is registered nowhere, so the flow cannot run.
-- `workflows/workflows.go` — `TriggerableWorkflows` and `WorkerWorkflows` drift; no test asserting subset.
+- `workflows/misc/cleanup_production.go` — `MoveFileByImportDate` activity is registered nowhere (the workflow itself is intentionally unregistered); latent trap for whoever enables the flow.
 - `services/vidispine/export.go` — `StreamID`/`ChannelID` are `uint`; `zxx`/`und` have -1 channel offsets that wrap to garbage stream IDs. Make them `int` and reject negatives.
 - `languages/` — empty language codes collide in the two-letter map (`ParseLanguageCode("")` returns a wrong language); `utils/languages.go` map miss returns a zero `Language` that looks like Norwegian. Guard empty keys, use the `, ok` form.
 - `utils/files.go` — `IsDirEmpty` returns `(true, nil)` on any I/O error; feeds directory deletion. Check `errors.Is(err, io.EOF)`.
 - `utils/files.go` — `ValidRawFilename` lowercases the extension but `IsMedia` does not, so `.MOV`/`.MXF` skip transcode/analysis.
 - `utils/tc_samples.go` — divides by caller-supplied fps with no zero check; NTSC treated as 30 instead of 30000/1001 (~3.6 s drift per hour).
 - `services/subtrans/client.go` — file name concatenated into URL path unescaped; `stripBOM` uses `bytes.Trim` (cutset) instead of `TrimPrefix`.
-- `services/rclone/queue.go` — abandoned waiters leak channels forever; no ctx, blocks up to an hour.
-- `services/rclone/jobs.go` — request built outside retry loop; retries POST an empty body.
+- `services/rclone/queue.go` — abandoned waiters leak their queued channels (cleanup is only opportunistic); ctx cancellation unblocks the caller but the entry stays.
 - `services/ftp/client.go` — failed `Login` leaks the dialled connection (no `Quit`).
 - `services/telegram/chats.go` — enum built from zero-valued members at init; `Parse`/`Contains` are silently wrong.
 - `services/vidispine/export.go` — `convertFromClipTCTimeToSequenceRelativeTime` mutates the caller's metadata; every clip gets a bogus `und` subtitle entry (`allSubLanguages.Add("und")` outside its nil guard); BMM-title check tests the wrong variable.
 - `services/transcode/subtitles.go` — `specialASSConverter` ignores write/scan errors; truncated `.ass` burns in as success.
-- `paths/paths.go` — `Prepend` writes into the variadic backing array, rewriting the caller's slice.
+- `paths/paths.go` — `Prepend` writes into the variadic backing array, rewriting the caller's slice. Latent: all current callers pass literals.
 - `cache/store.go` — unchecked type assertion on a flat key namespace; janitor goroutine starts from `init()`; TTL hardcoded to 5 min.
-- `activities/crop_shorts.go` — ffprobe runs on the worker queue (no ffmpeg installed) and its error is discarded, silently producing 25 fps crops for 50 fps material.
-- ~45 `errcheck` findings: dropped errors in ingest/export/misc workflows (Telegram sends, metadata writes, etc.).
-- Panic-prone indexing without length checks: `asset_ingest_json`, `multitrack`, `playout_mux`, `ffmpeg/probe`, `vsapi/metadata`, trigger_ui resolution index from unvalidated form input.
+- `activities/crop_shorts.go` — ffprobe runs on the worker queue (no ffmpeg installed) and its error is discarded, silently producing 25 fps crops for 50 fps material. Already documented as a known limitation in `activities/queues_test.go`.
+- 42 `errcheck` findings (verified 2026-08-21): dropped errors in ingest/export/misc workflows (Telegram sends, metadata writes, etc.).
+- Panic-prone indexing without length checks: `multitrack` (service + ingest workflow), `playout_mux`, `vsapi/metadata` `GetInOut`, trigger_ui resolution index from unvalidated form input.
 
 ## Security
 
