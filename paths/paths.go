@@ -181,9 +181,10 @@ func (p Path) Append(path ...string) Path {
 }
 
 // Prepend prepends the path with the given paths
-func (p Path) Prepend(paths ...string) Path {
-	for i, path := range paths {
-		paths[i] = strings.TrimPrefix(path, "/")
+func (p Path) Prepend(path ...string) Path {
+	paths := make([]string, 0, len(path))
+	for _, part := range path {
+		paths = append(paths, strings.TrimPrefix(part, "/"))
 	}
 	return Path{
 		Drive: p.Drive,

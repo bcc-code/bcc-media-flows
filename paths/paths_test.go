@@ -54,6 +54,16 @@ func Test_Lucid(t *testing.T) {
 	assert.Equal(t, "lucid:lucidlink/tesing/test/test/Felles/Opptak1/lkajhdwid-323.wav", lucidPath.Rclone())
 }
 
+func Test_PrependDoesNotMutateInput(t *testing.T) {
+	p := Path{Drive: IsilonDrive, Path: "file.mov"}
+	segments := []string{"/a", "/b"}
+
+	res := p.Prepend(segments...)
+
+	assert.Equal(t, []string{"/a", "/b"}, segments)
+	assert.Equal(t, "/a/b/file.mov", res.Path)
+}
+
 func Test_FileCatalyst(t *testing.T) {
 	pathString := "/mnt/filecatalyst/ingestgrow/MDTES01_MU1.mxf"
 
