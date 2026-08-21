@@ -4,7 +4,6 @@ Condensed 2026-08-21. Items confirmed fixed were removed. Bugs section validated
 
 ## Bugs
 
-- `services/subtrans/client.go` — file name concatenated into URL path unescaped; `stripBOM` uses `bytes.Trim` (cutset) instead of `TrimPrefix`.
 - `services/rclone/queue.go` — abandoned waiters leak their queued channels (cleanup is only opportunistic); ctx cancellation unblocks the caller but the entry stays.
 - `services/ftp/client.go` — failed `Login` leaks the dialled connection (no `Quit`).
 - `services/telegram/chats.go` — enum built from zero-valued members at init; `Parse`/`Contains` are silently wrong.
