@@ -10,8 +10,8 @@ import (
 
 func LanguageKeysToOrderedLanguages(keys []string) languages.LanguageList {
 	langs := languages.LanguageList(lo.Map(keys, func(key string, _ int) languages.Language {
-		lang, ok := languages.LanguagesByISO[key]
-		if !ok {
+		lang, err := languages.ParseLanguageCode(key)
+		if err != nil {
 			panic(fmt.Sprintf("unknown language key: %q", key))
 		}
 		return lang
