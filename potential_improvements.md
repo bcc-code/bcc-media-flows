@@ -4,7 +4,6 @@ Condensed 2026-08-21. Items confirmed fixed were removed. Bugs section validated
 
 ## Bugs
 
-- `services/rclone/queue.go` — abandoned waiters leak their queued channels (cleanup is only opportunistic); ctx cancellation unblocks the caller but the entry stays.
 - `services/ftp/client.go` — failed `Login` leaks the dialled connection (no `Quit`).
 - `services/telegram/chats.go` — enum built from zero-valued members at init; `Parse`/`Contains` are silently wrong.
 - `services/vidispine/export.go` — `convertFromClipTCTimeToSequenceRelativeTime` mutates the caller's metadata; every clip gets a bogus `und` subtitle entry (`allSubLanguages.Add("und")` outside its nil guard); BMM-title check tests the wrong variable.
