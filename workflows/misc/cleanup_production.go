@@ -2,6 +2,7 @@ package miscworkflows
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
@@ -104,7 +105,7 @@ func MoveFileByImportDate(ctx context.Context, params MoveFileByImportDateParams
 	fileName := params.FileName
 
 	if params.SourceStorageID != params.DestinationStorageID {
-		return nil, fmt.Errorf("not implemented: moving files between different storages")
+		return nil, errors.New("not implemented: moving files between different storages")
 	}
 
 	filesResult, err := activities.Cantemo.GetFiles(ctx, cantemo.GetFilesParams{

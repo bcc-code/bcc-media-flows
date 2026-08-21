@@ -1,6 +1,7 @@
 package transcode
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -32,7 +33,7 @@ func HAP(input HAPInput, progressCallback ffmpeg.ProgressCallback) (*EncodeResul
 	}
 
 	if !info.HasVideo {
-		return nil, fmt.Errorf("input file has no video stream")
+		return nil, errors.New("input file has no video stream")
 	}
 
 	filename := filepath.Base(strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))) + ".mov"

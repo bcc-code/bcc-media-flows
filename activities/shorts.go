@@ -2,7 +2,7 @@ package activities
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"regexp"
 	"strconv"
@@ -71,7 +71,7 @@ func (ua UtilActivities) SubmitShortJobActivity(ctx context.Context, params Subm
 	}
 
 	if result.JobID == "" {
-		return nil, fmt.Errorf("shorts service accepted the job but returned no job id")
+		return nil, errors.New("shorts service accepted the job but returned no job id")
 	}
 
 	return &result, nil

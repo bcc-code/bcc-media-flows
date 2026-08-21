@@ -149,7 +149,7 @@ func TestDescribeError_OverridesTheDefaultMessage(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 
-	sentinel := fmt.Errorf("this service says so")
+	sentinel := errors.New("this service says so")
 	client := New(Config{
 		Service: "custom",
 		BaseURL: server.URL,
@@ -350,7 +350,7 @@ func TestSanitizeError_RedactsTheURLATransportErrorCarries(t *testing.T) {
 }
 
 func TestSanitizeError_KeepsTheWrappedError(t *testing.T) {
-	sentinel := fmt.Errorf("connection refused")
+	sentinel := errors.New("connection refused")
 	err := &neturl.Error{Op: "Get", URL: "http://svc/story?key=secret", Err: sentinel}
 
 	sanitized := SanitizeError(err)
@@ -360,7 +360,7 @@ func TestSanitizeError_KeepsTheWrappedError(t *testing.T) {
 }
 
 func TestSanitizeError_LeavesEverythingElseAlone(t *testing.T) {
-	plain := fmt.Errorf("something else went wrong")
+	plain := errors.New("something else went wrong")
 	assert.Equal(t, plain, SanitizeError(plain))
 
 	nothingToRedact := &neturl.Error{Op: "Get", URL: "http://svc/items/VX-1", Err: plain}

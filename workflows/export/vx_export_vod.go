@@ -178,7 +178,7 @@ func baseVideoForVOD(
 	lang := params.ExportData.OriginalLanguage
 	if lang == "" || audioFiles[lang].Path == "" {
 		if len(audioKeys) == 0 {
-			return paths.Path{}, "", fmt.Errorf("no audio available to generate visualization video")
+			return paths.Path{}, "", errors.New("no audio available to generate visualization video")
 		}
 		lang = audioKeys[0]
 	}

@@ -1,6 +1,7 @@
 package vb_export
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -29,7 +30,7 @@ func transcodeToHyperdeckProRes(ctx workflow.Context, params VBExportChildWorkfl
 	}
 
 	if analyzeResult.HasAlpha {
-		return paths.Path{}, fmt.Errorf("hyperdeck export currently does not support alpha channels")
+		return paths.Path{}, errors.New("hyperdeck export currently does not support alpha channels")
 	}
 
 	fileToTranscode := params.InputFile

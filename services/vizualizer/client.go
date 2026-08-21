@@ -1,7 +1,7 @@
 package vizualizer
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/go-resty/resty/v2"
 
@@ -29,7 +29,7 @@ func NewClient(cfg Config) (*Client, error) {
 	baseURL := cfg.Vizualizer()
 
 	if baseURL == "" {
-		return nil, fmt.Errorf("vizualizer baseURL not set")
+		return nil, errors.New("vizualizer baseURL not set")
 	}
 
 	client := httpx.New(httpx.Config{
@@ -82,7 +82,7 @@ func (c *Client) CreateVisualization(req CreateVisualizationRequest) (*CreateVis
 // GetJob fetches the status of a specific visualization job.
 func (c *Client) GetJob(jobID string) (*JobStatusResponse, error) {
 	if jobID == "" {
-		return nil, fmt.Errorf("jobID is required")
+		return nil, errors.New("jobID is required")
 	}
 	var out JobStatusResponse
 	_, err := c.client.R().SetResult(&out).Get("/api/status/" + jobID)

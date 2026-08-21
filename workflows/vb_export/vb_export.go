@@ -1,6 +1,7 @@
 package vb_export
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -155,7 +156,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	if params.VXID == "" {
-		return nil, fmt.Errorf("vxid is required")
+		return nil, errors.New("vxid is required")
 	}
 
 	var destinations []*Destination

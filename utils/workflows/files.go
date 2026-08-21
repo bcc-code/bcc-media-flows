@@ -1,6 +1,7 @@
 package wfutils
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -268,7 +269,7 @@ func RcloneCopyFileWithNotifications(ctx workflow.Context, source, destination p
 		return err
 	}
 	if !success {
-		return fmt.Errorf("rclone job failed")
+		return errors.New("rclone job failed")
 	}
 	return nil
 }
@@ -287,7 +288,7 @@ func RcloneMoveFile(ctx workflow.Context, source, destination paths.Path, priori
 		return err
 	}
 	if !success {
-		return fmt.Errorf("rclone job failed")
+		return errors.New("rclone job failed")
 	}
 	return nil
 }
@@ -308,7 +309,7 @@ func RcloneCopyDir(ctx workflow.Context, source, destination string, priority rc
 		return err
 	}
 	if !success {
-		return fmt.Errorf("rclone job failed")
+		return errors.New("rclone job failed")
 	}
 	return nil
 }

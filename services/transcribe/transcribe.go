@@ -226,7 +226,7 @@ func DoTranscribe(
 
 	job := resp.Result().(*TranscribeJob)
 	if job.ID == "" {
-		return nil, fmt.Errorf("transcription service accepted the job but returned no id")
+		return nil, errors.New("transcription service accepted the job but returned no id")
 	}
 
 	// Periodically check the status of the job
