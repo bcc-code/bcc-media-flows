@@ -26,6 +26,9 @@ func GenerateVideoFile(outFile paths.Path, videoParams VideoGeneratorParams) pat
 		"-vf", fmt.Sprintf("setsar=%s, setdar=%s", videoParams.SAR, videoParams.DAR),
 		"-c:v", "prores_ks",
 		"-profile:v", videoParams.Profile,
+		// The MXF muxer takes the stream timebase as the frame rate when the
+		// video is stream-copied; the mov default of 12800 is rejected.
+		"-video_track_timescale", fmt.Sprintf("%d", videoParams.FrameRate),
 		"-y", outFile.Local(),
 	}
 
