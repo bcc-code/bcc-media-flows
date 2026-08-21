@@ -24,6 +24,15 @@ func TestIsDirEmpty(t *testing.T) {
 	empty, err = utils.IsDirEmpty("/this/path/does/not/exist")
 	assert.Error(t, err)
 	assert.False(t, empty)
+
+	file, err := os.CreateTemp("", "notadir")
+	assert.NoError(t, err)
+	defer os.Remove(file.Name())
+	assert.NoError(t, file.Close())
+
+	empty, err = utils.IsDirEmpty(file.Name())
+	assert.Error(t, err)
+	assert.False(t, empty)
 }
 
 func TestValidRawFilename(t *testing.T) {

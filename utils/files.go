@@ -2,6 +2,8 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -111,8 +113,8 @@ func IsDirEmpty(dir string) (bool, error) {
 	}
 	defer f.Close()
 
-	names, err := f.Readdirnames(1) // Try to read at least one entry
-	if err != nil && len(names) == 0 {
+	_, err = f.Readdirnames(1) // Try to read at least one entry
+	if errors.Is(err, io.EOF) {
 		return true, nil
 	}
 
