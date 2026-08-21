@@ -495,7 +495,7 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 	}
 
 	var bmmTitle *string
-	if str := meta.Get(vscommon.FieldBmmTitle, ""); strings.TrimSpace(title) != "" {
+	if str := meta.Get(vscommon.FieldBmmTitle, ""); strings.TrimSpace(str) != "" {
 		bmmTitle = &str
 	}
 
@@ -589,8 +589,8 @@ func addSubtitlesAndTranscriptionsToClips(client Client, clips []*Clip, allowAI 
 			shape := clipShapes.GetShape("Transcribed_Subtitle_SRT")
 			if shape != nil && shape.GetPath() != "" {
 				clip.SubtitleFiles["und"] = shape.GetPath()
+				allSubLanguages.Add("und")
 			}
-			allSubLanguages.Add("und")
 		}
 
 		shape := clipShapes.GetShape("transcription_json")
@@ -621,7 +621,11 @@ func convertFromClipTCTimeToSequenceRelativeTime(clip *Clip, chapter *vsapi.Meta
 	delta := clip.SequenceIn - clip.InSeconds
 
 	for name, terseValue := range chapter.Terse {
-		out.Terse[name] = terseValue
+		out.Terse[name] = make([]*vsapi.MetadataField, len(terseValue))
+		for i, value := range terseValue {
+			copied := *value
+			out.Terse[name][i] = &copied
+		}
 
 		for i, value := range chapter.Terse[name] {
 			// Convert to seconds so we can use math
