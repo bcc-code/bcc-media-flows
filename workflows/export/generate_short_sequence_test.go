@@ -46,7 +46,7 @@ func TestGenerateShortActivityOrder(t *testing.T) {
 			Status:    "completed",
 			Keyframes: []activities.Keyframe{},
 		}, nil)
-	env.OnActivity(activities.Util.CropShortActivity, mock.Anything, mock.Anything).
+	env.OnActivity(activities.Video.CropShortActivity, mock.Anything, mock.Anything).
 		Return(&activities.CropShortResult{Arguments: []string{"-i", "in.mxf"}}, nil)
 	env.OnWorkflow(miscworkflows.ExecuteFFmpeg, mock.Anything, mock.Anything).Return(nil)
 

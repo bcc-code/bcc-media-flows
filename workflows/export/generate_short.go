@@ -239,7 +239,7 @@ type cropShortRequest struct {
 func cropShortVideo(ctx workflow.Context, req cropShortRequest) error {
 	logger := workflow.GetLogger(ctx)
 
-	cropRes, err := wfutils.Execute(ctx, activities.Util.CropShortActivity, activities.CropShortInput{
+	cropRes, err := wfutils.Execute(ctx, activities.Video.CropShortActivity, activities.CropShortInput{
 		InputVideoPath:  req.Video,
 		OutputVideoPath: req.Output,
 		// SubtitlePath is left out: subtitle burn-in is disabled for now.
