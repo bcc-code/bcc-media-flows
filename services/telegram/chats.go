@@ -14,12 +14,12 @@ type Chat enum.Member[int64]
 //
 // !!!! You need to update that too !!!!
 var (
-	ChatVOD       = Chat{Value: 0}
-	ChatOslofjord = Chat{Value: 0}
-	ChatOther     = Chat{Value: 0}
-	ChatBMM       = Chat{Value: 0}
+	ChatVOD       Chat
+	ChatOslofjord Chat
+	ChatOther     Chat
+	ChatBMM       Chat
 
-	Chats = enum.New(ChatVOD, ChatOslofjord, ChatOther, ChatBMM)
+	Chats enum.Enum[Chat, int64]
 )
 
 func init() {
@@ -29,4 +29,6 @@ func init() {
 	ChatOslofjord.Value = cfg.Telegram.ChatOslofjord()
 	ChatOther.Value = cfg.Telegram.ChatOther()
 	ChatBMM.Value = cfg.Telegram.ChatBMM()
+
+	Chats = enum.New(ChatVOD, ChatOslofjord, ChatOther, ChatBMM)
 }
