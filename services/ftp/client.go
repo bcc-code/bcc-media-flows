@@ -1,8 +1,10 @@
 package ftp
 
 import (
-	"github.com/jlaffaye/ftp"
+	"errors"
 	"time"
+
+	"github.com/jlaffaye/ftp"
 )
 
 type Client struct {
@@ -17,7 +19,7 @@ func NewClient(addr, username, password string) (*Client, error) {
 
 	err = conn.Login(username, password)
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(err, conn.Quit())
 	}
 
 	return &Client{
