@@ -199,8 +199,8 @@ func enrichClipWithRelatedAudios(client Client, clip *Clip, oLanguagesToExport [
 		if len(relatedAudioShape.AudioComponent) > 0 {
 			for i := 0; relatedAudioShape.AudioComponent[0].ChannelCount > i; i++ {
 				streams = append(streams, common.AudioStream{
-					ChannelID: uint(i),
-					StreamID:  uint(relatedAudioShape.AudioComponent[0].EssenceStreamID),
+					ChannelID: i,
+					StreamID:  relatedAudioShape.AudioComponent[0].EssenceStreamID,
 				})
 			}
 		} else {
@@ -242,8 +242,8 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 			len(shape.AudioComponent), clip.VXID))
 
 		streams := []common.AudioStream{
-			{StreamID: uint(shape.AudioComponent[0].EssenceStreamID), ChannelID: 0},
-			{StreamID: uint(shape.AudioComponent[1].EssenceStreamID), ChannelID: 0},
+			{StreamID: shape.AudioComponent[0].EssenceStreamID, ChannelID: 0},
+			{StreamID: shape.AudioComponent[1].EssenceStreamID, ChannelID: 0},
 		}
 
 		for _, lang := range languagesToExport {
@@ -278,22 +278,30 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 		// This is a softron file
 
 		for _, lang := range languagesToExport {
-			if langInfo, ok := languages.LanguagesByISO[lang]; ok {
-				clip.AudioFiles[lang] = &AudioFile{
-					File: shape.GetPath(),
-					Streams: []common.AudioStream{
-						{
-							StreamID:  2,
-							ChannelID: uint(langInfo.SoftronStartCh),
-						},
-						{
-							StreamID:  2,
-							ChannelID: uint(langInfo.SoftronStartCh) + 1,
-						},
-					},
-				}
-			} else {
+			langInfo, ok := languages.LanguagesByISO[lang]
+			if !ok {
 				return nil, fmt.Errorf("unknown language %s", lang)
+			}
+
+			// Languages without their own channel pair (zxx) carry the
+			// Norwegian floor audio.
+			startCh := langInfo.SoftronStartCh
+			if startCh < 0 {
+				startCh = languages.LanguagesByISO["nor"].SoftronStartCh
+			}
+
+			clip.AudioFiles[lang] = &AudioFile{
+				File: shape.GetPath(),
+				Streams: []common.AudioStream{
+					{
+						StreamID:  2,
+						ChannelID: startCh,
+					},
+					{
+						StreamID:  2,
+						ChannelID: startCh + 1,
+					},
+				},
 			}
 		}
 
@@ -306,8 +314,8 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 			var streams []common.AudioStream
 			for i := 0; shape.AudioComponent[0].ChannelCount > i; i++ {
 				streams = append(streams, common.AudioStream{
-					StreamID:  uint(shape.AudioComponent[0].EssenceStreamID),
-					ChannelID: uint(i),
+					StreamID:  shape.AudioComponent[0].EssenceStreamID,
+					ChannelID: i,
 				})
 			}
 
@@ -328,7 +336,7 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 				return nil, fmt.Errorf("found %d channels in audio component, expected 1", c.ChannelCount)
 			}
 			streams = append(streams, common.AudioStream{
-				StreamID:  uint(c.EssenceStreamID),
+				StreamID:  c.EssenceStreamID,
 				ChannelID: 0,
 			})
 		}
@@ -359,7 +367,7 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 			}
 
 			streams = append(streams, common.AudioStream{
-				StreamID:  uint(c.EssenceStreamID),
+				StreamID:  c.EssenceStreamID,
 				ChannelID: 0,
 			})
 		}
@@ -379,11 +387,13 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 	for _, lang := range languagesToExport {
 		if l, ok := languages.LanguagesByISO[lang]; ok {
 			var streams []common.AudioStream
-			for i := 0; i < l.MU1ChannelCount; i++ {
-				streams = append(streams, common.AudioStream{
-					StreamID:  uint(l.MU1ChannelStart + i),
-					ChannelID: 0,
-				})
+			if l.MU1ChannelStart >= 0 {
+				for i := 0; i < l.MU1ChannelCount; i++ {
+					streams = append(streams, common.AudioStream{
+						StreamID:  l.MU1ChannelStart + i,
+						ChannelID: 0,
+					})
+				}
 			}
 
 			clip.AudioFiles[lang] = &AudioFile{

@@ -4,7 +4,6 @@ Condensed 2026-08-21. Items confirmed fixed were removed. Bugs section validated
 
 ## Bugs
 
-- `services/vidispine/export.go` — `StreamID`/`ChannelID` are `uint`; `zxx`/`und` have -1 channel offsets that wrap to garbage stream IDs. Make them `int` and reject negatives.
 - `languages/` — empty language codes collide in the two-letter map (`ParseLanguageCode("")` returns a wrong language); `utils/languages.go` map miss returns a zero `Language` that looks like Norwegian. Guard empty keys, use the `, ok` form.
 - `utils/files.go` — `IsDirEmpty` returns `(true, nil)` on any I/O error; feeds directory deletion. Check `errors.Is(err, io.EOF)`.
 - `utils/files.go` — `ValidRawFilename` lowercases the extension but `IsMedia` does not, so `.MOV`/`.MXF` skip transcode/analysis.
