@@ -44,7 +44,7 @@ func ValidRawFilename(filename string) bool {
 }
 
 func IsMedia(filename string) bool {
-	extension := filepath.Ext(filename)
+	extension := strings.ToLower(filepath.Ext(filename))
 	return lo.Contains(mediaExtensions, extension)
 }
 
