@@ -26,7 +26,9 @@ func CreateThumbnailsVX(
 	if params.Delay > 0 {
 		logger := workflow.GetLogger(ctx)
 		logger.Info("Delaying workflow execution", "duration", params.Delay)
-		workflow.Sleep(ctx, params.Delay)
+		if err := workflow.Sleep(ctx, params.Delay); err != nil {
+			return err
+		}
 	}
 
 	logger := workflow.GetLogger(ctx)

@@ -30,7 +30,7 @@ func (s *AudioTestSuite) TestTranscodeToAudioAac() {
 
 	inputFile := paths.MustParse("./testdata/generated/aac_input.wav")
 	outputDir := paths.MustParse("./testdata/generated/aac_output/")
-	os.MkdirAll(outputDir.Local(), 0755)
+	s.Require().NoError(os.MkdirAll(outputDir.Local(), 0755))
 	err := transcode.GenerateToneFile(440, 2, 48000, "01:00:00:00", inputFile)
 	assert.NoError(t, err)
 
@@ -55,7 +55,7 @@ func (s *AudioTestSuite) TestTranscodeToAudioWav() {
 
 	inputFile := paths.MustParse("./testdata/generated/wav_input.wav")
 	outputDir := paths.MustParse("./testdata/generated/wav_output/")
-	os.MkdirAll(outputDir.Local(), 0755)
+	s.Require().NoError(os.MkdirAll(outputDir.Local(), 0755))
 	err := transcode.GenerateToneFile(440, 2, 48000, "01:00:00:00", inputFile)
 	assert.NoError(t, err)
 
@@ -79,7 +79,7 @@ func (s *AudioTestSuite) TestTranscodeToAudioWav_WithTimecode() {
 
 	inputFile := paths.MustParse("./testdata/generated/wav_tc_input.wav")
 	outputDir := paths.MustParse("./testdata/generated/wav_tc_output/")
-	os.MkdirAll(outputDir.Local(), 0755)
+	s.Require().NoError(os.MkdirAll(outputDir.Local(), 0755))
 	err := transcode.GenerateToneFile(440, 2, 48000, "01:00:00:00", inputFile)
 	assert.NoError(t, err)
 
@@ -104,7 +104,7 @@ func (s *AudioTestSuite) TestPrepareForTranscription_WithAudio() {
 
 	testFile := paths.MustParse("./testdata/generated/transcription_input.mkv")
 	outputDir := paths.MustParse("./testdata/generated/transcription_output/")
-	os.MkdirAll(outputDir.Local(), 0755)
+	s.Require().NoError(os.MkdirAll(outputDir.Local(), 0755))
 	testutils.GenerateSoftronTestFile(testFile, 2, 2)
 
 	aa := AudioActivities{}
@@ -128,7 +128,7 @@ func (s *AudioTestSuite) TestPrepareForTranscription_NoAudio() {
 
 	testFile := paths.MustParse("./testdata/generated/transcription_noaudio.mov")
 	outputDir := paths.MustParse("./testdata/generated/transcription_noaudio_output/")
-	os.MkdirAll(outputDir.Local(), 0755)
+	s.Require().NoError(os.MkdirAll(outputDir.Local(), 0755))
 	testutils.GenerateVideoFile(testFile, testutils.VideoGeneratorParams{
 		Duration:  2,
 		FrameRate: 25,
@@ -181,7 +181,7 @@ func (s *AudioTestSuite) TestExtractAudio() {
 
 	testFile := paths.MustParse("./testdata/generated/extract_audio_input.mkv")
 	outputDir := paths.MustParse("./testdata/generated/extract_audio_output/")
-	os.MkdirAll(outputDir.Local(), 0755)
+	s.Require().NoError(os.MkdirAll(outputDir.Local(), 0755))
 	testutils.GenerateSeparateAudioStreamsTestFile(testFile, 2, 2)
 
 	aa := AudioActivities{}
@@ -205,7 +205,7 @@ func (s *AudioTestSuite) TestExtractAudio_SpecificChannels() {
 
 	testFile := paths.MustParse("./testdata/generated/extract_specific_input.mkv")
 	outputDir := paths.MustParse("./testdata/generated/extract_specific_output/")
-	os.MkdirAll(outputDir.Local(), 0755)
+	s.Require().NoError(os.MkdirAll(outputDir.Local(), 0755))
 	testutils.GenerateSeparateAudioStreamsTestFile(testFile, 3, 2)
 
 	aa := AudioActivities{}
@@ -250,7 +250,7 @@ func (s *AudioTestSuite) TestGenerateToneFile() {
 	t := s.T()
 
 	outputFile := paths.MustParse("./testdata/generated/tone_output.wav")
-	os.MkdirAll(outputFile.Dir().Local(), 0755)
+	s.Require().NoError(os.MkdirAll(outputFile.Dir().Local(), 0755))
 
 	aa := AudioActivities{}
 	s.env.RegisterActivity(aa.GenerateToneFile)

@@ -16,8 +16,8 @@ func Test_HAP(t *testing.T) {
 	testFile := paths.MustParse("./testdata/generated/hap_test_input.mp4")
 	outputFile := paths.MustParse("./testdata/generated/results/" + testFile.Base())
 
-	os.MkdirAll(testFile.Dir().Local(), 0755)
-	os.MkdirAll(outputFile.Dir().Local(), 0755)
+	assert.NoError(t, os.MkdirAll(testFile.Dir().Local(), 0755))
+	assert.NoError(t, os.MkdirAll(outputFile.Dir().Local(), 0755))
 
 	cmd := exec.Command("ffmpeg",
 		"-f", "lavfi",
@@ -60,8 +60,8 @@ func Test_HAP_PlainFormat(t *testing.T) {
 	testFile := paths.MustParse("./testdata/generated/hap_test_plain.mp4")
 	outputFile := paths.MustParse("./testdata/generated/results/" + testFile.Base())
 
-	os.MkdirAll(testFile.Dir().Local(), 0755)
-	os.MkdirAll(outputFile.Dir().Local(), 0755)
+	assert.NoError(t, os.MkdirAll(testFile.Dir().Local(), 0755))
+	assert.NoError(t, os.MkdirAll(outputFile.Dir().Local(), 0755))
 
 	cmd := exec.Command("ffmpeg",
 		"-f", "lavfi",
@@ -101,8 +101,8 @@ func Test_HAP_WithAlpha(t *testing.T) {
 	testFile := paths.MustParse("./testdata/generated/hap_test_alpha.mov")
 	outputFile := paths.MustParse("./testdata/generated/results/" + testFile.Base())
 
-	os.MkdirAll(testFile.Dir().Local(), 0755)
-	os.MkdirAll(outputFile.Dir().Local(), 0755)
+	assert.NoError(t, os.MkdirAll(testFile.Dir().Local(), 0755))
+	assert.NoError(t, os.MkdirAll(outputFile.Dir().Local(), 0755))
 
 	// Generate a test video with alpha channel using ProRes 4444
 	cmd := exec.Command("ffmpeg",
@@ -153,7 +153,7 @@ func Test_HAP_WithAudio(t *testing.T) {
 	testFile := paths.MustParse("./testdata/generated/hap_test_audio.mp4")
 	outputFile := paths.MustParse("./testdata/generated/results/" + testFile.Base())
 
-	os.MkdirAll(outputFile.Dir().Local(), 0755)
+	assert.NoError(t, os.MkdirAll(outputFile.Dir().Local(), 0755))
 
 	testutils.GenerateSeparateAudioStreamsTestFile(testFile, 1, 2.0)
 

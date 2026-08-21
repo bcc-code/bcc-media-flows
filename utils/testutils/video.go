@@ -19,7 +19,9 @@ type VideoGeneratorParams struct {
 }
 
 func GenerateVideoFile(outFile paths.Path, videoParams VideoGeneratorParams) paths.Path {
-	os.MkdirAll(outFile.Dir().Local(), 0755)
+	if err := os.MkdirAll(outFile.Dir().Local(), 0755); err != nil {
+		panic(err)
+	}
 	args := []string{
 		"-f", "lavfi",
 		"-i", fmt.Sprintf("testsrc=size=%dx%d:rate=%d:duration=%f", videoParams.Width, videoParams.Height, videoParams.FrameRate, videoParams.Duration),
@@ -46,7 +48,9 @@ func GenerateVideoFile(outFile paths.Path, videoParams VideoGeneratorParams) pat
 // GenerateVideoFileWithTimecode generates a video file (MXF) with an embedded timecode.
 // This is useful for testing activities that read timecodes from video files.
 func GenerateVideoFileWithTimecode(outFile paths.Path, timecode string, duration float64, fps int) paths.Path {
-	os.MkdirAll(outFile.Dir().Local(), 0755)
+	if err := os.MkdirAll(outFile.Dir().Local(), 0755); err != nil {
+		panic(err)
+	}
 
 	args := []string{
 		"-f", "lavfi",
@@ -71,7 +75,9 @@ func GenerateVideoFileWithTimecode(outFile paths.Path, timecode string, duration
 // growing files. MXF stores the stream layout in the header partition, so the
 // file can be probed while partial and piped to ffmpeg without seeking.
 func GenerateStreamableMXFTestFile(outFile paths.Path, audioTracks int, duration float64) paths.Path {
-	os.MkdirAll(outFile.Dir().Local(), 0755)
+	if err := os.MkdirAll(outFile.Dir().Local(), 0755); err != nil {
+		panic(err)
+	}
 
 	args := []string{
 		"-f", "lavfi",
@@ -110,7 +116,9 @@ func GenerateStreamableMXFTestFile(outFile paths.Path, audioTracks int, duration
 }
 
 func GenerateSeparateAudioStreamsTestFile(outFile paths.Path, audioTracks int, duration float64) paths.Path {
-	os.MkdirAll(outFile.Dir().Local(), 0755)
+	if err := os.MkdirAll(outFile.Dir().Local(), 0755); err != nil {
+		panic(err)
+	}
 
 	args := []string{}
 

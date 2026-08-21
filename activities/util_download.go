@@ -39,7 +39,7 @@ func (ua UtilActivities) DownloadFileFromURL(ctx context.Context, in DownloadFil
 	if err != nil {
 		return nil, fmt.Errorf("download request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return nil, fmt.Errorf("download returned unexpected status: %s", resp.Status)

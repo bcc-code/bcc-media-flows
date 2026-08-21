@@ -43,9 +43,12 @@ func (c *Client) CreatePlaceholder(ingestType PlaceholderType, title string) (st
 	}
 
 	var body bytes.Buffer
-	tpl.Execute(&body, PlacholderTplData{
+	err := tpl.Execute(&body, PlacholderTplData{
 		Title: title,
 	})
+	if err != nil {
+		return "", fmt.Errorf("rendering placeholder template: %w", err)
+	}
 
 	result, err := c.restyClient.R().
 		SetHeader("content-type", "application/xml").

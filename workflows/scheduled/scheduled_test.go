@@ -1,7 +1,6 @@
 package scheduled
 
 import (
-	"os"
 	"testing"
 	"time"
 
@@ -22,7 +21,7 @@ type ScheduledTestSuite struct {
 }
 
 func (s *ScheduledTestSuite) SetupTest() {
-	os.Setenv("TEMPORAL_DEBUG", "true")
+	s.T().Setenv("TEMPORAL_DEBUG", "true")
 	s.env = s.NewTestWorkflowEnvironment()
 }
 
@@ -47,7 +46,7 @@ func (s *ScheduledTestSuite) Test_MediabankenPurgeTrash() {
 	s.NoError(err)
 
 	var result MediabankenPurgeTrashResult
-	s.env.GetWorkflowResult(&result)
+	s.NoError(s.env.GetWorkflowResult(&result))
 	s.Equal(trashedIDs, result.DeletedVXIDs)
 }
 
@@ -66,7 +65,7 @@ func (s *ScheduledTestSuite) Test_MediabankenPurgeTrash_Empty() {
 	s.NoError(err)
 
 	var result MediabankenPurgeTrashResult
-	s.env.GetWorkflowResult(&result)
+	s.NoError(s.env.GetWorkflowResult(&result))
 	s.Empty(result.DeletedVXIDs)
 }
 
@@ -83,7 +82,7 @@ func (s *ScheduledTestSuite) Test_CleanupTemp() {
 	s.NoError(err)
 
 	var result CleanupResult
-	s.env.GetWorkflowResult(&result)
+	s.NoError(s.env.GetWorkflowResult(&result))
 	s.Greater(result.DeletedCount, 0)
 
 	// Two files per folder, counted per root rather than listed.

@@ -1,7 +1,6 @@
 package vb_export
 
 import (
-	"os"
 	"strings"
 	"testing"
 
@@ -25,7 +24,7 @@ type VBExportTestSuite struct {
 }
 
 func (s *VBExportTestSuite) SetupTest() {
-	os.Setenv("TEMPORAL_DEBUG", "true")
+	s.T().Setenv("TEMPORAL_DEBUG", "true")
 	s.env = s.NewTestWorkflowEnvironment()
 }
 
@@ -150,7 +149,7 @@ func (s *VBExportTestSuite) Test_VBExport_XDCAM_Success() {
 	s.NoError(err)
 
 	var results []wfutils.ResultOrError[VBExportResult]
-	s.env.GetWorkflowResult(&results)
+	s.NoError(s.env.GetWorkflowResult(&results))
 	s.Len(results, 1)
 	s.NotNil(results[0].Result)
 	s.Equal("VX-123", results[0].Result.ID)
@@ -192,7 +191,7 @@ func (s *VBExportTestSuite) Test_VBExportToXDCAM() {
 	s.NoError(err)
 
 	var result VBExportResult
-	s.env.GetWorkflowResult(&result)
+	s.NoError(s.env.GetWorkflowResult(&result))
 	s.Equal("VX-123", result.ID)
 }
 
@@ -237,7 +236,7 @@ func (s *VBExportTestSuite) Test_VBExportToBStage() {
 	s.Equal("/Delivery/FraMB/B-Stage/test_video.mov", copied.Destination.Path)
 
 	var result VBExportResult
-	s.env.GetWorkflowResult(&result)
+	s.NoError(s.env.GetWorkflowResult(&result))
 	s.Equal("VX-123", result.ID)
 	s.Equal("test_video", result.Title)
 
@@ -290,7 +289,7 @@ func (s *VBExportTestSuite) Test_VBExportToRawAbekas_CopiesWithoutTranscoding() 
 	s.Equal("/Delivery/FraMB/Abekas-RAW/test_video.mxf", copied.Destination.Path)
 
 	var result VBExportResult
-	s.env.GetWorkflowResult(&result)
+	s.NoError(s.env.GetWorkflowResult(&result))
 	s.Equal("test_video", result.Title)
 }
 

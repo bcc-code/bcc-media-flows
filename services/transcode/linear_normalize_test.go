@@ -15,7 +15,7 @@ import (
 func Test_AdjustAudioLevel_Stereo(t *testing.T) {
 	testFile := paths.MustParse("./testdata/generated/normalize_stereo.wav")
 	outputDir := paths.MustParse("./testdata/generated/results/")
-	os.MkdirAll(outputDir.Local(), 0755)
+	assert.NoError(t, os.MkdirAll(outputDir.Local(), 0755))
 
 	testutils.GenerateMultichannelAudioFile(testFile, 2, 3)
 
@@ -39,7 +39,7 @@ func Test_AdjustAudioLevel_Stereo(t *testing.T) {
 func Test_AdjustAudioLevel_Mono(t *testing.T) {
 	testFile := paths.MustParse("./testdata/generated/normalize_mono.wav")
 	outputDir := paths.MustParse("./testdata/generated/results/")
-	os.MkdirAll(outputDir.Local(), 0755)
+	assert.NoError(t, os.MkdirAll(outputDir.Local(), 0755))
 
 	testutils.GenerateMultichannelAudioFile(testFile, 1, 3)
 
@@ -62,7 +62,7 @@ func Test_AdjustAudioLevel_Mono(t *testing.T) {
 func Test_AdjustAudioLevel_TooManyChannels(t *testing.T) {
 	testFile := paths.MustParse("./testdata/generated/normalize_4ch.wav")
 	outputDir := paths.MustParse("./testdata/generated/results/")
-	os.MkdirAll(outputDir.Local(), 0755)
+	assert.NoError(t, os.MkdirAll(outputDir.Local(), 0755))
 
 	testutils.GenerateMultichannelAudioFile(testFile, 4, 3)
 

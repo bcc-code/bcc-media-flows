@@ -81,8 +81,8 @@ func Test_convertTimeFormat(t *testing.T) {
 func Test_writeEvent_SingleLine(t *testing.T) {
 	tmpFile, err := os.CreateTemp("", "subtitle_test_*.ass")
 	assert.NoError(t, err)
-	defer os.Remove(tmpFile.Name())
-	defer tmpFile.Close()
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
+	defer func() { _ = tmpFile.Close() }()
 
 	assert.NoError(t, writeEvent(tmpFile, "00:00:01,000", "00:00:05,000", []string{"Hello world"}, 0.00011))
 
@@ -96,8 +96,8 @@ func Test_writeEvent_SingleLine(t *testing.T) {
 func Test_writeEvent_TwoLines(t *testing.T) {
 	tmpFile, err := os.CreateTemp("", "subtitle_test_*.ass")
 	assert.NoError(t, err)
-	defer os.Remove(tmpFile.Name())
-	defer tmpFile.Close()
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
+	defer func() { _ = tmpFile.Close() }()
 
 	assert.NoError(t, writeEvent(tmpFile, "00:00:01,000", "00:00:05,000", []string{"Line one", "Line two"}, 0.00011))
 
@@ -114,8 +114,8 @@ func Test_writeEvent_TwoLines(t *testing.T) {
 func Test_writeEvent_ThreeLines(t *testing.T) {
 	tmpFile, err := os.CreateTemp("", "subtitle_test_*.ass")
 	assert.NoError(t, err)
-	defer os.Remove(tmpFile.Name())
-	defer tmpFile.Close()
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
+	defer func() { _ = tmpFile.Close() }()
 
 	assert.NoError(t, writeEvent(tmpFile, "00:00:01,000", "00:00:05,000", []string{"A", "B", "C"}, 0.00011))
 
@@ -129,7 +129,7 @@ func Test_writeEvent_ThreeLines(t *testing.T) {
 func Test_writeEvent_ClosedFileReturnsError(t *testing.T) {
 	tmpFile, err := os.CreateTemp("", "subtitle_test_*.ass")
 	assert.NoError(t, err)
-	defer os.Remove(tmpFile.Name())
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 	assert.NoError(t, tmpFile.Close())
 
 	err = writeEvent(tmpFile, "00:00:01,000", "00:00:05,000", []string{"Hello"}, 0.00011)

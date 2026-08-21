@@ -18,7 +18,7 @@ func (ua UtilActivities) FtpPlayoutRename(_ context.Context, params FtpPlayoutRe
 	if err != nil {
 		return nil, err
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	err = client.Rename(params.From, params.To)
 	if err != nil {
