@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -18,6 +19,7 @@ var (
 
 func TCToSamples(tc string, fps int, sampleRate int) (int, error) {
 	frames := 0
+	fpsNum, fpsDen := fps, 1
 	var err error
 	if strings.Contains(tc, "@") {
 
@@ -25,9 +27,9 @@ func TCToSamples(tc string, fps int, sampleRate int) (int, error) {
 
 		switch splitTc[1] {
 		case FrameRatePAL.Value:
-			fps = 25
+			fpsNum, fpsDen = 25, 1
 		case FrameRateNTSC.Value:
-			fps = 30
+			fpsNum, fpsDen = 30000, 1001
 		default:
 			return 0, errors.New("invalid frame rate")
 		}
@@ -40,10 +42,17 @@ func TCToSamples(tc string, fps int, sampleRate int) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	return frames * sampleRate / fps, nil
+	if fpsNum <= 0 || fpsDen <= 0 {
+		return 0, fmt.Errorf("invalid fps: %d", fps)
+	}
+	return frames * sampleRate * fpsDen / fpsNum, nil
 }
 
 func TimecodeToFrames(timecode string, frameRate int) (int, error) {
+	if frameRate <= 0 {
+		return 0, fmt.Errorf("invalid frame rate: %d", frameRate)
+	}
+
 	parts := strings.Split(timecode, ":")
 	if len(parts) != 4 {
 		return 0, errors.New("invalid timecode format")
