@@ -119,7 +119,7 @@ func mergeItemToStereoStream(index int, tag string, item common.MergeInputItem) 
 
 	for _, stream := range item.Streams {
 		s, found := lo.Find(audioStreams, func(s ffmpeg.FFProbeStream) bool {
-			return s.Index == int(stream.StreamID)
+			return s.Index == stream.StreamID
 		})
 		if found {
 			streams = append(streams, s)
