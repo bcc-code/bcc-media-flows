@@ -131,7 +131,7 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 			filesToImport[languages.LanguagesByMU2[key].ISO6391] = outputFile
 		}
 	} else {
-		return fmt.Errorf("no offset - this is extremely unlikely to happen, please check the input files - STOPPING WORKFLOW")
+		return errors.New("no offset - this is extremely unlikely to happen, please check the input files - STOPPING WORKFLOW")
 	}
 
 	audioKeys, err := wfutils.GetMapKeysSafely(ctx, mu1Files.AudioFiles)

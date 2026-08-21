@@ -1,6 +1,7 @@
 package ingestworkflows
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"path"
@@ -71,7 +72,7 @@ func BmmTrackMetadata(ctx workflow.Context, params BmmTrackMetadataParams) (*Bmm
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	if params.VXSource == "" && params.FileURL == "" {
-		return nil, fmt.Errorf("either VXSource or FileURL must be provided")
+		return nil, errors.New("either VXSource or FileURL must be provided")
 	}
 
 	metadataJSON, err := wfutils.MarshalJson(ctx, bmmTrackMetadataPayload{

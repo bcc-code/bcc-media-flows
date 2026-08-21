@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"io"
@@ -28,10 +29,10 @@ func LoadRavenConfigFromEnv() (RavenConfig, error) {
 		CertKeyPath: environment.Get().RavenDB.CertKeyPath(),
 	}
 	if cfg.URL == "" {
-		return cfg, fmt.Errorf("RAVENDB_URL is required")
+		return cfg, errors.New("RAVENDB_URL is required")
 	}
 	if cfg.Database == "" {
-		return cfg, fmt.Errorf("RAVENDB_DATABASE is required")
+		return cfg, errors.New("RAVENDB_DATABASE is required")
 	}
 	return cfg, nil
 }
@@ -206,7 +207,7 @@ func (c *RavenClient) LoadTracksByAlbumID(ctx context.Context, albumID int) ([]R
 
 func (c *RavenClient) LoadTracksByIDs(ctx context.Context, ids []int) ([]RavenTrack, error) {
 	if len(ids) == 0 {
-		return nil, fmt.Errorf("LoadTracksByIDs: ids must not be empty")
+		return nil, errors.New("LoadTracksByIDs: ids must not be empty")
 	}
 
 	parts := make([]string, len(ids))

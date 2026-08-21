@@ -137,11 +137,11 @@ func calculateAudioAdjustment(ctx workflow.Context, vxID string, audioPaths map[
 
 	originalShape := shapes.GetShape("original")
 	if originalShape == nil {
-		return 0, fmt.Errorf("original shape not found")
+		return 0, errors.New("original shape not found")
 	}
 
 	if len(originalShape.AudioComponent) == 0 {
-		return 0, fmt.Errorf("original shape has no audio")
+		return 0, errors.New("original shape has no audio")
 	}
 
 	originalPath, err := paths.Parse(originalShape.GetPath())
@@ -168,7 +168,7 @@ func calculateAudioAdjustment(ctx workflow.Context, vxID string, audioPaths map[
 
 	reaperAudio, ok := audioPaths["nor"]
 	if !ok {
-		return 0, fmt.Errorf("nor audio not found")
+		return 0, errors.New("nor audio not found")
 	}
 
 	diff, err := wfutils.Execute(ctx, activities.Util.GetAudioDiff, activities.GetAudioDiffParams{

@@ -3,6 +3,7 @@ package filecatalyst
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"math/rand"
@@ -197,7 +198,7 @@ func PokeFileCatalyst(ctx context.Context) error {
 
 	// Validate required environment variables
 	if baseURL == "" || taskID == "" || username == "" || password == "" {
-		return fmt.Errorf("missing required environment variables: FILECATALYST_URL, FILECATALYST_TASK_ID, FILECATALYST_USERNAME, FILECATALYST_PASSWORD")
+		return errors.New("missing required environment variables: FILECATALYST_URL, FILECATALYST_TASK_ID, FILECATALYST_USERNAME, FILECATALYST_PASSWORD")
 	}
 
 	// Get current configuration

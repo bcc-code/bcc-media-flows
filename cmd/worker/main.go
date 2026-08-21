@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/internal/bootstrap"
 	cantemo "github.com/bcc-code/bcc-media-flows/services/cantemo"
@@ -293,7 +294,7 @@ func update(version string) error {
 
 	exe, err := os.Executable()
 	if err != nil {
-		return fmt.Errorf("could not locate executable path")
+		return errors.New("could not locate executable path")
 	}
 	if err := updater.UpdateTo(ctx, latest, exe); err != nil {
 		return fmt.Errorf("error occurred while updating binary: %w", err)

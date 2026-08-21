@@ -2,6 +2,7 @@ package directus
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -214,7 +215,7 @@ func (c *Client) AssetExists(mediabankenID string) (bool, error) {
 // CreateStyledImage creates a styled image in Directus and returns the created styled image
 func (c *Client) CreateStyledImage(imageID, style string) (*StyledImage, error) {
 	if imageID == "" {
-		return nil, fmt.Errorf("imageID is required")
+		return nil, errors.New("imageID is required")
 	}
 
 	validStyles := []string{"poster", "default", "icon", "album", "featured"}
@@ -240,7 +241,7 @@ func (c *Client) CreateStyledImage(imageID, style string) (*StyledImage, error) 
 	}
 
 	if result.Data.ID == "" {
-		return nil, fmt.Errorf("invalid response from Directus: missing styled image ID")
+		return nil, errors.New("invalid response from Directus: missing styled image ID")
 	}
 
 	return &result.Data, nil
@@ -427,7 +428,7 @@ func (c *Client) UploadFile(directusFolderID string, filePath string) (*File, er
 	}
 
 	if result.Data.ID == "" {
-		return nil, fmt.Errorf("invalid response from Directus: missing file ID")
+		return nil, errors.New("invalid response from Directus: missing file ID")
 	}
 
 	return &result.Data, nil

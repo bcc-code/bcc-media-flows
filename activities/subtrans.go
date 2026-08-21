@@ -2,6 +2,7 @@ package activities
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -101,7 +102,7 @@ func (ua UtilActivities) GetSubtitlesActivity(_ context.Context, params GetSubti
 	}
 
 	if !info.IsDir() {
-		return nil, fmt.Errorf("Destination path is not a directory")
+		return nil, errors.New("Destination path is not a directory")
 	}
 
 	subs, err := client.GetSubtitles(params.SubtransID, params.Format, params.ApprovedOnly)

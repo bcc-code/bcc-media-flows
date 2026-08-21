@@ -100,10 +100,10 @@ func ImportSubtitles(ctx workflow.Context, input ImportSubtitlesInput) error {
 	logger := workflow.GetLogger(ctx)
 
 	if input.VXID == "" {
-		return fmt.Errorf("missing VXID")
+		return errors.New("missing VXID")
 	}
 	if input.Language == "" {
-		return fmt.Errorf("missing language")
+		return errors.New("missing language")
 	}
 
 	subtitles, err := resolveSubtitles(ctx, input)

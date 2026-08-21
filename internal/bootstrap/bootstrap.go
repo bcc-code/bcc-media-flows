@@ -29,7 +29,7 @@ func LoadEnv() {
 func TemporalClient() (client.Client, error) {
 	host := environment.Get().Temporal.HostPort()
 	if host == "" {
-		return nil, fmt.Errorf("TEMPORAL_HOST_PORT is required")
+		return nil, errors.New("TEMPORAL_HOST_PORT is required")
 	}
 
 	return client.Dial(client.Options{

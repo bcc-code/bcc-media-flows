@@ -128,7 +128,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 		sourceFiles = append(sourceFiles, *params.SourceFile)
 	} else {
 		if params.Directory == nil {
-			return nil, fmt.Errorf("neither SourceFile nor Directory provided")
+			return nil, errors.New("neither SourceFile nor Directory provided")
 		}
 
 		files, err := wfutils.ListFiles(ctx, *params.Directory)

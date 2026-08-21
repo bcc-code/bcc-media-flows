@@ -57,7 +57,7 @@ func shortsDataFromClickUpTask(t clickup.Task) *ShortsData {
 // The separate shorts are exported in parallel using the ExportShort workflow
 func BulkExportShorts(ctx workflow.Context, input BulkExportShortsInput) error {
 	if input.CollectionVXID == "" {
-		return fmt.Errorf("collection VXID is required")
+		return errors.New("collection VXID is required")
 	}
 
 	logger := workflow.GetLogger(ctx)
@@ -275,7 +275,7 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 	}
 
 	if mediaItemResult == nil {
-		return fmt.Errorf("failed to create media item: no data in response")
+		return errors.New("failed to create media item: no data in response")
 	}
 
 	// Tag codes will be sourced from ClickUp custom fields once those are added.
@@ -297,7 +297,7 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 	}
 
 	if shortResult == nil {
-		return fmt.Errorf("failed to create short: no data in response")
+		return errors.New("failed to create short: no data in response")
 	}
 
 	return nil

@@ -2,6 +2,7 @@ package transcode
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -266,7 +267,7 @@ func SplitAudioChannels(filePath, outputDir paths.Path, cb ffmpeg.ProgressCallba
 
 func ExtractAudioChannels(filePath paths.Path, output map[int]paths.Path, cb ffmpeg.ProgressCallback) (map[int]paths.Path, error) {
 	if len(output) == 0 {
-		return nil, fmt.Errorf("no output channels specified")
+		return nil, errors.New("no output channels specified")
 	}
 
 	params := []string{

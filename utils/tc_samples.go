@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"fmt"
+	"errors"
 	"strconv"
 	"strings"
 
@@ -29,7 +29,7 @@ func TCToSamples(tc string, fps int, sampleRate int) (int, error) {
 		case FrameRateNTSC.Value:
 			fps = 30
 		default:
-			return 0, fmt.Errorf("invalid frame rate")
+			return 0, errors.New("invalid frame rate")
 		}
 
 		frames, err = strconv.Atoi(splitTc[0])
@@ -46,7 +46,7 @@ func TCToSamples(tc string, fps int, sampleRate int) (int, error) {
 func TimecodeToFrames(timecode string, frameRate int) (int, error) {
 	parts := strings.Split(timecode, ":")
 	if len(parts) != 4 {
-		return 0, fmt.Errorf("invalid timecode format")
+		return 0, errors.New("invalid timecode format")
 	}
 
 	hours, err := strconv.Atoi(parts[0])

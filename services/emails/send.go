@@ -1,6 +1,7 @@
 package emails
 
 import (
+	"errors"
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"strings"
@@ -12,7 +13,7 @@ import (
 
 func Send(email string, subject string, messagePlainText string, messageHTML string) error {
 	if strings.TrimSpace(email) == "" {
-		return fmt.Errorf("recipient email is empty")
+		return errors.New("recipient email is empty")
 	}
 
 	client := sendgrid.NewSendClient(environment.Get().SendgridAPIKey)

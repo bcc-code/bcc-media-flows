@@ -104,7 +104,7 @@ func parseVSError(body []byte, statusCode int, tag, itemID string) error {
 
 func (c *Client) DeleteShape(assetID, shapeID string) error {
 	if shapeID == "" {
-		return fmt.Errorf("shapeID is empty - would delete all shapes")
+		return errors.New("shapeID is empty - would delete all shapes")
 	}
 
 	requestURL, _ := url.Parse(c.baseURL)
@@ -172,7 +172,7 @@ func (c *Client) GetResolutions(itemVXID string) ([]Resolution, error) {
 
 	shape := shapes.GetShape("original")
 	if shape == nil {
-		return nil, fmt.Errorf("no original shape found")
+		return nil, errors.New("no original shape found")
 	}
 	if len(shape.VideoComponent) == 0 {
 		return nil, nil

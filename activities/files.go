@@ -3,7 +3,6 @@ package activities
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -234,7 +233,7 @@ func (ua UtilActivities) WaitForFile(ctx context.Context, input FileInput) (bool
 		}
 
 		if res.Size() < lastKnownSize {
-			return false, fmt.Errorf("file size decreased")
+			return false, errors.New("file size decreased")
 		} else if res.Size() > lastKnownSize {
 			lastKnownSize = res.Size()
 			iterationsWhereSizeIsFreezed = 0

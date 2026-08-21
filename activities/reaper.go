@@ -3,6 +3,7 @@ package activities
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -50,7 +51,7 @@ func (l LiveActivities) StartReaper(ctx context.Context, _ any) (string, error) 
 	}
 
 	if response.SessionID == "" {
-		return "", fmt.Errorf("reaper started no session: no session_id in the response")
+		return "", errors.New("reaper started no session: no session_id in the response")
 	}
 
 	return response.SessionID, nil

@@ -1,6 +1,7 @@
 package ffmpeg
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -54,7 +55,7 @@ type Job struct {
 // to put a file there.
 func Run(job Job, cb ProgressCallback) (StreamInfo, error) {
 	if job.Input == "" {
-		return StreamInfo{}, fmt.Errorf("ffmpeg job has no input")
+		return StreamInfo{}, errors.New("ffmpeg job has no input")
 	}
 	if job.Output == "" {
 		return StreamInfo{}, fmt.Errorf("ffmpeg job for %s has no output", job.Input)
@@ -133,7 +134,7 @@ func FileInputs(paths []string) []Input {
 // argument list exactly as given.
 func RunArgs(args []string, output string, info StreamInfo, cb ProgressCallback) error {
 	if output == "" {
-		return fmt.Errorf("ffmpeg command has no output")
+		return errors.New("ffmpeg command has no output")
 	}
 
 	if err := os.MkdirAll(filepath.Dir(output), OutputDirMode); err != nil {
