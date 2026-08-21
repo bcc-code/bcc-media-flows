@@ -26,6 +26,7 @@ func (s *AudioTestSuite) SetupTest() {
 
 func (s *AudioTestSuite) TestTranscodeToAudioAac() {
 	t := s.T()
+	testutils.SkipWithoutEncoder(t, "libfdk_aac")
 
 	inputFile := paths.MustParse("./testdata/generated/aac_input.wav")
 	outputDir := paths.MustParse("./testdata/generated/aac_output/")
