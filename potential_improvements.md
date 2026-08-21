@@ -4,7 +4,6 @@ Condensed 2026-08-21. Items confirmed fixed were removed. Bugs section validated
 
 ## Bugs
 
-- `services/telegram/chats.go` — enum built from zero-valued members at init; `Parse`/`Contains` are silently wrong.
 - `services/vidispine/export.go` — `convertFromClipTCTimeToSequenceRelativeTime` mutates the caller's metadata; every clip gets a bogus `und` subtitle entry (`allSubLanguages.Add("und")` outside its nil guard); BMM-title check tests the wrong variable.
 - `services/transcode/subtitles.go` — `specialASSConverter` ignores write/scan errors; truncated `.ass` burns in as success.
 - `paths/paths.go` — `Prepend` writes into the variadic backing array, rewriting the caller's slice. Latent: all current callers pass literals.
