@@ -4,7 +4,6 @@ Condensed 2026-08-21. Items confirmed fixed were removed. Bugs section validated
 
 ## Bugs
 
-- `paths/paths.go` — `Prepend` writes into the variadic backing array, rewriting the caller's slice. Latent: all current callers pass literals.
 - `cache/store.go` — unchecked type assertion on a flat key namespace; janitor goroutine starts from `init()`; TTL hardcoded to 5 min.
 - `activities/crop_shorts.go` — ffprobe runs on the worker queue (no ffmpeg installed) and its error is discarded, silently producing 25 fps crops for 50 fps material. Already documented as a known limitation in `activities/queues_test.go`.
 - 42 `errcheck` findings (verified 2026-08-21): dropped errors in ingest/export/misc workflows (Telegram sends, metadata writes, etc.).
