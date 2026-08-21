@@ -204,6 +204,11 @@ func TestGetSubtitles_PassesApprovedOnlyThrough(t *testing.T) {
 	}
 }
 
+func TestStripBOM_StripsLeadingAndKeepsTrailing(t *testing.T) {
+	assert.Equal(t, []byte("text\ufeff"), stripBOM([]byte("\ufefftext\ufeff")))
+	assert.Equal(t, []byte("text"), stripBOM([]byte("text")))
+}
+
 func TestClient_TransportErrorDoesNotLeakTheKey(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
 	server.Close()
