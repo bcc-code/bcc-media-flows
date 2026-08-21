@@ -83,7 +83,7 @@ func (s *NormalizeTestSuite) TestAdjustAudioLevelActivity() {
 
 	testFile := paths.MustParse("./testdata/generated/adjust_level_input.wav")
 	outputDir := paths.MustParse("./testdata/generated/adjust_level_output/")
-	os.MkdirAll(outputDir.Local(), 0755)
+	s.Require().NoError(os.MkdirAll(outputDir.Local(), 0755))
 	err := transcode.GenerateToneFile(440, 3, 48000, "01:00:00:00", testFile)
 	assert.NoError(t, err)
 
@@ -111,7 +111,7 @@ func (s *NormalizeTestSuite) TestNormalizeAudioActivity_WithAdjustment() {
 
 	testFile := paths.MustParse("./testdata/generated/normalize_input.wav")
 	outputDir := paths.MustParse("./testdata/generated/normalize_output/")
-	os.MkdirAll(outputDir.Local(), 0755)
+	s.Require().NoError(os.MkdirAll(outputDir.Local(), 0755))
 	err := transcode.GenerateToneFile(440, 3, 48000, "01:00:00:00", testFile)
 	assert.NoError(t, err)
 

@@ -28,7 +28,7 @@ func (s *AnalyzeTestSuite) TestGetMimeType_TextFile() {
 	t := s.T()
 
 	testFile := paths.MustParse("./testdata/generated/mime_test.txt")
-	os.MkdirAll(testFile.Dir().Local(), 0755)
+	s.Require().NoError(os.MkdirAll(testFile.Dir().Local(), 0755))
 	err := os.WriteFile(testFile.Local(), []byte("hello world"), 0644)
 	assert.NoError(t, err)
 

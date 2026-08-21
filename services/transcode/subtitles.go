@@ -100,13 +100,13 @@ func specialASSConverter(header, inputFile, outputFile string, offset float64) e
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	outFile, err := os.Create(outputFile)
 	if err != nil {
 		return err
 	}
-	defer outFile.Close()
+	defer func() { _ = outFile.Close() }()
 
 	if _, err := outFile.WriteString(header); err != nil {
 		return fmt.Errorf("writing ASS header to %s: %w", outputFile, err)

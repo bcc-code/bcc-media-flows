@@ -47,9 +47,7 @@ func (s *UnitTestSuite) TestStandardizeFileName() {
 	assert.NotNil(t, res)
 
 	res2 := &FileResult{}
-	res.Get(res2)
-
-	assert.NoError(t, err)
+	assert.NoError(t, res.Get(res2))
 	assert.Equal(t, pathString+"/asdk_lkawd_823____.xYz", "./"+res2.Path.Local())
 }
 

@@ -16,7 +16,7 @@ func Test_MuxToSimpleMXF(t *testing.T) {
 	videoFile := paths.MustParse("./testdata/generated/mxf_video.mov")
 	audioFile := paths.MustParse("./testdata/generated/mxf_audio.wav")
 	outputDir := paths.MustParse("./testdata/generated/results/")
-	os.MkdirAll(outputDir.Local(), 0755)
+	assert.NoError(t, os.MkdirAll(outputDir.Local(), 0755))
 
 	testutils.GenerateVideoFile(videoFile, testutils.VideoGeneratorParams{
 		DAR:       "16/9",
@@ -28,7 +28,7 @@ func Test_MuxToSimpleMXF(t *testing.T) {
 		Profile:   "3",
 	})
 
-	transcode.GenerateToneFile(1000, 3, 48000, "01:00:00:00", audioFile)
+	assert.NoError(t, transcode.GenerateToneFile(1000, 3, 48000, "01:00:00:00", audioFile))
 
 	res, err := transcode.MuxToSimpleMXF(common.SimpleMuxInput{
 		FileName:        "test_output",
@@ -57,7 +57,7 @@ func Test_MuxToSimpleMXF_MultipleAudio(t *testing.T) {
 	audioFile1 := paths.MustParse("./testdata/generated/mxf_audio1.wav")
 	audioFile2 := paths.MustParse("./testdata/generated/mxf_audio2.wav")
 	outputDir := paths.MustParse("./testdata/generated/results/")
-	os.MkdirAll(outputDir.Local(), 0755)
+	assert.NoError(t, os.MkdirAll(outputDir.Local(), 0755))
 
 	testutils.GenerateVideoFile(videoFile, testutils.VideoGeneratorParams{
 		DAR:       "16/9",
@@ -69,8 +69,8 @@ func Test_MuxToSimpleMXF_MultipleAudio(t *testing.T) {
 		Profile:   "3",
 	})
 
-	transcode.GenerateToneFile(1000, 3, 48000, "01:00:00:00", audioFile1)
-	transcode.GenerateToneFile(500, 3, 48000, "01:00:00:00", audioFile2)
+	assert.NoError(t, transcode.GenerateToneFile(1000, 3, 48000, "01:00:00:00", audioFile1))
+	assert.NoError(t, transcode.GenerateToneFile(500, 3, 48000, "01:00:00:00", audioFile2))
 
 	res, err := transcode.MuxToSimpleMXF(common.SimpleMuxInput{
 		FileName:        "test_multi_audio",

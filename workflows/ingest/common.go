@@ -180,7 +180,9 @@ func notifyImportCompleted(ctx workflow.Context, recipients []string, jobID int,
 	}
 
 	msg, _ := telegram.NewMessage(telegram.ChatOther, content)
-	wfutils.Execute(ctx, activities.Util.SendTelegramMessage, msg).Wait(ctx)
+	if err := wfutils.Execute(ctx, activities.Util.SendTelegramMessage, msg).Wait(ctx); err != nil {
+		workflow.GetLogger(ctx).Error("Failed to send telegram notification", "error", err)
+	}
 
 	email, _ := emails.NewMessage(content, recipients, nil, nil)
 	return wfutils.Execute(ctx, activities.Util.SendEmail, email).Wait(ctx)
@@ -203,7 +205,9 @@ func notifyImportFailed(ctx workflow.Context, recipients []string, jobID int, fi
 		return err
 	}
 
-	wfutils.Execute(ctx, activities.Util.SendTelegramMessage, msg).Wait(ctx)
+	if err := wfutils.Execute(ctx, activities.Util.SendTelegramMessage, msg).Wait(ctx); err != nil {
+		workflow.GetLogger(ctx).Error("Failed to send telegram notification", "error", err)
+	}
 	email, _ := emails.NewMessage(content, recipients, nil, nil)
 	return wfutils.Execute(ctx, activities.Util.SendEmail, email).Wait(ctx)
 }

@@ -17,7 +17,7 @@ func Test_ProRes(t *testing.T) {
 	outputFile := paths.MustParse("./testdata/generated/results/" + testFile.Base())
 
 	// Create output directory
-	os.MkdirAll(outputFile.Dir().Local(), 0755)
+	assert.NoError(t, os.MkdirAll(outputFile.Dir().Local(), 0755))
 
 	testutils.GenerateVideoFile(testFile, testutils.VideoGeneratorParams{
 		DAR:       "16/9",
@@ -67,7 +67,7 @@ func Test_ProResHyperdeck(t *testing.T) {
 	outputFile := paths.MustParse("./testdata/generated/results/" + testFile.Base())
 
 	// Create output directory
-	os.MkdirAll(outputFile.Dir().Local(), 0755)
+	assert.NoError(t, os.MkdirAll(outputFile.Dir().Local(), 0755))
 
 	testutils.GenerateVideoFile(testFile, testutils.VideoGeneratorParams{
 		DAR:       "16/9",

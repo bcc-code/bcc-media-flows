@@ -492,10 +492,13 @@ func muxFinishedPreview(inputFolder, outputFile string) error {
 		return err
 	}
 
-	defer f.Close()
-
 	_, err = f.WriteString("\n#EXT-X-ENDLIST")
 	if err != nil {
+		_ = f.Close()
+		return err
+	}
+
+	if err := f.Close(); err != nil {
 		return err
 	}
 

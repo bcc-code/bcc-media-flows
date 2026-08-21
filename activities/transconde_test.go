@@ -28,7 +28,7 @@ func (s *TranscodeTestSuite) TestAThing() {
 	// Change this path to where your test file is
 	testFilePath := "./testdata/5sec.mov"
 
-	os.MkdirAll("./testdata/generated/", 0755)
+	s.Require().NoError(os.MkdirAll("./testdata/generated/", 0755))
 
 	input := common.MergeInput{
 		Title: "Softron_20sec_64ch_1audio-por",

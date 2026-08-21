@@ -91,7 +91,9 @@ func (aa AudioActivities) AdjustAudioToVideoStart(ctx context.Context, input Adj
 	videoTC, err := ffmpeg.GetTimeCode(input.VideoFile.Local())
 	if err != nil {
 		log.Warn(err.Error())
-		telegram.SendText(telegram.ChatOther, fmt.Sprintf("🟧 Unable to get timecode for `%s`. File imported unadjusted and *WILL* be out of sync with video.", input.AudioFile))
+		if _, terr := telegram.SendText(telegram.ChatOther, fmt.Sprintf("🟧 Unable to get timecode for `%s`. File imported unadjusted and *WILL* be out of sync with video.", input.AudioFile)); terr != nil {
+			log.Error("Failed to send telegram notification", "error", terr)
+		}
 	} else {
 		videoSamples, err = utils.TCToSamples(videoTC, 25, 48000)
 		if err != nil {
@@ -102,7 +104,9 @@ func (aa AudioActivities) AdjustAudioToVideoStart(ctx context.Context, input Adj
 	audioSamples, err := ffmpeg.GetTimeReference(input.AudioFile.Local())
 	if err != nil {
 		log.Warn(err.Error())
-		telegram.SendText(telegram.ChatOther, fmt.Sprintf("🟧 Unable to get timecode for `%s`. File imported unadjusted and *WILL* be out of sync with video.", input.AudioFile))
+		if _, terr := telegram.SendText(telegram.ChatOther, fmt.Sprintf("🟧 Unable to get timecode for `%s`. File imported unadjusted and *WILL* be out of sync with video.", input.AudioFile)); terr != nil {
+			log.Error("Failed to send telegram notification", "error", terr)
+		}
 	} else if videoSamples > 0 {
 		samplesToAdd += audioSamples - videoSamples
 	}
