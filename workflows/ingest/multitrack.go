@@ -2,6 +2,7 @@ package ingestworkflows
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -48,6 +49,10 @@ func Multitrack(ctx workflow.Context, params MasterParams) (*MasterResult, error
 	files, err := wfutils.ListFiles(ctx, *params.Directory)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(files) == 0 {
+		return nil, fmt.Errorf("no files found in directory %s", params.Directory.Local())
 	}
 
 	sort.Sort(files)

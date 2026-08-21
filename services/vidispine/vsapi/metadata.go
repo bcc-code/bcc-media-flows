@@ -178,7 +178,7 @@ func (c *Client) AddToItemMetadataField(params ItemMetadataFieldParams) error {
 // for use with ffmpeg
 func (m *MetadataResult) GetInOut(beginTC string) (float64, float64, error) {
 	var v *MetadataField
-	if val, ok := m.Terse[vscommon.FieldTitle.Value]; !ok {
+	if val, ok := m.Terse[vscommon.FieldTitle.Value]; !ok || len(val) == 0 {
 		// This should not happen as everything should have a title
 		return 0, 0, errors.New("Missing title")
 	} else {

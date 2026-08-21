@@ -5,7 +5,6 @@ Condensed 2026-08-21. Items confirmed fixed were removed. Bugs section validated
 ## Bugs
 
 - 42 `errcheck` findings (verified 2026-08-21): dropped errors in ingest/export/misc workflows (Telegram sends, metadata writes, etc.).
-- Panic-prone indexing without length checks: `multitrack` (service + ingest workflow), `playout_mux`, `vsapi/metadata` `GetInOut`, trigger_ui resolution index from unvalidated form input.
 
 ## Security
 

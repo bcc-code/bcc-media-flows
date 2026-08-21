@@ -295,6 +295,10 @@ func (s *TriggerServer) vxExportPOST(ctx *gin.Context) {
 
 	var selectedResolutions []utils.Resolution
 	for _, i := range resolutionIndexes {
+		if i < 0 || i >= len(vsresolutions) {
+			renderErrorPage(ctx, http.StatusBadRequest, fmt.Errorf("invalid resolution index %d", i))
+			return
+		}
 		r := vsresolutions[i]
 		selectedResolutions = append(selectedResolutions, utils.Resolution{
 			Width:  r.Width,
