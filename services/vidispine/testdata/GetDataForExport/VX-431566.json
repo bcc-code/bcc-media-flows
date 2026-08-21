@@ -670,7 +670,7 @@
   "SafeTitle": "TITLE_OF_THE_SEQUENCE",
   "Title": "TITLE_OF_THE_SEQUENCE",
   "ImportDate": "2022-10-30T15:18:46.52Z",
-  "BmmTitle": "",
+  "BmmTitle": null,
   "BmmTrackID": null,
   "OriginalLanguage": "no",
   "TranscribedLanguage": "no"
