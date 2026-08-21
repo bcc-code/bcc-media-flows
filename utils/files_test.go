@@ -35,6 +35,13 @@ func TestIsDirEmpty(t *testing.T) {
 	assert.False(t, empty)
 }
 
+func TestIsMedia(t *testing.T) {
+	assert.True(t, utils.IsMedia("clip.mov"))
+	assert.True(t, utils.IsMedia("CLIP.MOV"))
+	assert.True(t, utils.IsMedia("clip.MXF"))
+	assert.False(t, utils.IsMedia("image.PNG"))
+}
+
 func TestValidRawFilename(t *testing.T) {
 	// Ø is not allowed
 	assert.False(t, utils.ValidRawFilename("KJS80_INTERVJUFILM_BRØDRE_RCC_AUD_V02.wav"))
