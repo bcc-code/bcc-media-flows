@@ -108,7 +108,9 @@ func specialASSConverter(header, inputFile, outputFile string, offset float64) e
 	}
 	defer outFile.Close()
 
-	outFile.WriteString(header)
+	if _, err := outFile.WriteString(header); err != nil {
+		return fmt.Errorf("writing ASS header to %s: %w", outputFile, err)
+	}
 
 	scanner := bufio.NewScanner(file)
 	var lineCount int
@@ -133,7 +135,9 @@ func specialASSConverter(header, inputFile, outputFile string, offset float64) e
 
 		if line == "" {
 			if len(textLines) > 0 {
-				writeEvent(outFile, startTime, endTime, textLines, offset)
+				if err := writeEvent(outFile, startTime, endTime, textLines, offset); err != nil {
+					return err
+				}
 				textLines = nil
 			}
 			lineCount = 0
@@ -142,12 +146,22 @@ func specialASSConverter(header, inputFile, outputFile string, offset float64) e
 		}
 	}
 
-	// Write the last event if the file doesn't end with a blank line
-	if len(textLines) > 0 {
-		writeEvent(outFile, startTime, endTime, textLines, offset)
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("reading %s: %w", inputFile, err)
 	}
 
-	return err
+	// Write the last event if the file doesn't end with a blank line
+	if len(textLines) > 0 {
+		if err := writeEvent(outFile, startTime, endTime, textLines, offset); err != nil {
+			return err
+		}
+	}
+
+	if err := outFile.Close(); err != nil {
+		return fmt.Errorf("closing %s: %w", outputFile, err)
+	}
+
+	return nil
 }
 
 func convertTimestamp(input string) string {
@@ -179,7 +193,7 @@ func convertTimestamp(input string) string {
 	return fmt.Sprintf("%s:%s:%s%s", hours, timeParts[1], secondsParts[0], secondsRounded)
 }
 
-func writeEvent(outFile *os.File, startTime, endTime string, textLines []string, offset float64) {
+func writeEvent(outFile *os.File, startTime, endTime string, textLines []string, offset float64) error {
 	startTime = convertTimeFormat(startTime)
 	endTime = convertTimeFormat(endTime)
 
@@ -193,7 +207,10 @@ func writeEvent(outFile *os.File, startTime, endTime string, textLines []string,
 	}
 
 	event := fmt.Sprintf("Dialogue: 0,%s,%s,Default,,0,0,0,,%s\n", startTime, endTime, text)
-	outFile.WriteString(event)
+	if _, err := outFile.WriteString(event); err != nil {
+		return fmt.Errorf("writing ASS event to %s: %w", outFile.Name(), err)
+	}
+	return nil
 }
 
 func convertTimeFormat(srtTime string) string {
