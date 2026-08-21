@@ -4,7 +4,6 @@ Condensed 2026-08-21. Items confirmed fixed were removed. Bugs section validated
 
 ## Bugs
 
-- `workflows/export/shorts.go:442` — `os.Stat` inside workflow code (`generateThumbnailForShort`); not replay-safe. Use `wfutils.RcloneCheckFileExists`.
 - `workflows/misc/slow_move_files.go:50` — `_, _ = c.SignalWithStartWorkflow(...)` then `return nil` in a local activity; the swallowed error also defeats the `MaximumAttempts: 5` retry policy, so a failed start is invisible.
 - `workflows/export/vx_export_bmm.go:62,407` — `panic` in workflow code; workflow task retries forever. Return errors.
 - `workflows/misc/cleanup_production.go` — `MoveFileByImportDate` activity is registered nowhere (the workflow itself is intentionally unregistered); latent trap for whoever enables the flow.

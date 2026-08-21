@@ -189,6 +189,12 @@ func IsImage(ctx workflow.Context, file paths.Path) (bool, error) {
 	return strings.HasPrefix(*mimeType, "image"), nil
 }
 
+func FileExists(ctx workflow.Context, file paths.Path) (bool, error) {
+	return Execute(ctx, activities.Util.FileExists, activities.FileInput{
+		Path: file,
+	}).Result(ctx)
+}
+
 func RcloneCheckFileExists(ctx workflow.Context, file paths.Path) (bool, error) {
 	return Execute(ctx, activities.Util.RcloneCheckFileExists, activities.RcloneSingleFileInput{
 		File: file,
