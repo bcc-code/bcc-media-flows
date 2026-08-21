@@ -13,6 +13,7 @@ import (
 )
 
 func Test_AACEncode(t *testing.T) {
+	testutils.SkipWithoutEncoder(t, "libfdk_aac")
 	tempDstPath := paths.MustParse("./testdata/test" + t.Name() + ".wav")
 	err := GenerateToneFile(1000, 5, 48000, "01:00:00:00", tempDstPath)
 	assert.NoError(t, err)
