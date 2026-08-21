@@ -59,6 +59,28 @@ func Test_GetInOut_SubclipErr(t *testing.T) {
 	assert.Equal(t, 0.0, out)
 }
 
+func Test_GetInOut_EmptyTitle(t *testing.T) {
+	m := MetadataResult{
+		Terse: map[string][]*MetadataField{
+			vscommon.FieldTitle.Value: {},
+		},
+	}
+
+	in, out, err := m.GetInOut("")
+	assert.EqualError(t, err, "Missing title")
+	assert.Equal(t, 0.0, in)
+	assert.Equal(t, 0.0, out)
+}
+
+func Test_GetInOut_MissingTitle(t *testing.T) {
+	m := MetadataResult{Terse: map[string][]*MetadataField{}}
+
+	in, out, err := m.GetInOut("")
+	assert.EqualError(t, err, "Missing title")
+	assert.Equal(t, 0.0, in)
+	assert.Equal(t, 0.0, out)
+}
+
 func Test_GenerateMetUpdateXML(t *testing.T) {
 	buf, _ := createSetItemMetadataFieldXml(xmlSetItemMetadataFieldParams{
 		StartTC: "-INF",
