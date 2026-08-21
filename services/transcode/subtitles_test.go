@@ -84,7 +84,7 @@ func Test_writeEvent_SingleLine(t *testing.T) {
 	defer os.Remove(tmpFile.Name())
 	defer tmpFile.Close()
 
-	writeEvent(tmpFile, "00:00:01,000", "00:00:05,000", []string{"Hello world"}, 0.00011)
+	assert.NoError(t, writeEvent(tmpFile, "00:00:01,000", "00:00:05,000", []string{"Hello world"}, 0.00011))
 
 	content, err := os.ReadFile(tmpFile.Name())
 	assert.NoError(t, err)
@@ -99,7 +99,7 @@ func Test_writeEvent_TwoLines(t *testing.T) {
 	defer os.Remove(tmpFile.Name())
 	defer tmpFile.Close()
 
-	writeEvent(tmpFile, "00:00:01,000", "00:00:05,000", []string{"Line one", "Line two"}, 0.00011)
+	assert.NoError(t, writeEvent(tmpFile, "00:00:01,000", "00:00:05,000", []string{"Line one", "Line two"}, 0.00011))
 
 	content, err := os.ReadFile(tmpFile.Name())
 	assert.NoError(t, err)
@@ -117,13 +117,23 @@ func Test_writeEvent_ThreeLines(t *testing.T) {
 	defer os.Remove(tmpFile.Name())
 	defer tmpFile.Close()
 
-	writeEvent(tmpFile, "00:00:01,000", "00:00:05,000", []string{"A", "B", "C"}, 0.00011)
+	assert.NoError(t, writeEvent(tmpFile, "00:00:01,000", "00:00:05,000", []string{"A", "B", "C"}, 0.00011))
 
 	content, err := os.ReadFile(tmpFile.Name())
 	assert.NoError(t, err)
 
 	line := string(content)
 	assert.Contains(t, line, `A\NB\NC`)
+}
+
+func Test_writeEvent_ClosedFileReturnsError(t *testing.T) {
+	tmpFile, err := os.CreateTemp("", "subtitle_test_*.ass")
+	assert.NoError(t, err)
+	defer os.Remove(tmpFile.Name())
+	assert.NoError(t, tmpFile.Close())
+
+	err = writeEvent(tmpFile, "00:00:01,000", "00:00:05,000", []string{"Hello"}, 0.00011)
+	assert.Error(t, err)
 }
 
 // CreateBurninASSFile returns (nil, err) when it cannot read the header, and
