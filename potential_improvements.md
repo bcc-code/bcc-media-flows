@@ -4,7 +4,6 @@ Condensed 2026-08-21. Items confirmed fixed were removed. Bugs section validated
 
 ## Bugs
 
-- `workflows/export/vx_export_bmm.go:62,407` — `panic` in workflow code; workflow task retries forever. Return errors.
 - `workflows/misc/cleanup_production.go` — `MoveFileByImportDate` activity is registered nowhere (the workflow itself is intentionally unregistered); latent trap for whoever enables the flow.
 - `services/vidispine/export.go` — `StreamID`/`ChannelID` are `uint`; `zxx`/`und` have -1 channel offsets that wrap to garbage stream IDs. Make them `int` and reject negatives.
 - `languages/` — empty language codes collide in the two-letter map (`ParseLanguageCode("")` returns a wrong language); `utils/languages.go` map miss returns a zero `Language` that looks like Norwegian. Guard empty keys, use the `, ok` form.
