@@ -4,7 +4,6 @@ Condensed 2026-08-21. Items confirmed fixed were removed. Bugs section validated
 
 ## Bugs
 
-- `languages/` — empty language codes collide in the two-letter map (`ParseLanguageCode("")` returns a wrong language); `utils/languages.go` map miss returns a zero `Language` that looks like Norwegian. Guard empty keys, use the `, ok` form.
 - `utils/files.go` — `IsDirEmpty` returns `(true, nil)` on any I/O error; feeds directory deletion. Check `errors.Is(err, io.EOF)`.
 - `utils/files.go` — `ValidRawFilename` lowercases the extension but `IsMedia` does not, so `.MOV`/`.MXF` skip transcode/analysis.
 - `utils/tc_samples.go` — divides by caller-supplied fps with no zero check; NTSC treated as 30 instead of 30000/1001 (~3.6 s drift per hour).
@@ -51,7 +50,6 @@ Condensed 2026-08-21. Items confirmed fixed were removed. Bugs section validated
 ## Simplification and cleanup
 
 - `workflows/vb_export/` — `bstage` and `gfx` children are near-identical; the same preamble/postamble repeats at ~10 sites. Extract one shared child wrapper. Also: half the children omit `VBExportResult.Title`; `abekas`/`hyperdeck` re-run `AnalyzeFile` although the result is already passed in.
-- `languages/config.go` — the big language table should be embedded data (JSON/CSV) with a consistency test, not hand-written Go. `ISO6391`/`ISO6392TwoLetter` fields hold each other's formats (rename deferred by decision). `LanguageByBMM["no"]` is the interpreter track, not Norwegian.
 - `common/merge.go` imports `services/vidispine`, inverting the layering; move `AudioStream` down.
 - Enum stragglers: watch-folder names, Vidispine job states, shape tags, shorts type/status, `Destinations []string` where enum types exist. (Watch-folder names need a history migration first.)
 - JSON tags on workflow payload structs are inconsistent (camelCase vs snake_case vs none); settle one convention — the choice is permanent for replay.
