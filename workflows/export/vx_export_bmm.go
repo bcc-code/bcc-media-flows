@@ -46,20 +46,20 @@ type bmmConfig struct {
 	BaseURL string
 }
 
-func getBMMDestinationConfig(dst AssetExportDestination) bmmConfig {
+func getBMMDestinationConfig(dst AssetExportDestination) (bmmConfig, error) {
 	if dst == AssetExportDestinationBMM {
 		return bmmConfig{
 			Bucket:  "bmms3:/prod-bmm-mediabanken/",
 			BaseURL: "https://bmm-api.brunstad.org",
-		}
+		}, nil
 	} else if dst == AssetExportDestinationBMMIntegration {
 		return bmmConfig{
 			Bucket:  "bmms3:/int-bmm-mediabanken/",
 			BaseURL: "https://int-bmm-api.brunstad.org",
-		}
+		}, nil
 	}
 
-	panic(fmt.Errorf("unsupported destination: %s", dst))
+	return bmmConfig{}, fmt.Errorf("unsupported destination: %s", dst)
 }
 
 // VXExportToBMM exports the specified vx params to BMM
@@ -115,7 +115,10 @@ func VXExportToBMM(ctx workflow.Context, params VXExportChildWorkflowParams) (*V
 		return nil, fmt.Errorf("failed to write JSON file: %w", err)
 	}
 
-	config := getBMMDestinationConfig(params.ExportDestination)
+	config, err := getBMMDestinationConfig(params.ExportDestination)
+	if err != nil {
+		return nil, err
+	}
 
 	ingestFolder := params.ExportData.SafeTitle + "_" + workflow.GetInfo(ctx).OriginalRunID
 	err = wfutils.RcloneCopyDir(ctx, params.OutputDir.Rclone(), config.Bucket+ingestFolder, rclone.PriorityNormal)
@@ -250,7 +253,10 @@ func makeBMMJSON(
 	logger := workflow.GetLogger(ctx)
 
 	// Prepare data for the JSON file
-	jsonData := prepareBMMData(ctx, audioResults, normalizedResults)
+	jsonData, err := prepareBMMData(ctx, audioResults, normalizedResults)
+	if err != nil {
+		return nil, err
+	}
 	jsonData.Length = int(params.MergeResult.Duration)
 	jsonData.MediabankenID = fmt.Sprintf("%s-%s", params.ParentParams.VXID, HashTitle(params.ExportData.Title))
 	jsonData.ImportDate = params.ExportData.ImportDate
@@ -362,14 +368,14 @@ type BMMAudioFile struct {
 	Size            int64   `json:"size"`
 }
 
-func prepareBMMData(ctx workflow.Context, audioFiles map[string][]common.AudioResult, analysis map[string]activities.NormalizeAudioResult) BMMData {
+func prepareBMMData(ctx workflow.Context, audioFiles map[string][]common.AudioResult, analysis map[string]activities.NormalizeAudioResult) (BMMData, error) {
 	out := BMMData{
 		AudioFiles: map[string][]BMMAudioFile{},
 	}
 
 	audioFileKeys, err := wfutils.GetMapKeysSafely(ctx, audioFiles)
 	if err != nil {
-		return out
+		return out, err
 	}
 
 	for _, lang := range audioFileKeys {
@@ -403,8 +409,7 @@ func prepareBMMData(ctx workflow.Context, audioFiles map[string][]common.AudioRe
 			case file.Format == "mp3":
 				f.MimeType = "audio/mpeg"
 			default:
-				// Since this should never happen (only during dev), we panic
-				panic(fmt.Errorf("unsupported audio format: %s", file.Format))
+				return out, fmt.Errorf("unsupported audio format: %s", file.Format)
 			}
 
 			langFiles = append(langFiles, f)
@@ -413,8 +418,7 @@ func prepareBMMData(ctx workflow.Context, audioFiles map[string][]common.AudioRe
 		out.AudioFiles[lang] = langFiles
 	}
 
-	return out
-
+	return out, nil
 }
 
 func HashTitle(title string) string {
