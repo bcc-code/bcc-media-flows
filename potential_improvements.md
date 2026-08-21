@@ -4,7 +4,7 @@ Condensed 2026-08-21. Items confirmed fixed were removed. Bugs section validated
 
 ## Bugs
 
-- 42 `errcheck` findings (verified 2026-08-21): dropped errors in ingest/export/misc workflows (Telegram sends, metadata writes, etc.).
+- `activities/normalize.go:39` — `AnalyzeEBUR128Activity` ignores the `ffmpeg.GetStreamInfo` error and dereferences `probe.AudioStreams[0]`; a probe failure or a file without audio streams panics the activity.
 
 ## Security
 
