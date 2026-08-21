@@ -438,7 +438,7 @@ func generateThumbnailForShort(ctx workflow.Context, destFolder paths.Path, shor
 
 	outputFilePath := destFolder.Append(short.MBMetadata.ID + ".jpg")
 
-	exists, err := wfutils.RcloneCheckFileExists(ctx, outputFilePath)
+	exists, err := wfutils.FileExists(ctx, outputFilePath)
 	if err != nil {
 		return outputFilePath, err
 	}
