@@ -3,6 +3,7 @@ package subtrans
 import (
 	"bytes"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/go-resty/resty/v2"
@@ -62,7 +63,7 @@ func (c *Client) get(path string, query map[string]string, result any) (*resty.R
 
 func (c *Client) SearchByName(name string) ([]*SubtransResult, error) {
 	res := []*SubtransResult{}
-	_, err := c.get("/api/external/story/files/"+name, map[string]string{
+	_, err := c.get("/api/external/story/files/"+url.PathEscape(name), map[string]string{
 		"incLanguages":       "true",
 		"returnApprovedOnly": "true",
 	}, &res)
@@ -76,7 +77,7 @@ func (c *Client) SearchByName(name string) ([]*SubtransResult, error) {
 
 func (c *Client) SearchByID(id string) (*SubtransResult, error) {
 	res := &SubtransResult{}
-	_, err := c.get("/api/external/story/storyid/"+id, map[string]string{
+	_, err := c.get("/api/external/story/storyid/"+url.PathEscape(id), map[string]string{
 		"incLanguages": "true",
 	}, res)
 	if err != nil {
@@ -101,8 +102,7 @@ const SubTypeTxt = "txt"
 
 // BOM is not recommended in UTF-8: https://stackoverflow.com/a/2223926/556085
 func stripBOM(fileBytes []byte) []byte {
-	trimmedBytes := bytes.Trim(fileBytes, "\ufeff")
-	return trimmedBytes
+	return bytes.TrimPrefix(fileBytes, []byte("\ufeff"))
 }
 
 func (c *Client) GetSubtitles(id string, format string, approvedOnly bool) (map[string]string, error) {
@@ -122,8 +122,9 @@ func (c *Client) GetSubtitles(id string, format string, approvedOnly bool) (map[
 		}
 
 		// The 0 is a timecode offset
-		url := fmt.Sprintf("/api/external/export/story/storyid/%s/%s/%s/0", id, l.IsoName, format)
-		res, err := c.get(url, map[string]string{
+		path := fmt.Sprintf("/api/external/export/story/storyid/%s/%s/%s/0",
+			url.PathEscape(id), url.PathEscape(l.IsoName), url.PathEscape(format))
+		res, err := c.get(path, map[string]string{
 			"onlyApproved": fmt.Sprintf("%t", approvedOnly),
 		}, nil)
 		if err != nil {
