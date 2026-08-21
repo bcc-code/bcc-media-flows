@@ -283,23 +283,25 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 				return nil, fmt.Errorf("unknown language %s", lang)
 			}
 
-			var streams []common.AudioStream
-			if langInfo.SoftronStartCh >= 0 {
-				streams = []common.AudioStream{
-					{
-						StreamID:  2,
-						ChannelID: langInfo.SoftronStartCh,
-					},
-					{
-						StreamID:  2,
-						ChannelID: langInfo.SoftronStartCh + 1,
-					},
-				}
+			// Languages without their own channel pair (zxx) carry the
+			// Norwegian floor audio.
+			startCh := langInfo.SoftronStartCh
+			if startCh < 0 {
+				startCh = languages.LanguagesByISO["nor"].SoftronStartCh
 			}
 
 			clip.AudioFiles[lang] = &AudioFile{
-				File:    shape.GetPath(),
-				Streams: streams,
+				File: shape.GetPath(),
+				Streams: []common.AudioStream{
+					{
+						StreamID:  2,
+						ChannelID: startCh,
+					},
+					{
+						StreamID:  2,
+						ChannelID: startCh + 1,
+					},
+				},
 			}
 		}
 
