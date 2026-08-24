@@ -4,7 +4,6 @@ Condensed 2026-08-21. Items confirmed fixed were removed. Bugs section validated
 
 ## Bugs
 
-- `activities/normalize.go:39` — `AnalyzeEBUR128Activity` ignores the `ffmpeg.GetStreamInfo` error and dereferences `probe.AudioStreams[0]`; a probe failure or a file without audio streams panics the activity.
 
 ## Security
 
