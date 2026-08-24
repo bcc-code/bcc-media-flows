@@ -27,7 +27,7 @@ func TestIsDirEmpty(t *testing.T) {
 
 	file, err := os.CreateTemp("", "notadir")
 	assert.NoError(t, err)
-	defer func() { _ = os.Remove(file.Name()) }()
+	defer os.Remove(file.Name()) //nolint:errcheck
 	assert.NoError(t, file.Close())
 
 	empty, err = utils.IsDirEmpty(file.Name())

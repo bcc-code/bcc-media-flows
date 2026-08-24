@@ -299,7 +299,7 @@ func queryRaven[T any](ctx context.Context, c *RavenClient, query string) ([]T, 
 	if err != nil {
 		return nil, fmt.Errorf("ravendb request failed: %w", err)
 	}
-	defer func() { _ = resp.Body.Close() }()
+	defer resp.Body.Close() //nolint:errcheck
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))

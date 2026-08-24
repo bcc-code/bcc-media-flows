@@ -111,7 +111,7 @@ func IsDirEmpty(dir string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	defer func() { _ = f.Close() }()
+	defer f.Close() //nolint:errcheck
 
 	_, err = f.Readdirnames(1) // Try to read at least one entry
 	if errors.Is(err, io.EOF) {

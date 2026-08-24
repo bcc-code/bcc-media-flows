@@ -217,7 +217,7 @@ func TestUploadFile_SendsTheFileAndParsesTheResult(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		file, header, err := r.FormFile("file")
 		if err == nil {
-			defer func() { _ = file.Close() }()
+			defer file.Close() //nolint:errcheck
 			uploaded = header.Filename
 		}
 		folder = r.FormValue("folder")

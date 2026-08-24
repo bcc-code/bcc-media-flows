@@ -17,7 +17,7 @@ type testConfig struct {
 func (c testConfig) Vizualizer() string { return c.baseURL }
 
 func decodeJSON(r *http.Request, target any) error {
-	defer func() { _ = r.Body.Close() }()
+	defer r.Body.Close() //nolint:errcheck
 	return json.NewDecoder(r.Body).Decode(target)
 }
 
