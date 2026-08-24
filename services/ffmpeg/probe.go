@@ -168,7 +168,7 @@ func doProbe(path string) (*FFProbeResult, error) {
 
 // ProbeFile returns information about the specified video file. Requires ffprobe present.
 func ProbeFile(filePath string) (*FFProbeResult, error) {
-	return cache.GetOrSet("probe:"+filePath, func() (*FFProbeResult, error) {
+	return cache.GetOrSet("probe:"+filePath, cache.DefaultTTL, func() (*FFProbeResult, error) {
 		return doProbe(filePath)
 	})
 }

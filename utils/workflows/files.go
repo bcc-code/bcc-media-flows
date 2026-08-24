@@ -189,6 +189,12 @@ func IsImage(ctx workflow.Context, file paths.Path) (bool, error) {
 	return strings.HasPrefix(*mimeType, "image"), nil
 }
 
+func FileExists(ctx workflow.Context, file paths.Path) (bool, error) {
+	return Execute(ctx, activities.Util.FileExists, activities.FileInput{
+		Path: file,
+	}).Result(ctx)
+}
+
 func RcloneCheckFileExists(ctx workflow.Context, file paths.Path) (bool, error) {
 	return Execute(ctx, activities.Util.RcloneCheckFileExists, activities.RcloneSingleFileInput{
 		File: file,
@@ -235,10 +241,14 @@ func RcloneWaitForFileGone(ctx workflow.Context, file paths.Path, notificationCh
 		}
 
 		template.Message = fmt.Sprintf("⚠️ File ```%s``` still exists, retrying in one minute (%d/%d)", file.Rclone(), i+1, retries)
-		msg.UpdateWithTemplate(template)
+		if err := msg.UpdateWithTemplate(template); err != nil {
+			workflow.GetLogger(ctx).Error("Failed to update telegram message", "error", err)
+		}
 		msg = SendTelegramMessage(ctx, msg)
 
-		workflow.Sleep(ctx, time.Minute)
+		if err := workflow.Sleep(ctx, time.Minute); err != nil {
+			return err
+		}
 	}
 
 	if fileExists {

@@ -10,7 +10,6 @@ import (
 	//vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	//wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"encoding/json"
-	"os"
 	"testing"
 	"time"
 
@@ -91,7 +90,7 @@ type ImportSubtitlesTestSuite struct {
 }
 
 func (s *ImportSubtitlesTestSuite) SetupTest() {
-	os.Setenv("TEMPORAL_DEBUG", "true")
+	s.T().Setenv("TEMPORAL_DEBUG", "true")
 	s.env = s.NewTestWorkflowEnvironment()
 }
 

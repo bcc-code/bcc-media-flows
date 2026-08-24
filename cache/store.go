@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+const DefaultTTL = time.Minute * 5
+
 type entry struct {
 	Expiry time.Time
 	Value  any
@@ -12,6 +14,13 @@ type entry struct {
 
 var lock = sync.Mutex{}
 var store = map[string]entry{}
+
+var startJanitor = sync.OnceFunc(func() {
+	j := &janitor{
+		interval: time.Minute * 1,
+	}
+	go j.start()
+})
 
 type janitor struct {
 	interval time.Duration
@@ -41,33 +50,29 @@ func (j *janitor) clear() {
 	}
 }
 
-func init() {
-	j := &janitor{
-		interval: time.Minute * 1,
-	}
-	go j.start()
-}
-
 func Get[T any](key string) *T {
 	lock.Lock()
 	i, ok := store[key]
 	lock.Unlock()
 	if ok && i.Expiry.After(time.Now()) {
-		return i.Value.(*T)
+		if v, ok := i.Value.(*T); ok {
+			return v
+		}
 	}
 	return nil
 }
 
-func Set[T any](key string, value *T) {
+func Set[T any](key string, value *T, ttl time.Duration) {
+	startJanitor()
 	lock.Lock()
 	defer lock.Unlock()
 	store[key] = entry{
-		Expiry: time.Now().Add(time.Minute * 5),
+		Expiry: time.Now().Add(ttl),
 		Value:  value,
 	}
 }
 
-func GetOrSet[T any](key string, factory func() (*T, error)) (*T, error) {
+func GetOrSet[T any](key string, ttl time.Duration, factory func() (*T, error)) (*T, error) {
 	v := Get[T](key)
 	if v != nil {
 		return v, nil
@@ -76,6 +81,6 @@ func GetOrSet[T any](key string, factory func() (*T, error)) (*T, error) {
 	if err != nil {
 		return nil, err
 	}
-	Set(key, v)
+	Set(key, v, ttl)
 	return v, nil
 }

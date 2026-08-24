@@ -27,12 +27,15 @@ type CropShortResult struct {
 	Arguments []string
 }
 
-func (ua UtilActivities) CropShortActivity(ctx context.Context, params CropShortInput) (*CropShortResult, error) {
+func (va VideoActivities) CropShortActivity(ctx context.Context, params CropShortInput) (*CropShortResult, error) {
 	cropFilter := buildCropFilter(params.KeyFrames)
 
 	info, err := ffmpeg.GetStreamInfo(params.InputVideoPath.Local())
+	if err != nil {
+		return nil, fmt.Errorf("probing %s for frame rate: %w", params.InputVideoPath.Local(), err)
+	}
 	rate := 25
-	if err == nil && info.FrameRate > 40 {
+	if info.FrameRate > 40 {
 		rate = 50
 	}
 

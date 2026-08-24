@@ -61,7 +61,7 @@ func Test_assignLanguagesToResolutions_noLanguages(t *testing.T) {
 }
 
 func Test_assignLanguagesToResolutions_manyLanguages(t *testing.T) {
-	langs := []string{"en", "no", "de", "fr", "es", "it", "ru", "sv", "da", "fi"}
+	langs := []string{"en", "no", "de", "fr", "es", "it", "ru", "pl", "da", "fi"}
 	l := assignLanguagesToResolutions(langs, []utils.Resolution{
 		{Width: 1920, Height: 1080, IsFile: true},
 		{Width: 1280, Height: 720, IsFile: true},

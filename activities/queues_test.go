@@ -51,6 +51,7 @@ func TestActivityNamesAreUniqueAcrossStructs(t *testing.T) {
 func TestGetQueueForActivityRoutesByStruct(t *testing.T) {
 	assert.Equal(t, environment.GetAudioQueue(), GetQueueForActivity(Audio.TranscodeToAudioWav))
 	assert.Equal(t, environment.GetTranscodeQueue(), GetQueueForActivity(Video.TranscodeToProResActivity))
+	assert.Equal(t, environment.GetTranscodeQueue(), GetQueueForActivity(Video.CropShortActivity))
 	assert.Equal(t, environment.GetLiveIngestQueue(), GetQueueForActivity(Live.StartReaper))
 
 	// Anything not claimed by a specialised queue runs on the worker queue.
@@ -61,12 +62,7 @@ func TestGetQueueForActivityRoutesByStruct(t *testing.T) {
 // ffmpegOnWorkerQueue lists the activities that reach for ffmpeg from a struct
 // that does not route to an ffmpeg queue. Every entry is a latent failure: the
 // worker image does not install ffmpeg, so the call fails there.
-//
-// CropShortActivity calls ffmpeg.GetStreamInfo to decide between 25 and 50 fps
-// and ignores the error, so on a worker without ffmpeg it silently picks 25.
-var ffmpegOnWorkerQueue = map[string]string{
-	"CropShortActivity": "reads the frame rate with ffprobe and falls back to 25 fps when it cannot",
-}
+var ffmpegOnWorkerQueue = map[string]string{}
 
 // The routing fallback cannot be anything but silent — a name says nothing
 // about what the activity needs — so an ffmpeg activity hung on the wrong

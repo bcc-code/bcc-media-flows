@@ -47,7 +47,7 @@ func MoveMBFile(ctx workflow.Context, params MoveMBFileParams) error {
 
 func StartFilesWorkerFlow(ctx context.Context, params MoveMBFileParams) error {
 	c := ctx.Value(ClientContextKey).(client.Client)
-	_, _ = c.SignalWithStartWorkflow(
+	_, err := c.SignalWithStartWorkflow(
 		context.Background(),
 		"move_mb_file",
 		MoveMBFileSignalName,
@@ -65,6 +65,9 @@ func StartFilesWorkerFlow(ctx context.Context, params MoveMBFileParams) error {
 		},
 		MoveFilesWorkerFlow,
 	)
+	if err != nil {
+		return fmt.Errorf("signal-with-start move_mb_file workflow: %w", err)
+	}
 
 	return nil
 }

@@ -60,7 +60,7 @@ func (s *BMMExportTestSuite) doTestGenerateJson(t testData) {
 	s.NoError(err)
 
 	res := []byte{}
-	s.env.GetWorkflowResult(&res)
+	s.NoError(s.env.GetWorkflowResult(&res))
 	s.NotEmpty(res)
 
 	d := BMMData{}
@@ -185,7 +185,7 @@ func (s *BMMExportTestSuite) Test_MakeBMMJSON_SkipsBrokenTranscriptions() {
 	s.NoError(err)
 
 	res := []byte{}
-	s.env.GetWorkflowResult(&res)
+	s.NoError(s.env.GetWorkflowResult(&res))
 	s.NotEmpty(res)
 
 	output := BMMData{}

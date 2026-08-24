@@ -24,6 +24,22 @@ func TestIsDirEmpty(t *testing.T) {
 	empty, err = utils.IsDirEmpty("/this/path/does/not/exist")
 	assert.Error(t, err)
 	assert.False(t, empty)
+
+	file, err := os.CreateTemp("", "notadir")
+	assert.NoError(t, err)
+	defer os.Remove(file.Name()) //nolint:errcheck
+	assert.NoError(t, file.Close())
+
+	empty, err = utils.IsDirEmpty(file.Name())
+	assert.Error(t, err)
+	assert.False(t, empty)
+}
+
+func TestIsMedia(t *testing.T) {
+	assert.True(t, utils.IsMedia("clip.mov"))
+	assert.True(t, utils.IsMedia("CLIP.MOV"))
+	assert.True(t, utils.IsMedia("clip.MXF"))
+	assert.False(t, utils.IsMedia("image.PNG"))
 }
 
 func TestValidRawFilename(t *testing.T) {

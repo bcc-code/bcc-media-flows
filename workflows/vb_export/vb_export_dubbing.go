@@ -115,7 +115,12 @@ func postTranscodeAudio(ctx workflow.Context, originalFile paths.Path, destinati
 		baseName := originalFile.BaseNoExt()
 		dstName := res.OutputPath.Dir().Append(fmt.Sprintf("%02d_%s_%s.wav", dubbReaperChannel, baseName, lang))
 
-		wfutils.MoveFile(ctx, res.OutputPath, dstName, rclone.PriorityHigh)
-		wfutils.RcloneCopyFile(ctx, dstName, destinationBase.Append(dstName.Base()), rclone.PriorityHigh)
+		if err := wfutils.MoveFile(ctx, res.OutputPath, dstName, rclone.PriorityHigh); err != nil {
+			logger.Error("Error moving transcoded audio", "error", err)
+			return
+		}
+		if err := wfutils.RcloneCopyFile(ctx, dstName, destinationBase.Append(dstName.Base()), rclone.PriorityHigh); err != nil {
+			logger.Error("Error copying transcoded audio to destination", "error", err)
+		}
 	}
 }

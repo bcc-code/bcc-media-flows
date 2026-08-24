@@ -37,6 +37,15 @@ func (aa AudioActivities) AnalyzeEBUR128Activity(ctx context.Context, input Anal
 	}
 
 	probe, err := ffmpeg.GetStreamInfo(input.FilePath.Local())
+	if err != nil {
+		return nil, err
+	}
+
+	if len(probe.AudioStreams) == 0 {
+		log.Warn("No audio streams detected, skipping normalization")
+		return out, nil
+	}
+
 	if probe.AudioStreams[0].Channels > 2 {
 		log.Warn("More than 2 audio streams detected, skipping normalization")
 		return out, nil

@@ -29,12 +29,26 @@ func waitForTransferSlot(ctx context.Context, priority Priority, timeout time.Du
 	case <-ch:
 		break
 	case <-ctx.Done():
+		removeFromTransferQueue(priority, ch)
 		return ctx.Err()
 	case <-time.After(timeout):
+		removeFromTransferQueue(priority, ch)
 		return errTimeout
 	}
 
 	return nil
+}
+
+func removeFromTransferQueue(priority Priority, ch chan bool) {
+	queueLock.Lock()
+	defer queueLock.Unlock()
+	queue := transferQueue[priority]
+	for i, c := range queue {
+		if c == ch {
+			transferQueue[priority] = append(queue[:i], queue[i+1:]...)
+			return
+		}
+	}
 }
 
 func StartFileTransferQueue() {
@@ -56,35 +70,31 @@ func checkFileTransferQueue() {
 		return
 	}
 
+	dispatchTransferSlots(count)
+}
+
+func dispatchTransferSlots(count int) {
 	queueLock.Lock()
 	defer queueLock.Unlock()
 
 	for _, priority := range Priorities.Members() {
-		started := 0
-		for _, ch := range transferQueue[priority] {
+		var remaining []chan bool
+		for i, ch := range transferQueue[priority] {
+			if count >= maxConcurrentTransfers {
+				remaining = append(remaining, transferQueue[priority][i:]...)
+				break
+			}
 
-			// This is a non-blocking send, so if the channel is full, we can skip it.
-			// It basically means that the other side is not listening and we can move on.
-			// this approach works because we're using an unbuffered channel
+			// This is a non-blocking send, so if nobody is listening on the
+			// unbuffered channel we keep the entry for the next round; the
+			// waiter removes itself when it gives up.
 			select {
 			case ch <- true:
 				count++
-				started++
 			default:
-			}
-
-			if count >= maxConcurrentTransfers {
-				// If we've reached the maximum number of concurrent transfers, then we can stop processing the queue
-				// and remove the items that we've already started
-				transferQueue[priority] = transferQueue[priority][started:]
-				return
+				remaining = append(remaining, ch)
 			}
 		}
-
-		if started > 0 {
-			// If we get to here, then we've exhausted the queue for this priority and can replace it with an empty slice
-			transferQueue[priority] = []chan bool{}
-		}
+		transferQueue[priority] = remaining
 	}
-
 }

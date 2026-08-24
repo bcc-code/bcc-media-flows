@@ -1,7 +1,6 @@
 package ingestworkflows
 
 import (
-	"os"
 	"testing"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -25,7 +24,7 @@ type UnitTestSuite struct {
 
 func (s *UnitTestSuite) SetupTest() {
 	// Disable some timeout detection for easier debugging
-	os.Setenv("TEMPORAL_DEBUG", "true")
+	s.T().Setenv("TEMPORAL_DEBUG", "true")
 
 	s.env = s.NewTestWorkflowEnvironment()
 }

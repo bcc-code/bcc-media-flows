@@ -399,7 +399,7 @@ func GrowingPreview(ctx context.Context, input GrowingPreviewInput, heartbeater 
 	// leaves a zombie per call: StdoutPipe registers the read end in
 	// tailCmd.parentIOPipes, which only Wait closes, and handing it to ffmpegCmd.Stdin
 	// does not transfer ownership because exec returns a caller-supplied *os.File as-is.
-	defer func() { _ = tailCmd.Wait() }()
+	defer tailCmd.Wait() //nolint:errcheck
 
 	// Start ffmpeg command
 	if err := ffmpegCmd.Start(); err != nil {
@@ -492,10 +492,13 @@ func muxFinishedPreview(inputFolder, outputFile string) error {
 		return err
 	}
 
-	defer f.Close()
-
 	_, err = f.WriteString("\n#EXT-X-ENDLIST")
 	if err != nil {
+		_ = f.Close()
+		return err
+	}
+
+	if err := f.Close(); err != nil {
 		return err
 	}
 

@@ -10,7 +10,9 @@ import (
 )
 
 func GenerateDualMonoAudioFile(outFile paths.Path, length float64) paths.Path {
-	os.MkdirAll(outFile.Dir().Local(), 0755)
+	if err := os.MkdirAll(outFile.Dir().Local(), 0755); err != nil {
+		panic(err)
+	}
 
 	args := []string{
 		"-f", "lavfi",
@@ -34,7 +36,9 @@ func GenerateDualMonoAudioFile(outFile paths.Path, length float64) paths.Path {
 }
 
 func GenerateMultichannelAudioFile(outFile paths.Path, chCount int, length float64) paths.Path {
-	os.MkdirAll(outFile.Dir().Local(), 0755)
+	if err := os.MkdirAll(outFile.Dir().Local(), 0755); err != nil {
+		panic(err)
+	}
 
 	args := []string{}
 
@@ -60,7 +64,9 @@ func GenerateMultichannelAudioFile(outFile paths.Path, chCount int, length float
 }
 
 func GenerateSoftronTestFile(outFile paths.Path, chCount int, length float64) paths.Path {
-	os.MkdirAll(outFile.Dir().Local(), 0755)
+	if err := os.MkdirAll(outFile.Dir().Local(), 0755); err != nil {
+		panic(err)
+	}
 
 	args := []string{}
 	// Add audio inputs (start at 1, go one longer)

@@ -192,6 +192,20 @@ func (ua UtilActivities) ListFiles(ctx context.Context, input FileInput) (paths.
 	}), err
 }
 
+func (ua UtilActivities) FileExists(ctx context.Context, input FileInput) (bool, error) {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Starting FileExists")
+
+	_, err := os.Stat(input.Path.Local())
+	if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func (ua UtilActivities) DeletePath(ctx context.Context, input DeletePathInput) (any, error) {
 	log := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "DeletePath")

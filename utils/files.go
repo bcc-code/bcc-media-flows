@@ -2,6 +2,8 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -42,7 +44,7 @@ func ValidRawFilename(filename string) bool {
 }
 
 func IsMedia(filename string) bool {
-	extension := filepath.Ext(filename)
+	extension := strings.ToLower(filepath.Ext(filename))
 	return lo.Contains(mediaExtensions, extension)
 }
 
@@ -109,10 +111,10 @@ func IsDirEmpty(dir string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
-	names, err := f.Readdirnames(1) // Try to read at least one entry
-	if err != nil && len(names) == 0 {
+	_, err = f.Readdirnames(1) // Try to read at least one entry
+	if errors.Is(err, io.EOF) {
 		return true, nil
 	}
 

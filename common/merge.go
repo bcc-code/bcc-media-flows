@@ -5,8 +5,8 @@ import (
 )
 
 type AudioStream struct {
-	StreamID  uint
-	ChannelID uint
+	StreamID  int
+	ChannelID int
 }
 
 type MergeInputItem struct {

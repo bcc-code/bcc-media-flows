@@ -1,8 +1,10 @@
 package main
 
 import (
-	"github.com/bcc-code/bcc-media-flows/environment"
+	"fmt"
 	"net/http"
+
+	"github.com/bcc-code/bcc-media-flows/environment"
 
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
@@ -68,6 +70,11 @@ func (s *TriggerServer) isilonExportPOST(ctx *gin.Context) {
 	vsResolutions, err := s.vidispine.GetResolutions(vxID)
 	if err != nil {
 		renderErrorPage(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	if resolutionIndex < 0 || resolutionIndex >= len(vsResolutions) {
+		renderErrorPage(ctx, http.StatusBadRequest, fmt.Errorf("invalid resolution index %d", resolutionIndex))
 		return
 	}
 

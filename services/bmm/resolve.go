@@ -21,14 +21,14 @@ func ResolveFileURL(ctx context.Context, rawURL string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 
 	if resp.StatusCode == http.StatusMethodNotAllowed || resp.StatusCode == http.StatusNotImplemented {
 		resp, err = doResolve(ctx, client, http.MethodGet, rawURL)
 		if err != nil {
 			return "", err
 		}
-		resp.Body.Close()
+		_ = resp.Body.Close()
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {

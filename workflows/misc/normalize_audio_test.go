@@ -1,7 +1,6 @@
 package miscworkflows
 
 import (
-	"os"
 	"testing"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -21,7 +20,7 @@ type NormalizeAudioTestSuite struct {
 }
 
 func (s *NormalizeAudioTestSuite) SetupTest() {
-	os.Setenv("TEMPORAL_DEBUG", "true")
+	s.T().Setenv("TEMPORAL_DEBUG", "true")
 	s.env = s.NewTestWorkflowEnvironment()
 }
 
@@ -64,7 +63,7 @@ func (s *NormalizeAudioTestSuite) Test_NormalizeAudio_NegligibleAdjustment_IsNot
 	s.Zero(adjustCalls, "a zero adjustment must not trigger a re-encode")
 
 	var result NormalizeAudioResult
-	s.env.GetWorkflowResult(&result)
+	s.NoError(s.env.GetWorkflowResult(&result))
 	s.Equal(inputPath.Local(), result.FilePath, "the original file should be returned untouched")
 	s.NotNil(result.InputAnalysis)
 }
@@ -106,7 +105,7 @@ func (s *NormalizeAudioTestSuite) Test_NormalizeAudio_LoudAudio_IsReduced() {
 	s.InDelta(-5.0, appliedAdjustment, 0.001)
 
 	var result NormalizeAudioResult
-	s.env.GetWorkflowResult(&result)
+	s.NoError(s.env.GetWorkflowResult(&result))
 	s.Equal(outputPath.Local(), result.FilePath)
 	s.NotNil(result.InputAnalysis)
 }
@@ -155,7 +154,7 @@ func (s *NormalizeAudioTestSuite) Test_NormalizeAudio_WithOutputAnalysis() {
 	s.NoError(err)
 
 	var result NormalizeAudioResult
-	s.env.GetWorkflowResult(&result)
+	s.NoError(s.env.GetWorkflowResult(&result))
 	s.NotNil(result.InputAnalysis)
 	s.NotNil(result.OutputAnalysis)
 	s.InDelta(-23.2, result.OutputAnalysis.IntegratedLoudness, 0.01)
@@ -203,7 +202,7 @@ func (s *NormalizeAudioTestSuite) Test_NormalizeAudio_QuietAudio_IsBoosted() {
 	s.InDelta(3.0, appliedAdjustment, 0.001)
 
 	var result NormalizeAudioResult
-	s.env.GetWorkflowResult(&result)
+	s.NoError(s.env.GetWorkflowResult(&result))
 	s.Equal(outputPath.Local(), result.FilePath)
 }
 

@@ -64,6 +64,9 @@ func (l LanguageList) ByNumber() map[int]Language {
 func (l LanguageList) ByISO6391() map[string]Language {
 	out := make(map[string]Language)
 	for _, lang := range l {
+		if lang.ISO6391 == "" {
+			continue
+		}
 		out[lang.ISO6391] = lang
 	}
 	return out
@@ -110,6 +113,9 @@ func (l LanguageList) ByReaperChan() map[int]Language {
 func (l LanguageList) ByISO6392TwoLetter() map[string]Language {
 	out := make(map[string]Language)
 	for _, lang := range l {
+		if lang.ISO6392TwoLetter == "" {
+			continue
+		}
 		out[lang.ISO6392TwoLetter] = lang
 	}
 	return out

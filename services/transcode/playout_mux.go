@@ -136,18 +136,16 @@ func generateFFmpegParamsForPlayoutMux(input common.PlayoutMuxInput, outputPath 
 		}
 	}
 
+	useStream := func(streams map[string][]string, lang string) (string, error) {
+		if len(streams[lang]) == 0 {
+			return "", fmt.Errorf("no remaining audio stream for language %s", lang)
+		}
+		stream := streams[lang][0]
+		streams[lang] = streams[lang][1:]
+		return stream, nil
+	}
 	leftStreams := map[string][]string{}
-	useLeftStream := func(lang string) string {
-		stream := leftStreams[lang][0]
-		leftStreams[lang] = leftStreams[lang][1:]
-		return stream
-	}
 	rightStreams := map[string][]string{}
-	useRightStream := func(lang string) string {
-		stream := rightStreams[lang][0]
-		rightStreams[lang] = rightStreams[lang][1:]
-		return stream
-	}
 
 	var filterParts []string
 	for _, lang := range audioLanguages {
@@ -203,10 +201,16 @@ func generateFFmpegParamsForPlayoutMux(input common.PlayoutMuxInput, outputPath 
 		if f.CopyFrom != "" {
 			lang = f.CopyFrom
 		}
-		label := useLeftStream(lang)
+		label, err := useStream(leftStreams, lang)
+		if err != nil {
+			return nil, err
+		}
 		params = append(params, "-map", fmt.Sprintf("[%s]", label))
 		if f.Stereo {
-			label = useRightStream(lang)
+			label, err = useStream(rightStreams, lang)
+			if err != nil {
+				return nil, err
+			}
 			params = append(params, "-map", fmt.Sprintf("[%s]", label))
 		}
 	}

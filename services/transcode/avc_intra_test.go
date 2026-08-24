@@ -15,7 +15,7 @@ import (
 func Test_AvcIntra_Progressive(t *testing.T) {
 	testFile := paths.MustParse("./testdata/generated/avci_prog.mov")
 	outputDir := paths.MustParse("./testdata/generated/results/")
-	os.MkdirAll(outputDir.Local(), 0755)
+	assert.NoError(t, os.MkdirAll(outputDir.Local(), 0755))
 
 	testutils.GenerateVideoFile(testFile, testutils.VideoGeneratorParams{
 		DAR:       "16/9",
@@ -57,7 +57,7 @@ func Test_AvcIntra_Progressive(t *testing.T) {
 func Test_AvcIntra_Interlaced(t *testing.T) {
 	testFile := paths.MustParse("./testdata/generated/avci_interlaced.mov")
 	outputDir := paths.MustParse("./testdata/generated/results/")
-	os.MkdirAll(outputDir.Local(), 0755)
+	assert.NoError(t, os.MkdirAll(outputDir.Local(), 0755))
 
 	testutils.GenerateVideoFile(testFile, testutils.VideoGeneratorParams{
 		DAR:       "16/9",

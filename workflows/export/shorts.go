@@ -13,7 +13,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/utils"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -439,8 +438,11 @@ func generateThumbnailForShort(ctx workflow.Context, destFolder paths.Path, shor
 
 	outputFilePath := destFolder.Append(short.MBMetadata.ID + ".jpg")
 
-	_, err := os.Stat(outputFilePath.Local())
-	if err == nil {
+	exists, err := wfutils.FileExists(ctx, outputFilePath)
+	if err != nil {
+		return outputFilePath, err
+	}
+	if exists {
 		return outputFilePath, nil
 	}
 

@@ -1,6 +1,7 @@
 package transcode
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -9,6 +10,10 @@ import (
 )
 
 func MultitrackMux(files paths.Files, outputPath paths.Path, cb ffmpeg.ProgressCallback) (*paths.Path, error) {
+	if len(files) == 0 {
+		return nil, errors.New("no input files for multitrack mux")
+	}
+
 	lines := []string{
 		"Multitrack VB",
 		"",
