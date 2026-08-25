@@ -101,6 +101,110 @@ func (c *Client) GetMetadataAdvanced(params GetMetadataAdvancedParams) (*Metadat
 	return resp.Result().(*MetadataResult), nil
 }
 
+// MetadataGroupInstance identifies one occurrence of a named metadata group on an
+// item: the group's uuid and the timespan it lives in.
+type MetadataGroupInstance struct {
+	UUID  string
+	Start string
+	End   string
+}
+
+// The non-terse metadata endpoint answers with a MetadataListDocument
+// ({"item":[{"metadata":{"timespan":[...]}}]}); a bare MetadataDocument carries
+// the timespans at the top level. metadataDocumentJSON accepts both.
+type metadataDocumentJSON struct {
+	Item []struct {
+		Metadata struct {
+			Timespan []metadataTimespanJSON `json:"timespan"`
+		} `json:"metadata"`
+	} `json:"item"`
+	Timespan []metadataTimespanJSON `json:"timespan"`
+}
+
+type metadataTimespanJSON struct {
+	Start string              `json:"start"`
+	End   string              `json:"end"`
+	Group []metadataGroupJSON `json:"group"`
+}
+
+type metadataGroupJSON struct {
+	UUID  string              `json:"uuid"`
+	Name  string              `json:"name"`
+	Group []metadataGroupJSON `json:"group"`
+}
+
+func collectGroupInstances(groups []metadataGroupJSON, name, start, end string, out []MetadataGroupInstance) []MetadataGroupInstance {
+	for _, g := range groups {
+		if g.Name == name && g.UUID != "" {
+			out = append(out, MetadataGroupInstance{UUID: g.UUID, Start: start, End: end})
+		}
+		out = collectGroupInstances(g.Group, name, start, end, out)
+	}
+	return out
+}
+
+// GetMetadataGroupInstances lists every occurrence of the named metadata group on
+// the item, across all timespans (nested groups included).
+func (c *Client) GetMetadataGroupInstances(itemID, groupName string) ([]MetadataGroupInstance, error) {
+	requestURL, _ := url.Parse(c.baseURL)
+	requestURL.Path += fmt.Sprintf("/item/%s/metadata", url.PathEscape(itemID))
+	q := requestURL.Query()
+	q.Set("group", groupName)
+	requestURL.RawQuery = q.Encode()
+
+	// An item with no instances of the group can come back as 404.
+	resp, err := tolerating404(c.restyClient.R()).
+		SetResult(&metadataDocumentJSON{}).
+		Get(requestURL.String())
+	if err != nil {
+		return nil, err
+	}
+
+	doc := resp.Result().(*metadataDocumentJSON)
+	timespans := doc.Timespan
+	for _, item := range doc.Item {
+		timespans = append(timespans, item.Metadata.Timespan...)
+	}
+
+	var out []MetadataGroupInstance
+	for _, ts := range timespans {
+		out = collectGroupInstances(ts.Group, groupName, ts.Start, ts.End, out)
+	}
+	return out, nil
+}
+
+// DeleteMetadataGroupInstances removes every occurrence of the named metadata group
+// from the item and returns how many were removed. Removal is addressed by group
+// uuid per timespan — addressing by name is what Vidispine rejects as "ambiguous
+// path to group" when the name resolves to more than one path.
+func (c *Client) DeleteMetadataGroupInstances(itemID, groupName string) (int, error) {
+	instances, err := c.GetMetadataGroupInstances(itemID, groupName)
+	if err != nil {
+		return 0, err
+	}
+	if len(instances) == 0 {
+		return 0, nil
+	}
+
+	body, err := createRemoveMetadataGroupsXml(instances)
+	if err != nil {
+		return 0, err
+	}
+
+	requestURL, _ := url.Parse(c.baseURL)
+	requestURL.Path += fmt.Sprintf("/item/%s/metadata", url.PathEscape(itemID))
+
+	_, err = c.restyClient.R().
+		SetHeader("content-type", "application/xml").
+		SetBody(body.String()).
+		Put(requestURL.String())
+	if err != nil {
+		return 0, err
+	}
+
+	return len(instances), nil
+}
+
 type ItemMetadataFieldParams struct {
 	ItemID  string
 	GroupID string

@@ -90,6 +90,26 @@ func (a Activities) AddToVXMetadataFieldActivity(ctx context.Context, params vsa
 	return nil, err
 }
 
+type DeleteMetadataGroupParams struct {
+	VXID  string
+	Group string
+}
+
+type DeleteMetadataGroupResult struct {
+	DeletedInstances int
+}
+
+func (a Activities) DeleteMetadataGroupInstancesActivity(ctx context.Context, params DeleteMetadataGroupParams) (*DeleteMetadataGroupResult, error) {
+	log := activity.GetLogger(ctx)
+	log.Info("Starting DeleteMetadataGroupInstancesActivity", "vxid", params.VXID, "group", params.Group)
+
+	count, err := a.Client.DeleteMetadataGroupInstances(params.VXID, params.Group)
+	if err != nil {
+		return nil, err
+	}
+	return &DeleteMetadataGroupResult{DeletedInstances: count}, nil
+}
+
 type GetResolutionsParams struct {
 	VXID string
 }

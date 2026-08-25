@@ -4,6 +4,10 @@ import "github.com/orsinium-labs/enum"
 
 type FieldType enum.Member[string]
 
+// GroupStlSubtitle is the metadata group Vidispine writes subtitle cues
+// (FieldStlText) into during sidecar import.
+const GroupStlSubtitle = "stl_subtitle"
+
 var (
 	FieldDurationSeconds       = FieldType{"durationSeconds"}
 	FieldDescription           = FieldType{"portal_mf982016"}

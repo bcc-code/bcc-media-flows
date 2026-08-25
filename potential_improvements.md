@@ -4,6 +4,9 @@ Condensed 2026-08-21. Items confirmed fixed were removed. Bugs section validated
 
 ## Bugs
 
+- `workflows/misc/merge_import_subs.go:145` — `langs = append(langs, lang)` inside `for _, lang := range langs`; copy-paste from import_subs.go where `langs` is a separate accumulator. Here it just grows the slice being ranged over with duplicates. Remove the append.
+- `workflows/misc/merge_import_subs.go:147` — `_ = wfutils.Execute(...WaitForJobCompletion...).Wait(ctx)` discards the job result, so a failed shape-import job doesn't fail the workflow (same pattern was fixed in import_subs.go).
+
 
 ## Security
 

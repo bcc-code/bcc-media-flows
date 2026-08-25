@@ -144,6 +144,21 @@ func (mr *MockClientMockRecorder) DeleteItems(ctx, itemVXIDs, deleteFiles any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteItems", reflect.TypeOf((*MockClient)(nil).DeleteItems), ctx, itemVXIDs, deleteFiles)
 }
 
+// DeleteMetadataGroupInstances mocks base method.
+func (m *MockClient) DeleteMetadataGroupInstances(itemID, groupName string) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteMetadataGroupInstances", itemID, groupName)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteMetadataGroupInstances indicates an expected call of DeleteMetadataGroupInstances.
+func (mr *MockClientMockRecorder) DeleteMetadataGroupInstances(itemID, groupName any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMetadataGroupInstances", reflect.TypeOf((*MockClient)(nil).DeleteMetadataGroupInstances), itemID, groupName)
+}
+
 // DeleteShape mocks base method.
 func (m *MockClient) DeleteShape(assetID, shapeID string) error {
 	m.ctrl.T.Helper()
@@ -261,6 +276,21 @@ func (m *MockClient) GetMetadataFields(vsID string, fields []string) (*vsapi.Met
 func (mr *MockClientMockRecorder) GetMetadataFields(vsID, fields any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetadataFields", reflect.TypeOf((*MockClient)(nil).GetMetadataFields), vsID, fields)
+}
+
+// GetMetadataGroupInstances mocks base method.
+func (m *MockClient) GetMetadataGroupInstances(itemID, groupName string) ([]vsapi.MetadataGroupInstance, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMetadataGroupInstances", itemID, groupName)
+	ret0, _ := ret[0].([]vsapi.MetadataGroupInstance)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMetadataGroupInstances indicates an expected call of GetMetadataGroupInstances.
+func (mr *MockClientMockRecorder) GetMetadataGroupInstances(itemID, groupName any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetadataGroupInstances", reflect.TypeOf((*MockClient)(nil).GetMetadataGroupInstances), itemID, groupName)
 }
 
 // GetRelations mocks base method.

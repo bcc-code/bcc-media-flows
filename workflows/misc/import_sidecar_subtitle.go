@@ -1,9 +1,12 @@
 package miscworkflows
 
 import (
+	"fmt"
+
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -26,6 +29,17 @@ func ImportSidecarSubtitle(ctx workflow.Context, params ImportSidecarSubtitleInp
 	logger.Info("Starting ImportSidecarSubtitle", "vxid", params.VXID, "language", params.Language)
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+
+	// Vidispine resolves the subtitle group by name during sidecar import, and
+	// stale instances from earlier imports make that fail with "ambiguous path
+	// to group: stl_subtitle" — so remove them first.
+	err := wfutils.Execute(ctx, activities.Vidispine.DeleteMetadataGroupInstancesActivity, vsactivity.DeleteMetadataGroupParams{
+		VXID:  params.VXID,
+		Group: vscommon.GroupStlSubtitle,
+	}).Wait(ctx)
+	if err != nil {
+		return fmt.Errorf("removing existing %s metadata failed: %w", vscommon.GroupStlSubtitle, err)
+	}
 
 	return wfutils.Execute(ctx, activities.Vidispine.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
 		AssetID:  params.VXID,

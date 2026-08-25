@@ -7,6 +7,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -92,10 +93,13 @@ func doImportSubtitlesFromSubtrans(ctx workflow.Context, params ImportSubtitlesF
 
 		langs = append(langs, lang)
 
-		_ = wfutils.Execute(ctx, activities.Vidispine.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
+		err = wfutils.Execute(ctx, activities.Vidispine.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
 			JobID:     jobRes.JobID,
 			SleepTime: 10,
 		}).Wait(ctx)
+		if err != nil {
+			return fmt.Errorf("waiting for subtitle shape import job for %s failed: %w", lang, err)
+		}
 	}
 
 	wfutils.SendTelegramText(
@@ -103,6 +107,18 @@ func doImportSubtitlesFromSubtrans(ctx workflow.Context, params ImportSubtitlesF
 		telegram.ChatOther,
 		fmt.Sprintf("Sub import for VXID: %s finished (%s). Starting preview import.", params.VXID, strings.Join(langs, ", ")),
 	)
+
+	// Vidispine resolves the subtitle group by name during sidecar import, and
+	// stale instances from earlier imports make that fail with "ambiguous path
+	// to group: stl_subtitle". Clean once before the loop — cleaning per
+	// language would wipe the cues the previous iteration just imported.
+	err = wfutils.Execute(ctx, activities.Vidispine.DeleteMetadataGroupInstancesActivity, vsactivity.DeleteMetadataGroupParams{
+		VXID:  params.VXID,
+		Group: vscommon.GroupStlSubtitle,
+	}).Wait(ctx)
+	if err != nil {
+		return fmt.Errorf("removing existing %s metadata failed: %w", vscommon.GroupStlSubtitle, err)
+	}
 
 	for _, lang := range subsKeys {
 		sub := subsList[lang]
@@ -123,10 +139,13 @@ func doImportSubtitlesFromSubtrans(ctx workflow.Context, params ImportSubtitlesF
 			continue
 		}
 
-		_ = wfutils.Execute(ctx, activities.Vidispine.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
+		err = wfutils.Execute(ctx, activities.Vidispine.WaitForJobCompletion, vsactivity.WaitForJobCompletionParams{
 			JobID:     jobRes.JobID,
 			SleepTime: 10,
 		}).Wait(ctx)
+		if err != nil {
+			return fmt.Errorf("waiting for subtitle sidecar import job for %s failed: %w", lang, err)
+		}
 	}
 
 	return nil
