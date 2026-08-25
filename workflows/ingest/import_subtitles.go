@@ -7,7 +7,9 @@ import (
 	"strings"
 
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
+	"github.com/bcc-code/bcc-media-flows/languages"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
@@ -105,6 +107,10 @@ func ImportSubtitles(ctx workflow.Context, input ImportSubtitlesInput) error {
 	if input.Language == "" {
 		return errors.New("missing language")
 	}
+	language, err := languages.ParseLanguageCode(input.Language)
+	if err != nil {
+		return fmt.Errorf("unknown language %q: %w", input.Language, err)
+	}
 
 	subtitles, err := resolveSubtitles(ctx, input)
 	if err != nil {
@@ -155,6 +161,16 @@ func ImportSubtitles(ctx workflow.Context, input ImportSubtitlesInput) error {
 			Replace:  true,
 		})
 
+	// Import SRT as a language-coded shape so exports treat it as a real
+	// subtitle for that language, not the AI-generated "und" fallback.
+	importLangSRTJob := wfutils.Execute(ctx, vsactivity.Vidispine.ImportFileAsShapeActivity,
+		vsactivity.ImportFileAsShapeParams{
+			AssetID:  input.VXID,
+			FilePath: srtFilePath,
+			ShapeTag: fmt.Sprintf("sub_%s_srt", language.ISO6391),
+			Replace:  true,
+		})
+
 	var errs []error
 	importSRTResult, err := importSRTJob.Result(ctx)
 	if err != nil {
@@ -162,6 +178,11 @@ func ImportSubtitles(ctx workflow.Context, input ImportSubtitlesInput) error {
 	}
 
 	importJSONResult, err := importJSONJob.Result(ctx)
+	if err != nil {
+		errs = append(errs, err)
+	}
+
+	importLangSRTResult, err := importLangSRTJob.Result(ctx)
 	if err != nil {
 		errs = append(errs, err)
 	}
@@ -178,19 +199,38 @@ func ImportSubtitles(ctx workflow.Context, input ImportSubtitlesInput) error {
 	if err != nil {
 		return fmt.Errorf("importing of JSON file into Mediabanken failed: %w", err)
 	}
+	err = wfutils.WaitForVidispineJob(ctx, importLangSRTResult.JobID)
+	if err != nil {
+		return fmt.Errorf("importing of language SRT shape into Mediabanken failed: %w", err)
+	}
 
-	// Import SRT as sidecar independently (non-blocking, fire-and-forget)
-	err = wfutils.Execute(ctx, vsactivity.Vidispine.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
+	// Vidispine resolves the subtitle group by name during sidecar import, and
+	// stale instances from earlier imports make that fail with "ambiguous path
+	// to group: stl_subtitle" — so remove them first.
+	err = wfutils.Execute(ctx, vsactivity.Vidispine.DeleteMetadataGroupInstancesActivity, vsactivity.DeleteMetadataGroupParams{
+		VXID:  input.VXID,
+		Group: vscommon.GroupStlSubtitle,
+	}).Wait(ctx)
+	if err != nil {
+		return fmt.Errorf("removing existing %s metadata failed: %w", vscommon.GroupStlSubtitle, err)
+	}
+
+	sidecarResult, err := wfutils.Execute(ctx, vsactivity.Vidispine.ImportFileAsSidecarActivity, vsactivity.ImportSubtitleAsSidecarParams{
 		FilePath: srtFilePath,
 		Language: input.Language,
 		AssetID:  input.VXID,
-	}).Wait(ctx)
-
+	}).Result(ctx)
 	if err != nil {
 		return fmt.Errorf("importing of SRT file as sidecar failed: %w", err)
 	}
+	if sidecarResult != nil && sidecarResult.JobID != "" {
+		err = wfutils.WaitForVidispineJob(ctx, sidecarResult.JobID)
+		if err != nil {
+			return fmt.Errorf("sidecar import job failed: %w", err)
+		}
+	}
 
-	logger.Info("Subtitle SRT and JSON imported as shapes; SRT as sidecar (async)", "vxid", input.VXID)
+	logger.Info("Subtitle SRT and JSON imported as shapes and sidecar", "vxid", input.VXID)
 	return nil
 }
 

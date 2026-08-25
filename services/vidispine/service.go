@@ -16,6 +16,7 @@ type Client interface {
 	CreateThumbnails(assetID string, width, height int) (string, error)
 
 	DeleteItems(ctx context.Context, itemVXIDs []string, deleteFiles bool) error
+	DeleteMetadataGroupInstances(itemID, groupName string) (int, error)
 	DeleteShape(assetID, shapeID string) error
 
 	FindJob(itemID string, jobType string) (*vsapi.JobDocument, error)
@@ -30,6 +31,7 @@ type Client interface {
 	GetJob(jobID string) (*vsapi.JobDocument, error)
 	GetMetadata(vsID string) (*vsapi.MetadataResult, error)
 	GetMetadataFields(vsID string, fields []string) (*vsapi.MetadataResult, error)
+	GetMetadataGroupInstances(itemID, groupName string) ([]vsapi.MetadataGroupInstance, error)
 	GetRelations(assetID string) ([]vsapi.Relation, error)
 	GetResolutions(itemVXID string) ([]vsapi.Resolution, error)
 	GetSequence(itemVXID string) (*vsapi.SequenceDocument, error)

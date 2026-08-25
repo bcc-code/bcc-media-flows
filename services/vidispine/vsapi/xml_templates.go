@@ -9,6 +9,7 @@ var (
 	xmlMasterPlaceholderTmpl      = template.Must(template.New("master").Parse(xmlMasterPlaceholder))
 	xmlRawMaterialPlaceholderTmpl = template.Must(template.New("raw").Parse(xmlRawMaterialPlaceholder))
 	xmlSetMetadataPlaceholderTmpl = template.Must(template.New("metadata").Parse(xmlSetItemMetadataFieldPlaceholder))
+	xmlRemoveMetadataGroupsTmpl   = template.Must(template.New("removeGroups").Parse(xmlRemoveMetadataGroupsPlaceholder))
 )
 
 const (
@@ -85,6 +86,15 @@ const (
 		{{end}}
 	</timespan>
 </MetadataDocument>`
+
+	xmlRemoveMetadataGroupsPlaceholder = `<?xml version="1.0"?>
+<MetadataDocument xmlns="http://xml.vidispine.com/schema/vidispine">
+{{- range . }}
+	<timespan start="{{ .Start }}" end="{{ .End }}">
+		<group uuid="{{ .UUID }}" mode="remove"/>
+	</timespan>
+{{- end }}
+</MetadataDocument>`
 )
 
 type xmlSetItemMetadataFieldParams struct {
@@ -94,6 +104,12 @@ type xmlSetItemMetadataFieldParams struct {
 	Key     string
 	Value   string
 	Add     bool
+}
+
+func createRemoveMetadataGroupsXml(instances []MetadataGroupInstance) (*bytes.Buffer, error) {
+	buf := new(bytes.Buffer)
+	err := xmlRemoveMetadataGroupsTmpl.Execute(buf, instances)
+	return buf, err
 }
 
 func createSetItemMetadataFieldXml(params xmlSetItemMetadataFieldParams) (*bytes.Buffer, error) {

@@ -24,6 +24,11 @@ func (s *ImportSidecarSubtitleTestSuite) Test_ImportsTheSubtitle() {
 
 	srtPath := paths.MustParse("/mnt/temp/workflows/transcript.srt")
 
+	env.OnActivity(activities.Vidispine.DeleteMetadataGroupInstancesActivity, mock.Anything, vsactivity.DeleteMetadataGroupParams{
+		VXID:  "VX-1",
+		Group: "stl_subtitle",
+	}).Once().Return(&vsactivity.DeleteMetadataGroupResult{}, nil)
+
 	var got vsactivity.ImportSubtitleAsSidecarParams
 	env.OnActivity(activities.Vidispine.ImportFileAsSidecarActivity, mock.Anything, mock.MatchedBy(
 		func(input vsactivity.ImportSubtitleAsSidecarParams) bool {
@@ -49,6 +54,8 @@ func (s *ImportSidecarSubtitleTestSuite) Test_ImportsTheSubtitle() {
 func (s *ImportSidecarSubtitleTestSuite) Test_ReportsActivityFailure() {
 	env := s.NewTestWorkflowEnvironment()
 
+	env.OnActivity(activities.Vidispine.DeleteMetadataGroupInstancesActivity, mock.Anything, mock.Anything).
+		Return(&vsactivity.DeleteMetadataGroupResult{}, nil)
 	env.OnActivity(activities.Vidispine.ImportFileAsSidecarActivity, mock.Anything, mock.Anything).
 		Return(nil, errors.New("vidispine rejected the sidecar"))
 

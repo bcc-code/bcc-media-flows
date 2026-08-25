@@ -111,11 +111,11 @@ func (s *ImportSubtitlesTestSuite) Test_ImportSubtitlesWorkflow() {
 		Subtitles: Transcription{Segments: segments},
 	}
 
-	// Use a valid Path string for your environment
-	//mockOutputPath := paths.MustParse("./testdata/output")
-
-	s.env.OnActivity(activities.Vidispine.ImportFileAsShapeActivity, mock.Anything, mock.Anything).Return(&vsactivity.ImportFileResult{JobID: "job-srt"}, nil)
-	s.env.OnActivity(activities.Vidispine.ImportFileAsShapeActivity, mock.Anything, mock.Anything).Return(&vsactivity.ImportFileResult{JobID: "job-json"}, nil)
+	shapeTags := map[string]bool{}
+	s.env.OnActivity(activities.Vidispine.ImportFileAsShapeActivity, mock.Anything, mock.MatchedBy(func(p vsactivity.ImportFileAsShapeParams) bool {
+		shapeTags[p.ShapeTag] = true
+		return true
+	})).Return(&vsactivity.ImportFileResult{JobID: "job-shape"}, nil)
 
 	s.env.OnActivity(activities.Util.CreateFolder, mock.Anything, mock.Anything).Return("", nil)
 
@@ -139,13 +139,46 @@ func (s *ImportSubtitlesTestSuite) Test_ImportSubtitlesWorkflow() {
 		Data: []byte("1\n00:00:00,000 --> 00:00:01,000\nHello\n\n2\n00:00:01,500 --> 00:00:02,500\nWorld\n\n"),
 	}).Return("", nil).Once()
 
-	s.env.OnActivity(activities.Vidispine.ImportFileAsSidecarActivity, mock.Anything, mock.Anything).Return(nil, nil)
+	s.env.OnActivity(activities.Vidispine.DeleteMetadataGroupInstancesActivity, mock.Anything, vsactivity.DeleteMetadataGroupParams{
+		VXID:  vxid,
+		Group: "stl_subtitle",
+	}).Return(&vsactivity.DeleteMetadataGroupResult{DeletedInstances: 2}, nil).Once()
+	s.env.OnActivity(activities.Vidispine.ImportFileAsSidecarActivity, mock.Anything, mock.Anything).Return(&vsactivity.ImportFileAsSidecarResult{JobID: "job-sidecar"}, nil).Once()
 	s.env.OnActivity(activities.Vidispine.JobCompleteOrErr, mock.Anything, mock.Anything).Return(true, nil)
 
 	s.env.ExecuteWorkflow(ImportSubtitles, input)
 	s.True(s.env.IsWorkflowCompleted())
 	err = s.env.GetWorkflowError()
 	s.NoError(err)
+
+	s.True(shapeTags["Transcribed_Subtitle_SRT"])
+	s.True(shapeTags["transcription_json"])
+	s.True(shapeTags["sub_eng_srt"])
+}
+
+// A failing sidecar import job fails the workflow instead of being swallowed.
+func (s *ImportSubtitlesTestSuite) Test_ImportSubtitlesSidecarJobFails() {
+	input := ImportSubtitlesInput{
+		VXID:     "VX-123",
+		Language: "no",
+		Subtitles: Transcription{Segments: []Segment{
+			{Start: 0.0, End: 1.0, Text: "Hei"},
+		}},
+	}
+
+	s.env.OnActivity(activities.Util.CreateFolder, mock.Anything, mock.Anything).Return("", nil)
+	s.env.OnActivity(activities.Util.WriteFile, mock.Anything, mock.Anything).Return("", nil)
+	s.env.OnActivity(activities.Vidispine.ImportFileAsShapeActivity, mock.Anything, mock.Anything).Return(&vsactivity.ImportFileResult{JobID: "job-shape"}, nil)
+	s.env.OnActivity(activities.Vidispine.DeleteMetadataGroupInstancesActivity, mock.Anything, mock.Anything).Return(&vsactivity.DeleteMetadataGroupResult{}, nil)
+	s.env.OnActivity(activities.Vidispine.ImportFileAsSidecarActivity, mock.Anything, mock.Anything).Return(&vsactivity.ImportFileAsSidecarResult{JobID: "job-sidecar"}, nil)
+	s.env.OnActivity(activities.Vidispine.JobCompleteOrErr, mock.Anything, vsactivity.WaitForJobCompletionParams{JobID: "job-shape"}).Return(true, nil)
+	s.env.OnActivity(activities.Vidispine.JobCompleteOrErr, mock.Anything, vsactivity.WaitForJobCompletionParams{JobID: "job-sidecar"}).Return(false, assert.AnError)
+
+	s.env.ExecuteWorkflow(ImportSubtitles, input)
+	s.True(s.env.IsWorkflowCompleted())
+	err := s.env.GetWorkflowError()
+	s.Error(err)
+	s.Contains(err.Error(), "sidecar import job failed")
 }
 
 // Given a path instead of the transcription, the workflow reads it and behaves
@@ -190,6 +223,10 @@ func (s *ImportSubtitlesTestSuite) Test_ImportSubtitlesFromFile() {
 		Data: []byte("1\n00:00:00,000 --> 00:00:01,000\nHello\n\n2\n00:00:01,500 --> 00:00:02,500\nWorld\n\n"),
 	}).Return("", nil).Once()
 
+	s.env.OnActivity(activities.Vidispine.DeleteMetadataGroupInstancesActivity, mock.Anything, vsactivity.DeleteMetadataGroupParams{
+		VXID:  vxid,
+		Group: "stl_subtitle",
+	}).Return(&vsactivity.DeleteMetadataGroupResult{}, nil).Once()
 	s.env.OnActivity(activities.Vidispine.ImportFileAsSidecarActivity, mock.Anything, mock.Anything).Return(nil, nil)
 	s.env.OnActivity(activities.Vidispine.JobCompleteOrErr, mock.Anything, mock.Anything).Return(true, nil)
 

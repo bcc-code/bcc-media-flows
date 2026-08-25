@@ -136,3 +136,47 @@ func Test_GenerateMetUpdateWithTCXML(t *testing.T) {
 </MetadataDocument>`
 	assert.Equal(t, expected, buf.String())
 }
+
+func Test_MetadataDocumentJSON_GroupInstances(t *testing.T) {
+	// MetadataListDocument envelope with nested groups.
+	listDoc := `{"item":[{"id":"VX-1","metadata":{"timespan":[
+		{"start":"-INF","end":"+INF","group":[
+			{"uuid":"uuid-1","name":"stl_subtitle"},
+			{"uuid":"uuid-2","name":"Subclips","group":[{"uuid":"uuid-3","name":"stl_subtitle"}]}
+		]},
+		{"start":"0@PAL","end":"250@PAL","group":[{"uuid":"uuid-4","name":"stl_subtitle"}]}
+	]}}]}`
+
+	doc := metadataDocumentJSON{}
+	assert.NoError(t, json.Unmarshal([]byte(listDoc), &doc))
+
+	timespans := doc.Timespan
+	for _, item := range doc.Item {
+		timespans = append(timespans, item.Metadata.Timespan...)
+	}
+
+	var out []MetadataGroupInstance
+	for _, ts := range timespans {
+		out = collectGroupInstances(ts.Group, "stl_subtitle", ts.Start, ts.End, out)
+	}
+
+	assert.Equal(t, []MetadataGroupInstance{
+		{UUID: "uuid-1", Start: "-INF", End: "+INF"},
+		{UUID: "uuid-3", Start: "-INF", End: "+INF"},
+		{UUID: "uuid-4", Start: "0@PAL", End: "250@PAL"},
+	}, out)
+}
+
+func Test_MetadataDocumentJSON_BareDocument(t *testing.T) {
+	bareDoc := `{"timespan":[{"start":"-INF","end":"+INF","group":[{"uuid":"uuid-9","name":"stl_subtitle"}]}]}`
+
+	doc := metadataDocumentJSON{}
+	assert.NoError(t, json.Unmarshal([]byte(bareDoc), &doc))
+
+	var out []MetadataGroupInstance
+	for _, ts := range doc.Timespan {
+		out = collectGroupInstances(ts.Group, "stl_subtitle", ts.Start, ts.End, out)
+	}
+
+	assert.Equal(t, []MetadataGroupInstance{{UUID: "uuid-9", Start: "-INF", End: "+INF"}}, out)
+}
