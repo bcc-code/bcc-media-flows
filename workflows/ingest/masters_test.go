@@ -130,6 +130,8 @@ func (s *UnitTestSuite) Test_VBBulk_MasterFlow() {
 		Language: "no",
 	}).Once().Return(nil, nil)
 
+	s.env.OnWorkflow(miscworkflows.QScanMaster, mock.Anything, mock.Anything).Times(2).Return(nil, nil)
+
 	s.env.OnWorkflow(miscworkflows.TranscodePreviewVX, mock.Anything, miscworkflows.TranscodePreviewVXInput{
 		VXID: "VBBulk1",
 	}).Once().Return(nil, nil)

@@ -18,6 +18,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/analytics"
 	"github.com/bcc-code/bcc-media-flows/services/clickup"
 	"github.com/bcc-code/bcc-media-flows/services/directus"
+	"github.com/bcc-code/bcc-media-flows/services/qscan"
 	"github.com/bcc-code/bcc-media-flows/services/vizualizer"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
@@ -185,6 +186,14 @@ func buildClients(cfg *environment.Config) {
 		log.Printf("Error creating vizualizer client: %v", err)
 	}
 	activities.Vizualizer = &activities.VizualizerActivities{Client: vizClient}
+
+	qscanClient, err := qscan.NewClient(cfg.QScan)
+	if err != nil {
+		log.Printf("Error creating QScan client: %v", err)
+	}
+	activities.QScan.Client = qscanClient
+	activities.QScan.RepositoryID = cfg.QScan.RepositoryID()
+	activities.QScan.TemplateName = cfg.QScan.TemplateName()
 }
 
 func registerWorker(c client.Client, queue string, options worker.Options) {
@@ -211,6 +220,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		registerActivitiesInStruct(w, activities.ClickUp)
 
 		registerActivitiesInStruct(w, activities.Vizualizer)
+		registerActivitiesInStruct(w, activities.QScan)
 
 		for _, wf := range workflows.WorkerWorkflows {
 			w.RegisterWorkflow(wf)
@@ -229,6 +239,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		registerActivitiesInStruct(w, activities.Directus)
 		registerActivitiesInStruct(w, activities.ClickUp)
 		registerActivitiesInStruct(w, activities.Vizualizer)
+		registerActivitiesInStruct(w, activities.QScan)
 
 		for _, wf := range workflows.WorkerWorkflows {
 			w.RegisterWorkflow(wf)

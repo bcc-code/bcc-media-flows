@@ -1,9 +1,12 @@
 package emails
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/environment"
+	"github.com/bcc-code/bcc-media-flows/paths"
+	"os"
 	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/services/notifications"
@@ -11,7 +14,7 @@ import (
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
-func Send(email string, subject string, messagePlainText string, messageHTML string) error {
+func Send(email string, subject string, messagePlainText string, messageHTML string, attachments []Attachment) error {
 	if strings.TrimSpace(email) == "" {
 		return errors.New("recipient email is empty")
 	}
@@ -34,6 +37,19 @@ func Send(email string, subject string, messagePlainText string, messageHTML str
 		m.AddContent(mail.NewContent("text/plain", messagePlainText))
 	}
 	m.AddContent(mail.NewContent("text/html", messageHTML))
+
+	for _, a := range attachments {
+		content, err := os.ReadFile(a.Path.Local())
+		if err != nil {
+			return fmt.Errorf("reading attachment %s: %w", a.Filename, err)
+		}
+		attachment := mail.NewAttachment()
+		attachment.SetFilename(a.Filename)
+		attachment.SetType(a.ContentType)
+		attachment.SetDisposition("attachment")
+		attachment.SetContent(base64.StdEncoding.EncodeToString(content))
+		m.AddAttachment(attachment)
+	}
 
 	res, err := client.Send(m)
 	if err != nil {
@@ -69,10 +85,19 @@ func NewMessage(template notifications.Template, to []string, cc []string, bcc [
 }
 
 type Message struct {
-	Subject   string
-	HTML      string
-	PlainText string
-	To        []string
-	CC        []string
-	BCC       []string
+	Subject     string
+	HTML        string
+	PlainText   string
+	To          []string
+	CC          []string
+	BCC         []string
+	Attachments []Attachment
+}
+
+// Attachment points at a file the sending worker can read. The bytes are read
+// when the mail is sent, so they never enter the workflow history.
+type Attachment struct {
+	Filename    string
+	ContentType string
+	Path        paths.Path
 }

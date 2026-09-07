@@ -20,6 +20,7 @@ func TestActivityStructsStillExposeTheirMethods(t *testing.T) {
 		"Cantemo":   activities.Cantemo,
 		"Platform":  activities.Platform,
 		"Live":      activities.Live,
+		"QScan":     activities.QScan,
 	}
 
 	for name, s := range structs {
