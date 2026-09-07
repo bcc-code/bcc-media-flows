@@ -81,6 +81,15 @@ func processMaster(ctx workflow.Context, sourceFile paths.Path, destinationFile 
 
 	asyncCtx := wfutils.WithAbandonChildOptions(ctx)
 
+	// QC runs on its own and reports by email; it neither delays nor fails the import.
+	qcFuture := workflow.ExecuteChildWorkflow(wfutils.WithChildSearchAttributes(asyncCtx, result.AssetID), miscworkflows.QScanMaster, miscworkflows.QScanMasterInput{
+		VXID: result.AssetID,
+		Path: destinationFile,
+	})
+	if err := qcFuture.GetChildWorkflowExecution().Get(ctx, nil); err != nil {
+		workflow.GetLogger(ctx).Error("Failed to start QScan workflow", "vxid", result.AssetID, "error", err)
+	}
+
 	// Trigger transcribe and create previews but don't wait for them to finish. We must still
 	// wait for the child to actually START — it uses ParentClosePolicy ABANDON, so if the parent
 	// closes before the start is processed the child is dropped and never runs.

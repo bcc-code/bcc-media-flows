@@ -60,6 +60,44 @@ type Subtrans struct {
 func (s Subtrans) BaseURL() string { return s.baseURL }
 func (s Subtrans) APIKey() string  { return s.apiKey }
 
+type QScan struct {
+	baseURL      string
+	username     string
+	password     string
+	repositoryID int64
+	templateName string
+	reportEmails string
+}
+
+func (q QScan) BaseURL() string  { return q.baseURL }
+func (q QScan) Username() string { return q.username }
+func (q QScan) Password() string { return q.password }
+
+// RepositoryID is the QScan repository rooted at the isilon share, so an
+// isilon-relative path is also a repository-relative path.
+func (q QScan) RepositoryID() int64 { return q.repositoryID }
+
+func (q QScan) TemplateName() string {
+	if q.templateName != "" {
+		return q.templateName
+	}
+	return "BCCM - Masters"
+}
+
+func (q QScan) ReportEmails() []string {
+	raw := q.reportEmails
+	if raw == "" {
+		raw = "matjaz.debelak@bcc.no"
+	}
+	var emails []string
+	for _, e := range strings.Split(raw, ",") {
+		if e = strings.TrimSpace(e); e != "" {
+			emails = append(emails, e)
+		}
+	}
+	return emails
+}
+
 type Directus struct {
 	baseURL        string
 	apiKey         string
@@ -186,6 +224,7 @@ type Config struct {
 	Vidispine    Vidispine
 	Cantemo      Cantemo
 	Subtrans     Subtrans
+	QScan        QScan
 	Directus     Directus
 	ClickUp      ClickUp
 	Rclone       Rclone
@@ -243,6 +282,15 @@ func Load() *Config {
 		Subtrans: Subtrans{
 			baseURL: os.Getenv("SUBTRANS_BASE_URL"),
 			apiKey:  os.Getenv("SUBTRANS_API_KEY"),
+		},
+
+		QScan: QScan{
+			baseURL:      os.Getenv("QSCAN_BASE_URL"),
+			username:     os.Getenv("QSCAN_USERNAME"),
+			password:     os.Getenv("QSCAN_PASSWORD"),
+			repositoryID: int64(intOr("QSCAN_REPOSITORY_ID", 2)),
+			templateName: os.Getenv("QSCAN_TEMPLATE_NAME"),
+			reportEmails: os.Getenv("QSCAN_REPORT_EMAILS"),
 		},
 
 		Directus: Directus{

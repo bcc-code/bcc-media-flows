@@ -19,7 +19,7 @@ func (ua UtilActivities) SendEmail(_ context.Context, msg emails.Message) (any, 
 			continue
 		}
 
-		if err := emails.Send(email, msg.Subject, msg.PlainText, msg.HTML); err != nil {
+		if err := emails.Send(email, msg.Subject, msg.PlainText, msg.HTML, msg.Attachments); err != nil {
 			errs = append(errs, err)
 		}
 	}

@@ -32,6 +32,7 @@ Condensed 2026-08-21. Items confirmed fixed were removed. Bugs section validated
 - Only `vidispine.Client` has an interface + mock; other service clients are concrete structs and untestable without network.
 - `services/transcode/testdata/generated/` is partly committed; tests should use `t.TempDir()`.
 - Test helpers in `utils/testutils` panic instead of `t.Fatal`/`t.Skip`.
+- `services/transcode` tests fail on a current ffmpeg (7.x): `-vsync` was removed and the ProRes `top` AVOption is no longer an encoder option, so `Test_H264Video_WeirdResolutions` and `Test_ProResHyperdeck` are red locally. Either pin the ffmpeg version the tests expect or move to `-fps_mode` / drop `top`.
 
 ## Simplification and cleanup
 
@@ -43,6 +44,7 @@ Condensed 2026-08-21. Items confirmed fixed were removed. Bugs section validated
 - Dead code: `cmd/fakerclone/`, `vsapi.ListFilesForStorage` + `ListFilesFilter`, assorted unused helpers flagged by `unused`.
 - Long functions (150–280 lines) in `incremental_ingest`, `vx_export`, `vx_export_vod`, `generate_short`, `masv_import` decompose naturally.
 - `activities/shorts.go` and `activities/reaper.go` still build ad-hoc resty clients outside `internal/httpx`.
+- `emails.Message` carries `CC`/`BCC` that `UtilActivities.SendEmail` never reads; every recipient gets a separate `To`-only mail. Either honour them or drop the fields.
 - Typos in exported names: `EmtpySRTFile`, `PlacholderTplData`, `SubSteams`, `BmmTargetEnvionment`, `sanitizeDuplicatdPath`.
 - go.mod: two cache libraries, `golang-set` used once next to `lo`, `shortid` overlaps `uuid`, `go-spew` pinned to a pseudo-version, stranded direct deps in `// indirect` blocks.
 - Two stray SQLite databases in `cmd/trigger_ui/` (ignored, but invite dev misuse).
