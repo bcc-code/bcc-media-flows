@@ -122,7 +122,12 @@ func (a *QScanActivities) QScanEnsureFile(ctx context.Context, in QScanEnsureFil
 		return nil, err
 	}
 
-	repoPath := strings.TrimLeft(in.Path.Path, "/")
+	// The path is relative to the QScan repository and must keep its leading
+	// separator: QScan appends it to the repository root verbatim, so without
+	// one the first component is glued onto the share name
+	// (\\server\isilonProduction\...) and Windows answers
+	// "The network name cannot be found".
+	repoPath := "/" + strings.TrimLeft(in.Path.Path, "/")
 
 	existing, err := a.Client.ListJobFiles(ctx, in.JobID)
 	if err != nil {

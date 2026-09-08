@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -27,6 +28,8 @@ type fakeQScan struct {
 	jobs  []qscan.Job
 	files map[int64][]qscan.JobFile
 	posts map[string]int
+	// addedPaths records what was submitted, in submission order.
+	addedPaths []string
 }
 
 func newFakeQScan(t *testing.T) (*fakeQScan, *QScanActivities) {
@@ -53,7 +56,9 @@ func newFakeQScan(t *testing.T) (*fakeQScan, *QScanActivities) {
 			f.posts["files"]++
 			var req []qscan.AddFileRequest
 			require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
-			file := qscan.JobFile{ID: qscan.Int(10 + len(f.files[1])), JobID: 1, ResultsID: qscan.Int(90 + len(f.files[1])), Path: `\` + req[0].Path}
+			f.addedPaths = append(f.addedPaths, req[0].Path)
+			// QScan stores and echoes the path in Windows form.
+			file := qscan.JobFile{ID: qscan.Int(10 + len(f.files[1])), JobID: 1, ResultsID: qscan.Int(90 + len(f.files[1])), Path: strings.ReplaceAll(req[0].Path, "/", `\`)}
 			f.files[1] = append(f.files[1], file)
 			_ = json.NewEncoder(w).Encode(file)
 			return
@@ -113,6 +118,11 @@ func TestQScanEnsureJobAndFile_AreIdempotent(t *testing.T) {
 	assert.Equal(t, int64(10), f1.FileID)
 	assert.Equal(t, int64(90), f1.ResultsID)
 	assert.Equal(t, 1, fake.posts["files"], "the second run must find the queued file")
+
+	// QScan concatenates the repository root and this path, so dropping the
+	// leading separator would name the share "isilonProduction" and the
+	// analysis would fail with "The network name cannot be found".
+	assert.Equal(t, []string{"/Production/masters/MASTER_01.mxf"}, fake.addedPaths)
 }
 
 func TestQScanEnsureJob_RejectsNonIsilonPaths(t *testing.T) {
