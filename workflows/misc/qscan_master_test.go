@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
+	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/emails"
 	"github.com/bcc-code/bcc-media-flows/services/qscan"
-	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"go.temporal.io/sdk/testsuite"
@@ -23,11 +23,19 @@ type QScanMasterTestSuite struct {
 
 func (s *QScanMasterTestSuite) SetupTest() {
 	s.env = s.NewTestWorkflowEnvironment()
-	s.env.OnActivity(activities.Util.SendTelegramMessage, mock.Anything, mock.Anything).Maybe().Return(&telegram.Message{}, nil)
 }
 
 func (s *QScanMasterTestSuite) AfterTest(_, _ string) {
 	s.env.AssertExpectations(s.T())
+	// QC reports by email only; the Telegram chat is not told about it.
+	s.env.AssertActivityNotCalled(s.T(), "SendTelegramMessage")
+}
+
+// useErrorAddresses points the QC error mails somewhere the test can recognise.
+func (s *QScanMasterTestSuite) useErrorAddresses(addresses string) {
+	s.T().Setenv("QSCAN_ERROR_EMAILS", addresses)
+	environment.Load()
+	s.T().Cleanup(func() { environment.Load() })
 }
 
 var qscanInput = QScanMasterInput{
@@ -115,8 +123,10 @@ func (s *QScanMasterTestSuite) Test_CleanFileIsPassed() {
 	s.expectSubmission()
 	s.env.OnActivity(activities.QScan.QScanFileStatus, mock.Anything, mock.Anything).Once().Return(&qscan.FileStatus{Status: qscan.StatusAnalyzed}, nil)
 	s.expectTempFolder()
-	s.env.OnActivity(activities.QScan.QScanFetchResult, mock.Anything, mock.Anything).Once().Return(&activities.QScanFetchResultOutput{
-		ReportNote: "The PDF report could not be fetched; open it in QScan.",
+	// QScan can report a file as analysed before it has written the PDF, so the
+	// fetch is repeated before the summary goes out without one.
+	s.env.OnActivity(activities.QScan.QScanFetchResult, mock.Anything, mock.Anything).Times(qscanReportAttempts).Return(&activities.QScanFetchResultOutput{
+		ReportNote: "The PDF report could not be fetched (qscan GET /report failed (status 404): no report); open it in QScan.",
 	}, nil)
 
 	var sent emails.Message
@@ -128,11 +138,37 @@ func (s *QScanMasterTestSuite) Test_CleanFileIsPassed() {
 
 	s.NoError(s.env.GetWorkflowError())
 	s.Equal("QC PASSED: VX-123 MASTER_01.mxf", sent.Subject)
+	s.Equal([]string{"qc@example.com"}, sent.To)
 	s.Empty(sent.Attachments)
 	s.Contains(sent.PlainText, "could not be fetched")
+	s.Contains(sent.PlainText, "404", "the uploader is told what actually failed")
+}
+
+func (s *QScanMasterTestSuite) Test_ReportThatArrivesLateIsStillAttached() {
+	s.expectSubmission()
+	s.env.OnActivity(activities.QScan.QScanFileStatus, mock.Anything, mock.Anything).Once().Return(&qscan.FileStatus{Status: qscan.StatusAnalyzed}, nil)
+	s.expectTempFolder()
+	s.env.OnActivity(activities.QScan.QScanFetchResult, mock.Anything, mock.Anything).Once().Return(&activities.QScanFetchResultOutput{
+		ReportNote: "The PDF report could not be fetched (status 404); open it in QScan.",
+	}, nil)
+	s.env.OnActivity(activities.QScan.QScanFetchResult, mock.Anything, mock.Anything).Once().Return(&activities.QScanFetchResultOutput{
+		ReportSaved: true,
+	}, nil)
+
+	var sent emails.Message
+	s.env.OnActivity(activities.Util.SendEmail, mock.Anything, mock.Anything).Once().Run(func(args mock.Arguments) {
+		sent = args.Get(1).(emails.Message)
+	}).Return(nil, nil)
+
+	s.env.ExecuteWorkflow(QScanMaster, qscanInput)
+
+	s.NoError(s.env.GetWorkflowError())
+	s.Len(sent.Attachments, 1)
+	s.NotContains(sent.PlainText, "could not be fetched")
 }
 
 func (s *QScanMasterTestSuite) Test_SubmitFailureIsEmailedAndFailsTheWorkflow() {
+	s.useErrorAddresses("ops@example.com")
 	s.env.OnActivity(activities.QScan.QScanEnsureJob, mock.Anything, mock.Anything).Return(nil, errors.New("qscan POST /jobs failed (status 500): boom"))
 
 	var sent emails.Message
@@ -145,9 +181,12 @@ func (s *QScanMasterTestSuite) Test_SubmitFailureIsEmailedAndFailsTheWorkflow() 
 	s.Error(s.env.GetWorkflowError())
 	s.Equal("QC ERROR: VX-123 MASTER_01.mxf", sent.Subject)
 	s.Contains(sent.PlainText, "boom")
+	// An uploader can do nothing about a QScan outage, so they are not told.
+	s.Equal([]string{"ops@example.com"}, sent.To)
 }
 
 func (s *QScanMasterTestSuite) Test_FileErrorIsReportedWithoutFetchingAReport() {
+	s.useErrorAddresses("ops@example.com")
 	s.expectSubmission()
 	s.env.OnActivity(activities.QScan.QScanFileStatus, mock.Anything, mock.Anything).Once().Return(&qscan.FileStatus{
 		Status: qscan.StatusFileError, StatusInfo: "File not found",
@@ -164,6 +203,21 @@ func (s *QScanMasterTestSuite) Test_FileErrorIsReportedWithoutFetchingAReport() 
 	s.Equal("QC ERROR: VX-123 MASTER_01.mxf", sent.Subject)
 	s.Contains(sent.PlainText, "file_error")
 	s.Contains(sent.PlainText, "File not found")
+	s.Equal([]string{"ops@example.com"}, sent.To)
+}
+
+func (s *QScanMasterTestSuite) Test_NothingIsSentWhenThereIsNoUploaderToTell() {
+	s.expectSubmission()
+	s.env.OnActivity(activities.QScan.QScanFileStatus, mock.Anything, mock.Anything).Once().Return(&qscan.FileStatus{Status: qscan.StatusAnalyzed}, nil)
+	s.expectTempFolder()
+	s.env.OnActivity(activities.QScan.QScanFetchResult, mock.Anything, mock.Anything).Once().Return(&activities.QScanFetchResultOutput{ReportSaved: true}, nil)
+
+	input := qscanInput
+	input.Recipients = nil
+	s.env.ExecuteWorkflow(QScanMaster, input)
+
+	s.NoError(s.env.GetWorkflowError())
+	s.env.AssertActivityNotCalled(s.T(), "SendEmail")
 }
 
 func TestQScanMasterTestSuite(t *testing.T) {

@@ -58,7 +58,7 @@ func Masters(ctx workflow.Context, params MasterParams) (*MasterResult, error) {
 	return result, nil
 }
 
-func processMaster(ctx workflow.Context, sourceFile paths.Path, destinationFile paths.Path, metadata *ingest.Metadata) (string, error) {
+func processMaster(ctx workflow.Context, sourceFile paths.Path, destinationFile paths.Path, metadata *ingest.Metadata, recipients []string) (string, error) {
 	err := wfutils.MoveFile(ctx, sourceFile, destinationFile, rclone.PriorityNormal)
 	if err != nil {
 		return "", err
@@ -81,10 +81,11 @@ func processMaster(ctx workflow.Context, sourceFile paths.Path, destinationFile 
 
 	asyncCtx := wfutils.WithAbandonChildOptions(ctx)
 
-	// QC runs on its own and reports by email; it neither delays nor fails the import.
+	// QC runs on its own and mails the uploader; it neither delays nor fails the import.
 	qcFuture := workflow.ExecuteChildWorkflow(wfutils.WithChildSearchAttributes(asyncCtx, result.AssetID), miscworkflows.QScanMaster, miscworkflows.QScanMasterInput{
-		VXID: result.AssetID,
-		Path: destinationFile,
+		VXID:       result.AssetID,
+		Path:       destinationFile,
+		Recipients: recipients,
 	})
 	if err := qcFuture.GetChildWorkflowExecution().Get(ctx, nil); err != nil {
 		workflow.GetLogger(ctx).Error("Failed to start QScan workflow", "vxid", result.AssetID, "error", err)
@@ -166,7 +167,7 @@ func uploadMaster(ctx workflow.Context, params MasterParams) (*MasterResult, err
 			file = params.OutputDir.Append(filename)
 		}
 
-		result, err := processMaster(ctx, sourceFile, file, params.Metadata)
+		result, err := processMaster(ctx, sourceFile, file, params.Metadata, params.Targets)
 
 		if err != nil {
 			errs = append(errs, err)

@@ -185,6 +185,9 @@ type QScanFetchResultOutput struct {
 	// ReportSaved is false when no PDF was written; ReportNote then says why.
 	ReportSaved bool
 	ReportNote  string
+	// ResultsID is the id the report was actually asked for, which is not
+	// necessarily the one the caller passed in.
+	ResultsID int64
 }
 
 // QScanFetchResult collects the events and saves the PDF report. A missing PDF
@@ -194,26 +197,60 @@ func (a *QScanActivities) QScanFetchResult(ctx context.Context, in QScanFetchRes
 	if err := a.ready(); err != nil {
 		return nil, err
 	}
+	logger := activity.GetLogger(ctx)
 
 	events, err := a.Client.FileEvents(ctx, in.JobID, in.FileID)
 	if err != nil {
 		return nil, err
 	}
-	out := &QScanFetchResultOutput{Events: events}
 
-	pdf, err := a.Client.DownloadReport(ctx, in.JobID, in.ResultsID, qscan.ReportPDF)
-	if err == nil {
-		local := in.ReportPath.Local()
-		if err = os.MkdirAll(filepath.Dir(local), 0o755); err == nil {
-			err = os.WriteFile(local, pdf, 0o644)
-		}
+	resultsID := a.resolveResultsID(ctx, in)
+	out := &QScanFetchResultOutput{Events: events, ResultsID: resultsID}
+
+	if resultsID == 0 {
+		logger.Warn("QScan has no results id for the file", "jobID", in.JobID, "fileID", in.FileID)
+		out.ReportNote = "QScan has not produced a report for this file; open it in QScan."
+		return out, nil
+	}
+
+	pdf, err := a.Client.DownloadReport(ctx, in.JobID, resultsID, qscan.ReportPDF)
+	if err != nil {
+		logger.Warn("Could not fetch QScan PDF report", "jobID", in.JobID, "resultsID", resultsID, "error", err)
+		out.ReportNote = fmt.Sprintf("The PDF report could not be fetched (%s); open it in QScan.", err)
+		return out, nil
+	}
+
+	local := in.ReportPath.Local()
+	if err = os.MkdirAll(filepath.Dir(local), 0o755); err == nil {
+		err = os.WriteFile(local, pdf, 0o644)
 	}
 	if err != nil {
-		activity.GetLogger(ctx).Warn("Could not save QScan PDF report", "jobID", in.JobID, "resultsID", in.ResultsID, "error", err)
-		out.ReportNote = "The PDF report could not be fetched; open it in QScan."
+		logger.Warn("Could not save QScan PDF report", "jobID", in.JobID, "resultsID", resultsID, "path", local, "error", err)
+		out.ReportNote = fmt.Sprintf("The PDF report could not be saved (%s); open it in QScan.", err)
 		return out, nil
 	}
 
 	out.ReportSaved = true
 	return out, nil
+}
+
+// resolveResultsID re-reads the results id from the job. The one the caller
+// carries was read when the file was queued, before the analysis existed, so
+// it is usually 0; the report lives under the id the job reports afterwards.
+func (a *QScanActivities) resolveResultsID(ctx context.Context, in QScanFetchResultInput) int64 {
+	logger := activity.GetLogger(ctx)
+
+	files, err := a.Client.ListJobFiles(ctx, in.JobID)
+	if err != nil {
+		logger.Warn("Could not re-read the QScan results id, using the one from submission",
+			"jobID", in.JobID, "fileID", in.FileID, "resultsID", in.ResultsID, "error", err)
+		return in.ResultsID
+	}
+
+	for _, f := range files {
+		if int64(f.ID) == in.FileID && f.ResultsID != 0 {
+			return int64(f.ResultsID)
+		}
+	}
+	return in.ResultsID
 }

@@ -130,7 +130,11 @@ func (s *UnitTestSuite) Test_VBBulk_MasterFlow() {
 		Language: "no",
 	}).Once().Return(nil, nil)
 
-	s.env.OnWorkflow(miscworkflows.QScanMaster, mock.Anything, mock.Anything).Times(2).Return(nil, nil)
+	// QC mails its verdict to whoever uploaded the master.
+	var qcInputs []miscworkflows.QScanMasterInput
+	s.env.OnWorkflow(miscworkflows.QScanMaster, mock.Anything, mock.Anything).Times(2).Run(func(args mock.Arguments) {
+		qcInputs = append(qcInputs, args.Get(1).(miscworkflows.QScanMasterInput))
+	}).Return(nil, nil)
 
 	s.env.OnWorkflow(miscworkflows.TranscodePreviewVX, mock.Anything, miscworkflows.TranscodePreviewVXInput{
 		VXID: "VBBulk1",
@@ -147,6 +151,11 @@ func (s *UnitTestSuite) Test_VBBulk_MasterFlow() {
 
 	err := s.env.GetWorkflowError()
 	s.NoError(err)
+
+	s.Len(qcInputs, 2)
+	for _, in := range qcInputs {
+		s.Equal(params.Targets, in.Recipients)
+	}
 }
 
 func TestUnitTestSuite(t *testing.T) {

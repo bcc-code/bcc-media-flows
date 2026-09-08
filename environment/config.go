@@ -66,6 +66,9 @@ type QScan struct {
 	password     string
 	repositoryID int64
 	templateName string
+	errorEmails  string
+	// reportEmails is the previous name of errorEmails, kept so a deployment
+	// that still sets QSCAN_REPORT_EMAILS keeps reaching someone.
 	reportEmails string
 }
 
@@ -84,8 +87,13 @@ func (q QScan) TemplateName() string {
 	return "BCCM - Masters"
 }
 
-func (q QScan) ReportEmails() []string {
-	raw := q.reportEmails
+// ErrorEmails is where QC errors go: a QScan outage, a timeout or a file the
+// analysis could not read. QC verdicts go to the uploader instead, never here.
+func (q QScan) ErrorEmails() []string {
+	raw := q.errorEmails
+	if raw == "" {
+		raw = q.reportEmails
+	}
 	if raw == "" {
 		raw = "matjaz.debelak@bcc.no"
 	}
@@ -290,6 +298,7 @@ func Load() *Config {
 			password:     os.Getenv("QSCAN_PASSWORD"),
 			repositoryID: int64(intOr("QSCAN_REPOSITORY_ID", 2)),
 			templateName: os.Getenv("QSCAN_TEMPLATE_NAME"),
+			errorEmails:  os.Getenv("QSCAN_ERROR_EMAILS"),
 			reportEmails: os.Getenv("QSCAN_REPORT_EMAILS"),
 		},
 

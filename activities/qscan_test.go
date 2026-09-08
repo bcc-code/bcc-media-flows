@@ -30,6 +30,31 @@ type fakeQScan struct {
 	posts map[string]int
 	// addedPaths records what was submitted, in submission order.
 	addedPaths []string
+	// analysed turns on the results ids, which QScan only hands out once the
+	// analysis has produced results.
+	analysed bool
+	// reportedIDs records the ids the report endpoint was asked for.
+	reportedIDs []string
+	// reportStatus, when set, is what the report endpoint answers instead of a PDF.
+	reportStatus int
+}
+
+// resultsID is 0 until the file has been analysed, as it is on the real server.
+func (f *fakeQScan) resultsID(index int) qscan.Int {
+	if !f.analysed {
+		return 0
+	}
+	return qscan.Int(90 + index)
+}
+
+// listedFiles is what GET /jobs/1/files answers now.
+func (f *fakeQScan) listedFiles() []qscan.JobFile {
+	listed := make([]qscan.JobFile, len(f.files[1]))
+	for i, file := range f.files[1] {
+		file.ResultsID = f.resultsID(i)
+		listed[i] = file
+	}
+	return listed
 }
 
 func newFakeQScan(t *testing.T) (*fakeQScan, *QScanActivities) {
@@ -58,7 +83,7 @@ func newFakeQScan(t *testing.T) (*fakeQScan, *QScanActivities) {
 			require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
 			f.addedPaths = append(f.addedPaths, req[0].Path)
 			// QScan stores and echoes the path in Windows form.
-			file := qscan.JobFile{ID: qscan.Int(10 + len(f.files[1])), JobID: 1, ResultsID: qscan.Int(90 + len(f.files[1])), Path: strings.ReplaceAll(req[0].Path, "/", `\`)}
+			file := qscan.JobFile{ID: qscan.Int(10 + len(f.files[1])), JobID: 1, ResultsID: f.resultsID(len(f.files[1])), Path: strings.ReplaceAll(req[0].Path, "/", `\`)}
 			f.files[1] = append(f.files[1], file)
 			_ = json.NewEncoder(w).Encode(file)
 			return
@@ -68,12 +93,19 @@ func newFakeQScan(t *testing.T) (*fakeQScan, *QScanActivities) {
 			_, _ = w.Write([]byte(`{"status":"Not Found","message":"Job ID has no files"}`))
 			return
 		}
-		_ = json.NewEncoder(w).Encode(f.files[1])
+		_ = json.NewEncoder(w).Encode(f.listedFiles())
 	})
 	mux.HandleFunc("/api-1/qc/jobs/1/files/10/events", func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = w.Write([]byte(`[{"severity":"critical","events":[{"media_type":"video","message":"Freeze"}]}]`))
 	})
-	mux.HandleFunc("/api-1/qc/jobs/1/files/90/report", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/api-1/qc/jobs/1/files/{resultsID}/report", func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("resultsID")
+		f.reportedIDs = append(f.reportedIDs, id)
+		if f.reportStatus != 0 {
+			w.WriteHeader(f.reportStatus)
+			_, _ = w.Write([]byte(`{"status":"Not Found","message":"No report for this file"}`))
+			return
+		}
 		w.Header().Set("Content-Type", "application/pdf")
 		_, _ = w.Write([]byte("%PDF-1.4 fake"))
 	})
@@ -85,11 +117,20 @@ func newFakeQScan(t *testing.T) (*fakeQScan, *QScanActivities) {
 	return f, &QScanActivities{Client: client, RepositoryID: 2, TemplateName: "BCCM - Masters"}
 }
 
-func TestQScanEnsureJobAndFile_AreIdempotent(t *testing.T) {
-	fake, a := newFakeQScan(t)
+// newQScanEnv registers the activities under test. They log through the
+// activity context, so they cannot be called with a plain context.
+func newQScanEnv(t *testing.T, a *QScanActivities) *testsuite.TestActivityEnvironment {
+	t.Helper()
 	env := (&testsuite.WorkflowTestSuite{}).NewTestActivityEnvironment()
 	env.RegisterActivity(a.QScanEnsureJob)
 	env.RegisterActivity(a.QScanEnsureFile)
+	env.RegisterActivity(a.QScanFetchResult)
+	return env
+}
+
+func TestQScanEnsureJobAndFile_AreIdempotent(t *testing.T) {
+	fake, a := newFakeQScan(t)
+	env := newQScanEnv(t, a)
 
 	master := paths.New(paths.IsilonDrive, "Production/masters/MASTER_01.mxf")
 	in := QScanEnsureJobInput{VXID: "VX-1", Path: master}
@@ -116,7 +157,9 @@ func TestQScanEnsureJobAndFile_AreIdempotent(t *testing.T) {
 
 	assert.Equal(t, f1, f2)
 	assert.Equal(t, int64(10), f1.FileID)
-	assert.Equal(t, int64(90), f1.ResultsID)
+	// A freshly queued file has no results yet, so the id it carries is 0 and
+	// the fetch has to read it again once the analysis is done.
+	assert.Zero(t, f1.ResultsID)
 	assert.Equal(t, 1, fake.posts["files"], "the second run must find the queued file")
 
 	// QScan concatenates the repository root and this path, so dropping the
@@ -134,17 +177,90 @@ func TestQScanEnsureJob_RejectsNonIsilonPaths(t *testing.T) {
 	assert.Contains(t, err.Error(), "isilon")
 }
 
-func TestQScanFetchResult_WritesThePDFNextToTheWorkflow(t *testing.T) {
-	_, a := newFakeQScan(t)
+// queueAndAnalyse puts the master in the job and lets the analysis finish, so
+// the state matches what the fetch meets in production.
+func queueAndAnalyse(t *testing.T, env *testsuite.TestActivityEnvironment, fake *fakeQScan, a *QScanActivities) {
+	t.Helper()
+	master := paths.New(paths.IsilonDrive, "Production/masters/MASTER_01.mxf")
+	_, err := env.ExecuteActivity(a.QScanEnsureJob, QScanEnsureJobInput{VXID: "VX-1", Path: master})
+	require.NoError(t, err)
+	_, err = env.ExecuteActivity(a.QScanEnsureFile, QScanEnsureFileInput{JobID: 1, Path: master})
+	require.NoError(t, err)
+	fake.analysed = true
+}
+
+func testReportPath(t *testing.T) paths.Path {
+	t.Helper()
 	report := paths.New(paths.TestDrive, filepath.Join("generated", "qscan", "VX-1_qscan_report.pdf"))
 	t.Cleanup(func() { _ = os.RemoveAll(filepath.Dir(report.Local())) })
+	return report
+}
 
-	out, err := a.QScanFetchResult(context.Background(), QScanFetchResultInput{JobID: 1, FileID: 10, ResultsID: 90, ReportPath: report})
-
+func fetchQScanReport(t *testing.T, env *testsuite.TestActivityEnvironment, a *QScanActivities, in QScanFetchResultInput) QScanFetchResultOutput {
+	t.Helper()
+	val, err := env.ExecuteActivity(a.QScanFetchResult, in)
 	require.NoError(t, err)
+	var out QScanFetchResultOutput
+	require.NoError(t, val.Get(&out))
+	return out
+}
+
+func TestQScanFetchResult_WritesThePDFNextToTheWorkflow(t *testing.T) {
+	fake, a := newFakeQScan(t)
+	env := newQScanEnv(t, a)
+	queueAndAnalyse(t, env, fake, a)
+	report := testReportPath(t)
+
+	out := fetchQScanReport(t, env, a, QScanFetchResultInput{JobID: 1, FileID: 10, ResultsID: 90, ReportPath: report})
+
 	assert.True(t, out.ReportSaved)
 	assert.Len(t, out.Events, 1)
 	content, err := os.ReadFile(report.Local())
 	require.NoError(t, err)
 	assert.Equal(t, "%PDF-1.4 fake", string(content))
+}
+
+// The submitted results id is 0 because the file had not been analysed when it
+// was queued; the report only exists under the id the job reports afterwards.
+func TestQScanFetchResult_ReReadsTheResultsIDBeforeDownloading(t *testing.T) {
+	fake, a := newFakeQScan(t)
+	env := newQScanEnv(t, a)
+	queueAndAnalyse(t, env, fake, a)
+	report := testReportPath(t)
+
+	out := fetchQScanReport(t, env, a, QScanFetchResultInput{JobID: 1, FileID: 10, ResultsID: 0, ReportPath: report})
+
+	assert.True(t, out.ReportSaved)
+	assert.Equal(t, int64(90), out.ResultsID)
+	assert.Equal(t, []string{"90"}, fake.reportedIDs)
+}
+
+func TestQScanFetchResult_SaysNothingWasDownloadedWhenThereIsNoResultsID(t *testing.T) {
+	fake, a := newFakeQScan(t)
+	env := newQScanEnv(t, a)
+	queueAndAnalyse(t, env, fake, a)
+	fake.analysed = false
+	report := testReportPath(t)
+
+	out := fetchQScanReport(t, env, a, QScanFetchResultInput{JobID: 1, FileID: 10, ResultsID: 0, ReportPath: report})
+
+	assert.False(t, out.ReportSaved)
+	assert.Empty(t, fake.reportedIDs, "there is nothing to ask for")
+	assert.Contains(t, out.ReportNote, "has not produced a report")
+}
+
+func TestQScanFetchResult_NamesTheReasonTheReportIsMissing(t *testing.T) {
+	fake, a := newFakeQScan(t)
+	env := newQScanEnv(t, a)
+	queueAndAnalyse(t, env, fake, a)
+	fake.reportStatus = http.StatusNotFound
+	report := testReportPath(t)
+
+	// A missing PDF must not lose the summary.
+	out := fetchQScanReport(t, env, a, QScanFetchResultInput{JobID: 1, FileID: 10, ResultsID: 0, ReportPath: report})
+
+	assert.False(t, out.ReportSaved)
+	assert.Len(t, out.Events, 1)
+	assert.Contains(t, out.ReportNote, "could not be fetched")
+	assert.Contains(t, out.ReportNote, "404", "the note must say what actually failed")
 }
