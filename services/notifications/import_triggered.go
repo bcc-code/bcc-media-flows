@@ -40,13 +40,13 @@ func (t ImportTriggered) RenderMarkdown() (string, error) {
 	b.WriteString("Your upload has been received and an import has been started.\n\n")
 
 	if t.Filename != "" {
-		fmt.Fprintf(&b, "File: %s\n", t.Filename)
+		fmt.Fprintf(&b, "File: %s\n", escapeMarkdown(t.Filename))
 	}
 	if t.UploadedBy != "" {
-		fmt.Fprintf(&b, "Uploaded by: %s\n", t.UploadedBy)
+		fmt.Fprintf(&b, "Uploaded by: %s\n", escapeMarkdown(t.UploadedBy))
 	}
 	if t.UploadedAt != "" {
-		fmt.Fprintf(&b, "Uploaded at: %s\n", t.UploadedAt)
+		fmt.Fprintf(&b, "Uploaded at: %s\n", escapeMarkdown(t.UploadedAt))
 	}
 
 	if len(t.Details) > 0 {
@@ -55,7 +55,7 @@ func (t ImportTriggered) RenderMarkdown() (string, error) {
 			if d.Value == "" {
 				continue
 			}
-			fmt.Fprintf(&b, "- %s: %s\n", d.Label, d.Value)
+			fmt.Fprintf(&b, "- %s: %s\n", escapeMarkdown(d.Label), escapeMarkdown(d.Value))
 		}
 	}
 

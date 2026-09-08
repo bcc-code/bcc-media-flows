@@ -28,10 +28,10 @@ func (t ImportCompleted) RenderMarkdown() (string, error) {
 
 	files := ""
 	for _, f := range t.Files {
-		files += fmt.Sprintf("- `%s`\n", f.Name)
+		files += fmt.Sprintf("- `%s`\n", escapeCode(f.Name))
 	}
 
-	return fmt.Sprintf(md, t.JobID, files), nil
+	return fmt.Sprintf(md, escapeMarkdown(t.JobID), files), nil
 }
 
 func (t ImportCompleted) Subject() string {

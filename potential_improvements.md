@@ -4,6 +4,10 @@ Condensed 2026-08-21. Items confirmed fixed were removed. Bugs section validated
 
 ## Bugs
 
+- The ~60 `wfutils.SendTelegramText` / `telegram.SendText` call sites hand-build legacy Markdown with `fmt.Sprintf`, interpolating filenames, paths and error strings raw. Any unbalanced `_`, `*`, `` ` `` or `[` in those values makes Telegram reject the message ("can't parse entities"); the sender now retries in plain text, so the alert survives but loses its formatting. The root fix is an escaping send helper (`notifications.escapeMarkdown` is the piece to export or mirror) or a move to MarkdownV2, which can also escape inside code entities.
+- QScan's repository id is an unvalidated default (`QSCAN_REPOSITORY_ID`, 2), and nothing in the code can tell a wrong repository from an unreachable one: the workflow sends only a repository-relative path, so the server/share half of the resolved path lives entirely in QScan's config. A `ListRepositories` call in `QScanActivities.ready()` (or a startup check) asserting that repository's root would turn a silent per-file `file_error` into one clear configuration failure.
+- `QScanMaster` turns every non-success terminal status into a non-retryable `QScanAnalysisFailed` (`workflows/misc/qscan_master.go:100`). `file_error` is not always about the file: an SMB outage on the QScan host reports the same status, and that transient infrastructure failure becomes a permanent "QC ERROR" alert with no retry. Worth distinguishing `file_error` (retry a few times, widely spaced) from `analysis_error`/`unsupported` (genuinely permanent).
+- `notifications.Simple.RenderMarkdown` emits `# Title`, which legacy Markdown has no heading syntax for — Telegram shows the literal `#`. It also forwards `Message` unescaped, which is deliberate for callers that pass their own markup but means `Simple` cannot be used for text from another system.
 
 ## Security
 

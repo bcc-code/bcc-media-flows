@@ -73,14 +73,14 @@ func (t QScanResult) RenderMarkdown() (string, error) {
 	if t.Passed() {
 		icon = "✅"
 	}
-	fmt.Fprintf(&b, "%s QC %s: `%s` %s\n", icon, t.Outcome.Value, t.VXID, t.Filename)
+	fmt.Fprintf(&b, "%s QC %s: `%s` %s\n", icon, t.Outcome.Value, escapeCode(t.VXID), escapeMarkdown(t.Filename))
 	if t.Error != "" {
-		fmt.Fprintf(&b, "```\n%s\n```\n", t.Error)
+		fmt.Fprintf(&b, "```\n%s\n```\n", escapeCodeBlock(t.Error))
 	}
 	if t.Status != "" {
-		fmt.Fprintf(&b, "Status: %s", t.Status)
+		fmt.Fprintf(&b, "Status: %s", escapeMarkdown(oneLine(t.Status)))
 		if t.StatusInfo != "" {
-			fmt.Fprintf(&b, " (%s)", t.StatusInfo)
+			fmt.Fprintf(&b, " (%s)", escapeMarkdown(oneLine(t.StatusInfo)))
 		}
 		b.WriteString("\n")
 	}
@@ -90,22 +90,24 @@ func (t QScanResult) RenderMarkdown() (string, error) {
 	if len(t.Events) > 0 {
 		fmt.Fprintf(&b, "\nEvents (%d of %d):\n", len(t.Events), t.TotalEvents)
 		for _, e := range t.Events {
-			fmt.Fprintf(&b, "- [%s] %s %s", e.Severity, e.MediaType, e.Message)
+			fmt.Fprintf(&b, "- \\[%s] %s %s", escapeMarkdown(e.Severity), escapeMarkdown(e.MediaType), escapeMarkdown(oneLine(e.Message)))
 			if e.TCIn != "" {
-				fmt.Fprintf(&b, " @ %s", e.TCIn)
+				fmt.Fprintf(&b, " @ %s", escapeMarkdown(e.TCIn))
 				if e.TCOut != "" && e.TCOut != e.TCIn {
-					fmt.Fprintf(&b, " - %s", e.TCOut)
+					fmt.Fprintf(&b, " - %s", escapeMarkdown(e.TCOut))
 				}
 			}
 			b.WriteString("\n")
 		}
 	}
 	if t.ReportNote != "" {
-		fmt.Fprintf(&b, "\n%s\n", t.ReportNote)
+		fmt.Fprintf(&b, "\n%s\n", escapeMarkdown(t.ReportNote))
 	}
 	if t.JobName != "" {
-		fmt.Fprintf(&b, "\nQScan job: %s", t.JobName)
+		fmt.Fprintf(&b, "\nQScan job: %s", escapeMarkdown(t.JobName))
 		if t.QScanURL != "" {
+			// The configured QScan base URL, left unescaped so Telegram still
+			// turns it into a link.
 			fmt.Fprintf(&b, " (%s)", t.QScanURL)
 		}
 		b.WriteString("\n")

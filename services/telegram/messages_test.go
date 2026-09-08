@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/telebot.v3"
 )
 
 // TestMessageJson tests the marshalling and unmarshalling of the Message struct
@@ -98,4 +99,17 @@ func TestVBExportMarkdownIssue(t *testing.T) {
 		// The fixed version should not have the same parsing error
 		assert.NotContains(t, err2.Error(), "can't parse entities: Can't find end of the entity starting at byte offset 94")
 	}
+}
+
+// Send falls back to plain text on a parse failure, so the classification has
+// to catch the real API error — whose description carries a byte offset — and
+// nothing else.
+func TestIsMarkdownParseError(t *testing.T) {
+	parseFailure := telebot.NewError(400, "Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 138")
+
+	assert.True(t, IsMarkdownParseError(parseFailure))
+	assert.True(t, IsMarkdownParseError(fmt.Errorf("telegram: %w", parseFailure)))
+	assert.False(t, IsMarkdownParseError(nil))
+	assert.False(t, IsMarkdownParseError(telebot.ErrChatNotFound))
+	assert.False(t, IsMarkdownParseError(fmt.Errorf("telegram: %w", telebot.ErrTooLarge)))
 }

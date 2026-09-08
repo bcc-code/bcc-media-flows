@@ -30,10 +30,10 @@ func (t ImportFailed) RenderMarkdown() (string, error) {
 
 	files := ""
 	for _, f := range t.Files {
-		files += fmt.Sprintf("- `%s`\n", f.Name)
+		files += fmt.Sprintf("- `%s`\n", escapeCode(f.Name))
 	}
 
-	return fmt.Sprintf(md, t.JobID, t.Error, files), nil
+	return fmt.Sprintf(md, escapeMarkdown(t.JobID), escapeCode(oneLine(t.Error)), files), nil
 }
 
 func (t ImportFailed) Subject() string {
