@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"slices"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -85,7 +84,7 @@ type File struct {
 // StyledImage represents a styled image in Directus
 type StyledImage struct {
 	ID          string     `json:"id"`
-	Style       string     `json:"style"`
+	Style       ImageStyle `json:"style"`
 	Language    string     `json:"language"`
 	File        string     `json:"file"`
 	DateCreated *time.Time `json:"date_created,omitempty"`
@@ -96,28 +95,28 @@ type StyledImage struct {
 
 // Short represents a short in Directus
 type Short struct {
-	ID          string `json:"id"`
-	MediaItemID string `json:"mediaitem_id"`
-	Status      string `json:"status"`
+	ID          string      `json:"id"`
+	MediaItemID string      `json:"mediaitem_id"`
+	Status      ShortStatus `json:"status"`
 }
 
 // ShortCreate is used when creating a new short
 type ShortCreate struct {
-	MediaItemID string   `json:"mediaitem_id"`
-	Status      string   `json:"status"`
-	Roles       []string `json:"roles,omitempty"`
+	MediaItemID string      `json:"mediaitem_id"`
+	Status      ShortStatus `json:"status"`
+	Roles       []string    `json:"roles,omitempty"`
 }
 
 // MediaItem represents a media item in Directus"
 type MediaItem struct {
-	ID              string `json:"id"`
-	Label           string `json:"label"`
-	Type            string `json:"type"`
-	AssetID         int64  `json:"asset_id"`
-	Title           string `json:"title"`
-	ParentEpisodeID *int   `json:"parent_episode_id"`
-	ParentStartsAt  *int64 `json:"parent_starts_at"`
-	ParentEndsAt    *int64 `json:"parent_ends_at"`
+	ID              string        `json:"id"`
+	Label           string        `json:"label"`
+	Type            MediaItemType `json:"type"`
+	AssetID         int64         `json:"asset_id"`
+	Title           string        `json:"title"`
+	ParentEpisodeID *int          `json:"parent_episode_id"`
+	ParentStartsAt  *int64        `json:"parent_starts_at"`
+	ParentEndsAt    *int64        `json:"parent_ends_at"`
 }
 
 // MediaItemCreate is used when creating a new media item
@@ -126,7 +125,7 @@ type MediaItem struct {
 // This prevents sending empty strings for integer fields
 type MediaItemCreate struct {
 	Label           string                   `json:"label"`
-	Type            string                   `json:"type"`
+	Type            MediaItemType            `json:"type"`
 	AssetID         *int64                   `json:"asset_id,omitempty"`
 	Title           string                   `json:"title"`
 	ParentEpisodeID *int64                   `json:"parent_episode_id,omitempty"`
@@ -149,9 +148,9 @@ type MediaItemStyledImageCRUD struct {
 }
 
 type StyledImageCreate struct {
-	Style    string `json:"style"`
-	Language string `json:"language"`
-	File     string `json:"file"`
+	Style    ImageStyle `json:"style"`
+	Language string     `json:"language"`
+	File     string     `json:"file"`
 }
 
 // Tag represents a tag in Directus
@@ -213,14 +212,13 @@ func (c *Client) AssetExists(mediabankenID string) (bool, error) {
 }
 
 // CreateStyledImage creates a styled image in Directus and returns the created styled image
-func (c *Client) CreateStyledImage(imageID, style string) (*StyledImage, error) {
+func (c *Client) CreateStyledImage(imageID string, style ImageStyle) (*StyledImage, error) {
 	if imageID == "" {
 		return nil, errors.New("imageID is required")
 	}
 
-	validStyles := []string{"poster", "default", "icon", "album", "featured"}
-	if !slices.Contains(validStyles, style) {
-		return nil, fmt.Errorf("invalid style: %s. Valid styles: %v", style, validStyles)
+	if !ImageStyles.Contains(style) {
+		return nil, fmt.Errorf("invalid style: %s. Valid styles: %v", style, ImageStyles.Values())
 	}
 
 	result := &struct {

@@ -2,6 +2,7 @@ package miscworkflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
@@ -27,7 +28,7 @@ func FixDurationVX(
 	// Get the original file from Vidispine
 	originalFile, err := wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		VXID: params.VXID,
-		Tags: []string{"original"},
+		Tags: []vsapi.ShapeTag{vsapi.ShapeTagOriginal},
 	}).Result(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get original file: %w", err)

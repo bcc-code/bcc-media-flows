@@ -18,12 +18,12 @@ import (
 
 type WatchFolderTranscodeInput struct {
 	Path       string
-	FolderName string
+	FolderName common.WatchFolder
 }
 
 // watchFolderEncodes are the folders whose transcode is one activity call.
 // FilePath and OutputDir are filled in per run.
-var watchFolderEncodes = map[string]struct {
+var watchFolderEncodes = map[common.WatchFolder]struct {
 	activity func(context.Context, activities.EncodeParams) (*activities.EncodeResult, error)
 	params   activities.EncodeParams
 }{

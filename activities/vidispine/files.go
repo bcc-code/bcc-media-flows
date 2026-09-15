@@ -14,7 +14,7 @@ import (
 type ImportFileAsShapeParams struct {
 	AssetID  string
 	FilePath paths.Path
-	ShapeTag string
+	ShapeTag vsapi.ShapeTag
 	Growing  bool
 	Replace  bool
 }
@@ -53,9 +53,9 @@ func (a Activities) ImportFileAsShapeActivity(ctx context.Context, params Import
 		}
 	}
 
-	res, err := a.Client.AddShapeToItem(params.ShapeTag, params.AssetID, fileID)
+	res, err := a.Client.AddShapeToItem(params.ShapeTag.Value, params.AssetID, fileID)
 	if err != nil && errors.Is(err, vsapi.ErrShapeTagNotFound) {
-		err = temporal.NewNonRetryableApplicationError(err.Error(), "VS_SHAPE_TAG_NOT_FOUND", err)
+		err = temporal.NewNonRetryableApplicationError(err.Error(), ShapeTagNotFoundErrorType, err)
 	}
 	return &ImportFileResult{
 		JobID:  res,

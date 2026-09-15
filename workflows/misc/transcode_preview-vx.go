@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/languages"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/samber/lo"
 	"path/filepath"
 	"strings"
@@ -46,7 +47,7 @@ func TranscodePreviewVX(
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	shapes, err := wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
-		Tags: []string{"original"},
+		Tags: []vsapi.ShapeTag{vsapi.ShapeTagOriginal},
 		VXID: params.VXID,
 	}).Result(ctx)
 
@@ -73,11 +74,9 @@ func TranscodePreviewVX(
 		return err
 	}
 
-	var shapeTag string
+	shapeTag := vsapi.ShapeTagLowresWatermarked
 	if previewResponse.AudioOnly {
-		shapeTag = "lowaudio"
-	} else {
-		shapeTag = "lowres_watermarked"
+		shapeTag = vsapi.ShapeTagLowAudio
 	}
 
 	err = wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity,
@@ -108,14 +107,14 @@ func TranscodePreviewVX(
 			vsactivity.ImportFileAsShapeParams{
 				AssetID:  params.VXID,
 				FilePath: p,
-				ShapeTag: tag,
+				ShapeTag: vsapi.ShapeTag{Value: tag},
 			}).Wait(ctx)
 		if iterErr != nil {
 			// A shape-tag that isn't configured in Vidispine is expected for some
 			// languages; skip it quietly and continue with the rest instead of
 			// treating it as a failure that alerts.
 			var appErr *temporal.ApplicationError
-			if errors.As(iterErr, &appErr) && appErr.Type() == "VS_SHAPE_TAG_NOT_FOUND" {
+			if errors.As(iterErr, &appErr) && appErr.Type() == vsactivity.ShapeTagNotFoundErrorType {
 				logger.Info("Skipping audio preview for unconfigured shape-tag",
 					"language", l, "tag", tag, "vxid", params.VXID)
 				continue

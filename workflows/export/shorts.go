@@ -121,7 +121,7 @@ func ExportShort(ctx workflow.Context, short *ShortsData) error {
 
 	res, err := wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		VXID: short.MBMetadata.ID,
-		Tags: []string{"original"},
+		Tags: []vsapi.ShapeTag{vsapi.ShapeTagOriginal},
 	}).Result(ctx)
 	if err != nil {
 		return err
@@ -134,7 +134,7 @@ func ExportShort(ctx workflow.Context, short *ShortsData) error {
 		return fmt.Errorf("failed to generate thumbnail: %w", err)
 	}
 
-	_, styledImage, err := uploadImage(ctx, activities.Directus.ShortsFolderID, true, "poster", thumb)
+	_, styledImage, err := uploadImage(ctx, activities.Directus.ShortsFolderID, true, directus.ImageStylePoster, thumb)
 	if err != nil {
 		return fmt.Errorf("failed to upload thumbnail: %w", err)
 	}
@@ -260,7 +260,7 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 	// Create media item
 	mediaItemResult, err := wfutils.Execute(ctx, activities.Directus.CreateMediaItem, activities.CreateMediaItemInput{
 		Label:           label,
-		Type:            "short",
+		Type:            directus.MediaItemTypeShort,
 		AssetID:         assetID,
 		Title:           "",
 		ParentEpisodeID: episodeID,
@@ -288,7 +288,7 @@ func createShortInPlatform(ctx workflow.Context, short *ShortsData, styledImage 
 	// Create short
 	shortResult, err := wfutils.Execute(ctx, activities.Directus.CreateShort, activities.CreateShortInput{
 		MediaItemID: mediaItemResult.ID,
-		Status:      "draft",
+		Status:      directus.ShortStatusDraft,
 	}).Result(ctx)
 
 	if err != nil {
@@ -405,7 +405,7 @@ func convertToSeconds(timeStr string) (*int64, error) {
 	return &totalSeconds, nil
 }
 
-func uploadImage(ctx workflow.Context, directusFolderID string, createStyledImages bool, imageStyle string, image paths.Path) (*directus.File, *directus.StyledImage, error) {
+func uploadImage(ctx workflow.Context, directusFolderID string, createStyledImages bool, imageStyle directus.ImageStyle, image paths.Path) (*directus.File, *directus.StyledImage, error) {
 	if !strings.HasSuffix(image.Ext(), ".jpg") {
 		return nil, nil, fmt.Errorf("invalid image extension: %s", image.Ext())
 	}
@@ -420,7 +420,7 @@ func uploadImage(ctx workflow.Context, directusFolderID string, createStyledImag
 		return nil, nil, err
 	}
 
-	if createStyledImages && imageStyle != "" {
+	if createStyledImages && imageStyle.Value != "" {
 		styledImage, err := wfutils.Execute(ctx, activities.Directus.CreateStyledImage, activities.CreateStyledImageInput{
 			ImageID: res.ID,
 			Style:   imageStyle,

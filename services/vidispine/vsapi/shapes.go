@@ -166,7 +166,7 @@ func (c *Client) GetResolutions(itemVXID string) ([]Resolution, error) {
 		return nil, err
 	}
 
-	shape := shapes.GetShape("original")
+	shape := shapes.GetShape(ShapeTagOriginal)
 	if shape == nil {
 		return nil, errors.New("no original shape found")
 	}
@@ -220,9 +220,9 @@ func (c *Client) GetResolutions(itemVXID string) ([]Resolution, error) {
 	return qualities, nil
 }
 
-func (sr ShapeResult) GetShape(tag string) *Shape {
+func (sr ShapeResult) GetShape(tag ShapeTag) *Shape {
 	for _, s := range sr.Shape {
-		if lo.Contains(s.Tag, tag) {
+		if lo.Contains(s.Tag, tag.Value) {
 			return &s
 		}
 	}

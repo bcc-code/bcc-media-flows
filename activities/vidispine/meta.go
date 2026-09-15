@@ -18,12 +18,12 @@ type VXOnlyParam struct {
 
 type GetFileFromVXParams struct {
 	VXID string
-	Tags []string
+	Tags []vsapi.ShapeTag
 }
 
 type GetFileFromVXResult struct {
 	FilePath paths.Path
-	ShapeTag string
+	ShapeTag vsapi.ShapeTag
 }
 
 func (a Activities) GetFileFromVXActivity(ctx context.Context, params GetFileFromVXParams) (*GetFileFromVXResult, error) {

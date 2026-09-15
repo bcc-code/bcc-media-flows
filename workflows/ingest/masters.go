@@ -3,6 +3,7 @@ package ingestworkflows
 import (
 	"errors"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"regexp"
 	"strconv"
 	"strings"
@@ -64,7 +65,7 @@ func processMaster(ctx workflow.Context, sourceFile paths.Path, destinationFile 
 		return "", err
 	}
 
-	result, err := ImportFileAsTag(ctx, "original", destinationFile, destinationFile.Base())
+	result, err := ImportFileAsTag(ctx, vsapi.ShapeTagOriginal, destinationFile, destinationFile.Base())
 	if err != nil {
 		return "", err
 	}

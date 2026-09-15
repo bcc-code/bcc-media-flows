@@ -105,7 +105,7 @@ func GetRelatedAudioPaths(client Client, vxID string) (map[string]string, error)
 			return nil, err
 		}
 
-		shape := shapes.GetShape("original")
+		shape := shapes.GetShape(vsapi.ShapeTagOriginal)
 		if shape == nil {
 			continue
 		}
@@ -182,7 +182,7 @@ func enrichClipWithRelatedAudios(client Client, clip *Clip, oLanguagesToExport [
 		}
 
 		// Ok now we can finally get the path to the audio file
-		relatedAudioShape := relatedAudioShapes.GetShape("original")
+		relatedAudioShape := relatedAudioShapes.GetShape(vsapi.ShapeTagOriginal)
 		if relatedAudioShape == nil {
 			if languagesToExport[0] == "nor" {
 				// Fall back to "nor" audio and issue a warning *somewhere*
@@ -225,7 +225,7 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 		return nil, err
 	}
 
-	shape := shapes.GetShape("original")
+	shape := shapes.GetShape(vsapi.ShapeTagOriginal)
 	if shape == nil {
 		// The AudioComponent access below dereferences the shape, so a missing original
 		// has to be reported rather than followed.
@@ -572,7 +572,7 @@ func addSubtitlesAndTranscriptionsToClips(client Client, clips []*Clip, allowAI 
 
 		for langCode := range languages.LanguagesByISO {
 			// There are also videos with .txt subs... we should support those at some point
-			shape := clipShapes.GetShape(fmt.Sprintf("sub_%s_srt", langCode))
+			shape := clipShapes.GetShape(vsapi.SubtitleShapeTag(langCode))
 			if shape == nil || shape.GetPath() == "" {
 				continue
 			}
@@ -585,14 +585,14 @@ func addSubtitlesAndTranscriptionsToClips(client Client, clips []*Clip, allowAI 
 
 		if len(clip.SubtitleFiles) == 0 && allowAI {
 			// We have no subtitles, so we fall back to transcriptions
-			shape := clipShapes.GetShape("Transcribed_Subtitle_SRT")
+			shape := clipShapes.GetShape(vsapi.ShapeTagTranscribedSubtitleSRT)
 			if shape != nil && shape.GetPath() != "" {
 				clip.SubtitleFiles["und"] = shape.GetPath()
 				allSubLanguages["und"] = struct{}{}
 			}
 		}
 
-		shape := clipShapes.GetShape("transcription_json")
+		shape := clipShapes.GetShape(vsapi.ShapeTagTranscriptionJSON)
 		if shape != nil {
 			clip.JSONTranscriptFile = shape.GetPath()
 		}

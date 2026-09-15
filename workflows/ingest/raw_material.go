@@ -3,6 +3,7 @@ package ingestworkflows
 import (
 	"fmt"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -102,7 +103,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 	imported := map[string]paths.Path{}
 	for _, file := range files {
 		var result *ImportTagResult
-		result, err = ImportFileAsTag(ctx, "original", file, file.Base())
+		result, err = ImportFileAsTag(ctx, vsapi.ShapeTagOriginal, file, file.Base())
 		if err != nil {
 			return imported, err
 		}

@@ -58,6 +58,6 @@ func Test_GetPath(t *testing.T) {
 		},
 	}
 
-	path := sr.GetShape("tag1").GetPath()
+	path := sr.GetShape(ShapeTag{Value: "tag1"}).GetPath()
 	assert.Equal(t, "/path/to/file", path)
 }

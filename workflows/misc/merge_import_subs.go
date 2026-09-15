@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/csv"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"strings"
 	"time"
 
@@ -129,7 +130,7 @@ func MergeAndImportSubtitlesFromCSV(ctx workflow.Context, params MergeAndImportS
 		jobRes, err := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.TargetVXID,
 			FilePath: sub,
-			ShapeTag: fmt.Sprintf("sub_%s_%s", lang, "srt"),
+			ShapeTag: vsapi.SubtitleShapeTag(lang),
 			Replace:  true,
 		}).Result(ctx)
 

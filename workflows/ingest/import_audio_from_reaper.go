@@ -2,6 +2,7 @@ package ingestworkflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"strconv"
 	"strings"
 	"time"
@@ -187,7 +188,7 @@ func doImportAudioFileFromReaper(ctx workflow.Context, params ImportAudioFileFro
 
 	getFileResult, err := wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		VXID: params.VideoVXID,
-		Tags: []string{"original"},
+		Tags: []vsapi.ShapeTag{vsapi.ShapeTagOriginal},
 	}).Result(ctx)
 	if err != nil {
 		return err

@@ -2,6 +2,7 @@ package cantemo
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"strings"
 	"time"
 
@@ -111,7 +112,7 @@ func (c *Client) GetTranscriptionJSON(itemID string) (*Transcription, error) {
 	}
 
 	for _, format := range formats {
-		if format.Name != "transcription_json" {
+		if format.Name != vsapi.ShapeTagTranscriptionJSON.Value {
 			continue
 		}
 

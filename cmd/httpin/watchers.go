@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
@@ -139,13 +140,16 @@ func doTranscode(ctx context.Context, path string) error {
 	}
 
 	matches := exp.FindStringSubmatch(path)
-	t := matches[1]
+	folder := common.WatchFolders.Parse(matches[1])
+	if folder == nil {
+		return fmt.Errorf("%w %q for %s", common.ErrUnknownWatchFolder, matches[1], path)
+	}
 
 	workflowOptions := wfutils.NewWorkflowOptions(environment.GetWorkerQueue(), "", "watcher")
 
 	_, err = c.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.WatchFolderTranscode, miscworkflows.WatchFolderTranscodeInput{
 		Path:       path,
-		FolderName: t,
+		FolderName: *folder,
 	})
 	return err
 }

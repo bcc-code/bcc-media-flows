@@ -26,8 +26,19 @@ type WaitForJobCompletionParams struct {
 
 type MBJobStatusResult struct {
 	JobID  string
-	Status string
+	Status vsapi.JobStatus
 }
+
+// Application error types raised by these activities. Workflows match on
+// them to decide whether an error is worth retrying or reporting.
+const (
+	// JobFailedErrorType marks a Vidispine job that ended in a state other
+	// than FINISHED; retrying the wait cannot help.
+	JobFailedErrorType = "JOB_FAILED"
+	// ShapeTagNotFoundErrorType marks an import whose shape-tag Vidispine has
+	// not configured.
+	ShapeTagNotFoundErrorType = "VS_SHAPE_TAG_NOT_FOUND"
+)
 
 func (a Activities) WaitForJobCompletion(ctx context.Context, params WaitForJobCompletionParams) (*MBJobStatusResult, error) {
 	logger := activity.GetLogger(ctx)
@@ -43,11 +54,7 @@ func (a Activities) WaitForJobCompletion(ctx context.Context, params WaitForJobC
 		if err != nil {
 			return nil, err
 		}
-		if job.Status == "FINISHED" {
-			return &MBJobStatusResult{params.JobID, job.Status}, nil
-		}
-
-		if job.Status != "STARTED" && job.Status != "READY" && job.Status != "WAITING" {
+		if job.Status == vsapi.JobStatusFinished || !job.Status.InProgress() {
 			return &MBJobStatusResult{params.JobID, job.Status}, nil
 		}
 
@@ -67,13 +74,13 @@ func (a Activities) JobCompleteOrErr(ctx context.Context, params WaitForJobCompl
 	for {
 		job, err := a.Client.GetJob(params.JobID)
 		if err != nil {
-			return false, temporal.NewNonRetryableApplicationError("couldn't complete job", "JOB_FAILED", err)
+			return false, temporal.NewNonRetryableApplicationError("couldn't complete job", JobFailedErrorType, err)
 		}
-		if job.Status == "FINISHED" {
+		if job.Status == vsapi.JobStatusFinished {
 			return true, nil
 		}
-		if job.Status != "STARTED" && job.Status != "READY" && job.Status != "WAITING" {
-			return false, temporal.NewNonRetryableApplicationError("couldn't complete job", "JOB_FAILED", fmt.Errorf("job failed with status: %s", job.Status), job)
+		if !job.Status.InProgress() {
+			return false, temporal.NewNonRetryableApplicationError("couldn't complete job", JobFailedErrorType, fmt.Errorf("job failed with status: %s", job.Status), job)
 		}
 
 		activity.RecordHeartbeat(ctx, job)
