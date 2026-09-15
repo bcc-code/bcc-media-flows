@@ -1,0 +1,24 @@
+# Keep the build context to what `go build` needs. Every Dockerfile does
+# `COPY . .`, so anything not listed here ends up in the build stage.
+.git
+.github
+.claude
+.idea
+.vscode
+.local
+.DS_Store
+.env
+.env.*
+env.example
+*.md
+*.Dockerfile
+.dockerignore
+Makefile
+VERSION
+coverage.out
+coverage.html
+*.db
+__debug_bin*
+build
+**/testdata
+**/*_test.go
