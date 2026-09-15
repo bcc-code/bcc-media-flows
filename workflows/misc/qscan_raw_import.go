@@ -14,7 +14,7 @@ import (
 
 // qscanRawImportTemplate is the QScan template raw material is checked against.
 // It has to exist on the QScan server under exactly this name.
-const qscanRawImportTemplate = "BCCM - Raw Import QC"
+const qscanRawImportTemplate = "BCCM - Raw Import"
 
 type QScanRawImportFile struct {
 	VXID string
