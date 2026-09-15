@@ -12,6 +12,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/services/ingest"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
+	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -44,6 +45,7 @@ func RawMaterialForm(ctx workflow.Context, params RawMaterialFormParams) error {
 		FilesToIngest:    originalFiles,
 		DeliveryMetadata: params.Metadata,
 		Language:         params.Metadata.JobProperty.Language,
+		Recipients:       params.Targets,
 	})
 	if err != nil {
 		if nerr := notifyImportFailed(ctx, params.Targets, params.Metadata.JobProperty.JobID, originalFiles, err); nerr != nil {
@@ -64,6 +66,9 @@ type RawMaterialParams struct {
 	FilesToIngest    paths.Files
 	DeliveryMetadata *ingest.Metadata
 	Language         string
+	// Recipients are the uploaders, who get the QC report for the video files.
+	// Without any the QC still runs, but nobody is mailed.
+	Recipients []string
 }
 
 func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]paths.Path, error) {
@@ -128,6 +133,7 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 
 	audioAssetIDs := []string{}
 	previewAssetIDs := []string{}
+	var qcFiles []miscworkflows.QScanRawImportFile
 
 	for _, id := range mediaAssetIDs {
 		task := mediaAnalyzeTasks[id]
@@ -149,6 +155,9 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 			if err != nil {
 				return imported, err
 			}
+
+			// Only video goes through QC; audio-only files have no template.
+			qcFiles = append(qcFiles, miscworkflows.QScanRawImportFile{VXID: id, Path: fileByAssetID[id]})
 		}
 
 		if result.HasAudio {
@@ -163,10 +172,31 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 		}
 	}
 
+	startRawImportQC(ctx, qcFiles, params.Recipients)
+
 	if _, err = createPreviewsAsync(ctx, previewAssetIDs); err != nil {
 		return imported, err
 	}
 
 	err = transcribe(ctx, audioAssetIDs, params.Language)
 	return imported, err
+}
+
+// startRawImportQC runs QScan on the video files as an abandoned child: it
+// neither delays nor fails the import, and mails one report for the upload.
+// The child must have started before this returns, or closing the parent
+// would drop it.
+func startRawImportQC(ctx workflow.Context, files []miscworkflows.QScanRawImportFile, recipients []string) {
+	if len(files) == 0 {
+		return
+	}
+
+	asyncCtx := wfutils.WithChildSearchAttributes(wfutils.WithAbandonChildOptions(ctx), files[0].VXID)
+	future := workflow.ExecuteChildWorkflow(asyncCtx, miscworkflows.QScanRawImport, miscworkflows.QScanRawImportInput{
+		Files:      files,
+		Recipients: recipients,
+	})
+	if err := future.GetChildWorkflowExecution().Get(ctx, nil); err != nil {
+		workflow.GetLogger(ctx).Error("Failed to start QScan workflow for raw import", "vxid", files[0].VXID, "error", err)
+	}
 }

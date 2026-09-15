@@ -1,0 +1,52 @@
+{{- /*gotype: github.com/bcc-code/bcc-media-flows/services/notifications.QScanBatchResult */ -}}
+{{template "header" .}}
+                            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
+                                <tr>
+                                    {{template "qscan_badge" .}}
+                                </tr>
+                            </table>
+
+                            <p style="margin:0 0 16px; font-size:15px; line-height:1.5;">
+                                {{if .AllErrors}}The QC run did not complete for {{if eq (len .Files) 1}}this file{{else}}these files{{end}}.{{else}}QScan has analysed {{.FileCount}} from your raw import.{{if .HasAttachments}} The full reports are attached.{{end}}{{end}}
+                            </p>
+
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin:0 0 24px;">
+                                <tr>
+                                    <th align="left" style="padding:8px 0; border-bottom:2px solid #edf0f3; font-size:12px; color:#7b8794; text-transform:uppercase; letter-spacing:0.06em;">VX-ID</th>
+                                    <th align="left" style="padding:8px 0; border-bottom:2px solid #edf0f3; font-size:12px; color:#7b8794; text-transform:uppercase; letter-spacing:0.06em;">File</th>
+                                    <th align="left" style="padding:8px 0; border-bottom:2px solid #edf0f3; font-size:12px; color:#7b8794; text-transform:uppercase; letter-spacing:0.06em;">Outcome</th>
+                                    <th align="left" style="padding:8px 0; border-bottom:2px solid #edf0f3; font-size:12px; color:#7b8794; text-transform:uppercase; letter-spacing:0.06em;">Critical / Warning</th>
+                                </tr>
+                                {{range .Files}}
+                                <tr>
+                                    <td style="padding:10px 0; border-bottom:1px solid #edf0f3; font-size:14px; color:#1f2933;">{{.VXID}}</td>
+                                    <td style="padding:10px 0; border-bottom:1px solid #edf0f3; font-size:14px; color:#1f2933;">{{.Filename}}</td>
+                                    <td style="padding:10px 0; border-bottom:1px solid #edf0f3; font-size:14px; {{if .Passed}}color:#0b6b3a;{{else}}color:#9b1c1c;{{end}}">{{.Outcome.Value}}</td>
+                                    <td style="padding:10px 0; border-bottom:1px solid #edf0f3; font-size:14px; color:#1f2933;">{{if .Error}}&ndash;{{else}}{{.Critical}} / {{.Warning}}{{end}}</td>
+                                </tr>
+                                {{end}}
+                            </table>
+
+                            {{range .Files}}
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0 12px; border-top:2px solid #1f3a5f;">
+                                <tr>
+                                    <td style="padding:16px 0 4px; font-size:17px; font-weight:600; color:#1f2933;">{{.VXID}} {{.Filename}}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 0 8px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                {{template "qscan_badge" .}}
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            {{if .Error}}
+                            <pre style="margin:0 0 16px; padding:12px; background-color:#f4f5f7; border-radius:6px; font-size:12px; white-space:pre-wrap;">{{.Error}}</pre>
+                            {{else if .ReportNote}}
+                            <p style="margin:0 0 16px; font-size:14px; line-height:1.5;">{{.ReportNote}}</p>
+                            {{end}}
+{{template "qscan_file" .}}
+                            {{end}}
+{{template "footer" .}}

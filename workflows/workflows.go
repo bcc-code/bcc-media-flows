@@ -44,6 +44,8 @@ var WorkerWorkflows = []any{
 	ingestworkflows.RawMaterialForm,
 	ingestworkflows.Masters,
 	miscworkflows.QScanMaster,
+	miscworkflows.QScanFile,
+	miscworkflows.QScanRawImport,
 	ingestworkflows.Incremental,
 	ingestworkflows.MoveUploadedFiles,
 	ingestworkflows.ImportAudioFileFromReaper,
