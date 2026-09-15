@@ -9,6 +9,9 @@ Condensed 2026-08-21. Items confirmed fixed were removed. Bugs section validated
 - `QScanMaster` turns every non-success terminal status into a non-retryable `QScanAnalysisFailed` (`workflows/misc/qscan_master.go:100`). `file_error` is not always about the file: an SMB outage on the QScan host reports the same status, and that transient infrastructure failure becomes a permanent "QC ERROR" alert with no retry. Worth distinguishing `file_error` (retry a few times, widely spaced) from `analysis_error`/`unsupported` (genuinely permanent).
 - `notifications.Simple.RenderMarkdown` emits `# Title`, which legacy Markdown has no heading syntax for — Telegram shows the literal `#`. It also forwards `Message` unescaped, which is deliberate for callers that pass their own markup but means `Simple` cannot be used for text from another system.
 
+- `RawMaterialForm` (`workflows/ingest/raw_material.go`) has had no production caller since commit 0ac6d6c removed the XML order form. The watcher path (`cmd/httpin/watchers.go` `doRawImport`) starts one `RawMaterial` per file event with no metadata, so files uploaded together land in separate runs and output folders, get separate QC mails at best, and carry no uploader address at all. A JSON sidecar form for raw material (like `jsonFormSpecs` has for masters) would restore batching and the uploader.
+- `utils.IsMedia` (`utils/files.go`) lists only `.mxf`, `.mov` and `.wav`, so an `.mp4` raw upload is imported but gets no ffprobe analysis, thumbnails, previews, transcription or QC.
+
 ## Security
 
 - `cmd/httpin/main.go:162` — `ExecuteFFmpeg` trigger gives arbitrary ffmpeg argv (read/write/exfil primitive). Delete or gate it.

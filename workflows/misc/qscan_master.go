@@ -48,6 +48,26 @@ type QScanMasterResult struct {
 	Logging  int
 }
 
+// QScanFileInput describes one file to run through QScan.
+type QScanFileInput struct {
+	VXID string
+	Path paths.Path
+	// TemplateName selects the QC template; empty means the masters template.
+	TemplateName string
+	// Description is shown on the job in QScan; empty means the masters wording.
+	Description string
+}
+
+// QScanFileResult is the verdict for one file, ready to be mailed.
+type QScanFileResult struct {
+	Report notifications.QScanResult
+	// Attachment is the PDF report; nil when none was saved, in which case
+	// Report.ReportNote says why.
+	Attachment *emails.Attachment
+	JobID      int64
+	FileID     int64
+}
+
 // QScanMaster runs an uploaded master through QScan and emails the result to
 // the uploader. It is started as an abandoned child of the master import, so it
 // reports its own failures by email: nobody is waiting on its return value.
@@ -57,83 +77,111 @@ func QScanMaster(ctx workflow.Context, in QScanMasterInput) (*QScanMasterResult,
 
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
-	report := notifications.QScanResult{
-		VXID:     in.VXID,
-		Filename: in.Path.Base(),
+	res, err := runQScanFile(ctx, QScanFileInput{VXID: in.VXID, Path: in.Path})
+	if err != nil {
+		sendQScanError(ctx, res.Report, err)
+		return nil, err
+	}
+
+	var attachments []emails.Attachment
+	if res.Attachment != nil {
+		attachments = append(attachments, *res.Attachment)
+	}
+	sendQScanReport(ctx, in.Recipients, res.Report, attachments)
+
+	return &QScanMasterResult{
+		Outcome:  res.Report.Outcome.Value,
+		JobID:    res.JobID,
+		FileID:   res.FileID,
+		Critical: res.Report.Critical,
+		Warning:  res.Report.Warning,
+		Logging:  res.Report.Logging,
+	}, nil
+}
+
+// QScanFile runs one file through QScan and hands the verdict back to the
+// parent, which decides who is told. QScanRawImport uses it to batch the files
+// of one upload into a single mail.
+func QScanFile(ctx workflow.Context, in QScanFileInput) (*QScanFileResult, error) {
+	logger := workflow.GetLogger(ctx)
+	logger.Info("Starting QScanFile workflow", "vxid", in.VXID, "path", in.Path.Linux(), "template", in.TemplateName)
+
+	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
+	return runQScanFile(ctx, in)
+}
+
+// runQScanFile queues the file, waits for the analysis and collects the report.
+// The result is never nil: on error it carries what the run got as far as
+// (job name, status), so the caller can say what failed.
+func runQScanFile(ctx workflow.Context, in QScanFileInput) (*QScanFileResult, error) {
+	res := &QScanFileResult{
+		Report: notifications.QScanResult{
+			VXID:     in.VXID,
+			Filename: in.Path.Base(),
+		},
 	}
 
 	job, err := wfutils.Execute(ctx, activities.QScan.QScanEnsureJob, activities.QScanEnsureJobInput{
-		VXID: in.VXID,
-		Path: in.Path,
+		VXID:         in.VXID,
+		Path:         in.Path,
+		TemplateName: in.TemplateName,
+		Description:  in.Description,
 	}).Result(ctx)
 	if err != nil {
-		sendQScanError(ctx, report, fmt.Errorf("creating QScan job: %w", err))
-		return nil, err
+		return res, fmt.Errorf("creating QScan job: %w", err)
 	}
-	report.JobName = job.JobName
-	report.QScanURL = job.JobURL
+	res.JobID = job.JobID
+	res.Report.JobName = job.JobName
+	res.Report.QScanURL = job.JobURL
 
 	file, err := wfutils.Execute(ctx, activities.QScan.QScanEnsureFile, activities.QScanEnsureFileInput{
 		JobID: job.JobID,
 		Path:  in.Path,
 	}).Result(ctx)
 	if err != nil {
-		sendQScanError(ctx, report, fmt.Errorf("queueing file in QScan: %w", err))
-		return nil, err
+		return res, fmt.Errorf("queueing file in QScan: %w", err)
 	}
+	res.FileID = file.FileID
 
 	status, err := waitForQScanFile(ctx, job.JobID, file.FileID)
 	if err != nil {
-		sendQScanError(ctx, report, err)
-		return nil, err
+		return res, err
 	}
-	report.Status = status.Status.String()
-	report.StatusInfo = status.StatusInfo
+	res.Report.Status = status.Status.String()
+	res.Report.StatusInfo = status.StatusInfo
 
 	if !status.Status.IsSuccess() {
 		err := fmt.Errorf("QScan did not analyse the file: status %s %s", status.Status, status.StatusInfo)
-		sendQScanError(ctx, report, err)
-		return nil, temporal.NewNonRetryableApplicationError(err.Error(), "QScanAnalysisFailed", nil)
+		return res, temporal.NewNonRetryableApplicationError(err.Error(), "QScanAnalysisFailed", nil)
 	}
 
 	tempFolder, err := wfutils.GetWorkflowTempFolder(ctx)
 	if err != nil {
-		sendQScanError(ctx, report, fmt.Errorf("creating temp folder: %w", err))
-		return nil, err
+		return res, fmt.Errorf("creating temp folder: %w", err)
 	}
 	reportPath := tempFolder.Append(fmt.Sprintf("%s_qscan_report.pdf", in.VXID))
 
 	fetched, err := fetchQScanResult(ctx, job.JobID, file.FileID, file.ResultsID, reportPath)
 	if err != nil {
-		sendQScanError(ctx, report, fmt.Errorf("fetching QScan result: %w", err))
-		return nil, err
+		return res, fmt.Errorf("fetching QScan result: %w", err)
 	}
 
-	report.Critical = int(status.CriticalTotal)
-	report.Warning = int(status.WarningTotal)
-	report.Logging = int(status.LoggingTotal)
-	report.Outcome = qscanOutcome(report.Critical, report.Warning)
-	report.Events, report.TotalEvents = selectQScanEvents(fetched.Events, qscanMaxEmailEvents)
-	report.ReportNote = fetched.ReportNote
+	res.Report.Critical = int(status.CriticalTotal)
+	res.Report.Warning = int(status.WarningTotal)
+	res.Report.Logging = int(status.LoggingTotal)
+	res.Report.Outcome = qscanOutcome(res.Report.Critical, res.Report.Warning)
+	res.Report.Events, res.Report.TotalEvents = selectQScanEvents(fetched.Events, qscanMaxEmailEvents)
+	res.Report.ReportNote = fetched.ReportNote
 
-	var attachments []emails.Attachment
 	if fetched.ReportSaved {
-		attachments = append(attachments, emails.Attachment{
+		res.Attachment = &emails.Attachment{
 			Filename:    reportPath.Base(),
 			ContentType: "application/pdf",
 			Path:        reportPath,
-		})
+		}
 	}
-	sendQScanReport(ctx, in.Recipients, report, attachments)
 
-	return &QScanMasterResult{
-		Outcome:  report.Outcome.Value,
-		JobID:    job.JobID,
-		FileID:   file.FileID,
-		Critical: report.Critical,
-		Warning:  report.Warning,
-		Logging:  report.Logging,
-	}, nil
+	return res, nil
 }
 
 // waitForQScanFile polls until the file reaches a terminal status. Each pass is
@@ -239,10 +287,8 @@ func sendQScanError(ctx workflow.Context, report notifications.QScanResult, err 
 	report.Outcome = notifications.QCError
 	report.Error = err.Error()
 
-	var recipients []string
-	if sideEffectErr := workflow.SideEffect(ctx, func(workflow.Context) any {
-		return environment.Get().QScan.ErrorEmails()
-	}).Get(&recipients); sideEffectErr != nil {
+	recipients, sideEffectErr := qscanErrorRecipients(ctx)
+	if sideEffectErr != nil {
 		workflow.GetLogger(ctx).Error("Failed to resolve the QScan error addresses", "error", sideEffectErr)
 		return
 	}
@@ -250,11 +296,21 @@ func sendQScanError(ctx workflow.Context, report notifications.QScanResult, err 
 	sendQScanReport(ctx, recipients, report, nil)
 }
 
-func sendQScanReport(ctx workflow.Context, recipients []string, report notifications.QScanResult, attachments []emails.Attachment) {
+// qscanErrorRecipients reads the configured QC error addresses through a side
+// effect, so a config change does not break replay.
+func qscanErrorRecipients(ctx workflow.Context) ([]string, error) {
+	var recipients []string
+	err := workflow.SideEffect(ctx, func(workflow.Context) any {
+		return environment.Get().QScan.ErrorEmails()
+	}).Get(&recipients)
+	return recipients, err
+}
+
+func sendQScanReport(ctx workflow.Context, recipients []string, report notifications.Template, attachments []emails.Attachment) {
 	logger := workflow.GetLogger(ctx)
 
 	if len(recipients) == 0 {
-		logger.Warn("No recipient for the QScan report, sending nothing", "vxid", report.VXID, "outcome", report.Outcome.Value)
+		logger.Warn("No recipient for the QScan report, sending nothing", "subject", report.Subject())
 		return
 	}
 

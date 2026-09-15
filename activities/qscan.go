@@ -34,6 +34,11 @@ func (a *QScanActivities) ready() error {
 type QScanEnsureJobInput struct {
 	VXID string
 	Path paths.Path
+	// TemplateName selects the QC template; empty means the worker default,
+	// which is the masters template.
+	TemplateName string
+	// Description is shown on the job in QScan; empty means the masters wording.
+	Description string
 }
 
 type QScanJob struct {
@@ -48,7 +53,7 @@ func QScanJobName(vxid string, path paths.Path) string {
 	return strings.TrimSpace(vxid + " " + path.Base())
 }
 
-// QScanEnsureJob returns the job for this master, creating it only if no job
+// QScanEnsureJob returns the job for this file, creating it only if no job
 // with its name exists yet.
 func (a *QScanActivities) QScanEnsureJob(ctx context.Context, in QScanEnsureJobInput) (*QScanJob, error) {
 	if err := a.ready(); err != nil {
@@ -69,7 +74,16 @@ func (a *QScanActivities) QScanEnsureJob(ctx context.Context, in QScanEnsureJobI
 	}
 
 	if job == nil {
-		template, err := a.Client.FindTemplate(ctx, a.TemplateName)
+		templateName := in.TemplateName
+		if templateName == "" {
+			templateName = a.TemplateName
+		}
+		description := in.Description
+		if description == "" {
+			description = "Automatic QC of uploaded master " + in.VXID
+		}
+
+		template, err := a.Client.FindTemplate(ctx, templateName)
 		if errors.Is(err, qscan.ErrTemplateNotFound) {
 			return nil, temporal.NewNonRetryableApplicationError(err.Error(), "qscan_template_not_found", err)
 		}
@@ -79,7 +93,7 @@ func (a *QScanActivities) QScanEnsureJob(ctx context.Context, in QScanEnsureJobI
 
 		job, err = a.Client.CreateJob(ctx, qscan.CreateJobRequest{
 			Name:                jobName,
-			Description:         "Automatic QC of uploaded master " + in.VXID,
+			Description:         description,
 			TemplateID:          int64(template.ID),
 			TemplateName:        template.Name,
 			ConcurrentAnalysis:  1,

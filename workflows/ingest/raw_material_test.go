@@ -2,12 +2,16 @@ package ingestworkflows
 
 import (
 	"encoding/json"
+	"testing"
+
 	"github.com/bcc-code/bcc-media-flows/activities"
+	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
+	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"go.temporal.io/sdk/testsuite"
-	"testing"
 )
 
 type RawMaterialTestSuite struct {
@@ -60,6 +64,57 @@ func (s *RawMaterialTestSuite) Test_RawMaterialForm_InvalidFilename() {
 
 	err = s.env.GetWorkflowError()
 	s.Equal(err.Error(), `workflow execution error (type: RawMaterialForm, workflowID: default-test-workflow-id, runID: default-test-run-id): invalid filename: {{test} video.mp4}`)
+}
+
+// Only files with a video stream go through QC, and the whole upload is handed
+// to one QC workflow so the uploader gets a single mail.
+func (s *RawMaterialTestSuite) Test_RawMaterial_StartsQCForVideoFilesOnly() {
+	video := paths.New(paths.IsilonDrive, "Input/Rawmaterial/CLIP_01.mxf")
+	audio := paths.New(paths.IsilonDrive, "Input/Rawmaterial/AUDIO_01.wav")
+	params := RawMaterialParams{
+		FilesToIngest: paths.Files{video, audio},
+		Language:      "no",
+		Recipients:    []string{"uploader@example.com"},
+	}
+
+	s.env.OnActivity(activities.Util.CreateFolder, mock.Anything, mock.Anything).Once().Return(nil, nil)
+	s.env.OnActivity(activities.Util.MoveFile, mock.Anything, mock.Anything).Times(2).Return(nil, nil)
+
+	s.env.OnActivity(activities.Vidispine.CreatePlaceholderActivity, mock.Anything, vsactivity.CreatePlaceholderParams{Title: "CLIP_01.mxf"}).
+		Once().Return(&vsactivity.CreatePlaceholderResult{AssetID: "VX-VIDEO"}, nil)
+	s.env.OnActivity(activities.Vidispine.CreatePlaceholderActivity, mock.Anything, vsactivity.CreatePlaceholderParams{Title: "AUDIO_01.wav"}).
+		Once().Return(&vsactivity.CreatePlaceholderResult{AssetID: "VX-AUDIO"}, nil)
+	s.env.OnActivity(activities.Vidispine.ImportFileAsShapeActivity, mock.Anything, mock.Anything).Times(2).Return(nil, nil)
+	s.env.OnActivity(activities.Vidispine.JobCompleteOrErr, mock.Anything, mock.Anything).Times(2).Return(true, nil)
+
+	s.env.OnActivity(activities.Audio.AnalyzeFile, mock.Anything, mock.MatchedBy(func(in activities.AnalyzeFileParams) bool {
+		return in.FilePath.Base() == "CLIP_01.mxf"
+	})).Once().Return(&ffmpeg.StreamInfo{HasVideo: true, HasAudio: true}, nil)
+	s.env.OnActivity(activities.Audio.AnalyzeFile, mock.Anything, mock.MatchedBy(func(in activities.AnalyzeFileParams) bool {
+		return in.FilePath.Base() == "AUDIO_01.wav"
+	})).Once().Return(&ffmpeg.StreamInfo{HasAudio: true}, nil)
+
+	s.env.OnActivity(activities.Vidispine.CreateThumbnailsActivity, mock.Anything, vsactivity.CreateThumbnailsParams{AssetID: "VX-VIDEO"}).
+		Once().Return(nil, nil)
+
+	var qcInput miscworkflows.QScanRawImportInput
+	s.env.OnWorkflow(miscworkflows.QScanRawImport, mock.Anything, mock.Anything).Once().Run(func(args mock.Arguments) {
+		qcInput = args.Get(1).(miscworkflows.QScanRawImportInput)
+	}).Return(nil, nil)
+	s.env.OnWorkflow(miscworkflows.TranscodePreviewVX, mock.Anything, mock.Anything).Times(2).Return(nil, nil)
+	s.env.OnWorkflow(miscworkflows.TranscribeVX, mock.Anything, mock.Anything).Times(2).Return(nil)
+
+	s.env.ExecuteWorkflow(RawMaterial, params)
+
+	s.True(s.env.IsWorkflowCompleted())
+	s.NoError(s.env.GetWorkflowError())
+
+	s.Equal(params.Recipients, qcInput.Recipients)
+	if s.Len(qcInput.Files, 1, "the audio file has no video and is not QC'd") {
+		s.Equal("VX-VIDEO", qcInput.Files[0].VXID)
+		s.Equal("CLIP_01.mxf", qcInput.Files[0].Path.Base())
+		s.Equal(paths.IsilonDrive, qcInput.Files[0].Path.Drive)
+	}
 }
 
 func Test_RawMaterialTestSuite(t *testing.T) {

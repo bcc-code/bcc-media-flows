@@ -9,9 +9,14 @@ import (
 )
 
 var (
+	// qscanPartials holds the per-file blocks shared by the single-file and
+	// the batch QC mails, so one file renders the same in both.
+	//go:embed templates/qscan_partials.gohtml
+	qscanPartials string
+
 	//go:embed templates/qscan_result.gohtml
 	qscanResultTemplateString string
-	qscanResultTemplate       = mustEmailTemplate("qscan_result", qscanResultTemplateString)
+	qscanResultTemplate       = mustEmailTemplate("qscan_result", qscanPartials+qscanResultTemplateString)
 )
 
 type QCOutcome enum.Member[string]

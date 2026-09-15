@@ -37,6 +37,8 @@ type fakeQScan struct {
 	reportedIDs []string
 	// reportStatus, when set, is what the report endpoint answers instead of a PDF.
 	reportStatus int
+	// createdJobs records every job creation request, in order.
+	createdJobs []qscan.CreateJobRequest
 }
 
 // resultsID is 0 until the file has been analysed, as it is on the real server.
@@ -62,13 +64,14 @@ func newFakeQScan(t *testing.T) (*fakeQScan, *QScanActivities) {
 	f := &fakeQScan{files: map[int64][]qscan.JobFile{}, posts: map[string]int{}}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api-1/qc/templates", func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = w.Write([]byte(`[{"id":7,"name":"BCCM - Masters","type":"custom"}]`))
+		_, _ = w.Write([]byte(`[{"id":7,"name":"BCCM - Masters","type":"custom"},{"id":8,"name":"BCCM - Raw Import QC","type":"custom"}]`))
 	})
 	mux.HandleFunc("/api-1/qc/jobs", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			f.posts["jobs"]++
 			var req qscan.CreateJobRequest
 			require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
+			f.createdJobs = append(f.createdJobs, req)
 			job := qscan.Job{ID: qscan.Int(len(f.jobs) + 1), Name: req.Name, Status: "running"}
 			f.jobs = append(f.jobs, job)
 			_ = json.NewEncoder(w).Encode(job)
@@ -166,6 +169,32 @@ func TestQScanEnsureJobAndFile_AreIdempotent(t *testing.T) {
 	// leading separator would name the share "isilonProduction" and the
 	// analysis would fail with "The network name cannot be found".
 	assert.Equal(t, []string{"/Production/masters/MASTER_01.mxf"}, fake.addedPaths)
+}
+
+func TestQScanEnsureJob_UsesRequestedTemplate(t *testing.T) {
+	fake, a := newFakeQScan(t)
+	env := newQScanEnv(t, a)
+
+	raw := paths.New(paths.IsilonDrive, "Production/raw/2026/09/15/run/CLIP_01.mxf")
+	_, err := env.ExecuteActivity(a.QScanEnsureJob, QScanEnsureJobInput{
+		VXID:         "VX-2",
+		Path:         raw,
+		TemplateName: "BCCM - Raw Import QC",
+		Description:  "Automatic QC of raw import VX-2",
+	})
+	require.NoError(t, err)
+
+	master := paths.New(paths.IsilonDrive, "Production/masters/MASTER_01.mxf")
+	_, err = env.ExecuteActivity(a.QScanEnsureJob, QScanEnsureJobInput{VXID: "VX-1", Path: master})
+	require.NoError(t, err)
+
+	require.Len(t, fake.createdJobs, 2)
+	assert.Equal(t, int64(8), fake.createdJobs[0].TemplateID)
+	assert.Equal(t, "BCCM - Raw Import QC", fake.createdJobs[0].TemplateName)
+	assert.Equal(t, "Automatic QC of raw import VX-2", fake.createdJobs[0].Description)
+	// Without a template the worker default, the masters template, applies.
+	assert.Equal(t, int64(7), fake.createdJobs[1].TemplateID)
+	assert.Equal(t, "Automatic QC of uploaded master VX-1", fake.createdJobs[1].Description)
 }
 
 func TestQScanEnsureJob_RejectsNonIsilonPaths(t *testing.T) {
