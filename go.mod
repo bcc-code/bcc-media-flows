@@ -8,8 +8,6 @@ require (
 	github.com/bcc-code/bcc-media-platform v0.0.0-20250903091027-11ead5481489
 	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/creativeprojects/go-selfupdate v1.1.3
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
-	github.com/deckarep/golang-set/v2 v2.3.1
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/glebarez/go-sqlite v1.22.0
@@ -22,7 +20,6 @@ require (
 	github.com/sendgrid/sendgrid-go v3.14.0+incompatible
 	github.com/stretchr/testify v1.11.1
 	github.com/teamwork/reload v1.4.2
-	github.com/teris-io/shortid v0.0.0-20220617161101-71ec9f2aa569
 	go.temporal.io/api v1.62.14
 	go.temporal.io/sdk v1.45.0
 	go.uber.org/mock v0.6.0
@@ -39,6 +36,7 @@ require (
 	github.com/MicahParks/keyfunc v1.9.0 // indirect
 	github.com/ansel1/merry/v2 v2.2.1 // indirect
 	github.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2 // indirect
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.37.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.3.3 // indirect
 	github.com/fatih/color v1.18.0 // indirect

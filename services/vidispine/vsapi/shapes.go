@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/davecgh/go-spew/spew"
-
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	"github.com/samber/lo"
 )
@@ -80,8 +78,6 @@ func (c *Client) AddShapeToItem(tag, itemID, fileID string) (string, error) {
 	if jobID == "" {
 		return "", parseVSError(result.Body(), result.StatusCode(), tag, itemID)
 	}
-
-	spew.Dump(result.Result())
 
 	return jobID, nil
 }

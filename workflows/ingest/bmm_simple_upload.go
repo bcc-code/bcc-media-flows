@@ -22,7 +22,7 @@ type BmmSimpleUploadParams struct {
 	FilePath                  string `json:"filePath"`
 	Title                     string `json:"title"`
 	Language                  string `json:"language"`
-	BmmTargetEnvionment       string `json:"bmmTargetEnvironment"`
+	BmmTargetEnvironment      string `json:"bmmTargetEnvironment"`
 	ForceReplaceTranscription bool   `json:"forceReplaceTranscription"`
 	IsPodcast                 bool   `json:"isPodcast"`
 }
@@ -107,7 +107,7 @@ func BmmIngestUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 	}
 
 	destinations := []string{export.AssetExportDestinationBMM.Value}
-	if params.BmmTargetEnvionment == "bmm-int" {
+	if params.BmmTargetEnvironment == "bmm-int" {
 		destinations = []string{export.AssetExportDestinationBMMIntegration.Value}
 	}
 

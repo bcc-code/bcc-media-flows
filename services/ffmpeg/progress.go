@@ -28,7 +28,7 @@ type StreamInfo struct {
 	HasAlpha     bool
 	VideoStreams []FFProbeStream
 	AudioStreams []FFProbeStream
-	SubSteams    []FFProbeStream
+	SubStreams   []FFProbeStream
 	OtherStreams []FFProbeStream
 	Progressive  bool
 	TotalFrames  int
@@ -58,7 +58,7 @@ func ProbeResultToInfo(info *FFProbeResult) StreamInfo {
 		case "video":
 			streamInfo.VideoStreams = append(streamInfo.VideoStreams, stream)
 		case "subtitle":
-			streamInfo.SubSteams = append(streamInfo.SubSteams, stream)
+			streamInfo.SubStreams = append(streamInfo.SubStreams, stream)
 		default:
 			streamInfo.OtherStreams = append(streamInfo.OtherStreams, stream)
 		}
