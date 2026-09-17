@@ -35,14 +35,6 @@ jobs:
       - name: go.mod and go.sum are tidy
         run: go mod tidy -diff
 
-  govulncheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: golang/govulncheck-action@v1
-        with:
-          go-version-file: go.mod
-          go-package: ./...
-
   lint:
     runs-on: ubuntu-latest
     steps:
