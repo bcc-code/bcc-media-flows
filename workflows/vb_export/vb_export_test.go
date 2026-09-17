@@ -1,6 +1,8 @@
 package vb_export
 
 import (
+	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
 
@@ -37,7 +39,7 @@ func (s *VBExportTestSuite) Test_VBExport_EmptyVXID() {
 
 	s.env.ExecuteWorkflow(VBExport, VBExportParams{
 		VXID:         "",
-		Destinations: []string{"xdcam"},
+		Destinations: []Destination{DestinationXDCAM},
 	})
 	s.True(s.env.IsWorkflowCompleted())
 	err := s.env.GetWorkflowError()
@@ -50,12 +52,13 @@ func (s *VBExportTestSuite) Test_VBExport_InvalidDestination() {
 
 	s.env.ExecuteWorkflow(VBExport, VBExportParams{
 		VXID:         "VX-123",
-		Destinations: []string{"nonexistent"},
+		Destinations: []Destination{{Value: "nonexistent"}},
 	})
 	s.True(s.env.IsWorkflowCompleted())
 	err := s.env.GetWorkflowError()
 	s.Error(err)
-	s.Contains(err.Error(), "invalid destination")
+	// Rejected while decoding the input payload, before the workflow body runs.
+	s.Contains(err.Error(), ErrUnknownDestination.Error())
 }
 
 func (s *VBExportTestSuite) Test_VBExport_NoShapes() {
@@ -68,7 +71,7 @@ func (s *VBExportTestSuite) Test_VBExport_NoShapes() {
 
 	s.env.ExecuteWorkflow(VBExport, VBExportParams{
 		VXID:         "VX-123",
-		Destinations: []string{"xdcam"},
+		Destinations: []Destination{DestinationXDCAM},
 	})
 	s.True(s.env.IsWorkflowCompleted())
 	err := s.env.GetWorkflowError()
@@ -88,7 +91,7 @@ func (s *VBExportTestSuite) Test_VBExport_NoOriginalShape() {
 
 	s.env.ExecuteWorkflow(VBExport, VBExportParams{
 		VXID:         "VX-123",
-		Destinations: []string{"xdcam"},
+		Destinations: []Destination{DestinationXDCAM},
 	})
 	s.True(s.env.IsWorkflowCompleted())
 	err := s.env.GetWorkflowError()
@@ -142,7 +145,7 @@ func (s *VBExportTestSuite) Test_VBExport_XDCAM_Success() {
 
 	s.env.ExecuteWorkflow(VBExport, VBExportParams{
 		VXID:         "VX-123",
-		Destinations: []string{"xdcam"},
+		Destinations: []Destination{DestinationXDCAM},
 	})
 	s.True(s.env.IsWorkflowCompleted())
 	err := s.env.GetWorkflowError()
@@ -171,7 +174,7 @@ func (s *VBExportTestSuite) Test_VBExportToXDCAM() {
 	s.env.ExecuteWorkflow(VBExportToXDCAM, VBExportChildWorkflowParams{
 		ParentParams: VBExportParams{
 			VXID:         "VX-123",
-			Destinations: []string{"xdcam"},
+			Destinations: []Destination{DestinationXDCAM},
 		},
 		InputFile: paths.MustParse("/mnt/temp/workflows/test_video.mxf"),
 		// OriginalFile must be set: a zero paths.Path marshals Drive to "",
@@ -337,4 +340,29 @@ func childParams() VBExportChildWorkflowParams {
 
 func TestVBExportTestSuite(t *testing.T) {
 	suite.Run(t, new(VBExportTestSuite))
+}
+
+// Destinations must decode from the bare names the trigger UI and older
+// histories carry, and refuse names no child workflow exists for.
+func TestDestination_JSON(t *testing.T) {
+	var params VBExportParams
+	if err := json.Unmarshal([]byte(`{"VXID":"VX-1","Destinations":["xdcam","b-stage"]}`), &params); err != nil {
+		t.Fatal(err)
+	}
+	if len(params.Destinations) != 2 || params.Destinations[0] != DestinationXDCAM || params.Destinations[1] != DestinationBStage {
+		t.Fatalf("unexpected destinations: %v", params.Destinations)
+	}
+
+	out, err := json.Marshal(params.Destinations)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(out) != `["xdcam","b-stage"]` {
+		t.Fatalf("unexpected JSON: %s", out)
+	}
+
+	err = json.Unmarshal([]byte(`["nonexistent"]`), &params.Destinations)
+	if !errors.Is(err, ErrUnknownDestination) {
+		t.Fatalf("expected ErrUnknownDestination, got %v", err)
+	}
 }

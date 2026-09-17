@@ -13,9 +13,8 @@ import (
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"github.com/bcc-code/bcc-media-flows/workflows/export"
 	bccmUtils "github.com/bcc-code/bcc-media-platform/backend/utils"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
-	"github.com/teris-io/shortid"
+	"github.com/google/uuid"
 )
 
 func (s *TriggerServer) isilonExportGET(ctx *gin.Context) {
@@ -80,8 +79,6 @@ func (s *TriggerServer) isilonExportPOST(ctx *gin.Context) {
 
 	selectedResolution := vsResolutions[resolutionIndex]
 
-	spew.Dump(ctx.PostForm("exportFormat"))
-
 	params := export.IsilonExportParams{
 		VXID:          vxID,
 		WatermarkPath: ctx.PostForm("watermarkPath"),
@@ -92,7 +89,7 @@ func (s *TriggerServer) isilonExportPOST(ctx *gin.Context) {
 	}
 
 	var wfID string
-	workflowOptions.ID = params.VXID + "-" + shortid.MustGenerate()
+	workflowOptions.ID = params.VXID + "-" + uuid.NewString()
 	res, err := s.wfClient.ExecuteWorkflow(ctx, workflowOptions, export.IsilonExport, params)
 	if err != nil {
 		renderErrorPage(ctx, http.StatusInternalServerError, err)

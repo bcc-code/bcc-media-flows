@@ -3,6 +3,7 @@ package ingestworkflows
 import (
 	"errors"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"sort"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -83,7 +84,7 @@ func Multitrack(ctx workflow.Context, params MasterParams) (*MasterResult, error
 	base := files[0].Base()
 	fileName := base[:len(base)-len(muxResult.OutputPath.Ext())]
 
-	result, err := ImportFileAsTag(ctx, "original", muxResult.OutputPath, fileName)
+	result, err := ImportFileAsTag(ctx, vsapi.ShapeTagOriginal, muxResult.OutputPath, fileName)
 	if err != nil {
 		return nil, err
 	}

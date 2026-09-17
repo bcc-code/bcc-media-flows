@@ -2,6 +2,7 @@ package ingestworkflows
 
 import (
 	"errors"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"strconv"
 
 	"github.com/bcc-code/bcc-media-flows/services/emails"
@@ -25,10 +26,10 @@ type ImportTagResult struct {
 	// FilePath and ShapeTag are retained so WaitForImportTag can re-trigger the
 	// import on JOB_FAILED.
 	FilePath paths.Path
-	ShapeTag string
+	ShapeTag vsapi.ShapeTag
 }
 
-func ImportFileAsTag(ctx workflow.Context, tag string, path paths.Path, title string) (*ImportTagResult, error) {
+func ImportFileAsTag(ctx workflow.Context, tag vsapi.ShapeTag, path paths.Path, title string) (*ImportTagResult, error) {
 	result, err := wfutils.Execute(ctx, activities.Vidispine.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
 		Title: title,
 	}).Result(ctx)
@@ -67,7 +68,7 @@ func WaitForImportTag(ctx workflow.Context, result *ImportTagResult) error {
 	}
 
 	var appErr *temporal.ApplicationError
-	if !errors.As(err, &appErr) || appErr.Type() != "JOB_FAILED" {
+	if !errors.As(err, &appErr) || appErr.Type() != vsactivity.JobFailedErrorType {
 		return err
 	}
 

@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/bcc-code/bcc-media-flows/internal/bootstrap"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"time"
 )
@@ -13,7 +13,7 @@ func jobStatusHandler(c *gin.Context) {
 	req := &rclone.JobStatusRequest{}
 	err := c.BindJSON(req)
 	if err != nil {
-		spew.Dump(err)
+		log.Println(err)
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
@@ -57,7 +57,7 @@ func operationsListHandler(c *gin.Context) {
 	req := &rclone.ListRequest{}
 	err := c.BindJSON(req)
 	if err != nil {
-		spew.Dump(err)
+		log.Println(err)
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
@@ -70,7 +70,7 @@ func operationsStatHandler(c *gin.Context) {
 	req := &rclone.ListRequest{}
 	err := c.BindJSON(req)
 	if err != nil {
-		spew.Dump(err)
+		log.Println(err)
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}

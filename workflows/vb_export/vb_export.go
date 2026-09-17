@@ -3,6 +3,7 @@ package vb_export
 import (
 	"errors"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"path/filepath"
 	"strings"
 	"time"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/environment"
+	"github.com/bcc-code/bcc-media-flows/internal/enumjson"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
@@ -46,8 +48,26 @@ var (
 		DestinationXDCAM,
 		DestinationCasparCG,
 	)
-	deliveryFolder = paths.New(paths.BrunstadDrive, "/Delivery/FraMB/")
+	deliveryFolder        = paths.New(paths.BrunstadDrive, "/Delivery/FraMB/")
+	ErrUnknownDestination = errors.New("unknown VB export destination")
 )
+
+func (d Destination) String() string {
+	return d.Value
+}
+
+// MarshalJSON writes the bare destination name, so payloads look the same as
+// they did while Destinations was a []string.
+//
+//goland:noinspection GoMixedReceiverTypes
+func (d Destination) MarshalJSON() ([]byte, error) {
+	return enumjson.Marshal(d)
+}
+
+//goland:noinspection GoMixedReceiverTypes
+func (d *Destination) UnmarshalJSON(data []byte) error {
+	return enumjson.UnmarshalStrict(data, Destinations, d, ErrUnknownDestination)
+}
 
 var destinationDescriptions = map[Destination]string{
 	DestinationAbekas:    "Videoavspilling i bussen",
@@ -114,7 +134,7 @@ var (
 
 type VBExportParams struct {
 	VXID             string
-	Destinations     []string
+	Destinations     []Destination
 	SubtitleShapeTag string
 	SubtitleStyle    string
 }
@@ -159,13 +179,10 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		return nil, errors.New("vxid is required")
 	}
 
-	var destinations []*Destination
 	for _, dest := range params.Destinations {
-		d := Destinations.Parse(dest)
-		if d == nil {
-			return nil, fmt.Errorf("invalid destination: %s", dest)
+		if _, ok := destinationWorkflows[dest]; !ok {
+			return nil, fmt.Errorf("%w: %s", ErrUnknownDestination, dest)
 		}
-		destinations = append(destinations, d)
 	}
 
 	shapes, err := wfutils.Execute(ctx, activities.Vidispine.GetShapes, avidispine.VXOnlyParam{
@@ -181,14 +198,14 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		return nil, fmt.Errorf("no clips found for VXID %s", params.VXID)
 	}
 
-	videoShape := shapes.GetShape("original")
+	videoShape := shapes.GetShape(vsapi.ShapeTagOriginal)
 	if videoShape == nil {
 		return nil, fmt.Errorf("no original shape found for item %s", params.VXID)
 	}
 
 	wfutils.SendTelegramText(ctx, telegram.ChatOslofjord,
 		fmt.Sprintf("🟦 VB Export of %s - `%s` started.\nDestination(s): `%s`\n\nRunID: %s",
-			params.VXID, filepath.Base(videoShape.GetPath()), strings.Join(params.Destinations, ", "), workflow.GetInfo(ctx).OriginalRunID,
+			params.VXID, filepath.Base(videoShape.GetPath()), strings.Join(lo.Map(params.Destinations, func(d Destination, _ int) string { return d.Value }), ", "), workflow.GetInfo(ctx).OriginalRunID,
 		),
 	)
 
@@ -214,8 +231,8 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 		return nil, err
 	}
 
-	destinationsWithAudioOutput := lo.Filter(destinations, func(dest *Destination, _ int) bool {
-		return *dest != DestinationCasparCG
+	destinationsWithAudioOutput := lo.Filter(params.Destinations, func(dest Destination, _ int) bool {
+		return dest != DestinationCasparCG
 	})
 
 	if len(destinationsWithAudioOutput) > 0 && analyzeResult.HasAudio && len(analyzeResult.AudioStreams) <= 2 {
@@ -257,7 +274,7 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	}
 
 	var resultFutures []workflow.Future
-	for _, dest := range destinations {
+	for _, dest := range params.Destinations {
 		childParams := VBExportChildWorkflowParams{
 			ParentParams:               params,
 			OriginalFilenameWithoutExt: originalFilenameWithoutExt,
@@ -271,18 +288,13 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 			AnalyzeResult:              *analyzeResult,
 		}
 
-		w, ok := destinationWorkflows[*dest]
-		if !ok {
-			return nil, fmt.Errorf("destination not implemented: %s", dest)
-		}
-
 		err = wfutils.CreateFolder(ctx, childParams.OutputDir)
 		if err != nil {
 			return nil, err
 		}
 
 		ctx = workflow.WithChildOptions(ctx, wfutils.GetVXDefaultWorkflowOptions(ctx, params.VXID))
-		future := workflow.ExecuteChildWorkflow(ctx, w, childParams)
+		future := workflow.ExecuteChildWorkflow(ctx, destinationWorkflows[dest], childParams)
 		resultFutures = append(resultFutures, future)
 	}
 

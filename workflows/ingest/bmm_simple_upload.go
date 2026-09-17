@@ -2,6 +2,7 @@ package ingestworkflows
 
 import (
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"strconv"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -22,7 +23,7 @@ type BmmSimpleUploadParams struct {
 	FilePath                  string `json:"filePath"`
 	Title                     string `json:"title"`
 	Language                  string `json:"language"`
-	BmmTargetEnvionment       string `json:"bmmTargetEnvironment"`
+	BmmTargetEnvironment      string `json:"bmmTargetEnvironment"`
 	ForceReplaceTranscription bool   `json:"forceReplaceTranscription"`
 	IsPodcast                 bool   `json:"isPodcast"`
 }
@@ -53,7 +54,7 @@ func BmmIngestUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 		return nil, err
 	}
 
-	res, err := ImportFileAsTag(ctx, "original", newPath, "BMM-"+strconv.Itoa(params.TrackID)+" "+params.Language+" - "+params.Title)
+	res, err := ImportFileAsTag(ctx, vsapi.ShapeTagOriginal, newPath, "BMM-"+strconv.Itoa(params.TrackID)+" "+params.Language+" - "+params.Title)
 	if err != nil {
 		wfutils.SendTelegramError(ctx, telegram.ChatBMM, "", err)
 		return nil, err
@@ -107,7 +108,7 @@ func BmmIngestUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 	}
 
 	destinations := []string{export.AssetExportDestinationBMM.Value}
-	if params.BmmTargetEnvionment == "bmm-int" {
+	if params.BmmTargetEnvironment == "bmm-int" {
 		destinations = []string{export.AssetExportDestinationBMMIntegration.Value}
 	}
 
@@ -172,7 +173,7 @@ func deliverToSSF(ctx workflow.Context, assetID string, wavPath paths.Path, para
 	// Get the transcription JSON from Vidispine
 	transcriptResult, err := wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		VXID: assetID,
-		Tags: []string{"transcription_json"},
+		Tags: []vsapi.ShapeTag{vsapi.ShapeTagTranscriptionJSON},
 	}).Result(ctx)
 	if err != nil {
 		logger.Warn("Failed to get transcription JSON from Vidispine", "error", err)

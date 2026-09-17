@@ -3,6 +3,7 @@ package ingestworkflows
 import (
 	"errors"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"strings"
 	"time"
 
@@ -28,12 +29,12 @@ func ExtractAudioFromMU1MU2(ctx workflow.Context, input ExtractAudioFromMU1MU2In
 	// Get paths to the original files
 	MU1FileFuture := wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		VXID: input.MU1ID,
-		Tags: []string{"original"},
+		Tags: []vsapi.ShapeTag{vsapi.ShapeTagOriginal},
 	})
 
 	MU2FileFuture := wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
 		VXID: input.MU2ID,
-		Tags: []string{"original"},
+		Tags: []vsapi.ShapeTag{vsapi.ShapeTagOriginal},
 	})
 
 	Mu1Result, err := MU1FileFuture.Result(ctx)

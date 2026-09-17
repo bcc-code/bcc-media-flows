@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/bcc-code/bcc-media-flows/environment"
 	"log"
 	"net/http"
@@ -65,9 +66,19 @@ func (s *TriggerServer) vbExportPOST(ctx *gin.Context) {
 
 	workflowOptions := wfutils.NewWorkflowOptions(environment.GetQueue(), vxID, getTriggeredBy(ctx))
 
+	var destinations []vb_export.Destination
+	for _, name := range ctx.PostFormArray("destinations[]") {
+		dest := vb_export.Destinations.Parse(name)
+		if dest == nil {
+			renderErrorPage(ctx, http.StatusBadRequest, fmt.Errorf("%w: %q", vb_export.ErrUnknownDestination, name))
+			return
+		}
+		destinations = append(destinations, *dest)
+	}
+
 	params := vb_export.VBExportParams{
 		VXID:             vxID,
-		Destinations:     ctx.PostFormArray("destinations[]"),
+		Destinations:     destinations,
 		SubtitleShapeTag: ctx.PostForm("subtitleShape"),
 		SubtitleStyle:    ctx.PostForm("subtitleStyle"),
 	}

@@ -17,7 +17,7 @@ func WaitForVidispineJob(ctx workflow.Context, jobID string) error {
 		BackoffCoefficient:     1.5,
 		InitialInterval:        30 * time.Second,
 		MaximumInterval:        300 * time.Second,
-		NonRetryableErrorTypes: []string{"JOB_FAILED"},
+		NonRetryableErrorTypes: []string{vsactivity.JobFailedErrorType},
 	}
 	ctx = workflow.WithActivityOptions(ctx, options)
 	return Execute(ctx, activities.Vidispine.JobCompleteOrErr, vsactivity.WaitForJobCompletionParams{

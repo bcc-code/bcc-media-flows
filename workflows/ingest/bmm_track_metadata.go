@@ -3,6 +3,7 @@ package ingestworkflows
 import (
 	"errors"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"net/url"
 	"path"
 	"strconv"
@@ -128,7 +129,7 @@ func BmmTrackMetadata(ctx workflow.Context, params BmmTrackMetadataParams) (*Bmm
 		}
 
 		title := fmt.Sprintf("BMM-%d %s - %s", params.BmmTrackID, params.Language, params.Title)
-		res, err := ImportFileAsTag(ctx, "original", newPath, title)
+		res, err := ImportFileAsTag(ctx, vsapi.ShapeTagOriginal, newPath, title)
 		if err != nil {
 			wfutils.SendTelegramError(ctx, telegram.ChatBMM, "", err)
 			return nil, err

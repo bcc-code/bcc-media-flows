@@ -89,7 +89,7 @@ func (s *UnitTestSuite) Test_VBBulk_MasterFlow() {
 	s.env.OnActivity(activities.Vidispine.ImportFileAsShapeActivity, mock.Anything, vsactivity.ImportFileAsShapeParams{
 		AssetID:  "VBBulk1",
 		FilePath: paths.MustParse("./testdata/generated/VBBulk_output/VBBulk1.mxf"),
-		ShapeTag: "original",
+		ShapeTag: vsapi.ShapeTagOriginal,
 		Growing:  false,
 		Replace:  false,
 	}).Once().Return(nil, nil)
@@ -97,7 +97,7 @@ func (s *UnitTestSuite) Test_VBBulk_MasterFlow() {
 	s.env.OnActivity(activities.Vidispine.ImportFileAsShapeActivity, mock.Anything, vsactivity.ImportFileAsShapeParams{
 		AssetID:  "VBBulk2",
 		FilePath: paths.MustParse("./testdata/generated/VBBulk_output/VBBulk2.mxf"),
-		ShapeTag: "original",
+		ShapeTag: vsapi.ShapeTagOriginal,
 		Growing:  false,
 		Replace:  false,
 	}).Once().Return(nil, nil)

@@ -56,10 +56,10 @@ func (c *Client) GetJob(jobID string) (*JobDocument, error) {
 }
 
 type JobDocument struct {
-	JobID    string  `json:"jobId"`
-	User     string  `json:"user"`
-	Started  *string `json:"started"`
-	Finished *string `json:"finished"`
-	Status   string  `json:"status"`
-	Type     string  `json:"type"`
+	JobID    string    `json:"jobId"`
+	User     string    `json:"user"`
+	Started  *string   `json:"started"`
+	Finished *string   `json:"finished"`
+	Status   JobStatus `json:"status"`
+	Type     string    `json:"type"`
 }

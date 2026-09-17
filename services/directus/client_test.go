@@ -53,7 +53,7 @@ func TestClient_ServerErrorsAreErrors(t *testing.T) {
 	}{
 		{"GetAssetByMediabankenID", func(c *Client) error { _, err := c.GetAssetByMediabankenID("MB-1"); return err }},
 		{"AssetExists", func(c *Client) error { _, err := c.AssetExists("MB-1"); return err }},
-		{"CreateStyledImage", func(c *Client) error { _, err := c.CreateStyledImage("file-1", "poster"); return err }},
+		{"CreateStyledImage", func(c *Client) error { _, err := c.CreateStyledImage("file-1", ImageStylePoster); return err }},
 		{"CreateShort", func(c *Client) error { _, err := c.CreateShort(ShortCreate{MediaItemID: "mi-1"}); return err }},
 		{"CreateMediaItemStyledImage", func(c *Client) error { return c.CreateMediaItemStyledImage("mi-1", "si-1") }},
 		{"CreateMediaItem", func(c *Client) error { _, err := c.CreateMediaItem(MediaItemCreate{Label: "l"}); return err }},
@@ -181,7 +181,7 @@ func TestCreateStyledImage_RejectsAnUnknownStyleWithoutCallingDirectus(t *testin
 	t.Cleanup(server.Close)
 
 	client := NewClient(testConfig{baseURL: server.URL, apiKey: "test-api-key"})
-	_, err := client.CreateStyledImage("file-1", "banner")
+	_, err := client.CreateStyledImage("file-1", ImageStyle{Value: "banner"})
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid style")
@@ -191,7 +191,7 @@ func TestCreateStyledImage_RejectsAnUnknownStyleWithoutCallingDirectus(t *testin
 func TestCreateStyledImage_MissingIDIsAnError(t *testing.T) {
 	client := directusServer(t, http.StatusOK, `{"data":{}}`)
 
-	_, err := client.CreateStyledImage("file-1", "poster")
+	_, err := client.CreateStyledImage("file-1", ImageStylePoster)
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "missing styled image ID")

@@ -7,6 +7,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/environment"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/temporal"
@@ -193,7 +194,7 @@ func MoveFilesWorkerFlow(ctx workflow.Context) error {
 		}
 
 		for _, shapeTag := range msg.Shapes {
-			s := meta.GetShape(shapeTag)
+			s := meta.GetShape(vsapi.ShapeTag{Value: shapeTag})
 
 			if s == nil {
 				workflow.GetLogger(ctx).Debug("No shape found for tag", "tag", shapeTag, "vxid", msg.VXID)

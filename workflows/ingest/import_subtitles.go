@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"strings"
 
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
@@ -142,7 +143,7 @@ func ImportSubtitles(ctx workflow.Context, input ImportSubtitlesInput) error {
 		vsactivity.ImportFileAsShapeParams{
 			AssetID:  input.VXID,
 			FilePath: srtFilePath,
-			ShapeTag: "Transcribed_Subtitle_SRT",
+			ShapeTag: vsapi.ShapeTagTranscribedSubtitleSRT,
 			Replace:  true,
 		})
 
@@ -151,7 +152,7 @@ func ImportSubtitles(ctx workflow.Context, input ImportSubtitlesInput) error {
 		vsactivity.ImportFileAsShapeParams{
 			AssetID:  input.VXID,
 			FilePath: jsonFilePath,
-			ShapeTag: "transcription_json",
+			ShapeTag: vsapi.ShapeTagTranscriptionJSON,
 			Replace:  true,
 		})
 

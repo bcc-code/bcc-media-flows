@@ -3,6 +3,7 @@ package ingestworkflows
 import (
 	"errors"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/common"
@@ -135,7 +136,7 @@ func calculateAudioAdjustment(ctx workflow.Context, vxID string, audioPaths map[
 		return 0, err
 	}
 
-	originalShape := shapes.GetShape("original")
+	originalShape := shapes.GetShape(vsapi.ShapeTagOriginal)
 	if originalShape == nil {
 		return 0, errors.New("original shape not found")
 	}

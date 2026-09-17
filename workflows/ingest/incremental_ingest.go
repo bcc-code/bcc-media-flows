@@ -3,6 +3,7 @@ package ingestworkflows
 import (
 	"errors"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"path/filepath"
 	"strings"
 	"time"
@@ -299,7 +300,7 @@ func startGrowingPreview(ctx workflow.Context, rawPath paths.Path, videoVXID str
 		lowresImportJob, importErr := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity, vsactivity.ImportFileAsShapeParams{
 			AssetID:  videoVXID,
 			FilePath: previewPath,
-			ShapeTag: "lowres_watermarked",
+			ShapeTag: vsapi.ShapeTagLowresWatermarked,
 			Growing:  true,
 			Replace:  false,
 		}).Result(ctx)

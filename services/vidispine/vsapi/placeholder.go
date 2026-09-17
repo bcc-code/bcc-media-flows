@@ -28,7 +28,7 @@ var (
 	FileStates      = enum.New(FileStateClosed, FileStateOpen)
 )
 
-type PlacholderTplData struct {
+type PlaceholderTplData struct {
 	Title string
 }
 
@@ -43,7 +43,7 @@ func (c *Client) CreatePlaceholder(ingestType PlaceholderType, title string) (st
 	}
 
 	var body bytes.Buffer
-	err := tpl.Execute(&body, PlacholderTplData{
+	err := tpl.Execute(&body, PlaceholderTplData{
 		Title: title,
 	})
 	if err != nil {

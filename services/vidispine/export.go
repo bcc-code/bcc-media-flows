@@ -14,7 +14,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/languages"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
-	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/orsinium-labs/enum"
 	"github.com/samber/lo"
 )
@@ -78,7 +77,7 @@ var (
 	)
 
 	EmptyWAVFile = environment.GetIsilonPrefix() + "/system/assets/BlankAudio10h.wav"
-	EmtpySRTFile = environment.GetIsilonPrefix() + "/system/assets/empty.srt"
+	EmptySRTFile = environment.GetIsilonPrefix() + "/system/assets/empty.srt"
 )
 
 // GetRelatedAudioPaths returns all related audio paths for a given VXID
@@ -106,7 +105,7 @@ func GetRelatedAudioPaths(client Client, vxID string) (map[string]string, error)
 			return nil, err
 		}
 
-		shape := shapes.GetShape("original")
+		shape := shapes.GetShape(vsapi.ShapeTagOriginal)
 		if shape == nil {
 			continue
 		}
@@ -183,7 +182,7 @@ func enrichClipWithRelatedAudios(client Client, clip *Clip, oLanguagesToExport [
 		}
 
 		// Ok now we can finally get the path to the audio file
-		relatedAudioShape := relatedAudioShapes.GetShape("original")
+		relatedAudioShape := relatedAudioShapes.GetShape(vsapi.ShapeTagOriginal)
 		if relatedAudioShape == nil {
 			if languagesToExport[0] == "nor" {
 				// Fall back to "nor" audio and issue a warning *somewhere*
@@ -226,7 +225,7 @@ func enrichClipWithEmbeddedAudio(client Client, clip *Clip, languagesToExport []
 		return nil, err
 	}
 
-	shape := shapes.GetShape("original")
+	shape := shapes.GetShape(vsapi.ShapeTagOriginal)
 	if shape == nil {
 		// The AudioComponent access below dereferences the shape, so a missing original
 		// has to be reported rather than followed.
@@ -559,7 +558,7 @@ func GetDataForExport(client Client, itemVXID string, languagesToExport []string
 
 // addSubtitlesAndTranscriptionsToClips modifies the original clips to include subtitles and transcriptions
 func addSubtitlesAndTranscriptionsToClips(client Client, clips []*Clip, allowAI bool) error {
-	allSubLanguages := mapset.NewSet[string]()
+	allSubLanguages := map[string]struct{}{}
 
 	// Fetch subs
 	for _, clip := range clips {
@@ -573,7 +572,7 @@ func addSubtitlesAndTranscriptionsToClips(client Client, clips []*Clip, allowAI 
 
 		for langCode := range languages.LanguagesByISO {
 			// There are also videos with .txt subs... we should support those at some point
-			shape := clipShapes.GetShape(fmt.Sprintf("sub_%s_srt", langCode))
+			shape := clipShapes.GetShape(vsapi.SubtitleShapeTag(langCode))
 			if shape == nil || shape.GetPath() == "" {
 				continue
 			}
@@ -581,19 +580,19 @@ func addSubtitlesAndTranscriptionsToClips(client Client, clips []*Clip, allowAI 
 			clip.SubtitleFiles[langCode] = shape.GetPath()
 
 			// Collect all languages that any of the clips have subs for
-			allSubLanguages.Add(langCode)
+			allSubLanguages[langCode] = struct{}{}
 		}
 
 		if len(clip.SubtitleFiles) == 0 && allowAI {
 			// We have no subtitles, so we fall back to transcriptions
-			shape := clipShapes.GetShape("Transcribed_Subtitle_SRT")
+			shape := clipShapes.GetShape(vsapi.ShapeTagTranscribedSubtitleSRT)
 			if shape != nil && shape.GetPath() != "" {
 				clip.SubtitleFiles["und"] = shape.GetPath()
-				allSubLanguages.Add("und")
+				allSubLanguages["und"] = struct{}{}
 			}
 		}
 
-		shape := clipShapes.GetShape("transcription_json")
+		shape := clipShapes.GetShape(vsapi.ShapeTagTranscriptionJSON)
 		if shape != nil {
 			clip.JSONTranscriptFile = shape.GetPath()
 		}
@@ -602,9 +601,9 @@ func addSubtitlesAndTranscriptionsToClips(client Client, clips []*Clip, allowAI 
 	for _, clip := range clips {
 		// Add empty subs for all languages that any of the clips have subs for if they are missing
 		// This makes it easier to handle down the line if we always have a sub file for all languages
-		for langCode := range allSubLanguages.Iter() {
+		for langCode := range allSubLanguages {
 			if _, ok := clip.SubtitleFiles[langCode]; !ok {
-				clip.SubtitleFiles[langCode] = EmtpySRTFile
+				clip.SubtitleFiles[langCode] = EmptySRTFile
 			}
 		}
 	}

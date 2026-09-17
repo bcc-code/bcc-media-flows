@@ -26,7 +26,7 @@ type CreateMediaItemTagInput struct {
 
 type CreateMediaItemInput struct {
 	Label           string
-	Type            string
+	Type            directus.MediaItemType
 	AssetID         string
 	Title           string
 	ParentEpisodeID string
@@ -37,12 +37,12 @@ type CreateMediaItemInput struct {
 
 type CreateShortInput struct {
 	MediaItemID string
-	Status      string
+	Status      directus.ShortStatus
 }
 
 type CreateStyledImageInput struct {
 	ImageID string
-	Style   string
+	Style   directus.ImageStyle
 }
 
 type GetOrCreateTagInput struct {

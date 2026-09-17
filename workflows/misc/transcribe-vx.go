@@ -3,6 +3,7 @@ package miscworkflows
 import (
 	"errors"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 
@@ -34,7 +35,7 @@ func TranscribeVX(
 	ctx = workflow.WithActivityOptions(ctx, wfutils.GetDefaultActivityOptions())
 
 	shapes, err := wfutils.Execute(ctx, activities.Vidispine.GetFileFromVXActivity, vsactivity.GetFileFromVXParams{
-		Tags: []string{"lowres", "lowres_watermarked", "lowaudio", "original"},
+		Tags: []vsapi.ShapeTag{vsapi.ShapeTagLowres, vsapi.ShapeTagLowresWatermarked, vsapi.ShapeTagLowAudio, vsapi.ShapeTagOriginal},
 		VXID: params.VXID,
 	}).Result(ctx)
 
@@ -78,7 +79,7 @@ func TranscribeVX(
 		vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.VXID,
 			FilePath: transcriptionJob.JSONPath,
-			ShapeTag: "transcription_json",
+			ShapeTag: vsapi.ShapeTagTranscriptionJSON,
 			Replace:  true,
 		})
 
@@ -86,7 +87,7 @@ func TranscribeVX(
 		vsactivity.ImportFileAsShapeParams{
 			AssetID:  params.VXID,
 			FilePath: transcriptionJob.SRTPath,
-			ShapeTag: "Transcribed_Subtitle_SRT",
+			ShapeTag: vsapi.ShapeTagTranscribedSubtitleSRT,
 			Replace:  true,
 		})
 

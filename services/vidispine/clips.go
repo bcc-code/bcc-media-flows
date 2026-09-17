@@ -32,7 +32,7 @@ func SeqToClips(client Client, seq *vsapi.SequenceDocument) ([]*Clip, error) {
 				return nil, err
 			}
 
-			shape := shapes.GetShape("original")
+			shape := shapes.GetShape(vsapi.ShapeTagOriginal)
 			if shape == nil {
 				return nil, fmt.Errorf("no original shape found for item %s", segment.VXID)
 			}
@@ -93,7 +93,7 @@ func getClipForAsset(
 		return nil, err
 	}
 
-	shape := shapes.GetShape("original")
+	shape := shapes.GetShape(vsapi.ShapeTagOriginal)
 	if shape == nil {
 		return nil, fmt.Errorf("no original shape found for item %s", itemVXID)
 	}
@@ -125,7 +125,7 @@ func getClipForSubclip(
 		return nil, err
 	}
 
-	shape := shapes.GetShape("original")
+	shape := shapes.GetShape(vsapi.ShapeTagOriginal)
 	if shape == nil {
 		return nil, fmt.Errorf("no original shape found for item %s", itemVXID)
 	}
