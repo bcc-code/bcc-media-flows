@@ -1,0 +1,82 @@
+{{- /*gotype: github.com/bcc-code/bcc-media-flows/services/notifications.DemuxCheckReport */ -}}
+{{template "header" .}}
+                            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
+                                <tr>
+                                    {{if .Passed}}<td style="background-color:#e3f6ec; color:#0b6b3a; font-size:13px; font-weight:600; padding:6px 14px; border-radius:14px;">&#10003; {{.Outcome.Value}}</td>{{else}}<td style="background-color:#fde8e8; color:#9b1c1c; font-size:13px; font-weight:600; padding:6px 14px; border-radius:14px;">&#10007; {{.Outcome.Value}}</td>{{end}}
+                                </tr>
+                            </table>
+
+                            <p style="margin:0 0 16px; font-size:15px; line-height:1.5;">
+                                Before import into Mediabanken, ffmpeg read {{if eq (len .Files) 1}}the file{{else}}each of the {{.FileCount}}{{end}} from start to end and checked that every packet could be demuxed. Nothing was decoded, so this finds truncated files, broken containers and damaged packets, not picture or sound faults. Corrupt-packet warnings count as errors.
+                            </p>
+
+{{range .Files}}
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-top:24px;">
+                                <tr>
+                                    <td colspan="2" style="padding:0 0 8px; font-size:16px; font-weight:600; color:#1f2933; border-bottom:2px solid #edf0f3;">
+                                        {{if .Passed}}<span style="color:#0b6b3a;">&#10003;</span>{{else}}<span style="color:#9b1c1c;">&#10007;</span>{{end}}
+                                        {{.Filename}}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:10px 0; border-bottom:1px solid #edf0f3; font-size:13px; color:#7b8794; width:40%;">Result</td>
+                                    <td style="padding:10px 0; border-bottom:1px solid #edf0f3; font-size:14px; color:#1f2933;">{{.Outcome.Value}}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:10px 0; border-bottom:1px solid #edf0f3; font-size:13px; color:#7b8794;">Path</td>
+                                    <td style="padding:10px 0; border-bottom:1px solid #edf0f3; font-size:13px; color:#1f2933; font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace; word-break:break-all;">{{.Path}}</td>
+                                </tr>
+                                {{if not .Error}}
+                                {{if gt .TotalSeconds 0.0}}
+                                <tr>
+                                    <td style="padding:10px 0; border-bottom:1px solid #edf0f3; font-size:13px; color:#7b8794;">Read</td>
+                                    <td style="padding:10px 0; border-bottom:1px solid #edf0f3; font-size:14px; color:{{if .ShortRead}}#9b1c1c{{else}}#1f2933{{end}};">{{.Processed}} of {{.Total}}{{if .ShortRead}} &mdash; the file ends before its header says it does{{end}}</td>
+                                </tr>
+                                {{end}}
+                                <tr>
+                                    <td style="padding:10px 0; border-bottom:1px solid #edf0f3; font-size:13px; color:#7b8794;">Errors / Warnings</td>
+                                    <td style="padding:10px 0; border-bottom:1px solid #edf0f3; font-size:14px; color:#1f2933;">{{.Errors}} / {{.Warnings}}</td>
+                                </tr>
+                                {{end}}
+                            </table>
+
+                            {{if .Error}}
+                            <p style="margin:16px 0 8px; font-size:13px; color:#7b8794; text-transform:uppercase; letter-spacing:0.06em;">The check did not run</p>
+                            <div style="background-color:#fdecec; border:1px solid #f5c2c0; border-radius:6px; padding:14px 16px; font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace; font-size:13px; color:#b3261e; white-space:pre-wrap; word-break:break-word;">{{.Error}}</div>
+                            {{else}}
+                            {{if .ExitError}}
+                            <p style="margin:16px 0 8px; font-size:13px; color:#7b8794; text-transform:uppercase; letter-spacing:0.06em;">ffmpeg could not read the file</p>
+                            <div style="background-color:#fdecec; border:1px solid #f5c2c0; border-radius:6px; padding:14px 16px; font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace; font-size:13px; color:#b3261e; white-space:pre-wrap; word-break:break-word;">{{.ExitError}}</div>
+                            {{end}}
+
+                            {{if .Messages}}
+                            <p style="margin:16px 0 8px; font-size:13px; color:#7b8794; text-transform:uppercase; letter-spacing:0.06em;">Messages{{if .HasMoreMessages}} (first {{len .Messages}} of {{.TotalMessages}}){{end}}</p>
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                                <tr>
+                                    <th align="left" style="padding:8px 0; border-bottom:2px solid #edf0f3; font-size:12px; color:#7b8794; text-transform:uppercase; letter-spacing:0.06em; width:70px;">Level</th>
+                                    <th align="left" style="padding:8px 0; border-bottom:2px solid #edf0f3; font-size:12px; color:#7b8794; text-transform:uppercase; letter-spacing:0.06em; width:150px;">Source</th>
+                                    <th align="left" style="padding:8px 0; border-bottom:2px solid #edf0f3; font-size:12px; color:#7b8794; text-transform:uppercase; letter-spacing:0.06em;">Message</th>
+                                </tr>
+                                {{range .Messages}}
+                                <tr>
+                                    <td style="padding:8px 8px 8px 0; border-bottom:1px solid #edf0f3; font-size:13px; font-weight:600; color:{{if .IsError}}#9b1c1c{{else}}#8a6d00{{end}}; vertical-align:top;">{{.Level}}</td>
+                                    <td style="padding:8px 8px 8px 0; border-bottom:1px solid #edf0f3; font-size:12px; color:#7b8794; font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace; vertical-align:top; word-break:break-all;">{{.Component}}</td>
+                                    <td style="padding:8px 0; border-bottom:1px solid #edf0f3; font-size:13px; color:#1f2933; font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace; word-break:break-word;">{{.Message}}</td>
+                                </tr>
+                                {{end}}
+                            </table>
+                            {{else}}
+                            <p style="margin:16px 0 0; font-size:14px; color:#0b6b3a;">ffmpeg read the whole file without a single warning.</p>
+                            {{end}}
+
+                            {{if .Command}}
+                            <p style="margin:16px 0 4px; font-size:12px; color:#9aa5b1;">Command</p>
+                            <div style="font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace; font-size:11px; color:#7b8794; word-break:break-all;">{{.Command}}</div>
+                            {{end}}
+                            {{end}}
+{{end}}
+
+                            {{if .CheckedAt}}
+                            <p style="margin:24px 0 0; font-size:12px; color:#9aa5b1;">Checked {{.CheckedAt}}</p>
+                            {{end}}
+{{template "footer" .}}

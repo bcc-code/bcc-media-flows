@@ -130,6 +130,12 @@ func (s *UnitTestSuite) Test_VBBulk_MasterFlow() {
 		Language: "no",
 	}).Once().Return(nil, nil)
 
+	// Each master is read through ffmpeg before it is handed to Vidispine.
+	var demuxInputs []miscworkflows.DemuxCheckInput
+	s.env.OnWorkflow(miscworkflows.DemuxCheck, mock.Anything, mock.Anything).Times(2).Run(func(args mock.Arguments) {
+		demuxInputs = append(demuxInputs, args.Get(1).(miscworkflows.DemuxCheckInput))
+	}).Return(&miscworkflows.DemuxCheckResult{Outcome: "PASSED", Mailed: true}, nil)
+
 	// QC mails its verdict to whoever uploaded the master.
 	var qcInputs []miscworkflows.QScanMasterInput
 	s.env.OnWorkflow(miscworkflows.QScanMaster, mock.Anything, mock.Anything).Times(2).Run(func(args mock.Arguments) {
@@ -155,6 +161,18 @@ func (s *UnitTestSuite) Test_VBBulk_MasterFlow() {
 	s.Len(qcInputs, 2)
 	for _, in := range qcInputs {
 		s.Equal(params.Targets, in.Recipients)
+	}
+
+	if s.Len(demuxInputs, 2) {
+		var checked []paths.Path
+		for _, in := range demuxInputs {
+			s.Equal(params.Targets, in.Recipients)
+			checked = append(checked, in.Files...)
+		}
+		s.ElementsMatch([]paths.Path{
+			paths.MustParse("./testdata/generated/VBBulk_output/VBBulk1.mxf"),
+			paths.MustParse("./testdata/generated/VBBulk_output/VBBulk2.mxf"),
+		}, checked, "the file is checked at its final location, which is what Vidispine imports")
 	}
 }
 

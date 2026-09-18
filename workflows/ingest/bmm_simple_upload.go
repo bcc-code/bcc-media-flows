@@ -54,6 +54,8 @@ func BmmIngestUpload(ctx workflow.Context, params BmmSimpleUploadParams) (*BmmSi
 		return nil, err
 	}
 
+	demuxCheckBeforeImport(ctx, []paths.Path{newPath}, []string{params.UploadedBy})
+
 	res, err := ImportFileAsTag(ctx, vsapi.ShapeTagOriginal, newPath, "BMM-"+strconv.Itoa(params.TrackID)+" "+params.Language+" - "+params.Title)
 	if err != nil {
 		wfutils.SendTelegramError(ctx, telegram.ChatBMM, "", err)

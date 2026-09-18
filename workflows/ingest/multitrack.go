@@ -58,6 +58,8 @@ func Multitrack(ctx workflow.Context, params MasterParams) (*MasterResult, error
 
 	sort.Sort(files)
 
+	demuxCheckBeforeImport(ctx, files, params.Targets)
+
 	var channels paths.Files
 	for _, f := range files {
 		parts, err := wfutils.Execute(ctx, activities.Audio.SplitAudioChannels, activities.SplitAudioChannelsInput{

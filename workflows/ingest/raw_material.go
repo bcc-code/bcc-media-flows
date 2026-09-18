@@ -96,6 +96,14 @@ func RawMaterial(ctx workflow.Context, params RawMaterialParams) (map[string]pat
 		files = append(files, newPath)
 	}
 
+	var mediaFiles []paths.Path
+	for _, file := range files {
+		if utils.IsMedia(file.Local()) {
+			mediaFiles = append(mediaFiles, file)
+		}
+	}
+	demuxCheckBeforeImport(ctx, mediaFiles, params.Recipients)
+
 	var fileByAssetID = map[string]paths.Path{}
 	var mediaAnalyzeTasks = map[string]wfutils.Task[*ffmpeg.StreamInfo]{}
 	var importResults = map[string]*ImportTagResult{}

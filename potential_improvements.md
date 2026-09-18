@@ -51,3 +51,12 @@ Revalidated against the code 2026-09-15. Items confirmed fixed were removed; the
 - `cmd/httpin/watchers.go:128` — the transcode-root regexp is a package-level var built from `environment.Get()`, so it is evaluated before `bootstrap.LoadEnv` runs in `main` and ignores a `.env` override.
 - `cmd/worker/readme.md` documents 4 of the 6 queues in `environment/queues.go` (missing `live-ingest` and `debug`).
 - Mount-prefix getters in `environment/environment.go` still hand-roll the default-fallback pattern; defaults belong in `Config`.
+
+## Demux check (added 2026-09-17)
+
+- `services/ffmpeg/demuxcheck.go` runs `-c copy -f null -`, so it demuxes and parses but never decodes. Corruption inside a frame that leaves the container and NAL/KLV structure intact (broken ProRes slices, damaged DCT blocks) passes. A `Decode` option on the activity that drops `-c copy` would catch it, at the cost of a full decode per file; worth offering for masters at least.
+- The verdict hinges on ffmpeg's log severities plus a regexp (`demuxCorruptionWarning`) that promotes "corrupt", "sync lost", "partial file" and "truncat" warnings to errors. Any other demuxer warning that means damage still yields PASSED WITH WARNINGS. Review real-world reports for a while and extend the list.
+- The check runs on every ingest site except `Incremental` (growing live files, where a full read is meaningless) and the derived imports (previews, subtitles, transcriptions). The raw-material path filters with `utils.IsMedia`, so its `.mp4` gap (see Bugs) applies here too.
+- `demuxCheckBeforeImport` (`workflows/ingest/demux_check.go`) never blocks the import. A `FailOnErrors` switch, or routing FAILED verdicts to a holding folder instead of Mediabanken, is the natural next step once the reports have earned trust.
+- `ffmpeg.ProbeResultToInfo` (`services/ffmpeg/progress.go`) indexes `info.Streams[0]` without checking, so a probe of a file with zero streams panics the activity. `DemuxCheck` guards it locally; `GetStreamInfo` and every caller of it do not.
+- `BmmIngestUpload` mails `params.UploadedBy` as if it were an address; the demux check filters non-addresses out (`emailRecipients`), but the "BMM Upload successful" mail at the end of the workflow does not, and SendGrid rejects a bare name.

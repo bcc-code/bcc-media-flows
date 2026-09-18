@@ -65,6 +65,8 @@ func processMaster(ctx workflow.Context, sourceFile paths.Path, destinationFile 
 		return "", err
 	}
 
+	demuxCheckBeforeImport(ctx, []paths.Path{destinationFile}, recipients)
+
 	result, err := ImportFileAsTag(ctx, vsapi.ShapeTagOriginal, destinationFile, destinationFile.Base())
 	if err != nil {
 		return "", err

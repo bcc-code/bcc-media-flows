@@ -54,6 +54,9 @@ func RelateAudioToVideo(ctx workflow.Context, params RelateAudioToVideoParams) e
 			return fmt.Errorf("file %s is reported not OK by the system", path)
 		}
 
+		// Reaper exports have no uploader, so the report lands next to the file.
+		demuxCheckBeforeImport(ctx, []paths.Path{path}, nil)
+
 		// Create placeholder
 		assetResult, err := wfutils.Execute(ctx, activities.Vidispine.CreatePlaceholderActivity, vsactivity.CreatePlaceholderParams{
 			Title: path.Base(),

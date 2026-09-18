@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
+	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vscommon"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
@@ -127,6 +128,9 @@ func BmmTrackMetadata(ctx workflow.Context, params BmmTrackMetadataParams) (*Bmm
 			wfutils.SendTelegramError(ctx, telegram.ChatBMM, "", err)
 			return nil, fmt.Errorf("failed to download file: %w", err)
 		}
+
+		// BMM track imports carry no uploader address, so the report lands next to the file.
+		demuxCheckBeforeImport(ctx, []paths.Path{newPath}, nil)
 
 		title := fmt.Sprintf("BMM-%d %s - %s", params.BmmTrackID, params.Language, params.Title)
 		res, err := ImportFileAsTag(ctx, vsapi.ShapeTagOriginal, newPath, title)

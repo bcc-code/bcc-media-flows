@@ -97,6 +97,12 @@ func (s *RawMaterialTestSuite) Test_RawMaterial_StartsQCForVideoFilesOnly() {
 	s.env.OnActivity(activities.Vidispine.CreateThumbnailsActivity, mock.Anything, vsactivity.CreateThumbnailsParams{AssetID: "VX-VIDEO"}).
 		Once().Return(nil, nil)
 
+	// The whole upload is read through ffmpeg in one go before anything is imported.
+	var demuxInput miscworkflows.DemuxCheckInput
+	s.env.OnWorkflow(miscworkflows.DemuxCheck, mock.Anything, mock.Anything).Once().Run(func(args mock.Arguments) {
+		demuxInput = args.Get(1).(miscworkflows.DemuxCheckInput)
+	}).Return(&miscworkflows.DemuxCheckResult{Outcome: "PASSED", Mailed: true}, nil)
+
 	var qcInput miscworkflows.QScanRawImportInput
 	s.env.OnWorkflow(miscworkflows.QScanRawImport, mock.Anything, mock.Anything).Once().Run(func(args mock.Arguments) {
 		qcInput = args.Get(1).(miscworkflows.QScanRawImportInput)
@@ -108,6 +114,14 @@ func (s *RawMaterialTestSuite) Test_RawMaterial_StartsQCForVideoFilesOnly() {
 
 	s.True(s.env.IsWorkflowCompleted())
 	s.NoError(s.env.GetWorkflowError())
+
+	s.Equal(params.Recipients, demuxInput.Recipients)
+	if s.Len(demuxInput.Files, 2, "every media file is demux checked, audio included") {
+		s.Equal("CLIP_01.mxf", demuxInput.Files[0].Base())
+		s.Equal("AUDIO_01.wav", demuxInput.Files[1].Base())
+		s.Equal(paths.IsilonDrive, demuxInput.Files[0].Drive)
+		s.Contains(demuxInput.Files[0].Path, "Production/raw/", "the file is checked at its final location")
+	}
 
 	s.Equal(params.Recipients, qcInput.Recipients)
 	if s.Len(qcInput.Files, 1, "the audio file has no video and is not QC'd") {
