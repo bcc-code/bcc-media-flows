@@ -26,3 +26,11 @@ decls:
   # Pure string parsing. Flagged only because net/url.parse allocates, and the
   # allocator can start a GC goroutine.
   net/url.Parse: false
+
+  # Renders an embedded template, parsed once at package init with no FuncMap,
+  # over the given data. Flagged via reflect -> runtime.Frames like json.Marshal
+  # above. Every workflow that mails a notifications.Template already renders
+  # it in workflow context through emails.NewMessage; the checker only sees it
+  # here because DemuxCheck calls the concrete method rather than the interface.
+  # Keep the methods the templates call on their data pure.
+  github.com/bcc-code/bcc-media-flows/services/notifications.renderHtmlTemplate: false
