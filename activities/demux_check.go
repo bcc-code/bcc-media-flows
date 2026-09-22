@@ -14,8 +14,8 @@ type DemuxCheckParams struct {
 	FilePath paths.Path
 }
 
-// DemuxCheck reads the whole file through ffmpeg without decoding it and
-// returns every warning and error the demuxers and parsers logged. A broken
+// DemuxCheck reads and decodes the whole file through ffmpeg, writing nothing,
+// and returns every warning and error the demuxers, parsers and decoders logged. A broken
 // file is a result, not a failure: the activity errors only when the check
 // itself could not run.
 func (va VideoActivities) DemuxCheck(ctx context.Context, params DemuxCheckParams) (*ffmpeg.DemuxCheckResult, error) {

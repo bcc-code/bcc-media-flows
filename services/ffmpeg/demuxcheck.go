@@ -83,8 +83,10 @@ func (r DemuxCheckResult) Passed() bool {
 }
 
 // DemuxCheckArguments is the command line the check runs. Every stream is
-// copied into the null muxer, so the whole file is demuxed and parsed but
-// nothing is decoded.
+// demuxed and decoded into the null muxer, so nothing is written but every
+// frame goes through its decoder. Copying instead of decoding would be far
+// cheaper, but damage inside a frame that leaves the container intact, such as
+// broken ProRes slices, is only ever seen by the decoder.
 func DemuxCheckArguments(path string) []string {
 	return []string{
 		"-hide_banner", "-nostdin", "-nostats",
@@ -94,14 +96,13 @@ func DemuxCheckArguments(path string) []string {
 		"-progress", "pipe:1",
 		"-i", path,
 		"-map", "0",
-		"-c", "copy",
 		"-ignore_unknown",
 		"-f", "null", "-",
 	}
 }
 
-// DemuxCheck reads the whole file through ffmpeg and collects what it complains
-// about. info is the probe result used for progress and the short read check;
+// DemuxCheck reads and decodes the whole file through ffmpeg and collects what
+// it complains about. info is the probe result used for progress and the short read check;
 // it is probed when nil.
 //
 // An error is returned only when the check itself could not run: ffmpeg
@@ -222,16 +223,21 @@ func DemuxCheck(path string, info *StreamInfo, cb ProgressCallback) (DemuxCheckR
 	return result, nil
 }
 
-// demuxLogLine matches one ffmpeg log line with the level flag on: an optional
-// "[component @ 0xaddr] " prefix, the "[level] " tag, then the message. Lines
-// without a level tag are continuations of the previous message.
 // demuxCorruptionWarning matches the warnings ffmpeg logs for damaged essence.
 // ffmpeg flags a corrupt packet and carries on, so it logs these at warning
 // level; for a file about to be archived they are errors, and a damaged MXF
 // or a truncated one would otherwise pass with warnings.
 var demuxCorruptionWarning = regexp.MustCompile(`(?i)corrupt|sync lost|partial file|truncat`)
 
-var demuxLogLine = regexp.MustCompile(`^(?:\[([^\]]*?) @ 0x[0-9a-fA-F]+\] )?\[(warning|error|fatal|panic|info|verbose|debug|trace)\] (.*)$`)
+// demuxLogLine matches one ffmpeg log line with the level flag on: any number
+// of "[component @ 0xaddr] " prefixes, the "[level] " tag, then the message.
+// Demuxer lines carry one prefix; decoder lines carry two, the input stream
+// and the decoder. Lines without a level tag are continuations of the
+// previous message.
+var demuxLogLine = regexp.MustCompile(`^((?:\[[^\]]*? @ 0x[0-9a-fA-F]+\] )*)\[(warning|error|fatal|panic|info|verbose|debug|trace)\] (.*)$`)
+
+// demuxLogPrefix picks the component names out of demuxLogLine's prefix group.
+var demuxLogPrefix = regexp.MustCompile(`\[([^\]]*?) @ 0x[0-9a-fA-F]+\] `)
 
 type demuxMessageCollector struct {
 	messages  []DemuxCheckMessage
@@ -271,7 +277,7 @@ func (c *demuxMessageCollector) add(line string) {
 		return
 	}
 
-	level, component, message := match[2], match[1], truncateMessage(match[3])
+	level, component, message := match[2], demuxLogComponents(match[1]), truncateMessage(match[3])
 	if level == "warning" && demuxCorruptionWarning.MatchString(message) {
 		level = "error"
 	}
@@ -296,6 +302,17 @@ func (c *demuxMessageCollector) add(line string) {
 			Message:   message,
 		})
 	}
+}
+
+// demuxLogComponents joins the component names in a log line prefix with a
+// space, so a decoder line reads "vist#0:0/prores dec:prores" and still says
+// which input stream it belonged to.
+func demuxLogComponents(prefix string) string {
+	var names []string
+	for _, m := range demuxLogPrefix.FindAllStringSubmatch(prefix, -1) {
+		names = append(names, m[1])
+	}
+	return strings.Join(names, " ")
 }
 
 func truncateMessage(s string) string {

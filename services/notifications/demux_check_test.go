@@ -18,7 +18,7 @@ func sampleDemuxCheckReport() DemuxCheckReport {
 				Outcome:          QCPassed,
 				ProcessedSeconds: 3,
 				TotalSeconds:     3,
-				Command:          "ffmpeg -i CLIP_01.mxf -c copy -f null -",
+				Command:          "ffmpeg -i CLIP_01.mxf -map 0 -f null -",
 			},
 			{
 				Filename:         "CLIP_02.mxf",

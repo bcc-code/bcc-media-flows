@@ -43,7 +43,7 @@ func TestDemuxCheck_GoodFilePasses(t *testing.T) {
 	assert.False(t, result.ShortRead)
 	assert.InDelta(t, 3, result.TotalSeconds, 0.1)
 	assert.InDelta(t, 3, result.ProcessedSeconds, 0.1)
-	assert.Contains(t, result.Command, "-c copy")
+	assert.NotContains(t, result.Command, "-c copy")
 	assert.NotEmpty(t, progress, "progress is what keeps the activity heartbeat alive")
 }
 
@@ -91,6 +91,67 @@ func TestDemuxCheck_CorruptedPacketsAreErrors(t *testing.T) {
 	for _, m := range result.Messages {
 		assert.NotContains(t, m.Component, "0x", "pointer suffix should be stripped")
 	}
+}
+
+// generateDemuxProResTestFile writes a short ProRes .mov, which is what a
+// Resolve export looks like. Its frames are self-contained, so damage inside
+// one leaves the container intact and only the decoder notices.
+func generateDemuxProResTestFile(t *testing.T) string {
+	t.Helper()
+	if _, err := exec.LookPath("ffmpeg"); err != nil {
+		t.Skip("ffmpeg not installed")
+	}
+
+	path := filepath.Join(t.TempDir(), "good.mov")
+	cmd := exec.Command("ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+		"-f", "lavfi", "-i", "testsrc=duration=3:size=320x240:rate=25",
+		"-f", "lavfi", "-i", "sine=frequency=440:duration=3:sample_rate=48000",
+		"-c:v", "prores_ks", "-profile:v", "3", "-c:a", "pcm_s24le", path)
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err, string(out))
+	return path
+}
+
+func TestDemuxCheck_GoodProResFilePasses(t *testing.T) {
+	path := generateDemuxProResTestFile(t)
+
+	result, err := DemuxCheck(path, nil, nil)
+	require.NoError(t, err)
+
+	assert.True(t, result.Passed(), "messages: %+v", result.Messages)
+	assert.False(t, result.ShortRead)
+}
+
+// A frame with a valid packet but garbage inside it. The mov demuxer hands it
+// over without a word; the check has to decode to see it.
+func TestDemuxCheck_CorruptProResFramesAreErrors(t *testing.T) {
+	good := generateDemuxProResTestFile(t)
+	data, err := os.ReadFile(good)
+	require.NoError(t, err)
+
+	garbage := make([]byte, 20000)
+	_, err = rand.Read(garbage)
+	require.NoError(t, err)
+	copy(data[len(data)/2:], garbage)
+
+	corrupt := filepath.Join(t.TempDir(), "corrupt.mov")
+	require.NoError(t, os.WriteFile(corrupt, data, 0o644))
+
+	result, err := DemuxCheck(corrupt, nil, nil)
+	require.NoError(t, err)
+
+	assert.False(t, result.Passed(), "messages: %+v", result.Messages)
+	assert.Greater(t, result.Errors, 0)
+	assert.Empty(t, result.ExitError, "ffmpeg reads past a bad frame, so this is a verdict from the log, not an exit code")
+
+	var fromDecoder bool
+	for _, m := range result.Messages {
+		if strings.Contains(m.Component, "prores") {
+			fromDecoder = true
+			break
+		}
+	}
+	assert.True(t, fromDecoder, "expected a prores decoder message, got %+v", result.Messages)
 }
 
 func TestDemuxCheck_UnreadableFileIsAVerdictNotAnError(t *testing.T) {
@@ -142,6 +203,28 @@ func TestDemuxMessageCollector_ParsesLevelsAndStripsPointers(t *testing.T) {
 	assert.Equal(t, "fatal", c.messages[4].Level)
 }
 
+// Decoder lines carry two prefixes: the input stream and the decoder. These
+// are verbatim from ffmpeg 9 reading a damaged ProRes master.
+func TestDemuxMessageCollector_ParsesDecoderLinesWithTwoPrefixes(t *testing.T) {
+	c := newDemuxMessageCollector()
+	c.add("[vist#0:0/prores @ 0x94f014300] [dec:prores @ 0x94f01c280] [error] Error submitting packet to decoder: Invalid data found when processing input")
+	c.add("[vist#0:0/prores @ 0x94f014300] [dec:prores @ 0x94f01c280] [warning] corrupt decoded frame")
+	c.add("[prores @ 0x94f07ca80] [error] invalid frame header")
+
+	assert.Equal(t, 3, c.total)
+	assert.Equal(t, 3, c.errors, "a corrupt decoded frame is corruption, so its warning counts as an error")
+	assert.Equal(t, 0, c.warnings)
+
+	require.Len(t, c.messages, 3)
+	assert.Equal(t, DemuxCheckMessage{
+		Level:     "error",
+		Component: "vist#0:0/prores dec:prores",
+		Message:   "Error submitting packet to decoder: Invalid data found when processing input",
+	}, c.messages[0])
+	assert.Equal(t, DemuxCheckMessage{Level: "error", Component: "vist#0:0/prores dec:prores", Message: "corrupt decoded frame"}, c.messages[1])
+	assert.Equal(t, DemuxCheckMessage{Level: "error", Component: "prores", Message: "invalid frame header"}, c.messages[2])
+}
+
 func TestDemuxMessageCollector_PromotesCorruptionWarnings(t *testing.T) {
 	c := newDemuxMessageCollector()
 	c.add("[in#0/mxf @ 0x1] [warning] edit unit sync lost on stream 0, jumping from 37 to 40")
@@ -172,7 +255,8 @@ func TestDemuxMessageCollector_CapsMessagesButKeepsCounting(t *testing.T) {
 func TestDemuxCheckArguments(t *testing.T) {
 	args := strings.Join(DemuxCheckArguments("/in.mov"), " ")
 	assert.Contains(t, args, "-loglevel repeat+level+warning")
-	assert.Contains(t, args, "-i /in.mov -map 0 -c copy")
+	assert.Contains(t, args, "-i /in.mov -map 0")
+	assert.NotContains(t, args, "-c copy", "the check must decode, or damage inside a frame passes")
 	assert.True(t, strings.HasSuffix(args, "-f null -"))
 }
 

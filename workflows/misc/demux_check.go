@@ -49,9 +49,9 @@ type DemuxCheckResult struct {
 	Mailed bool
 }
 
-// DemuxCheck reads every file through ffmpeg without decoding, so that a
-// truncated or damaged file is known about before Mediabanken gets it, and
-// reports what ffmpeg found. The report is mailed to the recipients when there
+// DemuxCheck reads and decodes every file through ffmpeg, so that a truncated
+// or damaged file is known about before Mediabanken gets it, and reports what
+// ffmpeg found. The report is mailed to the recipients when there
 // are any, otherwise written as HTML next to each file.
 //
 // A broken file is a verdict, not an error. The workflow errors only when the
