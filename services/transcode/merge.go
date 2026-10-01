@@ -1,11 +1,12 @@
 package transcode
 
 import (
+	"cmp"
 	"fmt"
-	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -203,19 +204,6 @@ func MergeAudio(input common.MergeInput, progressCallback ffmpeg.ProgressCallbac
 	}, err
 }
 
-func formatDuration(seconds float64) string {
-	// Calculate hours, minutes, and whole seconds
-	hours := int(seconds) / 3600
-	minutes := int(seconds) / 60 % 60
-	wholeSeconds := int(seconds) % 60
-
-	// Calculate milliseconds
-	milliseconds := int(math.Mod(seconds, 1) * 1000)
-
-	// Return the formatted string
-	return fmt.Sprintf("%02d:%02d:%02d,%03d", hours, minutes, wholeSeconds, milliseconds)
-}
-
 // MergeSubtitlesByOffset merges subtitles based on a specified offset
 //
 // This is used for example when you have several movies played in a feast.
@@ -295,93 +283,59 @@ func MergeSubtitlesByOffset(input common.MergeInput, progressCallback ffmpeg.Pro
 }
 
 // MergeSubtitles does the merging of subtitles for the mormal mediabanken export
-func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCallback) (*common.MergeResult, error) {
-	var files []string
-	// for each file, extract the specified range and save the result to a file.
+//
+// Each item's cues between Start and End are moved so that they follow the
+// previous items. This is done here rather than with ffmpeg: whether ffmpeg
+// keeps the source times on an output -ss for subtitles or rebases them to the
+// -ss point differs between builds, and guessing wrong moved every cue so the
+// first one started at 00:00:00.
+//
+// Like ffmpeg's cut, a cue belongs to an item when it starts inside it, so a
+// cue straddling the in-point is dropped and one straddling the out-point keeps
+// its end.
+func MergeSubtitles(input common.MergeInput, _ ffmpeg.ProgressCallback) (*common.MergeResult, error) {
+	var merged []srtCue
 
-	startAt := 0.0
-	for index, item := range input.Items {
-		file := filepath.Join(input.WorkDir.Local(), fmt.Sprintf("%s-%d.srt", input.Title, index))
-		fileOut := filepath.Join(input.WorkDir.Local(), fmt.Sprintf("%s-%d-out.srt", input.Title, index))
-		path := item.Path.Local()
-
-		cmd := exec.Command("ffmpeg",
-			"-hide_banner",
-			"-i", path,
-			"-ss", fmt.Sprintf("%f", item.Start),
-			"-to", fmt.Sprintf("%f", item.End),
-			"-y", file,
-		)
-
-		_, err := utils.ExecuteCmd(cmd, nil)
-		if err != nil {
-			return nil, err
-		}
-		fileInfo, err := os.Stat(file)
+	var startAt int64
+	for _, item := range input.Items {
+		data, err := os.ReadFile(item.Path.Local())
 		if err != nil {
 			return nil, err
 		}
 
-		if fileInfo.Size() == 0 {
-			contents := fmt.Sprintf("1\n%s --> %s\n\n", formatDuration(item.Start), formatDuration(item.End))
-			err = os.WriteFile(file,
-				[]byte(contents),
-				ffmpeg.OutputFileMode,
-			)
-			if err != nil {
-				return nil, err
+		cues, err := parseSRT(data)
+		if err != nil {
+			return nil, fmt.Errorf("parsing subtitles %s: %w", item.Path.Local(), err)
+		}
+
+		// The demuxer orders cues by start, and Whisper output is not always in order.
+		slices.SortStableFunc(cues, func(a, b srtCue) int {
+			return cmp.Compare(a.Start, b.Start)
+		})
+		repairBackwardCues(cues)
+
+		itemStart := secondsToMillis(item.Start)
+		itemEnd := secondsToMillis(item.End)
+		shift := startAt - itemStart
+
+		for _, cue := range cues {
+			if cue.Start < itemStart || cue.Start >= itemEnd {
+				continue
 			}
+			cue.Start += shift
+			cue.End += shift
+			merged = append(merged, cue)
 		}
 
-		cmd = exec.Command("ffmpeg",
-			"-hide_banner",
-			"-itsoffset", fmt.Sprintf("%f", -item.Start+startAt),
-			"-i", file,
-			"-y", fileOut,
-		)
-		_, err = utils.ExecuteCmd(cmd, nil)
-		if err != nil {
-			return nil, err
-		}
-		startAt += item.End - item.Start
-
-		files = append(files, fileOut)
+		startAt += itemEnd - itemStart
 	}
 
-	// the files have to be present in a text file for ffmpeg to concatenate them.
-	// #subtitles.txt
-	// file /path/to/file/0.srt
-	// file /path/to/file/1.srt
-	var content string
-	for _, f := range files {
-		content += fmt.Sprintf("file '%s'\n", f)
-	}
-
-	subtitlesFile := filepath.Join(input.WorkDir.Local(), input.Title+"-subtitles.txt")
-
-	err := os.WriteFile(subtitlesFile, []byte(content), ffmpeg.OutputFileMode)
-	if err != nil {
+	if err := os.MkdirAll(input.OutputDir.Local(), ffmpeg.OutputDirMode); err != nil {
 		return nil, err
 	}
 
-	for _, f := range files {
-		err = ensureValidSrtFile(f)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	concatStr := fmt.Sprintf("concat:%s", strings.Join(files, "|"))
-
 	outputFilePath := filepath.Join(input.OutputDir.Local(), filepath.Clean(input.Title)+".srt")
-	// The input is ffmpeg's concat: pseudo-protocol rather than one of the merge
-	// items, so this does not go through runMergeJob.
-	_, err = ffmpeg.Run(ffmpeg.Job{
-		Input:  concatStr,
-		Output: outputFilePath,
-		Args:   []string{"-c", "copy"},
-		Info:   &ffmpeg.StreamInfo{},
-	}, progressCallback)
+	err := os.WriteFile(outputFilePath, writeSRT(merged), ffmpeg.OutputFileMode)
 	if err != nil {
 		return nil, err
 	}
@@ -398,7 +352,7 @@ func MergeSubtitles(input common.MergeInput, progressCallback ffmpeg.ProgressCal
 
 	return &common.MergeResult{
 		Path: outputPath,
-	}, err
+	}, nil
 }
 
 func ensureValidSrtFile(f string) error {
