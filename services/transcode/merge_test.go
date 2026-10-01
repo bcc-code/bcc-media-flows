@@ -210,6 +210,78 @@ func Test_MergeSubtitlesByOffset(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
+// Test_MergeSubtitles_SourceTimecodeInPoint is the VX-517656 export: a Whisper
+// SRT on source time, cut from 1334s. Some ffmpeg builds rebased the cut to the
+// -ss point, and the merge then moved every cue so the first sat at 00:00:00.
+// The expected file is what ffmpeg 8.0.1 produced, including its repair of the
+// cue that ends before it starts.
+func Test_MergeSubtitles_SourceTimecodeInPoint(t *testing.T) {
+	output := paths.MustParse("./testdata/generated/")
+
+	input := common.MergeInput{
+		OutputDir: output,
+		WorkDir:   output,
+		Title:     t.Name(),
+		Items: []common.MergeInputItem{
+			{
+				Path:  paths.MustParse("./testdata/sub_whisper_tc.srt"),
+				Start: 1334,
+				End:   6717.96,
+			},
+		},
+	}
+
+	res, err := MergeSubtitles(input, nil)
+	assert.NoError(t, err)
+
+	actual, _ := os.ReadFile(res.Path.Local())
+	expected, _ := os.ReadFile("./testdata/Test_MergeSubtitles_SourceTimecodeInPoint.srt")
+
+	assert.Equal(t, string(expected), string(actual))
+}
+
+// An item without subtitles still takes up its duration.
+func Test_MergeSubtitles_EmptyFirstItem(t *testing.T) {
+	output := paths.MustParse("./testdata/generated/")
+	empty := paths.MustParse("./testdata/generated/" + t.Name() + "-empty.srt")
+	assert.NoError(t, os.WriteFile(empty.Local(), nil, 0644))
+
+	input := common.MergeInput{
+		OutputDir: output,
+		WorkDir:   output,
+		Title:     t.Name(),
+		Items: []common.MergeInputItem{
+			{Path: empty, Start: 0, End: 600},
+			{Path: paths.MustParse("./testdata/sub1.srt"), Start: 10, End: 15},
+		},
+	}
+
+	res, err := MergeSubtitles(input, nil)
+	assert.NoError(t, err)
+
+	actual, _ := os.ReadFile(res.Path.Local())
+	assert.Equal(t, "1\n00:10:03,000 --> 00:10:05,500\n- Multiple speakers can be shown\n- Using dashes like this\n\n", string(actual))
+}
+
+func Test_MergeSubtitles_NothingInRange(t *testing.T) {
+	output := paths.MustParse("./testdata/generated/")
+
+	input := common.MergeInput{
+		OutputDir: output,
+		WorkDir:   output,
+		Title:     t.Name(),
+		Items: []common.MergeInputItem{
+			{Path: paths.MustParse("./testdata/sub1.srt"), Start: 100, End: 200},
+		},
+	}
+
+	res, err := MergeSubtitles(input, nil)
+	assert.NoError(t, err)
+
+	actual, _ := os.ReadFile(res.Path.Local())
+	assert.Equal(t, "1\n00:00:00,000 --> 00:00:00,000\n", string(actual))
+}
+
 func Test_MergeSubtitles2(t *testing.T) {
 	output := paths.MustParse("./testdata/generated/")
 	subPath := paths.MustParse("./testdata/sub1.srt")
