@@ -46,6 +46,7 @@ func utilActivities() []any {
 		activities.Cantemo.RenameFile,
 		activities.Cantemo.MoveFileWait,
 		activities.Cantemo.GetTaskInfo,
+		activities.Cantemo.GetItemCreated,
 	}
 }
 

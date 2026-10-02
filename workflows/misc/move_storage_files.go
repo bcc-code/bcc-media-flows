@@ -2,6 +2,8 @@ package miscworkflows
 
 import (
 	"fmt"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
@@ -38,15 +40,20 @@ type MoveStorageFilesParams struct {
 }
 
 type MoveStorageFilesResult struct {
-	Files       int
-	Bytes       int64
+	Files int
+	Bytes int64
+	// Redated counts the files put under YYYY/MM because they sat less than
+	// minFolderDepth folders deep.
+	Redated     int
 	Failed      int
 	FailedPaths []string
 	SamplePaths []string
 }
 
 // MoveStorageFiles moves every item file on a storage, or under a folder of
-// it, to another storage, one file at a time. The relative path is kept.
+// it, to another storage, one file at a time. A file at least two folders deep
+// keeps its relative path; a shallower one goes under the YYYY/MM of the
+// item's Cantemo creation date.
 //
 // Moved files leave the source listing, so the next page starts after the
 // files that could not be moved rather than after the page that was read.
@@ -101,8 +108,18 @@ func MoveStorageFiles(ctx workflow.Context, params MoveStorageFilesParams) (*Mov
 			break
 		}
 
+		created := map[string]time.Time{}
+
 		if params.DryRun {
-			countFiles(&progress, page.Items)
+			for _, f := range page.Items {
+				newPath, err := datedDestinationPath(ctx, f, created)
+				if err != nil {
+					logger.Error("Failed to work out destination path", "error", err, "path", f.Path, "itemID", f.ItemID)
+					recordFailure(&progress, f.Path)
+					continue
+				}
+				countFile(&progress, f, newPath)
+			}
 			offset += page.Files
 			continue
 		}
@@ -124,12 +141,20 @@ func MoveStorageFiles(ctx workflow.Context, params MoveStorageFilesParams) (*Mov
 				attemptedIDs = append(attemptedIDs, f.FileID)
 			}
 
-			err := wfutils.Execute(moveCtx, activities.Cantemo.MoveFileWait, &cantemo.RenameFileParams{
+			newPath, err := datedDestinationPath(ctx, f, created)
+			if err != nil {
+				logger.Error("Failed to work out destination path", "error", err, "path", f.Path, "itemID", f.ItemID)
+				recordFailure(&progress, f.Path)
+				skipped[f.FileID] = true
+				continue
+			}
+
+			err = wfutils.Execute(moveCtx, activities.Cantemo.MoveFileWait, &cantemo.RenameFileParams{
 				ItemID:            f.ItemID,
 				ShapeID:           f.ShapeID,
 				SourceStorage:     src.VXID,
 				DestinatinStorage: dst.VXID,
-				NewPath:           f.Path,
+				NewPath:           newPath,
 			}).Wait(ctx)
 			if err != nil {
 				logger.Error("Failed to move file", "error", err, "path", f.Path, "itemID", f.ItemID)
@@ -137,7 +162,7 @@ func MoveStorageFiles(ctx workflow.Context, params MoveStorageFilesParams) (*Mov
 				skipped[f.FileID] = true
 				continue
 			}
-			countFiles(&progress, []vsactivity.StorageItemFile{f})
+			countFile(&progress, f, newPath)
 		}
 
 		offset += len(skipped)
@@ -149,13 +174,39 @@ func MoveStorageFiles(ctx workflow.Context, params MoveStorageFilesParams) (*Mov
 	return &progress, nil
 }
 
-func countFiles(progress *MoveStorageFilesResult, files []vsactivity.StorageItemFile) {
-	for _, f := range files {
-		progress.Files++
-		progress.Bytes += f.Size
-		if len(progress.SamplePaths) < moveStorageFilesMaxPaths {
-			progress.SamplePaths = append(progress.SamplePaths, f.Path)
+// minFolderDepth is how many folders deep a file must sit on the destination.
+// A shallower file is put under the item's creation year and month.
+const minFolderDepth = 2
+
+// datedDestinationPath keeps a path that is already minFolderDepth folders
+// deep, and otherwise puts it under YYYY/MM of the item's Cantemo creation
+// date. created caches the dates per item for the page.
+func datedDestinationPath(ctx workflow.Context, f vsactivity.StorageItemFile, created map[string]time.Time) (string, error) {
+	if strings.Count(f.Path, "/") >= minFolderDepth {
+		return f.Path, nil
+	}
+
+	date, ok := created[f.ItemID]
+	if !ok {
+		var err error
+		date, err = wfutils.Execute(ctx, activities.Cantemo.GetItemCreated, cantemo.GetItemCreatedParams{ItemID: f.ItemID}).Result(ctx)
+		if err != nil {
+			return "", err
 		}
+		created[f.ItemID] = date
+	}
+
+	return path.Join(date.Format("2006/01"), f.Path), nil
+}
+
+func countFile(progress *MoveStorageFilesResult, f vsactivity.StorageItemFile, newPath string) {
+	progress.Files++
+	progress.Bytes += f.Size
+	if newPath != f.Path {
+		progress.Redated++
+	}
+	if len(progress.SamplePaths) < moveStorageFilesMaxPaths {
+		progress.SamplePaths = append(progress.SamplePaths, f.Path+" -> "+newPath)
 	}
 }
 
