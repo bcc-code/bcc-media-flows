@@ -2,13 +2,13 @@ package miscworkflows
 
 import (
 	"fmt"
-	"sort"
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/activities/cantemo"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
+	"github.com/samber/lo"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -75,10 +75,8 @@ func MoveStorageFiles(ctx workflow.Context, params MoveStorageFilesParams) (*Mov
 
 	progress := params.Progress
 	offset := params.Offset
-	prevAttempted := map[string]bool{}
-	for _, id := range params.Attempted {
-		prevAttempted[id] = true
-	}
+	prevAttemptedIDs := params.Attempted
+	prevAttempted := lookup(prevAttemptedIDs)
 
 	for {
 		if workflow.GetInfo(ctx).GetContinueAsNewSuggested() {
@@ -86,7 +84,7 @@ func MoveStorageFiles(ctx workflow.Context, params MoveStorageFilesParams) (*Mov
 			next := params
 			next.Progress = progress
 			next.Offset = offset
-			next.Attempted = mapKeys(prevAttempted)
+			next.Attempted = prevAttemptedIDs
 			return nil, workflow.NewContinueAsNewError(ctx, MoveStorageFiles, next)
 		}
 
@@ -109,7 +107,8 @@ func MoveStorageFiles(ctx workflow.Context, params MoveStorageFilesParams) (*Mov
 			continue
 		}
 
-		attempted := map[string]bool{}
+		// A slice, not a map, so the continue-as-new input is the same on replay.
+		var attemptedIDs []string
 		skipped := map[string]bool{}
 		for _, f := range page.Items {
 			if skipped[f.FileID] {
@@ -121,7 +120,9 @@ func MoveStorageFiles(ctx workflow.Context, params MoveStorageFilesParams) (*Mov
 				skipped[f.FileID] = true
 				continue
 			}
-			attempted[f.FileID] = true
+			if !lo.Contains(attemptedIDs, f.FileID) {
+				attemptedIDs = append(attemptedIDs, f.FileID)
+			}
 
 			err := wfutils.Execute(moveCtx, activities.Cantemo.MoveFileWait, &cantemo.RenameFileParams{
 				ItemID:            f.ItemID,
@@ -140,7 +141,8 @@ func MoveStorageFiles(ctx workflow.Context, params MoveStorageFilesParams) (*Mov
 		}
 
 		offset += len(skipped)
-		prevAttempted = attempted
+		prevAttemptedIDs = attemptedIDs
+		prevAttempted = lookup(attemptedIDs)
 	}
 
 	logger.Info("Storage move done", "dryRun", params.DryRun, "files", progress.Files, "failed", progress.Failed)
@@ -164,13 +166,10 @@ func recordFailure(progress *MoveStorageFilesResult, path string) {
 	}
 }
 
-// mapKeys is sorted: the keys go into the continue-as-new input, and map
-// order would make that input differ between runs of the same history.
-func mapKeys(m map[string]bool) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
+func lookup(ids []string) map[string]bool {
+	m := make(map[string]bool, len(ids))
+	for _, id := range ids {
+		m[id] = true
 	}
-	sort.Strings(keys)
-	return keys
+	return m
 }
