@@ -338,6 +338,21 @@ func (mr *MockClientMockRecorder) GetTrash() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTrash", reflect.TypeOf((*MockClient)(nil).GetTrash))
 }
 
+// ListFilesForStorage mocks base method.
+func (m *MockClient) ListFilesForStorage(storageID, rootPath string, recursive bool, count, offset int, filter []vsapi.ListFilesFilter) (*vsapi.FileSearchResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListFilesForStorage", storageID, rootPath, recursive, count, offset, filter)
+	ret0, _ := ret[0].(*vsapi.FileSearchResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListFilesForStorage indicates an expected call of ListFilesForStorage.
+func (mr *MockClientMockRecorder) ListFilesForStorage(storageID, rootPath, recursive, count, offset, filter any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListFilesForStorage", reflect.TypeOf((*MockClient)(nil).ListFilesForStorage), storageID, rootPath, recursive, count, offset, filter)
+}
+
 // RegisterFile mocks base method.
 func (m *MockClient) RegisterFile(filePath string, state vsapi.FileState) (string, error) {
 	m.ctrl.T.Helper()

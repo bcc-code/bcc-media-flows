@@ -22,6 +22,7 @@ var WorkerWorkflows = []any{
 	miscworkflows.HandleMultitrackFile,
 	miscworkflows.MoveMBFile,
 	miscworkflows.MoveFilesWorkerFlow,
+	miscworkflows.MoveStorageFiles,
 	miscworkflows.CopyFile,
 	ingestworkflows.BmmIngestUpload,
 	ingestworkflows.BmmTrackMetadata,

@@ -3,6 +3,7 @@ package vsactivity
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -214,4 +215,59 @@ func (a Activities) WaitForFileVisibleInStorageActivity(ctx context.Context, par
 		case <-time.After(15 * time.Second):
 		}
 	}
+}
+
+type ListItemFilesOnStorageParams struct {
+	StorageID string
+	// PathPrefix limits the listing to a folder, relative to the storage root.
+	// Empty lists the whole storage.
+	PathPrefix string
+	Offset     int
+	Count      int
+}
+
+// StorageItemFile is one shape's file on a storage. A file shared by several
+// items or shapes appears once per item and shape.
+type StorageItemFile struct {
+	FileID  string
+	Path    string
+	Size    int64
+	ItemID  string
+	ShapeID string
+}
+
+type ListItemFilesOnStorageResult struct {
+	// Files is the number of storage files in this page, before they are
+	// expanded per item and shape. An empty page means the listing is done.
+	Files int
+	Items []StorageItemFile
+}
+
+// ListItemFilesOnStorage lists one page of the closed files on a storage that
+// belong to an item, flattened to the item and shape each file serves.
+func (a Activities) ListItemFilesOnStorage(ctx context.Context, params ListItemFilesOnStorageParams) (*ListItemFilesOnStorageResult, error) {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Starting ListItemFilesOnStorage", "storage", params.StorageID, "offset", params.Offset)
+
+	res, err := a.Client.ListFilesForStorage(params.StorageID, params.PathPrefix, true, params.Count, params.Offset,
+		[]vsapi.ListFilesFilter{vsapi.AssociatedFiles})
+	if err != nil {
+		return nil, fmt.Errorf("list files on storage %s: %w", params.StorageID, err)
+	}
+
+	out := &ListItemFilesOnStorageResult{Files: len(res.Files)}
+	for _, f := range res.Files {
+		for _, item := range f.Items {
+			for _, shape := range item.Shape {
+				out.Items = append(out.Items, StorageItemFile{
+					FileID:  f.ID,
+					Path:    f.Path,
+					Size:    f.Size,
+					ItemID:  item.ID,
+					ShapeID: shape.ID,
+				})
+			}
+		}
+	}
+	return out, nil
 }

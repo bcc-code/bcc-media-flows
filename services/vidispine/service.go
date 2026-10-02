@@ -36,6 +36,8 @@ type Client interface {
 	GetShapes(itemVXID string) (*vsapi.ShapeResult, error)
 	GetTrash() ([]string, error)
 
+	ListFilesForStorage(storageID, rootPath string, recursive bool, count, offset int, filter []vsapi.ListFilesFilter) (*vsapi.FileSearchResult, error)
+
 	RegisterFile(filePath string, state vsapi.FileState) (string, error)
 	FileExistsInStorage(storageID, absoluteFilePath string) (bool, error)
 
