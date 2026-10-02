@@ -375,6 +375,57 @@ func (s *TriggerServer) vxExportTimedMetadataPOST(ctx *gin.Context) {
 	})
 }
 
+// moveStorageFilesPOST starts a move of every item file on one storage, or a
+// folder of it, to another storage.
+func (s *TriggerServer) moveStorageFilesPOST(ctx *gin.Context) {
+	params := miscworkflows.MoveStorageFilesParams{
+		SourceStorage:      ctx.PostForm("sourceStorage"),
+		DestinationStorage: ctx.PostForm("destinationStorage"),
+		PathPrefix:         strings.Trim(strings.TrimSpace(ctx.PostForm("pathPrefix")), "/"),
+		DryRun:             ctx.PostForm("dryRun") == "on",
+	}
+
+	renderError := func(msg string) {
+		ctx.HTML(http.StatusOK, "move-files.gohtml", MoveFilesGETParams{
+			Storages: miscworkflows.Storages,
+			Error:    msg,
+		})
+	}
+
+	if miscworkflows.FindStorageForVXID(params.SourceStorage) == nil ||
+		miscworkflows.FindStorageForVXID(params.DestinationStorage) == nil {
+		renderError("Source and destination storage are required")
+		return
+	}
+	if params.SourceStorage == params.DestinationStorage {
+		renderError("Source and destination storage must differ")
+		return
+	}
+
+	workflowOptions := wfutils.NewWorkflowOptions(environment.GetQueue(), "", getTriggeredBy(ctx))
+	// One move per source storage at a time; a second would list the same files.
+	workflowOptions.ID = "move-storage-" + params.SourceStorage
+	workflowOptions.WorkflowExecutionErrorWhenAlreadyStarted = true
+	if params.DryRun {
+		workflowOptions.ID += "-dry-run-" + uuid.NewString()
+	}
+
+	res, err := s.wfClient.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.MoveStorageFiles, params)
+	if err != nil {
+		renderError(fmt.Sprintf("Failed to start workflow: %v", err))
+		return
+	}
+
+	title := "Move storage"
+	if params.DryRun {
+		title = "Move storage (dry run)"
+	}
+	ctx.HTML(http.StatusOK, "success.gohtml", gin.H{
+		"WorkflowID": res.GetID(),
+		"Title":      title,
+	})
+}
+
 type MoveFilesGETParams struct {
 	Storages []miscworkflows.MBStorage
 	Error    string
@@ -555,7 +606,8 @@ func main() {
 
 	router.Group("/move-files").
 		GET("/", server.moveFilesGET).
-		POST("/", server.moveFilesPOST)
+		POST("/", server.moveFilesPOST).
+		POST("/storage", server.moveStorageFilesPOST)
 
 	router.GET("/workflow/:id", server.workflowDetailsGET)
 

@@ -63,3 +63,10 @@ Revalidated against the code 2026-09-15. Items confirmed fixed were removed; the
 - `SeqToClips` (`services/vidispine/clips.go`) computes seconds as `Samples / TimeBase.Denominator` and ignores `TimeBase.Numerator`, which is wrong for any timebase whose numerator isn't 1.
 - `MergeSubtitles` keeps ffmpeg's cut semantics: a cue straddling a clip's in-point is dropped, and one straddling the out-point keeps its end and overlaps the next segment. Clamping both to the clip range is probably what viewers expect.
 - `MergeSubtitlesByOffset` still shifts with ffmpeg `-itsoffset`; a negative offset would make ffmpeg shift the whole stream so the first cue sits at 0, the same failure as above. It could reuse the Go SRT helpers in `services/transcode/srt.go`.
+
+## Moving files between storages (added 2026-10-02)
+
+- `MoveFilesWorkerFlow` (`workflows/misc/slow_move_files.go`) only logs a failed move and carries on, and `MoveMBFile` only signals it, so the workflow the trigger UI started reports success even when the file never moved.
+- The `/move-files` VX-ID form always sends `Shapes: ["original"]`, although `MoveMBFileParams` takes any shape tags.
+- `Cantemo.MoveFileWait` returns nil when it finds no `MOVE_FILE` job, and `WaitForJobCompletion` returns a FAILED or ABORTED status without an error, so a move can "succeed" without moving the file. `MoveStorageFiles` works around it by skipping a file that is still listed on the source after its move.
+- The trigger UI's workflow details page doesn't show a workflow's result, so the `MoveStorageFiles` dry-run counts can only be read in the Temporal UI.
