@@ -216,6 +216,7 @@ func (c *Client) Transcribe(
 	inputFile string,
 	outputFolder string,
 	language string,
+	idempotencyKey string,
 ) (_ *TranscribeJob, err error) {
 
 	if inputFile == "" {
@@ -228,7 +229,7 @@ func (c *Client) Transcribe(
 
 	language = normalizeTranscriptionLanguage(language)
 
-	resp, err := c.client.R().
+	req := c.client.R().
 		SetContext(ctx).
 		SetBody(TranscribeInput{
 			Path:       inputFile,
@@ -236,9 +237,15 @@ func (c *Client) Transcribe(
 			Format:     "all",
 			OutputPath: outputFolder,
 		}).
-		SetResult(&TranscribeJob{}).
-		Post("/transcription/job")
+		SetResult(&TranscribeJob{})
 
+	// The client retries the POST too, and a retry of one the server did accept would
+	// otherwise start a second job
+	if idempotencyKey != "" {
+		req.SetHeader("Idempotency-Key", idempotencyKey)
+	}
+
+	resp, err := req.Post("/transcription/job")
 	if err != nil {
 		return nil, err
 	}

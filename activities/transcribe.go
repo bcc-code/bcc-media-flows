@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
-	"time"
 
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -28,6 +27,13 @@ type TranscribeResponse struct {
 	TXTPath      paths.Path
 }
 
+// transcribeIdempotencyKey is per attempt: a reused key returns the old job even
+// when it FAILED. Run ID, because reruns can reuse a workflow ID
+func transcribeIdempotencyKey(ctx context.Context) string {
+	info := activity.GetInfo(ctx)
+	return fmt.Sprintf("%s/%s/%d", info.WorkflowExecution.RunID, info.ActivityID, info.Attempt)
+}
+
 // Transcribe is the activity that transcribes a video
 func (ua UtilActivities) Transcribe(
 	ctx context.Context,
@@ -41,9 +47,7 @@ func (ua UtilActivities) Transcribe(
 		return nil, temporal.NewNonRetryableApplicationError("transcriber client not configured", "transcriber_not_configured", nil)
 	}
 
-	time.Sleep(time.Second * 10)
-
-	jobData, err := ua.Transcriber.Transcribe(ctx, input.File.Local(), input.DestinationPath.Local(), input.Language)
+	jobData, err := ua.Transcriber.Transcribe(ctx, input.File.Local(), input.DestinationPath.Local(), input.Language, transcribeIdempotencyKey(ctx))
 	if errors.Is(err, transcribe.ErrJobCanceled) {
 		// A retry would submit the job again and undo the cancel
 		return nil, temporal.NewNonRetryableApplicationError(err.Error(), "transcription_canceled", err)
