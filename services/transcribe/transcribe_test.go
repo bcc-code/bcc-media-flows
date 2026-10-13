@@ -245,9 +245,9 @@ func TestTranscribe_CancellationEndsTheLoop(t *testing.T) {
 }
 
 // cancelledWhilePolling starts a job against a server that keeps it RUNNING, cancels
-// the context once the first poll has landed, and returns the error and the paths the
-// server received a DELETE for.
-func cancelledWhilePolling(t *testing.T, deleteStatus int) (error, []string) {
+// the context once the first poll has landed, and returns the paths the
+// server received a DELETE for and the error.
+func cancelledWhilePolling(t *testing.T, deleteStatus int) ([]string, error) {
 	t.Helper()
 
 	previous := pollInterval
@@ -291,7 +291,7 @@ func cancelledWhilePolling(t *testing.T, deleteStatus int) (error, []string) {
 	case err := <-done:
 		mu.Lock()
 		defer mu.Unlock()
-		return err, deleted
+		return deleted, err
 	case <-time.After(5 * time.Second):
 		t.Fatal("a cancelled context did not end the poll loop")
 		return nil, nil
@@ -299,14 +299,14 @@ func cancelledWhilePolling(t *testing.T, deleteStatus int) (error, []string) {
 }
 
 func TestTranscribe_CancellationCancelsTheServerJob(t *testing.T) {
-	err, deleted := cancelledWhilePolling(t, http.StatusOK)
+	deleted, err := cancelledWhilePolling(t, http.StatusOK)
 
 	require.ErrorIs(t, err, context.Canceled)
 	assert.Equal(t, []string{"/transcription/job/job-1"}, deleted)
 }
 
 func TestTranscribe_CancellingAJobTheServerDroppedIsNotAnError(t *testing.T) {
-	err, deleted := cancelledWhilePolling(t, http.StatusNotFound)
+	deleted, err := cancelledWhilePolling(t, http.StatusNotFound)
 
 	require.ErrorIs(t, err, context.Canceled)
 	assert.NotContains(t, err.Error(), "cancel transcription job", "a job that is already gone needs no cancel")
