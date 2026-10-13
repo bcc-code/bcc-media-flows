@@ -3,6 +3,7 @@ package activities
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"time"
@@ -43,6 +44,10 @@ func (ua UtilActivities) Transcribe(
 	time.Sleep(time.Second * 10)
 
 	jobData, err := ua.Transcriber.Transcribe(ctx, input.File.Local(), input.DestinationPath.Local(), input.Language)
+	if errors.Is(err, transcribe.ErrJobCanceled) {
+		// A retry would submit the job again and undo the cancel
+		return nil, temporal.NewNonRetryableApplicationError(err.Error(), "transcription_canceled", err)
+	}
 	if err != nil {
 		return nil, err
 	}

@@ -168,6 +168,28 @@ func TestTranscribe_FailedJobIsAnError(t *testing.T) {
 	assert.NotNil(t, job, "the failed job is still returned for its detail")
 }
 
+func TestTranscribe_CanceledJobEndsTheLoop(t *testing.T) {
+	fastPolling(t)
+
+	var polls atomic.Int32
+	client := transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodPost {
+			_, _ = w.Write([]byte(`{"id":"job-1","status":"QUEUED"}`))
+			return
+		}
+		polls.Add(1)
+		_, _ = w.Write([]byte(`{"id":"job-1","status":"CANCELED"}`))
+	})
+
+	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no")
+
+	require.ErrorIs(t, err, ErrJobCanceled)
+	assert.Contains(t, err.Error(), "job-1", "the error names the job that was canceled")
+	assert.NotNil(t, job, "the canceled job is still returned for its detail")
+	assert.Equal(t, int32(1), polls.Load(), "a canceled job is final, so polling stops")
+}
+
 func TestTranscribe_CancellationEndsTheLoop(t *testing.T) {
 	previous := pollInterval
 	pollInterval = time.Hour

@@ -27,6 +27,10 @@ const (
 // server.
 var pollInterval = 10 * time.Second
 
+// ErrJobCanceled means the job was canceled on the transcriber itself, which only
+// happens when someone stops it there on purpose
+var ErrJobCanceled = errors.New("transcription job canceled")
+
 var (
 	errNoBaseURL   = errors.New("transcriber base URL not set")
 	errNoInputFile = errors.New("no input file")
@@ -262,6 +266,8 @@ func (c *Client) Transcribe(
 			return status, nil
 		case "FAILED":
 			return status, fmt.Errorf("transcription job %s failed", job.ID)
+		case "CANCELED":
+			return status, fmt.Errorf("transcription job %s: %w", job.ID, ErrJobCanceled)
 		}
 
 		select {
