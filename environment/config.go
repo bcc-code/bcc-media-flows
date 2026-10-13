@@ -185,9 +185,10 @@ func (t Telegram) ChatOther() int64     { return t.chatOther }
 func (t Telegram) ChatBMM() int64       { return t.chatBMM }
 
 type Services struct {
-	shorts     string
-	sync       string
-	vizualizer string
+	shorts      string
+	sync        string
+	vizualizer  string
+	transcriber string
 }
 
 func (s Services) Shorts() string { return s.shorts }
@@ -197,6 +198,13 @@ func (s Services) Vizualizer() string {
 		return s.vizualizer
 	}
 	return "http://vizualizer.lan.bcc.media"
+}
+
+func (s Services) Transcriber() string {
+	if s.transcriber != "" {
+		return s.transcriber
+	}
+	return "http://10.12.128.44:8888"
 }
 
 type TriggerUI struct {
@@ -349,9 +357,10 @@ func Load() *Config {
 		},
 
 		Services: Services{
-			shorts:     os.Getenv("SHORTS_SERVICE_URL"),
-			sync:       os.Getenv("SYNC_SERVICE_URL"),
-			vizualizer: os.Getenv("VIZUALIZER_BASE_URL"),
+			shorts:      os.Getenv("SHORTS_SERVICE_URL"),
+			sync:        os.Getenv("SYNC_SERVICE_URL"),
+			vizualizer:  os.Getenv("VIZUALIZER_BASE_URL"),
+			transcriber: os.Getenv("TRANSCRIBER_BASE_URL"),
 		},
 
 		TriggerUI: TriggerUI{

@@ -11,6 +11,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/transcribe"
 	"go.temporal.io/sdk/activity"
+	"go.temporal.io/sdk/temporal"
 )
 
 type TranscribeParams struct {
@@ -35,9 +36,13 @@ func (ua UtilActivities) Transcribe(
 	activity.RecordHeartbeat(ctx, "Transcribe")
 	log.Info("Starting Transcribe")
 
+	if ua.Transcriber == nil {
+		return nil, temporal.NewNonRetryableApplicationError("transcriber client not configured", "transcriber_not_configured", nil)
+	}
+
 	time.Sleep(time.Second * 10)
 
-	jobData, err := transcribe.DoTranscribe(ctx, input.File.Local(), input.DestinationPath.Local(), input.Language)
+	jobData, err := ua.Transcriber.Transcribe(ctx, input.File.Local(), input.DestinationPath.Local(), input.Language)
 	if err != nil {
 		return nil, err
 	}

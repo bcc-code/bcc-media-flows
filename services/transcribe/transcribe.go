@@ -15,8 +15,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/utils"
 )
 
-const BaseUrl = "http://10.12.128.44:8888"
-
 const serviceName = "transcribe"
 
 const (
@@ -25,28 +23,43 @@ const (
 	retryMaxWait = 30 * time.Second
 )
 
-// pollInterval and baseURL are vars only so the tests can drive the poll loop against
-// a stub server.
-var (
-	pollInterval = 10 * time.Second
-	baseURL      = BaseUrl
-)
-
-func newClient() *resty.Client {
-	return httpx.New(httpx.Config{
-		Service:      serviceName,
-		BaseURL:      baseURL,
-		RetryCount:   retryCount,
-		RetryWait:    retryWait,
-		RetryMaxWait: retryMaxWait,
-	})
-}
+// pollInterval is a var only so the tests can drive the poll loop against a stub
+// server.
+var pollInterval = 10 * time.Second
 
 var (
+	errNoBaseURL   = errors.New("transcriber base URL not set")
 	errNoInputFile = errors.New("no input file")
 	errNoOutput    = errors.New("no output folder")
 	errNoLanguage  = errors.New("no language")
 )
+
+type Config interface {
+	Transcriber() string
+}
+
+// Client talks to one transcriber instance. Job IDs are only known to the instance
+// that issued them, so a job is submitted and polled through the same client.
+type Client struct {
+	client *resty.Client
+}
+
+func NewClient(cfg Config) (*Client, error) {
+	baseURL := cfg.Transcriber()
+	if baseURL == "" {
+		return nil, errNoBaseURL
+	}
+
+	return &Client{
+		client: httpx.New(httpx.Config{
+			Service:      serviceName,
+			BaseURL:      baseURL,
+			RetryCount:   retryCount,
+			RetryWait:    retryWait,
+			RetryMaxWait: retryMaxWait,
+		}),
+	}, nil
+}
 
 type TranscribeInput struct {
 	Path       string `json:"path"`
@@ -190,7 +203,7 @@ func normalizeTranscriptionLanguage(language string) string {
 	return "auto"
 }
 
-func DoTranscribe(
+func (c *Client) Transcribe(
 	ctx context.Context,
 	inputFile string,
 	outputFolder string,
@@ -205,11 +218,9 @@ func DoTranscribe(
 		return nil, errNoOutput
 	}
 
-	client := newClient()
-
 	language = normalizeTranscriptionLanguage(language)
 
-	resp, err := client.R().
+	resp, err := c.client.R().
 		SetContext(ctx).
 		SetBody(TranscribeInput{
 			Path:       inputFile,
@@ -236,7 +247,7 @@ func DoTranscribe(
 			activity.RecordHeartbeat(ctx)
 		}
 
-		resp, err := client.R().
+		resp, err := c.client.R().
 			SetContext(ctx).
 			SetResult(&TranscribeJob{}).
 			Get("/transcription/job/" + job.ID)

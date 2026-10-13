@@ -7,6 +7,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/internal/bootstrap"
 	cantemo "github.com/bcc-code/bcc-media-flows/services/cantemo"
 	"github.com/bcc-code/bcc-media-flows/services/subtrans"
+	"github.com/bcc-code/bcc-media-flows/services/transcribe"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"log"
 	"os"
@@ -169,6 +170,12 @@ func buildClients(cfg *environment.Config) {
 
 	activities.Util.Vidispine = vsClient
 	activities.Util.Subtrans = subtrans.NewClient(cfg.Subtrans)
+
+	transcriberClient, err := transcribe.NewClient(cfg.Services)
+	if err != nil {
+		log.Printf("Error creating transcriber client: %v", err)
+	}
+	activities.Util.Transcriber = transcriberClient
 
 	activities.Directus = &activities.DirectusActivities{
 		Client:         directus.NewClient(cfg.Directus),
