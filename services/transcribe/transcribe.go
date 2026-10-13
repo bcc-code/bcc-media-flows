@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -21,6 +22,8 @@ const (
 	retryCount   = 3
 	retryWait    = 10 * time.Second
 	retryMaxWait = 30 * time.Second
+
+	cancelTimeout = 30 * time.Second
 )
 
 // pollInterval is a var only so the tests can drive the poll loop against a stub
@@ -87,6 +90,7 @@ type TranscribeJob struct {
 	Model        string `json:"model"`
 	Duration     string `json:"duration"`
 	Priority     int    `json:"priority"`
+	Error        string `json:"error,omitempty"`
 }
 
 var whisperSupportedLanguages = map[string]bool{
@@ -212,7 +216,7 @@ func (c *Client) Transcribe(
 	inputFile string,
 	outputFolder string,
 	language string,
-) (*TranscribeJob, error) {
+) (_ *TranscribeJob, err error) {
 
 	if inputFile == "" {
 		return nil, errNoInputFile
@@ -244,6 +248,14 @@ func (c *Client) Transcribe(
 		return nil, errors.New("transcription service accepted the job but returned no id")
 	}
 
+	// When the activity is cancelled or times out, the job would otherwise keep a GPU
+	// busy for nobody, and a retry would start a second one beside it
+	defer func() {
+		if err != nil && ctx.Err() != nil {
+			err = errors.Join(err, c.cancelJob(ctx, job.ID))
+		}
+	}()
+
 	// Periodically check the status of the job
 	for {
 		// RecordHeartbeat panics outside an activity, and this is a plain function.
@@ -265,6 +277,9 @@ func (c *Client) Transcribe(
 		case "COMPLETED":
 			return status, nil
 		case "FAILED":
+			if status.Error != "" {
+				return status, fmt.Errorf("transcription job %s failed: %s", job.ID, status.Error)
+			}
 			return status, fmt.Errorf("transcription job %s failed", job.ID)
 		case "CANCELED":
 			return status, fmt.Errorf("transcription job %s: %w", job.ID, ErrJobCanceled)
@@ -276,6 +291,21 @@ func (c *Client) Transcribe(
 		case <-time.After(pollInterval):
 		}
 	}
+}
+
+// cancelJob runs because ctx is already done, so it gets a short context of its own
+func (c *Client) cancelJob(ctx context.Context, id string) error {
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), cancelTimeout)
+	defer cancel()
+
+	// 404: the job has already been dropped from the transcriber's store
+	_, err := httpx.Tolerating(c.client.R().SetContext(ctx), http.StatusNotFound).
+		Delete("/transcription/job/" + id)
+	if err != nil {
+		return fmt.Errorf("cancel transcription job %s: %w", id, err)
+	}
+
+	return nil
 }
 
 type Transcription struct {

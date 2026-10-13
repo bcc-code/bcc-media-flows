@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -168,6 +169,27 @@ func TestTranscribe_FailedJobIsAnError(t *testing.T) {
 	assert.NotNil(t, job, "the failed job is still returned for its detail")
 }
 
+func TestTranscribe_FailedJobErrorCarriesTheServerReason(t *testing.T) {
+	fastPolling(t)
+
+	client := transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodPost {
+			_, _ = w.Write([]byte(`{"id":"job-1","status":"QUEUED"}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"id":"job-1","status":"FAILED","error":"open /mnt/temp/in.wav: no such file or directory"}`))
+	})
+
+	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no")
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "job-1")
+	assert.Contains(t, err.Error(), "open /mnt/temp/in.wav: no such file or directory")
+	require.NotNil(t, job)
+	assert.Equal(t, "open /mnt/temp/in.wav: no such file or directory", job.Error)
+}
+
 func TestTranscribe_CanceledJobEndsTheLoop(t *testing.T) {
 	fastPolling(t)
 
@@ -220,6 +242,97 @@ func TestTranscribe_CancellationEndsTheLoop(t *testing.T) {
 	case <-time.After(5 * time.Second):
 		t.Fatal("a cancelled context did not end the poll loop")
 	}
+}
+
+// cancelledWhilePolling starts a job against a server that keeps it RUNNING, cancels
+// the context once the first poll has landed, and returns the error and the paths the
+// server received a DELETE for.
+func cancelledWhilePolling(t *testing.T, deleteStatus int) (error, []string) {
+	t.Helper()
+
+	previous := pollInterval
+	pollInterval = time.Hour
+	t.Cleanup(func() { pollInterval = previous })
+
+	polled := make(chan struct{}, 1)
+	var mu sync.Mutex
+	var deleted []string
+	client := transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case http.MethodPost:
+			_, _ = w.Write([]byte(`{"id":"job-1","status":"QUEUED"}`))
+		case http.MethodDelete:
+			mu.Lock()
+			deleted = append(deleted, r.URL.Path)
+			mu.Unlock()
+			w.WriteHeader(deleteStatus)
+			_, _ = w.Write([]byte(`{"id":"job-1","status":"CANCELED"}`))
+		default:
+			_, _ = w.Write([]byte(`{"id":"job-1","status":"RUNNING"}`))
+			select {
+			case polled <- struct{}{}:
+			default:
+			}
+		}
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		_, err := client.Transcribe(ctx, "/mnt/in.wav", "/mnt/out", "no")
+		done <- err
+	}()
+
+	<-polled
+	cancel()
+
+	select {
+	case err := <-done:
+		mu.Lock()
+		defer mu.Unlock()
+		return err, deleted
+	case <-time.After(5 * time.Second):
+		t.Fatal("a cancelled context did not end the poll loop")
+		return nil, nil
+	}
+}
+
+func TestTranscribe_CancellationCancelsTheServerJob(t *testing.T) {
+	err, deleted := cancelledWhilePolling(t, http.StatusOK)
+
+	require.ErrorIs(t, err, context.Canceled)
+	assert.Equal(t, []string{"/transcription/job/job-1"}, deleted)
+}
+
+func TestTranscribe_CancellingAJobTheServerDroppedIsNotAnError(t *testing.T) {
+	err, deleted := cancelledWhilePolling(t, http.StatusNotFound)
+
+	require.ErrorIs(t, err, context.Canceled)
+	assert.NotContains(t, err.Error(), "cancel transcription job", "a job that is already gone needs no cancel")
+	assert.Len(t, deleted, 1)
+}
+
+func TestTranscribe_AFailedJobIsNotCancelled(t *testing.T) {
+	fastPolling(t)
+
+	var deletes atomic.Int32
+	client := transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case http.MethodPost:
+			_, _ = w.Write([]byte(`{"id":"job-1","status":"QUEUED"}`))
+		case http.MethodDelete:
+			deletes.Add(1)
+		default:
+			_, _ = w.Write([]byte(`{"id":"job-1","status":"FAILED"}`))
+		}
+	})
+
+	_, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no")
+
+	require.Error(t, err)
+	assert.Zero(t, deletes.Load(), "only a cancelled or timed-out activity cancels its job")
 }
 
 func TestTranscribe_SendsTheJobDefinition(t *testing.T) {
