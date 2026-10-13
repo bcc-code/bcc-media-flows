@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -58,13 +59,64 @@ func (ua UtilActivities) Transcribe(
 
 	log.Info("Finished Transcribe")
 
-	fileName := input.File.Base()
-	return &TranscribeResponse{
-		JSONPath:     paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".json")),
-		SRTPath:      paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".srt")),
-		WordsSRTPath: paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".words.srt")),
-		TXTPath:      paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".txt")),
-	}, nil
+	// The old transcriber doesn't list what it wrote, so its file names are assumed.
+	if len(jobData.Results) == 0 {
+		fileName := input.File.Base()
+		return &TranscribeResponse{
+			JSONPath:     paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".json")),
+			SRTPath:      paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".srt")),
+			WordsSRTPath: paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".words.srt")),
+			TXTPath:      paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".txt")),
+		}, nil
+	}
+
+	response, err := transcriptPaths(jobData.Results)
+	if err != nil {
+		// The same job writes the same files, so a retry would fail the same way.
+		return nil, temporal.NewNonRetryableApplicationError(err.Error(), "transcription_results", err)
+	}
+
+	return response, nil
+}
+
+// transcriptPaths picks each transcript out of the files the transcriber says it
+// wrote, so a change to its naming fails here rather than in a later step.
+func transcriptPaths(results []string) (*TranscribeResponse, error) {
+	byFormat := map[string]string{}
+	for _, result := range results {
+		// Before the extension check: ".words.srt" also ends in ".srt".
+		if strings.HasSuffix(result, ".words.srt") {
+			byFormat["words.srt"] = result
+			continue
+		}
+		byFormat[strings.TrimPrefix(filepath.Ext(result), ".")] = result
+	}
+
+	var errs []error
+	parse := func(format string) paths.Path {
+		result, ok := byFormat[format]
+		if !ok {
+			errs = append(errs, fmt.Errorf("transcriber wrote no %s file", format))
+			return paths.Path{}
+		}
+		path, err := paths.Parse(result)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("transcriber %s file: %w", format, err))
+		}
+		return path
+	}
+
+	response := &TranscribeResponse{
+		JSONPath:     parse("json"),
+		SRTPath:      parse("srt"),
+		WordsSRTPath: parse("words.srt"),
+		TXTPath:      parse("txt"),
+	}
+	if len(errs) > 0 {
+		return nil, errors.Join(errs...)
+	}
+
+	return response, nil
 }
 
 type MergeTranscriptJSONParams struct {
