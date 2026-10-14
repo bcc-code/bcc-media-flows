@@ -34,6 +34,15 @@ var pollInterval = 10 * time.Second
 // happens when someone stops it there on purpose
 var ErrJobCanceled = errors.New("transcription job canceled")
 
+// ErrJobTimeout means the transcriber stopped the job at its time limit (JOB_TIMEOUT,
+// or the job's own timeout_seconds)
+var ErrJobTimeout = errors.New("stopped at the transcriber's job timeout")
+
+// jobTimeoutError is the whole error value the transcriber documents for a job it
+// stopped at its time limit. It has no error code, so this exact value is the signal;
+// any other text, even one mentioning a timeout, is an ordinary failure
+const jobTimeoutError = "timeout"
+
 var (
 	errNoBaseURL   = errors.New("transcriber base URL not set")
 	errNoInputFile = errors.New("no input file")
@@ -238,7 +247,7 @@ func (c *Client) Transcribe(
 			Language:   language,
 			Format:     "all",
 			OutputPath: outputFolder,
-			Model: model,
+			Model:      model,
 		}).
 		SetResult(&TranscribeJob{})
 
@@ -287,6 +296,9 @@ func (c *Client) Transcribe(
 		case "COMPLETED":
 			return status, nil
 		case "FAILED":
+			if status.Error == jobTimeoutError {
+				return status, fmt.Errorf("transcription job %s failed: %w", job.ID, ErrJobTimeout)
+			}
 			if status.Error != "" {
 				return status, fmt.Errorf("transcription job %s failed: %s", job.ID, status.Error)
 			}

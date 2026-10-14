@@ -224,3 +224,74 @@ func TestTranscribe_PassesTheModelOn(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, submitted, `"model":"nb-whisper-large"`)
 }
+
+// transcriberPolling submits job-1 and answers every poll with pollStatus/pollBody
+func transcriberPolling(t *testing.T, pollStatus int, pollBody string) *TranscriberActivities {
+	t.Helper()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodPost {
+			_, _ = w.Write([]byte(`{"id":"job-1","status":"QUEUED"}`))
+			return
+		}
+		w.WriteHeader(pollStatus)
+		_, _ = w.Write([]byte(pollBody))
+	}))
+	t.Cleanup(server.Close)
+
+	client, err := transcribe.NewClient(transcriberConfig(server.URL))
+	require.NoError(t, err)
+
+	return &TranscriberActivities{Client: client}
+}
+
+func TestTranscribe_RetriesOnlyWhatAnotherAttemptCouldFix(t *testing.T) {
+	tests := []struct {
+		name          string
+		pollStatus    int
+		pollBody      string
+		wantRetryable bool
+		wantType      string
+	}{
+		{
+			name:       "the transcriber's job timeout is not retried",
+			pollStatus: http.StatusOK, pollBody: `{"id":"job-1","status":"FAILED","error":"timeout"}`,
+			wantRetryable: false, wantType: TranscriberJobTimeoutErrorType,
+		},
+		{
+			name:       "another failure is retried",
+			pollStatus: http.StatusOK, pollBody: `{"id":"job-1","status":"FAILED","error":"write srt: no space left on device"}`,
+			wantRetryable: true,
+		},
+		{
+			name:       "a failure that only mentions a timeout is retried",
+			pollStatus: http.StatusOK, pollBody: `{"id":"job-1","status":"FAILED","error":"ffprobe: timeout reading header"}`,
+			wantRetryable: true,
+		},
+		{
+			name:       "an HTTP failure is retried",
+			pollStatus: http.StatusServiceUnavailable, pollBody: `{"error":"timeout"}`,
+			wantRetryable: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ta := transcriberPolling(t, test.pollStatus, test.pollBody)
+			env := activityEnv(t)
+			env.RegisterActivity(ta.Transcribe)
+
+			_, err := env.ExecuteActivity(ta.Transcribe, transcribeParams())
+
+			require.Error(t, err)
+			var appErr *temporal.ApplicationError
+			require.True(t, errors.As(err, &appErr))
+			assert.Equal(t, !test.wantRetryable, appErr.NonRetryable())
+			if test.wantType != "" {
+				assert.Equal(t, test.wantType, appErr.Type())
+				assert.Contains(t, appErr.Error(), "job-1", "the job is named for diagnosis")
+			}
+		})
+	}
+}

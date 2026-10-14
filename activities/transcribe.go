@@ -29,6 +29,10 @@ type TranscribeResponse struct {
 	TXTPath      paths.Path
 }
 
+// TranscriberJobTimeoutErrorType marks a Transcribe failure because the transcriber
+// stopped the job at its time limit. It is not retried
+const TranscriberJobTimeoutErrorType = "TRANSCRIBER_JOB_TIMEOUT"
+
 // transcribeIdempotencyKey is per attempt: a reused key returns the old job even
 // when it FAILED. Run ID, because reruns can reuse a workflow ID
 func transcribeIdempotencyKey(ctx context.Context) string {
@@ -51,6 +55,10 @@ func (ta *TranscriberActivities) Transcribe(
 	}
 
 	jobData, err := ta.Client.Transcribe(ctx, input.File.Local(), input.DestinationPath.Local(), input.Language, input.Model, transcribeIdempotencyKey(ctx))
+	if errors.Is(err, transcribe.ErrJobTimeout) {
+		// Another attempt would run into the same limit and spend it on the GPU again
+		return nil, temporal.NewNonRetryableApplicationError(err.Error(), TranscriberJobTimeoutErrorType, err)
+	}
 	if errors.Is(err, transcribe.ErrJobCanceled) {
 		// A retry would submit the job again and undo the cancel
 		return nil, temporal.NewNonRetryableApplicationError(err.Error(), "transcription_canceled", err)

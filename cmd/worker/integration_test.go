@@ -14,6 +14,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -36,6 +37,7 @@ import (
 	historypb "go.temporal.io/api/history/v1"
 	taskqueuepb "go.temporal.io/api/taskqueue/v1"
 	"go.temporal.io/sdk/client"
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/testsuite"
 	"go.temporal.io/sdk/worker"
 	"go.temporal.io/sdk/workflow"
@@ -231,6 +233,7 @@ func (h *harness) startTranscription(id string, n int, heartbeatTimeout time.Dur
 // activityEvents are the Transcribe events of a workflow, from its history.
 type activityEvents struct {
 	scheduledQueue string
+	maxAttempts    int32
 	started        []*historypb.ActivityTaskStartedEventAttributes
 	startedAt      []time.Time
 }
@@ -245,6 +248,7 @@ func (h *harness) activityEvents(workflowID string) activityEvents {
 		require.NoError(h.t, err)
 		if scheduled := event.GetActivityTaskScheduledEventAttributes(); scheduled != nil {
 			events.scheduledQueue = scheduled.GetTaskQueue().GetName()
+			events.maxAttempts = scheduled.GetRetryPolicy().GetMaximumAttempts()
 		}
 		if started := event.GetActivityTaskStartedEventAttributes(); started != nil {
 			events.started = append(events.started, started)
@@ -281,7 +285,8 @@ type stubJob struct {
 	Path      string
 	Duration  time.Duration
 	Submitted time.Time
-	Completed time.Time // when COMPLETED was first handed to a poller
+	Failure   string    // the error the job FAILED with; empty means it COMPLETED
+	Completed time.Time // when the job's final status was first handed to a poller
 	LastPoll  time.Time
 	Polls     int
 	Deleted   bool
@@ -292,11 +297,12 @@ func (j *stubJob) attempt() string {
 }
 
 // stubTranscriber speaks the transcriber API. A job counts as active from its submit
-// until a poller is told it is COMPLETED, which is when Transcribe returns.
+// until a poller is told its final status, which is when Transcribe returns.
 type stubTranscriber struct {
 	mu        sync.Mutex
 	start     time.Time
 	duration  func(n int) time.Duration
+	failure   func(n int) string
 	jobs      []*stubJob
 	byID      map[string]*stubJob
 	active    int
@@ -331,6 +337,9 @@ func (s *stubTranscriber) handle(w http.ResponseWriter, r *http.Request) {
 			Duration:  s.duration(len(s.jobs) + 1),
 			Submitted: now,
 		}
+		if s.failure != nil {
+			job.Failure = s.failure(len(s.jobs) + 1)
+		}
 		s.jobs = append(s.jobs, job)
 		s.byID[job.ID] = job
 		s.active++
@@ -363,11 +372,22 @@ func (s *stubTranscriber) handle(w http.ResponseWriter, r *http.Request) {
 		job.Completed = now
 		s.active--
 	}
+	if job.Failure != "" {
+		_ = json.NewEncoder(w).Encode(map[string]any{"id": job.ID, "status": "FAILED", "error": job.Failure})
+		return
+	}
 	out := "/mnt/temp/it/out/" + filepath.Base(job.Path)
 	_ = json.NewEncoder(w).Encode(map[string]any{
 		"id": job.ID, "status": "COMPLETED", "output_path": "/mnt/temp/it/out",
 		"results": []string{out + ".json", out + ".srt", out + ".txt", out + ".words.srt"},
 	})
+}
+
+// failWith decides, per job number, the error a job FAILS with; "" lets it complete.
+func (s *stubTranscriber) failWith(failure func(n int) string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.failure = failure
 }
 
 func (s *stubTranscriber) snapshot() ([]stubJob, int) {
@@ -382,9 +402,16 @@ func (s *stubTranscriber) snapshot() ([]stubJob, int) {
 }
 
 func (h *harness) logJobs(jobs []stubJob) {
-	h.t.Logf("%-6s %-8s %-9s %-9s %-9s %-6s %s", "job", "attempt", "submitted", "completed", "last poll", "polls", "deleted")
+	h.t.Logf("%-6s %-8s %-9s %-9s %-9s %-6s %-8s %s", "job", "attempt", "submitted", "ended", "last poll", "polls", "deleted", "result")
 	for _, job := range jobs {
-		h.t.Logf("%-6s %-8s %-9s %-9s %-9s %-6d %t", job.ID, job.attempt(), h.since(job.Submitted), h.since(job.Completed), h.since(job.LastPoll), job.Polls, job.Deleted)
+		result := "COMPLETED"
+		switch {
+		case job.Completed.IsZero():
+			result = "-"
+		case job.Failure != "":
+			result = fmt.Sprintf("FAILED %q", job.Failure)
+		}
+		h.t.Logf("%-6s %-8s %-9s %-9s %-9s %-6d %-8t %s", job.ID, job.attempt(), h.since(job.Submitted), h.since(job.Completed), h.since(job.LastPoll), job.Polls, job.Deleted, result)
 	}
 }
 
@@ -545,6 +572,83 @@ func TestIntegrationRoutingFollowsTheFlag(t *testing.T) {
 
 			assert.Equal(t, test.wantQueue, events.scheduledQueue)
 			assert.Equal(t, test.wantBy, events.started[0].GetIdentity())
+		})
+	}
+}
+
+// The transcriber stopping a job at its JOB_TIMEOUT has to end Transcribe after one
+// attempt, although the activity allows ten, while any other failure is still retried.
+// The stub fails jobs after a second instead of 30 minutes.
+func TestIntegrationTranscriberJobTimeoutIsNotRetried(t *testing.T) {
+	tests := []struct {
+		name         string
+		failure      func(n int) string
+		wantAttempt  int32
+		wantJobs     int
+		wantFailType string // empty: the workflow succeeds
+	}{
+		{
+			name:         "JOB_TIMEOUT",
+			failure:      func(int) string { return "timeout" },
+			wantAttempt:  1,
+			wantJobs:     1,
+			wantFailType: activities.TranscriberJobTimeoutErrorType,
+		},
+		{
+			name: "transient failure",
+			failure: func(n int) string {
+				if n == 1 {
+					return "write srt: no space left on device"
+				}
+				return ""
+			},
+			wantAttempt: 2,
+			wantJobs:    2,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			h := newHarness(t, true, func(int) time.Duration { return time.Second })
+			h.stub.failWith(test.failure)
+			h.startWorker(environment.QueueTranscribe, "it-transcribe", 2)
+
+			run := h.startTranscription("job-timeout", 1, 0)
+			err := run.Get(context.Background(), nil)
+			endedAt := time.Now()
+
+			// The workflow is closed, so nothing can be scheduled any more; waiting past
+			// the retry interval (1s) makes sure no late submit is missed either.
+			time.Sleep(3 * time.Second)
+
+			jobs, _ := h.stub.snapshot()
+			events := h.activityEvents("job-timeout")
+
+			h.logJobs(jobs)
+			t.Logf("workflow ended at %s, error: %v", h.since(endedAt), err)
+			t.Logf("history: Transcribe scheduled with MaximumAttempts=%d", events.maxAttempts)
+			for i, started := range events.started {
+				t.Logf("history: ActivityTaskStarted at %s attempt=%d identity=%s last failure=%q",
+					h.since(events.startedAt[i]), started.GetAttempt(), started.GetIdentity(), started.GetLastFailure().GetMessage())
+			}
+
+			assert.Equal(t, int32(10), events.maxAttempts, "the activity's retry policy is unchanged")
+			require.Len(t, events.started, 1)
+			assert.Equal(t, test.wantAttempt, events.started[0].GetAttempt())
+			require.Len(t, jobs, test.wantJobs, "one transcription job per attempt")
+
+			if test.wantFailType == "" {
+				require.NoError(t, err)
+				assert.Equal(t, "2", jobs[1].attempt())
+				return
+			}
+
+			require.Error(t, err)
+			var appErr *temporal.ApplicationError
+			require.True(t, errors.As(err, &appErr), "the workflow fails with the activity's error")
+			assert.Equal(t, test.wantFailType, appErr.Type())
+			assert.True(t, appErr.NonRetryable())
+			assert.Contains(t, appErr.Error(), jobs[0].ID)
 		})
 	}
 }

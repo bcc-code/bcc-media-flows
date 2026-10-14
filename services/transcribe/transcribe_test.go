@@ -191,6 +191,75 @@ func TestTranscribe_FailedJobErrorCarriesTheServerReason(t *testing.T) {
 	assert.Equal(t, "open /mnt/temp/in.wav: no such file or directory", job.Error)
 }
 
+// failingServer submits job-1 and answers every poll with pollStatus/pollBody.
+func failingServer(t *testing.T, pollStatus int, pollBody string) *Client {
+	t.Helper()
+
+	return transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodPost {
+			_, _ = w.Write([]byte(`{"id":"job-1","status":"QUEUED"}`))
+			return
+		}
+		w.WriteHeader(pollStatus)
+		_, _ = w.Write([]byte(pollBody))
+	})
+}
+
+func TestTranscribe_TheTranscribersTimeoutIsErrJobTimeout(t *testing.T) {
+	fastPolling(t)
+	client := failingServer(t, http.StatusOK, `{"id":"job-1","status":"FAILED","error":"timeout","duration":"duration: 30m0s"}`)
+
+	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
+
+	require.ErrorIs(t, err, ErrJobTimeout)
+	assert.Contains(t, err.Error(), "job-1", "the error names the job")
+	require.NotNil(t, job, "the job is still returned for its detail")
+	assert.Equal(t, "duration: 30m0s", job.Duration)
+}
+
+func TestTranscribe_OtherFailuresAreNotErrJobTimeout(t *testing.T) {
+	tests := []struct {
+		name       string
+		pollStatus int
+		pollBody   string
+	}{
+		{name: "another failure", pollStatus: http.StatusOK, pollBody: `{"id":"job-1","status":"FAILED","error":"write srt: no space left on device"}`},
+		{name: "a failure that only mentions a timeout", pollStatus: http.StatusOK, pollBody: `{"id":"job-1","status":"FAILED","error":"ffprobe: timeout reading header"}`},
+		{name: "a failure with a deadline in its text", pollStatus: http.StatusOK, pollBody: `{"id":"job-1","status":"FAILED","error":"context deadline exceeded"}`},
+		{name: "a failure without a reason", pollStatus: http.StatusOK, pollBody: `{"id":"job-1","status":"FAILED"}`},
+		{name: "an HTTP failure", pollStatus: http.StatusServiceUnavailable, pollBody: `{"error":"timeout"}`},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			fastPolling(t)
+			client := failingServer(t, test.pollStatus, test.pollBody)
+
+			_, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
+
+			require.Error(t, err)
+			assert.NotErrorIs(t, err, ErrJobTimeout)
+		})
+	}
+}
+
+// A Temporal heartbeat or start-to-close timeout reaches the client as its context
+// ending, which is not the transcriber stopping the job.
+func TestTranscribe_AContextDeadlineIsNotErrJobTimeout(t *testing.T) {
+	previous := pollInterval
+	pollInterval = time.Hour
+	t.Cleanup(func() { pollInterval = previous })
+	client := failingServer(t, http.StatusOK, `{"id":"job-1","status":"RUNNING"}`)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	_, err := client.Transcribe(ctx, "/mnt/in.wav", "/mnt/out", "no", "", "")
+
+	require.ErrorIs(t, err, context.DeadlineExceeded)
+	assert.NotErrorIs(t, err, ErrJobTimeout)
+}
+
 func TestTranscribe_CanceledJobEndsTheLoop(t *testing.T) {
 	fastPolling(t)
 
