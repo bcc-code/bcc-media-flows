@@ -7,6 +7,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/internal/bootstrap"
 	cantemo "github.com/bcc-code/bcc-media-flows/services/cantemo"
 	"github.com/bcc-code/bcc-media-flows/services/subtrans"
+	"github.com/bcc-code/bcc-media-flows/services/transcribe"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 	"log"
 	"os"
@@ -131,28 +132,30 @@ func main() {
 		}
 	}
 
-	ctx := context.Background()
-
-	workerOptions := worker.Options{
-		DeadlockDetectionTimeout:           time.Hour * 3,
-		DisableRegistrationAliasing:        true, // Recommended according to readme, default false for backwards compatibility
-		EnableSessionWorker:                true,
-		Identity:                           identity,
-		LocalActivityWorkerOnly:            false,
-		MaxConcurrentActivityExecutionSize: activityCount, // Doesn't make sense to have more than one activity running at a time
-		BackgroundActivityContext:          context.WithValue(ctx, miscworkflows.ClientContextKey, c),
-		Interceptors: []interceptor.WorkerInterceptor{
-			&wfutils.AnalyticsWorkerInterceptor{},
-		},
-	}
-
 	if environment.Get().Rclone.Password() != "" {
 		go rclone.StartFileTransferQueue()
 	}
 
 	buildClients(environment.Get())
 
-	registerWorker(c, environment.GetQueue(), workerOptions)
+	registerWorker(c, environment.GetQueue(), newWorkerOptions(c, identity, activityCount))
+}
+
+// newWorkerOptions is shared with the integration tests, so they run workers exactly
+// as configured here.
+func newWorkerOptions(c client.Client, identity string, activityCount int) worker.Options {
+	return worker.Options{
+		DeadlockDetectionTimeout:           time.Hour * 3,
+		DisableRegistrationAliasing:        true, // Recommended according to readme, default false for backwards compatibility
+		EnableSessionWorker:                true,
+		Identity:                           identity,
+		LocalActivityWorkerOnly:            false,
+		MaxConcurrentActivityExecutionSize: activityCount, // Doesn't make sense to have more than one activity running at a time
+		BackgroundActivityContext:          context.WithValue(context.Background(), miscworkflows.ClientContextKey, c),
+		Interceptors: []interceptor.WorkerInterceptor{
+			&wfutils.AnalyticsWorkerInterceptor{},
+		},
+	}
 }
 
 // buildClients constructs every service client once, from the configuration, and hands
@@ -169,6 +172,12 @@ func buildClients(cfg *environment.Config) {
 
 	activities.Util.Vidispine = vsClient
 	activities.Util.Subtrans = subtrans.NewClient(cfg.Subtrans)
+
+	transcriberClient, err := transcribe.NewClient(cfg.Services)
+	if err != nil {
+		log.Printf("Error creating transcriber client: %v", err)
+	}
+	activities.Transcriber.Client = transcriberClient
 
 	activities.Directus = &activities.DirectusActivities{
 		Client:         directus.NewClient(cfg.Directus),
@@ -221,6 +230,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 
 		registerActivitiesInStruct(w, activities.Vizualizer)
 		registerActivitiesInStruct(w, activities.QScan)
+		registerActivitiesInStruct(w, activities.Transcriber)
 
 		for _, wf := range workflows.WorkerWorkflows {
 			w.RegisterWorkflow(wf)
@@ -240,6 +250,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		registerActivitiesInStruct(w, activities.ClickUp)
 		registerActivitiesInStruct(w, activities.Vizualizer)
 		registerActivitiesInStruct(w, activities.QScan)
+		registerActivitiesInStruct(w, activities.Transcriber)
 
 		for _, wf := range workflows.WorkerWorkflows {
 			w.RegisterWorkflow(wf)
@@ -250,6 +261,8 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		registerActivitiesInStruct(w, activities.Audio)
 	case environment.QueueLiveIngest:
 		registerActivitiesInStruct(w, activities.Live)
+	case environment.QueueTranscribe:
+		registerActivitiesInStruct(w, activities.Transcriber)
 
 	}
 

@@ -3,6 +3,7 @@ package activities
 import (
 	cantemoactivities "github.com/bcc-code/bcc-media-flows/activities/cantemo"
 	"github.com/bcc-code/bcc-media-flows/services/subtrans"
+	"github.com/bcc-code/bcc-media-flows/services/transcribe"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine"
 	"reflect"
 	"runtime"
@@ -37,6 +38,15 @@ type UtilActivities struct {
 
 // Util is replaced at boot with clients built from the configuration.
 var Util = &UtilActivities{}
+
+// TranscriberActivities is its own struct so Transcribe can run on the transcribe
+// queue, on a worker next to the transcriber it talks to
+type TranscriberActivities struct {
+	Client *transcribe.Client
+}
+
+// Transcriber gets its client at boot, from the configuration
+var Transcriber = &TranscriberActivities{}
 
 type LiveActivities struct{}
 
@@ -88,8 +98,20 @@ func buildActivityQueues() map[string]func() string {
 	add(Audio, environment.GetAudioQueue)
 	add(Video, environment.GetTranscodeQueue)
 	add(Live, environment.GetLiveIngestQueue)
+	add(Transcriber, transcriberQueue)
 
 	return queues
+}
+
+// transcriberQueue keeps Transcribe on the worker queue until TRANSCRIBE_QUEUE_ENABLED
+// is set, so the move to the GPU workers can be switched on, and back off, without a
+// release. Replay doesn't compare task queues, so flipping it is safe for running
+// workflows
+func transcriberQueue() string {
+	if environment.Get().TranscribeQueueEnabled {
+		return environment.GetTranscribeQueue()
+	}
+	return environment.GetWorkerQueue()
 }
 
 // GetQueueForActivity detects which queue the activity belongs in, else returns the worker queue.

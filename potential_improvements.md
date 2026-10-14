@@ -29,6 +29,7 @@ Revalidated against the code 2026-09-15. Items confirmed fixed were removed; the
 
 ## CI and tooling
 
+- `services/vidispine/vsapi/search_integration_test.go` (build tag `integration`) no longer compiles: it calls `NewClient` with three strings, but `NewClient` takes a `Config` now. Nothing builds that tag in CI, so it went unnoticed; it also makes `golangci-lint --build-tags integration ./...` stop with a typecheck error.
 - CI (`.github/workflows/ci.yml`) runs vet, tests, workflowcheck and golangci-lint, but golangci-lint uses `only-new-issues`, so the pre-existing backlog (errcheck, staticcheck, ineffassign, unused) stays. Burn it down and drop the grandfathering.
 - No image scanning in `deploy-images.yml` (a Trivy step was drafted and dropped; revisit once base-image noise is acceptable).
 - Low or zero test coverage: `workflows/export`, `activities`, `services/ffmpeg`, and no tests at all for `services/baton`, `services/ftp`, `services/filecatalyst`.
@@ -70,3 +71,17 @@ Revalidated against the code 2026-09-15. Items confirmed fixed were removed; the
 - The `/move-files` VX-ID form always sends `Shapes: ["original"]`, although `MoveMBFileParams` takes any shape tags.
 - `Cantemo.MoveFileWait` returns nil when it finds no `MOVE_FILE` job, and `WaitForJobCompletion` returns a FAILED or ABORTED status without an error, so a move can "succeed" without moving the file. `MoveStorageFiles` works around it by skipping a file that is still listed on the source after its move.
 - The trigger UI's workflow details page doesn't show a workflow's result, so the `MoveStorageFiles` dry-run counts can only be read in the Temporal UI.
+
+## Transcription (added 2026-10-13)
+
+Found while switching to the new transcriber service (`../transcriber`).
+
+- Resolved 2026-10-14: a retry of `Transcribe` resumes the job its last attempt left on the same transcriber (heartbeat details `TranscribeHeartbeat`). What it still can't resume is in the items below.
+- Resolved 2026-10-14: a transcriber `FAILED` with `error: "timeout"` is no longer retried (`TRANSCRIBER_JOB_TIMEOUT`).
+- A job submitted just before a worker dies is orphaned: the crash can come after the transcriber accepted the job but before the heartbeat naming it reached Temporal, so the retry submits a second one (`TestIntegrationCrashBeforeTheHeartbeat`). The transcriber's API can't close this: re-POSTing the previous attempt's key finds that job, but creates one when there is none, so it is no lookup. A `GET` by idempotency key on the transcriber would let a retry with no details look for its predecessor's job (key `run/activity/attempt-1`).
+- A retry on another GPU host can't resume: each worker only knows its own `TRANSCRIBER_BASE_URL`, so it submits a new job and the first host's runs on to the end (`TestIntegrationRecoveryAcrossHosts`). The smallest fix is a trusted list of transcriber URLs on every worker, checked against the heartbeat's `transcriber` before calling it, plus confirming the GPU hosts can reach each other's port 8888. Never call the URL from the heartbeat itself.
+- Recovery tells transcribers apart by `TRANSCRIBER_BASE_URL`. With an alias both GPU hosts share (`http://transcriber:8888`), a job on the other host looks local, its `GET` answers 404, and the retry submits a new job: today's behaviour, never a wrong result, but no resume. Deployments should use each transcriber's own address.
+- On a graceful worker stop (a deploy, or the 5-minute self-update) the activity's context ends and `Wait` DELETEs the running job, so the retry starts it over instead of resuming. Not deleting on worker shutdown would let a same-host retry resume it, at the cost of an orphan when the retry lands on the other host.
+- `Transcribe` is registered on the `worker` queue as well as `transcribe` (`registerWorker` in `cmd/worker/main.go`). Remove the `worker` registration once `TRANSCRIBE_QUEUE_ENABLED` has been on for good and 12h (`ScheduleToCloseTimeout`) have passed since, so nothing scheduled there before the switch is left to retry. Until then it is also the rollback path.
+- A `transcribe` worker only needs Temporal and `TRANSCRIBER_BASE_URL`, but boot warns about every variable in `RequiredByWorker`. A required list per queue would keep that warning meaningful.
+- A `transcribe` worker keeps taking jobs while its transcriber is down; they fail fast with "connection refused" and retry, possibly on another host. Checking the transcriber's `/readyz` first would leave them for a healthy host.

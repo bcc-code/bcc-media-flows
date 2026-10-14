@@ -48,7 +48,7 @@ func TranscribeFile(
 		return nil
 	}
 
-	transcribeOutput, err := wfutils.Execute(ctx, activities.Util.Transcribe, activities.TranscribeParams{
+	transcribeOutput, err := wfutils.Execute(ctx, activities.Transcriber.Transcribe, activities.TranscribeParams{
 		Language:        params.Language,
 		File:            *prepareResult.OutputPath,
 		DestinationPath: tempFolder,

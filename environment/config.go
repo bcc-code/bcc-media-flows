@@ -185,9 +185,10 @@ func (t Telegram) ChatOther() int64     { return t.chatOther }
 func (t Telegram) ChatBMM() int64       { return t.chatBMM }
 
 type Services struct {
-	shorts     string
-	sync       string
-	vizualizer string
+	shorts      string
+	sync        string
+	vizualizer  string
+	transcriber string
 }
 
 func (s Services) Shorts() string { return s.shorts }
@@ -197,6 +198,13 @@ func (s Services) Vizualizer() string {
 		return s.vizualizer
 	}
 	return "http://vizualizer.lan.bcc.media"
+}
+
+func (s Services) Transcriber() string {
+	if s.transcriber != "" {
+		return s.transcriber
+	}
+	return "http://10.12.128.44:8888"
 }
 
 type TriggerUI struct {
@@ -226,6 +234,7 @@ type Config struct {
 	H264Encoder    string
 	SendgridAPIKey string
 	BMMFileBaseURL string
+	TranscribeQueueEnabled bool
 
 	Temporal     Temporal
 	Paths        Paths
@@ -260,6 +269,7 @@ func Load() *Config {
 		H264Encoder:    os.Getenv("H264_ENCODER"),
 		SendgridAPIKey: os.Getenv("SENDGRID_API_KEY"),
 		BMMFileBaseURL: os.Getenv("BMM_FILE_BASE_URL"),
+		TranscribeQueueEnabled: boolOr("TRANSCRIBE_QUEUE_ENABLED", false),
 
 		Temporal: Temporal{
 			hostPort:  os.Getenv("TEMPORAL_HOST_PORT"),
@@ -349,9 +359,10 @@ func Load() *Config {
 		},
 
 		Services: Services{
-			shorts:     os.Getenv("SHORTS_SERVICE_URL"),
-			sync:       os.Getenv("SYNC_SERVICE_URL"),
-			vizualizer: os.Getenv("VIZUALIZER_BASE_URL"),
+			shorts:      os.Getenv("SHORTS_SERVICE_URL"),
+			sync:        os.Getenv("SYNC_SERVICE_URL"),
+			vizualizer:  os.Getenv("VIZUALIZER_BASE_URL"),
+			transcriber: os.Getenv("TRANSCRIBER_BASE_URL"),
 		},
 
 		TriggerUI: TriggerUI{
@@ -411,6 +422,21 @@ func intOr(name string, fallback int) int {
 	value, err := strconv.Atoi(raw)
 	if err != nil {
 		log.Printf("WARNING: %s is not a number, using %d: %v", name, fallback, err)
+		return fallback
+	}
+
+	return value
+}
+
+func boolOr(name string, fallback bool) bool {
+	raw := os.Getenv(name)
+	if raw == "" {
+		return fallback
+	}
+
+	value, err := strconv.ParseBool(raw)
+	if err != nil {
+		log.Printf("WARNING: %s is not a boolean, using %t: %v", name, fallback, err)
 		return fallback
 	}
 
