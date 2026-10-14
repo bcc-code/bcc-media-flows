@@ -17,15 +17,16 @@ import (
 // activityStructs is every struct whose methods are registered as activities by
 // registerActivitiesInStruct.
 var activityStructs = map[string]any{
-	"Audio":      Audio,
-	"Video":      Video,
-	"Util":       Util,
-	"Live":       Live,
-	"Vidispine":  Vidispine,
-	"Platform":   Platform,
-	"Directus":   Directus,
-	"ClickUp":    ClickUp,
-	"Vizualizer": Vizualizer,
+	"Audio":       Audio,
+	"Video":       Video,
+	"Util":        Util,
+	"Live":        Live,
+	"Vidispine":   Vidispine,
+	"Platform":    Platform,
+	"Directus":    Directus,
+	"ClickUp":     ClickUp,
+	"Vizualizer":  Vizualizer,
+	"Transcriber": Transcriber,
 }
 
 // Activities are registered and routed by their short method name, so a name
@@ -57,6 +58,33 @@ func TestGetQueueForActivityRoutesByStruct(t *testing.T) {
 	// Anything not claimed by a specialised queue runs on the worker queue.
 	assert.Equal(t, environment.GetWorkerQueue(), GetQueueForActivity(Util.CreateFolder))
 	assert.Equal(t, environment.GetWorkerQueue(), GetQueueForActivity("SomethingNobodyDefined"))
+}
+
+func TestTranscribeStaysOnTheWorkerQueueUntilEnabled(t *testing.T) {
+	setEnv(t, "TRANSCRIBE_QUEUE_ENABLED", "")
+
+	assert.Equal(t, environment.QueueWorker, GetQueueForActivity(Transcriber.Transcribe))
+}
+
+func TestTranscribeMovesToTheTranscribeQueueWhenEnabled(t *testing.T) {
+	setEnv(t, "TRANSCRIBE_QUEUE_ENABLED", "true")
+
+	assert.Equal(t, environment.QueueTranscribe, GetQueueForActivity(Transcriber.Transcribe))
+}
+
+func TestTranscribeFollowsTheDebugQueue(t *testing.T) {
+	setEnv(t, "QUEUE", environment.QueueDebug)
+
+	for _, enabled := range []string{"", "true"} {
+		setEnv(t, "TRANSCRIBE_QUEUE_ENABLED", enabled)
+		assert.Equal(t, environment.QueueDebug, GetQueueForActivity(Transcriber.Transcribe), "enabled=%q", enabled)
+	}
+}
+
+// Workflow histories record the activity by this name, and replay compares it, so a
+// rename would fail every workflow that was running when it shipped.
+func TestTranscribeKeepsItsRecordedName(t *testing.T) {
+	assert.Equal(t, "Transcribe", getFunctionName(Transcriber.Transcribe))
 }
 
 // ffmpegOnWorkerQueue lists the activities that reach for ffmpeg from a struct

@@ -234,6 +234,7 @@ type Config struct {
 	H264Encoder    string
 	SendgridAPIKey string
 	BMMFileBaseURL string
+	TranscribeQueueEnabled bool
 
 	Temporal     Temporal
 	Paths        Paths
@@ -268,6 +269,7 @@ func Load() *Config {
 		H264Encoder:    os.Getenv("H264_ENCODER"),
 		SendgridAPIKey: os.Getenv("SENDGRID_API_KEY"),
 		BMMFileBaseURL: os.Getenv("BMM_FILE_BASE_URL"),
+		TranscribeQueueEnabled: boolOr("TRANSCRIBE_QUEUE_ENABLED", false),
 
 		Temporal: Temporal{
 			hostPort:  os.Getenv("TEMPORAL_HOST_PORT"),
@@ -420,6 +422,21 @@ func intOr(name string, fallback int) int {
 	value, err := strconv.Atoi(raw)
 	if err != nil {
 		log.Printf("WARNING: %s is not a number, using %d: %v", name, fallback, err)
+		return fallback
+	}
+
+	return value
+}
+
+func boolOr(name string, fallback bool) bool {
+	raw := os.Getenv(name)
+	if raw == "" {
+		return fallback
+	}
+
+	value, err := strconv.ParseBool(raw)
+	if err != nil {
+		log.Printf("WARNING: %s is not a boolean, using %t: %v", name, fallback, err)
 		return fallback
 	}
 

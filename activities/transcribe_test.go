@@ -22,7 +22,7 @@ func (c transcriberConfig) Transcriber() string { return string(c) }
 
 // transcriberServer answers the submit with job-1 and every poll with pollStatus,
 // and reports the Idempotency-Key the submit carried.
-func transcriberServer(t *testing.T, pollStatus string) (UtilActivities, *string) {
+func transcriberServer(t *testing.T, pollStatus string) (*TranscriberActivities, *string) {
 	t.Helper()
 
 	var key string
@@ -40,7 +40,7 @@ func transcriberServer(t *testing.T, pollStatus string) (UtilActivities, *string
 	client, err := transcribe.NewClient(transcriberConfig(server.URL))
 	require.NoError(t, err)
 
-	return UtilActivities{Transcriber: client}, &key
+	return &TranscriberActivities{Client: client}, &key
 }
 
 func transcribeParams() TranscribeParams {
@@ -53,10 +53,10 @@ func transcribeParams() TranscribeParams {
 
 func TestTranscribe_WithoutAClientIsNotRetried(t *testing.T) {
 	env := activityEnv(t)
-	ua := UtilActivities{}
-	env.RegisterActivity(ua.Transcribe)
+	ta := &TranscriberActivities{}
+	env.RegisterActivity(ta.Transcribe)
 
-	_, err := env.ExecuteActivity(ua.Transcribe, transcribeParams())
+	_, err := env.ExecuteActivity(ta.Transcribe, transcribeParams())
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "transcriber client not configured")
@@ -67,11 +67,11 @@ func TestTranscribe_WithoutAClientIsNotRetried(t *testing.T) {
 }
 
 func TestTranscribe_CanceledJobIsNotRetried(t *testing.T) {
-	ua, _ := transcriberServer(t, "CANCELED")
+	ta, _ := transcriberServer(t, "CANCELED")
 	env := activityEnv(t)
-	env.RegisterActivity(ua.Transcribe)
+	env.RegisterActivity(ta.Transcribe)
 
-	_, err := env.ExecuteActivity(ua.Transcribe, transcribeParams())
+	_, err := env.ExecuteActivity(ta.Transcribe, transcribeParams())
 
 	require.Error(t, err)
 	var appErr *temporal.ApplicationError
@@ -80,11 +80,11 @@ func TestTranscribe_CanceledJobIsNotRetried(t *testing.T) {
 }
 
 func TestTranscribe_FailedJobIsRetried(t *testing.T) {
-	ua, _ := transcriberServer(t, "FAILED")
+	ta, _ := transcriberServer(t, "FAILED")
 	env := activityEnv(t)
-	env.RegisterActivity(ua.Transcribe)
+	env.RegisterActivity(ta.Transcribe)
 
-	_, err := env.ExecuteActivity(ua.Transcribe, transcribeParams())
+	_, err := env.ExecuteActivity(ta.Transcribe, transcribeParams())
 
 	require.Error(t, err)
 	var appErr *temporal.ApplicationError
@@ -93,11 +93,11 @@ func TestTranscribe_FailedJobIsRetried(t *testing.T) {
 }
 
 func TestTranscribe_SubmitsWithAKeyForThisAttempt(t *testing.T) {
-	ua, key := transcriberServer(t, "COMPLETED")
+	ta, key := transcriberServer(t, "COMPLETED")
 	env := activityEnv(t)
-	env.RegisterActivity(ua.Transcribe)
+	env.RegisterActivity(ta.Transcribe)
 
-	_, err := env.ExecuteActivity(ua.Transcribe, transcribeParams())
+	_, err := env.ExecuteActivity(ta.Transcribe, transcribeParams())
 
 	require.NoError(t, err)
 	parts := strings.Split(*key, "/")
@@ -170,11 +170,11 @@ func TestTranscribe_UsesTheFilesTheTranscriberListed(t *testing.T) {
 
 	client, err := transcribe.NewClient(transcriberConfig(server.URL))
 	require.NoError(t, err)
-	ua := UtilActivities{Transcriber: client}
+	ta := &TranscriberActivities{Client: client}
 	env := activityEnv(t)
-	env.RegisterActivity(ua.Transcribe)
+	env.RegisterActivity(ta.Transcribe)
 
-	val, err := env.ExecuteActivity(ua.Transcribe, transcribeParams())
+	val, err := env.ExecuteActivity(ta.Transcribe, transcribeParams())
 	require.NoError(t, err)
 
 	var response TranscribeResponse
@@ -184,11 +184,11 @@ func TestTranscribe_UsesTheFilesTheTranscriberListed(t *testing.T) {
 }
 
 func TestTranscribe_WithoutResultsAssumesTheOldNames(t *testing.T) {
-	ua, _ := transcriberServer(t, "COMPLETED")
+	ta, _ := transcriberServer(t, "COMPLETED")
 	env := activityEnv(t)
-	env.RegisterActivity(ua.Transcribe)
+	env.RegisterActivity(ta.Transcribe)
 
-	val, err := env.ExecuteActivity(ua.Transcribe, transcribeParams())
+	val, err := env.ExecuteActivity(ta.Transcribe, transcribeParams())
 	require.NoError(t, err)
 
 	var response TranscribeResponse
@@ -213,13 +213,13 @@ func TestTranscribe_PassesTheModelOn(t *testing.T) {
 
 	client, err := transcribe.NewClient(transcriberConfig(server.URL))
 	require.NoError(t, err)
-	ua := UtilActivities{Transcriber: client}
+	ta := &TranscriberActivities{Client: client}
 	env := activityEnv(t)
-	env.RegisterActivity(ua.Transcribe)
+	env.RegisterActivity(ta.Transcribe)
 
 	params := transcribeParams()
 	params.Model = "nb-whisper-large"
-	_, err = env.ExecuteActivity(ua.Transcribe, params)
+	_, err = env.ExecuteActivity(ta.Transcribe, params)
 
 	require.NoError(t, err)
 	assert.Contains(t, submitted, `"model":"nb-whisper-large"`)

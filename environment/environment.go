@@ -29,6 +29,8 @@ func GetAudioQueue() string { return queueOrDebug(QueueAudio) }
 
 func GetLiveIngestQueue() string { return queueOrDebug(QueueLiveIngest) }
 
+func GetTranscribeQueue() string { return queueOrDebug(QueueTranscribe) }
+
 func GetIsilonPrefix() string {
 	// For local testing
 	if prefix := Get().Paths.IsilonPrefix(); prefix != "" {

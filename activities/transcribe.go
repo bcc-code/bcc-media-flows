@@ -19,7 +19,7 @@ type TranscribeParams struct {
 	File            paths.Path
 	DestinationPath paths.Path
 	Language        string
-	Model string
+	Model           string
 }
 
 type TranscribeResponse struct {
@@ -36,8 +36,9 @@ func transcribeIdempotencyKey(ctx context.Context) string {
 	return fmt.Sprintf("%s/%s/%d", info.WorkflowExecution.RunID, info.ActivityID, info.Attempt)
 }
 
-// Transcribe is the activity that transcribes a video
-func (ua UtilActivities) Transcribe(
+// Transcribe is the activity that transcribes a video. Workflows record it by this
+// name, so renaming it would break replay of running workflows
+func (ta *TranscriberActivities) Transcribe(
 	ctx context.Context,
 	input TranscribeParams,
 ) (*TranscribeResponse, error) {
@@ -45,11 +46,11 @@ func (ua UtilActivities) Transcribe(
 	activity.RecordHeartbeat(ctx, "Transcribe")
 	log.Info("Starting Transcribe")
 
-	if ua.Transcriber == nil {
+	if ta.Client == nil {
 		return nil, temporal.NewNonRetryableApplicationError("transcriber client not configured", "transcriber_not_configured", nil)
 	}
 
-	jobData, err := ua.Transcriber.Transcribe(ctx, input.File.Local(), input.DestinationPath.Local(), input.Language, input.Model, transcribeIdempotencyKey(ctx))
+	jobData, err := ta.Client.Transcribe(ctx, input.File.Local(), input.DestinationPath.Local(), input.Language, input.Model, transcribeIdempotencyKey(ctx))
 	if errors.Is(err, transcribe.ErrJobCanceled) {
 		// A retry would submit the job again and undo the cancel
 		return nil, temporal.NewNonRetryableApplicationError(err.Error(), "transcription_canceled", err)

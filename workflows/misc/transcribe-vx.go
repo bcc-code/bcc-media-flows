@@ -65,7 +65,7 @@ func TranscribeVX(
 		return err
 	}
 
-	transcriptionJob, err := wfutils.Execute(ctx, activities.Util.Transcribe, activities.TranscribeParams{
+	transcriptionJob, err := wfutils.Execute(ctx, activities.Transcriber.Transcribe, activities.TranscribeParams{
 		Language:        params.Language,
 		File:            *prepareResult.OutputPath,
 		DestinationPath: destinationPath,
