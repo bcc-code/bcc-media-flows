@@ -1,11 +1,14 @@
 package activities
 
 import (
+	"context"
 	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"path"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
@@ -13,6 +16,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.temporal.io/sdk/activity"
+	"go.temporal.io/sdk/converter"
 	"go.temporal.io/sdk/temporal"
 )
 
@@ -141,7 +146,8 @@ func TestTranscriptPaths(t *testing.T) {
 		response, err := transcriptPaths(withoutWords)
 
 		require.NoError(t, err)
-		assert.Equal(t, paths.Path{}, response.WordsSRTPath)
+		assert.Equal(t, paths.MustParse("/mnt/temp/out/in.wav.words.srt"), response.WordsSRTPath,
+			"an empty Path would not decode from the activity result")
 		assert.Equal(t, paths.MustParse("/mnt/temp/out/in.wav.srt"), response.SRTPath)
 	})
 
@@ -294,4 +300,221 @@ func TestTranscribe_RetriesOnlyWhatAnotherAttemptCouldFix(t *testing.T) {
 			}
 		})
 	}
+}
+
+// recoveryServer is a transcriber holding job-7, a previous attempt's job, which answers
+// its GETs with previousReplies in turn (the last one repeats). A POST creates job-new,
+// complete on its first poll.
+type recoveryServer struct {
+	mu       sync.Mutex
+	posts    int
+	gets     map[string]int
+	replies  []recoveryReply
+	identity string
+}
+
+type recoveryReply struct {
+	status int
+	body   string
+}
+
+func newRecoveryServer(t *testing.T, previousReplies ...recoveryReply) (*recoveryServer, *TranscriberActivities) {
+	t.Helper()
+
+	rs := &recoveryServer{gets: map[string]int{}, replies: previousReplies}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		rs.mu.Lock()
+		defer rs.mu.Unlock()
+		w.Header().Set("Content-Type", "application/json")
+
+		if r.Method == http.MethodPost {
+			rs.posts++
+			_, _ = w.Write([]byte(`{"id":"job-new","status":"QUEUED"}`))
+			return
+		}
+
+		id := path.Base(r.URL.Path)
+		rs.gets[id]++
+		if id == "job-new" {
+			_, _ = w.Write([]byte(`{"id":"job-new","status":"COMPLETED","output_path":"/mnt/temp/out","results":["/mnt/temp/out/new.json","/mnt/temp/out/new.srt","/mnt/temp/out/new.txt"]}`))
+			return
+		}
+
+		reply := rs.replies[min(rs.gets[id], len(rs.replies))-1]
+		w.WriteHeader(reply.status)
+		_, _ = w.Write([]byte(reply.body))
+	}))
+	t.Cleanup(server.Close)
+
+	client, err := transcribe.NewClient(transcriberConfig(server.URL))
+	require.NoError(t, err)
+	rs.identity = client.Identity()
+
+	return rs, &TranscriberActivities{Client: client}
+}
+
+func previousJob(status string, extra string) recoveryReply {
+	return recoveryReply{status: http.StatusOK, body: `{"id":"job-7","status":"` + status + `"` + extra + `}`}
+}
+
+var previousCompleted = previousJob("COMPLETED", `,"output_path":"/mnt/temp/out","results":["/mnt/temp/out/prev.json","/mnt/temp/out/prev.srt","/mnt/temp/out/prev.txt"]`)
+
+func TestTranscribe_ResumesThePreviousAttemptsJob(t *testing.T) {
+	tests := []struct {
+		name            string
+		replies         []recoveryReply
+		foreign         bool
+		wantPosts       int
+		wantJSON        string // empty: the activity fails
+		wantRetryable   bool
+		wantFailType    string
+		wantHeartbeatID string // empty: no heartbeat at all
+	}{
+		{
+			name:      "a running job is polled on",
+			replies:   []recoveryReply{previousJob("RUNNING", ""), previousCompleted},
+			wantPosts: 0, wantJSON: "/mnt/temp/out/prev.json", wantHeartbeatID: "job-7",
+		},
+		{
+			name:      "a queued job is polled on",
+			replies:   []recoveryReply{previousJob("QUEUED", ""), previousCompleted},
+			wantPosts: 0, wantJSON: "/mnt/temp/out/prev.json", wantHeartbeatID: "job-7",
+		},
+		{
+			name:      "a completed job returns its result",
+			replies:   []recoveryReply{previousCompleted},
+			wantPosts: 0, wantJSON: "/mnt/temp/out/prev.json", wantHeartbeatID: "job-7",
+		},
+		{
+			name:      "a job stopped at the transcriber's timeout fails without a retry",
+			replies:   []recoveryReply{previousJob("FAILED", `,"error":"timeout"`)},
+			wantPosts: 0, wantFailType: TranscriberJobTimeoutErrorType, wantHeartbeatID: "job-7",
+		},
+		{
+			name:      "a job that failed otherwise is replaced",
+			replies:   []recoveryReply{previousJob("FAILED", `,"error":"write srt: no space left on device"`)},
+			wantPosts: 1, wantJSON: "/mnt/temp/out/new.json", wantHeartbeatID: "job-new",
+		},
+		{
+			name:      "a canceled job is replaced",
+			replies:   []recoveryReply{previousJob("CANCELED", "")},
+			wantPosts: 1, wantJSON: "/mnt/temp/out/new.json", wantHeartbeatID: "job-new",
+		},
+		{
+			name:      "a job the transcriber no longer knows is replaced",
+			replies:   []recoveryReply{{status: http.StatusNotFound, body: `{"error":"not found"}`}},
+			wantPosts: 1, wantJSON: "/mnt/temp/out/new.json", wantHeartbeatID: "job-new",
+		},
+		{
+			name:      "an unavailable transcriber submits nothing and is retried",
+			replies:   []recoveryReply{{status: http.StatusServiceUnavailable, body: `{"error":"down"}`}},
+			wantPosts: 0, wantRetryable: true,
+		},
+		{
+			name:      "a job on another transcriber is left alone and replaced",
+			foreign:   true,
+			wantPosts: 1, wantJSON: "/mnt/temp/out/new.json", wantHeartbeatID: "job-new",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			rs, ta := newRecoveryServer(t, test.replies...)
+			previous := &TranscribeHeartbeat{Version: 1, JobID: "job-7", Transcriber: rs.identity}
+			if test.foreign {
+				previous.Transcriber = "http://10.12.128.99:8888"
+			}
+
+			env := activityEnv(t)
+			var heartbeats []TranscribeHeartbeat
+			env.SetOnActivityHeartbeatListener(func(_ *activity.Info, details converter.EncodedValues) {
+				var heartbeat TranscribeHeartbeat
+				require.NoError(t, details.Get(&heartbeat), "every heartbeat carries the job")
+				heartbeats = append(heartbeats, heartbeat)
+			})
+			resume := func(ctx context.Context, input TranscribeParams) (*TranscribeResponse, error) {
+				return ta.transcribe(ctx, input, previous)
+			}
+			env.RegisterActivity(resume)
+
+			val, err := env.ExecuteActivity(resume, transcribeParams())
+
+			rs.mu.Lock()
+			defer rs.mu.Unlock()
+			assert.Equal(t, test.wantPosts, rs.posts, "jobs submitted")
+			if test.foreign {
+				assert.Zero(t, rs.gets["job-7"], "another transcriber's job ID is never asked about here")
+			}
+
+			if test.wantHeartbeatID == "" {
+				assert.Empty(t, heartbeats, "nothing heartbeated, so the details survive for the next attempt")
+			} else {
+				require.NotEmpty(t, heartbeats)
+				for _, heartbeat := range heartbeats {
+					assert.Equal(t, TranscribeHeartbeat{Version: 1, JobID: test.wantHeartbeatID, Transcriber: rs.identity}, heartbeat)
+				}
+			}
+
+			if test.wantJSON != "" {
+				require.NoError(t, err)
+				var response TranscribeResponse
+				require.NoError(t, val.Get(&response))
+				assert.Equal(t, paths.MustParse(test.wantJSON), response.JSONPath)
+				return
+			}
+
+			require.Error(t, err)
+			var appErr *temporal.ApplicationError
+			require.True(t, errors.As(err, &appErr))
+			assert.Equal(t, !test.wantRetryable, appErr.NonRetryable())
+			if test.wantFailType != "" {
+				assert.Equal(t, test.wantFailType, appErr.Type())
+			}
+		})
+	}
+}
+
+func TestDecodeTranscribeHeartbeat(t *testing.T) {
+	dc := converter.GetDefaultDataConverter()
+	from := func(values ...any) func(...any) error {
+		payloads, err := dc.ToPayloads(values...)
+		require.NoError(t, err)
+		return func(details ...any) error { return dc.FromPayloads(payloads, details...) }
+	}
+
+	t.Run("the legacy string names no job", func(t *testing.T) {
+		heartbeat, err := decodeTranscribeHeartbeat(from("Transcribe"))
+		assert.Error(t, err)
+		assert.Nil(t, heartbeat)
+	})
+
+	t.Run("empty details name no job", func(t *testing.T) {
+		heartbeat, _ := decodeTranscribeHeartbeat(from())
+		assert.Nil(t, heartbeat)
+	})
+
+	t.Run("details without a job or transcriber name no job", func(t *testing.T) {
+		heartbeat, err := decodeTranscribeHeartbeat(from(TranscribeHeartbeat{Version: 1, Transcriber: "http://gpu1:8888"}))
+		assert.NoError(t, err)
+		assert.Nil(t, heartbeat)
+	})
+
+	t.Run("typed details name their job", func(t *testing.T) {
+		want := TranscribeHeartbeat{Version: 1, JobID: "job-7", Transcriber: "http://gpu1:8888"}
+
+		heartbeat, err := decodeTranscribeHeartbeat(from(want))
+
+		require.NoError(t, err)
+		assert.Equal(t, &want, heartbeat)
+	})
+
+	t.Run("a later version with more fields still names its job", func(t *testing.T) {
+		later := map[string]any{"version": 2, "job_id": "job-7", "transcriber": "http://gpu1:8888", "host": "gpu1"}
+
+		heartbeat, err := decodeTranscribeHeartbeat(from(later))
+
+		require.NoError(t, err)
+		require.NotNil(t, heartbeat)
+		assert.Equal(t, "job-7", heartbeat.JobID)
+	})
 }

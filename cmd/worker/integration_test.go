@@ -36,6 +36,7 @@ import (
 	enumspb "go.temporal.io/api/enums/v1"
 	historypb "go.temporal.io/api/history/v1"
 	taskqueuepb "go.temporal.io/api/taskqueue/v1"
+	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/testsuite"
@@ -50,8 +51,9 @@ import (
 )
 
 const (
-	helperEnv     = "FLOWS_IT_HELPER_WORKER"
-	workflowQueue = "it-workflows"
+	helperEnv          = "FLOWS_IT_HELPER_WORKER"
+	legacyHeartbeatEnv = "FLOWS_IT_LEGACY_HEARTBEAT"
+	workflowQueue      = "it-workflows"
 )
 
 // TestIntegrationHelperWorker is not a test of its own. The tests re-run this binary
@@ -68,8 +70,25 @@ func TestIntegrationHelperWorker(t *testing.T) {
 		log.Fatal(err)
 	}
 
+	options := newWorkerOptions(c, bootstrap.Identity(), environment.Get().ActivityCount)
+
+	if os.Getenv(legacyHeartbeatEnv) != "" {
+		w := worker.New(c, environment.GetQueue(), options)
+		w.RegisterActivityWithOptions(legacyTranscribe, activity.RegisterOptions{Name: "Transcribe"})
+		_ = w.Run(worker.InterruptCh())
+		return
+	}
+
 	buildClients(environment.Get())
-	registerWorker(c, environment.GetQueue(), newWorkerOptions(c, bootstrap.Identity(), environment.Get().ActivityCount))
+	registerWorker(c, environment.GetQueue(), options)
+}
+
+// legacyTranscribe heartbeats what Transcribe did before its details were typed, the
+// string "Transcribe", and then waits to be killed
+func legacyTranscribe(ctx context.Context, _ activities.TranscribeParams) (*activities.TranscribeResponse, error) {
+	activity.RecordHeartbeat(ctx, "Transcribe")
+	<-ctx.Done()
+	return nil, ctx.Err()
 }
 
 // transcribeOnce routes Transcribe the way the transcribe workflows do, through
@@ -123,7 +142,7 @@ func newHarness(t *testing.T, transcribeQueueEnabled bool, jobDuration func(n in
 	t.Cleanup(func() { _ = server.Stop() })
 
 	h := &harness{t: t, start: time.Now(), server: server, client: server.Client()}
-	h.stub = newStubTranscriber(t, h.start, jobDuration)
+	h.stub = newStubTranscriber(t, "gpu-a", h.start, jobDuration)
 
 	w := worker.New(h.client, workflowQueue, worker.Options{})
 	w.RegisterWorkflow(transcribeOnce)
@@ -146,9 +165,24 @@ type helperWorker struct {
 	stopped  bool
 }
 
-// startWorker runs a worker process for queue and waits until it polls.
+// startWorker runs a worker process for queue, against the default stub transcriber, and waits until it polls
 func (h *harness) startWorker(queue, identity string, activityCount int) *helperWorker {
 	h.t.Helper()
+	return h.startWorkerSpec(workerSpec{queue: queue, identity: identity, activityCount: activityCount, stub: h.stub})
+}
+
+type workerSpec struct {
+	queue         string
+	identity      string
+	activityCount int
+	stub          *stubTranscriber
+	// legacyHeartbeat runs legacyTranscribe as Transcribe instead of the real one
+	legacyHeartbeat bool
+}
+
+func (h *harness) startWorkerSpec(spec workerSpec) *helperWorker {
+	h.t.Helper()
+	queue, identity := spec.queue, spec.identity
 
 	logFile, err := os.Create(filepath.Join(h.t.TempDir(), identity+".log"))
 	require.NoError(h.t, err)
@@ -158,11 +192,14 @@ func (h *harness) startWorker(queue, identity string, activityCount int) *helper
 		helperEnv+"=1",
 		"QUEUE="+queue,
 		"IDENTITY="+identity,
-		"ACTIVITY_COUNT="+strconv.Itoa(activityCount),
+		"ACTIVITY_COUNT="+strconv.Itoa(spec.activityCount),
 		"TEMPORAL_HOST_PORT="+h.server.FrontendHostPort(),
 		"TEMPORAL_NAMESPACE=default",
-		"TRANSCRIBER_BASE_URL="+h.stub.server.URL,
+		"TRANSCRIBER_BASE_URL="+spec.stub.server.URL,
 	)
+	if spec.legacyHeartbeat {
+		cmd.Env = append(cmd.Env, legacyHeartbeatEnv+"=1")
+	}
 	cmd.Stdout = logFile
 	cmd.Stderr = logFile
 	require.NoError(h.t, cmd.Start())
@@ -277,7 +314,42 @@ func (h *harness) startedActivities(workflowIDs []string) int {
 	return started
 }
 
+// pendingHeartbeat is what Temporal holds as the pending Transcribe's last heartbeat
+// details, as raw JSON, and its attempt. Empty when nothing has reached the server.
+func (h *harness) pendingHeartbeat(workflowID string) (string, int32) {
+	resp, err := h.client.DescribeWorkflowExecution(context.Background(), workflowID, "")
+	if err != nil {
+		return "", 0
+	}
+	pending := resp.GetPendingActivities()
+	if len(pending) == 0 {
+		return "", 0
+	}
+	var data []string
+	for _, payload := range pending[0].GetHeartbeatDetails().GetPayloads() {
+		data = append(data, string(payload.GetData()))
+	}
+	return strings.Join(data, ","), pending[0].GetAttempt()
+}
+
+// awaitHeartbeatJob waits until Temporal holds heartbeat details naming a job, so a
+// crash after it leaves the job findable, and returns them
+func (h *harness) awaitHeartbeatJob(workflowID string) activities.TranscribeHeartbeat {
+	h.t.Helper()
+
+	var heartbeat activities.TranscribeHeartbeat
+	require.Eventually(h.t, func() bool {
+		raw, _ := h.pendingHeartbeat(workflowID)
+		return raw != "" && json.Unmarshal([]byte(raw), &heartbeat) == nil && heartbeat.JobID != ""
+	}, 30*time.Second, 50*time.Millisecond, "no heartbeat naming a job reached Temporal")
+
+	return heartbeat
+}
+
 // --- stub transcriber ---
+
+// stubCanceled as a job's failure ends it CANCELED rather than FAILED
+const stubCanceled = "<canceled>"
 
 type stubJob struct {
 	ID        string
@@ -300,21 +372,45 @@ func (j *stubJob) attempt() string {
 // until a poller is told its final status, which is when Transcribe returns.
 type stubTranscriber struct {
 	mu        sync.Mutex
+	name      string
 	start     time.Time
 	duration  func(n int) time.Duration
 	failure   func(n int) string
+	hold      chan struct{} // while set, submit responses wait for it to close
 	jobs      []*stubJob
 	byID      map[string]*stubJob
+	unknown   []string // IDs asked about that this transcriber never issued
+	lastSeen  time.Time
 	active    int
 	maxActive int
 	server    *httptest.Server
 }
 
-func newStubTranscriber(t *testing.T, start time.Time, duration func(n int) time.Duration) *stubTranscriber {
-	s := &stubTranscriber{start: start, duration: duration, byID: map[string]*stubJob{}}
+// newStubTranscriber names its job IDs after itself, as the real transcriber's random
+// IDs never match another's
+func newStubTranscriber(t *testing.T, name string, start time.Time, duration func(n int) time.Duration) *stubTranscriber {
+	s := &stubTranscriber{name: name, start: start, duration: duration, byID: map[string]*stubJob{}}
 	s.server = httptest.NewServer(http.HandlerFunc(s.handle))
 	t.Cleanup(s.server.Close)
+	t.Cleanup(s.releaseSubmits)
 	return s
+}
+
+// holdSubmits makes the transcriber accept submits but not answer them, until
+// releaseSubmits: the job exists, but the worker never learns its ID
+func (s *stubTranscriber) holdSubmits() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.hold = make(chan struct{})
+}
+
+func (s *stubTranscriber) releaseSubmits() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.hold != nil {
+		close(s.hold)
+		s.hold = nil
+	}
 }
 
 func (s *stubTranscriber) handle(w http.ResponseWriter, r *http.Request) {
@@ -323,6 +419,7 @@ func (s *stubTranscriber) handle(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	now := time.Now()
+	s.lastSeen = now
 
 	if r.Method == http.MethodPost {
 		var in struct {
@@ -331,7 +428,7 @@ func (s *stubTranscriber) handle(w http.ResponseWriter, r *http.Request) {
 		}
 		_ = json.NewDecoder(r.Body).Decode(&in)
 		job := &stubJob{
-			ID:        fmt.Sprintf("job-%d", len(s.jobs)+1),
+			ID:        fmt.Sprintf("%s-job-%d", s.name, len(s.jobs)+1),
 			Key:       r.Header.Get("Idempotency-Key"),
 			Path:      in.Path,
 			Duration:  s.duration(len(s.jobs) + 1),
@@ -344,6 +441,11 @@ func (s *stubTranscriber) handle(w http.ResponseWriter, r *http.Request) {
 		s.byID[job.ID] = job
 		s.active++
 		s.maxActive = max(s.maxActive, s.active)
+		if hold := s.hold; hold != nil {
+			s.mu.Unlock()
+			<-hold
+			s.mu.Lock()
+		}
 		w.WriteHeader(http.StatusAccepted)
 		_ = json.NewEncoder(w).Encode(map[string]any{"id": job.ID, "status": "QUEUED", "output_path": in.OutputPath})
 		return
@@ -351,6 +453,7 @@ func (s *stubTranscriber) handle(w http.ResponseWriter, r *http.Request) {
 
 	job, ok := s.byID[path.Base(r.URL.Path)]
 	if !ok {
+		s.unknown = append(s.unknown, path.Base(r.URL.Path))
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -372,6 +475,10 @@ func (s *stubTranscriber) handle(w http.ResponseWriter, r *http.Request) {
 		job.Completed = now
 		s.active--
 	}
+	if job.Failure == stubCanceled {
+		_ = json.NewEncoder(w).Encode(map[string]any{"id": job.ID, "status": "CANCELED"})
+		return
+	}
 	if job.Failure != "" {
 		_ = json.NewEncoder(w).Encode(map[string]any{"id": job.ID, "status": "FAILED", "error": job.Failure})
 		return
@@ -388,6 +495,12 @@ func (s *stubTranscriber) failWith(failure func(n int) string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.failure = failure
+}
+
+func (s *stubTranscriber) requests() (unknown []string, lastSeen time.Time) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return slices.Clone(s.unknown), s.lastSeen
 }
 
 func (s *stubTranscriber) snapshot() ([]stubJob, int) {
@@ -484,66 +597,197 @@ func TestIntegrationActivityCountLimitsConcurrentTranscriptions(t *testing.T) {
 	}
 }
 
-// A worker killed mid-transcription leaves its job running on the transcriber. Temporal
-// notices the missing heartbeat, retries on another worker, and that attempt submits a
-// separate job under a new key. The heartbeat timeout is shortened from the
-// production 10 minutes to keep the test short.
-func TestIntegrationWorkerCrashDuringTranscription(t *testing.T) {
-	const heartbeatTimeout = 20 * time.Second
+// recoveryHeartbeatTimeout stands in for the production 10 minutes, so a killed
+// worker's attempt is retried within the test
+const recoveryHeartbeatTimeout = 20 * time.Second
 
-	h := newHarness(t, true, func(n int) time.Duration {
-		if n == 1 {
-			return 10 * time.Minute // the crashed attempt's job outlives the test
-		}
-		return 5 * time.Second
-	})
-	crashed := h.startWorker(environment.QueueTranscribe, "it-transcribe-a", 2)
+// crashAfterHeartbeat starts a transcription on worker a against stub, waits until
+// Temporal holds heartbeat details naming its job, and kills a. It returns the details
+// and when the kill happened
+func (h *harness) crashAfterHeartbeat(workflowID string, stub *stubTranscriber) (client.WorkflowRun, activities.TranscribeHeartbeat, time.Time) {
+	h.t.Helper()
 
-	run := h.startTranscription("crash", 1, heartbeatTimeout)
+	a := h.startWorkerSpec(workerSpec{queue: environment.QueueTranscribe, identity: "it-worker-a", activityCount: 2, stub: stub})
+	run := h.startTranscription(workflowID, 1, recoveryHeartbeatTimeout)
+	heartbeat := h.awaitHeartbeatJob(workflowID)
+	h.t.Logf("Temporal holds heartbeat %+v at %s", heartbeat, h.since(time.Now()))
+
+	a.crash()
+	crashedAt := time.Now()
+	h.t.Logf("worker it-worker-a killed (SIGKILL) at %s", h.since(crashedAt))
+
+	return run, heartbeat, crashedAt
+}
+
+func (h *harness) logAttempts(workflowID string) activityEvents {
+	h.t.Helper()
+
+	events := h.activityEvents(workflowID)
+	for i, started := range events.started {
+		h.t.Logf("history: ActivityTaskStarted at %s attempt=%d identity=%s last failure=%q",
+			h.since(events.startedAt[i]), started.GetAttempt(), started.GetIdentity(), started.GetLastFailure().GetMessage())
+	}
+	return events
+}
+
+// A: a worker killed mid-transcription. Temporal retries after the heartbeat timeout,
+// and the new attempt resumes the job its heartbeat names instead of submitting one.
+func TestIntegrationResumeAfterWorkerCrash(t *testing.T) {
+	h := newHarness(t, true, func(int) time.Duration { return 45 * time.Second })
+
+	run, heartbeat, crashedAt := h.crashAfterHeartbeat("resume", h.stub)
+	h.startWorkerSpec(workerSpec{queue: environment.QueueTranscribe, identity: "it-worker-b", activityCount: 2, stub: h.stub})
+
+	var response activities.TranscribeResponse
+	require.NoError(t, run.Get(context.Background(), &response))
+
+	jobs, _ := h.stub.snapshot()
+	h.logJobs(jobs)
+	events := h.logAttempts("resume")
+
+	require.Len(t, jobs, 1, "the retry submits nothing")
+	job := jobs[0]
+	assert.Equal(t, heartbeat.JobID, job.ID)
+	assert.Equal(t, h.stub.server.URL, heartbeat.Transcriber)
+	assert.Equal(t, "1", job.attempt(), "the job is still attempt 1's")
+	assert.False(t, job.Deleted)
+	assert.True(t, job.LastPoll.After(crashedAt.Add(recoveryHeartbeatTimeout-5*time.Second)), "attempt 2 polled it")
+	assert.False(t, job.Completed.IsZero())
+
+	require.Len(t, events.started, 1)
+	assert.Equal(t, int32(2), events.started[0].GetAttempt())
+	assert.Equal(t, "it-worker-b", events.started[0].GetIdentity())
+	assert.Equal(t, enumspb.TIMEOUT_TYPE_HEARTBEAT, events.started[0].GetLastFailure().GetTimeoutFailureInfo().GetTimeoutType())
+
+	assert.Equal(t, paths.MustParse("/mnt/temp/it/out/in-1.wav.json"), response.JSONPath)
+}
+
+// B: the job finished while no worker was running. The retry returns its result.
+func TestIntegrationRecoverACompletedJob(t *testing.T) {
+	h := newHarness(t, true, func(int) time.Duration { return 5 * time.Second })
+
+	run, heartbeat, crashedAt := h.crashAfterHeartbeat("completed", h.stub)
+
+	// The job is done 5s after its submit; bring a worker back only after that.
+	time.Sleep(8 * time.Second)
+	h.startWorkerSpec(workerSpec{queue: environment.QueueTranscribe, identity: "it-worker-b", activityCount: 2, stub: h.stub})
+
+	var response activities.TranscribeResponse
+	require.NoError(t, run.Get(context.Background(), &response))
+
+	jobs, _ := h.stub.snapshot()
+	h.logJobs(jobs)
+	events := h.logAttempts("completed")
+
+	require.Len(t, jobs, 1, "the retry submits nothing")
+	assert.Equal(t, heartbeat.JobID, jobs[0].ID)
+	assert.True(t, jobs[0].Completed.After(crashedAt), "first seen complete by attempt 2")
+	require.Len(t, events.started, 1)
+	assert.Equal(t, int32(2), events.started[0].GetAttempt())
+	assert.Equal(t, paths.MustParse("/mnt/temp/it/out/in-1.wav.json"), response.JSONPath)
+	assert.Equal(t, paths.MustParse("/mnt/temp/it/out/in-1.wav.txt"), response.TXTPath)
+}
+
+// C: the retry runs on another GPU host. Its worker only knows its own transcriber, so it
+// leaves the job on the first one alone (no request there, no question about it here)
+// and submits a new job on its own
+func TestIntegrationRecoveryAcrossHosts(t *testing.T) {
+	h := newHarness(t, true, func(int) time.Duration { return 10 * time.Minute })
+	gpuB := newStubTranscriber(t, "gpu-b", h.start, func(int) time.Duration { return 5 * time.Second })
+
+	run, heartbeat, crashedAt := h.crashAfterHeartbeat("cross-host", h.stub)
+	h.startWorkerSpec(workerSpec{queue: environment.QueueTranscribe, identity: "it-worker-b", activityCount: 2, stub: gpuB})
+
+	var response activities.TranscribeResponse
+	require.NoError(t, run.Get(context.Background(), &response))
+
+	jobsA, _ := h.stub.snapshot()
+	jobsB, _ := gpuB.snapshot()
+	t.Log("gpu-a:")
+	h.logJobs(jobsA)
+	t.Log("gpu-b:")
+	h.logJobs(jobsB)
+	h.logAttempts("cross-host")
+
+	_, lastSeenA := h.stub.requests()
+	unknownB, _ := gpuB.requests()
+	t.Logf("gpu-a last request at %s; IDs gpu-b was asked about but never issued: %v", h.since(lastSeenA), unknownB)
+
+	require.Len(t, jobsA, 1)
+	assert.Equal(t, heartbeat.JobID, jobsA[0].ID)
+	assert.True(t, jobsA[0].Completed.IsZero(), "gpu-a's job is still running")
+	assert.False(t, lastSeenA.After(crashedAt), "nothing asks gpu-a after the crash")
+
+	require.Len(t, jobsB, 1, "gpu-b's worker submits its own job")
+	assert.Equal(t, "2", jobsB[0].attempt())
+	assert.Empty(t, unknownB, "gpu-a's job ID is never asked about on gpu-b")
+	assert.Equal(t, paths.MustParse("/mnt/temp/it/out/in-1.wav.json"), response.JSONPath)
+}
+
+// D: an attempt that heartbeated the old string "Transcribe" is retried by the new code.
+func TestIntegrationLegacyHeartbeatDetails(t *testing.T) {
+	h := newHarness(t, true, func(int) time.Duration { return 5 * time.Second })
+
+	legacy := h.startWorkerSpec(workerSpec{queue: environment.QueueTranscribe, identity: "it-legacy", activityCount: 2, stub: h.stub, legacyHeartbeat: true})
+	run := h.startTranscription("legacy", 1, recoveryHeartbeatTimeout)
+
+	var details string
+	require.Eventually(t, func() bool {
+		details, _ = h.pendingHeartbeat("legacy")
+		return details != ""
+	}, 30*time.Second, 50*time.Millisecond)
+	t.Logf("Temporal holds legacy heartbeat %s at %s", details, h.since(time.Now()))
+	assert.Equal(t, `"Transcribe"`, details)
+
+	legacy.crash()
+	h.startWorkerSpec(workerSpec{queue: environment.QueueTranscribe, identity: "it-worker-b", activityCount: 2, stub: h.stub})
+
+	require.NoError(t, run.Get(context.Background(), nil), "the old details don't break the retry")
+
+	jobs, _ := h.stub.snapshot()
+	h.logJobs(jobs)
+	events := h.logAttempts("legacy")
+
+	require.Len(t, jobs, 1, "with no job to resume, the retry submits one")
+	assert.Equal(t, "2", jobs[0].attempt())
+	require.Len(t, events.started, 1)
+	assert.Equal(t, int32(2), events.started[0].GetAttempt())
+}
+
+// F: the worker dies after the transcriber accepted its job but before the ID reached
+// Temporal. Nothing tells the retry about that job, so it submits another one: the
+// duplicate this recovery can't prevent.
+func TestIntegrationCrashBeforeTheHeartbeat(t *testing.T) {
+	h := newHarness(t, true, func(int) time.Duration { return 5 * time.Second })
+	h.stub.holdSubmits()
+
+	a := h.startWorkerSpec(workerSpec{queue: environment.QueueTranscribe, identity: "it-worker-a", activityCount: 2, stub: h.stub})
+	run := h.startTranscription("unpersisted", 1, recoveryHeartbeatTimeout)
 
 	require.Eventually(t, func() bool {
 		jobs, _ := h.stub.snapshot()
-		return len(jobs) == 1 && jobs[0].Polls >= 1
-	}, 30*time.Second, 100*time.Millisecond, "attempt 1 never submitted and polled its job")
+		return len(jobs) == 1
+	}, 30*time.Second, 50*time.Millisecond, "attempt 1 never submitted")
+	details, attempt := h.pendingHeartbeat("unpersisted")
+	t.Logf("job accepted, response held; Temporal holds heartbeat %q for attempt %d", details, attempt)
+	assert.Empty(t, details, "the job's ID never reached Temporal")
 
-	crashed.crash()
+	a.crash()
 	crashedAt := time.Now()
-	h.startWorker(environment.QueueTranscribe, "it-transcribe-b", 2)
-	restartedAt := time.Now()
+	t.Logf("worker it-worker-a killed (SIGKILL) at %s", h.since(crashedAt))
+	h.stub.releaseSubmits()
+	h.startWorkerSpec(workerSpec{queue: environment.QueueTranscribe, identity: "it-worker-b", activityCount: 2, stub: h.stub})
 
 	require.NoError(t, run.Get(context.Background(), nil))
 
 	jobs, _ := h.stub.snapshot()
-	events := h.activityEvents("crash")
-
-	t.Logf("worker it-transcribe-a killed (SIGKILL) at %s, it-transcribe-b polling at %s", h.since(crashedAt), h.since(restartedAt))
 	h.logJobs(jobs)
-	for i, started := range events.started {
-		t.Logf("history: ActivityTaskStarted at %s attempt=%d identity=%s last failure=%q",
-			h.since(events.startedAt[i]), started.GetAttempt(), started.GetIdentity(), started.GetLastFailure().GetMessage())
-	}
+	h.logAttempts("unpersisted")
 
-	require.Len(t, jobs, 2, "the retry submits a second job")
-	orphan, retry := jobs[0], jobs[1]
-
-	assert.NotEqual(t, orphan.ID, retry.ID)
-	assert.Equal(t, "1", orphan.attempt())
-	assert.Equal(t, "2", retry.attempt())
-	assert.NotEqual(t, orphan.Key, retry.Key, "a new key, so the transcriber makes a new job")
-
-	assert.False(t, orphan.Deleted, "a killed worker can't cancel its job")
-	assert.True(t, orphan.Completed.IsZero(), "the orphaned job is still running")
-	assert.False(t, orphan.LastPoll.After(crashedAt), "nobody polls the orphaned job after the crash")
-
-	assert.GreaterOrEqual(t, retry.Submitted.Sub(crashedAt), heartbeatTimeout-5*time.Second,
-		"the retry waits for the heartbeat timeout")
-	assert.False(t, retry.Completed.IsZero())
-
-	require.Len(t, events.started, 1, "history records the attempt that completed")
-	assert.Equal(t, int32(2), events.started[0].GetAttempt())
-	assert.Equal(t, "it-transcribe-b", events.started[0].GetIdentity())
-	assert.Equal(t, enumspb.TIMEOUT_TYPE_HEARTBEAT,
-		events.started[0].GetLastFailure().GetTimeoutFailureInfo().GetTimeoutType(), "attempt 1 ended by heartbeat timeout")
+	require.Len(t, jobs, 2, "the retry can't know about attempt 1's job")
+	assert.Equal(t, "1", jobs[0].attempt())
+	assert.Zero(t, jobs[0].Polls, "attempt 1's job is orphaned: nobody ever polls it")
+	assert.Equal(t, "2", jobs[1].attempt())
 }
 
 // With both queues served, TRANSCRIBE_QUEUE_ENABLED decides which worker runs it.

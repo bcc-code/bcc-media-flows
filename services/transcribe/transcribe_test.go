@@ -592,3 +592,41 @@ func TestNormalizeTranscriptionLanguage(t *testing.T) {
 		})
 	}
 }
+
+func TestTranscriberIdentity(t *testing.T) {
+	tests := []struct {
+		name    string
+		baseURL string
+		want    string
+	}{
+		{name: "an address is kept", baseURL: "http://10.12.128.44:8888", want: "http://10.12.128.44:8888"},
+		{name: "case and a trailing slash don't matter", baseURL: "HTTP://GPU1.lan:8888/", want: "http://gpu1.lan:8888"},
+		{name: "credentials never reach heartbeat details", baseURL: "http://user:secret@gpu1:8888", want: "http://gpu1:8888"},
+		{name: "a query is dropped", baseURL: "http://gpu1:8888/?token=secret", want: "http://gpu1:8888"},
+		{name: "no host gives no identity", baseURL: "gpu1", want: ""},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.want, transcriberIdentity(test.baseURL))
+		})
+	}
+}
+
+func TestGet_AnUnknownJobIsErrJobNotFound(t *testing.T) {
+	client := failingServer(t, http.StatusNotFound, `{"error":"not found"}`)
+
+	_, err := client.Get(context.Background(), "job-7")
+
+	require.ErrorIs(t, err, ErrJobNotFound)
+	assert.Contains(t, err.Error(), "job-7")
+}
+
+func TestGet_AnUnavailableTranscriberIsNotErrJobNotFound(t *testing.T) {
+	client := failingServer(t, http.StatusServiceUnavailable, `{"error":"down"}`)
+
+	_, err := client.Get(context.Background(), "job-7")
+
+	require.Error(t, err)
+	assert.NotErrorIs(t, err, ErrJobNotFound)
+}
