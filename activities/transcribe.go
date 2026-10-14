@@ -19,6 +19,7 @@ type TranscribeParams struct {
 	File            paths.Path
 	DestinationPath paths.Path
 	Language        string
+	Model string
 }
 
 type TranscribeResponse struct {
@@ -48,7 +49,7 @@ func (ua UtilActivities) Transcribe(
 		return nil, temporal.NewNonRetryableApplicationError("transcriber client not configured", "transcriber_not_configured", nil)
 	}
 
-	jobData, err := ua.Transcriber.Transcribe(ctx, input.File.Local(), input.DestinationPath.Local(), input.Language, transcribeIdempotencyKey(ctx))
+	jobData, err := ua.Transcriber.Transcribe(ctx, input.File.Local(), input.DestinationPath.Local(), input.Language, input.Model, transcribeIdempotencyKey(ctx))
 	if errors.Is(err, transcribe.ErrJobCanceled) {
 		// A retry would submit the job again and undo the cancel
 		return nil, temporal.NewNonRetryableApplicationError(err.Error(), "transcription_canceled", err)
@@ -93,10 +94,12 @@ func transcriptPaths(results []string) (*TranscribeResponse, error) {
 	}
 
 	var errs []error
-	parse := func(format string) paths.Path {
+	parse := func(format string, required bool) paths.Path {
 		result, ok := byFormat[format]
 		if !ok {
-			errs = append(errs, fmt.Errorf("transcriber wrote no %s file", format))
+			if required {
+				errs = append(errs, fmt.Errorf("transcriber wrote no %s file", format))
+			}
 			return paths.Path{}
 		}
 		path, err := paths.Parse(result)
@@ -107,10 +110,10 @@ func transcriptPaths(results []string) (*TranscribeResponse, error) {
 	}
 
 	response := &TranscribeResponse{
-		JSONPath:     parse("json"),
-		SRTPath:      parse("srt"),
-		WordsSRTPath: parse("words.srt"),
-		TXTPath:      parse("txt"),
+		JSONPath:     parse("json", true),
+		SRTPath:      parse("srt", true),
+		WordsSRTPath: parse("words.srt", false), // no workflow reads it
+		TXTPath:      parse("txt", true),
 	}
 	if len(errs) > 0 {
 		return nil, errors.Join(errs...)

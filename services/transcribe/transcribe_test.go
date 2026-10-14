@@ -2,6 +2,7 @@ package transcribe
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -58,10 +59,10 @@ func TestNewClient_RequiresABaseURL(t *testing.T) {
 func TestTranscribe_RejectsMissingArguments(t *testing.T) {
 	client := testClient(t, "http://transcriber.invalid")
 
-	_, err := client.Transcribe(context.Background(), "", "/mnt/out", "no", "")
+	_, err := client.Transcribe(context.Background(), "", "/mnt/out", "no", "", "")
 	assert.ErrorIs(t, err, errNoInputFile)
 
-	_, err = client.Transcribe(context.Background(), "/mnt/in.wav", "", "no", "")
+	_, err = client.Transcribe(context.Background(), "/mnt/in.wav", "", "no", "", "")
 	assert.ErrorIs(t, err, errNoOutput)
 }
 
@@ -71,7 +72,7 @@ func TestTranscribe_SubmitFailureIsAnError(t *testing.T) {
 		_, _ = w.Write([]byte(`{"detail":"boom"}`))
 	})
 
-	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "")
+	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
 
 	require.Error(t, err)
 	assert.Nil(t, job)
@@ -84,7 +85,7 @@ func TestTranscribe_SubmitWithoutAnIDIsAnError(t *testing.T) {
 		_, _ = w.Write([]byte(`{"status":"QUEUED"}`))
 	})
 
-	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "")
+	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
 
 	require.Error(t, err)
 	assert.Nil(t, job)
@@ -109,7 +110,7 @@ func TestTranscribe_PollNotFoundEndsTheLoop(t *testing.T) {
 	done := make(chan struct{})
 	var err error
 	go func() {
-		_, err = client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "")
+		_, err = client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
 		close(done)
 	}()
 
@@ -141,7 +142,7 @@ func TestTranscribe_PollsUntilCompleted(t *testing.T) {
 		_, _ = w.Write([]byte(`{"id":"job-1","status":"COMPLETED","result":"/mnt/out/in.json"}`))
 	})
 
-	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "")
+	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
 
 	require.NoError(t, err)
 	require.NotNil(t, job)
@@ -162,7 +163,7 @@ func TestTranscribe_FailedJobIsAnError(t *testing.T) {
 		_, _ = w.Write([]byte(`{"id":"job-1","status":"FAILED"}`))
 	})
 
-	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "")
+	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "job-1", "the error names the job that failed")
@@ -181,7 +182,7 @@ func TestTranscribe_FailedJobErrorCarriesTheServerReason(t *testing.T) {
 		_, _ = w.Write([]byte(`{"id":"job-1","status":"FAILED","error":"open /mnt/temp/in.wav: no such file or directory"}`))
 	})
 
-	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "")
+	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "job-1")
@@ -204,7 +205,7 @@ func TestTranscribe_CanceledJobEndsTheLoop(t *testing.T) {
 		_, _ = w.Write([]byte(`{"id":"job-1","status":"CANCELED"}`))
 	})
 
-	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "")
+	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
 
 	require.ErrorIs(t, err, ErrJobCanceled)
 	assert.Contains(t, err.Error(), "job-1", "the error names the job that was canceled")
@@ -229,7 +230,7 @@ func TestTranscribe_CancellationEndsTheLoop(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)
 	go func() {
-		_, err := client.Transcribe(ctx, "/mnt/in.wav", "/mnt/out", "no", "")
+		_, err := client.Transcribe(ctx, "/mnt/in.wav", "/mnt/out", "no", "", "")
 		done <- err
 	}()
 
@@ -280,7 +281,7 @@ func cancelledWhilePolling(t *testing.T, deleteStatus int) ([]string, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)
 	go func() {
-		_, err := client.Transcribe(ctx, "/mnt/in.wav", "/mnt/out", "no", "")
+		_, err := client.Transcribe(ctx, "/mnt/in.wav", "/mnt/out", "no", "", "")
 		done <- err
 	}()
 
@@ -329,7 +330,7 @@ func TestTranscribe_AFailedJobIsNotCancelled(t *testing.T) {
 		}
 	})
 
-	_, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "")
+	_, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
 
 	require.Error(t, err)
 	assert.Zero(t, deletes.Load(), "only a cancelled or timed-out activity cancels its job")
@@ -351,7 +352,7 @@ func TestTranscribe_SendsTheJobDefinition(t *testing.T) {
 		_, _ = w.Write([]byte(`{"id":"job-1","status":"COMPLETED"}`))
 	})
 
-	_, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "nor", "")
+	_, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "nor", "", "")
 
 	require.NoError(t, err)
 	assert.Contains(t, submitted, `"path":"/mnt/in.wav"`)
@@ -390,11 +391,49 @@ func TestTranscribe_SendsTheIdempotencyKeyOnlyWhenGiven(t *testing.T) {
 				_, _ = w.Write([]byte(`{"id":"job-1","status":"COMPLETED"}`))
 			})
 
-			_, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", test.key)
+			_, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", test.key)
 
 			require.NoError(t, err)
 			assert.Equal(t, test.wantFound, found)
 			assert.Equal(t, test.wantKey, gotKey)
+		})
+	}
+}
+
+func TestTranscribe_SendsTheModelOnlyWhenGiven(t *testing.T) {
+	tests := []struct {
+		name  string
+		model string
+		want  string
+	}{
+		{name: "a model is sent", model: "nb-whisper-large", want: `"model":"nb-whisper-large"`},
+		{name: "no model leaves the server default", model: "", want: ""},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			fastPolling(t)
+
+			var submitted string
+			client := transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				if r.Method == http.MethodPost {
+					body, _ := io.ReadAll(r.Body)
+					submitted = string(body)
+					_, _ = w.Write([]byte(`{"id":"job-1"}`))
+					return
+				}
+				_, _ = w.Write([]byte(`{"id":"job-1","status":"COMPLETED"}`))
+			})
+
+			_, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", test.model, "")
+
+			require.NoError(t, err)
+			if test.want == "" {
+				assert.NotContains(t, submitted, `"model"`)
+			} else {
+				assert.Contains(t, submitted, test.want)
+			}
 		})
 	}
 }
@@ -445,7 +484,7 @@ func TestTranscribe_HeartbeatsWhileItPolls(t *testing.T) {
 	})
 
 	transcribeActivity := func(ctx context.Context) (string, error) {
-		job, err := client.Transcribe(ctx, "/mnt/in.wav", "/mnt/out", "no", "")
+		job, err := client.Transcribe(ctx, "/mnt/in.wav", "/mnt/out", "no", "", "")
 		if err != nil {
 			return "", err
 		}

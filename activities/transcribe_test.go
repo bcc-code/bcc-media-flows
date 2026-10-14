@@ -2,6 +2,7 @@ package activities
 
 import (
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -134,6 +135,16 @@ func TestTranscriptPaths(t *testing.T) {
 		assert.NotContains(t, err.Error(), "no json file")
 	})
 
+	t.Run("words.srt is optional", func(t *testing.T) {
+		withoutWords := all[1:]
+
+		response, err := transcriptPaths(withoutWords)
+
+		require.NoError(t, err)
+		assert.Equal(t, paths.Path{}, response.WordsSRTPath)
+		assert.Equal(t, paths.MustParse("/mnt/temp/out/in.wav.srt"), response.SRTPath)
+	})
+
 	t.Run("a path outside the known drives is an error", func(t *testing.T) {
 		outside := append([]string{"/somewhere/else/in.wav.json"}, all[:4]...)
 
@@ -184,4 +195,32 @@ func TestTranscribe_WithoutResultsAssumesTheOldNames(t *testing.T) {
 	require.NoError(t, val.Get(&response))
 	assert.Equal(t, paths.MustParse("/mnt/temp/out/in.wav.json"), response.JSONPath)
 	assert.Equal(t, paths.MustParse("/mnt/temp/out/in.wav.words.srt"), response.WordsSRTPath)
+}
+
+func TestTranscribe_PassesTheModelOn(t *testing.T) {
+	var submitted string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodPost {
+			body, _ := io.ReadAll(r.Body)
+			submitted = string(body)
+			_, _ = w.Write([]byte(`{"id":"job-1","status":"QUEUED"}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"id":"job-1","status":"COMPLETED","output_path":"/mnt/temp/out"}`))
+	}))
+	t.Cleanup(server.Close)
+
+	client, err := transcribe.NewClient(transcriberConfig(server.URL))
+	require.NoError(t, err)
+	ua := UtilActivities{Transcriber: client}
+	env := activityEnv(t)
+	env.RegisterActivity(ua.Transcribe)
+
+	params := transcribeParams()
+	params.Model = "nb-whisper-large"
+	_, err = env.ExecuteActivity(ua.Transcribe, params)
+
+	require.NoError(t, err)
+	assert.Contains(t, submitted, `"model":"nb-whisper-large"`)
 }

@@ -74,6 +74,7 @@ type TranscribeInput struct {
 	Callback   string `json:"callback,omitempty"`
 	OutputPath string `json:"output_path"`
 	Priority   int    `json:"priority,omitempty"`
+	Model      string `json:"model,omitempty"`
 }
 
 type TranscribeJob struct {
@@ -216,6 +217,7 @@ func (c *Client) Transcribe(
 	inputFile string,
 	outputFolder string,
 	language string,
+	model string,
 	idempotencyKey string,
 ) (_ *TranscribeJob, err error) {
 
@@ -236,6 +238,7 @@ func (c *Client) Transcribe(
 			Language:   language,
 			Format:     "all",
 			OutputPath: outputFolder,
+			Model: model,
 		}).
 		SetResult(&TranscribeJob{})
 
