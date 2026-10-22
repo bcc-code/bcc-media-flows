@@ -17,6 +17,12 @@ func Test_TCToSeconds(t *testing.T) {
 		{"25@PAL", 1.0, false},
 		{"25000@PAL", 1000.0, false},
 		{"25000@NTSC", 0.0, true},
+		{"90000@PAL", 3600.0, false},
+		{"180000@50", 3600.0, false},
+		{"48000@48000", 1.0, false},
+		{"25000@FOO", 0.0, true},
+		{"25000@0", 0.0, true},
+		{"25000", 0.0, true},
 	}
 
 	for _, td := range testData {

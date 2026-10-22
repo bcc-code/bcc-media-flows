@@ -33,8 +33,11 @@ func GetChapterMetaForClips(client Client, clips []*Clip) ([]*GetChapterMetaResu
 		}
 
 		sourceMeta := metaCache[clip.VXID]
-		startTC := sourceMeta.Get(vscommon.FieldStartTC, "0")
-		tcStartSeconds, _ := vscommon.TCToSeconds(startTC)
+		startTC := sourceMeta.Get(vscommon.FieldStartTC, "0@PAL")
+		tcStartSeconds, err := vscommon.TCToSeconds(startTC)
+		if err != nil {
+			return nil, err
+		}
 
 		// The result here is in TC of the original MEDIA.
 		chapterMeta, err := client.GetChapterMeta(clip.VXID, clip.InSeconds+tcStartSeconds, clip.OutSeconds+tcStartSeconds)
