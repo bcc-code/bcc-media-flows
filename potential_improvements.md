@@ -70,3 +70,9 @@ Revalidated against the code 2026-09-15. Items confirmed fixed were removed; the
 - The `/move-files` VX-ID form always sends `Shapes: ["original"]`, although `MoveMBFileParams` takes any shape tags.
 - `Cantemo.MoveFileWait` returns nil when it finds no `MOVE_FILE` job, and `WaitForJobCompletion` returns a FAILED or ABORTED status without an error, so a move can "succeed" without moving the file. `MoveStorageFiles` works around it by skipping a file that is still listed on the source after its move.
 - The trigger UI's workflow details page doesn't show a workflow's result, so the `MoveStorageFiles` dry-run counts can only be read in the Temporal UI.
+
+## Worker scheduling and the Temporal SDK (added 2026-10-26)
+
+- `cmd/worker/main.go` sets `MaxConcurrentActivityExecutionSize: activityCount` with the comment "Doesn't make sense to have more than one activity running at a time", but `ACTIVITY_COUNT` defaults to 5 (`environment/config.go`). A transcode node running several heavy ffmpeg jobs still polls for more while other nodes are idle.
+- `services/transcode` tests fail against ffmpeg 9.0.1: `-vsync` is gone (`Unrecognized option 'vsync'`, use `-fps_mode`) and the ProRes Hyperdeck command passes `top` as an encoder option (`Codec AVOption top ... is not a encoding option`). HAP and multitrack tests fail too. Production images are on 8.0.3, so this bites on the next ffmpeg upgrade.
+- `services/cantemo` and `services/telegram` tests reach the network (vault.bcc.media, api.telegram.org) and fail offline; they could be integration-tagged.
