@@ -1,6 +1,6 @@
 module github.com/bcc-code/bcc-media-flows
 
-go 1.25.8
+go 1.26.0
 
 require (
 	cloud.google.com/go/pubsub v1.50.1
@@ -20,8 +20,8 @@ require (
 	github.com/sendgrid/sendgrid-go v3.14.0+incompatible
 	github.com/stretchr/testify v1.11.1
 	github.com/teamwork/reload v1.4.2
-	go.temporal.io/api v1.62.14
-	go.temporal.io/sdk v1.45.0
+	go.temporal.io/api v1.63.5
+	go.temporal.io/sdk v1.50.0
 	go.uber.org/mock v0.6.0
 	gopkg.in/telebot.v3 v3.2.1
 )
@@ -45,7 +45,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/nexus-rpc/nexus-proto-annotations v0.1.0 // indirect
-	github.com/nexus-rpc/sdk-go v0.6.0 // indirect
+	github.com/nexus-rpc/sdk-go v0.7.0 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/segmentio/backo-go v1.1.0 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.7.0 // indirect
