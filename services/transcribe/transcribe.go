@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -15,38 +17,75 @@ import (
 	"github.com/bcc-code/bcc-media-flows/utils"
 )
 
-const BaseUrl = "http://10.12.128.44:8888"
-
 const serviceName = "transcribe"
 
 const (
 	retryCount   = 3
 	retryWait    = 10 * time.Second
 	retryMaxWait = 30 * time.Second
+
+	cancelTimeout = 30 * time.Second
 )
 
-// pollInterval and baseURL are vars only so the tests can drive the poll loop against
-// a stub server.
-var (
-	pollInterval = 10 * time.Second
-	baseURL      = BaseUrl
-)
+// pollInterval is a var only so the tests can drive the poll loop against a stub
+// server.
+var pollInterval = 10 * time.Second
 
-func newClient() *resty.Client {
-	return httpx.New(httpx.Config{
-		Service:      serviceName,
-		BaseURL:      baseURL,
-		RetryCount:   retryCount,
-		RetryWait:    retryWait,
-		RetryMaxWait: retryMaxWait,
-	})
-}
+// ErrJobCanceled means the job was canceled on the transcriber itself, which only
+// happens when someone stops it there on purpose
+var ErrJobCanceled = errors.New("transcription job canceled")
+
+// ErrJobTimeout means the transcriber stopped the job at its time limit (JOB_TIMEOUT,
+// or the job's own timeout_seconds)
+var ErrJobTimeout = errors.New("stopped at the transcriber's job timeout")
+
+// jobTimeoutError is the whole error value the transcriber documents for a job it
+// stopped at its time limit. It has no error code, so this exact value is the signal;
+// any other text, even one mentioning a timeout, is an ordinary failure
+const jobTimeoutError = "timeout"
+
+// ErrJobNotFound means the transcriber doesn't know the job: it restarted, which also
+// kills running jobs, or it dropped the finished job from its store
+var ErrJobNotFound = errors.New("transcriber has no such job")
 
 var (
+	errNoBaseURL   = errors.New("transcriber base URL not set")
 	errNoInputFile = errors.New("no input file")
 	errNoOutput    = errors.New("no output folder")
-	errNoLanguage  = errors.New("no language")
 )
+
+type Config interface {
+	Transcriber() string
+}
+
+// Client talks to one transcriber instance. Job IDs are only known to the instance
+// that issued them, so a job is submitted and polled through the same client.
+type Client struct {
+	client   *resty.Client
+	identity string
+}
+
+// Identity is the transcriber's base URL without credentials. Unique only if each host
+// uses its own address, not a shared alias
+func (c *Client) Identity() string { return c.identity }
+
+func NewClient(cfg Config) (*Client, error) {
+	baseURL := cfg.Transcriber()
+	if baseURL == "" {
+		return nil, errNoBaseURL
+	}
+
+	return &Client{
+		identity: transcriberIdentity(baseURL),
+		client: httpx.New(httpx.Config{
+			Service:      serviceName,
+			BaseURL:      baseURL,
+			RetryCount:   retryCount,
+			RetryWait:    retryWait,
+			RetryMaxWait: retryMaxWait,
+		}),
+	}, nil
+}
 
 type TranscribeInput struct {
 	Path       string `json:"path"`
@@ -55,21 +94,29 @@ type TranscribeInput struct {
 	Callback   string `json:"callback,omitempty"`
 	OutputPath string `json:"output_path"`
 	Priority   int    `json:"priority,omitempty"`
+	Model      string `json:"model,omitempty"`
 }
 
 type TranscribeJob struct {
-	ID           string `json:"id"`
-	Path         string `json:"path"`
-	Language     string `json:"language"`
-	OutputFormat string `json:"format"`
-	OutputPath   string `json:"output_path"`
-	Progress     int    `json:"progress"`
-	Status       string `json:"status"`
-	Result       string `json:"result"`
-	Callback     string `json:"callback"`
-	Model        string `json:"model"`
-	Duration     string `json:"duration"`
-	Priority     int    `json:"priority"`
+	ID           string   `json:"id"`
+	Path         string   `json:"path"`
+	Language     string   `json:"language"`
+	OutputFormat string   `json:"format"`
+	OutputPath   string   `json:"output_path"`
+	Progress     int      `json:"progress"`
+	Status       string   `json:"status"`
+	Result       string   `json:"result"`
+	Results      []string `json:"results,omitempty"`
+	Callback     string   `json:"callback"`
+	Model        string   `json:"model"`
+	Duration     string   `json:"duration"`
+	Priority     int      `json:"priority"`
+	Error        string   `json:"error,omitempty"`
+}
+
+// TimedOut reports whether the transcriber stopped the job at its time limit
+func (j *TranscribeJob) TimedOut() bool {
+	return j.Status == "FAILED" && j.Error == jobTimeoutError
 }
 
 var whisperSupportedLanguages = map[string]bool{
@@ -190,13 +237,47 @@ func normalizeTranscriptionLanguage(language string) string {
 	return "auto"
 }
 
-func DoTranscribe(
+// transcriberIdentity normalises a base URL and drops credentials. An unparseable URL
+// gives "", which turns recovery off
+func transcriberIdentity(baseURL string) string {
+	u, err := url.Parse(strings.TrimSpace(baseURL))
+	if err != nil || u.Host == "" {
+		return ""
+	}
+	u.User = nil
+	u.Scheme = strings.ToLower(u.Scheme)
+	u.Host = strings.ToLower(u.Host)
+	u.RawQuery = ""
+	u.Fragment = ""
+	return strings.TrimSuffix(u.String(), "/")
+}
+
+// Transcribe submits a job and waits for it to end
+func (c *Client) Transcribe(
 	ctx context.Context,
 	inputFile string,
 	outputFolder string,
 	language string,
+	model string,
+	idempotencyKey string,
 ) (*TranscribeJob, error) {
+	job, err := c.Submit(ctx, inputFile, outputFolder, language, model, idempotencyKey)
+	if err != nil {
+		return nil, err
+	}
 
+	return c.Wait(ctx, job.ID, nil)
+}
+
+// Submit hands a new job to the transcriber and returns it as accepted
+func (c *Client) Submit(
+	ctx context.Context,
+	inputFile string,
+	outputFolder string,
+	language string,
+	model string,
+	idempotencyKey string,
+) (*TranscribeJob, error) {
 	if inputFile == "" {
 		return nil, errNoInputFile
 	}
@@ -205,21 +286,26 @@ func DoTranscribe(
 		return nil, errNoOutput
 	}
 
-	client := newClient()
-
 	language = normalizeTranscriptionLanguage(language)
 
-	resp, err := client.R().
+	req := c.client.R().
 		SetContext(ctx).
 		SetBody(TranscribeInput{
 			Path:       inputFile,
 			Language:   language,
 			Format:     "all",
 			OutputPath: outputFolder,
+			Model:      model,
 		}).
-		SetResult(&TranscribeJob{}).
-		Post("/transcription/job")
+		SetResult(&TranscribeJob{})
 
+	// The client retries the POST too, and a retry of one the server did accept would
+	// otherwise start a second job
+	if idempotencyKey != "" {
+		req.SetHeader("Idempotency-Key", idempotencyKey)
+	}
+
+	resp, err := req.Post("/transcription/job")
 	if err != nil {
 		return nil, err
 	}
@@ -229,28 +315,64 @@ func DoTranscribe(
 		return nil, errors.New("transcription service accepted the job but returned no id")
 	}
 
-	// Periodically check the status of the job
+	return job, nil
+}
+
+// Get reads a job's current state once
+func (c *Client) Get(ctx context.Context, jobID string) (*TranscribeJob, error) {
+	resp, err := c.client.R().
+		SetContext(ctx).
+		SetResult(&TranscribeJob{}).
+		Get("/transcription/job/" + jobID)
+	if httpx.StatusCode(err) == http.StatusNotFound {
+		return nil, fmt.Errorf("transcription job %s: %w: %w", jobID, ErrJobNotFound, err)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Result().(*TranscribeJob), nil
+}
+
+// Wait polls a job until it ends. heartbeat, when not nil, is recorded on every poll,
+// so a retry can find the job again
+func (c *Client) Wait(ctx context.Context, jobID string, heartbeat any) (_ *TranscribeJob, err error) {
+	// When the activity is cancelled or times out, the job would otherwise keep a GPU
+	// busy for nobody, and a retry would start a second one beside it
+	defer func() {
+		if err != nil && ctx.Err() != nil {
+			err = errors.Join(err, c.cancelJob(ctx, jobID))
+		}
+	}()
+
 	for {
 		// RecordHeartbeat panics outside an activity, and this is a plain function.
 		if activity.IsActivity(ctx) {
-			activity.RecordHeartbeat(ctx)
+			if heartbeat != nil {
+				activity.RecordHeartbeat(ctx, heartbeat)
+			} else {
+				activity.RecordHeartbeat(ctx)
+			}
 		}
 
-		resp, err := client.R().
-			SetContext(ctx).
-			SetResult(&TranscribeJob{}).
-			Get("/transcription/job/" + job.ID)
-
+		job, err := c.Get(ctx, jobID)
 		if err != nil {
 			return nil, err
 		}
 
-		status := resp.Result().(*TranscribeJob)
-		switch status.Status {
+		switch job.Status {
 		case "COMPLETED":
-			return status, nil
+			return job, nil
 		case "FAILED":
-			return status, fmt.Errorf("transcription job %s failed", job.ID)
+			if job.TimedOut() {
+				return job, fmt.Errorf("transcription job %s failed: %w", jobID, ErrJobTimeout)
+			}
+			if job.Error != "" {
+				return job, fmt.Errorf("transcription job %s failed: %s", jobID, job.Error)
+			}
+			return job, fmt.Errorf("transcription job %s failed", jobID)
+		case "CANCELED":
+			return job, fmt.Errorf("transcription job %s: %w", jobID, ErrJobCanceled)
 		}
 
 		select {
@@ -259,6 +381,21 @@ func DoTranscribe(
 		case <-time.After(pollInterval):
 		}
 	}
+}
+
+// cancelJob runs because ctx is already done, so it gets a short context of its own
+func (c *Client) cancelJob(ctx context.Context, id string) error {
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), cancelTimeout)
+	defer cancel()
+
+	// 404: the job has already been dropped from the transcriber's store
+	_, err := httpx.Tolerating(c.client.R().SetContext(ctx), http.StatusNotFound).
+		Delete("/transcription/job/" + id)
+	if err != nil {
+		return fmt.Errorf("cancel transcription job %s: %w", id, err)
+	}
+
+	return nil
 }
 
 type Transcription struct {

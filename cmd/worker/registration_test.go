@@ -15,12 +15,13 @@ import (
 // runtime, with the worker simply not answering those activities.
 func TestActivityStructsStillExposeTheirMethods(t *testing.T) {
 	structs := map[string]any{
-		"Util":      activities.Util,
-		"Vidispine": activities.Vidispine,
-		"Cantemo":   activities.Cantemo,
-		"Platform":  activities.Platform,
-		"Live":      activities.Live,
-		"QScan":     activities.QScan,
+		"Util":        activities.Util,
+		"Vidispine":   activities.Vidispine,
+		"Cantemo":     activities.Cantemo,
+		"Platform":    activities.Platform,
+		"Live":        activities.Live,
+		"QScan":       activities.QScan,
+		"Transcriber": activities.Transcriber,
 	}
 
 	for name, s := range structs {

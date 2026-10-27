@@ -33,6 +33,7 @@ func TestDebugCollapsesEverySpecialisedQueue(t *testing.T) {
 	assert.Equal(t, QueueDebug, GetTranscodeQueue())
 	assert.Equal(t, QueueDebug, GetAudioQueue())
 	assert.Equal(t, QueueDebug, GetLiveIngestQueue())
+	assert.Equal(t, QueueDebug, GetTranscribeQueue())
 }
 
 func TestEachSpecialisedQueueKeepsItsOwnNameOutsideDebug(t *testing.T) {
@@ -42,6 +43,7 @@ func TestEachSpecialisedQueueKeepsItsOwnNameOutsideDebug(t *testing.T) {
 	assert.Equal(t, QueueTranscode, GetTranscodeQueue())
 	assert.Equal(t, QueueAudio, GetAudioQueue())
 	assert.Equal(t, QueueLiveIngest, GetLiveIngestQueue())
+	assert.Equal(t, QueueTranscribe, GetTranscribeQueue())
 }
 
 func TestASpecialisedQueueIsNotTheConfiguredOne(t *testing.T) {
@@ -50,4 +52,27 @@ func TestASpecialisedQueueIsNotTheConfiguredOne(t *testing.T) {
 	assert.Equal(t, QueueAudio, GetQueue())
 	assert.Equal(t, QueueWorker, GetWorkerQueue())
 	assert.Equal(t, QueueTranscode, GetTranscodeQueue())
+}
+
+func TestTranscribeQueueEnabled(t *testing.T) {
+	tests := []struct {
+		name  string
+		value string
+		want  bool
+	}{
+		{name: "unset is off", value: "", want: false},
+		{name: "true is on", value: "true", want: true},
+		{name: "1 is on", value: "1", want: true},
+		{name: "false is off", value: "false", want: false},
+		{name: "garbage falls back to off", value: "yes please", want: false},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Cleanup(func() { Load() })
+			t.Setenv("TRANSCRIBE_QUEUE_ENABLED", test.value)
+
+			assert.Equal(t, test.want, Load().TranscribeQueueEnabled)
+		})
+	}
 }

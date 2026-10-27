@@ -2,8 +2,10 @@ package transcribe
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -15,15 +17,28 @@ import (
 	"go.temporal.io/sdk/testsuite"
 )
 
-func transcribeServer(t *testing.T, handler http.HandlerFunc) {
+type testConfig struct {
+	baseURL string
+}
+
+func (c testConfig) Transcriber() string { return c.baseURL }
+
+func testClient(t *testing.T, baseURL string) *Client {
+	t.Helper()
+
+	client, err := NewClient(testConfig{baseURL: baseURL})
+	require.NoError(t, err)
+
+	return client
+}
+
+func transcribeServer(t *testing.T, handler http.HandlerFunc) *Client {
 	t.Helper()
 
 	server := httptest.NewServer(handler)
 	t.Cleanup(server.Close)
 
-	previous := baseURL
-	baseURL = server.URL
-	t.Cleanup(func() { baseURL = previous })
+	return testClient(t, server.URL)
 }
 
 func fastPolling(t *testing.T) {
@@ -34,45 +49,54 @@ func fastPolling(t *testing.T) {
 	t.Cleanup(func() { pollInterval = previous })
 }
 
-func TestDoTranscribe_RejectsMissingArguments(t *testing.T) {
-	_, err := DoTranscribe(context.Background(), "", "/mnt/out", "no")
+func TestNewClient_RequiresABaseURL(t *testing.T) {
+	client, err := NewClient(testConfig{baseURL: ""})
+
+	assert.ErrorIs(t, err, errNoBaseURL)
+	assert.Nil(t, client)
+}
+
+func TestTranscribe_RejectsMissingArguments(t *testing.T) {
+	client := testClient(t, "http://transcriber.invalid")
+
+	_, err := client.Transcribe(context.Background(), "", "/mnt/out", "no", "", "")
 	assert.ErrorIs(t, err, errNoInputFile)
 
-	_, err = DoTranscribe(context.Background(), "/mnt/in.wav", "", "no")
+	_, err = client.Transcribe(context.Background(), "/mnt/in.wav", "", "no", "", "")
 	assert.ErrorIs(t, err, errNoOutput)
 }
 
-func TestDoTranscribe_SubmitFailureIsAnError(t *testing.T) {
-	transcribeServer(t, func(w http.ResponseWriter, _ *http.Request) {
+func TestTranscribe_SubmitFailureIsAnError(t *testing.T) {
+	client := transcribeServer(t, func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte(`{"detail":"boom"}`))
 	})
 
-	job, err := DoTranscribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no")
+	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
 
 	require.Error(t, err)
 	assert.Nil(t, job)
 	assert.Contains(t, err.Error(), "500")
 }
 
-func TestDoTranscribe_SubmitWithoutAnIDIsAnError(t *testing.T) {
-	transcribeServer(t, func(w http.ResponseWriter, _ *http.Request) {
+func TestTranscribe_SubmitWithoutAnIDIsAnError(t *testing.T) {
+	client := transcribeServer(t, func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"status":"QUEUED"}`))
 	})
 
-	job, err := DoTranscribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no")
+	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
 
 	require.Error(t, err)
 	assert.Nil(t, job)
 	assert.Contains(t, err.Error(), "no id")
 }
 
-func TestDoTranscribe_PollNotFoundEndsTheLoop(t *testing.T) {
+func TestTranscribe_PollNotFoundEndsTheLoop(t *testing.T) {
 	fastPolling(t)
 
 	var polls atomic.Int32
-	transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+	client := transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"id":"job-1","status":"QUEUED"}`))
@@ -86,14 +110,14 @@ func TestDoTranscribe_PollNotFoundEndsTheLoop(t *testing.T) {
 	done := make(chan struct{})
 	var err error
 	go func() {
-		_, err = DoTranscribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no")
+		_, err = client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
 		close(done)
 	}()
 
 	select {
 	case <-done:
 	case <-time.After(5 * time.Second):
-		t.Fatal("DoTranscribe kept polling a job that returns 404")
+		t.Fatal("Transcribe kept polling a job that returns 404")
 	}
 
 	require.Error(t, err)
@@ -101,11 +125,11 @@ func TestDoTranscribe_PollNotFoundEndsTheLoop(t *testing.T) {
 	assert.LessOrEqual(t, polls.Load(), int32(2), "one failed poll is enough to know")
 }
 
-func TestDoTranscribe_PollsUntilCompleted(t *testing.T) {
+func TestTranscribe_PollsUntilCompleted(t *testing.T) {
 	fastPolling(t)
 
 	var polls atomic.Int32
-	transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+	client := transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodPost {
 			_, _ = w.Write([]byte(`{"id":"job-1","status":"QUEUED"}`))
@@ -118,7 +142,7 @@ func TestDoTranscribe_PollsUntilCompleted(t *testing.T) {
 		_, _ = w.Write([]byte(`{"id":"job-1","status":"COMPLETED","result":"/mnt/out/in.json"}`))
 	})
 
-	job, err := DoTranscribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no")
+	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
 
 	require.NoError(t, err)
 	require.NotNil(t, job)
@@ -127,10 +151,10 @@ func TestDoTranscribe_PollsUntilCompleted(t *testing.T) {
 	assert.Equal(t, int32(3), polls.Load())
 }
 
-func TestDoTranscribe_FailedJobIsAnError(t *testing.T) {
+func TestTranscribe_FailedJobIsAnError(t *testing.T) {
 	fastPolling(t)
 
-	transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+	client := transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodPost {
 			_, _ = w.Write([]byte(`{"id":"job-1","status":"QUEUED"}`))
@@ -139,19 +163,131 @@ func TestDoTranscribe_FailedJobIsAnError(t *testing.T) {
 		_, _ = w.Write([]byte(`{"id":"job-1","status":"FAILED"}`))
 	})
 
-	job, err := DoTranscribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no")
+	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "job-1", "the error names the job that failed")
 	assert.NotNil(t, job, "the failed job is still returned for its detail")
 }
 
-func TestDoTranscribe_CancellationEndsTheLoop(t *testing.T) {
+func TestTranscribe_FailedJobErrorCarriesTheServerReason(t *testing.T) {
+	fastPolling(t)
+
+	client := transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodPost {
+			_, _ = w.Write([]byte(`{"id":"job-1","status":"QUEUED"}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"id":"job-1","status":"FAILED","error":"open /mnt/temp/in.wav: no such file or directory"}`))
+	})
+
+	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "job-1")
+	assert.Contains(t, err.Error(), "open /mnt/temp/in.wav: no such file or directory")
+	require.NotNil(t, job)
+	assert.Equal(t, "open /mnt/temp/in.wav: no such file or directory", job.Error)
+}
+
+// failingServer submits job-1 and answers every poll with pollStatus/pollBody.
+func failingServer(t *testing.T, pollStatus int, pollBody string) *Client {
+	t.Helper()
+
+	return transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodPost {
+			_, _ = w.Write([]byte(`{"id":"job-1","status":"QUEUED"}`))
+			return
+		}
+		w.WriteHeader(pollStatus)
+		_, _ = w.Write([]byte(pollBody))
+	})
+}
+
+func TestTranscribe_TheTranscribersTimeoutIsErrJobTimeout(t *testing.T) {
+	fastPolling(t)
+	client := failingServer(t, http.StatusOK, `{"id":"job-1","status":"FAILED","error":"timeout","duration":"duration: 30m0s"}`)
+
+	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
+
+	require.ErrorIs(t, err, ErrJobTimeout)
+	assert.Contains(t, err.Error(), "job-1", "the error names the job")
+	require.NotNil(t, job, "the job is still returned for its detail")
+	assert.Equal(t, "duration: 30m0s", job.Duration)
+}
+
+func TestTranscribe_OtherFailuresAreNotErrJobTimeout(t *testing.T) {
+	tests := []struct {
+		name       string
+		pollStatus int
+		pollBody   string
+	}{
+		{name: "another failure", pollStatus: http.StatusOK, pollBody: `{"id":"job-1","status":"FAILED","error":"write srt: no space left on device"}`},
+		{name: "a failure that only mentions a timeout", pollStatus: http.StatusOK, pollBody: `{"id":"job-1","status":"FAILED","error":"ffprobe: timeout reading header"}`},
+		{name: "a failure with a deadline in its text", pollStatus: http.StatusOK, pollBody: `{"id":"job-1","status":"FAILED","error":"context deadline exceeded"}`},
+		{name: "a failure without a reason", pollStatus: http.StatusOK, pollBody: `{"id":"job-1","status":"FAILED"}`},
+		{name: "an HTTP failure", pollStatus: http.StatusServiceUnavailable, pollBody: `{"error":"timeout"}`},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			fastPolling(t)
+			client := failingServer(t, test.pollStatus, test.pollBody)
+
+			_, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
+
+			require.Error(t, err)
+			assert.NotErrorIs(t, err, ErrJobTimeout)
+		})
+	}
+}
+
+// A Temporal heartbeat or start-to-close timeout reaches the client as its context
+// ending, which is not the transcriber stopping the job.
+func TestTranscribe_AContextDeadlineIsNotErrJobTimeout(t *testing.T) {
+	previous := pollInterval
+	pollInterval = time.Hour
+	t.Cleanup(func() { pollInterval = previous })
+	client := failingServer(t, http.StatusOK, `{"id":"job-1","status":"RUNNING"}`)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	_, err := client.Transcribe(ctx, "/mnt/in.wav", "/mnt/out", "no", "", "")
+
+	require.ErrorIs(t, err, context.DeadlineExceeded)
+	assert.NotErrorIs(t, err, ErrJobTimeout)
+}
+
+func TestTranscribe_CanceledJobEndsTheLoop(t *testing.T) {
+	fastPolling(t)
+
+	var polls atomic.Int32
+	client := transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodPost {
+			_, _ = w.Write([]byte(`{"id":"job-1","status":"QUEUED"}`))
+			return
+		}
+		polls.Add(1)
+		_, _ = w.Write([]byte(`{"id":"job-1","status":"CANCELED"}`))
+	})
+
+	job, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
+
+	require.ErrorIs(t, err, ErrJobCanceled)
+	assert.Contains(t, err.Error(), "job-1", "the error names the job that was canceled")
+	assert.NotNil(t, job, "the canceled job is still returned for its detail")
+	assert.Equal(t, int32(1), polls.Load(), "a canceled job is final, so polling stops")
+}
+
+func TestTranscribe_CancellationEndsTheLoop(t *testing.T) {
 	previous := pollInterval
 	pollInterval = time.Hour
 	t.Cleanup(func() { pollInterval = previous })
 
-	transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+	client := transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodPost {
 			_, _ = w.Write([]byte(`{"id":"job-1","status":"QUEUED"}`))
@@ -163,7 +299,7 @@ func TestDoTranscribe_CancellationEndsTheLoop(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)
 	go func() {
-		_, err := DoTranscribe(ctx, "/mnt/in.wav", "/mnt/out", "no")
+		_, err := client.Transcribe(ctx, "/mnt/in.wav", "/mnt/out", "no", "", "")
 		done <- err
 	}()
 
@@ -178,11 +314,102 @@ func TestDoTranscribe_CancellationEndsTheLoop(t *testing.T) {
 	}
 }
 
-func TestDoTranscribe_SendsTheJobDefinition(t *testing.T) {
+// cancelledWhilePolling starts a job against a server that keeps it RUNNING, cancels
+// the context once the first poll has landed, and returns the paths the
+// server received a DELETE for and the error.
+func cancelledWhilePolling(t *testing.T, deleteStatus int) ([]string, error) {
+	t.Helper()
+
+	previous := pollInterval
+	pollInterval = time.Hour
+	t.Cleanup(func() { pollInterval = previous })
+
+	polled := make(chan struct{}, 1)
+	var mu sync.Mutex
+	var deleted []string
+	client := transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case http.MethodPost:
+			_, _ = w.Write([]byte(`{"id":"job-1","status":"QUEUED"}`))
+		case http.MethodDelete:
+			mu.Lock()
+			deleted = append(deleted, r.URL.Path)
+			mu.Unlock()
+			w.WriteHeader(deleteStatus)
+			_, _ = w.Write([]byte(`{"id":"job-1","status":"CANCELED"}`))
+		default:
+			_, _ = w.Write([]byte(`{"id":"job-1","status":"RUNNING"}`))
+			select {
+			case polled <- struct{}{}:
+			default:
+			}
+		}
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		_, err := client.Transcribe(ctx, "/mnt/in.wav", "/mnt/out", "no", "", "")
+		done <- err
+	}()
+
+	<-polled
+	cancel()
+
+	select {
+	case err := <-done:
+		mu.Lock()
+		defer mu.Unlock()
+		return deleted, err
+	case <-time.After(5 * time.Second):
+		t.Fatal("a cancelled context did not end the poll loop")
+		return nil, nil
+	}
+}
+
+func TestTranscribe_CancellationCancelsTheServerJob(t *testing.T) {
+	deleted, err := cancelledWhilePolling(t, http.StatusOK)
+
+	require.ErrorIs(t, err, context.Canceled)
+	assert.Equal(t, []string{"/transcription/job/job-1"}, deleted)
+}
+
+func TestTranscribe_CancellingAJobTheServerDroppedIsNotAnError(t *testing.T) {
+	deleted, err := cancelledWhilePolling(t, http.StatusNotFound)
+
+	require.ErrorIs(t, err, context.Canceled)
+	assert.NotContains(t, err.Error(), "cancel transcription job", "a job that is already gone needs no cancel")
+	assert.Len(t, deleted, 1)
+}
+
+func TestTranscribe_AFailedJobIsNotCancelled(t *testing.T) {
+	fastPolling(t)
+
+	var deletes atomic.Int32
+	client := transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case http.MethodPost:
+			_, _ = w.Write([]byte(`{"id":"job-1","status":"QUEUED"}`))
+		case http.MethodDelete:
+			deletes.Add(1)
+		default:
+			_, _ = w.Write([]byte(`{"id":"job-1","status":"FAILED"}`))
+		}
+	})
+
+	_, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", "")
+
+	require.Error(t, err)
+	assert.Zero(t, deletes.Load(), "only a cancelled or timed-out activity cancels its job")
+}
+
+func TestTranscribe_SendsTheJobDefinition(t *testing.T) {
 	fastPolling(t)
 
 	var submitted string
-	transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+	client := transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodPost {
 			body := make([]byte, r.ContentLength)
@@ -194,7 +421,7 @@ func TestDoTranscribe_SendsTheJobDefinition(t *testing.T) {
 		_, _ = w.Write([]byte(`{"id":"job-1","status":"COMPLETED"}`))
 	})
 
-	_, err := DoTranscribe(context.Background(), "/mnt/in.wav", "/mnt/out", "nor")
+	_, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "nor", "", "")
 
 	require.NoError(t, err)
 	assert.Contains(t, submitted, `"path":"/mnt/in.wav"`)
@@ -202,8 +429,86 @@ func TestDoTranscribe_SendsTheJobDefinition(t *testing.T) {
 	assert.Contains(t, submitted, `"format":"all"`)
 }
 
+func TestTranscribe_SendsTheIdempotencyKeyOnlyWhenGiven(t *testing.T) {
+	tests := []struct {
+		name      string
+		key       string
+		wantKey   string
+		wantFound bool
+	}{
+		{name: "a key is sent as the header", key: "run-1/5/2", wantKey: "run-1/5/2", wantFound: true},
+		{name: "no key sends no header", key: "", wantFound: false},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			fastPolling(t)
+
+			var gotKey string
+			var found bool
+			client := transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				if r.Method == http.MethodPost {
+					values, ok := r.Header["Idempotency-Key"]
+					found = ok
+					if ok {
+						gotKey = values[0]
+					}
+					_, _ = w.Write([]byte(`{"id":"job-1"}`))
+					return
+				}
+				_, _ = w.Write([]byte(`{"id":"job-1","status":"COMPLETED"}`))
+			})
+
+			_, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", "", test.key)
+
+			require.NoError(t, err)
+			assert.Equal(t, test.wantFound, found)
+			assert.Equal(t, test.wantKey, gotKey)
+		})
+	}
+}
+
+func TestTranscribe_SendsTheModelOnlyWhenGiven(t *testing.T) {
+	tests := []struct {
+		name  string
+		model string
+		want  string
+	}{
+		{name: "a model is sent", model: "nb-whisper-large", want: `"model":"nb-whisper-large"`},
+		{name: "no model leaves the server default", model: "", want: ""},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			fastPolling(t)
+
+			var submitted string
+			client := transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				if r.Method == http.MethodPost {
+					body, _ := io.ReadAll(r.Body)
+					submitted = string(body)
+					_, _ = w.Write([]byte(`{"id":"job-1"}`))
+					return
+				}
+				_, _ = w.Write([]byte(`{"id":"job-1","status":"COMPLETED"}`))
+			})
+
+			_, err := client.Transcribe(context.Background(), "/mnt/in.wav", "/mnt/out", "no", test.model, "")
+
+			require.NoError(t, err)
+			if test.want == "" {
+				assert.NotContains(t, submitted, `"model"`)
+			} else {
+				assert.Contains(t, submitted, test.want)
+			}
+		})
+	}
+}
+
 func TestClient_RetryWaitsAreSecondsNotNanoseconds(t *testing.T) {
-	client := newClient()
+	client := testClient(t, "http://transcriber.invalid").client
 
 	assert.GreaterOrEqual(t, client.RetryWaitTime, time.Second)
 	assert.GreaterOrEqual(t, client.RetryMaxWaitTime, client.RetryWaitTime)
@@ -211,22 +516,22 @@ func TestClient_RetryWaitsAreSecondsNotNanoseconds(t *testing.T) {
 }
 
 func TestClient_DebugIsOff(t *testing.T) {
-	client := newClient()
+	client := testClient(t, "http://transcriber.invalid").client
 
 	assert.False(t, client.Debug)
 }
 
 func TestClient_HasATimeout(t *testing.T) {
-	client := newClient()
+	client := testClient(t, "http://transcriber.invalid").client
 
 	assert.Positive(t, client.GetClient().Timeout)
 }
 
-func TestDoTranscribe_HeartbeatsWhileItPolls(t *testing.T) {
+func TestTranscribe_HeartbeatsWhileItPolls(t *testing.T) {
 	fastPolling(t)
 
 	var polls atomic.Int32
-	transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
+	client := transcribeServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodPost {
 			_, _ = w.Write([]byte(`{"id":"job-1","status":"QUEUED"}`))
@@ -248,7 +553,7 @@ func TestDoTranscribe_HeartbeatsWhileItPolls(t *testing.T) {
 	})
 
 	transcribeActivity := func(ctx context.Context) (string, error) {
-		job, err := DoTranscribe(ctx, "/mnt/in.wav", "/mnt/out", "no")
+		job, err := client.Transcribe(ctx, "/mnt/in.wav", "/mnt/out", "no", "", "")
 		if err != nil {
 			return "", err
 		}
@@ -286,4 +591,42 @@ func TestNormalizeTranscriptionLanguage(t *testing.T) {
 			assert.Equal(t, test.want, normalizeTranscriptionLanguage(test.input))
 		})
 	}
+}
+
+func TestTranscriberIdentity(t *testing.T) {
+	tests := []struct {
+		name    string
+		baseURL string
+		want    string
+	}{
+		{name: "an address is kept", baseURL: "http://10.12.128.44:8888", want: "http://10.12.128.44:8888"},
+		{name: "case and a trailing slash don't matter", baseURL: "HTTP://GPU1.lan:8888/", want: "http://gpu1.lan:8888"},
+		{name: "credentials never reach heartbeat details", baseURL: "http://user:secret@gpu1:8888", want: "http://gpu1:8888"},
+		{name: "a query is dropped", baseURL: "http://gpu1:8888/?token=secret", want: "http://gpu1:8888"},
+		{name: "no host gives no identity", baseURL: "gpu1", want: ""},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.want, transcriberIdentity(test.baseURL))
+		})
+	}
+}
+
+func TestGet_AnUnknownJobIsErrJobNotFound(t *testing.T) {
+	client := failingServer(t, http.StatusNotFound, `{"error":"not found"}`)
+
+	_, err := client.Get(context.Background(), "job-7")
+
+	require.ErrorIs(t, err, ErrJobNotFound)
+	assert.Contains(t, err.Error(), "job-7")
+}
+
+func TestGet_AnUnavailableTranscriberIsNotErrJobNotFound(t *testing.T) {
+	client := failingServer(t, http.StatusServiceUnavailable, `{"error":"down"}`)
+
+	_, err := client.Get(context.Background(), "job-7")
+
+	require.Error(t, err)
+	assert.NotErrorIs(t, err, ErrJobNotFound)
 }

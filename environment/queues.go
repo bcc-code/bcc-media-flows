@@ -7,4 +7,5 @@ const (
 	QueueAudio       = "audio"
 	QueueDebug       = "debug"
 	QueueLiveIngest  = "live"
+	QueueTranscribe  = "transcribe"
 )
