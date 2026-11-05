@@ -47,7 +47,7 @@ jobs:
       # Pre-existing issues are grandfathered in; only issues introduced by
       # the change under review fail the job.
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
           version: latest
           only-new-issues: true
