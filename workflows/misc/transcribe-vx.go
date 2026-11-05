@@ -3,6 +3,8 @@ package miscworkflows
 import (
 	"errors"
 	"fmt"
+	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
 
 	"github.com/bcc-code/bcc-media-flows/services/telegram"
@@ -65,14 +67,34 @@ func TranscribeVX(
 		return err
 	}
 
+	// The transcriber can't write to Isilon, so it writes to temp and the transcripts
+	// are copied to aux. They have to end up there because Vidispine imports a shape
+	// by registering the file where it lies, and temp gets cleaned
+	transcribeToTemp := workflow.GetVersion(ctx, "transcribe-to-temp", workflow.DefaultVersion, 1) >= 1
+
+	transcribeDestination := destinationPath
+	if transcribeToTemp {
+		transcribeDestination = tempFolder
+	}
+
 	transcriptionJob, err := wfutils.Execute(ctx, activities.Transcriber.Transcribe, activities.TranscribeParams{
 		Language:        params.Language,
 		File:            *prepareResult.OutputPath,
-		DestinationPath: destinationPath,
+		DestinationPath: transcribeDestination,
 	}).Result(ctx)
 
 	if err != nil {
 		return err
+	}
+
+	if transcribeToTemp {
+		// Copy rather than move: a retried move fails once the source is gone
+		for _, p := range []*paths.Path{&transcriptionJob.JSONPath, &transcriptionJob.SRTPath, &transcriptionJob.TXTPath} {
+			*p, err = wfutils.CopyToFolder(ctx, *p, destinationPath, rclone.PriorityNormal)
+			if err != nil {
+				return fmt.Errorf("copying transcript to aux folder: %w", err)
+			}
+		}
 	}
 
 	importJsonJob := wfutils.Execute(ctx, activities.Vidispine.ImportFileAsShapeActivity,
