@@ -35,7 +35,7 @@ Revalidated against the code 2026-09-15. Items confirmed fixed were removed; the
 - Low or zero test coverage: `workflows/export`, `activities`, `services/ffmpeg`, and no tests at all for `services/baton`, `services/ftp`, `services/filecatalyst`.
 - Only `vidispine.Client` has an interface + mock; the other service clients expose a `Config` interface but are concrete structs, untestable without network.
 - Test helpers in `utils/testutils` (`audio.go`, `video.go`) panic instead of `t.Fatal`/`t.Skip`, so a machine without ffmpeg sees the ingest and activities suites panic rather than skip.
-- `services/transcode` tests were seen failing on ffmpeg 7.x (`-vsync` removed, ProRes `top` AVOption gone) in `Test_H264Video_WeirdResolutions` and `Test_ProResHyperdeck`. CI installs Ubuntu's ffmpeg; not re-verified locally (no ffmpeg installed). Either pin the ffmpeg version the tests expect or move to `-fps_mode` / drop `top`.
+- `services/transcode` tests were seen failing on ffmpeg 7.x (ProRes `top` AVOption gone) in `Test_ProResHyperdeck`. CI installs Ubuntu's ffmpeg. Either pin the ffmpeg version the tests expect or drop `top`. (`-vsync` was replaced by `-fps_mode cfr`.)
 
 ## Simplification and cleanup
 
@@ -75,7 +75,7 @@ Revalidated against the code 2026-09-15. Items confirmed fixed were removed; the
 ## Worker scheduling and the Temporal SDK (added 2026-10-26)
 
 - `cmd/worker/main.go` sets `MaxConcurrentActivityExecutionSize: activityCount` with the comment "Doesn't make sense to have more than one activity running at a time", but `ACTIVITY_COUNT` defaults to 5 (`environment/config.go`). A transcode node running several heavy ffmpeg jobs still polls for more while other nodes are idle.
-- `services/transcode` tests fail against ffmpeg 9.0.1: `-vsync` is gone (`Unrecognized option 'vsync'`, use `-fps_mode`) and the ProRes Hyperdeck command passes `top` as an encoder option (`Codec AVOption top ... is not a encoding option`). HAP and multitrack tests fail too. Production images are on 8.0.3, so this bites on the next ffmpeg upgrade.
+- `services/transcode` tests fail against ffmpeg 9.0.1: the ProRes Hyperdeck command passes `top` as an encoder option (`Codec AVOption top ... is not a encoding option`). HAP and multitrack tests fail too. Production images are on 8.0.3, so this bites on the next ffmpeg upgrade.
 - `services/cantemo` and `services/telegram` tests reach the network (vault.bcc.media, api.telegram.org) and fail offline; they could be integration-tagged.
 ## Transcription (added 2026-10-13)
 
