@@ -22,7 +22,7 @@ func VideoH264(input common.VideoInput, cb ffmpeg.ProgressCallback) (*common.Vid
 		"-preset", "slow",
 		"-level:v", "1.3",
 		"-tune", "film",
-		"-vsync", "1",
+		"-fps_mode", "cfr",
 		"-g", "48",
 		"-pix_fmt", "yuv420p",
 		"-x264opts", "no-scenecut",
