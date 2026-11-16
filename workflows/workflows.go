@@ -24,6 +24,7 @@ var WorkerWorkflows = []any{
 	miscworkflows.MoveFilesWorkerFlow,
 	miscworkflows.MoveStorageFiles,
 	miscworkflows.CopyFile,
+	miscworkflows.CopyVXWithRelated,
 	ingestworkflows.BmmIngestUpload,
 	ingestworkflows.BmmTrackMetadata,
 	export.VXExport,
