@@ -66,7 +66,7 @@ func Extract(archive, dir string) error {
 	if err != nil {
 		return fmt.Errorf("opening %s: %w", archive, err)
 	}
-	defer r.Close()
+	defer r.Close() //nolint:errcheck // read-only
 
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		return err
@@ -108,7 +108,7 @@ func extractFile(f *zip.File, target string) error {
 	if err != nil {
 		return err
 	}
-	defer src.Close()
+	defer src.Close() //nolint:errcheck // read-only
 
 	dst, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 	if err != nil {
@@ -164,7 +164,7 @@ func Items(libraryDir string) ([]Item, []SkippedItem, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck // read-only
 
 	all, err := ParsePortalProject(f)
 	if err != nil {

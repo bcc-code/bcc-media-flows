@@ -105,7 +105,7 @@ func copyVXWithRelated(ctx workflow.Context, vxID string) (*CopyVXWithRelatedRes
 	// Items that go into the FCP library, and the items left to copy flat into the folder.
 	var libraryItems []fcplibrary.Item
 	var library paths.Path
-	flat := related
+	var flat []string
 	if fcplibrary.IsArchive(main.Base()) {
 		extracted, err := wfutils.Execute(ctx, activities.Util.ExtractFCPLibrary, activities.ExtractFCPLibraryInput{
 			Archive:     main,
