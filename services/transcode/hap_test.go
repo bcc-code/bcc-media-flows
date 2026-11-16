@@ -13,6 +13,7 @@ import (
 )
 
 func Test_HAP(t *testing.T) {
+	testutils.SkipWithoutEncoder(t, "hap")
 	testFile := paths.MustParse("./testdata/generated/hap_test_input.mp4")
 	outputFile := paths.MustParse("./testdata/generated/results/" + testFile.Base())
 
@@ -57,6 +58,7 @@ func Test_HAP(t *testing.T) {
 }
 
 func Test_HAP_PlainFormat(t *testing.T) {
+	testutils.SkipWithoutEncoder(t, "hap")
 	testFile := paths.MustParse("./testdata/generated/hap_test_plain.mp4")
 	outputFile := paths.MustParse("./testdata/generated/results/" + testFile.Base())
 
@@ -98,6 +100,7 @@ func Test_HAP_PlainFormat(t *testing.T) {
 }
 
 func Test_HAP_WithAlpha(t *testing.T) {
+	testutils.SkipWithoutEncoder(t, "hap")
 	testFile := paths.MustParse("./testdata/generated/hap_test_alpha.mov")
 	outputFile := paths.MustParse("./testdata/generated/results/" + testFile.Base())
 
@@ -150,6 +153,7 @@ func Test_HAP_WithAlpha(t *testing.T) {
 }
 
 func Test_HAP_WithAudio(t *testing.T) {
+	testutils.SkipWithoutEncoder(t, "hap")
 	testFile := paths.MustParse("./testdata/generated/hap_test_audio.mp4")
 	outputFile := paths.MustParse("./testdata/generated/results/" + testFile.Base())
 

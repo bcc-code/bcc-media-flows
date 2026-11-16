@@ -63,8 +63,10 @@ func ProRes(input ProResInput, progressCallback ffmpeg.ProgressCallback) (*Encod
 			"-pix_fmt", "yuv422p10le",
 			"-profile:v", "2",
 			"-flags", "+ildct+ilme",
-			"-top", "1",
 		)
+		// Mark the frames top field first for the interlaced encode. This replaces
+		// ffmpeg's -top option, which FFmpeg 7 removed in favour of setfield.
+		videoFilters = append(videoFilters, "setfield=tff")
 	} else if input.Use4444 {
 		params = append(
 			params,
