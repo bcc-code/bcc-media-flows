@@ -108,6 +108,8 @@ func Test_ProResHyperdeck(t *testing.T) {
 	assert.Equal(t, "Standard", vs.Profile)
 	assert.Equal(t, 1920, vs.Width)
 	assert.Equal(t, 1080, vs.Height)
+	// ffmpeg labels interlaced top-field-first output "tb" for every codec but MJPEG; a bottom-field-first encode reads "bt".
+	assert.Equal(t, "tb", vs.FieldOrder, "Hyperdeck output is interlaced, top field first")
 	assert.Equal(t, "1:1", vs.SampleAspectRatio)
 	assert.Equal(t, "16:9", vs.DisplayAspectRatio)
 	assert.Equal(t, "yuv422p10le", vs.PixFmt)
