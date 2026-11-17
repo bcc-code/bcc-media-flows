@@ -90,3 +90,9 @@ Found while switching to the new transcriber service (`../transcriber`).
 - `Transcribe` is registered on the `worker` queue as well as `transcribe` (`registerWorker` in `cmd/worker/main.go`). Remove the `worker` registration once `TRANSCRIBE_QUEUE_ENABLED` has been on for good and 12h (`ScheduleToCloseTimeout`) have passed since, so nothing scheduled there before the switch is left to retry. Until then it is also the rollback path.
 - A `transcribe` worker only needs Temporal and `TRANSCRIBER_BASE_URL`, but boot warns about every variable in `RequiredByWorker`. A required list per queue would keep that warning meaningful.
 - A `transcribe` worker keeps taking jobs while its transcriber is down; they fail fast with "connection refused" and retry, possibly on another host. Checking the transcriber's `/readyz` first would leave them for a healthy host.
+
+## Media Brain transcript delivery (added 2026-11-17)
+
+- `TranscribeVX` hardcodes `Language: "no"` for the `ImportSidecarSubtitle` child, whatever language the run was asked to transcribe. A transcript in another language is registered in Mediabanken as Norwegian.
+- Brain (`../mediabrain`): `importSubtitles` always records `origin: IMPORT` (`internal/subtitle/service.go`). Machine transcripts from flows would need an `origin` input to be stored as `ASR`.
+- Brain: an asset's versions are fetched with `versions(first: 500)` to pick the latest. A `latestVersion` field on `Asset` would avoid paging and the cap.

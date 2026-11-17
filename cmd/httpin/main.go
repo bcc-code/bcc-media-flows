@@ -65,9 +65,16 @@ func triggerHandler(ctx *gin.Context) {
 			ctx.Status(http.StatusBadRequest)
 			return
 		}
+		// Optional: left out, the transcript goes to Mediabanken as before.
+		destination, parseErr := miscworkflows.ParseTranscriptionDestination(getParamFromCtx(ctx, "destination"))
+		if parseErr != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": parseErr.Error()})
+			return
+		}
 		res, err = wfClient.ExecuteWorkflow(ctx, workflowOptions, miscworkflows.TranscribeVX, miscworkflows.TranscribeVXInput{
-			Language: language,
-			VXID:     vxID,
+			Language:    language,
+			VXID:        vxID,
+			Destination: destination,
 		})
 	case "TranscribeFile":
 		language := getParamFromCtx(ctx, "language")

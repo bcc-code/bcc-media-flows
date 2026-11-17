@@ -19,6 +19,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/analytics"
 	"github.com/bcc-code/bcc-media-flows/services/clickup"
 	"github.com/bcc-code/bcc-media-flows/services/directus"
+	"github.com/bcc-code/bcc-media-flows/services/mediabrain"
 	"github.com/bcc-code/bcc-media-flows/services/qscan"
 	"github.com/bcc-code/bcc-media-flows/services/vizualizer"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
@@ -179,6 +180,8 @@ func buildClients(cfg *environment.Config) {
 	}
 	activities.Transcriber.Client = transcriberClient
 
+	activities.MediaBrain.Client = mediabrain.NewClient(cfg.MediaBrain)
+
 	activities.Directus = &activities.DirectusActivities{
 		Client:         directus.NewClient(cfg.Directus),
 		ShortsFolderID: cfg.Directus.ShortsFolderID(),
@@ -231,6 +234,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		registerActivitiesInStruct(w, activities.Vizualizer)
 		registerActivitiesInStruct(w, activities.QScan)
 		registerActivitiesInStruct(w, activities.Transcriber)
+		registerActivitiesInStruct(w, activities.MediaBrain)
 
 		for _, wf := range workflows.WorkerWorkflows {
 			w.RegisterWorkflow(wf)
@@ -251,6 +255,7 @@ func registerWorker(c client.Client, queue string, options worker.Options) {
 		registerActivitiesInStruct(w, activities.Vizualizer)
 		registerActivitiesInStruct(w, activities.QScan)
 		registerActivitiesInStruct(w, activities.Transcriber)
+		registerActivitiesInStruct(w, activities.MediaBrain)
 
 		for _, wf := range workflows.WorkerWorkflows {
 			w.RegisterWorkflow(wf)

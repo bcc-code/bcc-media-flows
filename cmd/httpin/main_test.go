@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	miscworkflows "github.com/bcc-code/bcc-media-flows/workflows/misc"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -151,4 +152,49 @@ func Test_TriggerHandler_NeverReturns200WithNullBody(t *testing.T) {
 			assert.NotEqual(t, http.StatusOK, rec.Code, "this request did not start a workflow")
 		})
 	}
+}
+
+// recordingClient keeps the input of the workflow it was asked to start.
+type recordingClient struct {
+	client.Client
+	args []any
+}
+
+func (c *recordingClient) ExecuteWorkflow(_ context.Context, _ client.StartWorkflowOptions, _ any, args ...any) (client.WorkflowRun, error) {
+	c.args = args
+	return stubRun{}, nil
+}
+
+// destination is optional: without it TranscribeVX starts exactly as before.
+func Test_TriggerHandler_TranscribeVX_DestinationOptional(t *testing.T) {
+	rc := &recordingClient{}
+	withClient(t, rc)
+
+	rec := triggerRequest(t, "TranscribeVX", "vxID=VX-1&language=no")
+
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Len(t, rc.args, 1)
+	assert.Equal(t, miscworkflows.TranscribeVXInput{Language: "no", VXID: "VX-1"}, rc.args[0])
+}
+
+func Test_TriggerHandler_TranscribeVX_MediaBrain(t *testing.T) {
+	rc := &recordingClient{}
+	withClient(t, rc)
+
+	rec := triggerRequest(t, "TranscribeVX", "vxID=VX-1&language=no&destination=mediabrain")
+
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Len(t, rc.args, 1)
+	assert.Equal(t, miscworkflows.TranscriptionDestinationMediaBrain, rc.args[0].(miscworkflows.TranscribeVXInput).Destination)
+}
+
+func Test_TriggerHandler_TranscribeVX_UnknownDestination_Returns400(t *testing.T) {
+	rc := &recordingClient{}
+	withClient(t, rc)
+
+	rec := triggerRequest(t, "TranscribeVX", "vxID=VX-1&language=no&destination=bogus")
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+	assert.Contains(t, rec.Body.String(), "bogus")
+	assert.Nil(t, rc.args)
 }

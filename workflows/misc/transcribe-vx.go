@@ -1,8 +1,13 @@
 package miscworkflows
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/bcc-code/bcc-media-flows/internal/enumjson"
+	"github.com/orsinium-labs/enum"
+
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
 	"github.com/bcc-code/bcc-media-flows/services/vidispine/vsapi"
@@ -19,11 +24,63 @@ import (
 
 const transcriptionMetadataFieldName = "portal_mf624761"
 
-// TranscribeVXInput is the input to the TranscribeFile
+// TranscriptionDestination is where TranscribeVX delivers the transcript.
+// The zero value means Mediabanken, so inputs written before the field existed,
+// and callers that leave it out, behave as they always did.
+type TranscriptionDestination enum.Member[string]
+
+var (
+	TranscriptionDestinationMediabanken = TranscriptionDestination{Value: "mediabanken"}
+	TranscriptionDestinationMediaBrain  = TranscriptionDestination{Value: "mediabrain"}
+	TranscriptionDestinations           = enum.New(TranscriptionDestinationMediabanken, TranscriptionDestinationMediaBrain)
+
+	ErrUnknownTranscriptionDestination = errors.New("unknown transcription destination")
+)
+
+func (d TranscriptionDestination) String() string { return d.Value }
+
+// IsMediaBrain is false for the zero value, which delivers to Mediabanken.
+func (d TranscriptionDestination) IsMediaBrain() bool { return d == TranscriptionDestinationMediaBrain }
+
+//goland:noinspection GoMixedReceiverTypes
+func (d TranscriptionDestination) MarshalJSON() ([]byte, error) { return enumjson.Marshal(d) }
+
+// UnmarshalJSON takes null and "" as the zero value; only a named, unknown
+// destination is refused.
+//
+//goland:noinspection GoMixedReceiverTypes
+func (d *TranscriptionDestination) UnmarshalJSON(data []byte) error {
+	var value *string
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	if value == nil || *value == "" {
+		*d = TranscriptionDestination{}
+		return nil
+	}
+	return enumjson.UnmarshalStrict(data, TranscriptionDestinations, d, ErrUnknownTranscriptionDestination)
+}
+
+// ParseTranscriptionDestination reads a destination from a form or query value. An
+// empty value is the zero value, which delivers to Mediabanken.
+func ParseTranscriptionDestination(value string) (TranscriptionDestination, error) {
+	if value == "" {
+		return TranscriptionDestination{}, nil
+	}
+	d := TranscriptionDestinations.Parse(value)
+	if d == nil {
+		return TranscriptionDestination{}, fmt.Errorf("%w: %q", ErrUnknownTranscriptionDestination, value)
+	}
+	return *d, nil
+}
+
+// TranscribeVXInput is the input to TranscribeVX
 type TranscribeVXInput struct {
 	Language            string
 	VXID                string
 	NotificationChannel *telegram.Chat
+	// Destination is optional. Left out, the transcript goes to Mediabanken.
+	Destination TranscriptionDestination `json:",omitzero"`
 }
 
 // TranscribeVX is the workflow that transcribes a video
@@ -85,6 +142,10 @@ func TranscribeVX(
 
 	if err != nil {
 		return err
+	}
+
+	if params.Destination.IsMediaBrain() {
+		return importTranscriptToMediaBrain(ctx, params, transcriptionJob.SRTPath)
 	}
 
 	if transcribeToTemp {
@@ -164,4 +225,25 @@ func TranscribeVX(
 		Key:    transcriptionMetadataFieldName,
 		Value:  string(txtValue),
 	}).Wait(ctx)
+}
+
+// importTranscriptToMediaBrain delivers the SRT to Media Brain in place of every
+// Mediabanken step: no shapes, no sidecar and no metadata field in Vidispine.
+func importTranscriptToMediaBrain(ctx workflow.Context, params TranscribeVXInput, srtPath paths.Path) error {
+	res, err := wfutils.Execute(ctx, activities.MediaBrain.ImportTranscriptToMediaBrain, activities.ImportTranscriptToMediaBrainParams{
+		VXID:     params.VXID,
+		Language: params.Language,
+		SRTPath:  srtPath,
+	}).Result(ctx)
+	if err != nil {
+		return fmt.Errorf("importing transcript to Media Brain: %w", err)
+	}
+
+	workflow.GetLogger(ctx).Info("Imported transcript to Media Brain", "vxid", params.VXID, "asset", res.AssetID, "track", res.TrackID, "revision", res.Revision)
+
+	if params.NotificationChannel != nil {
+		wfutils.SendTelegramText(ctx, *params.NotificationChannel, fmt.Sprintf("🟦 Transcription imported to Media Brain for VXID: %s", params.VXID))
+	}
+
+	return nil
 }
