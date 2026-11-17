@@ -93,3 +93,9 @@ Found while switching to the new transcriber service (`../transcriber`).
 - `workflows/misc/upddate_relations.go`: the filename has a typo ("upddate").
 - `UpdateAssetRelations` (`activities/vidispine/meta.go`) reads `title[len(title)-4]` without checking the title's length. A related item whose title, after the extension is cut off, is shorter than 4 characters makes the activity panic.
 - The safe-title logic (spaces to `_`, strip non-alphanumerics, collapse `_`) is written inline in `GetDataForExport` (`services/vidispine/export.go`). Moving it into a helper would let other jobs, such as `CopyVXWithRelated`, name their folder by title instead of by VXID.
+
+## Media Brain transcript delivery (added 2026-11-17)
+
+- `TranscribeVX` hardcodes `Language: "no"` for the `ImportSidecarSubtitle` child, whatever language the run was asked to transcribe. A transcript in another language is registered in Mediabanken as Norwegian.
+- Brain (`../mediabrain`): `importSubtitles` always records `origin: IMPORT` (`internal/subtitle/service.go`). Machine transcripts from flows would need an `origin` input to be stored as `ASR`.
+- Brain: an asset's versions are fetched with `versions(first: 500)` to pick the latest. A `latestVersion` field on `Asset` would avoid paging and the cap.

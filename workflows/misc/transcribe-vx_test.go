@@ -2,6 +2,7 @@ package miscworkflows
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 	"sync"
 	"testing"
@@ -9,7 +10,9 @@ import (
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.temporal.io/sdk/testsuite"
 )
@@ -109,6 +112,99 @@ func (s *TranscribeVXTestSuite) Test_TranscribesToTempAndImportsFromAux() {
 	s.Equal("audio.txt", readPath.Base())
 }
 
+// With Media Brain as destination the SRT goes there, straight from temp, and
+// nothing is copied to aux or imported into Mediabanken.
+func (s *TranscribeVXTestSuite) Test_MediaBrainDestinationSkipsMediabanken() {
+	env := s.NewTestWorkflowEnvironment()
+
+	audio := paths.MustParse("/mnt/temp/workflows/run/audio.wav")
+
+	env.OnActivity(activities.Vidispine.GetFileFromVXActivity, mock.Anything, mock.Anything).
+		Return(&vsactivity.GetFileFromVXResult{FilePath: paths.MustParse("/mnt/isilon/lowres.mp4")}, nil)
+	env.OnActivity(activities.Util.CreateFolder, mock.Anything, mock.Anything).Return(nil, nil)
+	env.OnActivity(activities.Audio.PrepareForTranscription, mock.Anything, mock.Anything).
+		Return(&activities.PrepareTranscriptionResult{OutputPath: &audio, HasAudio: true}, nil)
+	env.OnActivity(activities.Transcriber.Transcribe, mock.Anything, mock.Anything).
+		Return(func(_ context.Context, input activities.TranscribeParams) (*activities.TranscribeResponse, error) {
+			out := input.DestinationPath
+			return &activities.TranscribeResponse{
+				JSONPath:     out.Append("audio.json"),
+				SRTPath:      out.Append("audio.srt"),
+				WordsSRTPath: out.Append("audio.words.srt"),
+				TXTPath:      out.Append("audio.txt"),
+			}, nil
+		})
+
+	var brainInput activities.ImportTranscriptToMediaBrainParams
+	env.OnActivity(activities.MediaBrain.ImportTranscriptToMediaBrain, mock.Anything, mock.MatchedBy(
+		func(input activities.ImportTranscriptToMediaBrainParams) bool {
+			brainInput = input
+			return true
+		},
+	)).Return(&activities.ImportTranscriptToMediaBrainResult{AssetID: "a1", TrackID: "t1", Revision: 1}, nil).Once()
+
+	env.OnActivity(activities.Util.CopyFile, mock.Anything, mock.Anything).Return(nil, nil).Never()
+	env.OnActivity(activities.Vidispine.ImportFileAsShapeActivity, mock.Anything, mock.Anything).Return(nil, nil).Never()
+	env.OnActivity(activities.Vidispine.SetVXMetadataFieldActivity, mock.Anything, mock.Anything).Return(nil, nil).Never()
+
+	env.ExecuteWorkflow(TranscribeVX, TranscribeVXInput{Language: "no", VXID: "VX-1", Destination: TranscriptionDestinationMediaBrain})
+
+	s.Require().True(env.IsWorkflowCompleted())
+	s.Require().NoError(env.GetWorkflowError())
+	env.AssertExpectations(s.T())
+
+	s.Equal("VX-1", brainInput.VXID)
+	s.Equal("no", brainInput.Language)
+	s.Equal(paths.TempDrive, brainInput.SRTPath.Drive)
+	s.Equal("audio.srt", brainInput.SRTPath.Base())
+}
+
 func TestTranscribeVXTestSuite(t *testing.T) {
 	suite.Run(t, new(TranscribeVXTestSuite))
+}
+
+// Destination is optional: inputs without it, with null or with "" must decode
+// to the zero value, which delivers to Mediabanken as before.
+func TestTranscribeVXInput_DestinationIsOptional(t *testing.T) {
+	for _, raw := range []string{
+		`{"Language":"no","VXID":"VX-1"}`,
+		`{"Language":"no","VXID":"VX-1","Destination":null}`,
+		`{"Language":"no","VXID":"VX-1","Destination":""}`,
+	} {
+		var input TranscribeVXInput
+		require.NoError(t, json.Unmarshal([]byte(raw), &input), raw)
+		assert.Equal(t, TranscriptionDestination{}, input.Destination, raw)
+		assert.False(t, input.Destination.IsMediaBrain(), raw)
+	}
+
+	// The zero value is left out, so the input looks as it did before the field.
+	b, err := json.Marshal(TranscribeVXInput{Language: "no", VXID: "VX-1"})
+	require.NoError(t, err)
+	assert.NotContains(t, string(b), "Destination")
+}
+
+func TestTranscribeVXInput_DestinationRoundTrip(t *testing.T) {
+	b, err := json.Marshal(TranscribeVXInput{VXID: "VX-1", Destination: TranscriptionDestinationMediaBrain})
+	require.NoError(t, err)
+	assert.Contains(t, string(b), `"Destination":"mediabrain"`)
+
+	var input TranscribeVXInput
+	require.NoError(t, json.Unmarshal(b, &input))
+	assert.True(t, input.Destination.IsMediaBrain())
+
+	err = json.Unmarshal([]byte(`{"Destination":"dropbox"}`), &input)
+	assert.ErrorIs(t, err, ErrUnknownTranscriptionDestination)
+}
+
+func TestParseTranscriptionDestination(t *testing.T) {
+	d, err := ParseTranscriptionDestination("")
+	require.NoError(t, err)
+	assert.Equal(t, TranscriptionDestination{}, d)
+
+	d, err = ParseTranscriptionDestination("mediabrain")
+	require.NoError(t, err)
+	assert.Equal(t, TranscriptionDestinationMediaBrain, d)
+
+	_, err = ParseTranscriptionDestination("bogus")
+	assert.ErrorIs(t, err, ErrUnknownTranscriptionDestination)
 }

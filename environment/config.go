@@ -116,6 +116,42 @@ func (d Directus) BaseURL() string        { return d.baseURL }
 func (d Directus) APIKey() string         { return d.apiKey }
 func (d Directus) ShortsFolderID() string { return d.shortsFolderID }
 
+// MediaBrain is the Media Brain GraphQL API. It sits behind authentik, so calls carry a
+// token from the OAuth2 client_credentials grant of an authentik service account.
+type MediaBrain struct {
+	baseURL  string
+	tokenURL string
+	clientID string
+	username string
+	password string
+}
+
+func (m MediaBrain) BaseURL() string {
+	if m.baseURL != "" {
+		return m.baseURL
+	}
+	return "https://brain.lan.bcc.media"
+}
+
+func (m MediaBrain) TokenURL() string {
+	if m.tokenURL != "" {
+		return m.tokenURL
+	}
+	return "https://auth.bcc.media/application/o/token/"
+}
+
+// ClientID is the authentik proxy provider in front of Brain. A token is only accepted by
+// the proxy when it was issued for this client.
+func (m MediaBrain) ClientID() string {
+	if m.clientID != "" {
+		return m.clientID
+	}
+	return "wgUU5FiPMvcw48WvJNrbOq18GUMzZ1f5rE6cFuni"
+}
+
+func (m MediaBrain) Username() string { return m.username }
+func (m MediaBrain) Password() string { return m.password }
+
 type ClickUp struct {
 	frontdoorBaseURL string
 	workspaceID      string
@@ -243,6 +279,7 @@ type Config struct {
 	Subtrans     Subtrans
 	QScan        QScan
 	Directus     Directus
+	MediaBrain   MediaBrain
 	ClickUp      ClickUp
 	Rclone       Rclone
 	FileCatalyst FileCatalyst
@@ -316,6 +353,14 @@ func Load() *Config {
 			baseURL:        os.Getenv("DIRECTUS_BASE_URL"),
 			apiKey:         os.Getenv("DIRECTUS_API_KEY"),
 			shortsFolderID: os.Getenv("DIRECTUS_SHORTS_FOLDER_ID"),
+		},
+
+		MediaBrain: MediaBrain{
+			baseURL:  os.Getenv("MEDIABRAIN_BASE_URL"),
+			tokenURL: os.Getenv("MEDIABRAIN_TOKEN_URL"),
+			clientID: os.Getenv("MEDIABRAIN_CLIENT_ID"),
+			username: os.Getenv("MEDIABRAIN_USERNAME"),
+			password: os.Getenv("MEDIABRAIN_PASSWORD"),
 		},
 
 		ClickUp: ClickUp{
