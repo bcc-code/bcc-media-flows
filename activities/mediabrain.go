@@ -12,6 +12,7 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/mediabrain"
+	"github.com/bcc-code/bcc-media-flows/services/srt"
 )
 
 type MediaBrainActivities struct {
@@ -49,9 +50,17 @@ func (a *MediaBrainActivities) ImportTranscriptToMediaBrain(ctx context.Context,
 		return nil, temporal.NewNonRetryableApplicationError("media brain client not configured", "mediabrain_not_configured", nil)
 	}
 
-	content, err := os.ReadFile(params.SRTPath.Local())
+	raw, err := os.ReadFile(params.SRTPath.Local())
 	if err != nil {
 		return nil, fmt.Errorf("reading transcript: %w", err)
+	}
+	// Brain refuses a whole file for one cue without length, and Whisper writes those.
+	content, changed, err := srt.Sanitize(raw)
+	if err != nil {
+		return nil, temporal.NewNonRetryableApplicationError(err.Error(), "invalid_transcript", err)
+	}
+	if changed > 0 {
+		logger.Warn("Repaired transcript cues for Media Brain", "vxid", params.VXID, "cues", changed)
 	}
 
 	asset, err := a.findOrImportAsset(ctx, params.VXID)

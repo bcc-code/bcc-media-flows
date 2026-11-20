@@ -14,6 +14,7 @@ import (
 
 	"github.com/bcc-code/bcc-media-flows/common"
 	"github.com/bcc-code/bcc-media-flows/services/ffmpeg"
+	"github.com/bcc-code/bcc-media-flows/services/srt"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	"github.com/samber/lo"
 )
@@ -294,7 +295,7 @@ func MergeSubtitlesByOffset(input common.MergeInput, progressCallback ffmpeg.Pro
 // cue straddling the in-point is dropped and one straddling the out-point keeps
 // its end.
 func MergeSubtitles(input common.MergeInput, _ ffmpeg.ProgressCallback) (*common.MergeResult, error) {
-	var merged []srtCue
+	var merged []srt.Cue
 
 	var startAt int64
 	for _, item := range input.Items {
@@ -303,19 +304,19 @@ func MergeSubtitles(input common.MergeInput, _ ffmpeg.ProgressCallback) (*common
 			return nil, err
 		}
 
-		cues, err := parseSRT(data)
+		cues, err := srt.Parse(data)
 		if err != nil {
 			return nil, fmt.Errorf("parsing subtitles %s: %w", item.Path.Local(), err)
 		}
 
 		// The demuxer orders cues by start, and Whisper output is not always in order.
-		slices.SortStableFunc(cues, func(a, b srtCue) int {
+		slices.SortStableFunc(cues, func(a, b srt.Cue) int {
 			return cmp.Compare(a.Start, b.Start)
 		})
-		repairBackwardCues(cues)
+		srt.RepairBackward(cues)
 
-		itemStart := secondsToMillis(item.Start)
-		itemEnd := secondsToMillis(item.End)
+		itemStart := srt.SecondsToMillis(item.Start)
+		itemEnd := srt.SecondsToMillis(item.End)
 		shift := startAt - itemStart
 
 		for _, cue := range cues {
@@ -335,7 +336,7 @@ func MergeSubtitles(input common.MergeInput, _ ffmpeg.ProgressCallback) (*common
 	}
 
 	outputFilePath := filepath.Join(input.OutputDir.Local(), filepath.Clean(input.Title)+".srt")
-	err := os.WriteFile(outputFilePath, writeSRT(merged), ffmpeg.OutputFileMode)
+	err := os.WriteFile(outputFilePath, srt.Write(merged), ffmpeg.OutputFileMode)
 	if err != nil {
 		return nil, err
 	}

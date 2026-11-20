@@ -151,3 +151,22 @@ func TestImportTranscriptToMediaBrain_ImportForbidden(t *testing.T) {
 	assert.Contains(t, err.Error(), "mediabrain_refused")
 	assert.Nil(t, brain.imported)
 }
+
+// Whisper writes cues without length; Brain refuses a whole file for one of them.
+func TestImportTranscriptToMediaBrain_RepairsCues(t *testing.T) {
+	brain := &fakeBrain{finds: []string{foundAsset}}
+	a := &MediaBrainActivities{Client: brain.client(t)}
+	env := activityEnv(t)
+	env.RegisterActivity(a.ImportTranscriptToMediaBrain)
+
+	_, err := env.ExecuteActivity(a.ImportTranscriptToMediaBrain, ImportTranscriptToMediaBrainParams{
+		VXID: "VX-1", Language: "no", SRTPath: paths.New(paths.TestDrive, "mediabrain/whisper.srt"),
+	})
+	require.NoError(t, err)
+
+	assert.Equal(t,
+		"1\n00:00:01,000 --> 00:00:02,000\nHei\n\n"+
+			"2\n00:00:03,000 --> 00:00:06,000\nverden\n\n"+
+			"3\n00:00:06,000 --> 00:00:07,000\nslutt\n\n",
+		brain.imported["content"])
+}
