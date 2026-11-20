@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -50,12 +48,9 @@ func brainServer(t *testing.T) (*mediabrain.Client, *map[string]any) {
 	return mediabrain.NewClient(brainConfig{base: srv.URL}), &imported
 }
 
-func writeSRT(t *testing.T) paths.Path {
-	t.Helper()
-	file := filepath.Join(t.TempDir(), "audio.srt")
-	require.NoError(t, os.WriteFile(file, []byte("1\n00:00:00,000 --> 00:00:01,000\nHei\n"), 0o644))
-	return paths.MustParse(file)
-}
+// srtFixture is on the test drive: a file in t.TempDir() only parses as a Path when
+// the temp dir happens to sit under a drive prefix.
+var srtFixture = paths.New(paths.TestDrive, "mediabrain/audio.srt")
 
 func TestImportTranscriptToMediaBrain_SendsASRAndModel(t *testing.T) {
 	client, imported := brainServer(t)
@@ -64,7 +59,7 @@ func TestImportTranscriptToMediaBrain_SendsASRAndModel(t *testing.T) {
 	env.RegisterActivity(a.ImportTranscriptToMediaBrain)
 
 	_, err := env.ExecuteActivity(a.ImportTranscriptToMediaBrain, ImportTranscriptToMediaBrainParams{
-		VXID: "VX-1", Language: "no", SRTPath: writeSRT(t), Model: "nb-whisper-large",
+		VXID: "VX-1", Language: "no", SRTPath: srtFixture, Model: "nb-whisper-large",
 	})
 	require.NoError(t, err)
 
@@ -80,7 +75,7 @@ func TestImportTranscriptToMediaBrain_NoModel(t *testing.T) {
 	env.RegisterActivity(a.ImportTranscriptToMediaBrain)
 
 	_, err := env.ExecuteActivity(a.ImportTranscriptToMediaBrain, ImportTranscriptToMediaBrainParams{
-		VXID: "VX-1", Language: "no", SRTPath: writeSRT(t), Model: "  ",
+		VXID: "VX-1", Language: "no", SRTPath: srtFixture, Model: "  ",
 	})
 	require.NoError(t, err)
 
