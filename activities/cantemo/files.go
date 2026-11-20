@@ -53,7 +53,7 @@ func (a Activities) MoveFileWait(ctx context.Context, params *RenameFileParams) 
 
 	status := "STARTED"
 
-	for status == "STARTED" {
+	for taskInProgress(status) {
 		taskStatus, err := a.GetTaskInfo(ctx, GetTaskInfoParams{
 			TaskID: taskID,
 		})
@@ -90,4 +90,10 @@ func (a Activities) MoveFileWait(ctx context.Context, params *RenameFileParams) 
 		JobID:     job.JobID,
 		SleepTime: 20,
 	})
+}
+
+// taskInProgress reports whether a Cantemo task has yet to finish. PENDING is queued
+// but not started, so it is waited on like STARTED rather than treated as a failure.
+func taskInProgress(state string) bool {
+	return state == "PENDING" || state == "STARTED"
 }

@@ -103,3 +103,9 @@ Found while switching to the new transcriber service (`../transcriber`).
 
 - `services/transcode/subtitles_test.go` is not gofmt-clean.
 - The ingest workflows (`workflows/ingest/*`) start `TranscribeVX` without a model, so they always get the transcriber's default. If a model should be chosen per source or language, they would need a setting for it.
+
+## Cantemo move polling (added 2026-11-20)
+
+- `MoveFileWait` (`activities/cantemo/files.go`) waits with `time.Sleep`, so a cancelled activity keeps polling until the task ends. A `select` on `ctx.Done()` would stop it promptly.
+- `MoveFileWait` only treats `PENDING` and `STARTED` as in progress. If Cantemo's tasks are Celery tasks, `RETRY` also means "not done yet" and currently fails the move.
+- `cantemo.Client.GetTask` (`services/cantemo/client.go`) doesn't check the HTTP status. An error response decodes to an empty state, and the move fails with the unhelpful "task failed with status: ".
