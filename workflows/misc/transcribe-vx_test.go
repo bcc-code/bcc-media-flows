@@ -124,14 +124,17 @@ func (s *TranscribeVXTestSuite) Test_MediaBrainDestinationSkipsMediabanken() {
 	env.OnActivity(activities.Util.CreateFolder, mock.Anything, mock.Anything).Return(nil, nil)
 	env.OnActivity(activities.Audio.PrepareForTranscription, mock.Anything, mock.Anything).
 		Return(&activities.PrepareTranscriptionResult{OutputPath: &audio, HasAudio: true}, nil)
+	var requestedModel string
 	env.OnActivity(activities.Transcriber.Transcribe, mock.Anything, mock.Anything).
 		Return(func(_ context.Context, input activities.TranscribeParams) (*activities.TranscribeResponse, error) {
+			requestedModel = input.Model
 			out := input.DestinationPath
 			return &activities.TranscribeResponse{
 				JSONPath:     out.Append("audio.json"),
 				SRTPath:      out.Append("audio.srt"),
 				WordsSRTPath: out.Append("audio.words.srt"),
 				TXTPath:      out.Append("audio.txt"),
+				Model:        "nb-whisper-large-v3",
 			}, nil
 		})
 
@@ -147,7 +150,7 @@ func (s *TranscribeVXTestSuite) Test_MediaBrainDestinationSkipsMediabanken() {
 	env.OnActivity(activities.Vidispine.ImportFileAsShapeActivity, mock.Anything, mock.Anything).Return(nil, nil).Never()
 	env.OnActivity(activities.Vidispine.SetVXMetadataFieldActivity, mock.Anything, mock.Anything).Return(nil, nil).Never()
 
-	env.ExecuteWorkflow(TranscribeVX, TranscribeVXInput{Language: "no", VXID: "VX-1", Destination: TranscriptionDestinationMediaBrain})
+	env.ExecuteWorkflow(TranscribeVX, TranscribeVXInput{Language: "no", VXID: "VX-1", Destination: TranscriptionDestinationMediaBrain, Model: "nb-whisper-large"})
 
 	s.Require().True(env.IsWorkflowCompleted())
 	s.Require().NoError(env.GetWorkflowError())
@@ -157,6 +160,9 @@ func (s *TranscribeVXTestSuite) Test_MediaBrainDestinationSkipsMediabanken() {
 	s.Equal("no", brainInput.Language)
 	s.Equal(paths.TempDrive, brainInput.SRTPath.Drive)
 	s.Equal("audio.srt", brainInput.SRTPath.Base())
+	s.Equal("nb-whisper-large", requestedModel)
+	// Brain gets the model the transcriber reported, not the one asked for.
+	s.Equal("nb-whisper-large-v3", brainInput.Model)
 }
 
 func TestTranscribeVXTestSuite(t *testing.T) {
@@ -181,6 +187,7 @@ func TestTranscribeVXInput_DestinationIsOptional(t *testing.T) {
 	b, err := json.Marshal(TranscribeVXInput{Language: "no", VXID: "VX-1"})
 	require.NoError(t, err)
 	assert.NotContains(t, string(b), "Destination")
+	assert.NotContains(t, string(b), "Model")
 }
 
 func TestTranscribeVXInput_DestinationRoundTrip(t *testing.T) {

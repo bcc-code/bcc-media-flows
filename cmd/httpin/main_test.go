@@ -188,6 +188,17 @@ func Test_TriggerHandler_TranscribeVX_MediaBrain(t *testing.T) {
 	assert.Equal(t, miscworkflows.TranscriptionDestinationMediaBrain, rc.args[0].(miscworkflows.TranscribeVXInput).Destination)
 }
 
+func Test_TriggerHandler_TranscribeVX_Model(t *testing.T) {
+	rc := &recordingClient{}
+	withClient(t, rc)
+
+	rec := triggerRequest(t, "TranscribeVX", "vxID=VX-1&language=no&model=nb-whisper-large")
+
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Len(t, rc.args, 1)
+	assert.Equal(t, "nb-whisper-large", rc.args[0].(miscworkflows.TranscribeVXInput).Model)
+}
+
 func Test_TriggerHandler_TranscribeVX_UnknownDestination_Returns400(t *testing.T) {
 	rc := &recordingClient{}
 	withClient(t, rc)

@@ -3,6 +3,7 @@ package activities
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -229,6 +230,48 @@ func TestTranscribe_PassesTheModelOn(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Contains(t, submitted, `"model":"nb-whisper-large"`)
+}
+
+// The model the transcriber reports wins; the requested one stands in when it says nothing
+func TestTranscribe_ReportsTheModel(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		requested string
+		reported  string
+		want      string
+	}{
+		{name: "reported", requested: "nb-whisper-large", reported: "nb-whisper-large-v3", want: "nb-whisper-large-v3"},
+		{name: "server default reported", requested: "", reported: "large-v3", want: "large-v3"},
+		{name: "not reported", requested: "nb-whisper-large", reported: "", want: "nb-whisper-large"},
+		{name: "unknown", requested: "", reported: "", want: ""},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				if r.Method == http.MethodPost {
+					_, _ = w.Write([]byte(`{"id":"job-1","status":"QUEUED"}`))
+					return
+				}
+				_, _ = fmt.Fprintf(w, `{"id":"job-1","status":"COMPLETED","output_path":"/mnt/temp/out","model":%q}`, test.reported)
+			}))
+			t.Cleanup(server.Close)
+
+			client, err := transcribe.NewClient(transcriberConfig(server.URL))
+			require.NoError(t, err)
+			ta := &TranscriberActivities{Client: client}
+			env := activityEnv(t)
+			env.RegisterActivity(ta.Transcribe)
+
+			params := transcribeParams()
+			params.Model = test.requested
+			val, err := env.ExecuteActivity(ta.Transcribe, params)
+			require.NoError(t, err)
+
+			var response TranscribeResponse
+			require.NoError(t, val.Get(&response))
+			assert.Equal(t, test.want, response.Model)
+		})
+	}
 }
 
 // transcriberPolling submits job-1 and answers every poll with pollStatus/pollBody

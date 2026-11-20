@@ -34,6 +34,25 @@ func (k TrackKind) MarshalJSON() ([]byte, error) { return enumjson.Marshal(k) }
 //goland:noinspection GoMixedReceiverTypes
 func (k *TrackKind) UnmarshalJSON(data []byte) error { return enumjson.UnmarshalOpen(data, k) }
 
+// TrackOrigin is how a revision's text came to be, as Brain's TrackOrigin enum names it.
+// An import may only send IMPORT or ASR; MANUAL is what Brain records for edits.
+type TrackOrigin enum.Member[string]
+
+var (
+	TrackOriginImport = TrackOrigin{Value: "IMPORT"}
+	TrackOriginASR    = TrackOrigin{Value: "ASR"}
+	TrackOriginManual = TrackOrigin{Value: "MANUAL"}
+	TrackOrigins      = enum.New(TrackOriginImport, TrackOriginASR, TrackOriginManual)
+)
+
+func (o TrackOrigin) String() string { return o.Value }
+
+//goland:noinspection GoMixedReceiverTypes
+func (o TrackOrigin) MarshalJSON() ([]byte, error) { return enumjson.Marshal(o) }
+
+//goland:noinspection GoMixedReceiverTypes
+func (o *TrackOrigin) UnmarshalJSON(data []byte) error { return enumjson.UnmarshalOpen(data, o) }
+
 // SubtitleFormat is the text format of an imported track, as Brain's SubtitleFormat
 // enum names it.
 type SubtitleFormat enum.Member[string]
@@ -117,6 +136,10 @@ type ImportSubtitlesInput struct {
 	Language *string        `json:"language,omitempty"`
 	Kind     TrackKind      `json:"kind"`
 	Format   SubtitleFormat `json:"format"`
+	// Zero lets Brain record IMPORT.
+	Origin TrackOrigin `json:"origin,omitzero"`
+	// The model that produced the text. Nil leaves the revision without one.
+	Model *string `json:"model,omitempty"`
 	// The subtitle text. Brain refuses more than 5 MB with INVALID_INPUT.
 	Content string `json:"content"`
 }

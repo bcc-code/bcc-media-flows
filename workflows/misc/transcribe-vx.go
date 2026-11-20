@@ -81,6 +81,8 @@ type TranscribeVXInput struct {
 	NotificationChannel *telegram.Chat
 	// Destination is optional. Left out, the transcript goes to Mediabanken.
 	Destination TranscriptionDestination `json:",omitzero"`
+	// Model is optional. Left out, the transcriber uses its default model.
+	Model string `json:",omitempty"`
 }
 
 // TranscribeVX is the workflow that transcribes a video
@@ -138,6 +140,7 @@ func TranscribeVX(
 		Language:        params.Language,
 		File:            *prepareResult.OutputPath,
 		DestinationPath: transcribeDestination,
+		Model:           params.Model,
 	}).Result(ctx)
 
 	if err != nil {
@@ -145,7 +148,7 @@ func TranscribeVX(
 	}
 
 	if params.Destination.IsMediaBrain() {
-		return importTranscriptToMediaBrain(ctx, params, transcriptionJob.SRTPath)
+		return importTranscriptToMediaBrain(ctx, params, transcriptionJob)
 	}
 
 	if transcribeToTemp {
@@ -229,11 +232,12 @@ func TranscribeVX(
 
 // importTranscriptToMediaBrain delivers the SRT to Media Brain in place of every
 // Mediabanken step: no shapes, no sidecar and no metadata field in Vidispine.
-func importTranscriptToMediaBrain(ctx workflow.Context, params TranscribeVXInput, srtPath paths.Path) error {
+func importTranscriptToMediaBrain(ctx workflow.Context, params TranscribeVXInput, transcript *activities.TranscribeResponse) error {
 	res, err := wfutils.Execute(ctx, activities.MediaBrain.ImportTranscriptToMediaBrain, activities.ImportTranscriptToMediaBrainParams{
 		VXID:     params.VXID,
 		Language: params.Language,
-		SRTPath:  srtPath,
+		SRTPath:  transcript.SRTPath,
+		Model:    transcript.Model,
 	}).Result(ctx)
 	if err != nil {
 		return fmt.Errorf("importing transcript to Media Brain: %w", err)

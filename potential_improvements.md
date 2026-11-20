@@ -97,5 +97,9 @@ Found while switching to the new transcriber service (`../transcriber`).
 ## Media Brain transcript delivery (added 2026-11-17)
 
 - `TranscribeVX` hardcodes `Language: "no"` for the `ImportSidecarSubtitle` child, whatever language the run was asked to transcribe. A transcript in another language is registered in Mediabanken as Norwegian.
-- Brain (`../mediabrain`): `importSubtitles` always records `origin: IMPORT` (`internal/subtitle/service.go`). Machine transcripts from flows would need an `origin` input to be stored as `ASR`.
 - Brain: an asset's versions are fetched with `versions(first: 500)` to pick the latest. A `latestVersion` field on `Asset` would avoid paging and the cap.
+
+## Transcription model (added 2026-11-20)
+
+- `services/transcode/subtitles_test.go` is not gofmt-clean.
+- The ingest workflows (`workflows/ingest/*`) start `TranscribeVX` without a model, so they always get the transcriber's default. If a model should be chosen per source or language, they would need a setting for it.

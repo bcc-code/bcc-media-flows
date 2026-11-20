@@ -27,6 +27,9 @@ type TranscribeResponse struct {
 	SRTPath      paths.Path
 	WordsSRTPath paths.Path
 	TXTPath      paths.Path
+	// Model is the model the transcriber reports it used, or the requested one when it
+	// does not say. Empty when neither is known.
+	Model string `json:",omitempty"`
 }
 
 // TranscriberJobTimeoutErrorType marks a Transcribe failure because the transcriber
@@ -126,6 +129,11 @@ func (ta *TranscriberActivities) transcribe(
 
 	log.Info("Finished Transcribe")
 
+	model := jobData.Model
+	if model == "" {
+		model = input.Model
+	}
+
 	// The old transcriber doesn't list what it wrote, so its file names are assumed.
 	if len(jobData.Results) == 0 {
 		fileName := input.File.Base()
@@ -134,6 +142,7 @@ func (ta *TranscriberActivities) transcribe(
 			SRTPath:      paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".srt")),
 			WordsSRTPath: paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".words.srt")),
 			TXTPath:      paths.MustParse(filepath.Join(jobData.OutputPath, fileName+".txt")),
+			Model:        model,
 		}, nil
 	}
 
@@ -142,6 +151,7 @@ func (ta *TranscriberActivities) transcribe(
 		// The same job writes the same files, so a retry would fail the same way.
 		return nil, temporal.NewNonRetryableApplicationError(err.Error(), "transcription_results", err)
 	}
+	response.Model = model
 
 	return response, nil
 }

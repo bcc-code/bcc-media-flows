@@ -27,6 +27,8 @@ type ImportTranscriptToMediaBrainParams struct {
 	// Language of the transcript. Empty or "auto" leaves the track without one.
 	Language string
 	SRTPath  paths.Path
+	// Model that produced the transcript. Empty leaves the revision without one.
+	Model string `json:",omitempty"`
 }
 
 type ImportTranscriptToMediaBrainResult struct {
@@ -64,7 +66,11 @@ func (a *MediaBrainActivities) ImportTranscriptToMediaBrain(ctx context.Context,
 		VersionID: version.ID,
 		Kind:      mediabrain.TrackKindTranscript,
 		Format:    mediabrain.SubtitleFormatSRT,
+		Origin:    mediabrain.TrackOriginASR,
 		Content:   string(content),
+	}
+	if model := strings.TrimSpace(params.Model); model != "" {
+		input.Model = &model
 	}
 	if lang := strings.TrimSpace(params.Language); lang != "" && lang != "auto" {
 		input.Language = &lang
@@ -75,7 +81,7 @@ func (a *MediaBrainActivities) ImportTranscriptToMediaBrain(ctx context.Context,
 		return nil, nonRetryableMediaBrainError(err)
 	}
 
-	logger.Info("Imported transcript to Media Brain", "vxid", params.VXID, "asset", asset.ID, "version", version.ID, "track", track.ID, "revision", track.Revision)
+	logger.Info("Imported transcript to Media Brain", "vxid", params.VXID, "asset", asset.ID, "version", version.ID, "track", track.ID, "revision", track.Revision, "model", params.Model)
 
 	return &ImportTranscriptToMediaBrainResult{
 		AssetID:   asset.ID,

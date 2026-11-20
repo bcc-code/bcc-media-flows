@@ -75,6 +75,8 @@ func triggerHandler(ctx *gin.Context) {
 			Language:    language,
 			VXID:        vxID,
 			Destination: destination,
+			// Optional: left out, the transcriber uses its default model.
+			Model: getParamFromCtx(ctx, "model"),
 		})
 	case "TranscribeFile":
 		language := getParamFromCtx(ctx, "language")

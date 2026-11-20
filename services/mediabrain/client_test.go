@@ -116,6 +116,21 @@ func TestImportSubtitles(t *testing.T) {
 	}}, rec.variables)
 }
 
+func TestImportSubtitles_OriginAndModel(t *testing.T) {
+	c, rec := server(t, func(w http.ResponseWriter) {
+		_, _ = w.Write([]byte(`{"data":{"importSubtitles":{"id":"t1"}}}`))
+	})
+	model := "nb-whisper-large"
+	_, err := c.ImportSubtitles(context.Background(), ImportSubtitlesInput{
+		VersionID: "v1", Kind: TrackKindTranscript, Format: SubtitleFormatSRT, Content: "1\n",
+		Origin: TrackOriginASR, Model: &model,
+	})
+	require.NoError(t, err)
+	input := rec.variables["input"].(map[string]any)
+	assert.Equal(t, "ASR", input["origin"])
+	assert.Equal(t, "nb-whisper-large", input["model"])
+}
+
 func TestImportSubtitles_NoLanguage(t *testing.T) {
 	c, rec := server(t, func(w http.ResponseWriter) {
 		_, _ = w.Write([]byte(`{"data":{"importSubtitles":{"id":"t1"}}}`))
