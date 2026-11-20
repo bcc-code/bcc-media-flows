@@ -39,7 +39,8 @@ type ImportTranscriptToMediaBrainResult struct {
 }
 
 // ImportTranscriptToMediaBrain adds the SRT as a new TRANSCRIPT revision on the latest
-// version of the Brain asset imported from the Vidispine item.
+// version of the Brain asset imported from the Vidispine item. An item Brain does not
+// have yet is imported first, as raw material without a project.
 func (a *MediaBrainActivities) ImportTranscriptToMediaBrain(ctx context.Context, params ImportTranscriptToMediaBrainParams) (*ImportTranscriptToMediaBrainResult, error) {
 	logger := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "ImportTranscriptToMediaBrain")
@@ -53,7 +54,7 @@ func (a *MediaBrainActivities) ImportTranscriptToMediaBrain(ctx context.Context,
 		return nil, fmt.Errorf("reading transcript: %w", err)
 	}
 
-	asset, err := a.Client.FindAssetByLegacyID(ctx, params.VXID)
+	asset, err := a.findOrImportAsset(ctx, params.VXID)
 	if err != nil {
 		return nil, nonRetryableMediaBrainError(err)
 	}
@@ -91,6 +92,29 @@ func (a *MediaBrainActivities) ImportTranscriptToMediaBrain(ctx context.Context,
 	}, nil
 }
 
+// findOrImportAsset imports the Vidispine item when Brain has no asset for it yet.
+func (a *MediaBrainActivities) findOrImportAsset(ctx context.Context, vxID string) (*mediabrain.Asset, error) {
+	asset, err := a.Client.FindAssetByLegacyID(ctx, vxID)
+	if !errors.Is(err, mediabrain.ErrAssetNotFound) {
+		return asset, err
+	}
+
+	typeID, err := a.Client.AssetTypeID(ctx, mediabrain.AssetTypeRawMaterial)
+	if err != nil {
+		return nil, err
+	}
+	asset, err = a.Client.ImportFromVidispine(ctx, vxID, typeID)
+	if errors.Is(err, mediabrain.ErrConflict) {
+		// Imported in the meantime, or by an earlier attempt whose answer was lost.
+		return a.Client.FindAssetByLegacyID(ctx, vxID)
+	}
+	if err != nil {
+		return nil, err
+	}
+	activity.GetLogger(ctx).Info("Imported Vidispine item into Media Brain", "vxid", vxID, "asset", asset.ID)
+	return asset, nil
+}
+
 // nonRetryableMediaBrainError stops retries for answers that a retry gets again. Not
 // UNAUTHENTICATED: that is also what an expired token gets, and the next attempt
 // fetches a new one.
@@ -98,6 +122,7 @@ func nonRetryableMediaBrainError(err error) error {
 	for _, permanent := range []error{
 		mediabrain.ErrAssetNotFound,
 		mediabrain.ErrAmbiguousAsset,
+		mediabrain.ErrAssetTypeNotFound,
 		mediabrain.ErrNoVersion,
 		mediabrain.ErrForbidden,
 		mediabrain.ErrNotFound,

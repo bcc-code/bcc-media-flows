@@ -130,6 +130,56 @@ func (c *Client) FindAssetByLegacyID(ctx context.Context, legacyID string) (*Ass
 	}
 }
 
+// AssetTypeRawMaterial is the name of Brain's asset type for source recordings.
+const AssetTypeRawMaterial = "Raw material"
+
+var ErrAssetTypeNotFound = errors.New("media brain: no asset type has this name")
+
+type AssetType struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+const assetTypesQuery = `query AssetTypes { assetTypes { id name } }`
+
+// AssetTypeID returns the id of the asset type with this name.
+func (c *Client) AssetTypeID(ctx context.Context, name string) (int, error) {
+	var out struct {
+		AssetTypes []AssetType `json:"assetTypes"`
+	}
+	if err := c.do(ctx, assetTypesQuery, nil, &out); err != nil {
+		return 0, fmt.Errorf("listing asset types: %w", err)
+	}
+	for _, t := range out.AssetTypes {
+		if t.Name == name {
+			return t.ID, nil
+		}
+	}
+	return 0, fmt.Errorf("%w: %s", ErrAssetTypeNotFound, name)
+}
+
+const importFromVidispineMutation = `mutation ImportFromVidispine($input: VidispineImportInput!) {
+  importFromVidispine(input: $input) {
+    id
+    title
+    versions(first: 500) { nodes { id number } }
+  }
+}`
+
+// ImportFromVidispine creates the asset for a Vidispine item, without a project. Brain
+// allows it to administrators only, and answers ErrConflict when the item is already
+// imported.
+func (c *Client) ImportFromVidispine(ctx context.Context, itemID string, typeID int) (*Asset, error) {
+	var out struct {
+		ImportFromVidispine Asset `json:"importFromVidispine"`
+	}
+	input := map[string]any{"itemId": itemID, "typeId": typeID}
+	if err := c.do(ctx, importFromVidispineMutation, map[string]any{"input": input}, &out); err != nil {
+		return nil, fmt.Errorf("importing %s from Vidispine: %w", itemID, err)
+	}
+	return &out.ImportFromVidispine, nil
+}
+
 type ImportSubtitlesInput struct {
 	VersionID string `json:"versionId"`
 	// BCP 47 tag. Nil leaves the track without a language.

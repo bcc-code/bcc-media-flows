@@ -162,3 +162,34 @@ func TestRefusedByAuthMiddleware(t *testing.T) {
 	assert.ErrorIs(t, err, ErrForbidden)
 	assert.Equal(t, http.StatusForbidden, httpx.StatusCode(err))
 }
+
+func TestAssetTypeID(t *testing.T) {
+	c, _ := server(t, func(w http.ResponseWriter) {
+		_, _ = w.Write([]byte(`{"data":{"assetTypes":[{"id":1,"name":"Raw material"},{"id":2,"name":"Deliverable"}]}}`))
+	})
+	id, err := c.AssetTypeID(context.Background(), AssetTypeRawMaterial)
+	require.NoError(t, err)
+	assert.Equal(t, 1, id)
+
+	_, err = c.AssetTypeID(context.Background(), "Podcast")
+	assert.ErrorIs(t, err, ErrAssetTypeNotFound)
+}
+
+func TestImportFromVidispine(t *testing.T) {
+	c, rec := server(t, func(w http.ResponseWriter) {
+		_, _ = w.Write([]byte(`{"data":{"importFromVidispine":{"id":"a1","title":"Clip","versions":{"nodes":[{"id":"v1","number":1}]}}}}`))
+	})
+	asset, err := c.ImportFromVidispine(context.Background(), "VX-1", 1)
+	require.NoError(t, err)
+	assert.Equal(t, "a1", asset.ID)
+	assert.Len(t, asset.Versions.Nodes, 1)
+	assert.Equal(t, map[string]any{"input": map[string]any{"itemId": "VX-1", "typeId": float64(1)}}, rec.variables)
+}
+
+func TestImportFromVidispine_AlreadyImported(t *testing.T) {
+	c, _ := server(t, func(w http.ResponseWriter) {
+		_, _ = w.Write([]byte(`{"errors":[{"message":"VX-1 is already imported as a1","extensions":{"code":"CONFLICT"}}]}`))
+	})
+	_, err := c.ImportFromVidispine(context.Background(), "VX-1", 1)
+	assert.ErrorIs(t, err, ErrConflict)
+}
