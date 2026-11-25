@@ -25,6 +25,7 @@ func (s *QScanRawImportTestSuite) SetupTest() {
 	s.env = s.NewTestWorkflowEnvironment()
 	// The per-file children really run, so the suite covers the whole chain.
 	s.env.RegisterWorkflow(QScanFile)
+	grantQScanSlotAtOnce(s.env)
 }
 
 func (s *QScanRawImportTestSuite) AfterTest(_, _ string) {

@@ -109,3 +109,9 @@ Found while switching to the new transcriber service (`../transcriber`).
 - `MoveFileWait` (`activities/cantemo/files.go`) waits with `time.Sleep`, so a cancelled activity keeps polling until the task ends. A `select` on `ctx.Done()` would stop it promptly.
 - `MoveFileWait` only treats `PENDING` and `STARTED` as in progress. If Cantemo's tasks are Celery tasks, `RETRY` also means "not done yet" and currently fails the move.
 - `cantemo.Client.GetTask` (`services/cantemo/client.go`) doesn't check the HTTP status. An error response decodes to an empty state, and the move fails with the unhelpful "task failed with status: ".
+
+## QScan and transcription (added 2026-11-25)
+
+- QScan files that end in `file_error` "No thread available" are reported as an analysis failure. With the QScanLock this should only happen when someone starts a job by hand in the QScan GUI. Treating that status as "busy, try again" would also cover that case, but needs a way to re-queue an errored file, and `QScanEnsureFile` currently returns the errored entry again.
+- `QScanEnsureJob` creates one QScan job for each file and never pauses or removes it. If QScan counts a finished job as still running, the jobs pile up in the GUI. Reusing one job for each template would avoid that.
+- The transcriber answers an unknown `model` with HTTP 400 (`unknown model: scribe-3`). `Submit` returns it as an ordinary error, so the activity retries a request that can never succeed. A 4xx from `POST /transcription/job` should become a non-retryable error. Checking the model against `GET /models` in httpin would also reject a typo before a workflow starts.

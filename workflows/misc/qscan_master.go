@@ -121,6 +121,14 @@ func runQScanFile(ctx workflow.Context, in QScanFileInput) (*QScanFileResult, er
 		},
 	}
 
+	// QScan analyses one job at a time and fails the others' files with "No
+	// thread available", so the run holds the slot until the analysis is over.
+	release, err := acquireQScanSlot(ctx)
+	if err != nil {
+		return res, err
+	}
+	defer release()
+
 	job, err := wfutils.Execute(ctx, activities.QScan.QScanEnsureJob, activities.QScanEnsureJobInput{
 		VXID:         in.VXID,
 		Path:         in.Path,
@@ -147,6 +155,8 @@ func runQScanFile(ctx workflow.Context, in QScanFileInput) (*QScanFileResult, er
 	if err != nil {
 		return res, err
 	}
+	// Reading the report does not need an analysis thread.
+	release()
 	res.Report.Status = status.Status.String()
 	res.Report.StatusInfo = status.StatusInfo
 
