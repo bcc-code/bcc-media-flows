@@ -19,10 +19,13 @@ type QScanMasterTestSuite struct {
 	testsuite.WorkflowTestSuite
 
 	env *testsuite.TestWorkflowEnvironment
+	// released lists the runs that gave the QScan slot back.
+	released *[]string
 }
 
 func (s *QScanMasterTestSuite) SetupTest() {
 	s.env = s.NewTestWorkflowEnvironment()
+	s.released = grantQScanSlotAtOnce(s.env)
 }
 
 func (s *QScanMasterTestSuite) AfterTest(_, _ string) {
@@ -96,6 +99,8 @@ func (s *QScanMasterTestSuite) Test_AnalyzedFileIsEmailedWithReport() {
 
 	s.True(s.env.IsWorkflowCompleted())
 	s.NoError(s.env.GetWorkflowError())
+	// Released once, after the analysis, though release is also deferred.
+	s.Len(*s.released, 1)
 
 	var result QScanMasterResult
 	s.NoError(s.env.GetWorkflowResult(&result))
@@ -183,6 +188,8 @@ func (s *QScanMasterTestSuite) Test_SubmitFailureIsEmailedAndFailsTheWorkflow() 
 	s.Contains(sent.PlainText, "boom")
 	// An uploader can do nothing about a QScan outage, so they are not told.
 	s.Equal([]string{"ops@example.com"}, sent.To)
+	// A failed run still frees QScan for the next one.
+	s.Len(*s.released, 1)
 }
 
 func (s *QScanMasterTestSuite) Test_FileErrorIsReportedWithoutFetchingAReport() {

@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/orsinium-labs/enum"
@@ -53,8 +54,11 @@ func NewClient(cfg Config) (*Client, error) {
 	}
 
 	client := httpx.New(httpx.Config{
-		Service:    serviceName,
-		BaseURL:    baseURL + "/api-1/qc",
+		Service: serviceName,
+		BaseURL: baseURL + "/api-1/qc",
+		// The events of a long file take QScan well over the default minute to
+		// list; at 60s the fetch timed out on every attempt.
+		Timeout:    10 * time.Minute,
 		RetryCount: 3,
 		BasicAuth:  &httpx.BasicAuth{Username: cfg.Username(), Password: cfg.Password()},
 		ErrorBody:  &apiError{},

@@ -48,6 +48,7 @@ var WorkerWorkflows = []any{
 	miscworkflows.QScanMaster,
 	miscworkflows.QScanFile,
 	miscworkflows.QScanRawImport,
+	miscworkflows.QScanLock,
 	miscworkflows.DemuxCheck,
 	ingestworkflows.Incremental,
 	ingestworkflows.MoveUploadedFiles,
