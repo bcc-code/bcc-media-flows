@@ -4,6 +4,7 @@ import (
 	"github.com/bcc-code/bcc-media-flows/activities"
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	transcript "github.com/bcc-code/bcc-media-flows/services/transcribe"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
@@ -19,7 +20,7 @@ import (
 )
 
 func TestToSRT_SegmentLevel(t *testing.T) {
-	segments := []Segment{
+	segments := []transcript.Segment{
 		{
 			Start: 0.0, End: 2.5, Text: "Hello world!",
 		},
@@ -43,15 +44,15 @@ This is a test.
 }
 
 func TestToSRT_WordLevel(t *testing.T) {
-	segments := []Segment{
+	segments := []transcript.Segment{
 		{
-			Words: []Word{
+			Words: []transcript.Word{
 				{Start: 0.0, End: 0.5, Text: "Hello"},
 				{Start: 0.5, End: 1.0, Text: "world!"},
 			},
 		},
 		{
-			Words: []Word{
+			Words: []transcript.Word{
 				{Start: 1.5, End: 2.0, Text: "Test"},
 				{Start: 2.0, End: 2.5, Text: "again."},
 			},
@@ -101,14 +102,14 @@ func (s *ImportSubtitlesTestSuite) AfterTest(suiteName, testName string) {
 func (s *ImportSubtitlesTestSuite) Test_ImportSubtitlesWorkflow() {
 	vxid := "VX-123"
 	lang := "en"
-	segments := []Segment{
+	segments := []transcript.Segment{
 		{Start: 0.0, End: 1.0, Text: "Hello"},
 		{Start: 1.5, End: 2.5, Text: "World"},
 	}
 	input := ImportSubtitlesInput{
 		VXID:      vxid,
 		Language:  lang,
-		Subtitles: Transcription{Segments: segments},
+		Subtitles: transcript.Transcription{Segments: segments},
 	}
 
 	// Use a valid Path string for your environment
@@ -152,11 +153,11 @@ func (s *ImportSubtitlesTestSuite) Test_ImportSubtitlesWorkflow() {
 // identically.
 func (s *ImportSubtitlesTestSuite) Test_ImportSubtitlesFromFile() {
 	vxid := "VX-123"
-	segments := []Segment{
+	segments := []transcript.Segment{
 		{Start: 0.0, End: 1.0, Text: "Hello"},
 		{Start: 1.5, End: 2.5, Text: "World"},
 	}
-	stored := Transcription{Segments: segments}
+	stored := transcript.Transcription{Segments: segments}
 	subtitlesFile := paths.Path{Drive: paths.Drive{Value: "isilon"}, Path: "Production/aux/incoming.json"}
 
 	input := ImportSubtitlesInput{

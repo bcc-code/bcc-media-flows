@@ -2,6 +2,7 @@ package activities
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -28,6 +29,9 @@ type ImportTranscriptToMediaBrainParams struct {
 	// Language of the transcript. Empty or "auto" leaves the track without one.
 	Language string
 	SRTPath  paths.Path
+	// JSONPath is the transcriber's JSON. Its word timing is attached to the cues of the
+	// SRT. Nil, unreadable or broken leaves the cues without words.
+	JSONPath *paths.Path `json:",omitempty"`
 	// Model that produced the transcript. Empty leaves the revision without one.
 	Model string `json:",omitempty"`
 }
@@ -39,9 +43,10 @@ type ImportTranscriptToMediaBrainResult struct {
 	Revision  int
 }
 
-// ImportTranscriptToMediaBrain adds the SRT as a new TRANSCRIPT revision on the latest
-// version of the Brain asset imported from the Vidispine item. An item Brain does not
-// have yet is imported first, as raw material without a project.
+// ImportTranscriptToMediaBrain adds the SRT, with the words of the transcriber's JSON,
+// as a new TRANSCRIPT revision on the latest version of the Brain asset imported from
+// the Vidispine item. An item Brain does not have yet is imported first, as raw
+// material without a project.
 func (a *MediaBrainActivities) ImportTranscriptToMediaBrain(ctx context.Context, params ImportTranscriptToMediaBrainParams) (*ImportTranscriptToMediaBrainResult, error) {
 	logger := activity.GetLogger(ctx)
 	activity.RecordHeartbeat(ctx, "ImportTranscriptToMediaBrain")
@@ -54,13 +59,25 @@ func (a *MediaBrainActivities) ImportTranscriptToMediaBrain(ctx context.Context,
 	if err != nil {
 		return nil, fmt.Errorf("reading transcript: %w", err)
 	}
-	// Brain refuses a whole file for one cue without length, and Whisper writes those.
-	content, changed, err := srt.Sanitize(raw)
+	cues, err := srt.Parse(raw)
 	if err != nil {
 		return nil, temporal.NewNonRetryableApplicationError(err.Error(), "invalid_transcript", err)
 	}
+	// Brain refuses a whole file for one cue without length, and Whisper writes those.
+	cues, changed := srt.Repair(cues)
 	if changed > 0 {
 		logger.Warn("Repaired transcript cues for Media Brain", "vxid", params.VXID, "cues", changed)
+	}
+
+	transcript, fixes := mediabrain.NewTranscript(cues, readTranscriptWords(ctx, params))
+	if fixes.Total() > 0 {
+		logger.Warn("Repaired transcript words for Media Brain", "vxid", params.VXID,
+			"startsClamped", fixes.StartsClamped, "endsRaised", fixes.EndsRaised,
+			"confidencesDropped", fixes.ConfidencesDropped, "wordsDropped", fixes.WordsDropped)
+	}
+	content, err := transcriptContent(ctx, params.VXID, transcript)
+	if err != nil {
+		return nil, temporal.NewNonRetryableApplicationError(err.Error(), "invalid_transcript", err)
 	}
 
 	asset, err := a.findOrImportAsset(ctx, params.VXID)
@@ -75,9 +92,9 @@ func (a *MediaBrainActivities) ImportTranscriptToMediaBrain(ctx context.Context,
 	input := mediabrain.ImportSubtitlesInput{
 		VersionID: version.ID,
 		Kind:      mediabrain.TrackKindTranscript,
-		Format:    mediabrain.SubtitleFormatSRT,
+		Format:    mediabrain.SubtitleFormatJSON,
 		Origin:    mediabrain.TrackOriginASR,
-		Content:   string(content),
+		Content:   content,
 	}
 	if model := strings.TrimSpace(params.Model); model != "" {
 		input.Model = &model
@@ -99,6 +116,48 @@ func (a *MediaBrainActivities) ImportTranscriptToMediaBrain(ctx context.Context,
 		TrackID:   track.ID,
 		Revision:  track.Revision,
 	}, nil
+}
+
+// readTranscriptWords returns the words of the transcriber's JSON. Words are secondary
+// to the cues, so a file that cannot be read gives none instead of failing the import.
+func readTranscriptWords(ctx context.Context, params ImportTranscriptToMediaBrainParams) []mediabrain.TranscriptWord {
+	if params.JSONPath == nil {
+		return nil
+	}
+	logger := activity.GetLogger(ctx)
+	data, err := os.ReadFile(params.JSONPath.Local())
+	if err != nil {
+		logger.Warn("Importing transcript without words", "vxid", params.VXID, "error", err)
+		return nil
+	}
+	words, err := mediabrain.ReadWords(data)
+	if err != nil {
+		logger.Warn("Importing transcript without words", "vxid", params.VXID, "error", err)
+		return nil
+	}
+	return words
+}
+
+// transcriptContent is the transcript as Brain imports it. One that is too large with
+// its words is sent without them, since the cues matter more.
+func transcriptContent(ctx context.Context, vxID string, transcript mediabrain.Transcript) (string, error) {
+	content, err := json.Marshal(transcript)
+	if err != nil {
+		return "", fmt.Errorf("encoding transcript: %w", err)
+	}
+	if len(content) <= mediabrain.MaxContentBytes {
+		return string(content), nil
+	}
+
+	withWords := len(content)
+	content, err = json.Marshal(transcript.WithoutWords())
+	if err != nil {
+		return "", fmt.Errorf("encoding transcript: %w", err)
+	}
+	if len(content) < withWords {
+		activity.GetLogger(ctx).Warn("Transcript too large for Media Brain with words, importing it without", "vxid", vxID, "bytes", withWords, "limit", mediabrain.MaxContentBytes)
+	}
+	return string(content), nil
 }
 
 // findOrImportAsset imports the Vidispine item when Brain has no asset for it yet.

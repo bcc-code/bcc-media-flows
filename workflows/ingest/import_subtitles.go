@@ -9,36 +9,10 @@ import (
 
 	vsactivity "github.com/bcc-code/bcc-media-flows/activities/vidispine"
 	"github.com/bcc-code/bcc-media-flows/paths"
+	transcript "github.com/bcc-code/bcc-media-flows/services/transcribe"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
 )
-
-type Transcription struct {
-	Text     string    `json:"text"`
-	Segments []Segment `json:"segments"`
-}
-
-type Segment struct {
-	Start            float64 `json:"start"`
-	End              float64 `json:"end"`
-	Text             string  `json:"text"`
-	ID               int     `json:"id"`
-	Seek             int     `json:"seek"`
-	Tokens           []int   `json:"tokens"`
-	Temperature      float64 `json:"temperature"`
-	AvgLogprob       float64 `json:"avg_logprob"`
-	CompressionRatio float64 `json:"compression_ratio"`
-	NoSpeechProb     float64 `json:"no_speech_prob"`
-	Confidence       float64 `json:"confidence"`
-	Words            []Word  `json:"words"`
-}
-
-type Word struct {
-	Start      float64 `json:"start"`
-	End        float64 `json:"end"`
-	Text       string  `json:"text"`
-	Confidence float64 `json:"confidence"`
-}
 
 type ImportSubtitlesInput struct {
 	VXID string `json:"vxid"`
@@ -46,7 +20,7 @@ type ImportSubtitlesInput struct {
 	// Subtitles carries the transcription inline, which puts it in the
 	// WorkflowExecutionStarted event. A word-level transcription of a long
 	// programme can exceed Temporal's payload limit. Prefer SubtitlesFile.
-	Subtitles Transcription `json:"subtitles"`
+	Subtitles transcript.Transcription `json:"subtitles"`
 
 	// SubtitlesFile points at the same JSON on shared storage. When set, it is
 	// read by an activity and Subtitles is ignored.
@@ -65,7 +39,7 @@ func convertSecondsToSRTTimestamp(seconds float64) string {
 }
 
 // ToSRT generates an SRT string from segments. If words is true, creates a word-level SRT.
-func ToSRT(segments []Segment, words bool) string {
+func ToSRT(segments []transcript.Segment, words bool) string {
 	var text strings.Builder
 	counter := 1
 
@@ -197,14 +171,14 @@ func ImportSubtitles(ctx workflow.Context, input ImportSubtitlesInput) error {
 
 // resolveSubtitles reads the transcription from storage when the caller passed
 // a path instead of the whole thing.
-func resolveSubtitles(ctx workflow.Context, input ImportSubtitlesInput) (Transcription, error) {
+func resolveSubtitles(ctx workflow.Context, input ImportSubtitlesInput) (transcript.Transcription, error) {
 	if input.SubtitlesFile == nil {
 		return input.Subtitles, nil
 	}
 
-	subtitles, err := wfutils.UnmarshalJSONFile[Transcription](ctx, *input.SubtitlesFile)
+	subtitles, err := wfutils.UnmarshalJSONFile[transcript.Transcription](ctx, *input.SubtitlesFile)
 	if err != nil {
-		return Transcription{}, fmt.Errorf("failed to read subtitles from %s: %w", input.SubtitlesFile.Local(), err)
+		return transcript.Transcription{}, fmt.Errorf("failed to read subtitles from %s: %w", input.SubtitlesFile.Local(), err)
 	}
 
 	return *subtitles, nil

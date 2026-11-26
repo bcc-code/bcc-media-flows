@@ -1,6 +1,7 @@
 package activities
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.temporal.io/sdk/activity"
 
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/mediabrain"
@@ -152,21 +154,94 @@ func TestImportTranscriptToMediaBrain_ImportForbidden(t *testing.T) {
 	assert.Nil(t, brain.imported)
 }
 
-// Whisper writes cues without length; Brain refuses a whole file for one of them.
-func TestImportTranscriptToMediaBrain_RepairsCues(t *testing.T) {
-	brain := &fakeBrain{finds: []string{foundAsset}}
+func runBrainImportFiles(t *testing.T, brain *fakeBrain, srtFile string, jsonFile *paths.Path) mediabrain.Transcript {
+	t.Helper()
 	a := &MediaBrainActivities{Client: brain.client(t)}
 	env := activityEnv(t)
 	env.RegisterActivity(a.ImportTranscriptToMediaBrain)
 
 	_, err := env.ExecuteActivity(a.ImportTranscriptToMediaBrain, ImportTranscriptToMediaBrainParams{
-		VXID: "VX-1", Language: "no", SRTPath: paths.New(paths.TestDrive, "mediabrain/whisper.srt"),
+		VXID: "VX-1", Language: "no", SRTPath: paths.New(paths.TestDrive, srtFile), JSONPath: jsonFile,
 	})
 	require.NoError(t, err)
 
-	assert.Equal(t,
-		"1\n00:00:01,000 --> 00:00:02,000\nHei\n\n"+
-			"2\n00:00:03,000 --> 00:00:06,000\nverden\n\n"+
-			"3\n00:00:06,000 --> 00:00:07,000\nslutt\n\n",
-		brain.imported["content"])
+	assert.Equal(t, "JSON", brain.imported["format"])
+	var sent mediabrain.Transcript
+	require.NoError(t, json.Unmarshal([]byte(brain.imported["content"].(string)), &sent))
+	return sent
+}
+
+// Whisper writes cues without length; Brain refuses a whole file for one of them.
+func TestImportTranscriptToMediaBrain_RepairsCues(t *testing.T) {
+	brain := &fakeBrain{finds: []string{foundAsset}}
+	sent := runBrainImportFiles(t, brain, "mediabrain/whisper.srt", nil)
+
+	assert.Equal(t, mediabrain.Transcript{Segments: []mediabrain.TranscriptSegment{
+		{Start: 1, End: 2, Text: "Hei"},
+		{Start: 3, End: 6, Text: "verden"},
+		{Start: 6, End: 7, Text: "slutt"},
+	}}, sent)
+}
+
+// The cues are the SRT's; the JSON only gives them their words.
+func TestImportTranscriptToMediaBrain_AttachesWords(t *testing.T) {
+	brain := &fakeBrain{finds: []string{foundAsset}}
+	jsonFile := paths.New(paths.TestDrive, "mediabrain/whisper.json")
+	sent := runBrainImportFiles(t, brain, "mediabrain/whisper.srt", &jsonFile)
+
+	conf := func(f float64) *float64 { return &f }
+	assert.Equal(t, mediabrain.Transcript{Segments: []mediabrain.TranscriptSegment{
+		{Start: 1, End: 2, Text: "Hei", Words: []mediabrain.TranscriptWord{
+			{Text: "Eh,", Start: 0.5, End: 0.8, Confidence: conf(0.41)},
+			{Text: "Hei", Start: 1, End: 1.4, Confidence: conf(0.93)},
+		}},
+		{Start: 3, End: 6, Text: "verden", Words: []mediabrain.TranscriptWord{
+			{Text: "verden", Start: 3, End: 3, Confidence: conf(0.87)},
+		}},
+		{Start: 6, End: 7, Text: "slutt", Words: []mediabrain.TranscriptWord{
+			{Text: "slutt", Start: 6, End: 6.6, Confidence: conf(0.99)},
+		}},
+	}}, sent)
+}
+
+// Words are secondary: a JSON file that cannot be used leaves the cues without them.
+func TestImportTranscriptToMediaBrain_UnusableJSONImportsWithoutWords(t *testing.T) {
+	for _, file := range []string{"mediabrain/broken.json", "mediabrain/missing.json"} {
+		t.Run(file, func(t *testing.T) {
+			brain := &fakeBrain{finds: []string{foundAsset}}
+			jsonFile := paths.New(paths.TestDrive, file)
+			sent := runBrainImportFiles(t, brain, "mediabrain/whisper.srt", &jsonFile)
+
+			require.Len(t, sent.Segments, 3)
+			for _, s := range sent.Segments {
+				assert.Empty(t, s.Words)
+			}
+		})
+	}
+}
+
+func TestTranscriptContent_TooLargeDropsWords(t *testing.T) {
+	words := make([]mediabrain.TranscriptWord, mediabrain.MaxWordsPerCue)
+	for i := range words {
+		words[i] = mediabrain.TranscriptWord{Text: strings.Repeat("x", 100), Start: 1, End: 2}
+	}
+	var transcript mediabrain.Transcript
+	for i := range 60 {
+		transcript.Segments = append(transcript.Segments, mediabrain.TranscriptSegment{
+			Start: float64(i), End: float64(i + 1), Text: "cue", Words: words,
+		})
+	}
+
+	env := activityEnv(t)
+	env.RegisterActivityWithOptions(func(ctx context.Context) (string, error) {
+		return transcriptContent(ctx, "VX-1", transcript)
+	}, activity.RegisterOptions{Name: "content"})
+	val, err := env.ExecuteActivity("content")
+	require.NoError(t, err)
+	var content string
+	require.NoError(t, val.Get(&content))
+
+	var sent mediabrain.Transcript
+	require.NoError(t, json.Unmarshal([]byte(content), &sent))
+	assert.Equal(t, transcript.WithoutWords(), sent)
 }

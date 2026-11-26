@@ -143,16 +143,12 @@ func Write(cues []Cue) []byte {
 // minRepairedCueMs is how long a cue with no length lasts when the next cue gives it none.
 const minRepairedCueMs = 1000
 
-// Sanitize makes a transcriber's SRT acceptable to strict readers such as Media
-// Brain: cues without text are dropped, cues are ordered by start, and a cue that does
-// not end after it starts runs until the next cue starts, or minRepairedCueMs when that
-// gives it no length. No text is lost. It returns how many cues were dropped or repaired.
-func Sanitize(data []byte) ([]byte, int, error) {
-	cues, err := Parse(data)
-	if err != nil {
-		return nil, 0, err
-	}
-
+// Repair makes cues acceptable to strict readers such as Media Brain: cues without
+// text are dropped, cues are ordered by start, and a cue that does not end after it
+// starts runs until the next cue starts, or minRepairedCueMs when that gives it no
+// length. No text is lost. It returns the kept cues, reusing the backing array of
+// cues, and how many cues were dropped or repaired.
+func Repair(cues []Cue) ([]Cue, int) {
 	changed := 0
 	kept := cues[:0]
 	for _, cue := range cues {
@@ -176,5 +172,16 @@ func Sanitize(data []byte) ([]byte, int, error) {
 		}
 	}
 
+	return kept, changed
+}
+
+// Sanitize parses a transcriber's SRT, repairs it as Repair does, and writes it again.
+// It returns how many cues were dropped or repaired.
+func Sanitize(data []byte) ([]byte, int, error) {
+	cues, err := Parse(data)
+	if err != nil {
+		return nil, 0, err
+	}
+	kept, changed := Repair(cues)
 	return Write(kept), changed, nil
 }

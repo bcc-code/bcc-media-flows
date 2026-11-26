@@ -9,6 +9,7 @@ import (
 	"github.com/go-resty/resty/v2"
 
 	"github.com/bcc-code/bcc-media-flows/internal/httpx"
+	"github.com/bcc-code/bcc-media-flows/services/transcribe"
 )
 
 const serviceName = "cantemo"
@@ -105,7 +106,7 @@ func (c *Client) GetPreviewUrl(itemID string) (string, error) {
 	return "", nil
 }
 
-func (c *Client) GetTranscriptionJSON(itemID string) (*Transcription, error) {
+func (c *Client) GetTranscriptionJSON(itemID string) (*transcribe.Transcription, error) {
 	formats, err := c.GetFormats(itemID)
 	if err != nil {
 		return nil, err
@@ -117,17 +118,17 @@ func (c *Client) GetTranscriptionJSON(itemID string) (*Transcription, error) {
 		}
 
 		res, err := c.restyClient.R().
-			SetResult(&Transcription{}).
+			SetResult(&transcribe.Transcription{}).
 			Get(format.DownloadURI)
 
 		if err != nil {
 			return nil, err
 		}
 
-		return res.Result().(*Transcription), nil
+		return res.Result().(*transcribe.Transcription), nil
 	}
 
-	return &Transcription{}, nil
+	return &transcribe.Transcription{}, nil
 }
 
 // GetFieldTags will return all tags for a given field

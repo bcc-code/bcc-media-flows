@@ -142,3 +142,21 @@ func TestSanitizeSRT(t *testing.T) {
 	_, _, err := Sanitize([]byte("1\nnot a time --> 00:00:01,000\nHei\n"))
 	assert.ErrorIs(t, err, ErrInvalidTimestamp)
 }
+
+func TestRepair(t *testing.T) {
+	cues := []Cue{
+		{Start: 5000, End: 6000, Text: "to"},
+		{Start: 3000, End: 4000, Text: "  "},
+		{Start: 1000, End: 1000, Text: "en"},
+		{Start: 9000, End: 8000, Text: "tre"},
+	}
+
+	got, changed := Repair(cues)
+
+	assert.Equal(t, []Cue{
+		{Start: 1000, End: 5000, Text: "en"},
+		{Start: 5000, End: 6000, Text: "to"},
+		{Start: 9000, End: 10000, Text: "tre"},
+	}, got)
+	assert.Equal(t, 3, changed, "one dropped, two repaired")
+}

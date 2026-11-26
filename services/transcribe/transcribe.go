@@ -398,33 +398,6 @@ func (c *Client) cancelJob(ctx context.Context, id string) error {
 	return nil
 }
 
-type Transcription struct {
-	Text     string    `json:"text"`
-	Segments []Segment `json:"segments"`
-	Language string    `json:"language"`
-}
-
-type Segment struct {
-	ID               int     `json:"id"`
-	Seek             int     `json:"seek"`
-	Start            float64 `json:"start"`
-	End              float64 `json:"end"`
-	Text             string  `json:"text"`
-	Tokens           []int   `json:"tokens"`
-	Temperature      float64 `json:"temperature"`
-	AvgLogprob       float64 `json:"avg_logprob"`
-	CompressionRatio float64 `json:"compression_ratio"`
-	NoSpeechProb     float64 `json:"no_speech_prob"`
-	Words            []Word  `json:"words"`
-}
-
-type Word struct {
-	Text       string  `json:"text"`
-	Start      float64 `json:"start"`
-	End        float64 `json:"end"`
-	Confidence float64 `json:"confidence"`
-}
-
 func MergeTranscripts(input common.MergeInput) (*Transcription, error) {
 	mergedTranscription := &Transcription{
 		Language: "no",

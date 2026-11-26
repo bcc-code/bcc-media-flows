@@ -230,13 +230,15 @@ func TranscribeVX(
 	}).Wait(ctx)
 }
 
-// importTranscriptToMediaBrain delivers the SRT to Media Brain in place of every
-// Mediabanken step: no shapes, no sidecar and no metadata field in Vidispine.
+// importTranscriptToMediaBrain delivers the SRT, with the words of the JSON, to Media
+// Brain in place of every Mediabanken step: no shapes, no sidecar and no metadata field
+// in Vidispine.
 func importTranscriptToMediaBrain(ctx workflow.Context, params TranscribeVXInput, transcript *activities.TranscribeResponse) error {
 	res, err := wfutils.Execute(ctx, activities.MediaBrain.ImportTranscriptToMediaBrain, activities.ImportTranscriptToMediaBrainParams{
 		VXID:     params.VXID,
 		Language: params.Language,
 		SRTPath:  transcript.SRTPath,
+		JSONPath: &transcript.JSONPath,
 		Model:    transcript.Model,
 	}).Result(ctx)
 	if err != nil {

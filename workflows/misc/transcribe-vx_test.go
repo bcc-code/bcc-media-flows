@@ -160,6 +160,8 @@ func (s *TranscribeVXTestSuite) Test_MediaBrainDestinationSkipsMediabanken() {
 	s.Equal("no", brainInput.Language)
 	s.Equal(paths.TempDrive, brainInput.SRTPath.Drive)
 	s.Equal("audio.srt", brainInput.SRTPath.Base())
+	s.Require().NotNil(brainInput.JSONPath)
+	s.Equal("audio.json", brainInput.JSONPath.Base())
 	s.Equal("nb-whisper-large", requestedModel)
 	// Brain gets the model the transcriber reported, not the one asked for.
 	s.Equal("nb-whisper-large-v3", brainInput.Model)

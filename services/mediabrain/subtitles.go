@@ -60,7 +60,9 @@ type SubtitleFormat enum.Member[string]
 var (
 	SubtitleFormatSRT = SubtitleFormat{Value: "SRT"}
 	SubtitleFormatVTT = SubtitleFormat{Value: "VTT"}
-	SubtitleFormats   = enum.New(SubtitleFormatSRT, SubtitleFormatVTT)
+	// SubtitleFormatJSON is a Transcript: cues that carry their word timing.
+	SubtitleFormatJSON = SubtitleFormat{Value: "JSON"}
+	SubtitleFormats    = enum.New(SubtitleFormatSRT, SubtitleFormatVTT, SubtitleFormatJSON)
 )
 
 func (f SubtitleFormat) String() string { return f.Value }
@@ -190,7 +192,7 @@ type ImportSubtitlesInput struct {
 	Origin TrackOrigin `json:"origin,omitzero"`
 	// The model that produced the text. Nil leaves the revision without one.
 	Model *string `json:"model,omitempty"`
-	// The subtitle text. Brain refuses more than 5 MB with INVALID_INPUT.
+	// The subtitle text. Brain refuses more than MaxContentBytes with INVALID_INPUT.
 	Content string `json:"content"`
 }
 

@@ -1,0 +1,20 @@
+{
+  "text": "Hei verden slutt",
+  "segments": [
+    {
+      "id": 0, "start": 0.5, "end": 3.0, "text": " Eh, hei verden",
+      "words": [
+        {"text": " Eh,", "start": 0.5, "end": 0.8, "confidence": 0.41},
+        {"text": " Hei", "start": 1.0, "end": 1.4, "confidence": 0.93},
+        {"text": " ", "start": 1.5, "end": 1.6, "confidence": 0.1},
+        {"text": " verden", "start": 3.0, "end": 3.0, "confidence": 0.87}
+      ]
+    },
+    {
+      "id": 1, "start": 6.0, "end": 7.0, "text": " slutt",
+      "words": [
+        {"text": " slutt", "start": 6.0, "end": 6.6, "confidence": 0.99}
+      ]
+    }
+  ]
+}
