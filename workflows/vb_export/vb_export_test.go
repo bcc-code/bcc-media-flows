@@ -366,3 +366,28 @@ func TestDestination_JSON(t *testing.T) {
 		t.Fatalf("expected ErrUnknownDestination, got %v", err)
 	}
 }
+
+func (s *VBExportTestSuite) Test_VBExportChild_ExistingDeliveryFileSkipsWithWarning() {
+	var messages []string
+	s.env.OnActivity(activities.Util.SendTelegramMessage, mock.Anything, mock.Anything).Maybe().
+		Run(func(args mock.Arguments) {
+			if msg, ok := args.Get(1).(*telegram.Message); ok && msg != nil {
+				messages = append(messages, msg.Markdown)
+			}
+		}).Return(nil, nil)
+	s.env.OnActivity(activities.Util.RcloneCheckFileExists, mock.Anything, mock.Anything).Return(true, nil)
+
+	s.env.ExecuteWorkflow(VBExportToXDCAM, childParams())
+	s.True(s.env.IsWorkflowCompleted())
+	s.NoError(s.env.GetWorkflowError())
+
+	s.env.AssertNotCalled(s.T(), "TranscodeToXDCAMActivity", mock.Anything, mock.Anything)
+	s.env.AssertNotCalled(s.T(), "RcloneCopyFile", mock.Anything, mock.Anything)
+
+	var result VBExportResult
+	s.NoError(s.env.GetWorkflowResult(&result))
+	s.Equal("VX-123", result.ID)
+	s.Equal("test_video", result.Title)
+
+	s.Contains(strings.Join(messages, "\n"), "skipped: `")
+}

@@ -4,7 +4,6 @@ import (
 	"github.com/bcc-code/bcc-media-flows/activities"
 	"github.com/bcc-code/bcc-media-flows/paths"
 	"github.com/bcc-code/bcc-media-flows/services/rclone"
-	"github.com/bcc-code/bcc-media-flows/services/telegram"
 	"github.com/bcc-code/bcc-media-flows/utils"
 	wfutils "github.com/bcc-code/bcc-media-flows/utils/workflows"
 	"go.temporal.io/sdk/workflow"
@@ -69,9 +68,15 @@ func runVBExportChild(ctx workflow.Context, params VBExportChildWorkflowParams, 
 
 	rcloneDestination := deliveryFolder.Append(dest.destination.DeliveryFolder(), destName)
 
-	err := wfutils.RcloneWaitForFileGone(ctx, rcloneDestination, telegram.ChatOslofjord, 10)
+	skip, err := waitForDeliverySlot(ctx, params, dest.destination, rcloneDestination)
 	if err != nil {
 		return nil, err
+	}
+	if skip {
+		return &VBExportResult{
+			ID:    params.ParentParams.VXID,
+			Title: params.OriginalFilenameWithoutExt,
+		}, nil
 	}
 
 	if dest.transcode != nil {
