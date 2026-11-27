@@ -303,6 +303,21 @@ func VBExport(ctx workflow.Context, params VBExportParams) ([]wfutils.ResultOrEr
 	})
 }
 
+// waitForDeliverySlot waits for a previous delivery of file to be picked up. If it is
+// still there after all retries, it posts a warning and returns skip=true: the export
+// is skipped and counts as a success, so the existing file is never overwritten.
+func waitForDeliverySlot(ctx workflow.Context, params VBExportChildWorkflowParams, destination Destination, file paths.Path) (bool, error) {
+	err := wfutils.RcloneWaitForFileGone(ctx, file, telegram.ChatOslofjord, 10)
+	if wfutils.IsFileExistsError(err) {
+		workflow.GetLogger(ctx).Warn("Delivery file already exists, skipping export", "file", file.Rclone(), "destination", destination.Value)
+		wfutils.SendTelegramText(ctx, telegram.ChatOslofjord, fmt.Sprintf(
+			"⚠️ Export of `%s` to `%s` skipped: `%s` already exists in the delivery folder",
+			params.ParentParams.VXID, destination.Value, file.Rclone()))
+		return true, nil
+	}
+	return false, err
+}
+
 func notifyExportDone(ctx workflow.Context, params VBExportChildWorkflowParams, destination Destination, tempExportPath paths.Path) {
 	message := fmt.Sprintf("🟩 Export of `%s` finished.\nDestination: `%s`, Preview: `%s`", params.ParentParams.VXID, destination.Value, tempExportPath.Local())
 	wfutils.SendTelegramText(ctx, telegram.ChatOslofjord, message)

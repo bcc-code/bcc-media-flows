@@ -222,6 +222,17 @@ func RcloneWaitForFileExists(ctx workflow.Context, file paths.Path, retries int)
 
 }
 
+// FileExistsErrorType is the application error type RcloneWaitForFileGone returns
+// when the file is still there after all retries.
+const FileExistsErrorType = "FILE_EXISTS"
+
+// IsFileExistsError reports whether err is the error RcloneWaitForFileGone returns
+// when the file never went away.
+func IsFileExistsError(err error) bool {
+	var appErr *temporal.ApplicationError
+	return errors.As(err, &appErr) && appErr.Type() == FileExistsErrorType
+}
+
 func RcloneWaitForFileGone(ctx workflow.Context, file paths.Path, notificationChannel telegram.Chat, retries int) error {
 	fileExists := true
 
@@ -252,7 +263,7 @@ func RcloneWaitForFileGone(ctx workflow.Context, file paths.Path, notificationCh
 	}
 
 	if fileExists {
-		return temporal.NewNonRetryableApplicationError("File already exists", "FILE_EXISTS", nil)
+		return temporal.NewNonRetryableApplicationError("File already exists", FileExistsErrorType, nil)
 	}
 
 	return nil
